@@ -1,0 +1,6 @@
+﻿
+[SUCCESS] Report generated: test_normal.pdf
+--- Advice for Normal Bola (o'g'il, 6y) ---
+  * Bolaning tashqi muhitga moslashuvi (adaptatsiyasi) me'yorda. Hozirgi sog'lom turmush tarzini davom ettiring.
+  * Tana tuzilishi komponentlari juda yaxshi integratsiyalashgan, jismoniy rivojlanish darajasi yuqori.
+  * Bolaning rivojlanishi garmonik (mutanosib) holatda.

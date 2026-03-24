@@ -1,0 +1,212 @@
+/* ================== Global ease ================== */
+:root {
+  --mc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ================== OVERLAY (BLUR EFFEKT) ================== */
+.mc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.mc-overlay:not(.closing) {
+  display: flex !important;
+  animation: mc-overlay-in 0.3s ease-out both;
+}
+
+.mc-overlay.closing {
+  display: flex !important;
+  animation: mc-overlay-out 0.25s ease-in forwards !important;
+}
+
+/* ================== MODAL (TEMMA MOS) ================== */
+.mc-modal {
+  width: min(700px, 92vw);
+  padding: 16px;
+  border-radius: 16px;
+
+  /* ✅ LIGHT MODE - OQ MODAL */
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15) !important;
+  opacity: 1 !important;
+}
+
+.mc-modal:not(.closing) {
+  animation: mc-modal-in 0.35s var(--mc-ease) both;
+}
+
+.mc-modal.closing {
+  animation: mc-modal-out 0.3s ease-in forwards !important;
+}
+
+/* ✅ DARK MODE - QORA MODAL */
+[data-theme="dark"] .mc-modal {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+  border: 1px solid #374151 !important;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ================== ANIMATIONLAR (BLUR GA MOSLASHTIRILGAN) ================== */
+@keyframes mc-overlay-in {
+  from {
+    backdrop-filter: blur(0px);
+    opacity: 0;
+  }
+  to {
+    backdrop-filter: blur(12px);
+    opacity: 1;
+  }
+}
+
+@keyframes mc-overlay-out {
+  from {
+    backdrop-filter: blur(12px);
+    opacity: 1;
+  }
+  to {
+    backdrop-filter: blur(0px);
+    opacity: 0;
+  }
+}
+
+@keyframes mc-modal-in {
+  from {
+    transform: translateY(40px) scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes mc-modal-out {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(30px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+/* ================== Close button ================== */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+[data-theme="dark"] .btn-icon {
+  border: 1px solid #374151;
+}
+
+.btn-icon:hover {
+  background: #f3f4f6;
+}
+
+[data-theme="dark"] .btn-icon:hover {
+  background: #374151;
+}
+
+/* ===== Reduce Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .mc-overlay,
+  .mc-modal {
+    animation: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Smooth transitions for all interactive elements */
+.btn,
+.card,
+.nav-link,
+.form-control {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Page transition overlay */
+.page-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4a5568;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Focus states for accessibility */
+.btn:focus,
+.form-control:focus,
+.nav-link:focus {
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .card,
+  .nav-link,
+  .form-control {
+    transition: none;
+  }
+
+  .motion-div {
+    animation: none !important;
+    transition: none !important;
+  }
+}

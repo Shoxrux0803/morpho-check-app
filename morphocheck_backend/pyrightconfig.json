@@ -1,0 +1,10 @@
+{
+  "venvPath": "d:\\BOT\\morpho-check-app",
+  "venv": "venv",
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Windows",
+  "extraPaths": [
+    "d:\\BOT\\morpho-check-app\\venv\\Lib\\site-packages"
+  ],
+  "typeCheckingMode": "basic"
+}

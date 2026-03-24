@@ -1,0 +1,11 @@
+node_modules
+build
+dist
+.env
+*.md
+package-lock.json
+public
+assets
+# Python backend
+venv
+morphocheck_backend

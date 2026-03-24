@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-dotenv
+sqlalchemy
+asyncpg
+databases
+psycopg2-binary
+reportlab
+pydantic[email]
+python-multipart
+pillow
+passlib[bcrypt]
+python-jose[cryptography]
+python-docx
+openpyxl

@@ -1,0 +1,6 @@
+{
+  "python.defaultInterpreterPath": "d:\\BOT\\morpho-check-app\\venv\\Scripts\\python.exe",
+  "python.analysis.extraPaths": [
+    "d:\\BOT\\morpho-check-app\\venv\\Lib\\site-packages"
+  ]
+}

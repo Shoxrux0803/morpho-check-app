@@ -1,0 +1,101 @@
+/* ===== Tailwind bazasi (har doim eng tepada) ===== */
+/*@tailwind base;
+/* @tailwind components;
+/* @tailwind utilities;
+
+/* ===== Global reset/umumiy stillar ===== */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Kod shriftlari (ixtiyoriy) */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* ===== Komponent darajasidagi stillar ===== */
+/* Bootstrap .btn bilan yonma-yon ishlashi uchun .btn-analyze ni alohida qoldirdik */
+.btn-analyze {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    background-color 0.22s ease;
+}
+
+/* Hover effekti */
+.btn-analyze:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.25); /* primariga yaqin ko'k soyasi */
+}
+
+/* Bosilganda kichik bosim effekti */
+.btn-analyze:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(13, 110, 253, 0.18);
+}
+
+/* Bir martalik pulse animatsiya (bosilish payti) */
+.pulse-once {
+  animation: btnPulse 380ms ease-out 1;
+}
+
+@keyframes btnPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(13, 110, 253, 0);
+  }
+  35% {
+    transform: scale(1.03);
+    box-shadow: 0 8px 26px rgba(13, 110, 253, 0.35);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(13, 110, 253, 0);
+  }
+}
+/* Smooth animations */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Performance optimizations */
+canvas {
+  display: block;
+}
+
+/* Glass morphism support */
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Loading animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.floating {
+  animation: float 3s ease-in-out infinite;
+}
+

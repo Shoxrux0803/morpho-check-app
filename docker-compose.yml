@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./morphocheck_backend
+    container_name: morphocheck_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./morphocheck_backend:/app
+    env_file:
+      - ./morphocheck_backend/.env.docker
+    depends_on:
+      - db
+
+  frontend:
+    build: ./src
+    container_name: morphocheck_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    container_name: morphocheck_db
+    environment:
+      POSTGRES_USER: morpho
+      POSTGRES_PASSWORD: morpho123
+      POSTGRES_DB: morphocheck
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

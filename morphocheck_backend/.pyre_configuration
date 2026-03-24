@@ -1,0 +1,9 @@
+{
+  "source_directories": [
+    "."
+  ],
+  "search_path": [
+    "../venv/Lib/site-packages",
+    "d:\\BOT\\morpho-check-app\\venv\\Lib\\site-packages"
+  ]
+}
