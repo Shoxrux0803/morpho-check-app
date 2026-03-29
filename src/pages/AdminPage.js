@@ -1,14 +1,14 @@
-// src/pages/AdminPage.js
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { AdminApi } from "../services/AdminApi";
-import { generateDocx, generatePdf } from "../services/api";
+import { generateDocx, generatePdf, generatePdfById, generateDocxById } from "../services/api";
+import { LANGUAGES } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // Material UI importlari
 import {
   Container,
   Grid,
-  Card,
-  CardContent,
   Typography,
   Paper,
   AppBar,
@@ -16,22 +16,12 @@ import {
   Tabs,
   Tab,
   Box,
-  Chip,
   IconButton,
   Button,
-  TextField,
-  MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Checkbox,
   FormControl,
   InputLabel,
   Select,
+  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -40,28 +30,55 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
-  CircularProgress, // CircularProgress qo'shildi
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  TextField,
+  InputAdornment,
+  Stack,
+  Avatar,
 } from "@mui/material";
 import {
-  People,
-  PersonAdd,
-  TrendingUp,
-  TrendingDown,
   Delete,
-  Visibility,
   Download,
   FilterList,
-  Search,
   Close,
-  LocationOn,
-  Analytics,
-  List,
   Dashboard as DashboardIcon,
-  Cake,
-  MonitorWeight,
+  List as ListIcon,
+  Lock,
+  Person,
+  Visibility,
+  VisibilityOff,
 } from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Uzbekistan map removed
+const GlassPaper = ({ children, sx = {} }) => (
+  <Paper
+    elevation={0}
+    sx={{
+      background: (theme) =>
+        theme.palette.mode === "dark"
+          ? "rgba(30, 30, 40, 0.7)"
+          : "rgba(255, 255, 255, 0.7)",
+      backdropFilter: "blur(20px)",
+      borderRadius: 4,
+      border: "1px solid",
+      borderColor: (theme) =>
+        theme.palette.mode === "dark"
+          ? "rgba(255, 255, 255, 0.08)"
+          : "rgba(0, 0, 0, 0.05)",
+      overflow: "hidden",
+      ...sx,
+    }}
+  >
+    {children}
+  </Paper>
+);
 
 // Yangi modular komponentlar
 import StatsCards from "../components/Dashboard/StatsCards";
@@ -69,6 +86,9 @@ import RecentActivity from "../components/Dashboard/RecentActivity";
 import RegionStats from "../components/Dashboard/RegionStats";
 import BMIDistribution from "../components/Dashboard/BMIDistribution";
 import UserGrowthChart from "../components/Dashboard/UserGrowthChart";
+import GenderDistribution from "../components/Dashboard/GenderDistribution";
+import AgeGroupDistribution from "../components/Dashboard/AgeGroupDistribution";
+import SomatotypeAnalysis from "../components/Dashboard/SomatotypeAnalysis";
 import AdminFilters from "../components/Admin/AdminFilters";
 import AdminTable from "../components/Admin/AdminTable";
 
@@ -98,82 +118,28 @@ const normalize = (r) => {
   const parts = name.split(" ");
   const firstGuess = parts[0] || "";
   const lastGuess = parts.slice(1).join(" ");
-
   const bmiVal = r.bmi ?? calcBMI(r.weight, r.height);
 
   return {
-    id: r.id,
+    ...r,
     idCode: r.id_code || r.idCode,
-    createdAt: r.created_at || r.createdAt || null,
+    createdAt: r.created_at || r.createdAt,
     firstName: r.first_name || r.firstName || firstGuess,
     lastName: r.last_name || r.lastName || lastGuess,
-    gender: r.gender,
-    age: r.age,
-    ageMonths: r.age_months,
-    ageDays: r.age_days,
-    height: r.height,
-    weight: r.weight,
-    chest: r.chest,
-    waist: r.waist,
-    hip: r.hip,
-    head: r.head,
-    region: r.region,
-    district: r.district,
-    address: r.address,
-    examinationDate: r.examination_date,
-    birthDate: r.birth_date,
-    preschoolInstitution: r.preschool_institution,
-    shoulderLength: r.shoulder_length,
-    shoulderBreadth: r.shoulder_breadth,
-    shoulderCircumference: r.shoulder_circumference,
-    armElbowLength: r.arm_elbow_length,
-    handLength: r.hand_length,
-    thighLength: r.thigh_length,
-    thighCircumference: r.thigh_circumference,
-    calfLength: r.calf_length,
-    calfCircumference: r.calf_circumference,
-    footLength: r.foot_length,
-    zScore: r.z_score,
-    somatotype: r.somatotype,
-    recommendations: r.recommendations,
     bmi: bmiVal,
     bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
   };
 };
 
-/** ===== CSV eksport ===== */
-function exportToCsv(filename, rows) {
-  if (!rows?.length) return;
-  const headers = Object.keys(rows[0]);
-  const escape = (v) =>
-    typeof v === "string" && (v.includes(",") || v.includes('"') || v.includes("\n"))
-      ? `"${v.replace(/"/g, '""')}"`
-      : (v ?? "");
-  const csv =
-    headers.join(",") +
-    "\n" +
-    rows.map((r) => headers.map((h) => escape(r[h])).join(",")).join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", filename);
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, onDownloadPdf, isPdfDownloading }) {
+function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, onDownloadPdf, isPdfDownloading, pdfLang, setPdfLang }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Dialog open={true} onClose={onClose} fullScreen={fullScreen} maxWidth="md" fullWidth>
+    <Dialog open={true} onClose={onClose} fullScreen={fullScreen} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">{title}</Typography>
+          <Typography variant="h6" fontWeight="bold">{title}</Typography>
           <IconButton onClick={onClose} size="small">
             <Close />
           </IconButton>
@@ -181,27 +147,41 @@ function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, 
       </DialogTitle>
       <DialogContent dividers>{children}</DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
-        <Box display="flex" gap={1}>
-          <Button 
-            variant="contained" 
-            color="secondary" 
-            startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />} 
+        <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />}
             onClick={onDownloadDocx}
             disabled={isDownloading || isPdfDownloading}
+            sx={{ borderRadius: 2 }}
           >
-            {isDownloading ? "Yuklanmoqda..." : "Word (DOCX)"}
+            Word
           </Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={isPdfDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />} 
+
+          <FormControl size="small" sx={{ minWidth: 90 }}>
+            <InputLabel>Til</InputLabel>
+            <Select value={pdfLang} label="Til" onChange={(e) => setPdfLang(e.target.value)}>
+              {LANGUAGES.map((l) => (
+                <MenuItem key={l.code} value={l.code}>
+                  {l.flag} {l.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={isPdfDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />}
             onClick={onDownloadPdf}
             disabled={isDownloading || isPdfDownloading}
+            sx={{ borderRadius: 2 }}
           >
-            {isPdfDownloading ? "Yuklanmoqda..." : "PDF (User report)"}
+            PDF hisobot
           </Button>
         </Box>
-        <Button variant="outlined" onClick={onClose}>Yopish</Button>
+        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>Yopish</Button>
       </DialogActions>
     </Dialog>
   );
@@ -209,8 +189,36 @@ function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, 
 
 // ===== ASOSIY ADMIN PAGE =====
 export default function AdminPage() {
+  const navigate = useNavigate();
+  const { user, login, loading: authLoading } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginInProgress, setLoginInProgress] = useState(false);
+
+  // User role checking is now handled by AdminWrapper in App.js
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoginInProgress(true);
+    try {
+      const profile = await login(loginForm);
+      if (profile.role === "superadmin" || profile.role === "admin") {
+        // Stay here, Dashboard (Admin) or User Management (SuperAdmin) will render
+        // because AdminWrapper in App.js will handle the role-based switch
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      setLoginError(err.message || "Kirishda xatolik yuz berdi");
+    } finally {
+      setLoginInProgress(false);
+    }
+  };
 
   const [activeTab, setActiveTab] = useState(0);
   const [raw, setRaw] = useState([]);
@@ -218,115 +226,7 @@ export default function AdminPage() {
   const [err, setErr] = useState(null);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-
-  // Payload tayyorlash funksiyasi (DOCX va PDF uchun umumiy)
-  const preparePayload = async (row) => {
-    const res = await AdminApi.analyses.get(row.id);
-    let fullData = normalize(res);
-    
-    return {
-      id_code: fullData.idCode,
-      firstName: fullData.firstName,
-      lastName: fullData.lastName,
-      region: fullData.region || "",
-      district: fullData.district || "",
-      address: fullData.address || "",
-      age: Number(fullData.age),
-      ageMonths: Number(fullData.ageMonths) || 0,
-      ageDays: Number(fullData.ageDays) || 0,
-      gender: fullData.gender,
-      height: Number(fullData.height),
-      weight: Number(fullData.weight),
-      chest: Number(fullData.chest) || 0,
-      head: Number(fullData.head) || 0,
-      waist: Number(fullData.waist) || 0,
-      examinationDate: fullData.examinationDate || fullData.createdAt?.split("T")[0] || new Date().toISOString().split("T")[0],
-      birthDate: fullData.birthDate || "",
-      preschoolInstitution: fullData.preschoolInstitution || "",
-      shoulderLength: Number(fullData.shoulderLength) || 0,
-      shoulderBreadth: Number(fullData.shoulderBreadth) || 0,
-      shoulderCircumference: Number(fullData.shoulderCircumference) || 0,
-      armElbowLength: Number(fullData.armElbowLength) || 0,
-      handLength: Number(fullData.handLength) || 0,
-      thighLength: Number(fullData.thighLength) || 0,
-      thighCircumference: Number(fullData.thighCircumference) || 0,
-      calfLength: Number(fullData.calfLength) || 0,
-      calfCircumference: Number(fullData.calfCircumference) || 0,
-      footLength: Number(fullData.footLength) || 0,
-      totalBodyWater: fullData.totalBodyWater !== "" && fullData.totalBodyWater != null ? Number(fullData.totalBodyWater) : null,
-      fatPercent: fullData.fatPercent !== "" && fullData.fatPercent != null ? Number(fullData.fatPercent) : null,
-      fatMass: fullData.fatMass !== "" && fullData.fatMass != null ? Number(fullData.fatMass) : null,
-      muscleMass: fullData.muscleMass !== "" && fullData.muscleMass != null ? Number(fullData.muscleMass) : null,
-      boneMass: fullData.boneMass !== "" && fullData.boneMass != null ? Number(fullData.boneMass) : null,
-      acm: fullData.acm !== "" && fullData.acm != null ? Number(fullData.acm) : null,
-      visceralFat: fullData.visceralFat !== "" && fullData.visceralFat != null ? Number(fullData.visceralFat) : null,
-      analysis: {
-        z_score: fullData.zScore,
-        somatotype: fullData.somatotype,
-        bmi: fullData.bmi,
-        bmi_category: fullData.bmiStatus,
-      },
-    };
-  };
-
-  const handleDownloadDocx = async (row) => {
-    setDownloadingDocx(true);
-    try {
-      const payload = await preparePayload(row);
-      const blob = await generateDocx(payload);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `morphocheck_admin_${payload.firstName}_${payload.lastName}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      alert("DOCX yaratishda xatolik: " + (e?.message || "Noma'lum xato"));
-    } finally {
-      setDownloadingDocx(false);
-    }
-  };
-
-  const handleDownloadPdf = async (row) => {
-    setDownloadingPdf(true);
-    try {
-      const payload = await preparePayload(row);
-      const blob = await generatePdf(payload);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `morphocheck_report_${payload.firstName}_${payload.lastName}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      alert("PDF yaratishda xatolik: " + (e?.message || "Noma'lum xato"));
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
-
-  // DashBoard chizish uchun hamma ma'lumotlar
-  const [dashData, setDashData] = useState([]);
-  const [dashLoading, setDashLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchDashData = async () => {
-      setDashLoading(true);
-      try {
-        const res = await AdminApi.analyses.list({ page: 1, pageSize: 1000 });
-        setDashData(res.items || []);
-      } catch (e) {
-        console.error("Dashboard chizish uchun ma'lumot yuklashda xatolik:", e);
-      } finally {
-        setDashLoading(false);
-      }
-    };
-    fetchDashData();
-  }, []);
+  const [pdfLang, setPdfLang] = useState("uz");
 
   // Filtr/sort/paging
   const [q, setQ] = useState("");
@@ -344,102 +244,199 @@ export default function AdminPage() {
   // Tanlov/bulk
   const [checked, setChecked] = useState(new Set());
   const [viewRow, setViewRow] = useState(null);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
 
+  // DashBoard ma'lumotlari - FILTRLANGAN
+  const [dashData, setDashData] = useState([]);
+  const [dashLoading, setDashLoading] = useState(false);
 
-  // Yuklash - BACKEND PAGINATION (useCallback bilan)
+  // Tab switch qilinganda dashboard ma'lumotlarini yuklash
+  useEffect(() => {
+    if (activeTab === 0) {
+      const fetchDashData = async () => {
+        setDashLoading(true);
+        try {
+          // Dashboard uchun filtrlar asosida ko'proq ma'lumot olamiz (max 1000)
+          const res = await AdminApi.analyses.list({ 
+            q, gender, ageMin, ageMax, dateFrom, dateTo, region,
+            page: 1, pageSize: 1000 
+          });
+          setDashData(res.items || []);
+        } catch (e) {
+          console.error("Dashboard yuklashda xato:", e);
+        } finally {
+          setDashLoading(false);
+        }
+      };
+      fetchDashData();
+    }
+  }, [activeTab, q, gender, ageMin, ageMax, dateFrom, dateTo, region, user]);
+
+  // Statistikalar (KPI uchun barcha dashData bo'yicha)
+  const dashboardStats = useMemo(() => {
+    if (!dashData.length) return { totalUsers: totalCount, todayUsers: 0, avgAge: 0, avgBMI: 0, normalBMIPercent: 0 };
+    
+    const today = new Date().toDateString();
+    const todayCount = dashData.filter(u => new Date(u.created_at || u.createdAt).toDateString() === today).length;
+    
+    let totalAge = 0;
+    let totalBMI = 0;
+    let bmiCount = 0;
+    let normalCount = 0;
+
+    dashData.forEach(u => {
+      totalAge += Number(u.age) || 0;
+      const bmi = u.bmi || calcBMI(u.weight, u.height);
+      if (bmi) {
+        totalBMI += bmi;
+        bmiCount++;
+        if (bmi >= 18.5 && bmi < 25) normalCount++;
+      }
+    });
+
+    return {
+      totalUsers: totalCount,
+      todayUsers: todayCount,
+      avgAge: (totalAge / dashData.length).toFixed(1),
+      avgBMI: bmiCount > 0 ? (totalBMI / bmiCount) : 0,
+      normalBMIPercent: bmiCount > 0 ? (normalCount / bmiCount) * 100 : 0
+    };
+  }, [dashData, totalCount]);
+
+  // Yuklash - BACKEND PAGINATION
   const load = useCallback(async () => {
     setLoading(true);
     setErr(null);
     try {
       const response = await AdminApi.analyses.list({
-        q,
-        gender,
-        ageMin,
-        ageMax,
-        dateFrom,
-        dateTo,
-        region,
+        q, gender, ageMin, ageMax, dateFrom, dateTo, region,
         sortKey: sort.key === "createdAt" ? "created_at" : sort.key,
         sortDir: sort.dir,
-        page: page + 1, // Material UI page 0-based, backend 1-based
+        page: page + 1,
         pageSize: rowsPerPage,
       });
-
-      const items = response.items || [];
-      const total = response.total || items.length;
-
-      setRaw(items.map(normalize));
-      setTotalCount(total);
+      setRaw((response.items || []).map(normalize));
+      setTotalCount(response.total || 0);
     } catch (e) {
-      setErr(e?.message || "Ma'lumotlarni yuklashda xatolik.");
+      setErr(e?.message || "Xatolik yuz berdi.");
     } finally {
       setLoading(false);
     }
-  }, [q, gender, ageMin, ageMax, dateFrom, dateTo, region, sort, page, rowsPerPage]);
+  }, [q, gender, ageMin, ageMax, dateFrom, dateTo, region, sort, page, rowsPerPage, user]);
 
+  useEffect(() => { load(); }, [load]);
 
-  // Filtr yoki sahifa o'zgarganda yangilash
-  useEffect(() => {
-    load();
-  }, [load]);
+  if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
+    return (
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <GlassPaper sx={{ p: 4, position: "relative", overflow: "visible" }}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: -40,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                boxShadow: "0 8px 32px rgba(0, 123, 255, 0.3)",
+              }}
+            >
+              <Lock sx={{ color: "white", fontSize: 40 }} />
+            </Box>
 
+            <Box textAlign="center" mt={4} mb={4}>
+              <Typography variant="h4" fontWeight={800} gutterBottom>
+                Admin Panel
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Tizimga kirish uchun hisobingizga kiring
+              </Typography>
+            </Box>
 
-  // Statistikalar
-  const stats = useMemo(() => {
-    const totalUsers = totalCount; // Backenddan kelgan umumiy son
-    const today = new Date().toDateString();
-    const todayUsers = raw.filter((user) => {
-      if (!user.createdAt) return false;
-      return new Date(user.createdAt).toDateString() === today;
-    }).length;
+            {loginError && (
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                {loginError}
+              </Alert>
+            )}
 
-    // Faol foydalanuvchilar - oxirgi 7 kun ichida faol bo'lganlar
-    const activeUsers = raw.filter((user) => {
-      if (!user.createdAt) return false;
-      const userDate = new Date(user.createdAt);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return userDate >= weekAgo;
-    }).length;
+            <Box component="form" onSubmit={handleLogin}>
+              <Stack spacing={3}>
+                <TextField
+                  fullWidth
+                  label="Email yoki Login"
+                  variant="outlined"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person color="primary" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  label="Parol"
+                  type={showPassword ? "text" : "password"}
+                  variant="outlined"
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock color="primary" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <Button
+                  fullWidth
+                  size="large"
+                  type="submit"
+                  variant="contained"
+                  disabled={loginInProgress || authLoading}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: 2,
+                    boxShadow: "0 8px 16px rgba(0, 123, 255, 0.25)",
+                    fontSize: "1rem",
+                    fontWeight: 700,
+                    textTransform: "none",
+                  }}
+                >
+                  {loginInProgress ? <CircularProgress size={24} color="inherit" /> : "Kirish"}
+                </Button>
+              </Stack>
+            </Box>
+          </GlassPaper>
+        </motion.div>
+      </Container>
+    );
+  }
 
-    const avgAge =
-      raw.length > 0
-        ? Math.round(
-            (raw.reduce((sum, user) => sum + (Number(user.age) || 0), 0) / raw.length) * 10,
-          ) / 10
-        : 0;
-
-    return {
-      totalUsers,
-      todayUsers,
-      activeUsers,
-      avgAge,
-    };
-  }, [raw, totalCount]);
-
-  // Format funksiyalari
-  const formatDate = (iso) => {
-    const d = new Date(iso);
-    return isNaN(d) ? "-" : d.toLocaleDateString("uz-UZ");
-  };
-
-  const formatDateTime = (iso) => {
-    const d = new Date(iso);
-    return isNaN(d) ? "-" : d.toLocaleString("uz-UZ");
-  };
-
-  // Tanlash funksiyalari - FAQAT JORIY SAHIFADAGI ELEMENTLAR
-  const currentPageRows = raw; // Backenddan kelgan joriy sahifa ma'lumotlari
-
-  const allChecked = currentPageRows.length > 0 && currentPageRows.every((r) => checked.has(r.id));
   const toggleAll = () => {
     const next = new Set(checked);
-    if (allChecked) {
-      currentPageRows.forEach((r) => next.delete(r.id));
-    } else {
-      currentPageRows.forEach((r) => next.add(r.id));
-    }
+    const allChecked = raw.length > 0 && raw.every((r) => checked.has(r.id));
+    if (allChecked) raw.forEach((r) => next.delete(r.id));
+    else raw.forEach((r) => next.add(r.id));
     setChecked(next);
   };
 
@@ -450,267 +447,203 @@ export default function AdminPage() {
     setChecked(next);
   };
 
-  // O'chirish
   const onDeleteSelected = async () => {
-    if (!checked.size) return;
-    if (!window.confirm(`${checked.size} ta yozuvni o'chirasizmi?`)) return;
-    const ids = Array.from(checked);
+    if (!checked.size || !window.confirm(`${checked.size} ta yozuvni o'chirasizmi?`)) return;
     try {
-      if (AdminApi.analyses.removeMany) {
-        await AdminApi.analyses.removeMany(ids);
-      } else {
-        await Promise.all(ids.map((id) => AdminApi.analyses.remove(id)));
-      }
+      await Promise.all(Array.from(checked).map(id => AdminApi.analyses.remove(id)));
       setChecked(new Set());
-      await load();
+      load();
+    } catch (e) { alert("O'chirishda xato."); }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!viewRow) return;
+    setDownloadingPdf(true);
+    try {
+      const blob = await generatePdfById(viewRow.id, pdfLang);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `morphocheck_report_${viewRow.idCode}_${pdfLang}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
-      alert(e?.message || "O'chirishda xatolik yuz berdi.");
+      alert("PDF yuklashda xato: " + e.message);
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
-  // XLSX eksport
+  const handleDownloadDocx = async () => {
+    if (!viewRow) return;
+    setDownloadingDocx(true);
+    try {
+      const blob = await generateDocxById(viewRow.id, pdfLang);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `morphocheck_anketa_${viewRow.idCode}_${pdfLang}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert("Word yuklashda xato: " + e.message);
+    } finally {
+      setDownloadingDocx(false);
+    }
+  };
+
   const onExportXlsx = async () => {
     try {
-      const blob = await AdminApi.analyses.exportXlsx({
-        q,
-        gender,
-        ageMin,
-        ageMax,
-        dateFrom,
-        dateTo,
-        region,
-      });
-
+      const blob = await AdminApi.analyses.exportXlsx({ q, gender, ageMin, ageMax, dateFrom, dateTo, region });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `morphocheck_export_${new Date().toISOString().split('T')[0]}.xlsx`);
-      document.body.appendChild(link);
+      link.download = `morphocheck_export_${new Date().toISOString().split('T')[0]}.xlsx`;
       link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      alert("Eksport qilishda xatolik: " + (e?.message || "Noma'lum xatolik"));
-    }
+    } catch (e) { alert("Eksportda xato."); }
   };
 
-
-  // Tab kontentlari
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 0: // Dashboard
-        return (
-          <Box>
-            <Grid container spacing={3}>
-              {/* Row 1: Asosiy ko'rsatkichlar (KPI) */}
-              <Grid item xs={12}>
-                <StatsCards
-                  totalUsers={stats.totalUsers}
-                  todayUsers={stats.todayUsers}
-                  activeUsers={stats.activeUsers}
-                  avgAge={stats.avgAge}
-                />
-              </Grid>
-
-              {/* Row 2: Oxirgi faollik tarixi (uzunasiga) */}
-              <Grid item xs={12}>
-                <RecentActivity data={dashData} loading={dashLoading} />
-              </Grid>
-
-              {/* Row 3: Foydalanuvchilar o'sishi va BMI taqsimoti */}
-              <Grid item xs={12} md={8}>
-                <UserGrowthChart data={dashData} loading={dashLoading} />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <BMIDistribution data={dashData} loading={dashLoading} />
-              </Grid>
-
-              {/* Row 4: Viloyatlar kesimida statistika */}
-              {/* RegionStats ichida Grid item'lar bor, shuning uchun o'rash shart emas */}
-              <RegionStats data={dashData} loading={dashLoading} />
-            </Grid>
-          </Box>
-        );
-
-      case 1: // Foydalanuvchilar ro'yxati
-        return (
-          <Box>
-            {/* Sarlavha va tugmalar */}
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              mb={3}
-              flexDirection={isMobile ? "column" : "row"}
-              gap={2}
-            >
-              <Typography variant="h5" fontWeight="bold">
-                Foydalanuvchilar ro'yxati
-              </Typography>
-              <Box display="flex" gap={1} flexWrap="wrap">
-                <Button
-                  variant="outlined"
-                  startIcon={<Download />}
-                  onClick={onExportXlsx}
-                  disabled={totalCount === 0}
+    if (activeTab === 0) {
+      return (
+        <Box sx={{ py: 2 }}>
+            <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
+                <Box>
+                    <Typography variant="h4" fontWeight="900" color="primary.main">Dashboard</Typography>
+                    <Typography variant="body1" color="text.secondary">Tizimdagi umumiy tahliliy ko'rsatkichlar</Typography>
+                </Box>
+                <Button 
+                    variant="contained" 
+                    startIcon={<FilterList />} 
+                    onClick={() => setFiltersOpen(!filtersOpen)}
+                    sx={{ borderRadius: 3, px: 3 }}
                 >
-                  XLSX eksport
+                    Filtrlar {filtersOpen ? 'Yopish' : 'Ochish'}
                 </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<Delete />}
-                  onClick={onDeleteSelected}
-                  disabled={checked.size === 0}
-                >
-                  O'chirish ({checked.size})
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<FilterList />}
-                  onClick={() => setFiltersOpen(!filtersOpen)}
-                >
-                  Filtrlar
-                </Button>
-              </Box>
             </Box>
 
-            {/* Filtrlar paneli */}
             {filtersOpen && (
-              <AdminFilters
-                q={q}
-                setQ={setQ}
-                gender={gender}
-                setGender={setGender}
-                ageMin={ageMin}
-                setAgeMin={setAgeMin}
-                ageMax={ageMax}
-                setAgeMax={setAgeMax}
-                dateFrom={dateFrom}
-                setDateFrom={setDateFrom}
-                dateTo={dateTo}
-                setDateTo={setDateTo}
-                region={region}
-                setRegion={setRegion}
-              />
+              <Box mb={4}>
+                  <AdminFilters 
+                    q={q} setQ={setQ} gender={gender} setGender={setGender} 
+                    ageMin={ageMin} setAgeMin={setAgeMin} ageMax={ageMax} setAgeMax={setAgeMax}
+                    dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
+                    region={region} setRegion={setRegion}
+                  />
+              </Box>
             )}
 
-            {/* Jadval */}
-            <Card>
-              {loading && <LinearProgress />}
-              <CardContent sx={{ p: 0 }}>
-                {err ? (
-                  <Alert severity="error" sx={{ m: 2 }}>
-                    {err}
-                  </Alert>
-                ) : (
-                  <>
-                    <AdminTable
-                      rows={currentPageRows}
-                      checked={checked}
-                      toggleAll={toggleAll}
-                      allChecked={allChecked}
-                      toggleOne={toggleOne}
-                      setViewRow={setViewRow}
-                      formatDate={formatDate}
-                    />
+            <StatsCards 
+                totalUsers={dashboardStats.totalUsers} 
+                todayUsers={dashboardStats.todayUsers} 
+                avgAge={dashboardStats.avgAge}
+                avgBMI={dashboardStats.avgBMI}
+                normalBMIPercent={dashboardStats.normalBMIPercent}
+            />
 
-                    {/* PAGINATION - BACKEND PAGINATION */}
-                    <TablePagination
-                      rowsPerPageOptions={[5, 10, 25, 50]}
-                      component="div"
-                      count={totalCount} // Backenddan kelgan umumiy son
-                      rowsPerPage={rowsPerPage}
-                      page={page}
-                      onPageChange={(event, newPage) => setPage(newPage)}
-                      onRowsPerPageChange={(event) => {
-                        const newRowsPerPage = parseInt(event.target.value, 10);
-                        setRowsPerPage(newRowsPerPage);
-                        setPage(0); // Sahifani boshiga qaytarish
-                      }}
-                      labelRowsPerPage="Sahifadagi qatorlar:"
-                      labelDisplayedRows={({ from, to, count }) =>
-                        `${from}-${to} ning ${count !== -1 ? count : ` ${to} dan ko'p`}`
-                      }
-                    />
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </Box>
-        );
+            <Grid container spacing={3}>
+                <Grid item xs={12} lg={8}><UserGrowthChart data={dashData} loading={dashLoading} /></Grid>
+                <Grid item xs={12} lg={4}><RecentActivity data={dashData} loading={dashLoading} /></Grid>
+                
+                <Grid item xs={12} md={4} lg={3}><BMIDistribution data={dashData} loading={dashLoading} /></Grid>
+                <Grid item xs={12} md={4} lg={3}><GenderDistribution data={dashData} loading={dashLoading} /></Grid>
+                <Grid item xs={12} md={4} lg={3}><AgeGroupDistribution data={dashData} loading={dashLoading} /></Grid>
+                <Grid item xs={12} md={12} lg={3}><SomatotypeAnalysis data={dashData} loading={dashLoading} /></Grid>
 
-      default:
-        return null;
+                <RegionStats data={dashData} loading={dashLoading} />
+            </Grid>
+        </Box>
+      );
     }
+
+    return (
+      <Box sx={{ py: 2 }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} gap={2}>
+           <Typography variant="h5" fontWeight="bold">Foydalanuvchilar Listi</Typography>
+           <Box display="flex" gap={1}>
+             <Button variant="outlined" startIcon={<Download />} onClick={onExportXlsx} sx={{ borderRadius: 2 }}>XLSX Export</Button>
+             <Button variant="outlined" color="error" startIcon={<Delete />} onClick={onDeleteSelected} disabled={!checked.size} sx={{ borderRadius: 2 }}>O'chirish ({checked.size})</Button>
+           </Box>
+        </Box>
+        
+        <AdminFilters 
+            q={q} setQ={setQ} gender={gender} setGender={setGender} 
+            ageMin={ageMin} setAgeMin={setAgeMin} ageMax={ageMax} setAgeMax={setAgeMax}
+            dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
+            region={region} setRegion={setRegion}
+        />
+
+        <Paper elevation={0} sx={{ mt: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+          {loading && <LinearProgress />}
+          <AdminTable 
+            rows={raw} checked={checked} toggleAll={toggleAll} toggleOne={toggleOne} 
+            allChecked={raw.length > 0 && raw.every(r => checked.has(r.id))} 
+            setViewRow={setViewRow} formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")} 
+            user={user}
+          />
+          <TablePagination
+            component="div" count={totalCount} rowsPerPage={rowsPerPage} page={page}
+            onPageChange={(e, p) => setPage(p)}
+            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+          />
+        </Paper>
+      </Box>
+    );
   };
 
+  const isDark = theme.palette.mode === 'dark';
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" sx={{ mb: 3 }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            MorphoCheck Pro Admin Panel
-          </Typography>
-        </Toolbar>
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
+      <AppBar 
+        position="sticky" 
+        elevation={0} 
+        sx={{ 
+            bgcolor: isDark ? "rgba(23, 26, 33, 0.8)" : "rgba(255, 255, 255, 0.8)", 
+            backdropFilter: 'blur(10px)',
+            color: "text.primary", 
+            borderBottom: "1px solid",
+            borderColor: "divider"
+        }}
+      >
+        <Container maxWidth="xl">
+            <Toolbar disableGutters>
+                <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, letterSpacing: -0.5, color: 'primary.main' }}>
+                   MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box>
+                </Typography>
+                <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ minHeight: 64 }}>
+                    <Tab icon={<DashboardIcon />} iconPosition="start" label="Dashboard" sx={{ fontWeight: 'bold' }} />
+                    <Tab icon={<ListIcon />} iconPosition="start" label="Ma'lumotlar" sx={{ fontWeight: 'bold' }} />
+                </Tabs>
+            </Toolbar>
+        </Container>
       </AppBar>
 
-      <Container maxWidth="xl">
-        {/* Tabs */}
-        <Paper sx={{ mb: 3 }}>
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            variant={isMobile ? "scrollable" : "fullWidth"}
-            scrollButtons="auto"
-          >
-            <Tab icon={<DashboardIcon />} iconPosition="start" label="Dashboard" />
-            <Tab icon={<List />} iconPosition="start" label="Foydalanuvchilar ro'yxati" />
-          </Tabs>
-        </Paper>
-
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
         {renderTabContent()}
-
-        {/* Modal (batafsil) */}
-        {viewRow && (
-          <CustomModal 
-            title="Batafsil ma'lumot" 
-            onClose={() => setViewRow(null)}
-            onDownloadDocx={() => handleDownloadDocx(viewRow)}
-            isDownloading={downloadingDocx}
-            onDownloadPdf={() => handleDownloadPdf(viewRow)}
-            isPdfDownloading={downloadingPdf}
-          >
-            <TableContainer component={Paper} elevation={0} variant="outlined">
-              <Table size="small">
-                <TableHead sx={{ bgcolor: "grey.100" }}>
-                  <TableRow>
-                    <TableCell><strong>Ko'rsatkich</strong></TableCell>
-                    <TableCell><strong>Qiymat</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow><TableCell>F.I.SH</TableCell><TableCell>{viewRow.lastName} {viewRow.firstName}</TableCell></TableRow>
-                  <TableRow><TableCell>Sana</TableCell><TableCell>{formatDateTime(viewRow.createdAt)}</TableCell></TableRow>
-                  <TableRow><TableCell>Manzil</TableCell><TableCell>{[viewRow.region, viewRow.district, viewRow.address].filter(Boolean).join(", ") || "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Jins va Yosh</TableCell><TableCell>{viewRow.gender}, {viewRow.age} yosh ({viewRow.ageMonths} oy)</TableCell></TableRow>
-                  <TableRow><TableCell>Bo'y va Vazn</TableCell><TableCell>{viewRow.height} sm, {viewRow.weight} kg</TableCell></TableRow>
-                  <TableRow><TableCell>BMI</TableCell><TableCell>{viewRow.bmi ?? "-"} ({viewRow.bmiStatus})</TableCell></TableRow>
-                  <TableRow><TableCell>Aylanalar (sm)</TableCell><TableCell>Ko'krak: {viewRow.chest || "-"}, Bel: {viewRow.waist || "-"}, Bosh: {viewRow.head || "-"}, Bo'ksa: {viewRow.hip || "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Z-Score</TableCell><TableCell>{viewRow.zScore ?? "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Somatotip</TableCell><TableCell>{viewRow.somatotype ?? "-"}</TableCell></TableRow>
-                  <TableRow><TableCell colSpan={2} sx={{ bgcolor: "grey.50" }}><strong>Qo'shimcha o'lchovlar (sm)</strong></TableCell></TableRow>
-                  <TableRow><TableCell>Yelka uzunligi / kengligi / aylanasi</TableCell><TableCell>{viewRow.shoulderLength || "-"} / {viewRow.shoulderBreadth || "-"} / {viewRow.shoulderCircumference || "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Qo'l-tirsak / Kaft uzunligi</TableCell><TableCell>{viewRow.armElbowLength || "-"} / {viewRow.handLength || "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Son uzunligi / aylanasi</TableCell><TableCell>{viewRow.thighLength || "-"} / {viewRow.thighCircumference || "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Boldir uzunligi / aylanasi</TableCell><TableCell>{viewRow.calfLength || "-"} / {viewRow.calfCircumference || "-"}</TableCell></TableRow>
-                  <TableRow><TableCell>Oyoq kafti uzunligi</TableCell><TableCell>{viewRow.footLength || "-"}</TableCell></TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CustomModal>
-        )}
       </Container>
+
+      {viewRow && (
+        <CustomModal 
+            title="Tizim Ma'lumoti" onClose={() => setViewRow(null)} 
+            onDownloadDocx={handleDownloadDocx} isDownloading={downloadingDocx}
+            onDownloadPdf={handleDownloadPdf} isPdfDownloading={downloadingPdf}
+            pdfLang={pdfLang} setPdfLang={setPdfLang}
+        >
+          <TableContainer><Table size="small">
+             <TableBody>
+                 <TableRow><TableCell>ID</TableCell><TableCell><strong>{viewRow.idCode}</strong></TableCell></TableRow>
+                 <TableRow><TableCell>Ism Familiya</TableCell><TableCell>{viewRow.lastName} {viewRow.firstName}</TableCell></TableRow>
+                 <TableRow><TableCell>Sana</TableCell><TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell></TableRow>
+                 <TableRow><TableCell>Hudud</TableCell><TableCell>{viewRow.region}, {viewRow.district}</TableCell></TableRow>
+                 <TableRow><TableCell>Vazn / Bo'y</TableCell><TableCell>{viewRow.weight} kg / {viewRow.height} sm</TableCell></TableRow>
+                 <TableRow><TableCell>IBT (BMI)</TableCell><TableCell><strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})</TableCell></TableRow>
+             </TableBody>
+          </Table></TableContainer>
+        </CustomModal>
+      )}
     </Box>
   );
 }

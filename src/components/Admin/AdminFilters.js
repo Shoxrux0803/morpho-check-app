@@ -8,6 +8,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  useTheme,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 
@@ -31,8 +32,27 @@ const AdminFilters = ({
 }) => {
   const regions = Object.keys(UZB_LOCATIONS);
 
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   return (
-    <Card sx={{ mb: 3 }}>
+    <Card 
+      elevation={0}
+      sx={{ 
+        mb: 3, 
+        borderRadius: 4,
+        background: isDark 
+          ? 'rgba(23, 26, 33, 0.7)' 
+          : 'rgba(255, 255, 255, 0.7)',
+        backdropFilter: 'blur(10px)',
+        border: isDark 
+          ? '1px solid rgba(255, 255, 255, 0.08)' 
+          : '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: isDark 
+          ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' 
+          : '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+      }}
+    >
       <CardContent>
         <Grid container spacing={2}>
           <Grid item xs={12} md={3}>

@@ -32,10 +32,12 @@ import {
 } from "@mui/material";
 import { useThemeMode } from "../providers/ThemeProviderMUI";
 import DOFLinesAnimation from "../components/DOFLinesAnimation";
+import { useLanguage } from "../contexts/LanguageContext";
 
 export default function IntroPage() {
   const navigate = useNavigate();
   const { mode } = useThemeMode();
+  const { t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { scrollYProgress } = useScroll();
@@ -79,9 +81,7 @@ export default function IntroPage() {
       fontWeight: "bold",
       textTransform: "none",
       transition: "all 0.3s ease",
-      "&:hover": {
-        transform: "scale(1.05)",
-      },
+      "&:hover": { transform: "scale(1.05)" },
     },
   };
 
@@ -123,7 +123,7 @@ export default function IntroPage() {
                           border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
                         }}
                       >
-                        New Era of Health
+                        {t("newEra")}
                       </Box>
                       <Sparkles size={16} color={theme.palette.primary.main} />
                     </Stack>
@@ -137,9 +137,9 @@ export default function IntroPage() {
                         letterSpacing: "-0.02em",
                       }}
                     >
-                      Smart Analysis for
+                      {t("heroTitle1")}
                       <Box component="span" sx={styles.heroGradient} display="block">
-                        Future Anatomy.
+                        {t("heroTitle2")}
                       </Box>
                     </Typography>
 
@@ -153,9 +153,7 @@ export default function IntroPage() {
                         opacity: 0.9,
                       }}
                     >
-                      MorphoCheck Pro — bu nafaqat tahlil, balki sizning raqamli sog'liq
-                      monitoringingiz. Z-score, somatotip va AI tavsiyalar — hammasi professional
-                      formatda.
+                      {t("heroDesc")}
                     </Typography>
 
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 6 }}>
@@ -172,11 +170,11 @@ export default function IntroPage() {
                         }}
                         startIcon={<Zap size={20} />}
                       >
-                        Tizimga kirish
+                        {t("enterSystem")}
                       </Button>
                       <Button
                         variant="outlined"
-                        href="#about"
+                        onClick={() => navigate("/info")}
                         sx={{
                           ...styles.actionButton,
                           borderColor: alpha(theme.palette.text.primary, 0.2),
@@ -187,15 +185,15 @@ export default function IntroPage() {
                           },
                         }}
                       >
-                        Batafsil ma'lumot
+                        {t("details")}
                       </Button>
                     </Stack>
 
                     {/* Quick Stats */}
                     <Grid container spacing={4}>
                       {[
-                        { icon: Users, label: "Foydalanuvchilar", value: "10,000+" },
-                        { icon: BarChart3, label: "Aniqlik darajasi", value: "99.9%" },
+                        { icon: Users, label: t("users"), value: "10,000+" },
+                        { icon: BarChart3, label: t("accuracy"), value: "99.9%" },
                       ].map((stat, i) => (
                         <Grid item key={i}>
                           <Stack direction="row" spacing={2} alignItems="center">
@@ -250,7 +248,7 @@ export default function IntroPage() {
                           <Stack spacing={3}>
                             <Box sx={{ display: "flex", justifyContent: "space-between" }}>
                               <Typography variant="h5" fontWeight="900">
-                                Live Report
+                                {t("liveReport")}
                               </Typography>
                               <Activity color={theme.palette.primary.main} />
                             </Box>
@@ -298,30 +296,18 @@ export default function IntroPage() {
         <Container maxWidth="lg">
           <Box sx={{ textAlign: "center", mb: 10 }}>
             <Typography variant="h3" fontWeight="900" gutterBottom>
-              Nega aynan MorphoCheck?
+              {t("whyMorpho")}
             </Typography>
             <Typography variant="h6" color="text.secondary" sx={{ opacity: 0.7 }}>
-              Professional tahlil uchun eng ilg'or texnologiyalar jamlanmasi.
+              {t("whyDesc")}
             </Typography>
           </Box>
 
           <Grid container spacing={4}>
             {[
-              {
-                icon: ShieldCheck,
-                title: "Xavfsiz va Ishonchli",
-                desc: "Sizning ma'lumotlaringiz to'liq himoyalangan va xalqaro standartlarga mos tahlil qilinadi.",
-              },
-              {
-                icon: Activity,
-                title: "Dinamik Monitoring",
-                desc: "Har bir o'lchov natijalarini real vaqt rejimida kuzatib boring va o'zgarishlarni tahlil qiling.",
-              },
-              {
-                icon: FileText,
-                title: "Professional Hisobot",
-                desc: "PDF va Excel formatidagi batafsil hisobotlarni bir necha soniya ichida yuklab oling.",
-              },
+              { icon: ShieldCheck, title: t("feat1Title"), desc: t("feat1Desc") },
+              { icon: Activity, title: t("feat2Title"), desc: t("feat2Desc") },
+              { icon: FileText, title: t("feat3Title"), desc: t("feat3Desc") },
             ].map((feature, i) => (
               <Grid item xs={12} md={4} key={i}>
                 <motion.div
@@ -381,12 +367,75 @@ export default function IntroPage() {
                 MorphoCheck Pro
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                © {new Date().getFullYear()} Barcha huquqlar himoyalangan.
+                © {new Date().getFullYear()} {t("footerCopy")}
               </Typography>
             </Box>
-            <Stack direction="row" spacing={4}>
-              <Mail size={20} className="hover:text-primary cursor-pointer transition-colors" />
-              <Phone size={20} className="hover:text-primary cursor-pointer transition-colors" />
+            <Stack direction="row" spacing={4} alignItems="center">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    borderRadius: "12px",
+                    background: alpha(theme.palette.background.paper, 0.5),
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      background: alpha(theme.palette.primary.main, 0.1),
+                      borderColor: theme.palette.primary.main,
+                      boxShadow: `0 0 15px ${alpha(theme.palette.primary.main, 0.2)}`,
+                    },
+                  }}
+                >
+                  <a
+                    href="mailto:shermanov356abduvali@gmail.com"
+                    style={{ display: "flex", alignItems: "center", gap: "10px", color: "inherit", textDecoration: "none" }}
+                  >
+                    <Box sx={{ p: 1, borderRadius: "50%", bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, display: "flex" }}>
+                      <Mail size={18} />
+                    </Box>
+                    <Typography variant="body2" fontWeight="600">
+                      shermanov356abduvali@gmail.com
+                    </Typography>
+                  </a>
+                </Stack>
+              </motion.div>
+
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
+                  sx={{
+                    px: 2,
+                    py: 1,
+                    borderRadius: "12px",
+                    background: alpha(theme.palette.background.paper, 0.5),
+                    border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      background: alpha(theme.palette.secondary.main, 0.1),
+                      borderColor: theme.palette.secondary.main,
+                      boxShadow: `0 0 15px ${alpha(theme.palette.secondary.main, 0.2)}`,
+                    },
+                  }}
+                >
+                  <a
+                    href="tel:+998909699680"
+                    style={{ display: "flex", alignItems: "center", gap: "10px", color: "inherit", textDecoration: "none" }}
+                  >
+                    <Box sx={{ p: 1, borderRadius: "50%", bgcolor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main, display: "flex" }}>
+                      <Phone size={18} />
+                    </Box>
+                    <Typography variant="body2" fontWeight="600">
+                      +998 90 969 96 80
+                    </Typography>
+                  </a>
+                </Stack>
+              </motion.div>
             </Stack>
           </Stack>
         </Container>

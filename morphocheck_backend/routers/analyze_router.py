@@ -1,5 +1,5 @@
 # morphocheck_backend/routers/analyze_router.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional, Tuple
@@ -8,13 +8,8 @@ import datetime
 import os
 import logging
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import inch
+from services.pdf_services import generate_pdf_report as generate_pdf_file
 
 from sqlalchemy.orm import Session
 
@@ -32,7 +27,9 @@ except ImportError:
         finally:
             db.close()
 
-from models.userdata import UserAnalysis
+from models.userdata import PatientAnalysis
+from models.user import User
+from routers.auth_router import get_current_admin
 from services.indices_service import calculate_detailed_indices
 
 router = APIRouter(tags=["Tahlil"])
@@ -141,6 +138,7 @@ class PatientData(BaseModel):
     calf_length: float = Field(0.0, alias="calfLength")
     calf_circumference: float = Field(0.0, alias="calfCircumference")
     foot_length: float = Field(0.0, alias="footLength")
+    body_length: Optional[float] = Field(None, alias="bodyLength")
     
     id_code: Optional[str] = Field(None, alias="idCode")
     
@@ -218,7 +216,7 @@ def generate_region_based_id(db: Session, region: str) -> str:
                 
     if not prefix:
         # Agar xaritada bo'lmasa, birinchi 3 ta harfni olamiz
-        from services.docx_services import lat2cyr
+        from utils.translit import lat2cyr
         # Hammasini lotinga o'girib keyin prefix olish xavfsizroq bo'lishi mumkin, 
         # lekin hozircha oddiyroq yo'l:
         clean_name = "".join(filter(str.isalnum, region_norm))
@@ -230,49 +228,26 @@ def generate_region_based_id(db: Session, region: str) -> str:
     # Mavjud yozuvlar sonini hisoblash (prefix bo'yicha emas, aynan shu region bo'yicha)
     # Normallashtirilgan qidiruv: region nomi prefix bilan bog'liq bo'lgan barcha yozuvlarni sanaydi
     # Yoki shunchaki barcha Prefix-ID larni sanash (Prefix-XXXXX)
-    count = db.query(UserAnalysis).filter(UserAnalysis.id_code.like(f"{prefix}-%")).count()
+    # counts based on Prefix-ID
+    count = db.query(PatientAnalysis).filter(PatientAnalysis.id_code.like(f"{prefix}-%")).count()
     
     return f"{prefix}-{count + 1:05d}"
 
 
 
-def calculate_bmi(data: PatientData) -> Dict[str, Any]:
+def calculate_bmi(data: PatientData, lang: str = "uz") -> dict:
+    """Хисоблашлар ва диагноз (Z-score билан)."""
+    age = int(data.age)
+    gender = (data.gender or "").lower()
     height = float(data.height)
     weight = float(data.weight)
-    gender = (data.gender or "").strip().lower()
-    age = int(data.age)
-
+    
     h2 = (height / 100.0) ** 2
     if h2 <= 0:
-        raise ValueError("Bo'y qiymati noto‘g‘ri.")
+        raise ValueError("Некорректное значение роста.")
     bmi = round(weight / h2, 1)
 
-    bmi_rng = get_bmi_range_by_age_and_gender(age, gender)
-    ideal_weight = get_ideal_weight_by_age_and_gender(age, height, gender)
-    min_w = round(bmi_rng["min"] * h2, 1)
-    max_w = round(bmi_rng["max"] * h2, 1)
-
-    weight_diff = round(weight - ideal_weight, 1)
-    z_score = round((weight - ideal_weight) / 10, 2)  # soddalashtirilgan σ
-
-    if bmi < 18.5:
-        somatotype = "Эктоморф"
-        bmi_category = "Кам вазн"
-    elif 18.5 <= bmi < 25:
-        somatotype = "Мезоморф"
-        bmi_category = "Меъёр"
-    elif 25 <= bmi < 30:
-        somatotype = "Эндоморф"
-        bmi_category = "Ортиқча вазн"
-    else:
-        somatotype = "Эндоморф"
-        bmi_category = "Семизлик"
-        
-    # Yangi parametrlar bo'yicha proporsiya kalkulyatsiyasi
-    shoulder_ratio = round((float(data.shoulder_breadth) / height) * 100, 1) if data.shoulder_breadth else 0
-    thigh_ratio = round((float(data.thigh_circumference) / height) * 100, 1) if data.thigh_circumference else 0
-
-    # HMAI, MII, ADI hisoblash
+    # Используем улучшенные расчеты из indices_service
     manual_bio = {
         "total_body_water": data.total_body_water,
         "fat_percent": data.fat_percent,
@@ -280,20 +255,41 @@ def calculate_bmi(data: PatientData) -> Dict[str, Any]:
         "muscle_mass": data.muscle_mass,
         "bone_mass": data.bone_mass,
         "acm": data.acm,
-        "visceral_fat": data.visceral_fat
+        "visceral_fat": data.visceral_fat,
+        "body_length": data.body_length
     }
-    detailed = calculate_detailed_indices(age, gender, height, weight, bmi, manual_bio)
+    
+    detailed = calculate_detailed_indices(age, gender, height, weight, bmi, manual_bio, lang=lang)
+    
+    # Категория ИМТ на основе Z-score (для детей) или стандартов ВОЗ (для взрослых)
+    z_bmi = detailed.get("z_bmi", 0)
+    if age < 19:
+        if z_bmi < -2: bmi_category = _get_bmi_cat("v_low", lang)
+        elif z_bmi < -1: bmi_category = _get_bmi_cat("low", lang)
+        elif z_bmi <= 1: bmi_category = _get_bmi_cat("normal", lang)
+        elif z_bmi <= 2: bmi_category = _get_bmi_cat("overweight", lang)
+        else: bmi_category = _get_bmi_cat("obese", lang)
+    else:
+        if bmi < 18.5: bmi_category = _get_bmi_cat("low", lang)
+        elif bmi < 25: bmi_category = _get_bmi_cat("normal", lang)
+        elif bmi < 30: bmi_category = _get_bmi_cat("overweight", lang)
+        else: bmi_category = _get_bmi_cat("obese", lang)
+
+    ideal_weight = get_ideal_weight_by_age_and_gender(age, height, gender)
+    bmi_rng = get_bmi_range_by_age_and_gender(age, gender)
+    min_w = round(bmi_rng["min"] * h2, 1)
+    max_w = round(bmi_rng["max"] * h2, 1)
 
     return {
         "bmi": bmi,
         "ideal_weight": ideal_weight,
         "ideal_weight_range": {"min": min_w, "max": max_w},
-        "weight_diff": weight_diff,
-        "z_score": z_score,
-        "somatotype": somatotype,
+        "weight_diff": round(weight - ideal_weight, 1),
+        "z_score": z_bmi,
+        "somatotype": detailed.get("morphological_type", "normostenik"),
         "bmi_category": bmi_category,
-        "shoulder_ratio": shoulder_ratio,
-        "thigh_ratio": thigh_ratio,
+        "shoulder_ratio": round((float(data.shoulder_breadth or 0) / height) * 100, 1) if height > 0 else 0,
+        "thigh_ratio": round((float(data.thigh_circumference or 0) / height) * 100, 1) if height > 0 else 0,
         "indices": detailed
     }
 
@@ -313,83 +309,233 @@ def _split_region_and_district(region: Optional[str], district: Optional[str]) -
     return (region or None), district
 
 
-def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, bio_data: dict = None) -> Dict[str, str]:
+# ─────────────────────────────────────────────
+# BMI Kategoriyalar Lug'ati
+# ─────────────────────────────────────────────
+_BMI_CAT_I18N = {
+    "v_low": {
+        "uz": "Vazn yetishmovchiligi (yaqqol)",
+        "ru": "Выраженный дефицит массы",
+        "en": "Severe underweight",
+        "kz": "Айқын салмақ тапшылығы",
+    },
+    "low": {
+        "uz": "Vazn yetishmovchiligi",
+        "ru": "Недостаточная масса тела",
+        "en": "Underweight",
+        "kz": "Салмақ тапшылығы",
+    },
+    "normal": {
+        "uz": "Me'yor",
+        "ru": "Норма",
+        "en": "Normal",
+        "kz": "Қалыпты",
+    },
+    "overweight": {
+        "uz": "Ortiqcha vazn",
+        "ru": "Избыточная масса тела",
+        "en": "Overweight",
+        "kz": "Артық салмақ",
+    },
+    "obese": {
+        "uz": "Semizlik",
+        "ru": "Ожирение",
+        "en": "Obesity",
+    }
+}
+
+BMI_CATEGORIES = _BMI_CAT_I18N
+
+def _get_bmi_cat(key: str, lang: str) -> str:
+    return _BMI_CAT_I18N.get(key, {}).get(lang, _BMI_CAT_I18N.get(key, {}).get("uz", key))
+
+
+# ─────────────────────────────────────────────
+# Ko'p tilli maslahat lug'ati (generate_advices)
+# ─────────────────────────────────────────────
+_ADVICE_I18N = {
+    "default_general": {
+        "uz": "Sog'lom turmush tarzini davom ettiring.",
+        "ru": "Продолжайте вести здоровый образ жизни.",
+        "en": "Continue to maintain a healthy lifestyle.",
+        "kz": "Салауатты өмір салтын жалғастырыңыз.",
+    },
+    "default_specialist": {
+        "uz": "Doimiy nazorat zarur emas.",
+        "ru": "Постоянное наблюдение не требуется.",
+        "en": "Constant medical supervision is not required.",
+        "kz": "Тұрақты бақылау қажет емес.",
+    },
+    "default_nutrition": {
+        "uz": "Balanslangan ovqatlanish tartibiga rioya qiling.",
+        "ru": "Соблюдайте сбалансированный режим питания.",
+        "en": "Follow a balanced nutrition regimen.",
+        "kz": "Теңдестірілген тамақтану режиміне сүйеніңіз.",
+    },
+    "default_activity": {
+        "uz": "Kunlik jismoniy faollikni saqlab turing.",
+        "ru": "Поддерживайте ежедневную физическую активность.",
+        "en": "Maintain daily physical activity.",
+        "kz": "Күнделікті дене белсенділігін сақтаңыз.",
+    },
+    "default_checkups": {
+        "uz": "Yiliga 1 marta profilaktik tekshiruvdan o'ting.",
+        "ru": "Проходите профилактическое обследование 1 раз в год.",
+        "en": "Undergo a preventive medical check-up once a year.",
+        "kz": "Жылына 1 рет алдын алу тексерісінен өтіңіз.",
+    },
+    "low_bmi_general": {
+        "uz": "Tana vazni yetarli emas (Kam vazn). Diqqat qiling.",
+        "ru": "Масса тела недостаточна (дефицит веса). Обратите внимание.",
+        "en": "Body weight is insufficient (underweight). Please pay attention.",
+        "kz": "Дене салмағы жеткіліксіз (салмақ тапшылығы). Назар аударыңыз.",
+    },
+    "low_bmi_specialist": {
+        "uz": "Pediatr yoki parhezshunos (dietolog) ko'rigi tavsiya etiladi.",
+        "ru": "Рекомендуется консультация педиатра или диетолога.",
+        "en": "A consultation with a pediatrician or dietitian is recommended.",
+        "kz": "Педиатр немесе диетолог кеңесі ұсынылады.",
+    },
+    "low_bmi_nutrition": {
+        "uz": "Energetik qiymati yuqori, oqsil va sog'lom yog'larga boy taomlarni ko'paytiring.",
+        "ru": "Увеличьте потребление высококалорийной пищи, богатой белком и полезными жирами.",
+        "en": "Increase consumption of high-calorie foods rich in protein and healthy fats.",
+        "kz": "Энергетикалық мәні жоғары, ақуыз бен пайдалы майларға бай тамақтарды көбейтіңіз.",
+    },
+    "low_bmi_activity": {
+        "uz": "Yoshga mos ravishda mushak massasini oshiruvchi yengil mashqlar.",
+        "ru": "Лёгкие упражнения для увеличения мышечной массы, соответствующие возрасту.",
+        "en": "Light exercises to increase muscle mass appropriate for the age.",
+        "kz": "Жасқа сәйкес бұлшық ет массасын арттыратын жеңіл жаттығулар.",
+    },
+    "low_bmi_checkups": {
+        "uz": "Har 6 oyda tahlillar topshirib turish tavsiya etiladi.",
+        "ru": "Рекомендуется сдавать анализы каждые 6 месяцев.",
+        "en": "It is recommended to undergo laboratory tests every 6 months.",
+        "kz": "Әр 6 айда сынақтар тапсыру ұсынылады.",
+    },
+    "high_bmi_general": {
+        "uz": "Ortiqcha vazn aniqlandi. Bu kelajakda salomatlikka salbiy ta'sir qilishi mumkin.",
+        "ru": "Выявлен избыточный вес. В будущем это может негативно сказаться на здоровье.",
+        "en": "Excess weight was identified. This may negatively affect health in the future.",
+        "kz": "Артық салмақ анықталды. Бұл болашақта денсаулыққа кері әсер етуі мүмкін.",
+    },
+    "high_bmi_specialist": {
+        "uz": "Endokrinolog va parhezshunos ko'rigidan o'tish maqsadga muvofiq.",
+        "ru": "Целесообразно пройти консультацию эндокринолога и диетолога.",
+        "en": "It is advisable to consult an endocrinologist and dietitian.",
+        "kz": "Эндокринолог пен диетолог кеңесінен өту мақсатқа сай.",
+    },
+    "high_bmi_nutrition": {
+        "uz": "Past kaloriyali, kletchatka (sabzavotlar)ga boy ratsionga o'ting, shirinliklarni cheklang.",
+        "ru": "Перейдите на низкокалорийный рацион, богатый клетчаткой (овощи), ограничьте сладкое.",
+        "en": "Switch to a low-calorie diet rich in fiber (vegetables), limit sweets.",
+        "kz": "Талшыққа (көкөністер) бай, аз калориялы рационға көшіңіз, тәттілерді шектеңіз.",
+    },
+    "high_bmi_activity": {
+        "uz": "Kundalik 40-60 daqiqa faol harakat (yugurish, suzish, sport o'yinlari) zarur.",
+        "ru": "Необходимо 40–60 минут активного движения в день (бег, плавание, спортивные игры).",
+        "en": "40–60 minutes of active movement per day is necessary (running, swimming, sports games).",
+        "kz": "Күнделікті 40-60 минут белсенді қозғалыс (жүгіру, жүзу, спорт ойындары) қажет.",
+    },
+    "high_bmi_checkups": {
+        "uz": "Har 3-6 oyda vazn va metabolik ko'rsatkichlarni tekshirib turing.",
+        "ru": "Контролируйте вес и метаболические показатели каждые 3–6 месяцев.",
+        "en": "Monitor weight and metabolic indicators every 3–6 months.",
+        "kz": "Салмақ пен метаболикалық көрсеткіштерді 3-6 айда бір тексеріп тұрыңыз.",
+    },
+}
+
+
+def _ai(key: str, lang: str) -> str:
+    """Maslahat lug'atidan matnni oladi."""
+    d = _ADVICE_I18N.get(key, {})
+    return d.get(lang) or d.get("uz") or key
+
+
+# Kalit so'zlar til bo'yicha (bio_data advice larini guruhlash uchun)
+_KW = {
+    "nutrition": {
+        "uz": ["shirinlik", "ovqat", "suv", "oqsil", "ratsion", "iste'mol", "parhez", "yog'", "vitamin", "kalori", "sabzavot", "meva", "taom"],
+        "ru": ["сладк", "питани", "вод", "белок", "рацион", "потребл", "диет", "жир", "витамин", "калори", "овощ", "фрукт", "пищ"],
+        "en": ["sweet", "food", "water", "protein", "diet", "consum", "fat", "vitamin", "calori", "vegetabl", "fruit", "nutri"],
+        "kz": ["тәтті", "тамақ", "су", "ақуыз", "рацион", "тұтын", "парhez", "май", "дәрумен", "калори", "көкөніс", "жеміс"],
+    },
+    "specialist": {
+        "uz": ["pediatr", "endokrinolog", "mutaxassis", "ko'rig", "maslahat", "shifokor", "dоktor"],
+        "ru": ["педиатр", "эндокринолог", "специалист", "консультац", "врач", "доктор"],
+        "en": ["pediatr", "endocrinolog", "specialist", "consult", "doctor", "physician"],
+        "kz": ["педиатр", "эндокринолог", "маман", "кеңес", "дәрігер"],
+    },
+    "activity": {
+        "uz": ["mashq", "sport", "faollik", "harakat", "badantarbiya", "jismoniy", "yugurish", "suzish", "gimnastika"],
+        "ru": ["упражнен", "спорт", "активност", "движен", "физическ", "бег", "плавани", "гимнастик"],
+        "en": ["exercise", "sport", "activit", "movement", "physical", "running", "swimming", "gymnastic"],
+        "kz": ["жаттығу", "спорт", "белсенді", "қозғалыс", "дене", "жүгіру", "жүзу"],
+    },
+    "checkups": {
+        "uz": ["tahlil", "tekshiruv", "nazorat"],
+        "ru": ["анализ", "обследован", "контрол", "мониторинг"],
+        "en": ["test", "check", "monitor", "examination", "lab"],
+        "kz": ["талдау", "тексеру", "бақылау"],
+    },
+}
+
+
+def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, bio_data: dict = None, lang: str = "uz") -> Dict[str, str]:
     bmi_range = get_bmi_range_by_age_and_gender(age, gender)
 
     res = {
-        "general": "Sog'lom turmush tarzini davom ettiring.",
-        "specialist": "Doimiy nazorat zarur emas.",
-        "nutrition": "Balanslangan ovqatlanish tartibiga rioya qiling.",
-        "activity": "Kunlik jismoniy faollikni saqlab turing.",
-        "checkups": "Yiliga 1 marta profilaktik tekshiruvdan o'ting."
+        "general":    _ai("default_general",    lang),
+        "specialist": _ai("default_specialist",  lang),
+        "nutrition":  _ai("default_nutrition",   lang),
+        "activity":   _ai("default_activity",    lang),
+        "checkups":   _ai("default_checkups",    lang),
     }
 
     # 1. BMI based advice
     if bmi < bmi_range["min"]:
-        res["general"] = "Tana vazni yetarli emas (Kam vazn). Diqqat qiling."
-        res["specialist"] = "Pediatr yoki parhezshunos (dietolog) ko'rigi tavsiya etiladi."
-        res["nutrition"] = "Energetik qiymati yuqori, oqsil va sog'lom yog'larga boy taomlarni ko'paytiring."
-        res["activity"] = "Yoshga mos ravishda mushak massasini oshiruvchi yengil mashqlar."
-        res["checkups"] = "Har 6 oyda tahlillar topshirib turish tavsiya etiladi."
+        res["general"]    = _ai("low_bmi_general",    lang)
+        res["specialist"] = _ai("low_bmi_specialist", lang)
+        res["nutrition"]  = _ai("low_bmi_nutrition",  lang)
+        res["activity"]   = _ai("low_bmi_activity",   lang)
+        res["checkups"]   = _ai("low_bmi_checkups",   lang)
     elif bmi > bmi_range["max"]:
-        res["general"] = "Ortiqcha vazn aniqlandi. Bu kelajakda salomatlikka salbiy ta'sir qilishi mumkin."
-        res["specialist"] = "Endokrinolog va parhezshunos ko'rigidan o'tish maqsadga muvofiq."
-        res["nutrition"] = "Past kaloriyali, kletchatka (sabzavotlar)ga boy ratsionga o'ting, shirinliklarni cheklang."
-        res["activity"] = "Kundalik 40-60 daqiqa faol harakat (yugurish, suzish, sport o'yinlari) zarur."
-        res["checkups"] = "Har 3-6 oyda vazn va metabolik ko'rsatkichlarni tekshirib turing."
+        res["general"]    = _ai("high_bmi_general",    lang)
+        res["specialist"] = _ai("high_bmi_specialist", lang)
+        res["nutrition"]  = _ai("high_bmi_nutrition",  lang)
+        res["activity"]   = _ai("high_bmi_activity",   lang)
+        res["checkups"]   = _ai("high_bmi_checkups",   lang)
 
     # 2. Bioimpedance and Indices based advice (from bio_data)
     if bio_data:
-        # Get pre-calculated advice list from indices_service
         raw_advices = bio_data.get("advice", [])
-        
-        # Mapping rules based on keywords to categorize raw advices
+        kw_lang = _KW  # tildagi kalit so'zlar
+        defv = {
+            "general":    _ai("default_general",   lang),
+            "specialist": _ai("default_specialist", lang),
+            "nutrition":  _ai("default_nutrition",  lang),
+            "activity":   _ai("default_activity",   lang),
+            "checkups":   _ai("default_checkups",   lang),
+        }
+
         for adv in raw_advices:
             adv_l = adv.lower()
-            if any(k in adv_l for k in ["shirinlik", "ovqat", "suv", "oqsil", "ratsion", "iste'mol", "parhez"]):
-                if res["nutrition"] == "Balanslangan ovqatlanish tartibiga rioya qiling.":
-                    res["nutrition"] = adv
-                else:
-                    res["nutrition"] += " " + adv
-            elif any(k in adv_l for k in ["pediatr", "endokrinolog", "mutaxassis", "ko'rig", "maslahat"]):
-                if res["specialist"] == "Doimiy nazorat zarur emas.":
-                    res["specialist"] = adv
-                else:
-                    res["specialist"] += " " + adv
-            elif any(k in adv_l for k in ["mashq", "sport", "faollik", "harakat", "badantarbiya"]):
-                if res["activity"] == "Kunlik jismoniy faollikni saqlab turing.":
-                    res["activity"] = adv
-                else:
-                    res["activity"] += " " + adv
-            elif any(k in adv_l for k in ["tahlil", "tekshiruv", "nazorat", "vitamin"]):
-                if res["checkups"] == "Yiliga 1 marta profilaktik tekshiruvdan o'ting.":
-                    res["checkups"] = adv
-                else:
-                    res["checkups"] += " " + adv
-            else:
-                if res["general"] == "Sog'lom turmush tarzini davom ettiring.":
+            assigned = False
+            for cat in ["nutrition", "specialist", "activity", "checkups"]:
+                kws = kw_lang[cat].get(lang, kw_lang[cat]["uz"])
+                if any(k in adv_l for k in kws):
+                    if res[cat] == defv[cat]:
+                        res[cat] = adv
+                    else:
+                        res[cat] += " " + adv
+                    assigned = True
+                    break
+            if not assigned:
+                if res["general"] == defv["general"]:
                     res["general"] = adv
                 else:
                     res["general"] += " " + adv
-
-        # Extra specific checks to ensure high quality coverage
-        # ADI (Disharmony) reinforcement
-        adi = bio_data.get("adi", 0)
-        if adi > 2.0:
-            if "disgarmoniya" not in res["general"].lower():
-                res["general"] += " Rivojlanishda disgarmoniya kuzatilmoqda, mutaxassis nazorati muhim."
-        
-        # MII (Integration) reinforcement
-        mii = bio_data.get("mii", 0)
-        if mii < 1.5:
-            if "disbalans" not in res["activity"].lower():
-                res["activity"] += " Tana tuzilishidagi disbalansni to'g'rilash uchun maxsus mashqlar tavsiya etiladi."
-
-        # Visceral fat reinforcement
-        v_fat = bio_data.get("visceral_fat", 0)
-        if v_fat > 4:
-            if "visseral" not in res["nutrition"].lower():
-                res["nutrition"] += " Ichki yog' miqdorini kamaytirish uchun sog'lom parhezga o'ting."
 
     return res
 
@@ -401,13 +547,18 @@ def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, bio_
 # ---------------------------
 
 @router.post("/", tags=["Tahlil"])
-def analyze_and_store_raw(data: Dict[str, Any], db: Session = Depends(get_db)):
+def analyze_and_store_raw(
+    data: Dict[str, Any], 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
     """
-    Oddiy saqlash: kelgan 'data' ni to'g'ridan-to'g'ri UserAnalysis ga yozadi.
+    Oddiy saqlash: kelgan 'data' ni to'g'ridan-to'g'ri PatientAnalysis ga yozadi.
     (Kalit nomlari model bilan 1:1 mos bo'lishi shart.)
     """
     try:
-        rec = UserAnalysis(**data)
+        rec = PatientAnalysis(**data)
+        rec.created_by_id = current_user.id
         db.add(rec)
         db.commit()
         db.refresh(rec)
@@ -418,7 +569,12 @@ def analyze_and_store_raw(data: Dict[str, Any], db: Session = Depends(get_db)):
 
 
 @router.post("/full", response_model=Dict[str, Any], tags=["Tahlil"])
-def analyze_full(data: PatientData, db: Session = Depends(get_db)):
+def analyze_full(
+    data: PatientData, 
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"), 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
     """
     To'liq tahlil: hisob-kitob + maslahatlar + DBga saqlash.
     Frontend hozir aynan shu endpointga urmoqda.
@@ -426,20 +582,21 @@ def analyze_full(data: PatientData, db: Session = Depends(get_db)):
     try:
         # 1) Tahlil
         gender_norm = (data.gender or "").strip().lower()
-        analysis = calculate_bmi(data)
+        analysis = calculate_bmi(data, lang=lang)
         advices  = generate_advices(
-            analysis["bmi"], 
-            analysis["weight_diff"], 
-            int(data.age), 
+            analysis["bmi"],
+            analysis["weight_diff"],
+            int(data.age),
             gender_norm,
-            bio_data=analysis["indices"]
+            bio_data=analysis["indices"],
+            lang=lang
         )
         clean_region, clean_district = _split_region_and_district(data.region, getattr(data, "district", None))
 
         # 2) DBga saqlash
         id_code = generate_region_based_id(db, clean_region)
         full_name = f"{data.first_name} {data.last_name}".strip()
-        rec = UserAnalysis(
+        rec = PatientAnalysis(
             name=full_name,
             id_code=id_code,
             region=clean_region,
@@ -469,6 +626,7 @@ def analyze_full(data: PatientData, db: Session = Depends(get_db)):
             calf_length=data.calf_length,
             calf_circumference=data.calf_circumference,
             foot_length=data.foot_length,
+            body_length=data.body_length,
             
             bmi=float(analysis["bmi"]),
             z_score=float(analysis["z_score"]),
@@ -482,14 +640,15 @@ def analyze_full(data: PatientData, db: Session = Depends(get_db)):
             bone_mass=data.bone_mass,
             acm=data.acm,
             visceral_fat=data.visceral_fat,
-
+            
             recommendations=(
                 f"General: {advices.get('general', '')}; "
                 f"Nutrition: {advices.get('nutrition', '')}; "
                 f"Activity: {advices.get('activity', '')}; "
                 f"Specialist: {advices.get('specialist', '')}; "
                 f"Checkups: {advices.get('checkups', '')}"
-            )
+            ),
+            created_by_id=current_user.id
         )
         db.add(rec)
         db.commit()
@@ -527,142 +686,156 @@ def analyze_full(data: PatientData, db: Session = Depends(get_db)):
 
 
 @router.post("/pdf-report", tags=["PDF Hisobot"])
-def generate_pdf_report(data: PatientData):
+def generate_pdf_report_endpoint(data: PatientData, lang: str = Query(default="uz", description="Til: uz, ru, en, kz")):
     """
-    Kiritilgan ma'lumotlardan PDF hisobot generatsiyasi (download).
+    Generatsiya PDF otchyota na osnove vvedyonnykh dannykh.
+    lang parametri orqali til tanlash mumkin: uz, ru, en, kz
     """
     try:
-        # Hisob-kitoblar
-        gender_norm = (data.gender or "").strip().lower()
         analysis = calculate_bmi(data)
-        advices  = generate_advices(
-            analysis["bmi"], 
-            analysis["weight_diff"], 
-            int(data.age), 
-            gender_norm,
-            bio_data=analysis["indices"]
+        full_report_data = data.dict(by_alias=True)
+        full_report_data["analysis"] = analysis
+        pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
+
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=morphocheck_{data.first_name}_{lang}.pdf"
+            }
         )
-
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(
-            buffer,
-            pagesize=A4,
-            rightMargin=30, leftMargin=30,
-            topMargin=30, bottomMargin=30
-        )
-
-        font_name = setup_font()
-
-        styles = getSampleStyleSheet()
-        styles['Normal'].fontName = font_name
-        styles['Heading2'].fontName = font_name
-
-        elements = []
-
-        title_style = ParagraphStyle(
-            'Title',
-            parent=styles['Title'],
-            fontSize=18,
-            alignment=1,
-            spaceAfter=20,
-            fontName=font_name,
-            textColor=colors.HexColor("#2c3e50")
-        )
-        elements.append(Paragraph("MorphoCheck Pro Tahlil Hisoboti", title_style))
-
-        elements.append(Paragraph(f"<b>Ism:</b> {data.first_name} {data.last_name}", styles['Normal']))
-        elements.append(Paragraph(f"<b>Yosh:</b> {data.age}", styles['Normal']))
-        elements.append(Paragraph(f"<b>Jins:</b> {gender_norm}", styles['Normal']))
-        if getattr(data, "birth_date", None):
-            elements.append(Paragraph(f"<b>Tug'ilgan sanasi:</b> {data.birth_date}", styles['Normal']))
-        if getattr(data, "examination_date", None):
-            elements.append(Paragraph(f"<b>Tekshiruv sanasi:</b> {data.examination_date}", styles['Normal']))
-        if getattr(data, "preschool_institution", None):
-            elements.append(Paragraph(f"<b>Maktab/MTM:</b> {data.preschool_institution}", styles['Normal']))
-        elements.append(Paragraph(f"<b>Viloyat:</b> {data.region}", styles['Normal']))
-        if getattr(data, "district", None):
-            elements.append(Paragraph(f"<b>Tuman:</b> {data.district}", styles['Normal']))
-        elements.append(Paragraph(f"<b>Manzil:</b> {data.address}", styles['Normal']))
-        elements.append(Spacer(1, 20))
-
-        measurements = [
-            ["Parametr", "Qiymat"],
-            ["Bo'y", f"{data.height} sm"],
-            ["Vazn", f"{data.weight} kg"],
-            ["Ko'krak aylanasi", f"{data.chest} sm"],
-            ["Bosh aylanasi", f"{data.head} sm"]
-        ]
-        
-        extra_fields = [
-            ("Yelka uzunligi", "shoulder_length"),
-            ("Yelka kengligi", "shoulder_breadth"),
-            ("Yelka aylanasi", "shoulder_circumference"),
-            ("Bilak/tirsak uzunligi", "arm_elbow_length"),
-            ("Qo'l panja uzunligi", "hand_length"),
-            ("Son uzunligi", "thigh_length"),
-            ("Son aylanasi", "thigh_circumference"),
-            ("Boldir uzunligi", "calf_length"),
-            ("Boldir aylanasi", "calf_circumference"),
-            ("Oyoq panja uzunligi", "foot_length"),
-        ]
-        
-        for label, attr in extra_fields:
-            val = getattr(data, attr, None)
-            if val is not None:
-                measurements.append([label, f"{val} sm"])
-                
-        table = Table(measurements, colWidths=[3 * inch, 3 * inch])
-        table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#3498db")),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), font_name),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#f8f9fa")),
-            ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
-        ]))
-        elements.append(table)
-        elements.append(Spacer(1, 20))
-
-        analysis_results = [
-            ["Ko'rsatkich", "Qiymat", "Sharh"],
-            ["BMI", f"{analysis['bmi']}", analysis['bmi_category']],
-            ["Somatotip", analysis['somatotype'], ""],
-            ["Ideal vazn", f"{analysis['ideal_weight']} kg", ""],
-            ["Farq", f"{analysis['weight_diff']} kg", ""]
-        ]
-        table2 = Table(analysis_results, colWidths=[2.5 * inch, 1.5 * inch, 2 * inch])
-        table2.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2ecc71")),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), font_name),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#e8f5e9")),
-            ('GRID', (0, 0), (-1, -1), 1, colors.lightgrey),
-        ]))
-        elements.append(table2)
-        elements.append(Spacer(1, 20))
-
-        elements.append(Paragraph("<b>Shaxsiy Maslahatlar:</b>", styles['Heading2']))
-        for key, advice_text in advices.items():
-            elements.append(Paragraph(f"<b>{key.capitalize()}:</b> {advice_text}", styles['Normal']))
-            elements.append(Spacer(1, 10))
-
-        date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-        elements.append(Spacer(1, 20))
-        elements.append(Paragraph(f"Hisobot sanasi: {date_str}", styles['Normal']))
-        elements.append(Spacer(1, 20))
-        elements.append(Paragraph("_________________________", styles['Normal']))
-        elements.append(Paragraph("Shifokor imzosi", styles['Normal']))
-
-        doc.build(elements)
-
-        buffer.seek(0)
-        return StreamingResponse(buffer, media_type="application/pdf", headers={
-            "Content-Disposition": "attachment; filename=morphocheck_report.pdf"
-        })
-
-    except FileNotFoundError:
-        raise HTTPException(status_code=500, detail="Shrift fayli topilmadi")
     except Exception as e:
         logger.error(f"PDF yaratishda xatolik: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"PDF yaratishda xatolik: {str(e)}")
+
+
+@router.get("/pdf-by-id/{patient_id}", tags=["PDF Hisobot"])
+def generate_pdf_by_patient_id(
+    patient_id: int,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin panel uchun: DB dagi bemor ID si bo'yicha PDF hisobotini qaytaradi.
+    """
+    rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+
+    try:
+        # Ma'lumotlarni olish
+        name_parts = (rec.name or "").split(" ", 1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+        # BMI hisoblash uchun mini-data
+        from pydantic import BaseModel as BM
+        class _Mini(BM):
+            age: int = 0
+            gender: str = ""
+            height: float = 0.0
+            weight: float = 0.0
+            chest: float = 0.0
+            waist: float = 0.0
+            head: float = 0.0
+            shoulder_length: float = 0.0
+            shoulder_breadth: float = 0.0
+            shoulder_circumference: float = 0.0
+            arm_elbow_length: float = 0.0
+            hand_length: float = 0.0
+            thigh_length: float = 0.0
+            thigh_circumference: float = 0.0
+            calf_length: float = 0.0
+            calf_circumference: float = 0.0
+            foot_length: float = 0.0
+            body_length: float = None
+            total_body_water: float = None
+            fat_percent: float = None
+            fat_mass: float = None
+            muscle_mass: float = None
+            bone_mass: float = None
+            acm: float = None
+            visceral_fat: float = None
+
+        mini = _Mini(
+            age=rec.age or 0,
+            gender=rec.gender or "",
+            height=rec.height or 0,
+            weight=rec.weight or 0,
+            chest=rec.chest or 0,
+            waist=rec.waist or 0,
+            head=rec.head or 0,
+            shoulder_length=rec.shoulder_length or 0,
+            shoulder_breadth=rec.shoulder_breadth or 0,
+            shoulder_circumference=rec.shoulder_circumference or 0,
+            arm_elbow_length=rec.arm_elbow_length or 0,
+            hand_length=rec.hand_length or 0,
+            thigh_length=rec.thigh_length or 0,
+            thigh_circumference=rec.thigh_circumference or 0,
+            calf_length=rec.calf_length or 0,
+            calf_circumference=rec.calf_circumference or 0,
+            foot_length=rec.foot_length or 0,
+            body_length=rec.body_length,
+            total_body_water=rec.total_body_water,
+            fat_percent=rec.fat_percent,
+            fat_mass=rec.fat_mass,
+            muscle_mass=rec.muscle_mass,
+            bone_mass=rec.bone_mass,
+            acm=rec.acm,
+            visceral_fat=rec.visceral_fat,
+        )
+
+        from services.indices_service import calculate_detailed_indices
+        h2 = (mini.height / 100.0) ** 2 if mini.height > 0 else 1
+        bmi_val = round(mini.weight / h2, 1) if h2 > 0 else 0
+        manual_bio = {"body_length": mini.body_length, "total_body_water": mini.total_body_water,
+                      "fat_percent": mini.fat_percent, "fat_mass": mini.fat_mass,
+                      "muscle_mass": mini.muscle_mass, "bone_mass": mini.bone_mass,
+                      "acm": mini.acm, "visceral_fat": mini.visceral_fat}
+        detailed = calculate_detailed_indices(mini.age, mini.gender, mini.height, mini.weight, bmi_val, manual_bio)
+
+        ideal_range = get_bmi_range_by_age_and_gender(mini.age, mini.gender)
+        min_w = round(ideal_range["min"] * h2, 1)
+        max_w = round(ideal_range["max"] * h2, 1)
+        ideal_w = get_ideal_weight_by_age_and_gender(mini.age, mini.height, mini.gender)
+
+        analysis = {
+            "bmi": bmi_val,
+            "bmi_category": rec.somatotype or "",
+            "somatotype": detailed.get("morphological_type", rec.somatotype or ""),
+            "ideal_weight": ideal_w,
+            "ideal_weight_range": {"min": min_w, "max": max_w},
+            "weight_diff": round(mini.weight - ideal_w, 1),
+            "z_score": rec.z_score or 0,
+            "shoulder_ratio": round((mini.shoulder_breadth / mini.height) * 100, 1) if mini.height > 0 and mini.shoulder_breadth else 0,
+            "thigh_ratio": round((mini.thigh_circumference / mini.height) * 100, 1) if mini.height > 0 and mini.thigh_circumference else 0,
+            "indices": detailed,
+        }
+
+        report_data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "age": rec.age or 0,
+            "age_months": rec.age_months or 0,
+            "age_days": rec.age_days or 0,
+            "gender": rec.gender or "",
+            "birth_date": rec.birth_date or "",
+            "examination_date": rec.examination_date or "",
+            "preschool_institution": rec.preschool_institution or "",
+            "region": rec.region or "",
+            "district": rec.district or "",
+            "address": rec.address or "",
+            "analysis": analysis,
+        }
+
+        pdf_buffer = generate_pdf_file(report_data, lang=lang)
+        return StreamingResponse(
+            pdf_buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=morphocheck_{patient_id}_{lang}.pdf"
+            }
+        )
+    except Exception as e:
+        logger.error(f"PDF by ID yaratishda xatolik: {str(e)}")
         raise HTTPException(status_code=500, detail=f"PDF yaratishda xatolik: {str(e)}")

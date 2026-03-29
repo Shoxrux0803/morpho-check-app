@@ -12,16 +12,19 @@ load_dotenv()
 
 # --- ENV dan sozlamalar ---
 def _normalize_db_url(url: str) -> str:
+    # SQLITE_ABS_PATH yordamida bazani aniq joyini ko'rsatamiz
+    # Agar DATABASE_URL ko'rsatilmagan bo'lsa, joriy papkadagi morphocheck.db ishlatiladi
+    if not url or url.startswith("sqlite"):
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        db_path = os.path.join(base_dir, "morphocheck.db")
+        return f"sqlite:///{db_path}"
+        
     # Heroku/formats: postgres:// -> postgresql+psycopg2://
     if url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql+psycopg2://", 1)
     return url
 
-DATABASE_URL = _normalize_db_url(os.getenv(
-    "DATABASE_URL",
-    # Lokal default: Docker/PostgreSQL yo'q bo'lsa SQLite ishlatiladi
-    "sqlite:///./morphocheck.db",
-))
+DATABASE_URL = _normalize_db_url(os.getenv("DATABASE_URL", ""))
 
 POOL_SIZE     = int(os.getenv("DB_POOL_SIZE", "5"))
 MAX_OVERFLOW  = int(os.getenv("DB_MAX_OVERFLOW", "10"))
@@ -33,12 +36,23 @@ ECHO          = os.getenv("SQLALCHEMY_ECHO", "false").lower() == "true"
 _is_sqlite = DATABASE_URL.startswith("sqlite")
 
 if _is_sqlite:
+    from sqlalchemy import event
+
     engine = create_engine(
         DATABASE_URL,
         connect_args={"check_same_thread": False},  # SQLite uchun kerak
         echo=ECHO,
         future=True,
     )
+
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+        cursor.execute("PRAGMA cache_size=-64000")  # ~64MB
+        cursor.execute("PRAGMA temp_store=MEMORY")
+        cursor.close()
 else:
     engine = create_engine(
         DATABASE_URL,

@@ -14,6 +14,204 @@ __all__ = ["generate_pdf_report"]
 
 LOGO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'assets', 'morphocheck-logo.png'))
 
+# ---------------------------------------------------------------------------
+# Til lug'atlari
+# ---------------------------------------------------------------------------
+PDF_LABELS = {
+    "uz": {
+        "title": "MORPHOCHECK PRO ANTROPOMETRIK TAHLIL HISOBOTI",
+        "full_name": "Ism Familiya:",
+        "age": "Yosh:",
+        "gender": "Jins:",
+        "birth_date": "Tug'ilgan sana:",
+        "exam_date": "Tekshiruv sanasi:",
+        "institution": "Muassasa:",
+        "region": "Viloyat:",
+        "district": "Tuman:",
+        "address": "Manzil:",
+        "id_code": "ID kod:",
+
+        "male": "Erkak",
+        "female": "Ayol",
+        "results_section": "TAHLILNING ASOSIY NATIJALARI",
+        "indicator": "Ko'rsatkich",
+        "value": "Qiymat",
+        "note": "Izoh",
+        "bmi_label": "BMI (Vazn indeksi)",
+        "somatotype": "Tana tuzilishi",
+        "somatotype_note": "Somatotip",
+        "ideal_weight": "Me'yoriy vazn",
+        "ideal_weight_note": "Tavsiya etilgan oraliq",
+        "weight_diff": "Vazn farqi",
+        "weight_diff_note": "Idealdan og'ish",
+        "hmai": "HMAI (Moslashuv)",
+        "mii": "MII (Integratsiya)",
+        "adi": "ADI (Nomutanosiblik)",
+        "shoulder_ratio": "Yelka proporsiyasi",
+        "shoulder_note": "Bo'yga nisbatan",
+        "thigh_ratio": "Son proporsiyasi",
+        "thigh_note": "Bo'yga nisbatan",
+        "bmi_status": "BMI holati:",
+        "recommendation": "Tavsiya:",
+        "advice_section": "SHAXSIY TAVSIYALAR",
+        "advice_for_parents": " (OTA-ONALAR UCHUN)",
+        "no_advice": "• Maxsus tavsiyalar mavjud emas.",
+        "report_date": "Hisobot sanasi:",
+        "report_number": "Hisobot raqami:",
+        "doctor_sign": "Shifokor imzosi",
+        "patient_sign": "Bemor/Ota-ona imzosi",
+        "confidential": "Ushbu hisobot maxfiy ma'lumot hisoblanadi",
+        "bmi_underweight": "Vazn yetishmovchiligi",
+        "bmi_normal": "Me'yor",
+        "bmi_overweight": "Ortiqcha vazn",
+        "bmi_obese": "Semizlik",
+    },
+    "ru": {
+        "title": "MORPHOCHECK PRO ОТЧЁТ АНТРОПОМЕТРИЧЕСКОГО АНАЛИЗА",
+        "full_name": "Имя Фамилия:",
+        "age": "Возраст:",
+        "gender": "Пол:",
+        "birth_date": "Дата рождения:",
+        "exam_date": "Дата обследования:",
+        "institution": "Учреждение:",
+        "region": "Область:",
+        "district": "Район:",
+        "address": "Адрес:",
+        "id_code": "ID код:",
+
+        "male": "Мужской",
+        "female": "Женский",
+        "results_section": "ОСНОВНЫЕ РЕЗУЛЬТАТЫ АНАЛИЗА",
+        "indicator": "Показатель",
+        "value": "Значение",
+        "note": "Примечание",
+        "bmi_label": "ИМТ (Индекс массы тела)",
+        "somatotype": "Телосложение",
+        "somatotype_note": "Соматотип",
+        "ideal_weight": "Норма веса",
+        "ideal_weight_note": "Рекомендуемый диапазон",
+        "weight_diff": "Разница веса",
+        "weight_diff_note": "Отклонение от идеала",
+        "hmai": "HMAI (Адаптация)",
+        "mii": "MII (Интеграция)",
+        "adi": "ADI (Дисгармония)",
+        "shoulder_ratio": "Пропорция плеч",
+        "shoulder_note": "К росту",
+        "thigh_ratio": "Пропорция бёдер",
+        "thigh_note": "К росту",
+        "bmi_status": "Статус ИМТ:",
+        "recommendation": "Рекомендация:",
+        "advice_section": "ПЕРСОНАЛЬНЫЕ РЕКОМЕНДАЦИИ",
+        "advice_for_parents": " (ДЛЯ РОДИТЕЛЕЙ)",
+        "no_advice": "• Специальных рекомендаций нет.",
+        "report_date": "Дата отчёта:",
+        "report_number": "Номер отчёта:",
+        "doctor_sign": "Подпись врача",
+        "patient_sign": "Подпись пациента/родителя",
+        "confidential": "Данный отчёт является конфиденциальным",
+        "bmi_underweight": "Дефицит массы тела",
+        "bmi_normal": "Норма",
+        "bmi_overweight": "Избыточный вес",
+        "bmi_obese": "Ожирение",
+    },
+    "en": {
+        "title": "MORPHOCHECK PRO ANTHROPOMETRIC ANALYSIS REPORT",
+        "full_name": "Full Name:",
+        "age": "Age:",
+        "gender": "Gender:",
+        "birth_date": "Birth Date:",
+        "exam_date": "Examination Date:",
+        "institution": "Institution:",
+        "region": "Region:",
+        "district": "District:",
+        "address": "Address:",
+        "id_code": "ID Code:",
+
+        "male": "Male",
+        "female": "Female",
+        "results_section": "MAIN ANALYSIS RESULTS",
+        "indicator": "Indicator",
+        "value": "Value",
+        "note": "Note",
+        "bmi_label": "BMI (Body Mass Index)",
+        "somatotype": "Body Type",
+        "somatotype_note": "Somatotype",
+        "ideal_weight": "Ideal Weight",
+        "ideal_weight_note": "Recommended range",
+        "weight_diff": "Weight Difference",
+        "weight_diff_note": "Deviation from ideal",
+        "hmai": "HMAI (Adaptation)",
+        "mii": "MII (Integration)",
+        "adi": "ADI (Disharmony)",
+        "shoulder_ratio": "Shoulder Proportion",
+        "shoulder_note": "Relative to height",
+        "thigh_ratio": "Thigh Proportion",
+        "thigh_note": "Relative to height",
+        "bmi_status": "BMI Status:",
+        "recommendation": "Recommendation:",
+        "advice_section": "PERSONAL RECOMMENDATIONS",
+        "advice_for_parents": " (FOR PARENTS)",
+        "no_advice": "• No special recommendations.",
+        "report_date": "Report Date:",
+        "report_number": "Report Number:",
+        "doctor_sign": "Doctor's Signature",
+        "patient_sign": "Patient/Parent Signature",
+        "confidential": "This report is confidential",
+        "bmi_underweight": "Underweight",
+        "bmi_normal": "Normal",
+        "bmi_overweight": "Overweight",
+        "bmi_obese": "Obesity",
+    },
+    "kz": {
+        "title": "MORPHOCHECK PRO АНТРОПОМЕТРИЯЛЫҚ ТАЛДАУ ЕСЕБІ",
+        "full_name": "Аты-жөні:",
+        "age": "Жасы:",
+        "gender": "Жынысы:",
+        "birth_date": "Туған күні:",
+        "exam_date": "Тексеру күні:",
+        "institution": "Мекеме:",
+        "region": "Аймақ:",
+        "district": "Аудан:",
+        "address": "Мекенжай:",
+        "id_code": "ID коды:",
+
+        "male": "Ер",
+        "female": "Әйел",
+        "results_section": "ТАЛДАУДЫҢ НЕГІЗГІ НӘТИЖЕЛЕРІ",
+        "indicator": "Көрсеткіш",
+        "value": "Мән",
+        "note": "Ескертпе",
+        "bmi_label": "ДМИ (Дене массасы индексі)",
+        "somatotype": "Дене түрі",
+        "somatotype_note": "Соматотип",
+        "ideal_weight": "Норма салмақ",
+        "ideal_weight_note": "Ұсынылған диапазон",
+        "weight_diff": "Салмақ айырмасы",
+        "weight_diff_note": "Идеалдан ауытқу",
+        "hmai": "HMAI (Бейімделу)",
+        "mii": "MII (Интеграция)",
+        "adi": "ADI (Дисгармония)",
+        "shoulder_ratio": "Иық пропорциясы",
+        "shoulder_note": "Бойға қатысты",
+        "thigh_ratio": "Сан пропорциясы",
+        "thigh_note": "Бойға қатысты",
+        "bmi_status": "ДМИ күйі:",
+        "recommendation": "Ұсыныс:",
+        "advice_section": "ЖЕКЕ ҰСЫНЫСТАР",
+        "advice_for_parents": " (АТА-АНАЛАР ҮШІН)",
+        "no_advice": "• Арнайы ұсыныстар жоқ.",
+        "report_date": "Есеп күні:",
+        "report_number": "Есеп нөмірі:",
+        "doctor_sign": "Дәрігер қолы",
+        "patient_sign": "Пациент/Ата-ана қолы",
+        "confidential": "Бұл есеп құпия ақпарат болып табылады",
+        "bmi_underweight": "Салмақ жетіспеушілігі",
+        "bmi_normal": "Норма",
+        "bmi_overweight": "Артық салмақ",
+        "bmi_obese": "Семіздік",
+    },
+}
+
 
 def setup_font():
     try:
@@ -26,74 +224,61 @@ def setup_font():
 
 
 def create_header():
-    """Sarlavha uchun chiziq yaratish"""
     drawing = Drawing(400, 1)
     drawing.add(Line(0, 0, 400, 0, strokeColor=colors.HexColor("#3498db"), strokeWidth=2))
     return drawing
 
 
 def create_divider():
-    """Ajratish chizig'i"""
     drawing = Drawing(400, 1)
     drawing.add(Line(0, 0, 400, 0, strokeColor=colors.HexColor("#bdc3c7"), strokeWidth=1))
     return drawing
 
 
 def draw_watermark(canvas, doc):
-    """PDF sahifasining orqa foniga hiraroq logo joylashtirish"""
     canvas.saveState()
     if os.path.exists(LOGO_PATH):
-        # Shaffoflik (0.05 juda hira, o'qilishi oson bo'ladi)
         canvas.setFillAlpha(0.06)
-        # Sahifa markazini topish
         page_width, page_height = A4
         img_width = 6.5 * inch
-        img_height = 3.25 * inch # 2:1 nisbatda
-        
-        # Markazga joylashtirish
+        img_height = 3.25 * inch
         x = (page_width - img_width) / 2
         y = (page_height - img_height) / 2
-        
-        canvas.drawImage(
-            LOGO_PATH,
-            x, y,
-            width=img_width,
-            height=img_height,
-            mask='auto'
-        )
+        canvas.drawImage(LOGO_PATH, x, y, width=img_width, height=img_height, mask='auto')
     canvas.restoreState()
 
 
-def generate_pdf_file(data: dict):
+def generate_pdf_file(data: dict, lang: str = 'uz'):
+    # Til lug'atini olish (topilmasa UZ)
+    L = PDF_LABELS.get(lang, PDF_LABELS['uz'])
+
     buffer = BytesIO()
     doc = SimpleDocTemplate(
-        buffer, 
-        pagesize=A4, 
-        rightMargin=30, 
-        leftMargin=30, 
-        topMargin=40, 
+        buffer,
+        pagesize=A4,
+        rightMargin=30,
+        leftMargin=30,
+        topMargin=40,
         bottomMargin=40
     )
-    
+
     styles = getSampleStyleSheet()
     font_name = setup_font()
-    
-    # Stillarni yangilash
+
     styles['Normal'].fontName = font_name
     styles['Heading2'].fontName = font_name
-    
-    # Yangi stillar yaratish
+
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Title'],
-        fontSize=20,
+        fontSize=16,
         alignment=1,
         spaceAfter=25,
         fontName=font_name,
         textColor=colors.HexColor("#2c3e50"),
         borderPadding=10
     )
-    
+
     section_title_style = ParagraphStyle(
         'SectionTitle',
         parent=styles['Heading2'],
@@ -106,7 +291,7 @@ def generate_pdf_file(data: dict):
         borderPadding=5,
         leftIndent=10
     )
-    
+
     highlight_style = ParagraphStyle(
         'Highlight',
         parent=styles['Normal'],
@@ -115,21 +300,21 @@ def generate_pdf_file(data: dict):
         textColor=colors.HexColor("#7f8c8d"),
         alignment=0
     )
-    
+
     elements = []
 
-    # Sarlavha qismi
-    elements.append(Paragraph("MORPHOCHECK PRO TAHLIL HISOBOTI", title_style))
+    # Sarlavha
+    elements.append(Paragraph(L["title"], title_style))
     elements.append(create_header())
     elements.append(Spacer(1, 15))
 
-    # Ma'lumotlarni olish (dict yoki obyekt holatida)
+    # Ma'lumotlarni olish
     first_name = data.get('first_name', '') if isinstance(data, dict) else getattr(data, 'first_name', '')
     last_name = data.get('last_name', '') if isinstance(data, dict) else getattr(data, 'last_name', '')
     age_y = data.get('age', '') if isinstance(data, dict) else getattr(data, 'age', '')
     age_m = data.get('age_months', 0) if isinstance(data, dict) else getattr(data, 'age_months', 0)
     age_d = data.get('age_days', 0) if isinstance(data, dict) else getattr(data, 'age_days', 0)
-    
+
     gender = data.get('gender', '') if isinstance(data, dict) else getattr(data, 'gender', '')
     birth_date = data.get('birth_date', '') if isinstance(data, dict) else getattr(data, 'birth_date', '')
     examination_date = data.get('examination_date', '') if isinstance(data, dict) else getattr(data, 'examination_date', '')
@@ -137,23 +322,30 @@ def generate_pdf_file(data: dict):
     region = data.get('region', '') if isinstance(data, dict) else getattr(data, 'region', '')
     district = data.get('district', '') if isinstance(data, dict) else getattr(data, 'district', '')
     address = data.get('address', '') if isinstance(data, dict) else getattr(data, 'address', '')
-    
-    age_str = f"{age_y} yosh"
+    id_code_val = data.get('id_code', '') if isinstance(data, dict) else getattr(data, 'id_code', '')
+
+
+    age_str = f"{age_y}"
     if age_m or age_d:
-        age_str += f", {age_m} oy, {age_d} kun"
+        age_str += f", {age_m}m, {age_d}d"
+
+    gender_lower = (gender or "").lower()
+    gender_text = L["male"] if ("erkak" in gender_lower or "o'g'il" in gender_lower or "male" in gender_lower) else L["female"]
 
     personal_info_data = [
-        ["Ism Familiya:", f"{first_name} {last_name}"],
-        ["Yosh:", age_str],
-        ["Jins:", gender],
-        ["Tug'ilgan sanasi:", birth_date or '-'],
-        ["Tekshiruv sanasi:", examination_date or '-'],
-        ["Maktab/MTM:", preschool_institution or '-'],
-        ["Viloyat:", region or '-'],
-        ["Tuman:", district or '-'],
-        ["Manzil:", address or '-']
+        [L["full_name"], f"{first_name} {last_name}"],
+        [L["age"], age_str],
+        [L["gender"], gender_text],
+        [L["birth_date"], birth_date or '-'],
+        [L["exam_date"], examination_date or '-'],
+        [L["institution"], preschool_institution or '-'],
+        [L["region"], region or '-'],
+        [L["district"], district or '-'],
+        [L["address"], address or '-'],
+        [L["id_code"], id_code_val or '-'],
     ]
-    
+
+
     personal_table = Table(personal_info_data, colWidths=[2.5*inch, 3.5*inch])
     personal_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -167,46 +359,43 @@ def generate_pdf_file(data: dict):
     elements.append(personal_table)
     elements.append(Spacer(1, 20))
 
-    # Asosiy tahlil natijalari
-    elements.append(Paragraph("ASOSIY TAHLIL NATIJALARI", section_title_style))
-    
-    # Analysis ma'lumotlarini olish
+    # Tahlil natijalari
+    elements.append(Paragraph(L["results_section"], section_title_style))
+
     analysis_data_dict = data.get('analysis', {}) if isinstance(data, dict) else getattr(data, 'analysis', {})
-    
+
     analysis_table_data = [
-        ["Parametr", "Qiymat", "Sharh"],
-        ["BMI", f"{analysis_data_dict.get('bmi', 0):.1f}", analysis_data_dict.get('bmi_category', '')],
-        ["Somatotip", analysis_data_dict.get('somatotype', ''), "Tana tuzilishi"],
-        ["Me'yordagi vazn oraliqi", f"{analysis_data_dict.get('ideal_weight_range', {}).get('min', 0)} - {analysis_data_dict.get('ideal_weight_range', {}).get('max', 0)} kg", "Tavsiya etilgan oraliq"],
-        ["Vazn farqi", f"{analysis_data_dict.get('weight_diff', 0):.1f} kg", "Joriy va ideal farqi"]
+        [L["indicator"], L["value"], L["note"]],
+        [L["bmi_label"], f"{analysis_data_dict.get('bmi', 0):.1f}", analysis_data_dict.get('bmi_category', '')],
+        [L["somatotype"], analysis_data_dict.get('somatotype', ''), L["somatotype_note"]],
+        [L["ideal_weight"],
+         f"{analysis_data_dict.get('ideal_weight_range', {}).get('min', 0)} - {analysis_data_dict.get('ideal_weight_range', {}).get('max', 0)} kg",
+         L["ideal_weight_note"]],
+        [L["weight_diff"], f"{analysis_data_dict.get('weight_diff', 0):.1f} kg", L["weight_diff_note"]],
     ]
-    
-    # Yangi indekslar (HMAI, MII, ADI)
+
     detailed = analysis_data_dict.get('indices', {})
     if detailed:
-        analysis_table_data.append(["HMAI (Adaptatsiya)", f"{detailed.get('hmai', '')}", detailed.get('hmai_desc', '')])
-        analysis_table_data.append(["MII (Integratsiya)", f"{detailed.get('mii', '')}", detailed.get('mii_desc', '')])
-        analysis_table_data.append(["ADI (Disgarmoniya)", f"{detailed.get('adi', '')}", detailed.get('adi_desc', '')])
-    
+        analysis_table_data.append([L["hmai"], f"{detailed.get('hmai', '')}", detailed.get('hmai_desc', '')])
+        analysis_table_data.append([L["mii"], f"{detailed.get('mii', '')}", detailed.get('mii_desc', '')])
+        analysis_table_data.append([L["adi"], f"{detailed.get('adi', '')}", detailed.get('adi_desc', '')])
+
     shoulder_ratio = analysis_data_dict.get('shoulder_ratio', 0)
     if shoulder_ratio:
-        analysis_table_data.append(["Yelka proporsiyasi", f"{shoulder_ratio}%", "Bo'yga nisbatan"])
-        
+        analysis_table_data.append([L["shoulder_ratio"], f"{shoulder_ratio}%", L["shoulder_note"]])
+
     thigh_ratio = analysis_data_dict.get('thigh_ratio', 0)
     if thigh_ratio:
-        analysis_table_data.append(["Son proporsiyasi", f"{thigh_ratio}%", "Bo'yga nisbatan"])
+        analysis_table_data.append([L["thigh_ratio"], f"{thigh_ratio}%", L["thigh_note"]])
 
-    # Table widths: Total available ~540 points (7.5 inches)
-    # Column 1: Label, Column 2: Value, Column 3: Description (Sharh)
     col_widths = [2.2*inch, 0.8*inch, 3.4*inch]
-    
-    # Wrap text in Paragraphs for better layout
+
     formatted_analysis_data = []
     for row in analysis_table_data:
         formatted_analysis_data.append([
             Paragraph(str(row[0]), styles['Normal']),
             Paragraph(str(row[1]), styles['Normal']),
-            Paragraph(str(row[2]), styles['Normal'])
+            Paragraph(str(row[2]), styles['Normal']),
         ])
 
     t_analysis = Table(formatted_analysis_data, colWidths=col_widths)
@@ -228,26 +417,40 @@ def generate_pdf_file(data: dict):
     elements.append(t_analysis)
     elements.append(Spacer(1, 25))
 
-    # BMI ko'rsatkichi
+    # BMI holati
     bmi_value = analysis_data_dict.get('bmi', 0)
     if bmi_value < 18.5:
-        bmi_status = "Kam vazn"
+        bmi_status = L["bmi_underweight"]
         bmi_color = "#3498db"
     elif bmi_value < 25:
-        bmi_status = "Normal"
+        bmi_status = L["bmi_normal"]
         bmi_color = "#2ecc71"
     elif bmi_value < 30:
-        bmi_status = "Ortiqcha vazn"
+        bmi_status = L["bmi_overweight"]
         bmi_color = "#f39c12"
     else:
-        bmi_status = "Semizlik"
+        bmi_status = L["bmi_obese"]
         bmi_color = "#e74c3c"
-    
+
+    # BMI kategoriyasi tilga moslab
+    bmi_val_raw = analysis_data_dict.get('bmi', 0)
+    if bmi_val_raw is None:
+        bmi_val_raw = 0
+    bmi_cat_float = float(bmi_val_raw)
+    if bmi_cat_float < 18.5:
+        bmi_cat_text = L["bmi_underweight"]
+    elif bmi_cat_float < 25:
+        bmi_cat_text = L["bmi_normal"]
+    elif bmi_cat_float < 30:
+        bmi_cat_text = L["bmi_overweight"]
+    else:
+        bmi_cat_text = L["bmi_obese"]
+
     bmi_info = [
-        ["BMI Holati:", bmi_status],
-        ["Tavsiya:", analysis_data_dict.get('bmi_category', '')]
+        [L["bmi_status"], bmi_status],
+        [L["recommendation"], bmi_cat_text],
     ]
-    
+
     bmi_table = Table(bmi_info, colWidths=[2*inch, 4*inch])
     bmi_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(bmi_color)),
@@ -261,22 +464,30 @@ def generate_pdf_file(data: dict):
     elements.append(bmi_table)
     elements.append(Spacer(1, 25))
 
+    # Tavsiyalar bo'limi
+    age_y_val = 0
+    try:
+        age_y_val = int(float(age_y)) if age_y else 0
+    except (TypeError, ValueError):
+        pass
 
-    # Maslahatlar bo'limi
-    elements.append(Paragraph("SHAXSIY TAVSIYALAR (OTA-ONALAR UCHUN)", section_title_style))
-    
+    section_title = L["advice_section"]
+    if age_y_val < 21:
+        section_title += L["advice_for_parents"]
+
+    elements.append(Paragraph(section_title, section_title_style))
+
     detailed = analysis_data_dict.get('indices', {})
     advice_list = detailed.get('advice', [])
-    
+
     if advice_list:
         advice_elements = []
         for item in advice_list:
-            # Har bir maslahat uchun alohida Paragraph
             p = Paragraph(f"{item}", styles['Normal'])
-            advice_elements.append([p])
-        
-        # Maslahatlar jadvali (chiroyli ko'rinish uchun)
-        advice_table = Table(advice_elements, colWidths=[6*inch])
+            bullet_p = Paragraph("•", styles['Normal'])
+            advice_elements.append([bullet_p, p])
+
+        advice_table = Table(advice_elements, colWidths=[0.2*inch, 5.8*inch])
         advice_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#fdfefe")),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#d5dbdb")),
@@ -290,18 +501,18 @@ def generate_pdf_file(data: dict):
         ]))
         elements.append(advice_table)
     else:
-        elements.append(Paragraph("• Maxsus tavsiyalar mavjud emas.", styles['Normal']))
+        elements.append(Paragraph(L["no_advice"], styles['Normal']))
     elements.append(Spacer(1, 30))
 
     # Yakuniy qism
     elements.append(create_divider())
     elements.append(Spacer(1, 20))
-    
+
     footer_data = [
-        ["Hisobot sanasi:", datetime.datetime.now().strftime("%Y-%m-%d %H:%M")],
-        ["Hisobot raqami:", f"MCP-{datetime.datetime.now().strftime('%Y%m%d%H%M')}"],
+        [L["report_date"], datetime.datetime.now().strftime("%Y-%m-%d %H:%M")],
+        [L["report_number"], f"MCP-{datetime.datetime.now().strftime('%Y%m%d%H%M')}"],
     ]
-    
+
     footer_table = Table(footer_data, colWidths=[2*inch, 4*inch])
     footer_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), font_name),
@@ -310,16 +521,15 @@ def generate_pdf_file(data: dict):
         ('PADDING', (0, 0), (-1, -1), 4),
     ]))
     elements.append(footer_table)
-    
     elements.append(Spacer(1, 25))
-    
+
     # Imzo qismi
     signature_table_data = [
         ["", ""],
         ["_________________________", "_________________________"],
-        ["Shifokor imzosi", "Bemor tasdiqi"]
+        [L["doctor_sign"], L["patient_sign"]],
     ]
-    
+
     signature_table = Table(signature_table_data, colWidths=[2.5*inch, 2.5*inch])
     signature_table.setStyle(TableStyle([
         ('FONTNAME', (0, 0), (-1, -1), font_name),
@@ -328,23 +538,18 @@ def generate_pdf_file(data: dict):
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     elements.append(signature_table)
-    
+
     elements.append(Spacer(1, 10))
     elements.append(Paragraph(
-        "<i>Ushbu hisobot shaxsiy ma'lumot hisoblanadi va maxfiylikni talab qiladi</i>", 
+        f"<i>{L['confidential']}</i>",
         highlight_style
     ))
-
-    if os.path.exists(LOGO_PATH):
-        elements.append(Spacer(1, 20))
-        elements.append(Image(LOGO_PATH, width=2.0*inch, height=1.0*inch))
 
     doc.build(elements, onFirstPage=draw_watermark, onLaterPages=draw_watermark)
     buffer.seek(0)
     return buffer
 
 
-# Asosiy funksiya
-def generate_pdf_report(data: dict):
+def generate_pdf_report(data: dict, lang: str = 'uz'):
     """PDF hisobotini yaratish"""
-    return generate_pdf_file(data)
+    return generate_pdf_file(data, lang=lang)

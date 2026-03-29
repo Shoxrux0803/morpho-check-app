@@ -24,6 +24,8 @@ import AccessibilityNewIcon from "@mui/icons-material/AccessibilityNew";
 import PanToolIcon from "@mui/icons-material/PanTool";
 import DirectionsWalkIcon from "@mui/icons-material/DirectionsWalk";
 import WaterIcon from "@mui/icons-material/Water";
+import { useLanguage } from "../contexts/LanguageContext";
+
 import ShutterSpeedIcon from "@mui/icons-material/ShutterSpeed";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
@@ -60,58 +62,7 @@ function getAgeBands(age) {
   return { height: [85, 115], weight: [10, 22], head: [46, 52], chest: [48, 62], bmi: [12, 38] };
 }
 
-function validateAnthro(form) {
-  const errs = [];
-  const age = Number(form.age);
-  const h = Number(form.height);
-  const w = Number(form.weight);
-  const chest = Number(form.chest);
-  const head = Number(form.head);
 
-  if (isNaN(age) || age < 3 || age > 70) errs.push("Yosh 3–70 oralig‘ida bo‘lishi kerak.");
-
-  let bmi = null;
-  if (h > 0 && w > 0) {
-    bmi = w / Math.pow(h / 100, 2);
-    form.__bmi = round1(bmi);
-  }
-
-  if (!isNaN(age)) {
-    const band = getAgeBands(age);
-
-    if (isNaN(h) || h < band.height[0] || h > band.height[1])
-      errs.push(`Bo‘y yoshga mos emas: ${band.height[0]}–${band.height[1]} sm.`);
-    if (isNaN(w) || w < band.weight[0] || w > band.weight[1])
-      errs.push(`Vazn yoshga mos emas: ${band.weight[0]}–${band.weight[1]} kg.`);
-
-    if (isNaN(chest) || chest < band.chest[0] || chest > band.chest[1])
-      errs.push(`Ko‘krak aylanasi yoshga mos emas: ${band.chest[0]}–${band.chest[1]} sm.`);
-
-    if (bmi === null || isNaN(bmi) || bmi < band.bmi[0] || bmi > band.bmi[1])
-      errs.push(
-        `BMI mantiqan mos emas: ${band.bmi[0]}–${band.bmi[1]}${form.__bmi ? ` (joriy: ${form.__bmi})` : ""}.`,
-      );
-
-    if (!isNaN(h) && h > 0) {
-      const chestMin = Math.round(h * 0.45);
-      const chestMax = Math.round(h * 0.9);
-      if (!isNaN(chest) && (chest < chestMin || chest > chestMax))
-        errs.push(
-          `Ko‘krak aylanasi bo‘yga nisbatan mos emas: taxminiy ${chestMin}–${chestMax} sm.`,
-        );
-      if (age >= 20) {
-        if (!isNaN(head) && (head < 52 || head > 64))
-          errs.push("Kattalarda bosh aylanasi odatda 52–64 sm oralig‘ida bo‘ladi.");
-      } else {
-        const headMin = Math.round(h * 0.27);
-        const headMax = Math.round(h * 0.4);
-        if (!isNaN(head) && (head < headMin || head > headMax))
-          errs.push(`Bosh aylanasi bo‘yga mos emas: taxminiy ${headMin}–${headMax} sm.`);
-      }
-    }
-  }
-  return errs;
-}
 
 /* ===== Component ===== */
 export default function InputForm({
@@ -123,7 +74,62 @@ export default function InputForm({
   scrollTargetId,
   scrollTargetRef,
 }) {
+  const { t } = useLanguage();
   const btnRef = useRef(null);
+
+  const validateAnthro = (form) => {
+    const errs = [];
+    const age = Number(form.age);
+    const h = Number(form.height);
+    const w = Number(form.weight);
+    const chest = Number(form.chest);
+    const head = Number(form.head);
+
+    if (isNaN(age) || age < 3 || age > 70) errs.push(t("errAgeRange"));
+
+    let bmi = null;
+    if (h > 0 && w > 0) {
+      bmi = w / Math.pow(h / 100, 2);
+      form.__bmi = round1(bmi);
+    }
+
+    if (!isNaN(age)) {
+      const band = getAgeBands(age);
+
+      if (isNaN(h) || h < band.height[0] || h > band.height[1])
+        errs.push(`${t("heightLabel")} ${t("errNotMatchAge")}: ${band.height[0]}–${band.height[1]} sm.`);
+      if (isNaN(w) || w < band.weight[0] || w > band.weight[1])
+        errs.push(`${t("weightLabel")} ${t("errNotMatchAge")}: ${band.weight[0]}–${band.weight[1]} kg.`);
+
+      if (isNaN(chest) || chest < band.chest[0] || chest > band.chest[1])
+        errs.push(`${t("chestLabel")} ${t("errNotMatchAge")}: ${band.chest[0]}–${band.chest[1]} sm.`);
+
+      if (bmi === null || isNaN(bmi) || bmi < band.bmi[0] || bmi > band.bmi[1])
+        errs.push(
+          `BMI ${t("errNotMatchAge")}: ${band.bmi[0]}–${band.bmi[1]}${form.__bmi ? ` (${t("currentLabel")}: ${form.__bmi})` : ""}.`,
+        );
+
+      if (!isNaN(h) && h > 0) {
+        const chestMin = Math.round(h * 0.45);
+        const chestMax = Math.round(h * 0.9);
+        if (!isNaN(chest) && (chest < chestMin || chest > chestMax))
+          errs.push(
+            `${t("chestLabel")} ${t("errNotMatchHeight")}: ${t("approxLabel")} ${chestMin}–${chestMax} sm.`,
+          );
+        if (age >= 20) {
+          if (!isNaN(head) && (head < 52 || head > 64))
+            errs.push(t("errAdultHead"));
+        } else {
+          const headMin = Math.round(h * 0.27);
+          const headMax = Math.round(h * 0.4);
+          if (!isNaN(head) && (head < headMin || head > headMax))
+            errs.push(`${t("headLabel")} ${t("errNotMatchHeight")}: ${t("approxLabel")} ${headMin}–${headMax} sm.`);
+        }
+      }
+    }
+    return errs;
+  };
+
 
   const smoothScrollToResults = useCallback(() => {
     if (scrollTargetId) {
@@ -141,9 +147,10 @@ export default function InputForm({
       e.preventDefault();
       const errs = validateAnthro({ ...formData });
       if (errs.length) {
-        alert("Ma’lumotlarda xatolik:\n\n• " + errs.join("\n• "));
+        alert(t("errInValues") + ":\n\n• " + errs.join("\n• "));
         return;
       }
+
 
       if (btnRef.current) {
         btnRef.current.classList.remove("pulse-once");
@@ -177,14 +184,13 @@ export default function InputForm({
   const districtOptions = region ? UZB_LOCATIONS[region] || [] : [];
 
   const onRegionChange = (e) => {
-    // viloyat o‘zgarganda tumanni tozalash
+    // viloyat o'zgarganda tumanni tozalash
     handleInputChange(e);
     if (formData.district) {
       handleInputChange({ target: { name: "district", value: "" } });
     }
   };
 
-  // --- umumiy input sizing (uzun/keng va katta)
   const inputSx = {
     "& .MuiInputBase-input": { py: 2.4, fontSize: 17 },
     "& .MuiOutlinedInput-root": { borderRadius: 2 },
@@ -206,7 +212,7 @@ export default function InputForm({
         {/* ===== 1. Shaxsiy ma'lumotlar ===== */}
         <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>
-            1) Shaxsiy ma’lumotlar
+            1) {t("personalInfo")}
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
@@ -214,7 +220,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Ism *"
+                label={`${t("firstNameLabel")} *`}
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleInputChange}
@@ -226,7 +232,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Familiya *"
+                label={`${t("lastNameLabel")} *`}
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleInputChange}
@@ -238,7 +244,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Tug'ilgan sanasi"
+                label={t("birthDateLabel")}
                 name="birthDate"
                 type="date"
                 InputLabelProps={{ shrink: true }}
@@ -251,7 +257,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Tekshiruv sanasi"
+                label={t("examDateLabel")}
                 name="examinationDate"
                 type="date"
                 InputLabelProps={{ shrink: true }}
@@ -264,11 +270,11 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Yosh (avto-hisoblangan) *"
+                label={`${t("ageLabel")} (${t("autoCalcLabel")}) *`}
                 name="age"
                 value={
                   formData.age !== ""
-                    ? `${formData.age} yil, ${formData.ageMonths || 0} oy, ${formData.ageDays || 0} kun`
+                    ? `${formData.age} ${t("yearsShort")}, ${formData.ageMonths || 0} ${t("months")}, ${formData.ageDays || 0} ${t("days")}`
                     : ""
                 }
                 InputProps={{ ...adorn(<CalendarMonth />), readOnly: true }}
@@ -280,21 +286,21 @@ export default function InputForm({
               <MCSelect
                 select
                 fullWidth
-                label="Jins"
+                label={t("genderLabel")}
                 name="gender"
                 value={formData.gender}
                 onChange={handleInputChange}
                 InputProps={adorn(<WcIcon />)}
                 sx={inputSx}
               >
-                <MenuItem value="erkak">Erkak</MenuItem>
-                <MenuItem value="ayol">Ayol</MenuItem>
+                <MenuItem value="erkak">{t("male")}</MenuItem>
+                <MenuItem value="ayol">{t("female")}</MenuItem>
               </MCSelect>
             </Grid>
             <Grid item xs={12}>
               <Field
                 fullWidth
-                label="Maktab / Maktabgacha ta'lim muassasasi"
+                label={t("preschoolInstitutionLabel")}
                 name="preschoolInstitution"
                 value={formData.preschoolInstitution || ""}
                 onChange={handleInputChange}
@@ -305,20 +311,21 @@ export default function InputForm({
           </Grid>
         </Paper>
 
-        {/* ===== 2. Hududiy ma'lumotlar ===== */}
+
+        {/* ===== 2. Территориальные данные ===== */}
         <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>
-            2) Hududiy ma’lumotlar
+            2) {t("territorialData")}
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
           <Grid container spacing={2.5}>
-            {/* VILOYAT — FULL WIDTH */}
+            {/* ОБЛАСТЬ — FULL WIDTH */}
             <Grid item xs={12} md={12}>
               <MCSelect
                 select
                 fullWidth
-                label="Viloyat *"
+                label={`${t("regionLabel")} *`}
                 name="region"
                 value={region}
                 onChange={onRegionChange}
@@ -328,7 +335,7 @@ export default function InputForm({
                   "& .MuiOutlinedInput-root": { borderRadius: 2 },
                 }}
               >
-                <MenuItem value="">Tanlang</MenuItem>
+                <MenuItem value="">{t("selectLabel")}</MenuItem>
                 {REGIONS.map((r) => (
                   <MenuItem key={r} value={r}>
                     {r}
@@ -342,7 +349,7 @@ export default function InputForm({
               <MCSelect
                 select
                 fullWidth
-                label="Tuman/Shahar"
+                label={t("districtLabel")}
                 name="district"
                 value={formData.district || ""}
                 onChange={handleInputChange}
@@ -353,9 +360,9 @@ export default function InputForm({
                   "& .MuiOutlinedInput-root": { borderRadius: 2 },
                 }}
               >
-                {!region && <MenuItem value="">Avval viloyatni tanla</MenuItem>}
+                {!region && <MenuItem value="">{t("errSelectRegionFirst")}</MenuItem>}
                 {region && districtOptions.length === 0 && (
-                  <MenuItem value="">(Ro‘yxat yo‘q — majburiy emas)</MenuItem>
+                  <MenuItem value="">({t("emptyQueueOptional")})</MenuItem>
                 )}
                 {districtOptions.map((d) => (
                   <MenuItem key={d} value={d}>
@@ -365,15 +372,15 @@ export default function InputForm({
               </MCSelect>
             </Grid>
 
-            {/* MANZIL — FULL WIDTH (o‘zgarmagan) */}
+            {/* АДРЕС — FULL WIDTH */}
             <Grid item xs={12}>
               <Field
                 fullWidth
-                label="Manzil (ixtiyoriy)"
+                label={`${t("fullAddressLabel")} (${t("optionalLabel")})`}
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
-                placeholder="Ko‘cha, uy (xohlasangiz to‘ldiring)"
+                placeholder={t("addressPlaceholder")}
                 InputProps={{ notched: false }}
                 sx={{
                   "& .MuiInputBase-input": { py: 2.4, fontSize: 17 },
@@ -384,10 +391,11 @@ export default function InputForm({
           </Grid>
         </Paper>
 
-        {/* ===== 3. Antropometrik o‘lchovlar ===== */}
+
+        {/* ===== 3. O'lchovlar ===== */}
         <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>
-            3) Antropometrik o‘lchovlar
+            3) {t("anthroMeasurements")}
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
@@ -395,7 +403,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Bo'y (sm) *"
+                label={`${t("heightLabel")} (sm) *`}
                 name="height"
                 type="number"
                 value={formData.height}
@@ -406,10 +414,24 @@ export default function InputForm({
                 sx={inputSx}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Vazn (kg) *"
+                label={`${t("bodyLengthLabel")} (sm) *`}
+                name="bodyLength"
+                type="number"
+                value={formData.bodyLength}
+                onChange={handleInputChange}
+                inputProps={{ min: 50, max: 250, step: 0.1 }}
+                required
+                InputProps={adorn(<HeightIcon />)}
+                sx={inputSx}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Field
+                fullWidth
+                label={`${t("weightLabel")} (kg) *`}
                 name="weight"
                 type="number"
                 value={formData.weight}
@@ -424,7 +446,7 @@ export default function InputForm({
             <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Ko'krak aylanasi (sm) *"
+                label={`${t("chestLabel")} (sm) *`}
                 name="chest"
                 type="number"
                 value={formData.chest}
@@ -438,7 +460,7 @@ export default function InputForm({
             <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Bel aylanasi (sm) *"
+                label={`${t("waistLabel")} (sm) *`}
                 name="waist"
                 type="number"
                 value={formData.waist}
@@ -452,7 +474,7 @@ export default function InputForm({
             <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Bosh aylanasi (sm) *"
+                label={`${t("headLabel")} (sm) *`}
                 name="head"
                 type="number"
                 value={formData.head}
@@ -463,39 +485,38 @@ export default function InputForm({
                 sx={inputSx}
               />
             </Grid>
-            {/* Yangi O'lchov Parametrlari (Majburiy) */}
             <Grid item xs={12} md={4}>
-              <Field fullWidth label="Yelka uzunligi (sm) *" name="shoulderLength" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.shoulderLength || ""} onChange={handleInputChange} InputProps={adorn(<AccessibilityNewIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("shoulderLength")} (sm) *`} name="shoulderLength" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.shoulderLength || ""} onChange={handleInputChange} InputProps={adorn(<AccessibilityNewIcon />)} sx={inputSx} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Field fullWidth label="Yelka kengligi (sm) *" name="shoulderBreadth" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.shoulderBreadth || ""} onChange={handleInputChange} InputProps={adorn(<AccessibilityNewIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("shoulderBreadth")} (sm) *`} name="shoulderBreadth" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.shoulderBreadth || ""} onChange={handleInputChange} InputProps={adorn(<AccessibilityNewIcon />)} sx={inputSx} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Field fullWidth label="Yelka aylanasi (sm) *" name="shoulderCircumference" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.shoulderCircumference || ""} onChange={handleInputChange} InputProps={adorn(<AccessibilityNewIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("shoulderCircumference")} (sm) *`} name="shoulderCircumference" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.shoulderCircumference || ""} onChange={handleInputChange} InputProps={adorn(<AccessibilityNewIcon />)} sx={inputSx} />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field fullWidth label="Bilak/tirsak uzunligi (sm) *" name="armElbowLength" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.armElbowLength || ""} onChange={handleInputChange} InputProps={adorn(<PanToolIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("armElbowLength")} (sm) *`} name="armElbowLength" type="number" required inputProps={{ min: 5, max: 100, step: 0.1 }} value={formData.armElbowLength || ""} onChange={handleInputChange} InputProps={adorn(<PanToolIcon />)} sx={inputSx} />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Field fullWidth label="Qo'l panja uzunligi (sm) *" name="handLength" type="number" required inputProps={{ min: 5, max: 50, step: 0.1 }} value={formData.handLength || ""} onChange={handleInputChange} InputProps={adorn(<PanToolIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("handLength")} (sm) *`} name="handLength" type="number" required inputProps={{ min: 5, max: 50, step: 0.1 }} value={formData.handLength || ""} onChange={handleInputChange} InputProps={adorn(<PanToolIcon />)} sx={inputSx} />
             </Grid>
 
             <Grid item xs={12} md={6}>
-              <Field fullWidth label="Son uzunligi (sm) *" name="thighLength" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.thighLength || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("thighLength")} (sm) *`} name="thighLength" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.thighLength || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
             </Grid>
             <Grid item xs={12} md={6}>
-              <Field fullWidth label="Son aylanasi (sm) *" name="thighCircumference" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.thighCircumference || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("thighCircumference")} (sm) *`} name="thighCircumference" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.thighCircumference || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
             </Grid>
 
             <Grid item xs={12} md={4}>
-              <Field fullWidth label="Boldir uzunligi (sm) *" name="calfLength" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.calfLength || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("calfLength")} (sm) *`} name="calfLength" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.calfLength || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Field fullWidth label="Boldir aylanasi (sm) *" name="calfCircumference" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.calfCircumference || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("calfCircumference")} (sm) *`} name="calfCircumference" type="number" required inputProps={{ min: 10, max: 150, step: 0.1 }} value={formData.calfCircumference || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
             </Grid>
             <Grid item xs={12} md={4}>
-              <Field fullWidth label="Oyoq panja uzunligi (sm) *" name="footLength" type="number" required inputProps={{ min: 5, max: 50, step: 0.1 }} value={formData.footLength || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
+              <Field fullWidth label={`${t("footLength")} (sm) *`} name="footLength" type="number" required inputProps={{ min: 5, max: 50, step: 0.1 }} value={formData.footLength || ""} onChange={handleInputChange} InputProps={adorn(<DirectionsWalkIcon />)} sx={inputSx} />
             </Grid>
           </Grid>
         </Paper>
@@ -503,7 +524,7 @@ export default function InputForm({
         {/* ===== 4. Bioimpedans tahlili ===== */}
         <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6" fontStyle="italic" sx={{ fontWeight: 700, mb: 1.5 }}>
-            4) Bioimpedans tahlili (ixtiyoriy)
+            4) {t("bioimpedanceAnalysis")} ({t("optionalLabel")})
           </Typography>
           <Divider sx={{ mb: 2 }} />
 
@@ -511,7 +532,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="TBW (Tananing umumiy suvi, l)"
+                label={`${t("tbwLabel")} (l)`}
                 name="totalBodyWater"
                 type="number"
                 value={formData.totalBodyWater || ""}
@@ -524,7 +545,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Yog' to'qumasi (%)"
+                label={t("fatPercentLabel")}
                 name="fatPercent"
                 type="number"
                 value={formData.fatPercent || ""}
@@ -538,7 +559,7 @@ export default function InputForm({
             <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Yog' massasi (kg)"
+                label={t("fatMassLabel")}
                 name="fatMass"
                 type="number"
                 value={formData.fatMass || ""}
@@ -551,7 +572,7 @@ export default function InputForm({
             <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Mushak massasi (kg)"
+                label={t("muscleMassLabel")}
                 name="muscleMass"
                 type="number"
                 value={formData.muscleMass || ""}
@@ -564,7 +585,7 @@ export default function InputForm({
             <Grid item xs={12} md={4}>
               <Field
                 fullWidth
-                label="Suyak mineral massasi (kg)"
+                label={t("boneMassLabel")}
                 name="boneMass"
                 type="number"
                 value={formData.boneMass || ""}
@@ -578,7 +599,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="ACM (Faol hujayra massasi, kg)"
+                label={t("acmLabel")}
                 name="acm"
                 type="number"
                 value={formData.acm || ""}
@@ -591,7 +612,7 @@ export default function InputForm({
             <Grid item xs={12} md={6}>
               <Field
                 fullWidth
-                label="Visceral yog' darajasi"
+                label={t("visceralFatLabel")}
                 name="visceralFat"
                 type="number"
                 value={formData.visceralFat || ""}
@@ -640,10 +661,11 @@ export default function InputForm({
                 "&:hover": { filter: "brightness(1.05)" },
               })}
             >
-              {loading ? "Tahlil qilinmoqda..." : "Tahlil qilish"}
+              {loading ? t("analyzing") : t("analyze")}
             </Button>
           </Paper>
         </Box>
+
       </Box>
     </Box>
   );

@@ -1,7 +1,8 @@
 // src/services/AdminApi.js
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+// proxy (package.json "proxy": "http://localhost:8000") orqali CORS bartaraf etiladi.
+const API_BASE = process.env.REACT_APP_API_URL || "";
 const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
+
 
 // Token: localStorage ustuvor, bo'lmasa .env dagi
 const getToken = () => {
@@ -9,7 +10,7 @@ const getToken = () => {
   if (local && local !== "null" && local !== "undefined") return local;
   local = localStorage.getItem("token");
   if (local && local !== "null" && local !== "undefined") return local;
-  return process.env.REACT_APP_ADMIN_TOKEN || "supersecret_admin_token";
+  return null;
 };
 
 // Query builder: bo'sh qiymatlarni yubormaydi

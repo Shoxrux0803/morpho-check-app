@@ -1,56 +1,87 @@
 import React from "react";
-import { Grid, Card, CardContent, Typography, Box } from "@mui/material";
-import { People, PersonAdd, TrendingUp, TrendingDown, Analytics } from "@mui/icons-material";
+import { Grid, Card, CardContent, Typography, Box, useTheme, Avatar } from "@mui/material";
+import { People, PersonAdd, TrendingUp, TrendingDown, Analytics, Straighten, DoneAll } from "@mui/icons-material";
 
-const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge }) => {
+const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, normalBMIPercent }) => {
+  const theme = useTheme();
+
+  const isDark = theme.palette.mode === 'dark';
+
   const stats = [
     {
       title: "Jami foydalanuvchilar",
       value: totalUsers?.toLocaleString() || "0",
-      change: "+12%",
+      change: "+5.4%",
       trend: "up",
-      icon: <People sx={{ fontSize: 40 }} />,
-      color: "primary.main",
+      icon: <People />,
+      color: theme.palette.primary.main,
+      bg: isDark ? `${theme.palette.primary.main}26` : "rgba(25, 118, 210, 0.1)",
     },
     {
       title: "Bugun qo'shilganlar",
       value: todayUsers?.toLocaleString() || "0",
-      change: "+5%",
-      trend: "up",
-      icon: <PersonAdd sx={{ fontSize: 40 }} />,
-      color: "success.main",
+      change: todayUsers > 0 ? "Faol" : "Kutilmoqda",
+      trend: todayUsers > 0 ? "up" : "down",
+      icon: <PersonAdd />,
+      color: theme.palette.success.main,
+      bg: isDark ? `${theme.palette.success.main}26` : "rgba(46, 125, 50, 0.1)",
     },
     {
-      title: "Faol foydalanuvchilar",
-      value: activeUsers?.toLocaleString() || "0",
-      change: "+8%",
+      title: "O'rtacha IBT (BMI)",
+      value: avgBMI?.toFixed(1) || "0.0",
+      change: "Normal chegarada",
       trend: "up",
-      icon: <TrendingUp sx={{ fontSize: 40 }} />,
-      color: "warning.main",
+      icon: <Straighten />,
+      color: theme.palette.info.main,
+      bg: isDark ? `${theme.palette.info.main}26` : "rgba(2, 136, 209, 0.1)",
     },
     {
-      title: "O'rtacha yosh",
-      value: avgAge?.toString() || "0",
-      change: "-2%",
-      trend: "down",
-      icon: <Analytics sx={{ fontSize: 40 }} />,
-      color: "info.main",
+      title: "Sog'lom vazn ulushi",
+      value: (normalBMIPercent || 0).toFixed(1) + "%",
+      change: "Populyatsiya",
+      trend: "up",
+      icon: <DoneAll />,
+      color: theme.palette.secondary.main,
+      bg: isDark ? `${theme.palette.secondary.main}26` : "rgba(156, 39, 176, 0.1)",
     },
   ];
 
   return (
-    <Grid container spacing={3}>
+    <Grid container spacing={3} mb={4}>
       {stats.map((stat, index) => (
         <Grid item xs={12} sm={6} md={3} key={index}>
-          <Card sx={{ height: "100%" }}>
+          <Card 
+            elevation={0}
+            sx={{ 
+                height: "100%",
+                borderRadius: 4,
+                background: isDark 
+                    ? 'rgba(23, 26, 33, 0.7)' 
+                    : 'rgba(255, 255, 255, 0.7)',
+                backdropFilter: "blur(10px)",
+                border: isDark 
+                    ? '1px solid rgba(255, 255, 255, 0.08)' 
+                    : '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: isDark 
+                    ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' 
+                    : '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                transition: "all 0.3s ease",
+                "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: isDark 
+                        ? '0 12px 40px 0 rgba(0, 0, 0, 0.45)' 
+                        : '0 12px 40px 0 rgba(31, 38, 135, 0.12)',
+                }
+            }}
+          >
             <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
                 <Box>
-                  <Typography variant="h4" fontWeight="bold" color={stat.color}>
-                    {stat.value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography variant="body2" color="text.secondary" fontWeight="500" gutterBottom>
                     {stat.title}
+                  </Typography>
+                  <Typography variant="h4" fontWeight="800" sx={{ mb: 1, letterSpacing: -0.5 }}>
+                    {stat.value}
                   </Typography>
                   <Box display="flex" alignItems="center">
                     {stat.trend === "up" ? (
@@ -59,15 +90,25 @@ const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge }) => {
                       <TrendingDown sx={{ color: "error.main", fontSize: 16, mr: 0.5 }} />
                     )}
                     <Typography
-                      variant="body2"
+                      variant="caption"
                       color={stat.trend === "up" ? "success.main" : "error.main"}
-                      fontWeight="medium"
+                      fontWeight="bold"
                     >
-                      {stat.change} o'tgan oydan
+                      {stat.change}
                     </Typography>
                   </Box>
                 </Box>
-                <Box sx={{ color: stat.color }}>{stat.icon}</Box>
+                <Avatar 
+                    sx={{ 
+                        bgcolor: stat.bg, 
+                        color: stat.color,
+                        width: 48,
+                        height: 48,
+                        borderRadius: 3
+                    }}
+                >
+                    {stat.icon}
+                </Avatar>
               </Box>
             </CardContent>
           </Card>

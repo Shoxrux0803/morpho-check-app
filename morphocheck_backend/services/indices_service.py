@@ -1,9 +1,296 @@
 import math
 from typing import Dict, Any
 
+# ─────────────────────────────────────────────
+# 4-tilli matn lug'ati
+# ─────────────────────────────────────────────
+_T = {
+    # HMAI tavsiflari
+    "hmai_optimal": {
+        "uz": "muhitga nisbatan optimal morfologik moslashuv",
+        "ru": "оптимальная морфологическая адаптация к среде",
+        "en": "optimal morphological adaptation to the environment",
+        "kz": "қоршаған ортаға оңтайлы морфологиялық бейімделу",
+    },
+    "hmai_accel": {
+        "uz": "akseleratsiya / yuqori morfologik rivojlanish",
+        "ru": "акселерация / высокое морфологическое развитие",
+        "en": "acceleration / high morphological development",
+        "kz": "акселерация / жоғары морфологиялық дамуы",
+    },
+    "hmai_stress": {
+        "uz": "moslashuv stresi yoki rivojlanishning sekinlashishi",
+        "ru": "адаптационный стресс или замедление развития",
+        "en": "adaptation stress or developmental delay",
+        "kz": "бейімделу стрессі немесе дамуының баяулауы",
+    },
+    # MII tavsiflari
+    "mii_high": {
+        "uz": "somatik komponentlarning yuqori integratsiyasi",
+        "ru": "высокая интеграция соматических компонентов",
+        "en": "high integration of somatic components",
+        "kz": "соматикалық компоненттердің жоғары интеграциясы",
+    },
+    "mii_normal": {
+        "uz": "normal o'rtacha morfologik muvozanat",
+        "ru": "нормальный средний морфологический баланс",
+        "en": "normal average morphological balance",
+        "kz": "қалыпты орташа морфологиялық тепе-теңдік",
+    },
+    "mii_low": {
+        "uz": "past morfologik nomutanosiblik",
+        "ru": "низкая морфологическая диспропорция",
+        "en": "low morphological imbalance",
+        "kz": "төмен морфологиялық диспропорция",
+    },
+    # ADI tavsiflari
+    "adi_harmony": {
+        "uz": "uyg'un rivojlanish",
+        "ru": "гармоничное развитие",
+        "en": "harmonious development",
+        "kz": "үйлесімді даму",
+    },
+    "adi_mid": {
+        "uz": "o'rtacha nomutanosiblik",
+        "ru": "умеренная диспропорция",
+        "en": "moderate disharmony",
+        "kz": "орташа диспропорция",
+    },
+    "adi_high": {
+        "uz": "yuqori darajadagi nomutanosiblik",
+        "ru": "высокая степень диспропорции",
+        "en": "high degree of disharmony",
+        "kz": "жоғары дәрежелі диспропорция",
+    },
+    # Tip va holat tavsiflari
+    "astenik": {
+        "uz": "astenik",
+        "ru": "астенический",
+        "en": "asthenic",
+        "kz": "астеникалық",
+    },
+    "normostenik": {
+        "uz": "normostenik",
+        "ru": "нормостенический",
+        "en": "normosthenic",
+        "kz": "нормостеникалық",
+    },
+    "giperstenik": {
+        "uz": "giperstenik",
+        "ru": "гиперстенический",
+        "en": "hypersthenic",
+        "kz": "гиперстеникалық",
+    },
+    "mos": {
+        "uz": "mos",
+        "ru": "соответствует",
+        "en": "matches",
+        "kz": "сәйкес келеді",
+    },
+    "mos_emas": {
+        "uz": "mos emas",
+        "ru": "не соответствует",
+        "en": "does not match",
+        "kz": "сәйкес келмейді",
+    },
+    "yoq": {
+        "uz": "yo'q",
+        "ru": "отсутствует",
+        "en": "none",
+        "kz": "жоқ",
+    },
+    "mavjud": {
+        "uz": "mavjud",
+        "ru": "присутствует",
+        "en": "present",
+        "kz": "бар",
+    },
+    # Maslahatlar
+    "adv_body_len_high": {
+        "uz": "{sub_pos} tana uzunligi ushbu yosh uchun me'yordan ancha yuqori (gipermetriya).",
+        "ru": "Длина тела {sub_pos_lc} значительно выше нормы для данного возраста (гиперметрия).",
+        "en": "Body length is significantly above the norm for this age (hypermetry).",
+        "kz": "{sub_pos} дене ұзындығы осы жас үшін нормадан әлдеқайда жоғары (гиперметрия).",
+    },
+    "adv_body_len_low": {
+        "uz": "{sub_pos} tana uzunligi me'yordan ancha past. Bu rivojlanishning sekinlashishi belgisi bo'lishi mumkin, mutaxassis ko'rigi tavsiya etiladi.",
+        "ru": "Длина тела {sub_pos_lc} значительно ниже нормы. Это может быть признаком замедления развития — рекомендуется консультация специалиста.",
+        "en": "Body length is significantly below normal. This may indicate developmental delay — specialist consultation is recommended.",
+        "kz": "{sub_pos} дене ұзындығы нормадан әлдеқайда төмен. Бұл дамудың баяулауының белгісі болуы мүмкін, маман кеңесі ұсынылады.",
+    },
+    "adv_body_len_ok": {
+        "uz": "{sub_pos} tana uzunligi yoshga mos va me'yor atrofida.",
+        "ru": "Длина тела {sub_pos_lc} соответствует возрасту и находится в пределах нормы.",
+        "en": "Body length is age-appropriate and within the normal range.",
+        "kz": "{sub_pos} дене ұзындығы жасқа сәйкес және норма шеңберінде.",
+    },
+    "adv_hmai_very_high": {
+        "uz": "{sub_loc} o'sish va rivojlanish jarayoni juda jadal (akseleratsiya) kechmoqda. Bu davrda suyak va mushak tizimini qo'llab-quvvatlash uchun oqsil, kalsiy va D vitamini juda muhim.",
+        "ru": "Процесс роста и развития {sub_loc_lc} протекает очень интенсивно (акселерация). В этот период крайне важны белок, кальций и витамин D для поддержки костной и мышечной систем.",
+        "en": "Growth and development is very intensive (acceleration). Protein, calcium and vitamin D are crucial during this period to support the skeletal and muscular systems.",
+        "kz": "{sub_loc} өсу мен даму процесі өте қарқынды (акселерация) жүруде. Бұл кезеңде сүйек пен бұлшық ет жүйесін қолдау үшін ақуыз, кальций және D дәрумені өте маңызды.",
+    },
+    "adv_hmai_high": {
+        "uz": "{sub_loc} o'sish sur'atlari yuqori. Ratsionda vitamin va minerallar miqdorini oshirish va jismoniy faollikni muvofiqlashtirish tavsiya etiladi.",
+        "ru": "Темпы роста {sub_loc_lc} высокие. Рекомендуется увеличить количество витаминов и минералов в рационе и скоординировать физическую активность.",
+        "en": "Growth rates are high. It is recommended to increase vitamins and minerals in the diet and coordinate physical activity.",
+        "kz": "{sub_loc} өсу қарқыны жоғары. Рационда дәрумендер мен минералдар мөлшерін арттыру және дене белсенділігін үйлестіру ұсынылады.",
+    },
+    "adv_hmai_very_low": {
+        "uz": "Organizmda moslashuv stresi yoki rivojlanishning biroz orqada qolishi belgilari bor. Kun tartibi, toza havoda sayr va hissiy xotirjamlikka alohida e'tibor bering.",
+        "ru": "Наблюдаются признаки адаптационного стресса или незначительного отставания в развитии. Особое внимание уделите режиму дня, прогулкам на свежем воздухе и эмоциональному спокойствию.",
+        "en": "Signs of adaptation stress or slight developmental delay are present. Pay special attention to daily routine, outdoor walks and emotional well-being.",
+        "kz": "Бейімделу стрессінің немесе дамудың сәл кешігуінің белгілері бар. Күн тәртібіне, таза ауада серуендеуге және эмоционалдық тыныштыққа ерекше назар аударыңыз.",
+    },
+    "adv_hmai_low": {
+        "uz": "Moslashuv jarayoni biroz sekinlashgan. Immunitetni mustahkamlash, chiniqtirish muolajalari va to'g'ri dam olishni tashkil qiling.",
+        "ru": "Процесс адаптации несколько замедлен. Уделите внимание укреплению иммунитета, закаливанию и правильному отдыху.",
+        "en": "The adaptation process is slightly slowed. Focus on strengthening immunity, hardening procedures and proper rest.",
+        "kz": "Бейімделу процесі сәл баяулады. Иммунитетті нығайтуға, шынықтыру рәсімдеріне және дұрыс демалысқа назар аударыңыз.",
+    },
+    "adv_hmai_ok": {
+        "uz": "{sub_pos} tashqi muhitga moslashuv me'yorda. Hozirgi sog'lom turmush tarzini {v_keep}.",
+        "ru": "Адаптация к внешней среде в норме. Продолжайте вести здоровый образ жизни.",
+        "en": "Adaptation to the environment is normal. Continue maintaining a healthy lifestyle.",
+        "kz": "{sub_pos} сыртқы ортаға бейімделуі қалыпты. Қазіргі салауатты өмір салтын жалғастырыңыз.",
+    },
+    "adv_mii_very_low": {
+        "uz": "Tana komponentlari o'rtasida yaqqol nomutanosiblik kuzatilyapti. Maxsus jismoniy mashqlar majmuasi va mutaxassis maslahati zarur.",
+        "ru": "Выявлена выраженная диспропорция между компонентами тела. Необходим специальный комплекс физических упражнений и консультация специалиста.",
+        "en": "A pronounced imbalance between body components has been identified. A special set of physical exercises and specialist consultation are necessary.",
+        "kz": "Дене компоненттері арасында айқын диспропорция байқалуда. Арнайы жаттығулар кешені мен маман кеңесі қажет.",
+    },
+    "adv_mii_low": {
+        "uz": "Morfologik muvozanat biroz buzilgan. Jismoniy faollikni oshirish (suzish, gimnastika) va oqsilli taomlar iste'molini ko'paytirish tavsiya etiladi.",
+        "ru": "Морфологический баланс немного нарушен. Рекомендуется увеличить физическую активность (плавание, гимнастика) и увеличить потребление белковой пищи.",
+        "en": "Morphological balance is slightly disturbed. It is recommended to increase physical activity (swimming, gymnastics) and protein food consumption.",
+        "kz": "Морфологиялық тепе-теңдік сәл бұзылған. Дене белсенділігін арттыру (жүзу, гимнастика) және ақуызды тамақ тұтынуды көбейту ұсынылады.",
+    },
+    "adv_mii_high": {
+        "uz": "Tuzilish komponentlari juda yaxshi integratsiyalashgan, jismoniy rivojlanish darajasi yuqori.",
+        "ru": "Компоненты телосложения очень хорошо интегрированы, уровень физического развития высокий.",
+        "en": "Body composition components are very well integrated, the level of physical development is high.",
+        "kz": "Дене тұрқының компоненттері өте жақсы интеграцияланған, дене дамуының деңгейі жоғары.",
+    },
+    "adv_adi_very_high": {
+        "uz": "Rivojlanishda yuqori darajadagi nomutanosiblik aniqlandi. Endokrinolog ko'rigi tavsiya etiladi.",
+        "ru": "Выявлена высокая степень диспропорции в развитии. Рекомендуется консультация эндокринолога.",
+        "en": "A high degree of developmental disharmony was identified. Endocrinologist consultation is recommended.",
+        "kz": "Дамуда жоғары дәрежелі диспропорция анықталды. Эндокринолог кеңесі ұсынылады.",
+    },
+    "adv_adi_high": {
+        "uz": "Rivojlanishda o'rtacha nomutanosiblik kuzatilmoqda. Bo'y va vazn o'zgarishini muntazam kuzatib boring va ovqatlanishni tartibga soling.",
+        "ru": "Наблюдается умеренная диспропорция в развитии. Регулярно контролируйте изменения роста и веса, нормализуйте питание.",
+        "en": "Moderate developmental disharmony is observed. Regularly monitor height and weight changes and normalize nutrition.",
+        "kz": "Дамуда орташа диспропорция байқалуда. Бой мен салмақ өзгерістерін үнемі бақылаңыз және тамақтануды реттеңіз.",
+    },
+    "adv_adi_ok": {
+        "uz": "{sub_term_cap} rivojlanishi uyg'un (mutanosib) holatda.",
+        "ru": "Развитие гармоничное (пропорциональное).",
+        "en": "Development is harmonious (proportional).",
+        "kz": "Даму үйлесімді (пропорционал) жағдайда.",
+    },
+    "adv_bmi_very_low": {
+        "uz": "⚠️ {sub_loc} tana vazni yetishmovchiligi yaqqol namoyon bo'lmoqda. Bu sog'liqqa salbiy ta'sir qilishi mumkin. Yuqori kaloriyali oqsilli ovqatlanish va shifokor ko'rigi tavsiya etiladi.",
+        "ru": "⚠️ У {sub_loc_lc} явно выражен дефицит массы тела. Это может негативно сказаться на здоровье. Рекомендуется высококалорийное белковое питание и консультация врача.",
+        "en": "⚠️ A pronounced body weight deficit is observed. This may negatively affect health. High-calorie protein nutrition and a doctor's consultation are recommended.",
+        "kz": "⚠️ {sub_loc} дене салмағының жетіспеушілігі айқын байқалуда. Бұл денсаулыққа кері әсер етуі мүмкін. Жоғары калориялы ақуызды тамақтану және дәрігер кеңесі ұсынылады.",
+    },
+    "adv_bmi_low": {
+        "uz": "⚠️ {sub_loc} vazn yetishmasligi kuzatilmoqda. Ratsion quvvatini oshirish va to'yimli ovqatlantirishni ta'minlash lozim.",
+        "ru": "⚠️ У {sub_loc_lc} наблюдается недостаточная масса тела. Необходимо увеличить калорийность рациона и обеспечить полноценное питание.",
+        "en": "⚠️ Insufficient body weight is observed. It is necessary to increase calorie intake and ensure adequate nutrition.",
+        "kz": "⚠️ {sub_loc} салмақ жетіспеушілігі байқалуда. Рацион қуаттылығын арттыру және толыққанды тамақтануды қамтамасыз ету қажет.",
+    },
+    "adv_bmi_very_high": {
+        "uz": "⚠️ {sub_loc} vazn me'yordan sezilarli darajada yuqori (semizlik). Shirinliklar va fast-fudlarni cheklash, jismoniy faollik rejimini kuchaytirish kerak.",
+        "ru": "⚠️ Масса тела {sub_loc_lc} значительно превышает норму (ожирение). Необходимо ограничить сладкое и фастфуд, усилить режим физической активности.",
+        "en": "⚠️ Body weight is significantly above normal (obesity). It is necessary to limit sweets and fast food, and increase the physical activity regimen.",
+        "kz": "⚠️ {sub_loc} салмағы нормадан айтарлықтай жоғары (семіздік). Тәттілер мен фастфудты шектеу, дене белсенділігі режимін күшейту қажет.",
+    },
+    "adv_bmi_high": {
+        "uz": "⚠️ {sub_loc} vazn biroz ortiqcha. Ratsionni muvozanatlashtirish va jismoniy yuklamalarni oshirish tavsiya etiladi.",
+        "ru": "⚠️ У {sub_loc_lc} масса тела немного выше нормы. Рекомендуется сбалансировать рацион и увеличить физические нагрузки.",
+        "en": "⚠️ Body weight is slightly above normal. It is recommended to balance the diet and increase physical activity.",
+        "kz": "⚠️ {sub_loc} салмағы сәл артық. Рационды теңестіру және дене жүктемелерін арттыру ұсынылады.",
+    },
+    "adv_soma_astenik": {
+        "uz": "🎨 {sub_pos} astenik tana tuzilishiga ega: moddalar almashinuvi juda tez. Mushaklarni mustahkamlash uchun kuch mashqlari va oqsilli parhez muhim.",
+        "ru": "🎨 {sub_pos_nom} астенического типа телосложения: обмен веществ очень быстрый. Для укрепления мышц важны силовые упражнения и белковая диета.",
+        "en": "🎨 Asthenic body type with a very fast metabolism. Strength exercises and a protein diet are important for building muscles.",
+        "kz": "🎨 {sub_pos} астеникалық дене тұрқысы: зат алмасу өте жылдам. Бұлшық еттерді нығайту үшін күш жаттығулары мен ақуызды тамақтану маңызды.",
+    },
+    "adv_soma_giper": {
+        "uz": "🎨 {sub_pos} giperstenik tip: vazn yig'ishga moyillik bor. Faol jismoniy yuklamalar (yugurish, suzish) va uglevodlarni kamroq iste'mol qilish salomatlikni saqlashga yordam beradi.",
+        "ru": "🎨 {sub_pos_nom} гиперстенического типа: склонность к набору веса. Активные физические нагрузки (бег, плавание) и снижение потребления углеводов помогут сохранить здоровье.",
+        "en": "🎨 Hypersthenic body type with a tendency to gain weight. Active physical activity (running, swimming) and reduced carbohydrate intake will help maintain health.",
+        "kz": "🎨 {sub_pos} гиперстеникалық тип: салмақ жиюға бейімділік бар. Белсенді дене жүктемелері (жүгіру, жүзу) және көмірсуларды азайту денсаулықты сақтауға көмектеседі.",
+    },
+    "adv_soma_normo": {
+        "uz": "🎨 {sub_pos} normostenik tip: uyg'un rivojlanmoqda. Holatni saqlash uchun muvozanatli ovqatlanish rejimiga amal qiling.",
+        "ru": "🎨 {sub_pos_nom} нормостенического типа: гармоничное развитие. Придерживайтесь сбалансированного питания для поддержания формы.",
+        "en": "🎨 Normosthenic body type: harmonious development. Follow a balanced diet to maintain condition.",
+        "kz": "🎨 {sub_pos} нормостеникалық тип: үйлесімді дамуда. Жағдайды сақтау үшін теңдестірілген тамақтану режиміне сүйеніңіз.",
+    },
+    "adv_fat_high": {
+        "uz": "Tanadagi yog' miqdori me'yordan yuqori. Shirinliklar, gazli ichimliklar va xamir ovqatlarni cheklang, ko'proq sabzavot va mevalar {v_suffix}.",
+        "ru": "Количество жира в теле выше нормы. Ограничьте сладкое, газированные напитки и мучное, употребляйте больше овощей и фруктов.",
+        "en": "The amount of body fat is above normal. Limit sweets, carbonated drinks and flour products, eat more vegetables and fruits.",
+        "kz": "Денедегі май мөлшері нормадан жоғары. Тәттілерді, газдалған сусындарды және ұнды тамақтарды шектеңіз, көбірек көкөніс пен жемістер {v_suffix}.",
+    },
+    "adv_fat_low": {
+        "uz": "Yog' massasi me'yordan past. Ratsionda sog'lom yog'lar (yong'oqlar, zaytun moyi) miqdorini biroz oshirish tavsiya etiladi.",
+        "ru": "Жировая масса ниже нормы. Рекомендуется немного увеличить потребление здоровых жиров (орехи, оливковое масло) в рационе.",
+        "en": "Fat mass is below normal. It is recommended to slightly increase the intake of healthy fats (nuts, olive oil) in the diet.",
+        "kz": "Май массасы нормадан төмен. Рационда пайдалы майлар (жаңғақтар, зәйтүн майы) мөлшерін сәл арттыру ұсынылады.",
+    },
+    "adv_muscle_low": {
+        "uz": "Mushak massasi yetarli emas. Jismoniy faollikni (sport to'garaklari) va oqsilli taomlar iste'molini oshirish lozim.",
+        "ru": "Мышечная масса недостаточна. Необходимо увеличить физическую активность (спортивные секции) и потребление белковой пищи.",
+        "en": "Muscle mass is insufficient. It is necessary to increase physical activity (sports clubs) and protein food consumption.",
+        "kz": "Бұлшық ет массасы жеткіліксіз. Дене белсенділігін (спорт секциялары) және ақуызды тамақ тұтынуды арттыру қажет.",
+    },
+    "adv_water_low": {
+        "uz": "Organizmda suv miqdori (gidratsiya) past. Kun davomida toza suv ichish rejimiga amal qiling.",
+        "ru": "Уровень воды (гидратации) в организме низкий. Соблюдайте режим употребления чистой воды в течение дня.",
+        "en": "The body's hydration level is low. Follow a daily clean water intake regimen.",
+        "kz": "Организмдегі су мөлшері (гидратация) төмен. Күні бойы таза су ішу режиміне сүйеніңіз.",
+    },
+    "adv_visceral_high": {
+        "uz": "Visseral (ichki) yog' darajasi yuqori. Bu moddalar almashinuvi buzilishiga olib kelishi mumkin. Sog'lom parhez va kardio mashqlar zarur.",
+        "ru": "Уровень висцерального (внутреннего) жира высокий. Это может привести к нарушению обмена веществ. Необходимы здоровое питание и кардиоупражнения.",
+        "en": "Visceral (internal) fat level is high. This may lead to metabolic disorders. A healthy diet and cardio exercises are necessary.",
+        "kz": "Висцеральды (ішкі) май деңгейі жоғары. Бұл зат алмасу бұзылысына әкелуі мүмкін. Салауатты тамақтану және кардио жаттығулар қажет.",
+    },
+    "cm": {
+        "uz": "см",
+        "ru": "см",
+        "en": "cm",
+        "kz": "см",
+    },
+    "kg": {
+        "uz": "кг",
+        "ru": "кг",
+        "en": "kg",
+        "kz": "кг",
+    },
+}
+
+
+def _t(key: str, lang: str, **kwargs) -> str:
+    """Lug'atdan matnni oladi va {placeholder}larni almashtiradi."""
+    base = _T.get(key, {})
+    text = base.get(lang) or base.get("uz") or key
+    if kwargs:
+        try:
+            text = text.format(**kwargs)
+        except KeyError:
+            pass
+    return text
+
+
 def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
     gender = (gender or "").strip().lower()
-    # WHO-ga yaqinlashgan o'rtacha bo'y (sm)
     boys_heights = {
         2: 87.8, 3: 96.1, 4: 103.3, 5: 110.0, 6: 116.0, 7: 121.7, 8: 127.3, 9: 132.6,
         10: 137.8, 11: 143.1, 12: 149.1, 13: 156.0, 14: 163.8, 15: 170.1, 16: 173.4,
@@ -15,22 +302,19 @@ def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
         17: 163.5, 18: 163.7
     }
 
-    if age <= 18:
+    if age <= 21:
         if "erkak" in gender or "o'g'il" in gender or "ogil" in gender:
-            return boys_heights.get(age, 110.0)
+            return boys_heights.get(age, 110.0 if age < 5 else 170.0)
         else:
-            return girls_heights.get(age, 109.0)
-    
-    # Kattalar uchun (taxminiy)
-    return 175.0 if "erkak" in gender else 165.0
+            return girls_heights.get(age, 109.0 if age < 5 else 162.0)
+
+    return 175.0 if "erkak" in gender else 163.0
+
 
 def get_fm_percent_norm(age: int, gender: str) -> tuple:
-    """Yoshga va jinsga qarab yog' foizi normasini (past, baland) qaytaradi."""
     gender = (gender or "").lower()
     is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
-    
-    # WHO/Pediatrik referans (taxminiy)
-    # format: age -> (min, max)
+
     boys_fm = {
         2: (12, 21), 3: (12, 21), 4: (12, 21), 5: (11, 20), 6: (11, 20),
         7: (10, 20), 8: (10, 20), 9: (10, 21), 10: (11, 22), 11: (11, 23),
@@ -43,48 +327,121 @@ def get_fm_percent_norm(age: int, gender: str) -> tuple:
         12: (16, 28), 13: (17, 29), 14: (18, 30), 15: (19, 31), 16: (20, 32),
         17: (20, 32), 18: (21, 33)
     }
-    
+
     table = boys_fm if is_male else girls_fm
     age_key = min(max(age, 2), 18)
+
+    if age > 18:
+        return (10, 22) if is_male else (20, 30)
+
     return table.get(age_key, (10, 25))
 
+
 def calculate_detailed_indices(
-    age: int, 
-    gender: str, 
-    height: float, 
-    weight: float, 
+    age: int,
+    gender: str,
+    height: float,
+    weight: float,
     bmi: float,
-    manual_data: Dict[str, Any] = None
+    manual_data: Dict[str, Any] = None,
+    lang: str = "uz"
 ) -> Dict[str, Any]:
     gender_norm = (gender or "").strip().lower()
     is_male = "erkak" in gender_norm or "o'g'il" in gender_norm or "ogil" in gender_norm
     m = manual_data or {}
 
-    # 1. Ideal ko'rsatkichlarni olish
+    # Tilga qarab murojaat shakli
+    is_adult = (age >= 21)
+
+    # Har bir til uchun addressing so'zlari
+    _ADDR = {
+        "uz": {
+            "child": {
+                "sub_pos": "Bolada", "sub_pos_nom": "Bola", "sub_pos_lc": "bolada",
+                "sub_loc": "Bolaning", "sub_loc_lc": "bolaning",
+                "sub_term": "farzandingizning", "sub_term_cap": "Farzandingizning",
+                "sub_to": "bolaga", "v_suffix": "bering", "v_keep": "davom ettiring",
+            },
+            "adult": {
+                "sub_pos": "Sizda", "sub_pos_nom": "Siz", "sub_pos_lc": "sizda",
+                "sub_loc": "Sizning", "sub_loc_lc": "sizning",
+                "sub_term": "o'zingizning", "sub_term_cap": "O'zingizning",
+                "sub_to": "sizga", "v_suffix": "iste'mol qiling", "v_keep": "davom ettiring",
+            },
+        },
+        "ru": {
+            "child": {
+                "sub_pos": "У ребёнка", "sub_pos_nom": "Ребёнок", "sub_pos_lc": "у ребёнка",
+                "sub_loc": "У ребёнка", "sub_loc_lc": "ребёнка",
+                "sub_term": "вашего ребёнка", "sub_term_cap": "Вашего ребёнка",
+                "sub_to": "ребёнку", "v_suffix": "употребляйте", "v_keep": "продолжайте",
+            },
+            "adult": {
+                "sub_pos": "У вас", "sub_pos_nom": "Вы", "sub_pos_lc": "у вас",
+                "sub_loc": "У вас", "sub_loc_lc": "вас",
+                "sub_term": "вашего", "sub_term_cap": "Вашего",
+                "sub_to": "вам", "v_suffix": "употребляйте", "v_keep": "продолжайте",
+            },
+        },
+        "en": {
+            "child": {
+                "sub_pos": "The child has", "sub_pos_nom": "The child", "sub_pos_lc": "the child has",
+                "sub_loc": "The child's", "sub_loc_lc": "the child's",
+                "sub_term": "your child's", "sub_term_cap": "Your child's",
+                "sub_to": "the child", "v_suffix": "consume", "v_keep": "continue",
+            },
+            "adult": {
+                "sub_pos": "You have", "sub_pos_nom": "You", "sub_pos_lc": "you have",
+                "sub_loc": "Your", "sub_loc_lc": "your",
+                "sub_term": "your own", "sub_term_cap": "Your own",
+                "sub_to": "you", "v_suffix": "consume", "v_keep": "continue",
+            },
+        },
+        "kz": {
+            "child": {
+                "sub_pos": "Балада", "sub_pos_nom": "Бала", "sub_pos_lc": "балада",
+                "sub_loc": "Баланың", "sub_loc_lc": "баланың",
+                "sub_term": "балаңыздың", "sub_term_cap": "Балаңыздың",
+                "sub_to": "балаға", "v_suffix": "қолданыңыз", "v_keep": "жалғастырыңыз",
+            },
+            "adult": {
+                "sub_pos": "Сізде", "sub_pos_nom": "Сіз", "sub_pos_lc": "сізде",
+                "sub_loc": "Сіздің", "sub_loc_lc": "сіздің",
+                "sub_term": "өзіңіздің", "sub_term_cap": "Өзіңіздің",
+                "sub_to": "сізге", "v_suffix": "қолданыңыз", "v_keep": "жалғастырыңыз",
+            },
+        },
+    }
+
+    addr_lang = _ADDR.get(lang, _ADDR["uz"])
+    addr = addr_lang["adult"] if is_adult else addr_lang["child"]
+    fmt = dict(addr)
+
+
+    # 1. Ideal ko'rsatkichlar
     ideal_h = get_ideal_height_by_age_and_gender(age, gender_norm)
-    # Soddalashtirilgan ideal vazn
-    if age <= 18:
+    if age <= 21:
         if is_male:
             boys_weights = {
-                3: 14.3, 4: 16.3, 5: 18.3, 6: 20.5, 7: 22.9, 8: 25.6, 9: 28.5,
+                2: 12.0, 3: 14.3, 4: 16.3, 5: 18.3, 6: 20.5, 7: 22.9, 8: 25.6, 9: 28.5,
                 10: 31.9, 11: 35.6, 12: 39.9, 13: 45.3, 14: 50.8, 15: 56.5, 16: 61.5,
-                17: 66.0, 18: 70.3
+                17: 66.0, 18: 70.3, 19: 72.0, 20: 74.0, 21: 75.0
             }
-            ideal_w = boys_weights.get(age, 20.0)
+            ideal_w = boys_weights.get(age, 70.0)
         else:
             girls_weights = {
-                3: 13.9, 4: 15.7, 5: 17.6, 6: 19.7, 7: 22.0, 8: 24.5, 9: 27.2,
+                2: 11.5, 3: 13.9, 4: 15.7, 5: 17.6, 6: 19.7, 7: 22.0, 8: 24.5, 9: 27.2,
                 10: 30.1, 11: 33.4, 12: 37.0, 13: 41.1, 14: 45.3, 15: 49.1, 16: 52.1,
-                17: 54.4, 18: 56.0
+                17: 54.4, 18: 56.0, 19: 57.0, 20: 58.0, 21: 59.0
             }
-            ideal_w = girls_weights.get(age, 19.0)
+            ideal_w = girls_weights.get(age, 55.0)
     else:
-        ideal_w = (height - 100) * (0.9 if is_male else 0.85)
+        target_bmi = 22.0 if is_male else 21.0
+        ideal_w = target_bmi * ((height / 100) ** 2)
 
     ideal_bmi = ideal_w / ((ideal_h / 100) ** 2)
 
     # 2. Body Composition
-    # TBW (Total Body Water)
     if m.get("total_body_water") is not None:
         tbw = float(m["total_body_water"])
     else:
@@ -98,75 +455,77 @@ def calculate_detailed_indices(
                 tbw = -10.313 + (0.252 * weight) + (0.154 * height)
             else:
                 tbw = 0.076 + (0.507 * weight) + (0.013 * height)
-    
-    # Soddalashtirilgan ideal TBW
-    ideal_tbw = 0.61 * ideal_w if is_male else 0.58 * ideal_w
 
-    # FFM (Fat-Free Mass) va FM (Fat Mass)
+    ideal_tbw = 0.61 * ideal_w if is_male else 0.58 * ideal_w
     ffm = tbw / 0.732
-    
+
     if m.get("fat_mass") is not None:
         fm = float(m["fat_mass"])
     else:
         fm = max(0, weight - ffm)
-        
+
     ffm_percent = (ffm / weight) * 100 if weight > 0 else 0
-    
+
     if m.get("fat_percent") is not None:
         fm_percent = float(m["fat_percent"])
     else:
         fm_percent = (fm / weight) * 100 if weight > 0 else 0
 
-    # 3. Additional Bioimpedance Parameters
     if m.get("muscle_mass") is not None:
         muscle_mass = float(m["muscle_mass"])
     else:
-        muscle_mass = ffm * 0.8  # muscle mass is ~80% of lean mass
-        
+        muscle_mass = ffm * 0.8
+
     if m.get("bone_mass") is not None:
         bone_mass = float(m["bone_mass"])
     else:
-        bone_mass = ffm * 0.15   # skeletal weight is ~15% of lean mass
-        
+        bone_mass = ffm * 0.15
+
     if m.get("acm") is not None:
         acm = float(m["acm"])
     else:
-        acm = tbw * 0.55         # Active Cell Mass is ~55% of TBW
-        
+        acm = tbw * 0.55
+
     if m.get("visceral_fat") is not None:
         visceral_fat = float(m["visceral_fat"])
     else:
-        visceral_fat = 1.0       # Standard for children/adolescents (Level 1-4 is normal)
+        visceral_fat = 1.0
 
-    # Norm ranges
     low_fm, high_fm = get_fm_percent_norm(age, gender_norm)
     fm_norm_str = f"{low_fm}-{high_fm}%"
-    
-    # FM kg norm (WHO standards proxy)
     fm_kg_low = round(weight * (low_fm / 100), 1)
     fm_kg_high = round(weight * (high_fm / 100), 1)
-    fm_kg_norm_str = f"{fm_kg_low}-{fm_kg_high} кг"
+    fm_kg_norm_str = f"{fm_kg_low}-{fm_kg_high} {_t('kg', lang)}"
     fm_norm = fm_norm_str
 
     tbw_min, tbw_max = (60.0, 70.0) if is_male else (55.0, 65.0)
     tbw_norm_str = f"{int(tbw_min)}-{int(tbw_max)}%"
-    
     muscle_min, muscle_max = (35.0, 45.0) if is_male else (30.0, 40.0)
     muscle_norm_str = f"{int(muscle_min)}-{int(muscle_max)}%"
-    
     bone_norm = "4-6%"
     acm_norm = "50-60%"
     visceral_norm = "1-4"
     visceral_max = 4.0
 
-    # 4. Z-scores calculation (WHO 2007 reference approximations)
-    # Using approx Standard Deviations based on WHO LMS tables
-    sd_h = 4.0 + (age * 0.2)   # approx SD for height (5-7y: ~5.0)
-    sd_w = ideal_w * 0.14 if ideal_w > 0 else 1.0 # approx SD for weight (~14-16% of mean)
-    sd_bmi = 1.4              # approx SD for BMI for children 5-10y
-    sd_tbw = ideal_tbw * 0.1 if ideal_tbw > 0 else 1.0
+    # 4. Z-scores
+    if age < 5:
+        sd_h = 3.5 + (age * 0.3)
+    elif age < 12:
+        sd_h = 5.0 + ((age - 5) * 0.4)
+    else:
+        sd_h = 7.0 + ((age - 12) * 0.2)
+
+    sd_w = ideal_w * 0.15 if ideal_w > 0 else 1.0
+    sd_bmi = 1.5 if age < 19 else 2.0
+    sd_tbw = ideal_tbw * 0.12 if ideal_tbw > 0 else 1.0
 
     z_h = round((height - ideal_h) / sd_h, 2)
+
+    body_length = m.get("body_length")
+    z_body_length = None
+    if body_length:
+        z_body_length = round((float(body_length) - ideal_h) / sd_h, 2)
+
     z_w = round((weight - ideal_w) / sd_w, 2)
     z_bmi = round((bmi - ideal_bmi) / sd_bmi, 2)
     z_tbw = round((tbw - ideal_tbw) / sd_tbw, 2)
@@ -176,118 +535,131 @@ def calculate_detailed_indices(
     mii = round((ffm / (fm + 1.0)) * (height / weight), 2) if weight > 0 else 0
     adi = round(abs(z_h) + abs(z_w) + abs(z_bmi), 2)
 
-    # Interpretation
+    # Interpretation — 4 tilda
     if abs(hmai) <= 0.5:
-        hmai_desc = "муҳитга оптимал морфологик мослашув"
+        hmai_desc = _t("hmai_optimal", lang)
     elif hmai > 0.5:
-        hmai_desc = "акселерация / юқори морфологик ривожланиш"
+        hmai_desc = _t("hmai_accel", lang)
     else:
-        hmai_desc = "адаптацион стресс ёки кечиккан ривожланиш"
+        hmai_desc = _t("hmai_stress", lang)
 
     if mii > 2.5:
-        mii_desc = "юқори соматик компонентлар яхши интеграциялашган"
+        mii_desc = _t("mii_high", lang)
     elif 1.5 <= mii <= 2.5:
-        mii_desc = "ўрта нормал морфологик баланс"
+        mii_desc = _t("mii_normal", lang)
     else:
-        mii_desc = "паст морфологик дисбаланс"
+        mii_desc = _t("mii_low", lang)
 
     if adi <= 1:
-        adi_desc = "гармоник ривожланиш"
+        adi_desc = _t("adi_harmony", lang)
     elif 1 < adi <= 2:
-        adi_desc = "ўртача дисгармония"
+        adi_desc = _t("adi_mid", lang)
     else:
-        adi_desc = "юқори дисгармония"
+        adi_desc = _t("adi_high", lang)
 
-    # 6. Morphological and Biological assessment
-    if z_bmi < -1.0:
-        morphological_type = "astenik"
-    elif z_bmi > 1.0:
-        morphological_type = "giperstenik"
+    # 6. Morphological Type
+    if z_bmi < -1.5 or (z_h > 1.0 and z_bmi < -0.5):
+        morph_type_key = "astenik"
+    elif z_bmi > 1.5 or (z_h < -0.5 and z_bmi > 1.0):
+        morph_type_key = "giperstenik"
     else:
-        morphological_type = "normostenik"
+        morph_type_key = "normostenik"
+    
+    morphological_type = _t(morph_type_key, lang)
 
     if -1.0 <= z_h <= 1.0:
-        biological_age_status = "mos"
+        bio_age_key = "mos"
     else:
-        biological_age_status = "mos_emas"
-
-    if z_h > 1.0:
-        secular_trend = "mavjud"
-    else:
-        secular_trend = "yoq"
-
-    # 7. Personalized Advice for parents (Uzbek Latin)
-    advice = []
+        bio_age_key = "mos_emas"
     
-    # HMAI (Adaptation)
+    biological_age_status = _t(bio_age_key, lang)
+
+    secular_trend_key = "mavjud" if z_h > 1.0 else "yo'q"
+    secular_trend = _t(secular_trend_key, lang)
+
+    # 7. Personalized Advice — 4 tilda
+    advice = []
+
+    if z_body_length is not None:
+        if z_body_length > 2.0:
+            advice.append(_t("adv_body_len_high", lang, **fmt))
+        elif z_body_length < -2.0:
+            advice.append(_t("adv_body_len_low", lang, **fmt))
+        elif -1.0 <= z_body_length <= 1.0:
+            advice.append(_t("adv_body_len_ok", lang, **fmt))
+
+    # HMAI
     if hmai > 0.8:
-        advice.append("Bolada juda jadal o'sish va rivojlanish jarayoni (akseleratsiya) kuzatilmoqda. Bu davrda suyak va muskul tizimini qo'llab-quvvatlash uchun oqsil, kalsiy (sut mahsulotlari) va D vitamini juda muhim.")
+        advice.append(_t("adv_hmai_very_high", lang, **fmt))
     elif hmai > 0.5:
-        advice.append("Bolada o'sish sur'atlari yuqori. Ratsionda vitamin va minerallar miqdorini oshirish, jismoniy faollikni muvofiqlashtirish tavsiya etiladi.")
+        advice.append(_t("adv_hmai_high", lang, **fmt))
     elif hmai < -0.8:
-        advice.append("Organizmda adaptatsion stress yoki rivojlanishdan biroz ortda qolish belgilari bor. Bolaning uyqu rejimi, toza havoda sayr qilishi va ruhiy xotirjamligiga alohida e'tibor bering.")
+        advice.append(_t("adv_hmai_very_low", lang, **fmt))
     elif hmai < -0.5:
-        advice.append("Adaptatsiya jarayoni biroz sustlashgan. Immunitetni mustahkamlash, chiniqtirish muolajalari va to'g'ri dam olishni tashkil qiling.")
+        advice.append(_t("adv_hmai_low", lang, **fmt))
     else:
-        advice.append("Bolaning tashqi muhitga moslashuvi (adaptatsiyasi) me'yorda. Hozirgi sog'lom turmush tarzini davom ettiring.")
+        advice.append(_t("adv_hmai_ok", lang, **fmt))
 
-    # MII (Integration)
+    # MII
     if mii < 1.0:
-        advice.append("Tana komponentlari o'rtasida kuchli nomutanosiblik (disbalans) sezilmoqda. Maxsus jismoniy mashqlar kompleksi va mutaxassis maslahati zarur.")
+        advice.append(_t("adv_mii_very_low", lang, **fmt))
     elif mii < 1.5:
-        advice.append("Morfologik balans biroz buzulgan. Jismoniy faollikni oshirish (suzish, gimnastika) va oqsilga boy taomlar (go'sht, tuxum, dukkaklilar) iste'molini ko'paytiring.")
+        advice.append(_t("adv_mii_low", lang, **fmt))
     elif mii > 3.0:
-        advice.append("Tana tuzilishi komponentlari juda yaxshi integratsiyalashgan, jismoniy rivojlanish darajasi yuqori.")
+        advice.append(_t("adv_mii_high", lang, **fmt))
 
-    # ADI (Disharmony)
+    # ADI
     if adi > 3.0:
-        advice.append("Rivojlanishda yuqori darajadagi disgarmoniya (nomuvofiqlik) aniqlandi. Pediatr, endokrinolog ko'rigidan o'tish tavsiya etiladi.")
+        advice.append(_t("adv_adi_very_high", lang, **fmt))
     elif adi > 2.0:
-        advice.append("Rivojlanishda o'rtacha disgarmoniya kuzatilmoqda. Bo'y va vazn o'zgarishini muntazam kuzatib boring va ovqatlanishni me'yorlashtiring.")
+        advice.append(_t("adv_adi_high", lang, **fmt))
     elif adi <= 1.0:
-        advice.append("Bolaning rivojlanishi garmonik (mutanosib) holatda.")
+        advice.append(_t("adv_adi_ok", lang, **fmt))
 
-    # BMI (Vazn holati)
+    # BMI
     if z_bmi < -2.0:
-        advice.append("⚠️ Bolada vazn tanqisligi (juda kam vazn) yuqori darajada. Bu o'sish va rivojlanishga salbiy ta'sir qilishi mumkin. Kaloriyaga va oqsilga boy taomlar bilan birga endokrinolog ko'rigi tavsiya etiladi.")
+        advice.append(_t("adv_bmi_very_low", lang, **fmt))
     elif z_bmi < -1.0:
-        advice.append("⚠️ Bolada vazn yetishmovchiligi sezilmoqda. Kunlik ratsionda energiya miqdorini oshirish, tez-tez va to'yimli ovqatlantirish zarur.")
+        advice.append(_t("adv_bmi_low", lang, **fmt))
     elif z_bmi > 2.0:
-        advice.append("⚠️ Bolada vazn me'yordan ancha yuqori (semizlik). Shirinliklar, xamir ovqatlar va fast-fudlarni cheklash, faol harakat rejimini kuchaytirish shart.")
+        advice.append(_t("adv_bmi_very_high", lang, **fmt))
     elif z_bmi > 1.0:
-        advice.append("⚠️ Bolada vazn biroz ortiqcha. Ovqatlanishda ratsionni muvozanatlashtirish va jismoniy mashg'ulotlarni ko'paytirish tavsiya etiladi.")
+        advice.append(_t("adv_bmi_high", lang, **fmt))
 
-    # Somatotip (Tana tuzilishi)
-    if morphological_type == "astenik":
-        advice.append("🎨 Bolaning tana tuzilishi bilan bog'liq (astenik tur): moddalar almashinuvi juda tez. Mushaklarni mustahkamlash uchun kuch mashqlari va oqsilga boy parhez juda muhim.")
-    elif morphological_type == "giperstenik":
-        advice.append("🎨 Bolaning tana tuzilishi (giperstenik tur): vazn to'plashga moyillik bor. Faol jismoniy harakatlar (yugurish, suzish) va kamroq uglevod iste'moli sog'liqni saqlashga yordam beradi.")
+    # Somatotype
+    if morph_type_key == "astenik":
+        advice.append(_t("adv_soma_astenik", lang, **fmt))
+    elif morph_type_key == "giperstenik":
+        advice.append(_t("adv_soma_giper", lang, **fmt))
     else:
-        advice.append("🎨 Bolaning tana tuzilishi (normostenik) mutanosib rivojlanmoqda. Holatni saqlab qolish uchun muvozanatli ovqatlanish rejimiga amal qiling.")
+        advice.append(_t("adv_soma_normo", lang, **fmt))
 
-    # Bioimpedance parameters
+
+    # Bioimpedance
     fm_p = (fm / weight) * 100 if weight > 0 else 0
     if fm_p > high_fm:
-        advice.append("Tanada yog' miqdori me'yordan yuqori. Shirinliklar, gazli ichimliklar va xamir ovqatlarni cheklab, ko'proq sabzavotlar va mevalar bering.")
+        advice.append(_t("adv_fat_high", lang, **fmt))
     elif fm_p < low_fm:
-        advice.append("Tana yog' massasi normadan past. Ratsionda sog'lom yog'lar (yong'oqlar, zaytun moyi) miqdorini biroz oshirish tavsiya etiladi.")
-    
+        advice.append(_t("adv_fat_low", lang, **fmt))
+
     m_p = (muscle_mass / weight) * 100 if weight > 0 else 0
     if m_p < muscle_min:
-        advice.append("Mushak massasi yetarli emas. Bolaning jismoniy faolligini (sport to'garaklari) va oqsilli taomlar iste'molini oshirish lozim.")
+        advice.append(_t("adv_muscle_low", lang, **fmt))
 
     tbw_p = (tbw / weight) * 100 if weight > 0 else 0
     if tbw_p < tbw_min:
-        advice.append("Organizmda suv miqdori (gidratatsiya) kam. Kun davomida ko'proq toza suv ichish tartibiga rioya qiling.")
+        advice.append(_t("adv_water_low", lang, **fmt))
 
     if visceral_fat > visceral_max:
-        advice.append("Ichki (visseral) yog' miqdori yuqori. Bu kelajakda moddalar almashinuvi buzilishiga olib kelishi mumkin. Sog'lom parhez va kardio mashqlar zarur.")
+        advice.append(_t("adv_visceral_high", lang, **fmt))
 
     return {
         "z_h": z_h,
         "z_w": z_w,
         "z_bmi": z_bmi,
         "z_tbw": z_tbw,
+        "z_body_length": z_body_length,
+        "body_length": body_length,
         "tbw": round(tbw, 1),
         "tbw_percent": round((tbw / weight) * 100, 1) if weight > 0 else 0,
         "tbw_norm": tbw_norm_str,
@@ -316,4 +688,3 @@ def calculate_detailed_indices(
         "secular_trend": secular_trend,
         "advice": advice
     }
-

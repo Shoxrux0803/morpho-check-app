@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Query, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from io import BytesIO
@@ -7,6 +7,7 @@ from services.pdf_services import generate_pdf_file
 from services.docx_services import generate_docx_report
 from routers.analyze_router import PatientData, calculate_bmi, generate_advices, generate_region_based_id
 from utils.database import get_db
+from models.userdata import PatientAnalysis
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
@@ -28,16 +29,18 @@ class PDFRequest(BaseModel):
         500: {"description": "Server xatosi"},
     },
 )
-async def generate_pdf_endpoint(request_data: PatientData, db: Session = Depends(get_db)):
+async def generate_pdf_endpoint(
+    request_data: PatientData,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    db: Session = Depends(get_db)
+):
     try:
-        # Reconstruct full data payload for pdf builder
-        analysis = calculate_bmi(request_data)
+        analysis = calculate_bmi(request_data, lang=lang)
         gender_norm = (request_data.gender or "").strip().lower()
         advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(request_data.age), gender_norm)
-        
+
         data_dict = request_data.model_dump(by_alias=False)
-        
-        # Ensure ID code is present
+
         if not data_dict.get("id_code"):
             clean_region = (data_dict.get("region") or "").strip()
             data_dict["id_code"] = generate_region_based_id(db, clean_region)
@@ -45,7 +48,7 @@ async def generate_pdf_endpoint(request_data: PatientData, db: Session = Depends
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
 
-        buffer = generate_pdf_file(data_dict)
+        buffer = generate_pdf_file(data_dict, lang=lang)
 
         if not isinstance(buffer, BytesIO):
             raise HTTPException(status_code=500, detail="PDF generatsiyasi noto'g'ri formatda")
@@ -55,7 +58,7 @@ async def generate_pdf_endpoint(request_data: PatientData, db: Session = Depends
             content=buffer,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": "attachment; filename=morphocheck.pdf",
+                "Content-Disposition": f"attachment; filename=morphocheck_{lang}.pdf",
                 "Access-Control-Expose-Headers": "Content-Disposition",
             },
         )
@@ -66,6 +69,239 @@ async def generate_pdf_endpoint(request_data: PatientData, db: Session = Depends
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"PDF generatsiyasida xato: {str(e)}")
+
+
+@router.get(
+    "/report-by-id/{patient_id}",
+    response_description="Admin panel uchun ID bo'yicha PDF hisobot",
+    responses={200: {"content": {"application/pdf": {}}}, 404: {"description": "Bemor topilmadi"}},
+)
+async def generate_pdf_by_id_endpoint(
+    patient_id: int,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    db: Session = Depends(get_db)
+):
+    """Admin panel: DB dan bemor topib, tanlangan tilda PDF qaytaradi."""
+    from routers.analyze_router import (
+        get_bmi_range_by_age_and_gender,
+        get_ideal_weight_by_age_and_gender,
+    )
+    from services.indices_service import calculate_detailed_indices
+
+    rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+
+    try:
+        name_parts = (rec.name or "").split(" ", 1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+        h = rec.height or 0
+        w = rec.weight or 0
+        h2 = (h / 100.0) ** 2 if h > 0 else 1
+        bmi_val = round(w / h2, 1) if h2 > 0 else 0
+
+        manual_bio = {
+            "body_length": rec.body_length,
+            "total_body_water": rec.total_body_water,
+            "fat_percent": rec.fat_percent,
+            "fat_mass": rec.fat_mass,
+            "muscle_mass": rec.muscle_mass,
+            "bone_mass": rec.bone_mass,
+            "acm": rec.acm,
+            "visceral_fat": rec.visceral_fat,
+        }
+        detailed = calculate_detailed_indices(rec.age or 0, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+
+        ideal_range = get_bmi_range_by_age_and_gender(rec.age or 0, rec.gender or "")
+        min_w = round(ideal_range["min"] * h2, 1)
+        max_w = round(ideal_range["max"] * h2, 1)
+        ideal_w = get_ideal_weight_by_age_and_gender(rec.age or 0, h, rec.gender or "")
+
+        # Localize BMI category
+        from routers.analyze_router import BMI_CATEGORIES
+        bmi_cat_key = "normal"
+        if bmi_val < 18.5: bmi_cat_key = "underweight"
+        elif bmi_val < 25: bmi_cat_key = "normal"
+        elif bmi_val < 30: bmi_cat_key = "overweight"
+        else: bmi_cat_key = "obese"
+        
+        bmi_category_localized = BMI_CATEGORIES.get(bmi_cat_key, {}).get(lang, BMI_CATEGORIES[bmi_cat_key]["uz"])
+
+        sh_breadth = rec.shoulder_breadth or 0
+        th_circ = rec.thigh_circumference or 0
+
+        analysis = {
+            "bmi": bmi_val,
+            "bmi_category": bmi_category_localized,
+            "somatotype": detailed.get("morphological_type", ""),
+            "ideal_weight": ideal_w,
+            "ideal_weight_range": {"min": min_w, "max": max_w},
+            "weight_diff": round(w - ideal_w, 1),
+            "z_score": rec.z_score or 0,
+            "shoulder_ratio": round((sh_breadth / h) * 100, 1) if h > 0 and sh_breadth else 0,
+            "thigh_ratio": round((th_circ / h) * 100, 1) if h > 0 and th_circ else 0,
+            "indices": detailed,
+        }
+
+
+        report_data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "age": rec.age or 0,
+            "age_months": rec.age_months or 0,
+            "age_days": rec.age_days or 0,
+            "gender": rec.gender or "",
+            "birth_date": rec.birth_date or "",
+            "examination_date": rec.examination_date or "",
+            "preschool_institution": rec.preschool_institution or "",
+            "region": rec.region or "",
+            "district": rec.district or "",
+            "address": rec.address or "",
+            "id_code": rec.id_code or "",
+            "analysis": analysis,
+        }
+
+
+        buffer = generate_pdf_file(report_data, lang=lang)
+        buffer.seek(0)
+        return StreamingResponse(
+            content=buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=morphocheck_{patient_id}_{lang}.pdf",
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"PDF yaratishda xato: {str(e)}")
+
+
+@router.get(
+    "/report-docx-by-id/{patient_id}",
+    response_description="Admin panel uchun ID bo'yicha DOCX hisobot",
+    responses={
+        200: {
+            "content": {
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
+            }
+        },
+        404: {"description": "Bemor topilmadi"},
+        500: {"description": "Server xatosi"},
+    },
+)
+async def generate_docx_by_id_endpoint(
+    patient_id: int,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    db: Session = Depends(get_db)
+):
+    """Admin panel: DB dan bemor topib, tanlangan tilda DOCX (anketa) qaytaradi."""
+    from routers.analyze_router import (
+        get_bmi_range_by_age_and_gender,
+        get_ideal_weight_by_age_and_gender,
+    )
+    from services.indices_service import calculate_detailed_indices
+
+    rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+
+    try:
+        name_parts = (rec.name or "").split(" ", 1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+        h = rec.height or 0
+        w = rec.weight or 0
+        h2 = (h / 100.0) ** 2 if h > 0 else 1
+        bmi_val = round(w / h2, 1) if h2 > 0 else 0
+
+        manual_bio = {
+            "body_length": rec.body_length,
+            "total_body_water": rec.total_body_water,
+            "fat_percent": rec.fat_percent,
+            "fat_mass": rec.fat_mass,
+            "muscle_mass": rec.muscle_mass,
+            "bone_mass": rec.bone_mass,
+            "acm": rec.acm,
+            "visceral_fat": rec.visceral_fat,
+        }
+        detailed = calculate_detailed_indices(rec.age or 0, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+
+        ideal_range = get_bmi_range_by_age_and_gender(rec.age or 0, rec.gender or "")
+        min_w = round(ideal_range["min"] * h2, 1)
+        max_w = round(ideal_range["max"] * h2, 1)
+        ideal_w = get_ideal_weight_by_age_and_gender(rec.age or 0, h, rec.gender or "")
+
+        # Localize BMI category
+        from routers.analyze_router import BMI_CATEGORIES
+        bmi_cat_key = "normal"
+        if bmi_val < 18.5: bmi_cat_key = "underweight"
+        elif bmi_val < 25: bmi_cat_key = "normal"
+        elif bmi_val < 30: bmi_cat_key = "overweight"
+        else: bmi_cat_key = "obese"
+        
+        bmi_category_localized = BMI_CATEGORIES.get(bmi_cat_key, {}).get(lang, BMI_CATEGORIES[bmi_cat_key]["uz"])
+
+        sh_breadth = rec.shoulder_breadth or 0
+        th_circ = rec.thigh_circumference or 0
+
+        analysis = {
+            "bmi": bmi_val,
+            "bmi_category": bmi_category_localized,
+            "somatotype": detailed.get("morphological_type", ""),
+            "ideal_weight": ideal_w,
+            "ideal_weight_range": {"min": min_w, "max": max_w},
+            "weight_diff": round(w - ideal_w, 1),
+            "z_score": rec.z_score or 0,
+            "shoulder_ratio": round((sh_breadth / h) * 100, 1) if h > 0 and sh_breadth else 0,
+            "thigh_ratio": round((th_circ / h) * 100, 1) if h > 0 and th_circ else 0,
+            "indices": detailed,
+        }
+
+        report_data = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "age": rec.age or 0,
+            "age_months": rec.age_months or 0,
+            "age_days": rec.age_days or 0,
+            "gender": rec.gender or "",
+            "birth_date": rec.birth_date or "",
+            "examination_date": rec.examination_date or "",
+            "preschool_institution": rec.preschool_institution or "",
+            "region": rec.region or "",
+            "district": rec.district or "",
+            "address": rec.address or "",
+            "id_code": rec.id_code or "",
+            "analysis": analysis,
+        }
+
+        # Barcha qo'shimcha ko'rsatkichlarni report_data'ga o'tkazamiz (DOCX uchun kerak)
+        for col in [
+            "height", "weight", "head", "chest", "waist", "shoulder_length", 
+            "shoulder_breadth", "shoulder_circumference", "arm_elbow_length", 
+            "hand_length", "thigh_length", "thigh_circumference", "calf_length", 
+            "calf_circumference", "foot_length", "body_length"
+        ]:
+            report_data[col] = getattr(rec, col, 0) or 0
+
+        buffer = generate_docx_report(report_data, lang=lang)
+        buffer.seek(0)
+        return StreamingResponse(
+            content=buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f"attachment; filename=morphocheck_anketa_{patient_id}_{lang}.docx",
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"DOCX yaratishda xato: {str(e)}")
 
 
 @router.post(
@@ -81,15 +317,26 @@ async def generate_pdf_endpoint(request_data: PatientData, db: Session = Depends
         500: {"description": "Server xatosi"},
     },
 )
-async def generate_docx_endpoint(request_data: PatientData, db: Session = Depends(get_db)):
+async def generate_docx_endpoint(
+    request_data: PatientData,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    db: Session = Depends(get_db)
+):
     """
     Kiritilgan ma'lumotlardan kirillcha DOCX anketasi yaratib yuklaydi.
     """
     try:
         # Reconstruct full data payload for docx builder
-        analysis = calculate_bmi(request_data)
+        analysis = calculate_bmi(request_data, lang=lang)
         gender_norm = (request_data.gender or "").strip().lower()
-        advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(request_data.age), gender_norm)
+        advices = generate_advices(
+            analysis["bmi"],
+            analysis["weight_diff"],
+            int(request_data.age),
+            gender_norm,
+            bio_data=analysis["indices"],
+            lang=lang
+        )
         
         data_dict = request_data.model_dump(by_alias=False)
         
@@ -101,7 +348,7 @@ async def generate_docx_endpoint(request_data: PatientData, db: Session = Depend
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
 
-        buffer = generate_docx_report(data_dict)
+        buffer = generate_docx_report(data_dict, lang=lang)
 
         if not isinstance(buffer, BytesIO):
             raise HTTPException(status_code=500, detail="DOCX generatsiyasi noto'g'ri formatda")

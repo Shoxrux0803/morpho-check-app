@@ -23,7 +23,9 @@ const AdminTable = ({
   toggleOne,
   setViewRow,
   formatDate,
+  user,
 }) => {
+  const isSuperAdmin = user?.role === "superadmin";
   return (
     <TableContainer>
       <Table>
@@ -43,6 +45,7 @@ const AdminTable = ({
             <TableCell>Manzil</TableCell>
             <TableCell>BMI</TableCell>
             <TableCell>Holat</TableCell>
+            {isSuperAdmin && <TableCell>Admin</TableCell>}
             <TableCell>Amallar</TableCell>
           </TableRow>
         </TableHead>
@@ -104,6 +107,13 @@ const AdminTable = ({
                     }
                   />
                 </TableCell>
+                {isSuperAdmin && (
+                  <TableCell>
+                    <Typography variant="body2" color="primary" fontWeight="medium">
+                      {row.created_by_name || "Noma'lum"}
+                    </Typography>
+                  </TableCell>
+                )}
                 <TableCell onClick={(e) => e.stopPropagation()}>
                   <Box display="flex">
                     <Tooltip title="Batafsil">
@@ -117,7 +127,7 @@ const AdminTable = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={9} align="center" sx={{ py: 3 }}>
+              <TableCell colSpan={isSuperAdmin ? 10 : 9} align="center" sx={{ py: 3 }}>
                 Ma'lumot topilmadi
               </TableCell>
             </TableRow>

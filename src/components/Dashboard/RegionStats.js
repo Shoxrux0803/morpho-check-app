@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Grid,
-  CircularProgress,
   useTheme,
   Table,
   TableBody,
@@ -14,6 +11,7 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Chip,
 } from "@mui/material";
 import {
   BarChart,
@@ -23,12 +21,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell,
 } from "recharts";
-import { LocationOn, People, DataUsage } from "@mui/icons-material";
-import { AdminApi } from "../../services/AdminApi";
+import { LocationOn, DataUsage } from "@mui/icons-material";
+import DashboardCard from "./DashboardCard";
 
 // Viloyat nomlarini to'g'irlash uchun
 const normalizeRegionName = (name = "") =>
@@ -96,8 +92,8 @@ export default function RegionStats({ data, loading }) {
         rStat.totalHeight += Number(user.height) || 0;
         
         const gender = String(user.gender).toLowerCase();
-        if (gender === "erkak" || gender === "male" || gender === "m") rStat.genders.erkak += 1;
-        else if (gender === "ayol" || gender === "female" || gender === "f") rStat.genders.ayol += 1;
+        if (gender.includes("erkak") || gender.includes("male") || gender.includes("o'g'il")) rStat.genders.erkak += 1;
+        else if (gender.includes("ayol") || gender.includes("female") || gender.includes("qiz")) rStat.genders.ayol += 1;
       }
     });
 
@@ -112,135 +108,92 @@ export default function RegionStats({ data, loading }) {
       .sort((a, b) => b.count - a.count);
   }, [data]);
 
-  const topRegions = stats.slice(0, 10);
+  const topRegions = stats.slice(0, 8);
   
-  const genderData = [
-    { name: "Erkak", value: stats.reduce((acc, curr) => acc + curr.genders.erkak, 0) },
-    { name: "Ayol", value: stats.reduce((acc, curr) => acc + curr.genders.ayol, 0) },
-  ];
-  const COLORS = [theme.palette.primary.main, theme.palette.secondary.main];
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height={200}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (stats.length === 0) {
-    return null; // Ma'lumot yo'q bo'lsa ko'rsatilmaydi
+  if (!loading && stats.length === 0) {
+    return null;
   }
 
   return (
     <>
       <Grid item xs={12}>
-        <Typography variant="h5" fontWeight="bold" sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
-          <DataUsage sx={{ mr: 1, color: "primary.main" }} /> Hududlar kesimida kengaytirilgan statistika
-        </Typography>
+        <Box sx={{ mt: 4, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DataUsage color="primary" />
+            <Typography variant="h5" fontWeight="800">Hududiy Tahlil</Typography>
+        </Box>
       </Grid>
 
       {/* Top Regions BarChart */}
-      <Grid item xs={12} md={8}>
-          <Card elevation={2} sx={{ borderRadius: 3, height: "100%" }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                <LocationOn sx={{ mr: 1, verticalAlign: "middle", fontSize: 20 }} /> Top Viloyatlar (Foydalanuvchilar soni)
-              </Typography>
-              <Box sx={{ width: "100%", height: 320 }}>
-                <ResponsiveContainer>
-                  <BarChart data={topRegions} margin={{ top: 20, right: 30, left: 0, bottom: 25 }}>
-                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis dataKey="shortName" tick={{ fill: theme.palette.text.secondary, fontSize: 12 }} interval={0} angle={-30} textAnchor="end" height={60} />
-                    <YAxis tick={{ fill: theme.palette.text.secondary }} />
-                    <Tooltip cursor={{ fill: theme.palette.action.hover }} contentStyle={{ borderRadius: 8, backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, border: `1px solid ${theme.palette.divider}` }} />
-                    <Bar dataKey="count" fill="url(#colorPv)" radius={[6, 6, 0, 0]} name="Foydalanuvchilar" animationDuration={1500} >
-                      {topRegions.map((entry, index) => (
-                         <Cell key={`cell-${index}`} fill={theme.palette.primary.main} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Gender Distribution PieChart */}
-        <Grid item xs={12} md={4}>
-           <Card elevation={2} sx={{ borderRadius: 3, height: "100%" }}>
-            <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <Typography variant="h6" gutterBottom>
-                <People sx={{ mr: 1, verticalAlign: "middle", fontSize: 20 }} /> Jins bo'yicha taqsimot
-              </Typography>
-              <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 280 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={genderData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={70}
-                      outerRadius={100}
-                      paddingAngle={5}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {genderData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip contentStyle={{ borderRadius: 8, backgroundColor: theme.palette.background.paper, color: theme.palette.text.primary, border: `1px solid ${theme.palette.divider}` }} itemStyle={{ color: theme.palette.text.primary }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </Box>
-            </CardContent>
-          </Card>
+      <Grid item xs={12} lg={7}>
+          <DashboardCard title="Hududlar bo'yicha qamrov" icon={<LocationOn />} loading={loading}>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={topRegions} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+                <XAxis 
+                    dataKey="shortName" 
+                    tick={{ fill: theme.palette.text.secondary, fontSize: 11 }} 
+                    interval={0} 
+                    angle={-45} 
+                    textAnchor="end" 
+                    axisLine={false}
+                    tickLine={false}
+                />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: theme.palette.text.secondary }} />
+                <Tooltip 
+                    cursor={{ fill: theme.palette.divider, opacity: 0.1 }} 
+                    contentStyle={{ 
+                        borderRadius: 12, 
+                        border: 'none', 
+                        boxShadow: theme.palette.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)',
+                        backgroundColor: theme.palette.background.paper,
+                        color: theme.palette.text.primary
+                    }} 
+                    itemStyle={{ color: theme.palette.text.primary }}
+                />
+                <Bar dataKey="count" radius={[4, 4, 0, 0]} name="Foydalanuvchilar" animationDuration={1500} barSize={35}>
+                  {topRegions.map((entry, index) => (
+                     <Cell key={`cell-${index}`} fill={index % 2 === 0 ? theme.palette.primary.main : theme.palette.primary.light} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </DashboardCard>
         </Grid>
 
         {/* Detailed Table */}
-        <Grid item xs={12} md={12}>
-          <Card elevation={2} sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Hududiy ko'rsatkichlar jadvali
-              </Typography>
-              <TableContainer component={Paper} elevation={0} sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
-                <Table size="medium">
-                  <TableHead sx={{ bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : theme.palette.grey[100] }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: "bold" }}>Viloyat / Hudud</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>Foydalanuvchilar</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>O'rtacha Yosh</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>O'rtacha Bo'y (sm)</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>O'rtacha Vazn (kg)</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>Jins (E/A)</TableCell>
+        <Grid item xs={12} lg={5}>
+          <DashboardCard title="Statistik Ma'lumotlar" loading={loading} height={350}>
+            <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent', maxHeight: 350, overflow: 'auto' }}>
+              <Table size="small" stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ fontWeight: "700", background: theme.palette.background.paper }}>Hudud</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "700", background: theme.palette.background.paper }}>Soni</TableCell>
+                    <TableCell align="center" sx={{ fontWeight: "700", background: theme.palette.background.paper }}>Yoshi</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {stats.map((row) => (
+                    <TableRow key={row.name} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                      <TableCell component="th" scope="row" sx={{ py: 1.5 }}>
+                        <Typography variant="body2" fontWeight="500">{row.name}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Chip 
+                            label={row.count} 
+                            size="small" 
+                            sx={{ bgcolor: `${theme.palette.primary.main}26`, color: 'primary.main', fontWeight: 'bold' }} 
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography variant="body2" color="text.secondary">{row.avgAge}</Typography>
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {stats.map((row) => (
-                      <TableRow key={row.name} hover>
-                        <TableCell component="th" scope="row">
-                          {row.name}
-                        </TableCell>
-                        <TableCell align="center">
-                          <Box sx={{ display: 'inline-block', px: 2, py: 0.5, bgcolor: 'primary.light', color: 'primary.contrastText', borderRadius: 1, fontWeight: 'medium' }}>
-                            {row.count}
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center">{row.avgAge}</TableCell>
-                        <TableCell align="center">{row.avgHeight}</TableCell>
-                        <TableCell align="center">{row.avgWeight}</TableCell>
-                        <TableCell align="center">
-                          {row.genders.erkak} / {row.genders.ayol}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DashboardCard>
         </Grid>
     </>
   );

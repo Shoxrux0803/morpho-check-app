@@ -8,11 +8,11 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     amount = Column(Numeric(12, 2), nullable=False)     # to‘lov summasi
     currency = Column(String(10), default="UZS")        # valyuta: UZS, USD
     method = Column(String(30), nullable=True)          # click, payme, cash, ...
-    status = Column(String(30), default="paid")         # paid, pending, failed
+    status = Column(String(30), default="paid", index=True)         # paid, pending, failed
     description = Column(String(255), nullable=True)    # izoh
     created_at = Column(DateTime, server_default=func.now())
 

@@ -1,6 +1,8 @@
 // src/App.js
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
 
 // ==== Styles (doimo tepada) ====
@@ -18,6 +20,8 @@ import ThemeSync from "./components/ThemeSync";
 // Lazy pages - YANGI SAHIFALAR QO'SHILDI
 const MorphoCheckPro = lazy(() => import("./pages/MorphoCheckPro"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
+const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
+const InfoDetail = lazy(() => import("./pages/InfoDetail"));
 
 // 404
 const NotFound = () => (
@@ -56,6 +60,43 @@ function ScrollToTop() {
   return null;
 }
 
+// Role-based Admin Wrapper (Data Dashboard)
+const AdminWrapper = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return <PageLoader />;
+
+  // If not logged in, show AdminPage (login form)
+  // If logged in as admin or superadmin, show AdminPage (data)
+  if (!user || user.role === "admin" || user.role === "superadmin") {
+    return (
+      <PageTransition>
+        <AdminPage />
+      </PageTransition>
+    );
+  }
+
+  return <Navigate to="/" replace />;
+};
+
+// Super Admin Wrapper (Admin Management)
+const SuperAdminWrapper = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <PageLoader />;
+
+  if (user?.role === "superadmin") {
+    return (
+      <PageTransition>
+        <SuperAdminPage />
+      </PageTransition>
+    );
+  }
+
+  // If not superadmin, redirect to the data dashboard
+  return <Navigate to="/admin" replace />;
+};
+
 // Animated Routes komponenti
 function AnimatedRoutes() {
   const location = useLocation();
@@ -80,12 +121,24 @@ function AnimatedRoutes() {
           }
         />
         <Route
-          path="/admin"
+          path="/info"
           element={
             <PageTransition>
-              <AdminPage />
+              <InfoDetail />
             </PageTransition>
           }
+        />
+        <Route
+          path="/admin"
+          element={<AdminWrapper />}
+        />
+        <Route
+          path="/superadmin"
+          element={<SuperAdminWrapper />}
+        />
+        <Route
+          path="/morphoadmin"
+          element={<Navigate to="/superadmin" replace />}
         />
         <Route
           path="*"
@@ -156,22 +209,26 @@ export default function App() {
   const BASENAME = process.env.REACT_APP_BASENAME || "/";
 
   return (
-    <Router basename={BASENAME}>
-      <ScrollToTop />
-      {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
-      <ThemeSync />
+    <LanguageProvider>
+      <AuthProvider>
+        <Router basename={BASENAME}>
+          <ScrollToTop />
+          {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
+          <ThemeSync />
 
-      <div className="App d-flex flex-column min-vh-100">
-        <Header />
+          <div className="App d-flex flex-column min-vh-100">
+            <Header />
 
-        <main className="flex-grow-1">
-          <Suspense fallback={<PageLoader />}>
-            <AnimatedRoutes />
-          </Suspense>
-        </main>
+            <main className="flex-grow-1">
+              <Suspense fallback={<PageLoader />}>
+                <AnimatedRoutes />
+              </Suspense>
+            </main>
 
-        <Footer />
-      </div>
-    </Router>
+            <Footer />
+          </div>
+        </Router>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }

@@ -19,6 +19,344 @@ __all__ = ["generate_docx_report"]
 
 
 # ---------------------------------------------------------------------------
+# Ko'p tilli yorliqlar (DOCX labels)
+# ---------------------------------------------------------------------------
+DOCX_LABELS = {
+    "uz": {
+        "title_child": "МАКТАБГАЧА ТАЪЛИМ ЁШИДАГИ БОЛАЛАР УЧУН БИОИМПЕДАНС +\nАНТРОПОМЕТРИК ТЕКШИРУВ АНКЕТАСИ",
+        "title_pupil": "МАКТАБ ЁШИДАГИ БОЛАЛАР ВА ЎСМИРЛАР УЧУН БИОИМПЕДАНС +\nАНТРОПОМЕТРИК ТЕКШИРУВ АНКЕТАСИ",
+        "title_adult": "АНТРОПОМЕТРИК ТЕКШИРУВ ВА БИОИМПЕДАНС ТАҲЛИЛ АНКЕТАСИ",
+        "section_1": "I. Умумий маълумотлар",
+        "no": "№",
+        "indicator": "Кўрсаткич",
+        "data_col": "Маълумот",
+        "name_label_child": "Исми ва фамилияси (боланинг)",
+        "name_label_adult": "Исми ва фамилияси (беморнинг)",
+        "id_code": "ID код",
+        "exam_date": "Текширув санаси",
+        "age_label_child": "Ёши (боланинг)",
+        "age_label_adult": "Ёши (беморнинг)",
+        "age_suffix": "йил",
+        "age_months": "ой",
+        "age_days": "кун",
+        "gender": "Жинси",
+        "male": "Ўғил",
+        "female": "Қиз",
+        "birth_date": "Туғилган санаси",
+        "area_type": "Ҳудуд тури",
+        "city": "Шаҳар",
+        "village": "Қишлоқ",
+        "institution": "Муассаса (мактаб/боғча)",
+        "address": "Яшаш манзили",
+        "section_2": "II. Асосий антропометрик кўрсаткичлар (ЖССТ стандартлари)",
+        "unit": "Ўл.б.",
+        "value": "Қийм.",
+        "height": "Бўй узунлиги",
+        "weight": "Тана вазни",
+        "head": "Бош айланаси",
+        "chest": "Кўкрак айланаси",
+        "waist": "Бел айланаси",
+        "sh_len": "Елка узунлиги",
+        "sh_br": "Елка кенглиги",
+        "sh_circ": "Елка айланаси",
+        "arm_elb": "Билак/тирсак узунлиги",
+        "hand": "Қўл панжа узунлиги",
+        "thigh_len": "Сон узунлиги",
+        "thigh_circ": "Сон айланаси",
+        "calf_len": "Болдир узунлиги",
+        "calf_circ": "Болдир айланаси",
+        "foot": "Оёқ панжа узунлиги",
+        "body_len": "Тана узунлиги",
+        "section_3": "III. Ҳисобланган антропометрик индекслар",
+        "eval": "Баҳолаш",
+        "bmi_label": "ТВИ (кг/м²)",
+        "height_age_z": "Бўй-ёш Z-score",
+        "weight_age_z": "Вазн-ёш Z-score",
+        "bmi_age_z": "ТВИ-ёш Z-score",
+        "centile": "Центил интервали",
+        "corridor": "Соғломлик йўлаги",
+        "hmai_label": "HMAI (мослашув)",
+        "mii_label": "MII (интеграция)",
+        "adi_label": "ADI (номутаносиблик)",
+        "body_len_z": "Тана уз. Z-score",
+        "section_4": "IV. Биоимпеданс таҳлили натижалари",
+        "norm": "Меъёр",
+        "tbw": "Умумий сув (TBW)",
+        "fm_p": "Ёғ тўқимаси (%)",
+        "fm_kg": "Ёғ массаси (кг)",
+        "muscle": "Мушак массаси",
+        "bone": "Суяк массаси",
+        "acm": "Фаол ҳужайра массаси (ACM)",
+        "visceral": "Висцерал ёғ даражаси",
+        "section_5": "V. Морфологик ва биологик баҳолаш",
+        "dev_level": "Жисмоний ривожланиш даражаси",
+        "age_matches": "Ёшига мос",
+        "behind": "Орқада қолган",
+        "ahead": "Олдинда",
+        "morph_type": "Морфологик типи",
+        "bio_age_match": "Биологик ёшига мослиги",
+        "secular": "Секуляр тренд белгилари",
+        "section_6": "VI. Этик розилик ва имзолар:",
+        "parent": "Ота-она (ёки васий)",
+        "nurse": "Тиббий ҳамшира (муассаса)",
+        "specialists": "Мутахассис 1 / Мутахассис 2",
+        "consultant": "Консультант",
+        "sig_date": "Имзо / Сана",
+        "doctor_parent": "Мутахассис / Ота-она",
+        "cm": "см",
+        "kg": "кг",
+    },
+    "ru": {
+        "title_child": "АНКЕТА БИОИМПЕДАНСНОГО + АНТРОПОМЕТРИЧЕСКОГО\nОБСЛЕДОВАНИЯ ДЛЯ ДЕТЕЙ ДОШКОЛЬНОГО ВОЗРАСТА",
+        "title_pupil": "АНКЕТА БИОИМПЕДАНСНОГО + АНТРОПОМЕТРИЧЕСКОГО\nОБСЛЕДОВАНИЯ ДЛЯ ШКОЛЬНИКОВ И ПОДРОСТКОВ",
+        "title_adult": "АНКЕТА АНТРОПОМЕТРИЧЕСКОГО ОБСЛЕДОВАНИЯ И БИОИМПЕДАНСНОГО АНАЛИЗА",
+        "section_1": "I. Общие сведения",
+        "no": "№",
+        "indicator": "Показатель",
+        "data_col": "Данные",
+        "name_label_child": "Имя и фамилия (ребенка)",
+        "name_label_adult": "Имя и фамилия (пациента)",
+        "id_code": "ID код",
+        "exam_date": "Дата обследования",
+        "age_label_child": "Возраст (ребенка)",
+        "age_label_adult": "Возраст (пациента)",
+        "age_suffix": "лет",
+        "age_months": "мес",
+        "age_days": "дн",
+        "gender": "Пол",
+        "male": "Мужской",
+        "female": "Женский",
+        "birth_date": "Дата рождения",
+        "area_type": "Тип местности",
+        "city": "Город",
+        "village": "Село",
+        "institution": "Учреждение (школа/сад)",
+        "address": "Адрес проживания",
+        "section_2": "II. Основные антропометрические показатели (стандарты ВОЗ)",
+        "unit": "Ед.",
+        "value": "Знач.",
+        "height": "Длина тела (рост)",
+        "weight": "Масса тела",
+        "head": "Окружность головы",
+        "chest": "Окружность груди",
+        "waist": "Окружность талии",
+        "sh_len": "Длина плеча",
+        "sh_br": "Ширина плеч",
+        "sh_circ": "Окружность плеча",
+        "arm_elb": "Длина предплечья",
+        "hand": "Длина кисти",
+        "thigh_len": "Длина бедра",
+        "thigh_circ": "Окружность бедра",
+        "calf_len": "Длина голени",
+        "calf_circ": "Окружность голени",
+        "foot": "Длина стопы",
+        "body_len": "Длина туловища",
+        "section_3": "III. Расчетные антропометрические индексы",
+        "eval": "Оценка",
+        "bmi_label": "ИМТ (кг/м²)",
+        "height_age_z": "Рост-возраст Z-score",
+        "weight_age_z": "Вес-возраст Z-score",
+        "bmi_age_z": "ИМТ-возраст Z-score",
+        "centile": "Центильный интервал",
+        "corridor": "Коридор здоровья",
+        "hmai_label": "HMAI (адаптация)",
+        "mii_label": "MII (интеграция)",
+        "adi_label": "ADI (диспропорция)",
+        "body_len_z": "Длина тул. Z-score",
+        "section_4": "IV. Результаты биоимпедансного анализа",
+        "norm": "Норма",
+        "tbw": "Общая вода (TBW)",
+        "fm_p": "Жировая ткань (%)",
+        "fm_kg": "Жировая масса (кг)",
+        "muscle": "Мышечная масса",
+        "bone": "Костная масса",
+        "acm": "Активная клеточная масса (ACM)",
+        "visceral": "Уровень висцерального жира",
+        "section_5": "V. Морфологическая и биологическая оценка",
+        "dev_level": "Уровень физического развития",
+        "age_matches": "Соответствует возрасту",
+        "behind": "Отстает",
+        "ahead": "Опережает",
+        "morph_type": "Морфологический тип",
+        "bio_age_match": "Соотв. биол. возрасту",
+        "secular": "Признаки секулярного тренда",
+        "section_6": "VI. Этическое согласие и подписи:",
+        "parent": "Родитель (опекун)",
+        "nurse": "Медсестра (учреждение)",
+        "specialists": "Специалист 1 / Специалист 2",
+        "consultant": "Консультант",
+        "sig_date": "Подпись / Дата",
+        "doctor_parent": "Специалист / Родитель",
+    },
+    "en": {
+        "title_child": "BIOIMPEDANCE + ANTHROPOMETRIC EXAMINATION FORM\nFOR PRE-SCHOOL CHILDREN",
+        "title_pupil": "BIOIMPEDANCE + ANTHROPOMETRIC EXAMINATION FORM\nFOR SCHOOLCHILDREN AND ADOLESCENTS",
+        "title_adult": "ANTHROPOMETRIC EXAMINATION AND BIOIMPEDANCE ANALYSIS FORM",
+        "section_1": "I. General Information",
+        "no": "№",
+        "indicator": "Indicator",
+        "data_col": "Data",
+        "name_label_child": "Name and Surname (child)",
+        "name_label_adult": "Name and Surname (patient)",
+        "id_code": "ID Code",
+        "exam_date": "Examination Date",
+        "age_label_child": "Age (child)",
+        "age_label_adult": "Age (patient)",
+        "age_suffix": "years",
+        "age_months": "mo",
+        "age_days": "days",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "birth_date": "Date of Birth",
+        "area_type": "Area Type",
+        "city": "City",
+        "village": "Village",
+        "institution": "Institution (school/nursery)",
+        "address": "Residential Address",
+        "section_2": "II. Basic Anthropometric Indicators (WHO Standards)",
+        "unit": "Unit",
+        "value": "Value",
+        "height": "Height",
+        "weight": "Body Weight",
+        "head": "Head Circumference",
+        "chest": "Chest Circumference",
+        "waist": "Waist Circumference",
+        "sh_len": "Shoulder Length",
+        "sh_br": "Shoulder Breadth",
+        "sh_circ": "Shoulder Circumference",
+        "arm_elb": "Forearm Length",
+        "hand": "Hand Length",
+        "thigh_len": "Thigh Length",
+        "thigh_circ": "Thigh Circumference",
+        "calf_len": "Calf Length",
+        "calf_circ": "Calf Circumference",
+        "foot": "Foot Length",
+        "body_len": "Trunk Length",
+        "section_3": "III. Calculated Anthropometric Indices",
+        "eval": "Evaluation",
+        "bmi_label": "BMI (kg/m²)",
+        "height_age_z": "Height-for-age Z-score",
+        "weight_age_z": "Weight-for-age Z-score",
+        "bmi_age_z": "BMI-for-age Z-score",
+        "centile": "Centile Interval",
+        "corridor": "Health Corridor",
+        "hmai_label": "HMAI (adaptation)",
+        "mii_label": "MII (integration)",
+        "adi_label": "ADI (disharmony)",
+        "body_len_z": "Trunk-len. Z-score",
+        "section_4": "IV. Bioimpedance Analysis Results",
+        "norm": "Normal Range",
+        "tbw": "Total Body Water (TBW)",
+        "fm_p": "Fat Mass (%)",
+        "fm_kg": "Fat Mass (kg)",
+        "muscle": "Muscle Mass",
+        "bone": "Bone Mass",
+        "acm": "Active Cell Mass (ACM)",
+        "visceral": "Visceral Fat Level",
+        "section_5": "V. Morphological and Biological Assessment",
+        "dev_level": "Level of Physical Development",
+        "age_matches": "Age-appropriate",
+        "behind": "Behind",
+        "ahead": "Ahead",
+        "morph_type": "Morphological Type",
+        "bio_age_match": "Biological Age Match",
+        "secular": "Secular Trend Signs",
+        "section_6": "VI. Ethical Consent and Signatures:",
+        "parent": "Parent (guardian)",
+        "nurse": "Nurse (institution)",
+        "specialists": "Specialist 1 / Specialist 2",
+        "consultant": "Consultant",
+        "sig_date": "Signature / Date",
+        "doctor_parent": "Specialist / Parent",
+    },
+    "kz": {
+        "title_child": "МЕКТЕПКЕ ДЕЙІНГІ ЖАСТАҒЫ БАЛАЛАРҒА АРНАЛҒАН\nБИОИМПЕДАНС + АНТРОПОМЕТРИЯЛЫҚ ТЕКСЕРУ АНКЕТАСЫ",
+        "title_pupil": "МЕКТЕП ЖАСТАҒЫ БАЛАЛАР МЕН ЖАСӨСПІРІМДЕРГЕ АРНАЛҒАН\nБИОИМПЕДАНС + АНТРОПОМЕТРИЯЛЫҚ ТЕКСЕРУ АНКЕТАСЫ",
+        "title_adult": "АНТРОПОМЕТРИЯЛЫҚ ТЕКСЕРУ ЖӘНЕ БИОИМПЕДАНС ТАЛДАУ АНКЕТАСЫ",
+        "section_1": "I. Жалпы мәліметтер",
+        "no": "№",
+        "indicator": "Көрсеткіш",
+        "data_col": "Мәлімет",
+        "name_label_child": "Аты-жөні (баланың)",
+        "name_label_adult": "Аты-жөні (науқастың)",
+        "id_code": "ID код",
+        "exam_date": "Тексеру күні",
+        "age_label_child": "Жасы (баланың)",
+        "age_label_adult": "Жасы (науқастың)",
+        "age_suffix": "жас",
+        "age_months": "ай",
+        "age_days": "күн",
+        "gender": "Жынысы",
+        "male": "Ер",
+        "female": "Қыз",
+        "birth_date": "Туған күні",
+        "area_type": "Аймақ түрі",
+        "city": "Қала",
+        "village": "Ауыл",
+        "institution": "Мекеме (мектеп/бақша)",
+        "address": "Тұрғылықты мекен-жайы",
+        "section_2": "II. Негізгі антропометриялық көрсеткіштер (ДДСҰ стандарттары)",
+        "unit": "Өлш.б.",
+        "value": "Мән",
+        "height": "Бой ұзындығы",
+        "weight": "Дене салмағы",
+        "head": "Бас айналымы",
+        "chest": "Кеуде айналымы",
+        "waist": "Бел айналымы",
+        "sh_len": "Иық ұзындығы",
+        "sh_br": "Иық ені",
+        "sh_circ": "Иық айналымы",
+        "arm_elb": "Білек ұзындығы",
+        "hand": "Қол басының ұзындығы",
+        "thigh_len": "Сан ұзындығы",
+        "thigh_circ": "Сан айналымы",
+        "calf_len": "Балтыр ұзындығы",
+        "calf_circ": "Балтыр айналымы",
+        "foot": "Аяқ басының ұзындығы",
+        "body_len": "Дене ұзындығы",
+        "section_3": "III. Есептелген антропометриялық индекстер",
+        "eval": "Бағалау",
+        "bmi_label": "ДМИ (кг/м²)",
+        "height_age_z": "Бой-жас Z-score",
+        "weight_age_z": "Салмақ-жас Z-score",
+        "bmi_age_z": "ДМИ-жас Z-score",
+        "centile": "Центильдік интервал",
+        "corridor": "Денсаулық дәлізі",
+        "hmai_label": "HMAI (бейімделу)",
+        "mii_label": "MII (интеграция)",
+        "adi_label": "ADI (үйлесімсіздік)",
+        "body_len_z": "Дене ұз. Z-score",
+        "section_4": "IV. Биоимпеданс талдауының нәтижелері",
+        "norm": "Норма",
+        "tbw": "Жалпы су (TBW)",
+        "fm_p": "Май тіні (%)",
+        "fm_kg": "Май массасы (кг)",
+        "muscle": "Бұлшық ет массасы",
+        "bone": "Сүйек массасы",
+        "acm": "Белсенді жасуша массасы (ACM)",
+        "visceral": "Висцеральды май деңгейі",
+        "section_5": "V. Морфологиялық және биологиялық бағалау",
+        "dev_level": "Дене дамуының деңгейі",
+        "age_matches": "Жасына сәйкес",
+        "behind": "Қалып қойған",
+        "ahead": "Озық",
+        "morph_type": "Морфологиялық типі",
+        "bio_age_match": "Биол. жасқа сәйкестігі",
+        "secular": "Секулярлы тренд белгілері",
+        "section_6": "VI. Этикалық келісім және қолтаңбалар:",
+        "parent": "Ата-ана (немесе қамқоршы)",
+        "nurse": "Медбике (мекеме)",
+        "specialists": "Маман 1 / Маман 2",
+        "consultant": "Консультант",
+        "sig_date": "Қолтаңба / Күні",
+        "doctor_parent": "Маман / Ата-ана",
+    }
+}
+
+
+
+# ---------------------------------------------------------------------------
 # Kalit nomi normalizator (camelCase → snake_case)
 # ---------------------------------------------------------------------------
 
@@ -247,9 +585,19 @@ def _fmt(val, suffix: str = "") -> str:
 # Asosiy generatsiya funksiyasi
 # ---------------------------------------------------------------------------
 
-def generate_docx_file(raw_data: dict) -> BytesIO:
+def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # Barcha kalitlarni normallashtirish (camelCase → snake_case ham qo'shiladi)
     data = _normalize_data(raw_data)
+    labels = DOCX_LABELS.get(lang, DOCX_LABELS["uz"])
+
+    def LP(text):
+        """Transliteratsiya faqat uz tili uchun kerak bo'lsa."""
+        if lang == "uz":
+            return lat2cyr(text)
+        return text
+
+    def L(key):
+        return labels.get(key, key)
 
     doc = Document()
 
@@ -263,77 +611,90 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     style.font.name = "Times New Roman"
     style.font.size = Pt(9)
 
-    # -----------------------------------------------------------------------
-    # SARLAVHA
-    # -----------------------------------------------------------------------
-    _add_bold_centered_title(
-        doc,
-        "МАКТАБГАЧА ТАЪЛИМ ЁШИДАГИ БОЛАЛАР УЧУН БИОИМПЕДАНС +\n"
-        "АНТРОПОМЕТРИК ТЕКШИРУВ АНКЕТАСИ",
-        size=11,
-    )
-
-    # -----------------------------------------------------------------------
-    # I. УМУМИЙ МАЪЛУМОТЛАР
-    # -----------------------------------------------------------------------
-    _section_head_paragraph(doc, "I. Умумий маълумотлар")
-
-    t1 = doc.add_table(rows=10, cols=3)
-    t1.style = "Table Grid"
-
-    _set_cell_font(t1.cell(0, 0), "№",         bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-    _set_cell_font(t1.cell(0, 1), "Кўрсаткич", bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-    _set_cell_font(t1.cell(0, 2), "Маълумот",  bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-    for c in range(3):
-        _shade_cell(t1.cell(0, c))
-
-    # O'zgaruvchilar
+    # O'zgaruvchilar - Common fields extraction moved here to avoid NameError
     exam_date  = _val(data, "examination_date")
     birth_date = _val(data, "birth_date")
     age_val    = _val(data, "age")
     age_m      = _val(data, "age_months", "0")
     age_d      = _val(data, "age_days", "0")
     gender_raw = _val(data, "gender").lower()
-    preschool  = lat2cyr(_val(data, "preschool_institution"))
+    preschool  = LP(_val(data, "preschool_institution"))
     region_raw = _val(data, "region").lower()
     district_s = _val(data, "district").lower()
     address_s  = _val(data, "address").lower()
     
-    region_val = lat2cyr(_val(data, "region"))
-    district_val = lat2cyr(_val(data, "district"))
-    address_val = lat2cyr(_val(data, "address"))
+    region_val = LP(_val(data, "region"))
+    district_val = LP(_val(data, "district"))
+    address_val = LP(_val(data, "address"))
     full_address = ", ".join(filter(None, [region_val, district_val, address_val]))
 
+    # SARLAVHA
+    age_val_int = 0
+    try:
+        age_val_int = int(float(age_val or 0))
+    except (TypeError, ValueError):
+        pass
+
+    if age_val_int < 7:
+        title_text = L("title_child")
+    elif age_val_int < 21:
+        title_text = L("title_pupil")
+    else:
+        title_text = L("title_adult")
+
+    _add_bold_centered_title(
+        doc,
+        title_text,
+        size=11,
+    )
+
+    # -----------------------------------------------------------------------
+    # I. УМУМИЙ МАЪЛУМОТЛАР
+    # -----------------------------------------------------------------------
+    _section_head_paragraph(doc, L("section_1"))
+
+    t1 = doc.add_table(rows=10, cols=3)
+    t1.style = "Table Grid"
+
+    _set_cell_font(t1.cell(0, 0), L("no"),         bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _set_cell_font(t1.cell(0, 1), L("indicator"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _set_cell_font(t1.cell(0, 2), L("data_col"),  bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+    for c in range(3):
+        _shade_cell(t1.cell(0, c))
+
     # Жинси checkbox
-    is_boy   = any(k in gender_raw for k in ("erkak", "o'g'il", "ogil", "ўғил"))
+    is_boy   = any(k in gender_raw for k in ("erkak", "o'g'il", "ogil", "ўғил", "male", "ер"))
     boy_box  = _checkbox(is_boy)
     girl_box = _checkbox(not is_boy)
 
     # Яшаш ҳудуди checkbox
     combined = f"{region_raw} {district_s} {address_s}"
-    is_city     = any(k in combined for k in ("shahar", "shahri", "шаҳар", "city"))
+    is_city     = any(k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город"))
     city_box    = _checkbox(is_city)
     village_box = _checkbox(not is_city)
 
     #Age string
-    age_str = f"{age_val} йил" if age_val else ""
+    age_str = f"{age_val} {L('age_suffix')}" if age_val else ""
     if age_m != "0" or age_d != "0":
-        age_str += f", {age_m} ой, {age_d} кун"
+        age_str += f", {age_m} {L('age_months')}, {age_d} {L('age_days')}"
 
     full_name_raw = _val(data, "full_name") or data.get("name") or f"{_val(data, 'first_name')} {_val(data, 'last_name')}".strip()
-    full_name_val = lat2cyr(str(full_name_raw)) if full_name_raw else ""
+    full_name_val = LP(str(full_name_raw)) if full_name_raw else ""
     id_code_val   = _val(data, "id_code")
-
+    
+    name_label = L("name_label_child") if age_val_int < 21 else L("name_label_adult")
+    age_label = L("age_label_child") if age_val_int < 21 else L("age_label_adult")
+    
     rows_i = [
-        ("1", "Боланинг исм фамилияси",       full_name_val),
-        ("2", "ID код",             id_code_val),
-        ("3", "Текширув санаси",              exam_date),
-        ("4", "Боланинг ёши",                 age_str),
-        ("5", "Жинси",                        f"{boy_box} Ўғил    {girl_box} Қиз"),
-        ("6", "Туғилган санаси",              birth_date),
-        ("7", "Яшаш ҳудуди",                  f"{city_box} Шаҳар    {village_box} Қишлоқ"),
-        ("8", "Мактабгача таълим муассасаси", preschool),
-        ("9", "Яшаш манзили",                 full_address),
+        ("1", name_label,       full_name_val),
+        ("2", L("id_code"),             id_code_val),
+        ("3", L("exam_date"),              exam_date),
+        ("4", age_label,                 age_str),
+        ("5", L("gender"),                        f"{boy_box} {L('male')}    {girl_box} {L('female')}"),
+        ("6", L("birth_date"),              birth_date),
+        ("7", L("area_type"),                  f"{city_box} {L('city')}    {village_box} {L('village')}"),
+        ("8", L("institution"),        LP(preschool)),
+        ("9", L("address"),                 full_address),
     ]
 
     for i, (num, label, val) in enumerate(rows_i, start=1):
@@ -348,35 +709,36 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     # -----------------------------------------------------------------------
     # II. АСОСИЙ АНТРОПОМЕТРИК КЎРСАТКИЧЛАР
     # -----------------------------------------------------------------------
-    _section_head_paragraph(doc, "II. Асосий антропометрик кўрсаткичлар (ЖССТ стандарти)")
+    _section_head_paragraph(doc, L("section_2"))
 
     t2 = doc.add_table(rows=11, cols=7)
     t2.style = "Table Grid"
 
-    headers2 = ["№", "Кўрсаткич", "Би", "Қийм", "Кўрсаткич", "Би", "Қийм"]
+    headers2 = [L("no"), L("indicator"), L("unit"), L("value"), L("indicator"), L("unit"), L("value")]
     for c, h in enumerate(headers2):
         _set_cell_font(t2.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _shade_cell(t2.cell(0, c))
 
     left_metrics = [
-        ("1",  "Бўй узунлиги",         "см", _fmt(_val(data, "height"))),
-        ("2",  "Тана вазни",            "кг", _fmt(_val(data, "weight"))),
-        ("3",  "Бош айланаси",          "см", _fmt(_val(data, "head"))),
-        ("4",  "Кўкрак айланаси",       "см", _fmt(_val(data, "chest"))),
-        ("5",  "Бел айланаси",          "см", _fmt(_val(data, "waist"))),
-        ("6",  "Елка узунлиги",         "см", _fmt(_val(data, "shoulder_length"))),
-        ("7",  "Елка кенглиги",         "см", _fmt(_val(data, "shoulder_breadth"))),
-        ("8",  "Елка айланаси",         "см", _fmt(_val(data, "shoulder_circumference"))),
-        ("9",  "Билак/тирсак узунлиги", "см", _fmt(_val(data, "arm_elbow_length"))),
-        ("10", "Қўл панжа узунлиги",    "см", _fmt(_val(data, "hand_length"))),
+        ("1",  L("height"),         L("cm"), _fmt(_val(data, "height"))),
+        ("2",  L("weight"),            L("kg"), _fmt(_val(data, "weight"))),
+        ("3",  L("head"),          L("cm"), _fmt(_val(data, "head"))),
+        ("4",  L("chest"),       L("cm"), _fmt(_val(data, "chest"))),
+        ("5",  L("waist"),          L("cm"), _fmt(_val(data, "waist"))),
+        ("6",  L("sh_len"),         L("cm"), _fmt(_val(data, "shoulder_length"))),
+        ("7",  L("sh_br"),         L("cm"), _fmt(_val(data, "shoulder_breadth"))),
+        ("8",  L("sh_circ"),         L("cm"), _fmt(_val(data, "shoulder_circumference"))),
+        ("9",  L("arm_elb"), L("cm"), _fmt(_val(data, "arm_elbow_length"))),
+        ("10", L("hand"),    L("cm"), _fmt(_val(data, "hand_length"))),
     ]
 
     right_metrics = [
-        ("Сон узунлиги",        "см", _fmt(_val(data, "thigh_length"))),
-        ("Сон айланаси",        "см", _fmt(_val(data, "thigh_circumference"))),
-        ("Болдир узунлиги",     "см", _fmt(_val(data, "calf_length"))),
-        ("Болдир айланаси",     "см", _fmt(_val(data, "calf_circumference"))),
-        ("Оёқ панжа узунлиги", "см", _fmt(_val(data, "foot_length"))),
+        (L("thigh_len"),        L("cm"), _fmt(_val(data, "thigh_length"))),
+        (L("thigh_circ"),        L("cm"), _fmt(_val(data, "thigh_circumference"))),
+        (L("calf_len"),     L("cm"), _fmt(_val(data, "calf_length"))),
+        (L("calf_circ"),     L("cm"), _fmt(_val(data, "calf_circumference"))),
+        (L("foot"), L("cm"), _fmt(_val(data, "foot_length"))),
+        (L("body_len"),       L("cm"), _fmt(_val(data, "body_length"))),
     ]
 
     for i, (num, label, unit, qiymat) in enumerate(left_metrics, start=1):
@@ -401,7 +763,7 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     # -----------------------------------------------------------------------
     # III. ҲИСОБЛАНГАН АНТРОПОМЕТРИК ИНДЕКСЛАР
     # -----------------------------------------------------------------------
-    _section_head_paragraph(doc, "III. Ҳисобланган антропометрик индекслар")
+    _section_head_paragraph(doc, L("section_3"))
 
     analysis = data.get("analysis", {}) or {}
     try:
@@ -418,12 +780,12 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
         age_int = 0
 
     bmi_str    = f"{bmi_f:.1f}" if bmi_f else ""
-    bmi_cat    = str(analysis.get("bmi_category", "") or "")
+    bmi_cat    = LP(str(analysis.get("bmi_category", "") or ""))
     zscore_str = f"{z_val:.2f}" if z_val else ""
 
     # Centil va sog'lomlik yo'lagi
     centil_str  = _calc_centile(bmi_f, age_int, gender_raw)
-    corridor    = _calc_health_corridor(bmi_f, age_int, gender_raw)
+    corridor    = LP(_calc_health_corridor(bmi_f, age_int, gender_raw))
 
     # Yangi indekslarni olish
     detailed = analysis.get("indices", {})
@@ -431,33 +793,36 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     z_w_str = f"{detailed.get('z_w', 0):.2f}"
     z_bmi_str = f"{detailed.get('z_bmi', 0):.2f}"
     
+    z_body_length_str = f"{detailed.get('z_body_length', 0):.2f}" if detailed.get('z_body_length') is not None else ""
+    
     hmai_val = detailed.get("hmai", 0)
-    hmai_desc = detailed.get("hmai_desc", "")
+    hmai_desc = LP(detailed.get("hmai_desc", ""))
     
     mii_val = detailed.get("mii", 0)
-    mii_desc = detailed.get("mii_desc", "")
+    mii_desc = LP(detailed.get("mii_desc", ""))
     
     adi_val = detailed.get("adi", 0)
-    adi_desc = detailed.get("adi_desc", "")
+    adi_desc = LP(detailed.get("adi_desc", ""))
 
-    t3 = doc.add_table(rows=10, cols=4)
+    t3 = doc.add_table(rows=11, cols=4)
     t3.style = "Table Grid"
 
-    headers3 = ["№", "Индекс", "М", "Баҳолаш"]
+    headers3 = [L("no"), L("indicator"), L("value"), L("eval")]
     for c, h in enumerate(headers3):
         _set_cell_font(t3.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _shade_cell(t3.cell(0, c))
 
     indices = [
-        ("1", "BMI (кг/м²)",       bmi_str,    bmi_cat),
-        ("2", "Бўй-ёш Z-score",    z_h_str,    ""),
-        ("3", "Вазн-ёш Z-score",   z_w_str,    ""),
-        ("4", "BMI-ёш Z-score",    z_bmi_str,  ""),
-        ("5", "Центил интервали",  centil_str, ""),
-        ("6", "Соғломлик йўлаги",  corridor,   ""),
-        ("7", "HMAI (адаптация)",  f"{hmai_val}", hmai_desc),
-        ("8", "MII (интеграция)",  f"{mii_val}",  mii_desc),
-        ("9", "ADI (дисгармония)", f"{adi_val}",  adi_desc),
+        ("1", L("bmi_label"),       bmi_str,    bmi_cat),
+        ("2", L("height_age_z"),    z_h_str,    ""),
+        ("3", L("weight_age_z"),   z_w_str,    ""),
+        ("4", L("bmi_age_z"),    z_bmi_str,  ""),
+        ("5", L("centile"),  centil_str, ""),
+        ("6", L("corridor"),  corridor,   ""),
+        ("7", L("hmai_label"),  f"{hmai_val}", hmai_desc),
+        ("8", L("mii_label"),  f"{mii_val}",  mii_desc),
+        ("9", L("adi_label"), f"{adi_val}",  adi_desc),
+        ("10", L("body_len_z"), z_body_length_str, ""),
     ]
 
     for i, (num, label, m_val, baholash) in enumerate(indices, start=1):
@@ -472,14 +837,14 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     _set_col_width(t3, 3, 5.2)
 
     # -----------------------------------------------------------------------
-    # IV. БИОИМПЕДАНС ТАҲЛИЛ НАТИЖАЛАРИ
+    # IV. БИОИМПЕДАНС ТАҲЛИЛИ НАТИЖАЛАРИ
     # -----------------------------------------------------------------------
-    _section_head_paragraph(doc, "IV. Биоимпеданс таҳлил натижалари")
+    _section_head_paragraph(doc, L("section_4"))
 
     t4 = doc.add_table(rows=8, cols=5)
     t4.style = "Table Grid"
 
-    headers4 = ["№", "Кўрсаткич", "Би", "Қиймат", "Норма"]
+    headers4 = [L("no"), L("indicator"), L("unit"), L("value"), L("norm")]
     for c, h in enumerate(headers4):
         _set_cell_font(t4.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _shade_cell(t4.cell(0, c))
@@ -487,13 +852,13 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     bio_results = analysis.get("indices", {})
     
     bio_rows = [
-        ("1", "TBW (%)",   "%",  f"{bio_results.get('tbw_percent', '')}", f"{bio_results.get('tbw_norm', '')}"),
-        ("2", "Ёғ тўқимаси (фоизда)",   "%",  f"{bio_results.get('fm_percent', '')}",  f"{bio_results.get('fm_norm', '')}"),
-        ("3", "Ёғ массаси (вазнда)",    "кг", f"{bio_results.get('fm', '')}",          f"{bio_results.get('fm_kg_norm', '')}"),
-        ("4", "Мушак массаси",          "кг", f"{bio_results.get('muscle_mass', '')}", f"{bio_results.get('muscle_norm', '')}"),
-        ("5", "Суяк минерал массаси",   "кг", f"{bio_results.get('bone_mass', '')}",   f"{bio_results.get('bone_norm', '')}"),
-        ("6", "ACM (%)",  "%",  f"{bio_results.get('acm_percent', '')}", f"{bio_results.get('acm_norm', '')}"),
-        ("7", "Висцерал ёғ даражаси",  "—",  f"{bio_results.get('visceral_fat', '')}", f"{bio_results.get('visceral_norm', '')}"),
+        ("1", L("tbw"),   "%",  f"{bio_results.get('tbw_percent', '')}", f"{bio_results.get('tbw_norm', '')}"),
+        ("2", L("fm_p"),   "%",  f"{bio_results.get('fm_percent', '')}",  f"{bio_results.get('fm_norm', '')}"),
+        ("3", L("fm_kg"),    L("kg"), f"{bio_results.get('fm', '')}",          f"{bio_results.get('fm_kg_norm', '')}"),
+        ("4", L("muscle"),          L("kg"), f"{bio_results.get('muscle_mass', '')}", f"{bio_results.get('muscle_norm', '')}"),
+        ("5", L("bone"),   L("kg"), f"{bio_results.get('bone_mass', '')}",   f"{bio_results.get('bone_norm', '')}"),
+        ("6", L("acm"),  "%",  f"{bio_results.get('acm_percent', '')}", f"{bio_results.get('acm_norm', '')}"),
+        ("7", L("visceral"),  "—",  f"{bio_results.get('visceral_fat', '')}", f"{bio_results.get('visceral_norm', '')}"),
     ]
 
     for i, (num, label, unit, qiymat, norma) in enumerate(bio_rows, start=1):
@@ -512,7 +877,7 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     # -----------------------------------------------------------------------
     # V. МОРФОЛОГИК ВА БИОЛОГИК БАҲОЛАШ
     # -----------------------------------------------------------------------
-    _section_head_paragraph(doc, "V. Морфологик ва биологик баҳолаш")
+    _section_head_paragraph(doc, L("section_5"))
 
     # Z-score asosida rivojlanish darajasi checkboxini aniqlash
     dev_mos, dev_orqada, dev_oldinda = _dev_level(z_val)
@@ -520,15 +885,15 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     t5 = doc.add_table(rows=5, cols=3)
     t5.style = "Table Grid"
 
-    headers5 = ["№", "Кўрсаткич", "Натижа"]
+    headers5 = [L("no"), L("indicator"), L("value")]
     for c, h in enumerate(headers5):
         _set_cell_font(t5.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _shade_cell(t5.cell(0, c))
 
     dev_text = (
-        f"{_checkbox(dev_mos)} Ёшга мос  "
-        f"{_checkbox(dev_orqada)} Оркада қолган  "
-        f"{_checkbox(dev_oldinda)} Олдинда"
+        f"{_checkbox(dev_mos)} {L('age_matches')}  "
+        f"{_checkbox(dev_orqada)} {L('behind')}  "
+        f"{_checkbox(dev_oldinda)} {L('ahead')}"
     )
 
     # Morphological assessment data
@@ -536,25 +901,30 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     b_age = bio_results.get("biological_age_status", "")
     s_trend = bio_results.get("secular_trend", "")
 
+    # Morphological assessment data
+    m_type = bio_results.get("morphological_type", "")
+    b_age = bio_results.get("biological_age_status", "")
+    s_trend = bio_results.get("secular_trend", "")
+
     morph_type_text = (
-        f"{_checkbox(m_type == 'astenik')} Астеник  "
-        f"{_checkbox(m_type == 'normostenik')} Нормостеник  "
-        f"{_checkbox(m_type == 'giperstenik')} Гиперстеник"
+        f"{_checkbox(m_type == 'astenik')} " + LP("Астеник") + "  "
+        f"{_checkbox(m_type == 'normostenik')} " + LP("Нормостеник") + "  "
+        f"{_checkbox(m_type == 'giperstenik')} " + LP("Гиперстеник")
     )
     bio_age_text = (
-        f"{_checkbox(b_age == 'mos')} Мос  "
-        f"{_checkbox(b_age == 'mos_emas')} Мос эмас"
+        f"{_checkbox(b_age == 'mos')} " + LP("Мос") + "  "
+        f"{_checkbox(b_age == 'mos_emas')} " + LP("Мос эмас")
     )
     secular_trend_text = (
-        f"{_checkbox(s_trend == 'yoq')} Йўқ  "
-        f"{_checkbox(s_trend == 'mavjud')} Мавжуд"
+        f"{_checkbox(s_trend == 'yoq')} " + LP("Йўқ") + "  "
+        f"{_checkbox(s_trend == 'mavjud')} " + LP("Мавжуд")
     )
 
     morph_rows = [
-        ("1", "Жисмоний ривиш даражаси",   dev_text),
-        ("2", "Морфологик тип",             morph_type_text),
-        ("3", "Биологик ёшга мослик",       bio_age_text),
-        ("4", "Секуляр тенденция белгиси",  secular_trend_text),
+        ("1", L("dev_level"),   dev_text),
+        ("2", L("morph_type"),             morph_type_text),
+        ("3", L("bio_age_match"),       bio_age_text),
+        ("4", L("secular"),  secular_trend_text),
     ]
 
     for i, (num, label, result) in enumerate(morph_rows, start=1):
@@ -572,20 +942,20 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     # -----------------------------------------------------------------------
     _section_head_paragraph(
         doc,
-        "VI. Этик розилик ва текширувчи мутахасислар (ота-она / васий) имзоси:"
+        L("section_6")
     )
 
     t7 = doc.add_table(rows=5, cols=2)
     t7.style = "Table Grid"
 
-    headers7 = ["Мутахасис", "Имзо / Сана"]
+    headers7 = [L("doctor_parent"), L("sig_date")]
     for c, h in enumerate(headers7):
         _set_cell_font(t7.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _shade_cell(t7.cell(0, c))
 
     for i, label in enumerate(
-        ["Ота-она (ёки васий)", "Ҳамшира (муассаса)",
-         "Мутахасис 1/Мутахасис 2", "Консультант"],
+        [L("parent"), L("nurse"),
+         L("specialists"), L("consultant")],
         start=1,
     ):
         _set_cell_font(t7.cell(i, 0), label, size=9)
@@ -603,6 +973,6 @@ def generate_docx_file(raw_data: dict) -> BytesIO:
     return buffer
 
 
-def generate_docx_report(data: dict) -> BytesIO:
+def generate_docx_report(data: dict, lang: str = "uz") -> BytesIO:
     """Asosiy chaqiruv funksiyasi."""
-    return generate_docx_file(data)
+    return generate_docx_file(data, lang=lang)

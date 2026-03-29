@@ -15,13 +15,12 @@ load_dotenv()
 from routers.analyze_router import router as analyze_router
 from routers.admin_router import router as admin_router
 from routers.pdf_router import router as pdf_router
-from routers.rating_router import router as rating_router
 from routers.auth_router import router as auth_router
 
 # DB init
 from utils.database import engine, get_db, init_db
 from models.base import Base
-from models.userdata import UserAnalysis
+from models.userdata import PatientAnalysis
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
@@ -31,7 +30,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS sozlamalari (env orqali boshqariladi yoki default)
+# CORS sozlamalari
 _origins = os.getenv("CORS_ORIGINS", "")
 if _origins:
     allow_origins = [o.strip() for o in _origins.split(",") if o.strip()]
@@ -41,18 +40,20 @@ else:
         "http://127.0.0.1:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3001",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
     ]
+
+print(f"[CORS] Ruxsat berilgan originlar: {allow_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-    # Mahalliy testlarda (dev) origin regexdan foydalanish xatoliklarning oldini oladi
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:[0-9]+)?",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,
 )
 
 @app.on_event("startup")
@@ -64,7 +65,6 @@ def on_startup():
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])
 app.include_router(admin_router,  prefix=f"{API_PREFIX}/admin",   tags=["Admin"])
 app.include_router(pdf_router,    prefix=f"{API_PREFIX}/pdf",     tags=["PDF Hisobot"])
-app.include_router(rating_router, prefix=f"{API_PREFIX}/rating",  tags=["Fikr va baho"])
 app.include_router(auth_router,   prefix=f"{API_PREFIX}")
 
 # Sog'liqni tekshirish
@@ -74,33 +74,7 @@ def health(db: Session = Depends(get_db)):
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
 
-# --- Analizni qo'lda saqlash endpointi (ixtiyoriy) ---
-class UserInput(BaseModel):
-    name: str
-    age: int
-    gender: str
-    height: float
-    weight: float
-    chest: float
-    waist: float
-    hip: float
-    head: float
-    bmi: Optional[float] = None
-    z_score: Optional[float] = None
-    somatotype: Optional[str] = None
-    recommendations: Optional[str] = None
-
-@app.post(f"{API_PREFIX}/analyze/save", tags=["Ma'lumotlar bazasi"])
-def save_user_analysis(data: UserInput, db: Session = Depends(get_db)):
-    try:
-        record = UserAnalysis(**data.dict())
-        db.add(record)
-        db.commit()
-        db.refresh(record)
-        return {"message": "Ma'lumot saqlandi", "id": record.id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+# Endpoints are now handled via specialized routers
 
 if __name__ == "__main__":
     import uvicorn

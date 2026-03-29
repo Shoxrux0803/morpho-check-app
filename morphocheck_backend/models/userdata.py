@@ -1,20 +1,21 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, func
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, func, ForeignKey
+from sqlalchemy.orm import relationship
 from .base import Base
 
-class UserAnalysis(Base):
-    __tablename__ = "user_analysis"
+class PatientAnalysis(Base):
+    __tablename__ = "patient_analysis"
 
     id = Column(Integer, primary_key=True, index=True)
     id_code = Column(String(50), nullable=True, index=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, index=True)
 
     # YANGI ustunlar:
-    region = Column(String(100), nullable=True)
-    district = Column(String(100), nullable=True)
+    region = Column(String(100), nullable=True, index=True)
+    district = Column(String(100), nullable=True, index=True)
     address = Column(String(255), nullable=True)
 
-    examination_date = Column(String(50), nullable=True)
-    birth_date = Column(String(50), nullable=True)
+    examination_date = Column(String(50), nullable=True, index=True)
+    birth_date = Column(String(50), nullable=True, index=True)
     preschool_institution = Column(String(255), nullable=True)
 
     shoulder_length = Column(Float, nullable=True)
@@ -27,11 +28,12 @@ class UserAnalysis(Base):
     calf_length = Column(Float, nullable=True)
     calf_circumference = Column(Float, nullable=True)
     foot_length = Column(Float, nullable=True)
+    body_length = Column(Float, nullable=True)
 
-    age = Column(Integer, nullable=False)
+    age = Column(Integer, nullable=False, index=True)
     age_months = Column(Integer, nullable=True)
     age_days = Column(Integer, nullable=True)
-    gender = Column(String(10), nullable=False)
+    gender = Column(String(10), nullable=False, index=True)
     height = Column(Float, nullable=False)
     weight = Column(Float, nullable=False)
     chest  = Column(Float, nullable=False)
@@ -53,5 +55,8 @@ class UserAnalysis(Base):
     visceral_fat     = Column(Float, nullable=True)
 
     recommendations = Column(Text, nullable=False)
+    
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    created_by = relationship("User")
 
-    created_at = Column(DateTime, server_default=func.now())
+    created_at = Column(DateTime, server_default=func.now(), index=True)

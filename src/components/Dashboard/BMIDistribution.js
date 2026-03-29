@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { Card, CardContent, Typography, Box, useTheme, CircularProgress, Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import { Typography, Box, useTheme, Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { MonitorWeight, Fullscreen, Close } from "@mui/icons-material";
+import { MonitorWeight, Close } from "@mui/icons-material";
+import DashboardCard from "./DashboardCard";
 
 const BMIDistribution = ({ data, loading }) => {
   const theme = useTheme();
@@ -18,7 +19,6 @@ const BMIDistribution = ({ data, loading }) => {
     data.forEach((user) => {
       let bmiStr = user.bmi_status || user.bmiStatus;
       if (!bmiStr) {
-        // Ob'ektdan kalkulyatsiya qilinmagan bo'lsa o'zimiz hisoblaymiz
         const w = Number(user.weight);
         const h = Number(user.height) / 100;
         if (w && h) {
@@ -39,24 +39,27 @@ const BMIDistribution = ({ data, loading }) => {
     });
 
     return [
-      { name: "Ozg'in (<18.5)", value: ozgin, color: theme.palette.info.main },
-      { name: "Normal (18.5-24.9)", value: normal, color: theme.palette.success.main },
-      { name: "Ortiqcha (25-29.9)", value: ortiqcha, color: theme.palette.warning.main },
-      { name: "Semizlik (≥30)", value: semizlik, color: theme.palette.error.main },
+      { name: "Ozg'in", value: ozgin, color: "#00C49F" },
+      { name: "Normal", value: normal, color: "#0088FE" },
+      { name: "Ortiqcha", value: ortiqcha, color: "#FFBB28" },
+      { name: "Semizlik", value: semizlik, color: "#FF8042" },
     ];
-  }, [data, theme]);
+  }, [data]);
 
-  const renderChart = () => (
-    <ResponsiveContainer width="100%" height="100%">
+  const total = bmiData.reduce((acc, curr) => acc + curr.value, 0);
+
+  const renderChart = (height = 300) => (
+    <ResponsiveContainer width="100%" height={height}>
       <PieChart>
         <Pie
           data={bmiData}
           cx="50%"
           cy="50%"
-          innerRadius={60}
-          outerRadius={90}
-          paddingAngle={3}
+          innerRadius={height * 0.2}
+          outerRadius={height * 0.3}
+          paddingAngle={5}
           dataKey="value"
+          stroke="none"
         >
           {bmiData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -64,56 +67,47 @@ const BMIDistribution = ({ data, loading }) => {
         </Pie>
         <Tooltip 
           contentStyle={{ 
-            borderRadius: 8, 
+            borderRadius: 12, 
+            boxShadow: theme.palette.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)',
+            border: 'none',
             backgroundColor: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            border: `1px solid ${theme.palette.divider}`
+            backdropFilter: 'blur(5px)',
+            color: theme.palette.text.primary
           }} 
-          itemStyle={{ color: theme.palette.text.primary }} 
+          itemStyle={{ color: theme.palette.text.primary }}
         />
-        <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: 12, color: theme.palette.text.primary }}/>
+        <Legend verticalAlign="bottom" height={36} iconType="circle" />
       </PieChart>
     </ResponsiveContainer>
   );
 
-  if (loading) {
-    return (
-      <Card elevation={2} sx={{ borderRadius: 3, height: "100%" }}>
-        <Box display="flex" justifyContent="center" alignItems="center" height={300}>
-          <CircularProgress />
-        </Box>
-      </Card>
-    );
-  }
-
   return (
     <>
-      <Card elevation={2} sx={{ borderRadius: 3, height: "100%" }}>
-        <CardContent sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography variant="h6">
-              <MonitorWeight sx={{ mr: 1, verticalAlign: "middle", fontSize: 20 }} /> BMI Taqsimoti
-            </Typography>
-            <IconButton onClick={() => setOpenModal(true)} size="small" title="Kattalashtirish">
-              <Fullscreen />
-            </IconButton>
-          </Box>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', height: 350 }}>
-            {bmiData.reduce((acc, curr) => acc + curr.value, 0) === 0 ? (
-               <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
-            ) : (
-              renderChart()
-            )}
-          </Box>
-        </CardContent>
-      </Card>
+      <DashboardCard 
+        title="BMI Taqsimoti" 
+        icon={<MonitorWeight />} 
+        loading={loading}
+        onFullscreen={() => setOpenModal(true)}
+      >
+        {total === 0 ? (
+          <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
+        ) : (
+          renderChart(300)
+        )}
+      </DashboardCard>
 
       <Dialog 
         open={openModal} 
         onClose={() => setOpenModal(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { height: '80vh', borderRadius: 3 } }}
+        PaperProps={{ 
+            sx: { 
+                borderRadius: 4,
+                background: theme.palette.mode === 'dark' ? "rgba(23, 26, 33, 0.9)" : "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(20px)",
+            } 
+        }}
       >
         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Box display="flex" alignItems="center">
@@ -125,12 +119,12 @@ const BMIDistribution = ({ data, loading }) => {
           </IconButton>
         </DialogTitle>
         <DialogContent dividers sx={{ pb: 4 }}>
-          {bmiData.reduce((acc, curr) => acc + curr.value, 0) === 0 ? (
-            <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          {total === 0 ? (
+            <Box display="flex" justifyContent="center" alignItems="center" height={400}>
               <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
             </Box>
           ) : (
-            renderChart()
+            renderChart(500)
           )}
         </DialogContent>
       </Dialog>

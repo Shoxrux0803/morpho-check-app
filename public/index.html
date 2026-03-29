@@ -2,27 +2,40 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0d6efd" />
     <meta
       name="description"
-      content="Web site created using create-react-app"
-    />  
-    <title>React App</title>
+      content="MorphoCheck Pro - Advanced Anthropometric Analysis and Performance Optimization"
+    />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/favicon.ico" />
+    <!--
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+    -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    
+    <title>MorphoCheck Pro | Anthropometric Analysis</title>
   </head>
-  <body>
+  <body class="bg-light">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
+    
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("theme");
+          var theme =
+            saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.setAttribute("data-bs-theme", theme);
+          if (theme === 'dark') {
+            document.body.classList.remove('bg-light');
+            document.body.classList.add('bg-dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </body>
 </html>
-
-<script>
-  (function () {
-    try {
-      var saved = localStorage.getItem("theme");
-      var theme =
-        saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-      document.documentElement.setAttribute("data-bs-theme", theme);
-    } catch (e) {}
-  })();
-</script>
 

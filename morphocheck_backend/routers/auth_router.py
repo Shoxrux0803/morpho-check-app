@@ -15,10 +15,6 @@ SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "supersecret_admin_token")
-    if token == ADMIN_TOKEN:
-        return User(id=0, name="Admin", email="admin@morphocheck.uz", role="admin")
-
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -38,10 +34,18 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user
 
 def get_current_admin(current_user: User = Depends(get_current_user)):
-    if current_user.role != "admin":
+    if current_user.role not in ["admin", "superadmin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="The user doesn't have enough privileges"
+            detail="Ushbu amal uchun huquqingiz yetarli emas (faqat adminlar uchun)"
+        )
+    return current_user
+
+def get_current_superadmin(current_user: User = Depends(get_current_user)):
+    if current_user.role != "superadmin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Faqat Super Admin ushbu amalni bajara oladi"
         )
     return current_user
 
@@ -64,10 +68,22 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
+from sqlalchemy import or_
+
 @router.post("/login", response_model=Token)
 def login(user_in: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == user_in.email).first()
-    if not user or not verify_password(user_in.password, user.hashed_password):
+    # Login (email) yoki Ism (name) bo'yicha qidirish
+    user = db.query(User).filter(
+        or_(
+            User.email == user_in.email,
+            User.name == user_in.email
+        )
+    ).first()
+
+    if not user:
+        raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
+        
+    if not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
     
     access_token = create_access_token(

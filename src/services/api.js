@@ -1,7 +1,10 @@
 // src/services/api.js
-
-const API_BASE = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+// proxy (package.json "proxy": "http://localhost:8000") orqali CORS bartaraf etiladi.
+// Development da API_BASE bo'sh - nisbiy URL lar proxy orqali o'tadi.
+// Production da REACT_APP_API_URL ni to'liq URL ga o'rnating.
+const API_BASE = process.env.REACT_APP_API_URL || "";
 const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
+
 
 /* -------------------- Yordamchi: xatoni ajratib olish -------------------- */
 async function parseError(resp) {
@@ -31,8 +34,8 @@ async function parseError(resp) {
  * shunda frontenddagi AnalysisResults `results.data.analysis` va `results.data.advices` bilan
  * muammosiz ishlaydi.
  */
-export async function postAnalysis(payload) {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/analyze/full`, {
+export async function postAnalysis(payload, lang = "uz") {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/analyze/full?lang=${lang}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -55,9 +58,8 @@ export async function postAnalysis(payload) {
  * Asl router bizda /api/pdf/... ostida. Eski kod /analyze/pdf-report bo'lishi mumkin.
  * Fallback qo'ydik: avval /api/pdf/report, 404 bo'lsa /api/analyze/pdf-report.
  */
-export async function generatePdf(payload) {
-  // 1) Yangi yo'l: /api/pdf/report
-  let resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report`, {
+export async function generatePdf(payload, lang = "uz") {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report?lang=${lang}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -65,18 +67,6 @@ export async function generatePdf(payload) {
     },
     body: JSON.stringify(payload),
   });
-
-  // 2) Agar topilmasa (404), eski yo'lga urinib ko'ramiz
-  if (resp.status === 404) {
-    resp = await fetch(`${API_BASE}${API_PREFIX}/analyze/pdf-report`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      },
-      body: JSON.stringify(payload),
-    });
-  }
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -85,13 +75,46 @@ export async function generatePdf(payload) {
   return resp.blob(); // PDF blob
 }
 
+// Admin panel uchun: ID bo'yicha PDF olish
+export async function generatePdfById(patientId, lang = "uz") {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report-by-id/${patientId}?lang=${lang}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+    },
+  });
+
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+  return resp.blob();
+}
+
+// Admin panel uchun: ID bo'yicha DOCX olish
+export async function generateDocxById(patientId, lang = "uz") {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report-docx-by-id/${patientId}?lang=${lang}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+    },
+  });
+
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+  return resp.blob();
+}
+
+
 /* -------------------- DOCX -------------------- */
 /**
  * /api/pdf/generate-docx endpointiga POST yuborib, DOCX blob qaytaradi.
  * Payload PDF bilan bir xil (PatientData + analysis).
  */
-export async function generateDocx(payload) {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/generate-docx`, {
+export async function generateDocx(payload, lang = "uz") {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/generate-docx?lang=${lang}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -99,6 +122,7 @@ export async function generateDocx(payload) {
     },
     body: JSON.stringify(payload),
   });
+
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -195,7 +219,7 @@ export async function register(userData) {
 }
 
 export async function getUserProfile() {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/user/profile`, {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/me`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
@@ -425,6 +449,25 @@ export const AdminApi = {
       return data;
     },
 
+    create: async (userData) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      });
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+
+      const data = await resp.json();
+      return data;
+    },
+
     update: async (id, userData) => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/${id}`, {
         method: "PUT",
@@ -462,13 +505,36 @@ export const AdminApi = {
       return data;
     },
   },
+
+  stats: {
+    get: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/stats`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+
+      const data = await resp.json();
+      return data;
+    },
+  },
 };
+
 
 // API service object - ESLint xatosini bartaraf qilish uchun
 const apiService = {
   postAnalysis,
   generatePdf,
+  generatePdfById,
   generateDocx,
+  generateDocxById,
   sendRating,
   submitRating,
   login,

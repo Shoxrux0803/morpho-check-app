@@ -23,6 +23,7 @@ class PatientData(BaseModel):
     calf_length: float
     calf_circumference: float
     foot_length: float
+    body_length: Optional[float] = Field(None, alias="bodyLength")
     age: int
     age_months: Optional[int] = 0
     age_days: Optional[int] = 0
@@ -60,16 +61,6 @@ class FullReportRequest(BaseModel):
     analysis: AnalysisResult
     advices: Advices
 
-class RatingRequest(BaseModel):
-    score: int = Field(..., ge=1, le=5, alias="rating")  # rating yuborilsa ham qabul qiladi
-    comment: Optional[str] = None
-    user_id: Optional[int] = None
-    name: Optional[str] = None
-    email: Optional[EmailStr] = None
-
-    class Config:
-        populate_by_name = True
-
 class UserDataCreate(BaseModel):
     full_name: str
     age: Optional[int]
@@ -92,6 +83,7 @@ class UserDataCreate(BaseModel):
 class UserCreate(BaseModel):
     name: str
     email: Optional[EmailStr] = None
+    password: Optional[str] = None
     phone: Optional[str] = None
     role: Optional[str] = "user"
 
@@ -103,7 +95,7 @@ class UserRegister(BaseModel):
     region: Optional[str] = None
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    email: str
     password: str
 
 class Token(BaseModel):
@@ -113,6 +105,7 @@ class Token(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
+    password: Optional[str] = None
     phone: Optional[str] = None
     role: Optional[str] = None
 

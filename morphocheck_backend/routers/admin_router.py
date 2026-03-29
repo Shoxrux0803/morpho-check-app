@@ -14,15 +14,15 @@ from pydantic import BaseModel
 from utils.database import get_db
 from models.user import User
 from models.payment import Payment 
-from models.userdata import UserAnalysis
-from models.rating import Rating
-from routers.auth_router import get_current_admin
+from models.userdata import PatientAnalysis
+from routers.auth_router import get_current_admin, get_current_superadmin
 from models.schemas import (
     UserCreate, UserUpdate, UserOut,
     PaymentCreate, PaymentOut
 )
 from routers.analyze_router import calculate_bmi as calc_full_bmi, PatientData
 from utils.translit import lat2cyr
+from utils.security import get_password_hash
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -64,7 +64,7 @@ def bmi_status_by_age(bmi: Optional[float], age: Optional[int]) -> str:
     if bmi < 22: return "Ortiqcha?"
     return "Semizlik?"
 
-def to_dict_analysis(row: UserAnalysis) -> dict:
+def to_dict_analysis(row: PatientAnalysis) -> dict:
     first_name, last_name = split_name(getattr(row, "name", None))
     bmi_val = getattr(row, "bmi", None)
     if bmi_val is None:
@@ -105,10 +105,17 @@ def to_dict_analysis(row: UserAnalysis) -> dict:
     for extra in extra_fields:
         if hasattr(row, extra):
             payload[extra] = getattr(row, extra)
+    
+    # Add creator name if requested
+    if hasattr(row, "created_by") and row.created_by:
+        payload["created_by_name"] = row.created_by.name
+    else:
+        payload["created_by_name"] = "Noma'lum"
+        
     return payload
 
 # ------------------ USERS ----------------------
-@router.get("/users", response_model=List[UserOut], dependencies=[Depends(verify_admin)])
+@router.get("/users", response_model=List[UserOut], dependencies=[Depends(get_current_superadmin)])
 def list_users(
     db: Session = Depends(get_db),
     q: Optional[str] = Query(None),
@@ -127,33 +134,65 @@ def list_users(
     )
     return items
 
-@router.post("/users", response_model=UserOut, dependencies=[Depends(verify_admin)])
+@router.post("/users", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
-    user = User(**payload.model_dump(exclude_unset=True))
+    # Check if email exists
+    if payload.email:
+        existing_user = db.query(User).filter(User.email == payload.email).first()
+        if existing_user:
+            raise HTTPException(400, "Ushbu email bilan foydalanuvchi allaqachon mavjud.")
+            
+    user_data = payload.model_dump(exclude_unset=True)
+    
+    # Hash password if provided
+    if "password" in user_data:
+        password = user_data.pop("password")
+        if password:
+            user_data["hashed_password"] = get_password_hash(password)
+            
+    user = User(**user_data)
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
 
-@router.get("/users/{user_id}", response_model=UserOut, dependencies=[Depends(verify_admin)])
+@router.get("/users/{user_id}", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
     return user
 
-@router.put("/users/{user_id}", response_model=UserOut, dependencies=[Depends(verify_admin)])
+@router.put("/users/{user_id}", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
 def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
-    for k, v in payload.model_dump(exclude_unset=True).items():
+        
+    update_data = payload.model_dump(exclude_unset=True)
+    
+    # Check if new email conflicts with other users
+    if "email" in update_data and update_data["email"] != user.email:
+        existing_user = db.query(User).filter(User.email == update_data["email"]).first()
+        if existing_user:
+            raise HTTPException(400, "Ushbu email allaqachon boshqa foydalanuvchi tomonidan band etilgan.")
+
+    # Maxsus holat: UserUpdate sxemasida password bo'lmasligi mumkin, 
+    # lekin agar biz schemas.py ni yangilagan bo'lsak, password kelishi mumkin.
+    # UserUpdate sxemasini ham tekshirib ko'ramiz.
+    if "password" in update_data:
+        password = update_data.pop("password")
+        if password:
+            user.hashed_password = get_password_hash(password)
+
+    for k, v in update_data.items():
         setattr(user, k, v)
+        
     db.commit()
     db.refresh(user)
     return user
 
-@router.delete("/users/{user_id}", dependencies=[Depends(verify_admin)])
+@router.delete("/users/{user_id}", dependencies=[Depends(get_current_superadmin)])
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if not user:
@@ -163,9 +202,10 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     return {"status": "deleted"}
 
 # ---------------- ANALYSES ---------------------
-@router.get("/analyses", dependencies=[Depends(verify_admin)])
+@router.get("/analyses")
 def list_analyses(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
     q: Optional[str] = Query(None),
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
@@ -178,43 +218,47 @@ def list_analyses(
     page: int = 1,
     page_size: int = 20,
 ):
-    base = db.query(UserAnalysis)
+    base = db.query(PatientAnalysis)
+
+    # Ownership Filter: Regular admin or others only see their own data
+    if current_user.role != "superadmin":
+        base = base.filter(PatientAnalysis.created_by_id == current_user.id)
 
     # Qidiruv
     if q:
         like = f"%{q}%"
-        base = base.filter(UserAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.name.ilike(like))
 
     # Filtrlar
     if gender:
-        base = base.filter(func.lower(UserAnalysis.gender) == gender.lower())
+        base = base.filter(func.lower(PatientAnalysis.gender) == gender.lower())
     if age_min is not None:
-        base = base.filter(UserAnalysis.age >= age_min)
+        base = base.filter(PatientAnalysis.age >= age_min)
     if age_max is not None:
-        base = base.filter(UserAnalysis.age <= age_max)
+        base = base.filter(PatientAnalysis.age <= age_max)
     if date_from:
-        base = base.filter(cast(UserAnalysis.created_at, Date) >= date_from)
+        base = base.filter(cast(PatientAnalysis.created_at, Date) >= date_from)
     if date_to:
-        base = base.filter(cast(UserAnalysis.created_at, Date) <= date_to)
+        base = base.filter(cast(PatientAnalysis.created_at, Date) <= date_to)
     if region:
-        base = base.filter(UserAnalysis.region == region)
+        base = base.filter(PatientAnalysis.region == region)
 
     # Jami (filtrlargacha emas, filtrlardan keyin!)
-    total = base.with_entities(func.count(UserAnalysis.id)).scalar() or 0
+    total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
 
     # Sort
     sort_map = {
-        "created_at": getattr(UserAnalysis, "created_at", None),
-        "name": getattr(UserAnalysis, "name", None),
-        "gender": getattr(UserAnalysis, "gender", None),
-        "age": getattr(UserAnalysis, "age", None),
-        "height": getattr(UserAnalysis, "height", None),
-        "weight": getattr(UserAnalysis, "weight", None),
-        "bmi": getattr(UserAnalysis, "bmi", None),
+        "created_at": getattr(PatientAnalysis, "created_at", None),
+        "name": getattr(PatientAnalysis, "name", None),
+        "gender": getattr(PatientAnalysis, "gender", None),
+        "age": getattr(PatientAnalysis, "age", None),
+        "height": getattr(PatientAnalysis, "height", None),
+        "weight": getattr(PatientAnalysis, "weight", None),
+        "bmi": getattr(PatientAnalysis, "bmi", None),
         # Front so'rashi mumkin bo'lgan alias:
-        "last_name": getattr(UserAnalysis, "name", None),  # name orqali
+        "last_name": getattr(PatientAnalysis, "name", None),  # name orqali
     }
-    col = sort_map.get(sort_key) or getattr(UserAnalysis, "created_at", None)
+    col = sort_map.get(sort_key) or getattr(PatientAnalysis, "created_at", None)
     if col is not None:
         base = base.order_by(asc(col) if sort_dir == "asc" else desc(col))
 
@@ -222,22 +266,40 @@ def list_analyses(
     items = [to_dict_analysis(r) for r in items_db]
     return {"items": items, "total": int(total)}
 
-@router.get("/analyses/{analysis_id}", dependencies=[Depends(verify_admin)])
-def get_analysis(analysis_id: int, db: Session = Depends(get_db)):
-    rec = db.get(UserAnalysis, analysis_id)
+@router.get("/analyses/{analysis_id}")
+def get_analysis(
+    analysis_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    rec = db.get(PatientAnalysis, analysis_id)
     if not rec:
         raise HTTPException(404, "Analysis not found")
+    
+    # Ownership Check
+    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+        raise HTTPException(403, "Ushbu ma'lumotni ko'rishga huquqingiz yo'q")
+        
     return to_dict_analysis(rec)
 
 class AdminDeleteRequestModel(BaseModel):
     ids: List[int]
 
-@router.delete("/analyses", dependencies=[Depends(verify_admin)])
-def delete_analyses(payload: AdminDeleteRequestModel, db: Session = Depends(get_db)):
+@router.delete("/analyses")
+def delete_analyses(
+    payload: AdminDeleteRequestModel, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
     if not payload.ids:
         return {"deleted": 0}
     try:
-        q = db.query(UserAnalysis).filter(UserAnalysis.id.in_(payload.ids))
+        q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
+        
+        # Ownership Check for non-superadmins
+        if current_user.role != "superadmin":
+            q = q.filter(PatientAnalysis.created_by_id == current_user.id)
+            
         deleted = q.delete(synchronize_session=False)
         db.commit()
         return {"deleted": int(deleted or 0)}
@@ -245,11 +307,21 @@ def delete_analyses(payload: AdminDeleteRequestModel, db: Session = Depends(get_
         db.rollback()
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
-@router.put("/analyses/{analysis_id}", dependencies=[Depends(verify_admin)])
-def update_analysis(analysis_id: int, payload: dict, db: Session = Depends(get_db)):
-    rec = db.get(UserAnalysis, analysis_id)
+@router.put("/analyses/{analysis_id}")
+def update_analysis(
+    analysis_id: int, 
+    payload: dict, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    rec = db.get(PatientAnalysis, analysis_id)
     if not rec:
         raise HTTPException(404, "Analysis not found")
+        
+    # Ownership Check
+    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+        raise HTTPException(403, "Ushbu ma'lumotni o'zgartirishga huquqingiz yo'q")
+        
     # Faqat mavjud atributlarni yangilaymiz
     for k, v in payload.items():
         if hasattr(rec, k):
@@ -259,9 +331,10 @@ def update_analysis(analysis_id: int, payload: dict, db: Session = Depends(get_d
     return to_dict_analysis(rec)
 
 # ---------------- PAYMENTS ---------------------
-@router.get("/payments", response_model=List[PaymentOut], dependencies=[Depends(verify_admin)])
+@router.get("/payments")
 def list_payments(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
     user_id: Optional[int] = None,
     page: int = 1,
     page_size: int = 20,
@@ -269,6 +342,13 @@ def list_payments(
     q = db.query(Payment)
     if user_id:
         q = q.filter(Payment.user_id == user_id)
+        
+    # Ownership Filter for payments if needed? 
+    # Current request focuses on Admin panel data (analyses). 
+    # Keep payments as is for now or filter by related analyses creator?
+    # Usually payments are global for superadmin, but if we want to filter:
+    # if current_user.role == "admin":
+    #     ...
     items = (
         q.order_by(Payment.id.desc())
         .offset((page - 1) * page_size)
@@ -286,49 +366,95 @@ def create_payment(payload: PaymentCreate, db: Session = Depends(get_db)):
     return p
 
 # ----------------- STATS ----------------------
-@router.get("/stats", dependencies=[Depends(verify_admin)])
-def stats(db: Session = Depends(get_db)):
+@router.get("/stats")
+def stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    # Base count of users (only for superadmin?)
     total_users = db.query(func.count(User.id)).scalar() or 0
-    total_analyses = db.query(func.count(UserAnalysis.id)).scalar() or 0
+    
+    # Filter analyses stats by ownership
+    analysis_q = db.query(PatientAnalysis)
+    if current_user.role != "superadmin":
+        analysis_q = analysis_q.filter(PatientAnalysis.created_by_id == current_user.id)
+        
+    total_analyses = analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
     total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
-    avg_rating = db.query(func.coalesce(func.avg(Rating.score), 0)).scalar() or 0
-
-    # gender breakdown
+    
+    # Growth last 30 days
+    last_month_start = datetime.utcnow() - timedelta(days=30)
+    monthly_analyses = analysis_q.filter(PatientAnalysis.created_at >= last_month_start).count()
+    
+    # Gender Distribution
     gender_counts = (
-        db.query(UserAnalysis.gender, func.count(UserAnalysis.id))
-        .group_by(UserAnalysis.gender)
+        analysis_q.with_entities(PatientAnalysis.gender, func.count(PatientAnalysis.id))
+        .group_by(PatientAnalysis.gender)
         .all()
     )
-    gender_map = {g or "unknown": int(c or 0) for g, c in gender_counts}
+    gender_map = {g.lower() if g else "noma'lum": int(c) for g, c in gender_counts}
 
-    # last 7 days analyses by date
-    if hasattr(UserAnalysis, "created_at"):
-        since = (datetime.utcnow().date() - timedelta(days=6))
-        daily_counts = (
-            db.query(cast(UserAnalysis.created_at, Date).label("d"), func.count(UserAnalysis.id))
-            .filter(cast(UserAnalysis.created_at, Date) >= since)
-            .group_by("d")
-            .order_by("d")
+    # Somatotype Distribution
+    somatotype_counts = (
+        analysis_q.with_entities(PatientAnalysis.somatotype, func.count(PatientAnalysis.id))
+        .group_by(PatientAnalysis.somatotype)
+        .all()
+    )
+    somatotype_map = {s or "Noma'lum": int(c) for s, c in somatotype_counts}
+
+    # Age Groups
+    # 0-6 (Maktabgacha), 7-12 (Boshlang'ich), 13-18 (O'smir), 18+ (Katta)
+    age_groups = [
+        {"name": "0-6", "value": analysis_q.filter(PatientAnalysis.age <= 6).count()},
+        {"name": "7-12", "value": analysis_q.filter(PatientAnalysis.age > 6, PatientAnalysis.age <= 12).count()},
+        {"name": "13-18", "value": analysis_q.filter(PatientAnalysis.age > 12, PatientAnalysis.age <= 18).count()},
+        {"name": "18+", "value": analysis_q.filter(PatientAnalysis.age > 18).count()},
+    ]
+
+    # Regional Distribution
+    regional_counts = (
+        analysis_q.with_entities(PatientAnalysis.region, func.count(PatientAnalysis.id))
+        .group_by(PatientAnalysis.region)
+        .all()
+    )
+    regional_data = [{"region": r or "Noma'lum", "count": int(c)} for r, c in regional_counts]
+
+    # Monthly Trend (Last 12 months)
+    # Using strftime for SQLite, fallback to simple date for others if needed
+    try:
+        trend_counts = (
+            analysis_q.with_entities(
+                func.strftime('%Y-%m', PatientAnalysis.created_at).label("month"),
+                func.count(PatientAnalysis.id)
+            )
+            .group_by("month")
+            .order_by("month")
             .all()
         )
-        last7 = [{"date": str(d), "count": int(c or 0)} for d, c in daily_counts]
-    else:
-        last7 = []
+        monthly_trend = [{"month": m, "count": int(c)} for m, c in trend_counts][-12:]
+    except:
+        # Fallback if strftime fails (e.g. Postgres)
+        monthly_trend = []
 
     return {
         "total_users": int(total_users),
         "total_analyses": int(total_analyses),
         "total_revenue": float(total_revenue),
-        "avg_rating": float(avg_rating),
+        "monthly_growth": int(monthly_analyses),
         "by_gender": gender_map,
-        "last7": last7,
+        "by_somatotype": somatotype_map,
+        "by_age_group": age_groups,
+        "by_region": regional_data,
+        "monthly_trend": monthly_trend,
     }
 
 
+
 # ----------------- EXPORT XLSX ------------------
-@router.get("/export-xlsx", dependencies=[Depends(verify_admin)])
+@router.get("/export-xlsx")
 def export_analyses_xlsx(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
     q: Optional[str] = Query(None),
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
@@ -337,42 +463,46 @@ def export_analyses_xlsx(
     date_to: Optional[date] = Query(None),
     region: Optional[str] = Query(None),
 ):
-    base = db.query(UserAnalysis)
+    base = db.query(PatientAnalysis)
+    
+    # Ownership Filter
+    if current_user.role != "superadmin":
+        base = base.filter(PatientAnalysis.created_by_id == current_user.id)
+        
     if q:
         like = f"%{q}%"
-        base = base.filter(UserAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.name.ilike(like))
     if gender:
-        base = base.filter(func.lower(UserAnalysis.gender) == gender.lower())
+        base = base.filter(func.lower(PatientAnalysis.gender) == gender.lower())
     if age_min is not None:
-        base = base.filter(UserAnalysis.age >= age_min)
+        base = base.filter(PatientAnalysis.age >= age_min)
     if age_max is not None:
-        base = base.filter(UserAnalysis.age <= age_max)
+        base = base.filter(PatientAnalysis.age <= age_max)
     if date_from:
-        base = base.filter(cast(UserAnalysis.created_at, Date) >= date_from)
+        base = base.filter(cast(PatientAnalysis.created_at, Date) >= date_from)
     if date_to:
-        base = base.filter(cast(UserAnalysis.created_at, Date) <= date_to)
+        base = base.filter(cast(PatientAnalysis.created_at, Date) <= date_to)
     if region:
-        base = base.filter(UserAnalysis.region == region)
+        base = base.filter(PatientAnalysis.region == region)
 
-    rows_db = base.order_by(UserAnalysis.created_at.desc()).all()
+    rows_db = base.order_by(PatientAnalysis.created_at.desc()).all()
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Analyses"
 
-    # Sarlavhalar (Kirillchada)
+    # Sarlavhalar (To'liq o'zbekcha kirill yozuvida, texnik qismlar lotinda)
     headers = [
-        "Sana", "ID код", "F.I.SH", "Jins", "Yosh", "Viloyat", "Tuman", "Manzil",
-        "Bo'y (sm)", "Vazn (kg)", "BMI", "Holat", "Somatotip",
-        "Ideal Vazn (kg)", "Farq (kg)", "Vazn Oralig'i (min-max)",
-        "Ko'krak ayl.", "Bel ayl.", "Bosh ayl.",
-        "Yelka keng.", "Yelka proports.", "Son ayl.", "Son proports.",
+        "Сана", "ID код", "Ф.И.Ш.", "Жинс", "Ёш", "Вилоят", "Туман", "Манзил",
+        "Бўй (см)", "Вазн (кг)", "ИАВ", "Ҳолат", "Соматотип",
+        "Идеал Вазн (кг)", "Фарқ (кг)", "Вазн Оралиғи",
+        "Кўкрак айл.", "Бел айл.", "Бош айл.",
+        "Елка кенг.", "Елка проп.", "Сон айл.", "Сон проп.",
         "HMAI", "MII", "ADI",
-        "TBW (%)", "Yog' (%)", "Yog' (kg)",
-        "Muskul (kg)", "Suyak (kg)",
-        "ACM (%)", "Visceral Yog'"
+        "TBW (%)", "Ёғ (%)", "Ёғ (кг)",
+        "Мускул (кг)", "Суяк (кг)",
+        "ACM (%)", "Висцерал Ёғ", "Тана узунлиги (см)"
     ]
-    headers = [lat2cyr(h) if h not in ["ID код", "HMAI", "MII", "ADI", "TBW (%)", "ACM (%)"] else h for h in headers]
     
     # Header styling
     header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
@@ -406,7 +536,8 @@ def export_analyses_xlsx(
                 muscleMass=getattr(r, "muscle_mass", None),
                 boneMass=getattr(r, "bone_mass", None),
                 acm=getattr(r, "acm", None),
-                visceralFat=getattr(r, "visceral_fat", None)
+                visceralFat=getattr(r, "visceral_fat", None),
+                bodyLength=getattr(r, "body_length", None)
             )
             analysis = calc_full_bmi(p_data)
         except:
@@ -417,20 +548,29 @@ def export_analyses_xlsx(
             rng = analysis["ideal_weight_range"]
             vazn_range = f"{rng.get('min', '-')}-{rng.get('max', '-')}"
 
+        # Yosh formati
+        age_m = getattr(r, "age_months", 0) or 0
+        age_d = getattr(r, "age_days", 0) or 0
+        age_str = f"{r.age} й."
+        if age_m:
+            age_str += f", {age_m} о."
+        if age_d:
+            age_str += f", {age_d} к."
+
         vals = [
             r.created_at.strftime("%Y-%m-%d") if r.created_at else "-",
             r.id_code or "-",
-            r.name or "-",
-            r.gender or "-",
-            f"{r.age} й, {r.age_months} о, {r.age_days} к" if hasattr(r, "age_months") else r.age,
-            r.region or "-",
-            r.district or "-",
-            r.address or "-",
+            lat2cyr(r.name) if r.name else "-",
+            lat2cyr(r.gender) if r.gender else "-",
+            age_str,
+            lat2cyr(r.region) if r.region else "-",
+            lat2cyr(r.district) if r.district else "-",
+            lat2cyr(r.address) if r.address else "-",
             r.height or 0,
             r.weight or 0,
             analysis.get("bmi", r.bmi or "-"),
-            analysis.get("bmi_category", "-"),
-            analysis.get("somatotype", r.somatotype or "-"),
+            lat2cyr(analysis.get("bmi_category", "-")),
+            lat2cyr(analysis.get("somatotype", r.somatotype or "-")),
             analysis.get("ideal_weight", "-"),
             analysis.get("weight_diff", "-"),
             vazn_range,
@@ -451,10 +591,11 @@ def export_analyses_xlsx(
             analysis.get("indices", {}).get("bone_mass", "-"),
             analysis.get("indices", {}).get("acm_percent", "-"),
             analysis.get("indices", {}).get("visceral_fat", "-"),
+            r.body_length or 0,
         ]
         
-        # Barcha stringlarni kirillchaga o'giramiz (ID kod - index 1 dan tashqari)
-        vals = [lat2cyr(v) if isinstance(v, str) and i not in [1, 23, 24, 25, 26, 31] else v for i, v in enumerate(vals)]
+        # Barcha string qiymatlarni lat2cyr orqali o'girish shart emas —
+        # sarlavhalar allaqachon kirill yozuvida
 
         for col_num, val in enumerate(vals, 1):
             cell = ws.cell(row=row_idx, column=col_num, value=val)
