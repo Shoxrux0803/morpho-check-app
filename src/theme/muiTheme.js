@@ -9,8 +9,8 @@ const getVariantColors = (isDark, variant = "neo") => {
     neo: {
       primary: isDark ? "#8E7CFF" : "#6C5CE7",
       secondary: isDark ? "#1DE9B6" : "#00D1B2",
-      bgDefault: isDark ? "#0f1115" : "#f7f7fb",
-      bgPaper: isDark ? "#171a21" : "#ffffff",
+      bgDefault: isDark ? "#08090d" : "#f7f7fb",
+      bgPaper: isDark ? "#12141c" : "#ffffff",
       success: isDark ? "#00D1B2" : "#00B894",
       warning: isDark ? "#FDCB6E" : "#F39C12",
       error: isDark ? "#E84393" : "#E74C3C",
@@ -18,7 +18,7 @@ const getVariantColors = (isDark, variant = "neo") => {
       auraLight:
         "radial-gradient(40rem 40rem at 10% -10%, #e9e4ff, transparent), radial-gradient(30rem 30rem at 90% -20%, #d6fff5, transparent)",
       auraDark:
-        "radial-gradient(40rem 40rem at 10% -10%, rgba(128,117,255,.08), transparent), radial-gradient(30rem 30rem at 90% -20%, rgba(0,229,198,.08), transparent)",
+        "radial-gradient(50rem 50rem at 0% 0%, rgba(142,124,255,0.08), transparent), radial-gradient(40rem 40rem at 100% 100%, rgba(29,233,182,0.05), transparent)",
     },
     ocean: {
       primary: isDark ? "#64ffda" : "#0077b6",

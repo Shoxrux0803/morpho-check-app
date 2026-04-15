@@ -10,6 +10,7 @@ import re
 from docx import Document
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from io import BytesIO
@@ -78,6 +79,7 @@ DOCX_LABELS = {
         "hmai_label": "HMAI (мослашув)",
         "mii_label": "MII (интеграция)",
         "adi_label": "ADI (номутаносиблик)",
+        "mcri_label": "MCRI (Риск индекси)",
         "body_len_z": "Тана уз. Z-score",
         "section_4": "IV. Биоимпеданс таҳлили натижалари",
         "norm": "Меъёр",
@@ -162,6 +164,7 @@ DOCX_LABELS = {
         "hmai_label": "HMAI (адаптация)",
         "mii_label": "MII (интеграция)",
         "adi_label": "ADI (диспропорция)",
+        "mcri_label": "MCRI (Риск индекс)",
         "body_len_z": "Длина тул. Z-score",
         "section_4": "IV. Результаты биоимпедансного анализа",
         "norm": "Норма",
@@ -244,6 +247,7 @@ DOCX_LABELS = {
         "hmai_label": "HMAI (adaptation)",
         "mii_label": "MII (integration)",
         "adi_label": "ADI (disharmony)",
+        "mcri_label": "MCRI (Risk index)",
         "body_len_z": "Trunk-len. Z-score",
         "section_4": "IV. Bioimpedance Analysis Results",
         "norm": "Normal Range",
@@ -326,6 +330,7 @@ DOCX_LABELS = {
         "hmai_label": "HMAI (бейімделу)",
         "mii_label": "MII (интеграция)",
         "adi_label": "ADI (үйлесімсіздік)",
+        "mcri_label": "MCRI (Қауіп индексі)",
         "body_len_z": "Дене ұз. Z-score",
         "section_4": "IV. Биоимпеданс талдауының нәтижелері",
         "norm": "Норма",
@@ -507,11 +512,110 @@ def _dev_level(z_score_raw) -> tuple:
 
 
 # ---------------------------------------------------------------------------
+# Z-score baholash matni (4 tilda)
+# ---------------------------------------------------------------------------
+
+_Z_EVAL_LABELS = {
+    "uz": {
+        "very_low":  "Жуда паст (< -2 SD)",
+        "low":       "Паст (-2 … -1 SD)",
+        "normal":    "Меъёрда (-1 … +1 SD)",
+        "high":      "Юқори (+1 … +2 SD)",
+        "very_high": "Жуда юқори (> +2 SD)",
+    },
+    "ru": {
+        "very_low":  "Очень низкий (< -2 SD)",
+        "low":       "Низкий (-2 … -1 SD)",
+        "normal":    "Норма (-1 … +1 SD)",
+        "high":      "Высокий (+1 … +2 SD)",
+        "very_high": "Очень высокий (> +2 SD)",
+    },
+    "en": {
+        "very_low":  "Very low (< -2 SD)",
+        "low":       "Low (-2 … -1 SD)",
+        "normal":    "Normal (-1 … +1 SD)",
+        "high":      "High (+1 … +2 SD)",
+        "very_high": "Very high (> +2 SD)",
+    },
+    "kz": {
+        "very_low":  "Өте төмен (< -2 SD)",
+        "low":       "Төмен (-2 … -1 SD)",
+        "normal":    "Норма (-1 … +1 SD)",
+        "high":      "Жоғары (+1 … +2 SD)",
+        "very_high": "Өте жоғары (> +2 SD)",
+    },
+}
+
+
+def _z_eval(z_raw, lang: str = "uz") -> str:
+    """Z-score qiymatiga qarab baholash matnini qaytaradi."""
+    labels = _Z_EVAL_LABELS.get(lang, _Z_EVAL_LABELS["uz"])
+    if z_raw in (None, ""):
+        return ""
+    try:
+        z = float(z_raw)
+    except (TypeError, ValueError):
+        return ""
+    if z < -2.0:
+        return labels["very_low"]
+    elif z < -1.0:
+        return labels["low"]
+    elif z <= 1.0:
+        return labels["normal"]
+    elif z <= 2.0:
+        return labels["high"]
+    else:
+        return labels["very_high"]
+
+
+_CENTILE_EVAL = {
+    "uz": {
+        "< 3":   "Жуда паст (< 3-сентил)",
+        "3 - 15":  "Паст (3–15-сентил)",
+        "15 - 85": "Меъёр (15–85-сентил)",
+        "85 - 97": "Юқори (85–97-сентил)",
+        "> 97":  "Жуда юқори (> 97-сентил)",
+    },
+    "ru": {
+        "< 3":   "Очень низкий (< 3-го центиля)",
+        "3 - 15":  "Низкий (3–15-й центиль)",
+        "15 - 85": "Норма (15–85-й центиль)",
+        "85 - 97": "Высокий (85–97-й центиль)",
+        "> 97":  "Очень высокий (> 97-го центиля)",
+    },
+    "en": {
+        "< 3":   "Very low (< 3rd centile)",
+        "3 - 15":  "Low (3rd–15th centile)",
+        "15 - 85": "Normal (15th–85th centile)",
+        "85 - 97": "High (85th–97th centile)",
+        "> 97":  "Very high (> 97th centile)",
+    },
+    "kz": {
+        "< 3":   "Өте төмен (< 3-центиль)",
+        "3 - 15":  "Төмен (3–15-центиль)",
+        "15 - 85": "Норма (15–85-центиль)",
+        "85 - 97": "Жоғары (85–97-центиль)",
+        "> 97":  "Өте жоғары (> 97-центиль)",
+    },
+}
+
+
+def _centile_eval(centile_str: str, lang: str = "uz") -> str:
+    """Centil intervaliga mos baholash matnini qaytaradi."""
+    if not centile_str:
+        return ""
+    table = _CENTILE_EVAL.get(lang, _CENTILE_EVAL["uz"])
+    key = centile_str.strip()
+    return table.get(key, centile_str)
+
+
+# ---------------------------------------------------------------------------
 # Word formatlashtirish yordamchi funksiyalari
 # ---------------------------------------------------------------------------
 
 def _set_cell_font(cell, text: str, bold: bool = False, size: int = 8,
                    align=WD_ALIGN_PARAGRAPH.LEFT):
+    cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
     para = cell.paragraphs[0]
     para.alignment = align
     para.clear()
@@ -520,9 +624,6 @@ def _set_cell_font(cell, text: str, bold: bool = False, size: int = 8,
     run.font.size = Pt(size)
     run.font.name = "Times New Roman"
     # Layout optimization: reduce line spacing within cells
-    para.paragraph_format.line_spacing = 1.0
-    para.paragraph_format.space_before = Pt(0)
-    para.paragraph_format.space_after = Pt(0)
     para.paragraph_format.line_spacing = 1.0
     para.paragraph_format.space_before = Pt(0)
     para.paragraph_format.space_after = Pt(0)
@@ -541,6 +642,19 @@ def _shade_cell(cell, fill_hex: str = "D9D9D9"):
     shd.set(qn("w:color"), "auto")
     shd.set(qn("w:fill"), fill_hex)
     tcPr.append(shd)
+
+def _set_table_full_width(table):
+    table.autofit = True
+    tblPr = table._element.xpath('w:tblPr')
+    if tblPr:
+        tblW = tblPr[0].xpath('w:tblW')
+        if not tblW:
+            tblW = OxmlElement('w:tblW')
+            tblPr[0].append(tblW)
+        else:
+            tblW = tblW[0]
+        tblW.set(qn('w:w'), '5000')
+        tblW.set(qn('w:type'), 'pct')
 
 
 def _add_bold_centered_title(doc, text: str, size: int = 11) -> None:
@@ -655,6 +769,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     t1 = doc.add_table(rows=10, cols=3)
     t1.style = "Table Grid"
+    _set_table_full_width(t1)
 
     _set_cell_font(t1.cell(0, 0), L("no"),         bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
     _set_cell_font(t1.cell(0, 1), L("indicator"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -713,6 +828,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     t2 = doc.add_table(rows=11, cols=7)
     t2.style = "Table Grid"
+    _set_table_full_width(t2)
 
     headers2 = [L("no"), L("indicator"), L("unit"), L("value"), L("indicator"), L("unit"), L("value")]
     for c, h in enumerate(headers2):
@@ -783,17 +899,17 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     bmi_cat    = LP(str(analysis.get("bmi_category", "") or ""))
     zscore_str = f"{z_val:.2f}" if z_val else ""
 
-    # Centil va sog'lomlik yo'lagi
-    centil_str  = _calc_centile(bmi_f, age_int, gender_raw)
-    corridor    = LP(_calc_health_corridor(bmi_f, age_int, gender_raw))
-
-    # Yangi indekslarni olish
     detailed = analysis.get("indices", {})
+
+    # Centil va sog'lomlik yo'lagini indices orqali olamiz
+    centil_str  = detailed.get("centile", "")
+    corridor    = LP(detailed.get("corridor", ""))
+
     z_h_str = f"{detailed.get('z_h', 0):.2f}"
     z_w_str = f"{detailed.get('z_w', 0):.2f}"
     z_bmi_str = f"{detailed.get('z_bmi', 0):.2f}"
     
-    z_body_length_str = f"{detailed.get('z_body_length', 0):.2f}" if detailed.get('z_body_length') is not None else ""
+    z_body_length_str = f"{detailed.get('z_body_length', 0):.2f}" if detailed.get("z_body_length") is not None else ""
     
     hmai_val = detailed.get("hmai", 0)
     hmai_desc = LP(detailed.get("hmai_desc", ""))
@@ -804,8 +920,12 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     adi_val = detailed.get("adi", 0)
     adi_desc = LP(detailed.get("adi_desc", ""))
 
-    t3 = doc.add_table(rows=11, cols=4)
+    mcri_val = detailed.get("mcri", 0)
+    mcri_desc = LP(detailed.get("mcri_desc", ""))
+
+    t3 = doc.add_table(rows=12, cols=4)
     t3.style = "Table Grid"
+    _set_table_full_width(t3)
 
     headers3 = [L("no"), L("indicator"), L("value"), L("eval")]
     for c, h in enumerate(headers3):
@@ -813,16 +933,17 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         _shade_cell(t3.cell(0, c))
 
     indices = [
-        ("1", L("bmi_label"),       bmi_str,    bmi_cat),
-        ("2", L("height_age_z"),    z_h_str,    ""),
-        ("3", L("weight_age_z"),   z_w_str,    ""),
-        ("4", L("bmi_age_z"),    z_bmi_str,  ""),
-        ("5", L("centile"),  centil_str, ""),
-        ("6", L("corridor"),  corridor,   ""),
-        ("7", L("hmai_label"),  f"{hmai_val}", hmai_desc),
-        ("8", L("mii_label"),  f"{mii_val}",  mii_desc),
-        ("9", L("adi_label"), f"{adi_val}",  adi_desc),
-        ("10", L("body_len_z"), z_body_length_str, ""),
+        ("1",  L("bmi_label"),    bmi_str,           bmi_cat),
+        ("2",  L("height_age_z"), z_h_str,           _z_eval(z_h_str, lang)),
+        ("3",  L("weight_age_z"), z_w_str,           _z_eval(z_w_str, lang)),
+        ("4",  L("bmi_age_z"),    z_bmi_str,         _z_eval(z_bmi_str, lang)),
+        ("5",  L("body_len_z"),   z_body_length_str, _z_eval(z_body_length_str, lang) if z_body_length_str else ""),
+        ("6",  L("centile"),      centil_str,        _centile_eval(centil_str, lang)),
+        ("7",  L("corridor"),     corridor,          ""),
+        ("8",  L("hmai_label"),   f"{hmai_val}",     hmai_desc),
+        ("9",  L("mii_label"),    f"{mii_val}",      mii_desc),
+        ("10", L("adi_label"),    f"{adi_val}",      adi_desc),
+        ("11", L("mcri_label"),   f"{mcri_val}",     mcri_desc),
     ]
 
     for i, (num, label, m_val, baholash) in enumerate(indices, start=1):
@@ -843,6 +964,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     t4 = doc.add_table(rows=8, cols=5)
     t4.style = "Table Grid"
+    _set_table_full_width(t4)
 
     headers4 = [L("no"), L("indicator"), L("unit"), L("value"), L("norm")]
     for c, h in enumerate(headers4):
@@ -884,6 +1006,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     t5 = doc.add_table(rows=5, cols=3)
     t5.style = "Table Grid"
+    _set_table_full_width(t5)
 
     headers5 = [L("no"), L("indicator"), L("value")]
     for c, h in enumerate(headers5):
@@ -897,27 +1020,22 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     )
 
     # Morphological assessment data
-    m_type = bio_results.get("morphological_type", "")
-    b_age = bio_results.get("biological_age_status", "")
-    s_trend = bio_results.get("secular_trend", "")
-
-    # Morphological assessment data
-    m_type = bio_results.get("morphological_type", "")
-    b_age = bio_results.get("biological_age_status", "")
-    s_trend = bio_results.get("secular_trend", "")
+    m_type_key = bio_results.get("morphological_type_key", "")
+    b_age_key = bio_results.get("biological_age_status_key", "")
+    s_trend_key = bio_results.get("secular_trend_key", "")
 
     morph_type_text = (
-        f"{_checkbox(m_type == 'astenik')} " + LP("Астеник") + "  "
-        f"{_checkbox(m_type == 'normostenik')} " + LP("Нормостеник") + "  "
-        f"{_checkbox(m_type == 'giperstenik')} " + LP("Гиперстеник")
+        f"{_checkbox(m_type_key == 'astenik')} " + LP("Астеник") + "  "
+        f"{_checkbox(m_type_key == 'normostenik')} " + LP("Нормостеник") + "  "
+        f"{_checkbox(m_type_key == 'giperstenik')} " + LP("Гиперстеник")
     )
     bio_age_text = (
-        f"{_checkbox(b_age == 'mos')} " + LP("Мос") + "  "
-        f"{_checkbox(b_age == 'mos_emas')} " + LP("Мос эмас")
+        f"{_checkbox(b_age_key == 'mos')} " + LP("Мос") + "  "
+        f"{_checkbox(b_age_key == 'mos_emas')} " + LP("Мос эмас")
     )
     secular_trend_text = (
-        f"{_checkbox(s_trend == 'yoq')} " + LP("Йўқ") + "  "
-        f"{_checkbox(s_trend == 'mavjud')} " + LP("Мавжуд")
+        f"{_checkbox(s_trend_key == 'mavjud')} " + LP("Мавжуд") + "  "
+        f"{_checkbox(s_trend_key == 'yoq')} " + LP("Йўқ")
     )
 
     morph_rows = [
@@ -947,6 +1065,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     t7 = doc.add_table(rows=5, cols=2)
     t7.style = "Table Grid"
+    _set_table_full_width(t7)
 
     headers7 = [L("doctor_parent"), L("sig_date")]
     for c, h in enumerate(headers7):

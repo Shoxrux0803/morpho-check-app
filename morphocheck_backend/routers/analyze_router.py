@@ -1,5 +1,6 @@
 # morphocheck_backend/routers/analyze_router.py
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from utils.audit_helper import record_audit_log
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional, Tuple
@@ -29,8 +30,9 @@ except ImportError:
 
 from models.userdata import PatientAnalysis
 from models.user import User
-from routers.auth_router import get_current_admin
+from routers.auth_router import get_current_admin, get_optional_user
 from services.indices_service import calculate_detailed_indices
+from services.clinical_service import clinical_service
 
 router = APIRouter(tags=["Tahlil"])
 
@@ -235,7 +237,7 @@ def generate_region_based_id(db: Session, region: str) -> str:
 
 
 
-def calculate_bmi(data: PatientData, lang: str = "uz") -> dict:
+def calculate_bmi(data: PatientData, all_settings: Dict[str, Any], lang: str = "uz") -> dict:
     """Хисоблашлар ва диагноз (Z-score билан)."""
     age = int(data.age)
     gender = (data.gender or "").lower()
@@ -256,24 +258,28 @@ def calculate_bmi(data: PatientData, lang: str = "uz") -> dict:
         "bone_mass": data.bone_mass,
         "acm": data.acm,
         "visceral_fat": data.visceral_fat,
-        "body_length": data.body_length
+        "body_length": data.body_length,
+        "chest": data.chest,
+        "region": data.region,
+        "district": data.district,
+        "address": data.address
     }
     
-    detailed = calculate_detailed_indices(age, gender, height, weight, bmi, manual_bio, lang=lang)
+    detailed = calculate_detailed_indices(age, gender, height, weight, bmi, manual_bio, lang=lang, all_settings=all_settings)
     
     # Категория ИМТ на основе Z-score (для детей) или стандартов ВОЗ (для взрослых)
     z_bmi = detailed.get("z_bmi", 0)
     if age < 19:
-        if z_bmi < -2: bmi_category = _get_bmi_cat("v_low", lang)
-        elif z_bmi < -1: bmi_category = _get_bmi_cat("low", lang)
-        elif z_bmi <= 1: bmi_category = _get_bmi_cat("normal", lang)
-        elif z_bmi <= 2: bmi_category = _get_bmi_cat("overweight", lang)
-        else: bmi_category = _get_bmi_cat("obese", lang)
+        if z_bmi < -2: bmi_category = _get_bmi_cat("v_low", lang, all_settings)
+        elif z_bmi < -1: bmi_category = _get_bmi_cat("low", lang, all_settings)
+        elif z_bmi <= 1: bmi_category = _get_bmi_cat("normal", lang, all_settings)
+        elif z_bmi <= 2: bmi_category = _get_bmi_cat("overweight", lang, all_settings)
+        else: bmi_category = _get_bmi_cat("obese", lang, all_settings)
     else:
-        if bmi < 18.5: bmi_category = _get_bmi_cat("low", lang)
-        elif bmi < 25: bmi_category = _get_bmi_cat("normal", lang)
-        elif bmi < 30: bmi_category = _get_bmi_cat("overweight", lang)
-        else: bmi_category = _get_bmi_cat("obese", lang)
+        if bmi < 18.5: bmi_category = _get_bmi_cat("low", lang, all_settings)
+        elif bmi < 25: bmi_category = _get_bmi_cat("normal", lang, all_settings)
+        elif bmi < 30: bmi_category = _get_bmi_cat("overweight", lang, all_settings)
+        else: bmi_category = _get_bmi_cat("obese", lang, all_settings)
 
     ideal_weight = get_ideal_weight_by_age_and_gender(age, height, gender)
     bmi_rng = get_bmi_range_by_age_and_gender(age, gender)
@@ -341,13 +347,23 @@ _BMI_CAT_I18N = {
         "uz": "Semizlik",
         "ru": "Ожирение",
         "en": "Obesity",
+        "kz": "Семіздік",
     }
 }
 
 BMI_CATEGORIES = _BMI_CAT_I18N
 
-def _get_bmi_cat(key: str, lang: str) -> str:
-    return _BMI_CAT_I18N.get(key, {}).get(lang, _BMI_CAT_I18N.get(key, {}).get("uz", key))
+def _get_bmi_cat(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
+    # Key: 'bmi_cat_normal', 'bmi_cat_low', etc.
+    setting_key = f"bmi_cat_{key}"
+    val = all_settings.get(setting_key, {})
+    if val and isinstance(val, dict):
+        result = val.get(lang, val.get("uz", ""))
+        if result:
+            return result
+    # Fallback to built-in translations
+    built_in = _BMI_CAT_I18N.get(key, {})
+    return built_in.get(lang, built_in.get("uz", key))
 
 
 # ─────────────────────────────────────────────
@@ -447,10 +463,11 @@ _ADVICE_I18N = {
 }
 
 
-def _ai(key: str, lang: str) -> str:
+def _ai(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
     """Maslahat lug'atidan matnni oladi."""
-    d = _ADVICE_I18N.get(key, {})
-    return d.get(lang) or d.get("uz") or key
+    setting_key = f"adv_{key}"
+    val = all_settings.get(setting_key, {})
+    return val.get(lang) or val.get("uz") or key
 
 
 # Kalit so'zlar til bo'yicha (bio_data advice larini guruhlash uchun)
@@ -482,41 +499,45 @@ _KW = {
 }
 
 
-def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, bio_data: dict = None, lang: str = "uz") -> Dict[str, str]:
+def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, all_settings: Dict[str, Any], bio_data: dict = None, lang: str = "uz") -> Dict[str, str]:
     bmi_range = get_bmi_range_by_age_and_gender(age, gender)
 
     res = {
-        "general":    _ai("default_general",    lang),
-        "specialist": _ai("default_specialist",  lang),
-        "nutrition":  _ai("default_nutrition",   lang),
-        "activity":   _ai("default_activity",    lang),
-        "checkups":   _ai("default_checkups",    lang),
+        "general":    _ai("default_general",    lang, all_settings),
+        "specialist": _ai("default_specialist",  lang, all_settings),
+        "nutrition":  _ai("default_nutrition",   lang, all_settings),
+        "activity":   _ai("default_activity",    lang, all_settings),
+        "checkups":   _ai("default_checkups",    lang, all_settings),
     }
 
     # 1. BMI based advice
     if bmi < bmi_range["min"]:
-        res["general"]    = _ai("low_bmi_general",    lang)
-        res["specialist"] = _ai("low_bmi_specialist", lang)
-        res["nutrition"]  = _ai("low_bmi_nutrition",  lang)
-        res["activity"]   = _ai("low_bmi_activity",   lang)
-        res["checkups"]   = _ai("low_bmi_checkups",   lang)
+        res["general"]    = _ai("low_bmi_general",    lang, all_settings)
+        res["specialist"] = _ai("low_bmi_specialist", lang, all_settings)
+        res["nutrition"]  = _ai("low_bmi_nutrition",  lang, all_settings)
+        res["activity"]   = _ai("low_bmi_activity",   lang, all_settings)
+        res["checkups"]   = _ai("low_bmi_checkups",   lang, all_settings)
     elif bmi > bmi_range["max"]:
-        res["general"]    = _ai("high_bmi_general",    lang)
-        res["specialist"] = _ai("high_bmi_specialist", lang)
-        res["nutrition"]  = _ai("high_bmi_nutrition",  lang)
-        res["activity"]   = _ai("high_bmi_activity",   lang)
-        res["checkups"]   = _ai("high_bmi_checkups",   lang)
+        res["general"]    = _ai("high_bmi_general",    lang, all_settings)
+        res["specialist"] = _ai("high_bmi_specialist", lang, all_settings)
+        res["nutrition"]  = _ai("high_bmi_nutrition",  lang, all_settings)
+        res["activity"]   = _ai("high_bmi_activity",   lang, all_settings)
+        res["checkups"]   = _ai("high_bmi_checkups",   lang, all_settings)
 
     # 2. Bioimpedance and Indices based advice (from bio_data)
     if bio_data:
         raw_advices = bio_data.get("advice", [])
-        kw_lang = _KW  # tildagi kalit so'zlar
+        kw_lang = all_settings.get("keywords", {}) # keywords settings modelda bo'lsa
+        # Agar keywords settingda bo'lmasa fallback _KW (hozircha shunday qolishi mumkin)
+        if not kw_lang:
+            kw_lang = _KW
+            
         defv = {
-            "general":    _ai("default_general",   lang),
-            "specialist": _ai("default_specialist", lang),
-            "nutrition":  _ai("default_nutrition",  lang),
-            "activity":   _ai("default_activity",   lang),
-            "checkups":   _ai("default_checkups",   lang),
+            "general":    _ai("default_general",   lang, all_settings),
+            "specialist": _ai("default_specialist", lang, all_settings),
+            "nutrition":  _ai("default_nutrition",  lang, all_settings),
+            "activity":   _ai("default_activity",   lang, all_settings),
+            "checkups":   _ai("default_checkups",   lang, all_settings),
         }
 
         for adv in raw_advices:
@@ -569,25 +590,30 @@ def analyze_and_store_raw(
 
 
 @router.post("/full", response_model=Dict[str, Any], tags=["Tahlil"])
-def analyze_full(
-    data: PatientData, 
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"), 
+async def analyze_full(
+    data: PatientData,
+    request: Request,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
     """
     To'liq tahlil: hisob-kitob + maslahatlar + DBga saqlash.
     Frontend hozir aynan shu endpointga urmoqda.
     """
     try:
+        # 0) Fetch clinical settings
+        all_settings = clinical_service.get_all_settings(db)
+
         # 1) Tahlil
         gender_norm = (data.gender or "").strip().lower()
-        analysis = calculate_bmi(data, lang=lang)
+        analysis = calculate_bmi(data, all_settings, lang=lang)
         advices  = generate_advices(
             analysis["bmi"],
             analysis["weight_diff"],
             int(data.age),
             gender_norm,
+            all_settings,
             bio_data=analysis["indices"],
             lang=lang
         )
@@ -596,6 +622,8 @@ def analyze_full(
         # 2) DBga saqlash
         id_code = generate_region_based_id(db, clean_region)
         full_name = f"{data.first_name} {data.last_name}".strip()
+        
+
         rec = PatientAnalysis(
             name=full_name,
             id_code=id_code,
@@ -642,17 +670,38 @@ def analyze_full(
             visceral_fat=data.visceral_fat,
             
             recommendations=(
-                f"General: {advices.get('general', '')}; "
-                f"Nutrition: {advices.get('nutrition', '')}; "
-                f"Activity: {advices.get('activity', '')}; "
                 f"Specialist: {advices.get('specialist', '')}; "
                 f"Checkups: {advices.get('checkups', '')}"
             ),
-            created_by_id=current_user.id
+            created_by_id=current_user.id if current_user else None
         )
         db.add(rec)
+        
+        # Update User Stats for Activity
+        if current_user:
+            now = datetime.datetime.utcnow()
+            if current_user.last_form_open_at:
+                diff = (now - current_user.last_form_open_at).total_seconds()
+                # Faqat oqilona vaqtni hisobga olamiz (masalan, 1 soatdan kam)
+                if diff > 0 and diff < 3600:
+                    current_user.total_entry_time_seconds = (current_user.total_entry_time_seconds or 0) + diff
+                    current_user.completed_entries_count = (current_user.completed_entries_count or 0) + 1
+            # Formani yopish/reset qilish
+            current_user.last_form_open_at = None
+
         db.commit()
         db.refresh(rec)
+
+        # Audit Log
+        record_audit_log(
+            db=db,
+            user_id=current_user.id if current_user else None,
+            action="CREATE",
+            target_type="PatientAnalysis",
+            target_id=rec.id,
+            details=f"Yangi tahlil yaratildi: {full_name} ({id_code})",
+            request=request
+        )
 
         # 3) Frontendga natija — TOP-LEVEL da analysis/advices (api.js kutganidek)
         return {
@@ -685,15 +734,21 @@ def analyze_full(
         raise HTTPException(status_code=500, detail=f"Tahlil yoki saqlash xatosi: {str(e)}")
 
 
+
 @router.post("/pdf-report", tags=["PDF Hisobot"])
-def generate_pdf_report_endpoint(data: PatientData, lang: str = Query(default="uz", description="Til: uz, ru, en, kz")):
+def generate_pdf_report_endpoint(
+    data: PatientData, 
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    db: Session = Depends(get_db)
+):
     """
     Generatsiya PDF otchyota na osnove vvedyonnykh dannykh.
     lang parametri orqali til tanlash mumkin: uz, ru, en, kz
     """
     try:
-        analysis = calculate_bmi(data)
-        full_report_data = data.dict(by_alias=True)
+        all_settings = clinical_service.get_all_settings(db)
+        analysis = calculate_bmi(data, all_settings, lang=lang)
+        full_report_data = data.model_dump(by_alias=True)
         full_report_data["analysis"] = analysis
         pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
 
@@ -792,7 +847,8 @@ def generate_pdf_by_patient_id(
                       "fat_percent": mini.fat_percent, "fat_mass": mini.fat_mass,
                       "muscle_mass": mini.muscle_mass, "bone_mass": mini.bone_mass,
                       "acm": mini.acm, "visceral_fat": mini.visceral_fat}
-        detailed = calculate_detailed_indices(mini.age, mini.gender, mini.height, mini.weight, bmi_val, manual_bio)
+        all_settings = clinical_service.get_all_settings(db)
+        detailed = calculate_detailed_indices(mini.age, mini.gender, mini.height, mini.weight, bmi_val, manual_bio, lang=lang, all_settings=all_settings)
 
         ideal_range = get_bmi_range_by_age_and_gender(mini.age, mini.gender)
         min_w = round(ideal_range["min"] * h2, 1)

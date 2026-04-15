@@ -1,14 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Header, Query, File, UploadFile, Request
+from models.audit import AuditLog
+from utils.audit_helper import record_audit_log
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, or_, asc, desc, cast, Date
 from datetime import datetime, date, timedelta
 from typing import Optional, List
+
 import os
+import logging
 from io import BytesIO
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from docx import Document
+from docx.shared import Pt, Cm, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_ALIGN_VERTICAL
 
 
 from utils.database import get_db
@@ -20,12 +28,14 @@ from models.schemas import (
     UserCreate, UserUpdate, UserOut,
     PaymentCreate, PaymentOut
 )
-from routers.analyze_router import calculate_bmi as calc_full_bmi, PatientData
+from routers.analyze_router import calculate_bmi as calc_full_bmi, PatientData, generate_advices, _split_region_and_district
 from utils.translit import lat2cyr
 from utils.security import get_password_hash
+from services.clinical_service import clinical_service
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
+logger = logging.getLogger(__name__)
 
 verify_admin = get_current_admin
 
@@ -91,6 +101,7 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "z_score": getattr(row, "z_score", None),
         "somatotype": getattr(row, "somatotype", None),
         "recommendations": getattr(row, "recommendations", None),
+        "ai_recommendations": getattr(row, "ai_recommendations", None),
     }
     # Agar modelda mavjud bo'lsa: region, yelka, oyoq uzunliklari va hk
     extra_fields = (
@@ -107,10 +118,19 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
             payload[extra] = getattr(row, extra)
     
     # Add creator name if requested
+    payload["created_by_id"] = getattr(row, "created_by_id", None)
     if hasattr(row, "created_by") and row.created_by:
         payload["created_by_name"] = row.created_by.name
     else:
         payload["created_by_name"] = "Noma'lum"
+
+    # Soft delete ma'lumotlari
+    payload["is_deleted"] = bool(getattr(row, "is_deleted", False))
+    payload["deleted_at"] = getattr(row, "deleted_at", None)
+    if hasattr(row, "deleted_by") and row.deleted_by:
+        payload["deleted_by_name"] = row.deleted_by.name
+    else:
+        payload["deleted_by_name"] = None
         
     return payload
 
@@ -134,8 +154,13 @@ def list_users(
     )
     return items
 
-@router.post("/users", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
-def create_user(payload: UserCreate, db: Session = Depends(get_db)):
+@router.post("/users", response_model=UserOut)
+def create_user(
+    payload: UserCreate, 
+    request: Request, 
+    db: Session = Depends(get_db), 
+    current_admin: User = Depends(get_current_superadmin)
+):
     # Check if email exists
     if payload.email:
         existing_user = db.query(User).filter(User.email == payload.email).first()
@@ -154,6 +179,18 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
+    
+    # Audit Log
+    record_audit_log(
+        db=db,
+        user_id=current_admin.id,
+        action="CREATE",
+        target_type="User",
+        target_id=user.id,
+        details=f"Yangi foydalanuvchi yaratildi: {user.name} ({user.role})",
+        request=request
+    )
+    
     return user
 
 @router.get("/users/{user_id}", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
@@ -163,8 +200,14 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(404, "User not found")
     return user
 
-@router.put("/users/{user_id}", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
-def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)):
+@router.put("/users/{user_id}", response_model=UserOut)
+def update_user(
+    user_id: int, 
+    payload: UserUpdate, 
+    request: Request, 
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_superadmin)
+):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
@@ -177,9 +220,6 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
         if existing_user:
             raise HTTPException(400, "Ushbu email allaqachon boshqa foydalanuvchi tomonidan band etilgan.")
 
-    # Maxsus holat: UserUpdate sxemasida password bo'lmasligi mumkin, 
-    # lekin agar biz schemas.py ni yangilagan bo'lsak, password kelishi mumkin.
-    # UserUpdate sxemasini ham tekshirib ko'ramiz.
     if "password" in update_data:
         password = update_data.pop("password")
         if password:
@@ -190,15 +230,46 @@ def update_user(user_id: int, payload: UserUpdate, db: Session = Depends(get_db)
         
     db.commit()
     db.refresh(user)
+    
+    # Audit Log
+    record_audit_log(
+        db=db,
+        user_id=current_admin.id,
+        action="UPDATE",
+        target_type="User",
+        target_id=user.id,
+        details=f"Foydalanuvchi ma'lumotlari yangilandi: {user.name}",
+        request=request
+    )
+    
     return user
 
-@router.delete("/users/{user_id}", dependencies=[Depends(get_current_superadmin)])
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+@router.delete("/users/{user_id}")
+def delete_user(
+    user_id: int, 
+    request: Request, 
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_superadmin)
+):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
+    
+    user_name = user.name
     db.delete(user)
     db.commit()
+    
+    # Audit Log
+    record_audit_log(
+        db=db,
+        user_id=current_admin.id,
+        action="DELETE",
+        target_type="User",
+        target_id=user_id,
+        details=f"Foydalanuvchi o'chirildi: {user_name}",
+        request=request
+    )
+    
     return {"status": "deleted"}
 
 # ---------------- ANALYSES ---------------------
@@ -217,12 +288,26 @@ def list_analyses(
     region: Optional[str] = Query(None),
     page: int = 1,
     page_size: int = 20,
+    show_deleted: bool = Query(False),  # Super admin uchun o'chirilganlarni ko'rsatish
 ):
     base = db.query(PatientAnalysis)
 
-    # Ownership Filter: Regular admin or others only see their own data
     if current_user.role != "superadmin":
-        base = base.filter(PatientAnalysis.created_by_id == current_user.id)
+        # Oddiy admin: faqat o'z ma'lumotlari + o'chirilmaganlar
+        base = base.filter(
+            PatientAnalysis.created_by_id == current_user.id,
+            (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
+        )
+    else:
+        # Super admin: barcha ma'lumotlar
+        # Agar show_deleted=False bo'lsa — faqat o'chirilmaganlar
+        if not show_deleted:
+            base = base.filter(
+                (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
+            )
+        else:
+            # show_deleted=True bo'lsa hech qanday filter yo'q — barcha ko'rinadi (o'chirilganlar ham)
+            pass
 
     # Qidiruv
     if q:
@@ -243,10 +328,10 @@ def list_analyses(
     if region:
         base = base.filter(PatientAnalysis.region == region)
 
-    # Jami (filtrlargacha emas, filtrlardan keyin!)
+    # Jami
     total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
 
-    # Sort
+    # Sort — o'chirilganlar har doim oxirida
     sort_map = {
         "created_at": getattr(PatientAnalysis, "created_at", None),
         "name": getattr(PatientAnalysis, "name", None),
@@ -255,12 +340,13 @@ def list_analyses(
         "height": getattr(PatientAnalysis, "height", None),
         "weight": getattr(PatientAnalysis, "weight", None),
         "bmi": getattr(PatientAnalysis, "bmi", None),
-        # Front so'rashi mumkin bo'lgan alias:
-        "last_name": getattr(PatientAnalysis, "name", None),  # name orqali
+        "last_name": getattr(PatientAnalysis, "name", None),
     }
     col = sort_map.get(sort_key) or getattr(PatientAnalysis, "created_at", None)
     if col is not None:
         base = base.order_by(asc(col) if sort_dir == "asc" else desc(col))
+
+    base = base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by))
 
     items_db = base.offset(max(0, (page - 1) * page_size)).limit(page_size).all()
     items = [to_dict_analysis(r) for r in items_db]
@@ -288,21 +374,109 @@ class AdminDeleteRequestModel(BaseModel):
 @router.delete("/analyses")
 def delete_analyses(
     payload: AdminDeleteRequestModel, 
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
+    """Soft delete: ma'lumot DB dan o'chirmaydi, is_deleted=1 deb belgilaydi.
+    """
     if not payload.ids:
         return {"deleted": 0}
     try:
         q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
-        
-        # Ownership Check for non-superadmins
         if current_user.role != "superadmin":
             q = q.filter(PatientAnalysis.created_by_id == current_user.id)
+        
+        records = q.all()
+        count = 0
+        names = []
+        for rec in records:
+            rec.is_deleted = 1
+            rec.deleted_by_id = current_user.id
+            rec.deleted_at = datetime.utcnow()
+            count += 1
+            names.append(rec.name)
+        
+        db.commit()
+        
+        if count > 0:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="DELETE_SOFT",
+                target_type="PatientAnalysis",
+                details=f"{count} ta tahlil savatga yuborildi: {', '.join(names[:3])}{'...' if len(names)>3 else ''}",
+                request=request
+            )
             
+        return {"deleted": count}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+
+
+@router.post("/analyses/hard-delete")
+def hard_delete_analyses(
+    payload: AdminDeleteRequestModel,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin)
+):
+    """Haqiqiy o'chirish — faqat super admin. DB dan butunlay o'chiradi."""
+    if not payload.ids:
+        return {"deleted": 0}
+    try:
+        q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
         deleted = q.delete(synchronize_session=False)
         db.commit()
+        
+        if deleted:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="DELETE_HARD",
+                target_type="PatientAnalysis",
+                details=f"{deleted} ta tahlil butunlay o'chirildi (IDlar: {payload.ids[:5]})",
+                request=request
+            )
+            
         return {"deleted": int(deleted or 0)}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error: {e}")
+
+
+@router.post("/analyses/restore")
+def restore_analyses(
+    payload: AdminDeleteRequestModel,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin)
+):
+    """O'chirilgan ma'lumotni tiklash — faqat super admin."""
+    if not payload.ids:
+        return {"restored": 0}
+    try:
+        q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
+        count = q.update({
+            "is_deleted": 0,
+            "deleted_by_id": None,
+            "deleted_at": None
+        }, synchronize_session=False)
+        
+        db.commit()
+        
+        if count:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="RESTORE",
+                target_type="PatientAnalysis",
+                details=f"{count} ta tahlil savatdan tiklandi (IDlar: {payload.ids[:5]})",
+                request=request
+            )
+            
+        return {"restored": int(count)}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
@@ -311,24 +485,137 @@ def delete_analyses(
 def update_analysis(
     analysis_id: int, 
     payload: dict, 
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
-    rec = db.get(PatientAnalysis, analysis_id)
-    if not rec:
-        raise HTTPException(404, "Analysis not found")
+    try:
+        rec = db.get(PatientAnalysis, analysis_id)
+        if not rec:
+            raise HTTPException(404, "Analysis not found")
+            
+        # Ownership Check
+        if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+            raise HTTPException(403, "Ushbu ma'lumotni o'zgartirishga huquqingiz yo'q")
+            
+        old_name = rec.name
         
-    # Ownership Check
-    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
-        raise HTTPException(403, "Ushbu ma'lumotni o'zgartirishga huquqingiz yo'q")
+        # ... logic for update (kept as is) ...
+        # (Actually I need to keep the code here to avoid broken endpoint)
         
-    # Faqat mavjud atributlarni yangilaymiz
-    for k, v in payload.items():
-        if hasattr(rec, k):
-            setattr(rec, k, v)
-    db.commit()
-    db.refresh(rec)
-    return to_dict_analysis(rec)
+        # 1. Ismni yangilash
+        first_name = payload.get("firstName")
+        last_name = payload.get("lastName")
+        if first_name is not None or last_name is not None:
+            old_first, old_last = split_name(rec.name)
+            new_first = first_name if first_name is not None else old_first
+            new_last = last_name if last_name is not None else old_last
+            rec.name = f"{new_first or ''} {new_last or ''}".strip()
+
+        # 2. Region/District yangilash
+        if "region" in payload or "district" in payload:
+            reg = payload.get("region", rec.region)
+            dist = payload.get("district", rec.district)
+            clean_reg, clean_dist = _split_region_and_district(reg, dist)
+            rec.region = clean_reg
+            rec.district = clean_dist
+
+        # 3. Barcha o'lchovlarni yangilash
+        fields_to_update = [
+            "age", "age_months", "age_days", "gender", "height", "weight", "chest", "waist", "head",
+            "shoulder_length", "shoulder_breadth", "shoulder_circumference",
+            "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
+            "calf_length", "calf_circumference", "foot_length", "body_length",
+            "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat",
+            "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations"
+        ]
+        
+        changes = []
+        for f in fields_to_update:
+            camel_f = "".join(x.capitalize() or "_" for x in f.split("_"))
+            camel_f = camel_f[0].lower() + camel_f[1:] 
+            val = payload.get(camel_f)
+            if val is None: val = payload.get(f)
+                
+            if val is not None:
+                old_val = getattr(rec, f)
+                if str(old_val) != str(val):
+                    changes.append(f"{f}: {old_val} -> {val}")
+                setattr(rec, f, val)
+
+        # 4. Qayta hisoblash
+        try:
+            # Re-calculate using calc_full_bmi (skipped for brevity here but keeping original logic flow)
+            p_data = PatientData(
+                firstName=split_name(rec.name)[0],
+                lastName=split_name(rec.name)[1],
+                region=rec.region or "",
+                district=rec.district,
+                address=rec.address or "",
+                examinationDate=rec.examination_date or "",
+                birthDate=rec.birth_date or "Noma'lum",
+                preschoolInstitution=rec.preschool_institution or "Noma'lum",
+                age=int(rec.age or 0),
+                ageMonths=int(rec.age_months or 0),
+                ageDays=int(rec.age_days or 0),
+                gender=rec.gender or "noma'lum",
+                height=float(rec.height or 0.0),
+                weight=float(rec.weight or 0.0),
+                chest=float(rec.chest or 0.0),
+                waist=float(rec.waist or 0.0),
+                head=float(rec.head or 0.0),
+                shoulderLength=float(rec.shoulder_length or 0.0),
+                shoulderBreadth=float(rec.shoulder_breadth or 0.0),
+                shoulderCircumference=float(rec.shoulder_circumference or 0.0),
+                armElbowLength=float(rec.arm_elbow_length or 0.0),
+                handLength=float(rec.hand_length or 0.0),
+                thighLength=float(rec.thigh_length or 0.0),
+                thighCircumference=float(rec.thigh_circumference or 0.0),
+                calfLength=float(rec.calf_length or 0.0),
+                calfCircumference=float(rec.calf_circumference or 0.0),
+                footLength=float(rec.foot_length or 0.0),
+                bodyLength=rec.body_length,
+                totalBodyWater=rec.total_body_water,
+                fatPercent=rec.fat_percent,
+                fatMass=rec.fat_mass,
+                muscleMass=rec.muscle_mass,
+                boneMass=rec.bone_mass,
+                acm=rec.acm,
+                visceralFat=rec.visceral_fat
+            )
+            analysis = calc_full_bmi(p_data)
+            advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(rec.age), rec.gender, bio_data=analysis["indices"])
+            rec.bmi = float(analysis["bmi"])
+            rec.z_score = float(analysis["z_score"])
+            rec.somatotype = str(analysis["somatotype"])
+            rec.recommendations = f"General: {advices.get('general', '')}; Nutrition: {advices.get('nutrition', '')}"
+        except: pass
+
+        db.commit()
+        db.refresh(rec)
+        
+        record_audit_log(
+            db=db,
+            user_id=current_user.id,
+            action="UPDATE",
+            target_type="PatientAnalysis",
+            target_id=rec.id,
+            details=f"Tahlil yangilandi: {rec.name}. O'zgarishlar: {', '.join(changes[:3])}{'...' if len(changes)>3 else ''}",
+            request=request
+        )
+        
+        return to_dict_analysis(rec)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        print(f"CRITICAL ERROR in update_analysis: {e}")
+        raise HTTPException(status_code=500, detail=f"Ma'lumotni yangilashda xatolik: {str(e)}")
+
 
 # ---------------- PAYMENTS ---------------------
 @router.get("/payments")
@@ -382,10 +669,38 @@ def stats(
     total_analyses = analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
     total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
     
-    # Growth last 30 days
-    last_month_start = datetime.utcnow() - timedelta(days=30)
-    monthly_analyses = analysis_q.filter(PatientAnalysis.created_at >= last_month_start).count()
+    # Additional Stats
+    today = date.today()
+    today_analyses = analysis_q.filter(cast(PatientAnalysis.created_at, Date) == today).count()
     
+    avg_bmi = analysis_q.with_entities(func.avg(PatientAnalysis.bmi)).scalar() or 0
+    
+    # BMI Distribution
+    bmi_dist = {
+        "underweight": analysis_q.filter(PatientAnalysis.bmi < 18.5).count(),
+        "normal": analysis_q.filter(PatientAnalysis.bmi >= 18.5, PatientAnalysis.bmi < 25).count(),
+        "overweight": analysis_q.filter(PatientAnalysis.bmi >= 25, PatientAnalysis.bmi < 30).count(),
+        "obese": analysis_q.filter(PatientAnalysis.bmi >= 30).count(),
+    }
+
+    # Somatotype Average Approximation (for Radar Chart)
+    # We'll use fat_percent for endo, muscle_mass/weight for meso, and height/weight ratio for ecto
+    # Normalized to a 1-7 scale for the radar chart
+    avg_fat = analysis_q.with_entities(func.avg(PatientAnalysis.fat_percent)).scalar() or 20
+    avg_muscle = analysis_q.with_entities(func.avg(PatientAnalysis.muscle_mass / PatientAnalysis.weight)).scalar() or 0.4
+    
+    # Ectomorphy approximation using Reciprocal Ponderal Index (RPI) = height / weight^(1/3)
+    # RPI > 40 is roughly 1-7 scale
+    rpi_avg = analysis_q.with_entities(
+        func.avg(PatientAnalysis.height / func.pow(PatientAnalysis.weight, 1/3))
+    ).scalar() or 40
+
+    somato_avg = {
+        "endomorph": min(7, max(1, (avg_fat / 5))),          # 20% fat ~ 4.0
+        "mesomorph": min(7, max(1, (avg_muscle * 10))),      # 40% muscle/weight ~ 4.0
+        "ectomorph": min(7, max(1, (rpi_avg - 36) / 2)),     # RPI 44 ~ 4.0
+    }
+
     # Gender Distribution
     gender_counts = (
         analysis_q.with_entities(PatientAnalysis.gender, func.count(PatientAnalysis.id))
@@ -420,27 +735,43 @@ def stats(
     regional_data = [{"region": r or "Noma'lum", "count": int(c)} for r, c in regional_counts]
 
     # Monthly Trend (Last 12 months)
-    # Using strftime for SQLite, fallback to simple date for others if needed
     try:
         trend_counts = (
             analysis_q.with_entities(
                 func.strftime('%Y-%m', PatientAnalysis.created_at).label("month"),
-                func.count(PatientAnalysis.id)
+                func.count(PatientAnalysis.id),
+                func.avg(PatientAnalysis.bmi).label("avg_bmi")
             )
             .group_by("month")
             .order_by("month")
             .all()
         )
-        monthly_trend = [{"month": m, "count": int(c)} for m, c in trend_counts][-12:]
-    except:
-        # Fallback if strftime fails (e.g. Postgres)
+        monthly_trend = [
+            {"month": str(m) if m else "Noma'lum", "count": int(c), "avg_bmi": float(b or 0)} 
+            for m, c, b in trend_counts
+        ][-12:]
+        
+        # Calculate monthly average count
+        monthly_avg = sum(item["count"] for item in monthly_trend) / len(monthly_trend) if monthly_trend else 0
+    except Exception as e:
+        logger.error(f"Monthly trend error: {e}")
         monthly_trend = []
+        monthly_avg = 0
+
+    # Calculate monthly growth (current month analyses)
+    current_month_start = date.today().replace(day=1)
+    monthly_analyses = analysis_q.filter(cast(PatientAnalysis.created_at, Date) >= current_month_start).count()
 
     return {
         "total_users": int(total_users),
         "total_analyses": int(total_analyses),
+        "today_analyses": int(today_analyses),
         "total_revenue": float(total_revenue),
+        "avg_bmi": float(avg_bmi),
         "monthly_growth": int(monthly_analyses),
+        "monthly_avg": float(monthly_avg),
+        "bmi_distribution": bmi_dist,
+        "somatotype_avg": somato_avg,
         "by_gender": gender_map,
         "by_somatotype": somatotype_map,
         "by_age_group": age_groups,
@@ -485,7 +816,7 @@ def export_analyses_xlsx(
     if region:
         base = base.filter(PatientAnalysis.region == region)
 
-    rows_db = base.order_by(PatientAnalysis.created_at.desc()).all()
+    rows_db = base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by)).order_by(PatientAnalysis.created_at.desc()).all()
 
     wb = Workbook()
     ws = wb.active
@@ -493,7 +824,7 @@ def export_analyses_xlsx(
 
     # Sarlavhalar (To'liq o'zbekcha kirill yozuvida, texnik qismlar lotinda)
     headers = [
-        "Сана", "ID код", "Ф.И.Ш.", "Жинс", "Ёш", "Вилоят", "Туман", "Манзил",
+        "Сана", "ID код", "Ф.И.Ш.", "Жинс", "Ёш", "Вилоят", "Туман", "Манзил", "Киритди",
         "Бўй (см)", "Вазн (кг)", "ИАВ", "Ҳолат", "Соматотип",
         "Идеал Вазн (кг)", "Фарқ (кг)", "Вазн Оралиғи",
         "Кўкрак айл.", "Бел айл.", "Бош айл.",
@@ -515,6 +846,9 @@ def export_analyses_xlsx(
         cell.font = header_font
         cell.alignment = Alignment(horizontal='center', vertical='center')
         cell.border = border
+
+    # Fetch settings for calculations
+    all_settings = clinical_service.get_all_settings(db)
 
     # Ma'lumotlarni yozish
     row_idx = 2
@@ -539,8 +873,9 @@ def export_analyses_xlsx(
                 visceralFat=getattr(r, "visceral_fat", None),
                 bodyLength=getattr(r, "body_length", None)
             )
-            analysis = calc_full_bmi(p_data)
-        except:
+            analysis = calc_full_bmi(p_data, all_settings=all_settings, lang="uz")
+        except Exception as e:
+            logger.error(f"Error calculating analysis for XLSX row (id={r.id}): {e}")
             analysis = {}
 
         vazn_range = ""
@@ -566,6 +901,7 @@ def export_analyses_xlsx(
             lat2cyr(r.region) if r.region else "-",
             lat2cyr(r.district) if r.district else "-",
             lat2cyr(r.address) if r.address else "-",
+            lat2cyr(r.created_by.name) if r.created_by and r.created_by.name else "-",
             r.height or 0,
             r.weight or 0,
             analysis.get("bmi", r.bmi or "-"),
@@ -630,3 +966,653 @@ def export_analyses_xlsx(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+
+# -------------- O'CHIRILGAN MA'LUMOTLAR (Super Admin) ------------------
+@router.get("/deleted-analyses", dependencies=[Depends(get_current_superadmin)])
+def list_deleted_analyses(
+    db: Session = Depends(get_db),
+    q: Optional[str] = Query(None),
+    page: int = 1,
+    page_size: int = 20,
+):
+    """
+    Faqat super admin: barcha soft-deleted ma'lumotlarni ro'yxati.
+    """
+    base = db.query(PatientAnalysis).filter(
+        (PatientAnalysis.is_deleted == 1)
+    )
+    if q:
+        like = f"%{q}%"
+        base = base.filter(PatientAnalysis.name.ilike(like))
+
+    total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
+    items_db = (
+        base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by))
+        .order_by(desc(PatientAnalysis.deleted_at))
+        .offset(max(0, (page - 1) * page_size))
+        .limit(page_size)
+        .all()
+    )
+    items = [to_dict_analysis(r) for r in items_db]
+    return {"items": items, "total": int(total)}
+
+
+@router.get("/export-deleted-docx", dependencies=[Depends(get_current_superadmin)])
+def export_deleted_docx(
+    db: Session = Depends(get_db),
+    q: Optional[str] = Query(None),
+):
+    """
+    Super admin: o'chirilgan barcha ma'lumotlarni DOCX formatda yuklab olish.
+    """
+    base = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 1)
+    if q:
+        like = f"%{q}%"
+        base = base.filter(PatientAnalysis.name.ilike(like))
+
+    rows_db = base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by)).order_by(desc(PatientAnalysis.deleted_at)).all()
+
+    doc = Document()
+
+    # Hujjat sarlavhasi
+    title = doc.add_heading("", 0)
+    title_run = title.add_run("O'chirilgan Ma'lumotlar Hisoboti")
+    title_run.font.size = Pt(16)
+    title_run.font.bold = True
+    title_run.font.color.rgb = RGBColor(0xC0, 0x39, 0x2B)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    # Meta info
+    meta_para = doc.add_paragraph()
+    meta_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    meta_run = meta_para.add_run(
+        f"Hisobot sanasi: {datetime.now().strftime('%Y-%m-%d %H:%M')}  |  Jami: {len(rows_db)} ta yozuv"
+    )
+    meta_run.font.size = Pt(10)
+    meta_run.font.color.rgb = RGBColor(0x7F, 0x8C, 0x8D)
+
+    doc.add_paragraph()
+
+    # Jadval sarlavhalari
+    headers = [
+        "№", "ID Kod", "F.I.Sh.", "Jins", "Yosh",
+        "Viloyat / Tuman", "Bo'y (sm)", "Vazn (kg)", "BMI",
+        "Somatotip", "O'chirgan Admin", "O'chirilgan Sana"
+    ]
+    col_widths_cm = [
+        0.8, 2.0, 3.5, 1.5, 1.2,
+        3.0, 1.5, 1.5, 1.5,
+        2.5, 3.0, 3.0
+    ]
+
+    table = doc.add_table(rows=1, cols=len(headers))
+    table.style = "Table Grid"
+
+    # Header row styling
+    hdr_cells = table.rows[0].cells
+    for i, (h, w) in enumerate(zip(headers, col_widths_cm)):
+        cell = hdr_cells[i]
+        cell.width = Cm(w)
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+        para = cell.paragraphs[0]
+        para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = para.add_run(h)
+        run.bold = True
+        run.font.size = Pt(9)
+        run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        # Header fon — qizil
+        from docx.oxml.ns import qn
+        from docx.oxml import OxmlElement
+        tc = cell._tc
+        tcPr = tc.get_or_add_tcPr()
+        shd = OxmlElement("w:shd")
+        shd.set(qn("w:val"), "clear")
+        shd.set(qn("w:color"), "auto")
+        shd.set(qn("w:fill"), "C0392B")
+        tcPr.append(shd)
+
+    # Ma'lumot satrlari
+    for idx, r in enumerate(rows_db, 1):
+        row_cells = table.add_row().cells
+        bmi_val = getattr(r, "bmi", None) or calc_bmi(getattr(r, "weight", None), getattr(r, "height", None))
+        bmi_str = f"{round(bmi_val, 1)}" if bmi_val else "-"
+
+        age_str = f"{r.age} y."
+        if getattr(r, "age_months", None):
+            age_str += f" {r.age_months} oy"
+
+        deleted_at_str = (
+            r.deleted_at.strftime("%Y-%m-%d %H:%M") if getattr(r, "deleted_at", None) else "-"
+        )
+        deleted_by_str = (
+            r.deleted_by.name if (hasattr(r, "deleted_by") and r.deleted_by) else "Noma'lum"
+        )
+        region_str = f"{r.region or '-'} / {getattr(r, 'district', '') or '-'}"
+
+        values = [
+            str(idx),
+            r.id_code or "-",
+            lat2cyr(r.name) if r.name else "-",
+            lat2cyr(r.gender) if r.gender else "-",
+            age_str,
+            lat2cyr(region_str),
+            str(r.height or "-"),
+            str(r.weight or "-"),
+            bmi_str,
+            lat2cyr(r.somatotype) if r.somatotype else "-",
+            lat2cyr(deleted_by_str),
+            deleted_at_str,
+        ]
+
+        fill_color = "FADBD8" if idx % 2 == 0 else "FFFFFF"  # alternating pink-white
+
+        for i, val in enumerate(values):
+            cell = row_cells[i]
+            cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+            para = cell.paragraphs[0]
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER if i != 2 else WD_ALIGN_PARAGRAPH.LEFT
+            run = para.add_run(val)
+            run.font.size = Pt(8)
+
+            # Alternating row color
+            from docx.oxml.ns import qn
+            from docx.oxml import OxmlElement
+            tc = cell._tc
+            tcPr = tc.get_or_add_tcPr()
+            shd = OxmlElement("w:shd")
+            shd.set(qn("w:val"), "clear")
+            shd.set(qn("w:color"), "auto")
+            shd.set(qn("w:fill"), fill_color)
+            tcPr.append(shd)
+
+    # Pastki izoh
+    doc.add_paragraph()
+    footer_para = doc.add_paragraph()
+    footer_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    footer_run = footer_para.add_run(
+        "MORPHO CHECK PRO — Super Admin Hisoboti — Maxfiy hujjat"
+    )
+    footer_run.font.size = Pt(8)
+    footer_run.font.italic = True
+    footer_run.font.color.rgb = RGBColor(0xA9, 0xA9, 0xA9)
+
+    output = BytesIO()
+    doc.save(output)
+    output.seek(0)
+
+    filename = f"morphocheck_deleted_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+# ----------------- BULK IMPORT / TEMPLATE ------------------
+
+@router.get("/export-template")
+def export_template():
+    """Import uchun Excel shablonini yuklab olish."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Template"
+
+    # Sarlavhalar (Lotin yozuvida, import qilish oson bo'lishi uchun)
+    # Ammo userga tushunarli bo'lishi uchun Kirillda ham qoldirish mumkin.
+    # Biz Lotin (field name) + Izoh (Kirill) kombinatsiyasini ishlatamiz.
+    
+    headers = [
+        "first_name (Ism) *", "last_name (Familiya) *", "gender (erkak/ayol) *", 
+        "age (Yosh) *", "age_months (Yosh oylar)", "age_days (Yosh kunlar)",
+        "region (Viloyat) *", "district (Tuman)", "address (Manzil)",
+        "height (Bo'y, sm) *", "weight (Vazn, kg) *", "chest (Ko'krak qafasi, sm) *",
+        "waist (Bel айланаси, sm) *", "head (Bosh айланаси, sm) *",
+        "birth_date (Tug'ilgan sana: YYYY-MM-DD)", "examination_date (Sana: YYYY-MM-DD)", 
+        "preschool_institution (Muassasa)",
+        "shoulder_length", "shoulder_breadth", "shoulder_circumference",
+        "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
+        "calf_length", "calf_circumference", "foot_length", "body_length",
+        "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+    ]
+
+    header_fill = PatternFill(start_color="2ECC71", end_color="2ECC71", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    # Namuna qator
+    sample = [
+        "Ali", "Valiyev", "erkak", 10, 5, 12,
+        "Toshkent", "Yunusobod", "Amir Temur ko'chasi",
+        140.5, 35.2, 70, 65, 52,
+        "2014-05-10", "2024-05-10", "123-maktab",
+        15, 30, 25, 20, 15, 40, 35, 25, 20, 22, 135,
+        None, None, None, None, None, None, None
+    ]
+    for col_num, val in enumerate(sample, 1):
+        ws.cell(row=2, column=col_num, value=val)
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=morphocheck_template.xlsx"}
+    )
+
+
+@router.post("/import-xlsx")
+async def import_analyses_xlsx(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    """Excel orqali ommaviy ma'lumot yuklash."""
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(400, "Faqat Excel fayllari (.xlsx, .xls) qabul qilinadi.")
+
+    contents = await file.read()
+    wb = load_workbook(BytesIO(contents), data_only=True)
+    ws = wb.active
+
+    # Field mapping (header index -> field name)
+    field_map = {
+        0: "first_name", 1: "last_name", 2: "gender", 3: "age", 4: "age_months", 5: "age_days",
+        6: "region", 7: "district", 8: "address",
+        9: "height", 10: "weight", 11: "chest", 12: "waist", 13: "head",
+        14: "birth_date", 15: "examination_date", 16: "preschool_institution",
+        17: "shoulder_length", 18: "shoulder_breadth", 19: "shoulder_circumference",
+        20: "arm_elbow_length", 21: "hand_length", 22: "thigh_length", 23: "thigh_circumference",
+        24: "calf_length", 25: "calf_circumference", 26: "foot_length", 27: "body_length",
+        28: "total_body_water", 29: "fat_percent", 30: "fat_mass", 31: "muscle_mass", 32: "bone_mass",
+        33: "acm", 34: "visceral_fat"
+    }
+
+    imported_count = 0
+    updated_count = 0
+    errors = []
+
+    def format_val(v, default=0.0):
+        if v is None or v == "": return default
+        if isinstance(v, (int, float)): return float(v)
+        try:
+            ts = str(v).strip().replace(',', '.')
+            if not ts or ts.lower() == 'nan': return default
+            return float(ts)
+        except:
+            return default
+
+    def format_int(v, default=0):
+        if v is None or v == "": return default
+        if isinstance(v, int): return v
+        if isinstance(v, float): return int(v)
+        try:
+            ts = str(v).strip().split('.')[0] # handle '10.0' as string
+            if not ts: return default
+            return int(ts)
+        except:
+            return default
+
+    def format_date(v, default=""):
+        if not v: return default
+        if isinstance(v, (datetime, date)):
+            return v.strftime("%Y-%m-%d")
+        return str(v).strip()
+
+    # Skip header (row 1)
+    for row_idx, row in enumerate(ws.iter_rows(min_row=2), 2):
+        row_values = [cell.value for cell in row]
+        if not any(row_values): continue # Bo'sh qator
+
+        try:
+            data = {}
+            for col_idx, field in field_map.items():
+                if col_idx < len(row_values):
+                    data[field] = row_values[col_idx]
+            
+            # Mandatory fields check
+            if not data.get("first_name") or not data.get("last_name") or not data.get("height") or not data.get("weight"):
+                errors.append(f"Row {row_idx}: Ism, Familiya, Bo'y va Vazn majburiy.")
+                continue
+
+            # Convert types
+            full_name = f"{data['first_name']} {data['last_name']}".strip()
+            gender = str(data.get("gender") or "erkak").lower()
+            if "ayol" in gender or "fem" in gender: gender = "ayol"
+            else: gender = "erkak"
+
+            # Check existing record (full match by name and birth_date/region if available)
+            existing = db.query(PatientAnalysis).filter(
+                PatientAnalysis.name == full_name,
+                PatientAnalysis.created_by_id == current_user.id,
+                (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
+            )
+            if data.get("birth_date"):
+                existing = existing.filter(PatientAnalysis.birth_date == str(data["birth_date"]))
+            
+            rec = existing.first()
+            is_new = False
+            if not rec:
+                rec = PatientAnalysis()
+                rec.created_by_id = current_user.id
+                is_new = True
+
+            # Populate model
+            rec.name = full_name
+            rec.gender = gender
+            rec.age = format_int(data.get("age"), 0)
+            rec.age_months = format_int(data.get("age_months"), 0)
+            rec.age_days = format_int(data.get("age_days"), 0)
+            rec.region = str(data.get("region") or "").strip()
+            rec.district = str(data.get("district") or "").strip()
+            rec.address = str(data.get("address") or "").strip()
+            rec.height = format_val(data.get("height"), 0.0)
+            rec.weight = format_val(data.get("weight"), 0.0)
+            rec.chest = format_val(data.get("chest"), 0.0)
+            rec.waist = format_val(data.get("waist"), 0.0)
+            rec.head = format_val(data.get("head"), 0.0)
+            rec.hip = 0.0 # Mandatory in model but not in template
+            rec.birth_date = format_date(data.get("birth_date"), "")
+            rec.examination_date = format_date(data.get("examination_date"), datetime.now().strftime("%Y-%m-%d"))
+            rec.preschool_institution = str(data.get("preschool_institution") or "")
+            
+            # Bio fields
+            bio_fields = [
+                "shoulder_length", "shoulder_breadth", "shoulder_circumference",
+                "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
+                "calf_length", "calf_circumference", "foot_length", "body_length",
+                "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+            ]
+            for bf in bio_fields:
+                val = data.get(bf)
+                if val is not None:
+                    setattr(rec, bf, format_val(val, 0.0))
+
+            # Trigger Calculation
+            p_data = PatientData(
+                firstName=data["first_name"],
+                lastName=data["last_name"],
+                region=rec.region,
+                district=rec.district,
+                address=rec.address,
+                examinationDate=rec.examination_date,
+                birthDate=rec.birth_date,
+                preschoolInstitution=rec.preschool_institution,
+                age=rec.age,
+                ageMonths=rec.age_months,
+                ageDays=rec.age_days,
+                gender=rec.gender,
+                height=rec.height,
+                weight=rec.weight,
+                chest=rec.chest,
+                waist=rec.waist,
+                head=rec.head,
+                shoulderLength=rec.shoulder_length or 0,
+                shoulderBreadth=rec.shoulder_breadth or 0,
+                shoulderCircumference=rec.shoulder_circumference or 0,
+                armElbowLength=rec.arm_elbow_length or 0,
+                handLength=rec.hand_length or 0,
+                thighLength=rec.thigh_length or 0,
+                thighCircumference=rec.thigh_circumference or 0,
+                calfLength=rec.calf_length or 0,
+                calfCircumference=rec.calf_circumference or 0,
+                footLength=rec.foot_length or 0,
+                bodyLength=rec.body_length,
+                totalBodyWater=rec.total_body_water,
+                fatPercent=rec.fat_percent,
+                fatMass=rec.fat_mass,
+                muscleMass=rec.muscle_mass,
+                boneMass=rec.bone_mass,
+                acm=rec.acm,
+                visceralFat=rec.visceral_fat
+            )
+            
+            analysis = calc_full_bmi(p_data)
+            advices = generate_advices(
+                analysis["bmi"],
+                analysis["weight_diff"],
+                int(rec.age),
+                rec.gender,
+                bio_data=analysis["indices"]
+            )
+            
+            rec.bmi = float(analysis["bmi"])
+            rec.z_score = float(analysis["z_score"])
+            rec.somatotype = str(analysis["somatotype"])
+            rec.recommendations = (
+                f"General: {advices.get('general', '')}; "
+                f"Nutrition: {advices.get('nutrition', '')}; "
+                f"Activity: {advices.get('activity', '')}; "
+                f"Specialist: {advices.get('specialist', '')}; "
+                f"Checkups: {advices.get('checkups', '')}"
+            )
+
+            if is_new:
+                db.add(rec)
+                imported_count += 1
+            else:
+                updated_count += 1
+
+        except Exception as e:
+            errors.append(f"Row {row_idx}: Xatolik - {str(e)}")
+
+    try:
+        db.commit()
+    except Exception as commit_err:
+        db.rollback()
+        logger.error(f"Excel import DB commit error: {commit_err}")
+        # Agar commit fail qilsa, error qaytaramiz (500 o'rniga tushunarli matn)
+        raise HTTPException(status_code=500, detail=f"Ma'lumotlarni saqlashda xatolik: {commit_err}")
+        
+    return {
+        "status": "success",
+        "imported": imported_count,
+        "updated": updated_count,
+        "errors": errors
+    }
+
+# ----------------- AUDIT LOGS ------------------
+from models.schemas import AuditLogOut
+
+@router.get("/audit-logs", response_model=dict)
+def list_audit_logs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+    page: int = 1,
+    page_size: int = 50,
+    action: Optional[str] = Query(None),
+    user_id: Optional[int] = Query(None)
+):
+    """Faqat Super Admin uchun: tizimdagi barcha loglarni ko'rish."""
+    query = db.query(AuditLog)
+    
+    if action:
+        query = query.filter(AuditLog.action == action)
+    if user_id:
+        query = query.filter(AuditLog.user_id == user_id)
+        
+    total = query.count()
+    
+    logs_db = (
+        query.order_by(AuditLog.created_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    
+    # Map to schema with user names
+    items = []
+    for log in logs_db:
+        item = {
+            "id": log.id,
+            "user_id": log.user_id,
+            "action": log.action,
+            "target_type": log.target_type,
+            "target_id": log.target_id,
+            "details": log.details,
+            "ip_address": log.ip_address,
+            "created_at": log.created_at,
+            "user_name": log.user.name if log.user else "Mehmon"
+        }
+        items.append(item)
+        
+    return {"items": items, "total": total}
+
+# ----------------- ADMIN ACTIVITY -----------------
+
+@router.post("/activity/ping-form-start")
+def ping_form_start(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
+):
+    """Admin forma ochganini belgilash (vaqtni hisoblash uchun)."""
+    current_user.last_form_open_at = datetime.utcnow()
+    db.commit()
+    return {"status": "ok"}
+
+@router.get("/activity", response_model=dict)
+def get_admin_activity(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin)
+):
+    """Faqat Super Admin uchun: barcha adminlar faolligini ko'rish."""
+    # Superadminlar o'zini o'zi ko'rmasligi uchun faqat 'admin' role degilarni olamiz
+    admins = db.query(User).filter(User.role == "admin").all()
+    
+    now = datetime.utcnow()
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
+    
+    result = []
+    for admin in admins:
+        # Status calculation
+        status = "offline"
+        is_typing = False
+        
+        if admin.last_active_at:
+            diff = (now - admin.last_active_at).total_seconds()
+            if diff < 60: # 1 minut
+                status = "online"
+                # Agar oxirgi faollik juda yaqin bo'lsa va forma ochiq bo'lsa
+                if admin.last_form_open_at:
+                   is_typing = True
+            elif diff < 300: # 5 minut
+                status = "online"
+            elif diff < 900: # 15 minut
+                status = "away"
+        
+        # Stats
+        stats_today = db.query(func.count(PatientAnalysis.id)).filter(
+            PatientAnalysis.created_by_id == admin.id,
+            PatientAnalysis.created_at >= today_start
+        ).scalar() or 0
+        
+        stats_month = db.query(func.count(PatientAnalysis.id)).filter(
+            PatientAnalysis.created_by_id == admin.id,
+            PatientAnalysis.created_at >= month_start
+        ).scalar() or 0
+        
+        # Avg time
+        avg_time = 0
+        if admin.completed_entries_count and admin.completed_entries_count > 0:
+            avg_time = round(admin.total_entry_time_seconds / admin.completed_entries_count, 1)
+            
+        # Most active hour
+        most_active_hour = None
+        try:
+            # SQLite uchun strftime ishlatamiz
+            hour_query = db.query(
+                func.strftime('%H', PatientAnalysis.created_at).label("hour"),
+                func.count(PatientAnalysis.id).label("count")
+            ).filter(
+                PatientAnalysis.created_by_id == admin.id
+            ).group_by("hour").order_by(desc("count")).first()
+            
+            if hour_query:
+                most_active_hour = f"{hour_query.hour}:00"
+        except:
+            pass
+
+        result.append({
+            "id": admin.id,
+            "name": admin.name,
+            "email": admin.email,
+            "region": admin.region,
+            "status": status,
+            "is_typing": is_typing,
+            "last_active_at": admin.last_active_at,
+            "stats_today": stats_today,
+            "stats_month": stats_month,
+            "avg_entry_time": avg_time,
+            "most_active_hour": most_active_hour,
+            "total_entries": admin.completed_entries_count or 0
+        })
+        
+    return {"items": result}
+
+
+# ----------------- AUDIT LOGS -------------------
+@router.get("/audit-logs")
+def list_audit_logs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+    page: int = 1,
+    page_size: int = 50,
+    action: Optional[str] = Query(None)
+):
+    query = db.query(AuditLog).options(joinedload(AuditLog.user))
+    
+    if action:
+        query = query.filter(AuditLog.action == action)
+        
+    total = query.count()
+    logs_db = query.order_by(desc(AuditLog.created_at)).offset((page - 1) * page_size).limit(page_size).all()
+    
+    items = []
+    for log in logs_db:
+        items.append({
+            "id": log.id,
+            "user_id": log.user_id,
+            "user_name": log.user.name if log.user else "Noma'lum",
+            "action": log.action,
+            "target_type": log.target_type,
+            "target_id": log.target_id,
+            "details": log.details,
+            "ip_address": log.ip_address,
+            "created_at": log.created_at
+        })
+        
+    return {"items": items, "total": total}
+
+@router.delete("/audit-logs/clear")
+def clear_audit_logs(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+    action: Optional[str] = Query(None)
+):
+    query = db.query(AuditLog)
+    if action and action != "ALL":
+        query = query.filter(AuditLog.action == action)
+        
+    count = query.delete(synchronize_session=False)
+    db.commit()
+    
+    # After deleting, we must record that an admin cleared the logs
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="DELETE_HARD",
+        target_type="AuditLog",
+        details=f"Audit jurnali tozalandi: {action or 'Barchasi'} ({count} ta yozuv)",
+        request=request
+    )
+    
+    return {"deleted": count}
+

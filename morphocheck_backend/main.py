@@ -8,6 +8,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from utils.rate_limit import limiter
+from starlette.middleware.base import BaseHTTPMiddleware
+
 # .env faylini yuklash
 load_dotenv()
 
@@ -16,6 +21,8 @@ from routers.analyze_router import router as analyze_router
 from routers.admin_router import router as admin_router
 from routers.pdf_router import router as pdf_router
 from routers.auth_router import router as auth_router
+from routers.clinical_router import router as clinical_router
+from routers.backup_router import router as backup_router
 
 # DB init
 from utils.database import engine, get_db, init_db
@@ -29,6 +36,21 @@ app = FastAPI(
     description="Antropometrik tahlil, tavsiyalar va PDF hisoboti",
     version="1.0.0",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*; img-src 'self' data: blob:;"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS sozlamalari
 _origins = os.getenv("CORS_ORIGINS", "")
@@ -65,6 +87,8 @@ def on_startup():
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])
 app.include_router(admin_router,  prefix=f"{API_PREFIX}/admin",   tags=["Admin"])
 app.include_router(pdf_router,    prefix=f"{API_PREFIX}/pdf",     tags=["PDF Hisobot"])
+app.include_router(clinical_router, prefix=f"{API_PREFIX}/clinical", tags=["Klinik CMS"])
+app.include_router(backup_router, prefix=f"{API_PREFIX}/backup",  tags=["Zaxira (Backup)"])
 app.include_router(auth_router,   prefix=f"{API_PREFIX}")
 
 # Sog'liqni tekshirish
@@ -73,6 +97,29 @@ def health(db: Session = Depends(get_db)):
     from sqlalchemy import text
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
+
+# ---- Global Error Handler for Observability ----
+import traceback
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Log detailed error to console/logs
+    print("="*50)
+    print(f"[ERROR] {request.method} {request.url}")
+    print(f"Detail: {str(exc)}")
+    traceback.print_exc()
+    print("="*50)
+    
+    # Return generic but helpful message to client
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "message": "Serverda ichki xatolik yuz berdi."
+        }
+    )
 
 # Endpoints are now handled via specialized routers
 

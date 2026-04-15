@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr, Field, field_validator, model_validato
 from typing import Optional, List, Literal
 from decimal import Decimal
 import math
+import datetime
+import re
 
 class PatientData(BaseModel):
     first_name: str
@@ -78,21 +80,64 @@ class UserDataCreate(BaseModel):
     somatotype: Optional[str]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserCreate(BaseModel):
     name: str
     email: Optional[EmailStr] = None
     password: Optional[str] = None
+    password_confirm: Optional[str] = None
     phone: Optional[str] = None
     role: Optional[str] = "user"
+    region: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v):
+        if not v:
+            return v
+        if len(v) < 8:
+            raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Parolda kamida 1 ta katta harf bo'lishi kerak")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Parolda kamida 1 ta kichik harf bo'lishi kerak")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("Parolda kamida 1 ta raqam bo'lishi kerak")
+        return v
+
+    @model_validator(mode="after")
+    def check_passwords_match(self):
+        if self.password and self.password != self.password_confirm:
+            raise ValueError("Parollar mos emas")
+        return self
 
 class UserRegister(BaseModel):
     name: str
     email: EmailStr
     password: str
+    password_confirm: str
     phone: Optional[str] = None
     region: Optional[str] = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v):
+        if len(v) < 8:
+            raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Parolda kamida 1 ta katta harf bo'lishi kerak")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Parolda kamida 1 ta kichik harf bo'lishi kerak")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("Parolda kamida 1 ta raqam bo'lishi kerak")
+        return v
+
+    @model_validator(mode="after")
+    def check_passwords_match(self):
+        if self.password != self.password_confirm:
+            raise ValueError("Parollar mos emas")
+        return self
 
 class UserLogin(BaseModel):
     email: str
@@ -108,6 +153,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     phone: Optional[str] = None
     role: Optional[str] = None
+    region: Optional[str] = None
 
 class UserOut(BaseModel):
     id: int
@@ -115,6 +161,7 @@ class UserOut(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     role: str
+    region: Optional[str] = None
     class Config:
         from_attributes = True
 
@@ -134,6 +181,20 @@ class PaymentOut(BaseModel):
     method: Optional[str]
     status: str
     description: Optional[str]
+    class Config:
+        from_attributes = True
+
+class AuditLogOut(BaseModel):
+    id: int
+    user_id: Optional[int]
+    action: str
+    target_type: Optional[str]
+    target_id: Optional[int]
+    details: Optional[str]
+    ip_address: Optional[str]
+    created_at: datetime.datetime
+    user_name: Optional[str] = None
+    
     class Config:
         from_attributes = True
 

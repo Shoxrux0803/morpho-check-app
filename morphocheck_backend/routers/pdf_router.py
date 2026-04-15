@@ -5,11 +5,14 @@ from io import BytesIO
 
 from services.pdf_services import generate_pdf_file
 from services.docx_services import generate_docx_report
+from services.clinical_service import clinical_service
 from routers.analyze_router import PatientData, calculate_bmi, generate_advices, generate_region_based_id
 from utils.database import get_db
 from models.userdata import PatientAnalysis
 from sqlalchemy.orm import Session
-from fastapi import Depends
+from utils.audit_helper import record_audit_log
+from routers.auth_router import get_optional_user
+from models.user import User
 
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
 
@@ -35,9 +38,10 @@ async def generate_pdf_endpoint(
     db: Session = Depends(get_db)
 ):
     try:
-        analysis = calculate_bmi(request_data, lang=lang)
+        all_settings = clinical_service.get_all_settings(db)
+        analysis = calculate_bmi(request_data, all_settings, lang=lang)
         gender_norm = (request_data.gender or "").strip().lower()
-        advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(request_data.age), gender_norm)
+        advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(request_data.age), gender_norm, all_settings)
 
         data_dict = request_data.model_dump(by_alias=False)
 
@@ -78,8 +82,10 @@ async def generate_pdf_endpoint(
 )
 async def generate_pdf_by_id_endpoint(
     patient_id: int,
+    request: Request,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_optional_user)
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda PDF qaytaradi."""
     from routers.analyze_router import (
@@ -122,12 +128,14 @@ async def generate_pdf_by_id_endpoint(
         # Localize BMI category
         from routers.analyze_router import BMI_CATEGORIES
         bmi_cat_key = "normal"
-        if bmi_val < 18.5: bmi_cat_key = "underweight"
+        if bmi_val < 16.0: bmi_cat_key = "v_low"
+        elif bmi_val < 18.5: bmi_cat_key = "low"
         elif bmi_val < 25: bmi_cat_key = "normal"
         elif bmi_val < 30: bmi_cat_key = "overweight"
         else: bmi_cat_key = "obese"
         
-        bmi_category_localized = BMI_CATEGORIES.get(bmi_cat_key, {}).get(lang, BMI_CATEGORIES[bmi_cat_key]["uz"])
+        cat_info = BMI_CATEGORIES.get(bmi_cat_key, BMI_CATEGORIES.get("normal", {}))
+        bmi_category_localized = cat_info.get(lang, cat_info.get("uz", "Noma'lum"))
 
         sh_breadth = rec.shoulder_breadth or 0
         th_circ = rec.thigh_circumference or 0
@@ -166,6 +174,18 @@ async def generate_pdf_by_id_endpoint(
 
         buffer = generate_pdf_file(report_data, lang=lang)
         buffer.seek(0)
+        
+        if current_user:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="DOWNLOAD",
+                target_type="PatientAnalysis",
+                target_id=rec.id,
+                details=f"Bemor hisoboti (PDF) yuklab olindi: {rec.name}",
+                request=request
+            )
+            
         return StreamingResponse(
             content=buffer,
             media_type="application/pdf",
@@ -195,8 +215,10 @@ async def generate_pdf_by_id_endpoint(
 )
 async def generate_docx_by_id_endpoint(
     patient_id: int,
+    request: Request,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_optional_user)
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda DOCX (anketa) qaytaradi."""
     from routers.analyze_router import (
@@ -239,12 +261,14 @@ async def generate_docx_by_id_endpoint(
         # Localize BMI category
         from routers.analyze_router import BMI_CATEGORIES
         bmi_cat_key = "normal"
-        if bmi_val < 18.5: bmi_cat_key = "underweight"
+        if bmi_val < 16.0: bmi_cat_key = "v_low"
+        elif bmi_val < 18.5: bmi_cat_key = "low"
         elif bmi_val < 25: bmi_cat_key = "normal"
         elif bmi_val < 30: bmi_cat_key = "overweight"
         else: bmi_cat_key = "obese"
         
-        bmi_category_localized = BMI_CATEGORIES.get(bmi_cat_key, {}).get(lang, BMI_CATEGORIES[bmi_cat_key]["uz"])
+        cat_info = BMI_CATEGORIES.get(bmi_cat_key, BMI_CATEGORIES.get("normal", {}))
+        bmi_category_localized = cat_info.get(lang, cat_info.get("uz", "Noma'lum"))
 
         sh_breadth = rec.shoulder_breadth or 0
         th_circ = rec.thigh_circumference or 0
@@ -290,6 +314,18 @@ async def generate_docx_by_id_endpoint(
 
         buffer = generate_docx_report(report_data, lang=lang)
         buffer.seek(0)
+        
+        if current_user:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="DOWNLOAD",
+                target_type="PatientAnalysis",
+                target_id=rec.id,
+                details=f"Bemor anketasi (DOCX) yuklab olindi: {rec.name}",
+                request=request
+            )
+            
         return StreamingResponse(
             content=buffer,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -327,13 +363,15 @@ async def generate_docx_endpoint(
     """
     try:
         # Reconstruct full data payload for docx builder
-        analysis = calculate_bmi(request_data, lang=lang)
+        all_settings = clinical_service.get_all_settings(db)
+        analysis = calculate_bmi(request_data, all_settings, lang=lang)
         gender_norm = (request_data.gender or "").strip().lower()
         advices = generate_advices(
             analysis["bmi"],
             analysis["weight_diff"],
             int(request_data.age),
             gender_norm,
+            all_settings,
             bio_data=analysis["indices"],
             lang=lang
         )

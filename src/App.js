@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "r
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
+import { Toaster } from "react-hot-toast";
 
 // ==== Styles (doimo tepada) ====
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -13,6 +14,7 @@ import "./index.css";
 
 // ==== Pages & Components ====
 import Header from "./components/Header";
+import { OfflineSyncProvider } from "./providers/OfflineSyncProvider";
 import Footer from "./components/Footer";
 import IntroPage from "./pages/IntroPage";
 import ThemeSync from "./components/ThemeSync";
@@ -210,8 +212,35 @@ export default function App() {
 
   return (
     <LanguageProvider>
+      <Toaster 
+        position="top-right" 
+        reverseOrder={false}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#333",
+            color: "#fff",
+            borderRadius: "12px",
+            fontSize: "14px",
+            padding: "12px 20px",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10B981",
+              secondary: "#fff",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#EF4444",
+              secondary: "#fff",
+            },
+          },
+        }}
+      />
       <AuthProvider>
-        <Router basename={BASENAME}>
+        <OfflineSyncProvider>
+          <Router basename={BASENAME}>
           <ScrollToTop />
           {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
           <ThemeSync />
@@ -228,7 +257,8 @@ export default function App() {
             <Footer />
           </div>
         </Router>
-      </AuthProvider>
-    </LanguageProvider>
-  );
+      </OfflineSyncProvider>
+    </AuthProvider>
+  </LanguageProvider>
+);
 }

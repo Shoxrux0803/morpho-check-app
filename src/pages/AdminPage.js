@@ -7,55 +7,55 @@ import { useNavigate } from "react-router-dom";
 
 // Material UI importlari
 import {
-  Container,
-  Grid,
-  Typography,
-  Paper,
-  AppBar,
-  Toolbar,
-  Tabs,
-  Tab,
-  Box,
-  IconButton,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  LinearProgress,
-  Alert,
-  useTheme,
-  useMediaQuery,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  TextField,
-  InputAdornment,
-  Stack,
-  Avatar,
+  Container, Grid, Typography, Paper, AppBar, Toolbar, Tabs, Tab, Box, 
+  IconButton, Button, FormControl, InputLabel, Select, MenuItem, Dialog, 
+  DialogTitle, DialogContent, DialogActions, LinearProgress, Alert, useTheme, 
+  useMediaQuery, CircularProgress, Table, TableBody, TableCell, TableContainer, 
+  TableHead, TableRow, TablePagination, TextField, InputAdornment, Stack, Avatar
 } from "@mui/material";
 import {
-  Delete,
-  Download,
-  FilterList,
-  Close,
-  Dashboard as DashboardIcon,
-  List as ListIcon,
-  Lock,
-  Person,
-  Visibility,
-  VisibilityOff,
+  Delete, Download, FilterList, Close, Dashboard as DashboardIcon, 
+  List as ListIcon, Lock, Person, Visibility, VisibilityOff
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
+
+// Modular Components
+import AdminDashboard from "../components/Dashboard/AdminDashboard";
+import AdminFilters from "../components/Admin/AdminFilters";
+import AdminTable from "../components/Admin/AdminTable";
+import InputForm from "../components/InputForm";
+
+/** ===== Helpers ===== */
+const calcBMI = (wKg, hCm) => {
+  const h = Number(hCm) / 100;
+  if (!h || !wKg) return null;
+  return Math.round((Number(wKg) / (h * h)) * 10) / 10;
+};
+
+const bmiStatus = (bmi, age) => {
+  if (!bmi) return "-";
+  if (age >= 20) {
+    if (bmi < 18.5) return "Ozg'in";
+    if (bmi < 25) return "Normal";
+    if (bmi < 30) return "Ortiqcha";
+    return "Semizlik";
+  }
+  return bmi < 18.5 ? "Ozg'in" : bmi < 25 ? "Normal" : "Ortiqcha";
+};
+
+const normalize = (r) => {
+  const bmiVal = r.bmi ?? calcBMI(r.weight, r.height);
+  return {
+    ...r,
+    idCode: r.id_code || r.idCode,
+    createdAt: r.created_at || r.createdAt,
+    firstName: r.first_name || r.firstName,
+    lastName: r.last_name || r.lastName,
+    bmi: bmiVal,
+    bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
+  };
+};
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
@@ -80,57 +80,6 @@ const GlassPaper = ({ children, sx = {} }) => (
   </Paper>
 );
 
-// Yangi modular komponentlar
-import StatsCards from "../components/Dashboard/StatsCards";
-import RecentActivity from "../components/Dashboard/RecentActivity";
-import RegionStats from "../components/Dashboard/RegionStats";
-import BMIDistribution from "../components/Dashboard/BMIDistribution";
-import UserGrowthChart from "../components/Dashboard/UserGrowthChart";
-import GenderDistribution from "../components/Dashboard/GenderDistribution";
-import AgeGroupDistribution from "../components/Dashboard/AgeGroupDistribution";
-import SomatotypeAnalysis from "../components/Dashboard/SomatotypeAnalysis";
-import AdminFilters from "../components/Admin/AdminFilters";
-import AdminTable from "../components/Admin/AdminTable";
-
-/** ===== Helpers ===== */
-const calcBMI = (wKg, hCm) => {
-  const h = Number(hCm) / 100;
-  if (!h || !wKg) return null;
-  return Math.round((Number(wKg) / (h * h)) * 10) / 10;
-};
-
-const bmiStatus = (bmi, age) => {
-  if (!bmi) return "-";
-  if (age >= 20) {
-    if (bmi < 18.5) return "Ozg'in";
-    if (bmi < 25) return "Normal";
-    if (bmi < 30) return "Ortiqcha";
-    return "Semizlik";
-  }
-  if (bmi < 12) return "Ozg'in?";
-  if (bmi < 18) return "Normal?";
-  if (bmi < 22) return "Ortiqcha?";
-  return "Semizlik?";
-};
-
-const normalize = (r) => {
-  const name = (r.name || "").trim();
-  const parts = name.split(" ");
-  const firstGuess = parts[0] || "";
-  const lastGuess = parts.slice(1).join(" ");
-  const bmiVal = r.bmi ?? calcBMI(r.weight, r.height);
-
-  return {
-    ...r,
-    idCode: r.id_code || r.idCode,
-    createdAt: r.created_at || r.createdAt,
-    firstName: r.first_name || r.firstName || firstGuess,
-    lastName: r.last_name || r.lastName || lastGuess,
-    bmi: bmiVal,
-    bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
-  };
-};
-
 function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, onDownloadPdf, isPdfDownloading, pdfLang, setPdfLang }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -140,46 +89,15 @@ function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, 
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="h6" fontWeight="bold">{title}</Typography>
-          <IconButton onClick={onClose} size="small">
-            <Close />
-          </IconButton>
+          <IconButton onClick={onClose} size="small"><Close /></IconButton>
         </Box>
       </DialogTitle>
       <DialogContent dividers>{children}</DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
         <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />}
-            onClick={onDownloadDocx}
-            disabled={isDownloading || isPdfDownloading}
-            sx={{ borderRadius: 2 }}
-          >
-            Word
-          </Button>
-
-          <FormControl size="small" sx={{ minWidth: 90 }}>
-            <InputLabel>Til</InputLabel>
-            <Select value={pdfLang} label="Til" onChange={(e) => setPdfLang(e.target.value)}>
-              {LANGUAGES.map((l) => (
-                <MenuItem key={l.code} value={l.code}>
-                  {l.flag} {l.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={isPdfDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />}
-            onClick={onDownloadPdf}
-            disabled={isDownloading || isPdfDownloading}
-            sx={{ borderRadius: 2 }}
-          >
-            PDF hisobot
-          </Button>
+          <Button variant="contained" color="secondary" startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />} onClick={onDownloadDocx} disabled={isDownloading || isPdfDownloading} sx={{ borderRadius: 2 }}>Word</Button>
+          <FormControl size="small" sx={{ minWidth: 90 }}><InputLabel>Til</InputLabel><Select value={pdfLang} label="Til" onChange={(e) => setPdfLang(e.target.value)}>{LANGUAGES.map((l) => (<MenuItem key={l.code} value={l.code}>{l.flag} {l.label}</MenuItem>))}</Select></FormControl>
+          <Button variant="contained" color="primary" startIcon={isPdfDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />} onClick={onDownloadPdf} disabled={isDownloading || isPdfDownloading} sx={{ borderRadius: 2 }}>PDF hisobot</Button>
         </Box>
         <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>Yopish</Button>
       </DialogActions>
@@ -190,45 +108,24 @@ function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, 
 // ===== ASOSIY ADMIN PAGE =====
 export default function AdminPage() {
   const navigate = useNavigate();
-  const { user, login, loading: authLoading } = useAuth();
+  const { user, login: authLogin, loading: authLoading } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState("");
-  const [loginInProgress, setLoginInProgress] = useState(false);
-
-  // User role checking is now handled by AdminWrapper in App.js
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    setLoginInProgress(true);
-    try {
-      const profile = await login(loginForm);
-      if (profile.role === "superadmin" || profile.role === "admin") {
-        // Stay here, Dashboard (Admin) or User Management (SuperAdmin) will render
-        // because AdminWrapper in App.js will handle the role-based switch
-      } else {
-        navigate("/");
-      }
-    } catch (err) {
-      setLoginError(err.message || "Kirishda xatolik yuz berdi");
-    } finally {
-      setLoginInProgress(false);
-    }
-  };
+  const isDark = theme.palette.mode === 'dark';
 
   const [activeTab, setActiveTab] = useState(0);
   const [raw, setRaw] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  
+  // States for downloads
+  const [viewRow, setViewRow] = useState(null);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [pdfLang, setPdfLang] = useState("uz");
 
-  // Filtr/sort/paging
+  // Filters
   const [q, setQ] = useState("");
   const [gender, setGender] = useState("");
   const [ageMin, setAgeMin] = useState("");
@@ -239,94 +136,306 @@ export default function AdminPage() {
   const [sort, setSort] = useState({ key: "createdAt", dir: "desc" });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
-
-  // Tanlov/bulk
   const [checked, setChecked] = useState(new Set());
-  const [viewRow, setViewRow] = useState(null);
-  const [filtersOpen, setFiltersOpen] = useState(true);
 
-  // DashBoard ma'lumotlari - FILTRLANGAN
-  const [dashData, setDashData] = useState([]);
-  const [dashLoading, setDashLoading] = useState(false);
+  // Login state
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginInProgress, setLoginInProgress] = useState(false);
 
-  // Tab switch qilinganda dashboard ma'lumotlarini yuklash
-  useEffect(() => {
-    if (activeTab === 0) {
-      const fetchDashData = async () => {
-        setDashLoading(true);
-        try {
-          // Dashboard uchun filtrlar asosida ko'proq ma'lumot olamiz (max 1000)
-          const res = await AdminApi.analyses.list({ 
-            q, gender, ageMin, ageMax, dateFrom, dateTo, region,
-            page: 1, pageSize: 1000 
-          });
-          setDashData(res.items || []);
-        } catch (e) {
-          console.error("Dashboard yuklashda xato:", e);
-        } finally {
-          setDashLoading(false);
-        }
-      };
-      fetchDashData();
-    }
-  }, [activeTab, q, gender, ageMin, ageMax, dateFrom, dateTo, region, user]);
+  const [exportingXlsx, setExportingXlsx] = useState(false);
+  const [importingXlsx, setImportingXlsx] = useState(false);
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importResult, setImportResult] = useState(null);
 
-  // Statistikalar (KPI uchun barcha dashData bo'yicha)
-  const dashboardStats = useMemo(() => {
-    if (!dashData.length) return { totalUsers: totalCount, todayUsers: 0, avgAge: 0, avgBMI: 0, normalBMIPercent: 0 };
-    
-    const today = new Date().toDateString();
-    const todayCount = dashData.filter(u => new Date(u.created_at || u.createdAt).toDateString() === today).length;
-    
-    let totalAge = 0;
-    let totalBMI = 0;
-    let bmiCount = 0;
-    let normalCount = 0;
+  // Edit state
+  const [editRow, setEditRow] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
-    dashData.forEach(u => {
-      totalAge += Number(u.age) || 0;
-      const bmi = u.bmi || calcBMI(u.weight, u.height);
-      if (bmi) {
-        totalBMI += bmi;
-        bmiCount++;
-        if (bmi >= 18.5 && bmi < 25) normalCount++;
-      }
-    });
+  // Deletion state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
 
-    return {
-      totalUsers: totalCount,
-      todayUsers: todayCount,
-      avgAge: (totalAge / dashData.length).toFixed(1),
-      avgBMI: bmiCount > 0 ? (totalBMI / bmiCount) : 0,
-      normalBMIPercent: bmiCount > 0 ? (normalCount / bmiCount) * 100 : 0
-    };
-  }, [dashData, totalCount]);
-
-  // Yuklash - BACKEND PAGINATION
+  // Load Data - Paginated
   const load = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
-    setErr(null);
     try {
-      const response = await AdminApi.analyses.list({
+      const resp = await AdminApi.analyses.list({
         q, gender, ageMin, ageMax, dateFrom, dateTo, region,
         sortKey: sort.key === "createdAt" ? "created_at" : sort.key,
         sortDir: sort.dir,
         page: page + 1,
         pageSize: rowsPerPage,
       });
-      setRaw((response.items || []).map(normalize));
-      setTotalCount(response.total || 0);
+      setRaw((resp.items || []).map(normalize));
+      setTotalCount(resp.total || 0);
     } catch (e) {
-      setErr(e?.message || "Xatolik yuz berdi.");
+      console.error("Load failed:", e);
     } finally {
       setLoading(false);
     }
-  }, [q, gender, ageMin, ageMax, dateFrom, dateTo, region, sort, page, rowsPerPage, user]);
+  }, [user, q, gender, ageMin, ageMax, dateFrom, dateTo, region, sort, page, rowsPerPage]);
 
-  useEffect(() => { load(); }, [load]);
+  const fetchDashboardStats = useCallback(async () => {
+    if (!user) return;
+    setStatsLoading(true);
+    try {
+      const data = await AdminApi.stats();
+      setStats(data);
+    } catch (e) {
+      console.error("Failed to fetch admin stats:", e);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, [user]);
 
-  if (!user || (user.role !== "admin" && user.role !== "superadmin")) {
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    if (activeTab === 0) {
+      fetchDashboardStats();
+    }
+  }, [activeTab, fetchDashboardStats]);
+
+  const handleLogin = useCallback(async (e) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoginInProgress(true);
+    try {
+      const profile = await authLogin(loginForm);
+      if (profile.role !== "admin" && profile.role !== "superadmin") {
+        navigate("/");
+      }
+    } catch (err) {
+      setLoginError(err.message || "Kirishda xatolik yuz berdi");
+    } finally {
+      setLoginInProgress(false);
+    }
+  }, [authLogin, loginForm, navigate]);
+
+  const handleUpdateAnalysis = useCallback(async (e) => {
+    e?.preventDefault();
+    if (!editRow) return;
+    setUpdating(true);
+    try {
+      await AdminApi.analyses.update(editRow.id, editRow);
+      toast.success("Ma'lumot yangilandi");
+      setEditRow(null);
+      load();
+    } catch (err) {
+      toast.error("Xatolik: " + err.message);
+    } finally {
+      setUpdating(false);
+    }
+  }, [editRow, load]);
+
+  const handleEditInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    const numericFields = [
+      "age", "age_months", "age_days", "height", "weight", "chest", "waist", "head",
+      "shoulder_length", "shoulder_breadth", "shoulder_circumference",
+      "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
+      "calf_length", "calf_circumference", "foot_length", "body_length",
+      "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+    ];
+    
+    let v = value;
+    if (numericFields.includes(name) || numericFields.map(f => {
+      const camel = f.split('_').map((x, i) => i === 0 ? x : x.charAt(0).toUpperCase() + x.slice(1)).join('');
+      return camel;
+    }).includes(name)) {
+      v = value === "" ? "" : Number(value);
+    }
+    
+    setEditRow(prev => ({ ...prev, [name]: v }));
+  }, []);
+
+  const toggleAll = useCallback(() => {
+    const next = new Set(checked);
+    const allChecked = raw.length > 0 && raw.every((r) => checked.has(r.id));
+    if (allChecked) raw.forEach((r) => next.delete(r.id));
+    else raw.forEach((r) => next.add(r.id));
+    setChecked(next);
+  }, [checked, raw]);
+
+  const toggleOne = useCallback((id) => {
+    const next = new Set(checked);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setChecked(next);
+  }, [checked]);
+
+  const handleDeleteConfirm = useCallback(async (mode) => {
+    setDeleteConfirmLoading(true);
+    try {
+      if (mode === "hard") {
+        await AdminApi.analyses.hardDelete(Array.from(checked));
+        toast.success("Ma'lumotlar butunlay o'chirildi");
+      } else {
+        await AdminApi.analyses.removeMany(Array.from(checked));
+        toast.success("Ma'lumotlar savatga yuborildi");
+      }
+      setChecked(new Set());
+      setDeleteConfirmOpen(false);
+      load();
+    } catch (e) {
+      toast.error("O'chirishda xatolik: " + e.message);
+    } finally {
+      setDeleteConfirmLoading(false);
+    }
+  }, [checked, load]);
+
+  const onDeleteSelected = useCallback(async () => {
+    if (!checked.size) return;
+    if (user.role === "superadmin") {
+      setDeleteConfirmOpen(true);
+    } else {
+      if (!window.confirm(`${checked.size} ta yozuvni savatga yuborasizmi?`)) return;
+      handleDeleteConfirm("soft");
+    }
+  }, [checked.size, user?.role, handleDeleteConfirm]);
+
+  const handleDownloadPdf = useCallback(async () => {
+    if (!viewRow) return;
+    setDownloadingPdf(true);
+    try {
+      const blob = await generatePdfById(viewRow.id, pdfLang);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report_${viewRow.idCode}_${pdfLang}.pdf`;
+      a.click();
+    } catch (e) { alert("PDF Error: " + e.message); }
+    finally { setDownloadingPdf(false); }
+  }, [viewRow, pdfLang]);
+
+  const handleDownloadDocx = useCallback(async () => {
+    if (!viewRow) return;
+    setDownloadingDocx(true);
+    try {
+      const blob = await generateDocxById(viewRow.id, pdfLang);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `anketa_${viewRow.idCode}_${pdfLang}.docx`;
+      a.click();
+    } catch (e) { alert("Word Error: " + e.message); }
+    finally { setDownloadingDocx(false); }
+  }, [viewRow, pdfLang]);
+
+  const handleExportXlsx = useCallback(async () => {
+    setExportingXlsx(true);
+    try {
+      const blob = await AdminApi.analyses.exportXlsx({
+        q, gender, ageMin, ageMax, dateFrom, dateTo, region
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analyses_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.click();
+      toast.success("Excel muvaffaqiyatli yuklandi");
+    } catch (e) {
+      toast.error("Excel yuklashda xatolik: " + e.message);
+    } finally {
+      setExportingXlsx(false);
+    }
+  }, [q, gender, ageMin, ageMax, dateFrom, dateTo, region]);
+
+  const handleDownloadTemplate = useCallback(async () => {
+    try {
+      const blob = await AdminApi.analyses.exportTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `morphocheck_template.xlsx`;
+      a.click();
+      toast.success("Shablon yuklandi");
+    } catch (e) {
+      toast.error("Shablonni yuklashda xatolik: " + e.message);
+    }
+  }, []);
+
+  const handleImportXlsx = useCallback(async () => {
+    if (!importFile) return;
+    setImportingXlsx(true);
+    setImportResult(null);
+    try {
+      const res = await AdminApi.analyses.importXlsx(importFile);
+      setImportResult(res);
+      toast.success(`Tayyor! ${res.imported} ta yangi, ${res.updated} ta yangilangan`);
+      if (!res.errors || res.errors.length === 0) setImportConfirmOpen(false);
+      load();
+    } catch (e) {
+      toast.error("Importda xatolik: " + e.message);
+    } finally {
+      setImportingXlsx(false);
+    }
+  }, [importFile, load]);
+
+  const availableTabs = useMemo(() => {
+    const allTabs = [
+      { id: 0, label: "Dashboard", icon: <DashboardIcon />, roles: ["admin", "superadmin"], content: <AdminDashboard data={raw} loading={loading} stats={stats} statsLoading={statsLoading} totalCount={totalCount} userName={user?.name} /> },
+      { 
+        id: 1, 
+        label: "Ma'lumotlar", 
+        icon: <ListIcon />, 
+        roles: ["admin", "superadmin"],
+        content: (
+          <Box sx={{ py: 2 }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+               <Typography variant="h5" fontWeight="bold">Ma'lumotlar Listi</Typography>
+               <Box display="flex" gap={2}>
+                 <Button 
+                    variant="outlined" 
+                    color="secondary" 
+                    onClick={handleDownloadTemplate}
+                    startIcon={<Download />}
+                  >
+                    Shablon
+                  </Button>
+                 <Button 
+                    variant="outlined" 
+                    color="success" 
+                    onClick={() => setImportConfirmOpen(true)}
+                    startIcon={importingXlsx ? <CircularProgress size={20} /> : <Visibility />}
+                  >
+                    Import
+                  </Button>
+                 <Button 
+                    variant="outlined" 
+                    color="primary" 
+                    startIcon={exportingXlsx ? <CircularProgress size={20} /> : <Download />} 
+                    onClick={handleExportXlsx}
+                    disabled={exportingXlsx}
+                  >
+                    Eksport
+                  </Button>
+                 <Button variant="outlined" color="error" startIcon={<Delete />} onClick={onDeleteSelected} disabled={!checked.size}>O'chirish ({checked.size})</Button>
+               </Box>
+            </Box>
+            <AdminFilters q={q} setQ={setQ} gender={gender} setGender={setGender} ageMin={ageMin} setAgeMin={setAgeMin} ageMax={ageMax} setAgeMax={setAgeMax} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} region={region} setRegion={setRegion} />
+            <Paper sx={{ mt: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+              {loading && <LinearProgress />}
+              <AdminTable rows={raw} checked={checked} toggleAll={toggleAll} toggleOne={toggleOne} allChecked={raw.length > 0 && raw.every(r => checked.has(r.id))} setViewRow={setViewRow} onEdit={(r) => setEditRow(r)} formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")} user={user} />
+              <TablePagination component="div" count={totalCount} rowsPerPage={rowsPerPage} page={page} onPageChange={(e, p) => setPage(p)} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} />
+            </Paper>
+          </Box>
+        )
+      },
+    ];
+    return allTabs.filter(tab => tab.roles.includes(user?.role));
+  }, [user, raw, loading, stats, statsLoading, totalCount, handleDownloadTemplate, setImportConfirmOpen, importingXlsx, exportingXlsx, handleExportXlsx, onDeleteSelected, checked, q, setQ, gender, setGender, ageMin, setAgeMin, ageMax, setAgeMax, dateFrom, setDateFrom, dateTo, setDateTo, region, setRegion, toggleAll, toggleOne, setViewRow, rowsPerPage, page, setPage, setRowsPerPage]);
+
+  if (authLoading) return <Box display="flex" justifyContent="center" py={10}><CircularProgress /></Box>;
+
+  // LOGIN SCREEN
+  if (!user) {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <motion.div
@@ -359,7 +468,7 @@ export default function AdminPage() {
                 Admin Panel
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Tizimga kirish uchun hisobingizga kiring
+                Tizimga kirish uchun login va parolingizni kiriting
               </Typography>
             </Box>
 
@@ -412,7 +521,7 @@ export default function AdminPage() {
                   size="large"
                   type="submit"
                   variant="contained"
-                  disabled={loginInProgress || authLoading}
+                  disabled={loginInProgress}
                   sx={{
                     py: 1.5,
                     borderRadius: 2,
@@ -432,218 +541,199 @@ export default function AdminPage() {
     );
   }
 
-  const toggleAll = () => {
-    const next = new Set(checked);
-    const allChecked = raw.length > 0 && raw.every((r) => checked.has(r.id));
-    if (allChecked) raw.forEach((r) => next.delete(r.id));
-    else raw.forEach((r) => next.add(r.id));
-    setChecked(next);
-  };
-
-  const toggleOne = (id) => {
-    const next = new Set(checked);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setChecked(next);
-  };
-
-  const onDeleteSelected = async () => {
-    if (!checked.size || !window.confirm(`${checked.size} ta yozuvni o'chirasizmi?`)) return;
-    try {
-      await Promise.all(Array.from(checked).map(id => AdminApi.analyses.remove(id)));
-      setChecked(new Set());
-      load();
-    } catch (e) { alert("O'chirishda xato."); }
-  };
-
-  const handleDownloadPdf = async () => {
-    if (!viewRow) return;
-    setDownloadingPdf(true);
-    try {
-      const blob = await generatePdfById(viewRow.id, pdfLang);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `morphocheck_report_${viewRow.idCode}_${pdfLang}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      alert("PDF yuklashda xato: " + e.message);
-    } finally {
-      setDownloadingPdf(false);
-    }
-  };
-
-  const handleDownloadDocx = async () => {
-    if (!viewRow) return;
-    setDownloadingDocx(true);
-    try {
-      const blob = await generateDocxById(viewRow.id, pdfLang);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `morphocheck_anketa_${viewRow.idCode}_${pdfLang}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      alert("Word yuklashda xato: " + e.message);
-    } finally {
-      setDownloadingDocx(false);
-    }
-  };
-
-  const onExportXlsx = async () => {
-    try {
-      const blob = await AdminApi.analyses.exportXlsx({ q, gender, ageMin, ageMax, dateFrom, dateTo, region });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `morphocheck_export_${new Date().toISOString().split('T')[0]}.xlsx`;
-      link.click();
-    } catch (e) { alert("Eksportda xato."); }
-  };
-
-  const renderTabContent = () => {
-    if (activeTab === 0) {
-      return (
-        <Box sx={{ py: 2 }}>
-            <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
-                <Box>
-                    <Typography variant="h4" fontWeight="900" color="primary.main">Dashboard</Typography>
-                    <Typography variant="body1" color="text.secondary">Tizimdagi umumiy tahliliy ko'rsatkichlar</Typography>
-                </Box>
-                <Button 
-                    variant="contained" 
-                    startIcon={<FilterList />} 
-                    onClick={() => setFiltersOpen(!filtersOpen)}
-                    sx={{ borderRadius: 3, px: 3 }}
-                >
-                    Filtrlar {filtersOpen ? 'Yopish' : 'Ochish'}
-                </Button>
-            </Box>
-
-            {filtersOpen && (
-              <Box mb={4}>
-                  <AdminFilters 
-                    q={q} setQ={setQ} gender={gender} setGender={setGender} 
-                    ageMin={ageMin} setAgeMin={setAgeMin} ageMax={ageMax} setAgeMax={setAgeMax}
-                    dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
-                    region={region} setRegion={setRegion}
-                  />
-              </Box>
-            )}
-
-            <StatsCards 
-                totalUsers={dashboardStats.totalUsers} 
-                todayUsers={dashboardStats.todayUsers} 
-                avgAge={dashboardStats.avgAge}
-                avgBMI={dashboardStats.avgBMI}
-                normalBMIPercent={dashboardStats.normalBMIPercent}
-            />
-
-            <Grid container spacing={3}>
-                <Grid item xs={12} lg={8}><UserGrowthChart data={dashData} loading={dashLoading} /></Grid>
-                <Grid item xs={12} lg={4}><RecentActivity data={dashData} loading={dashLoading} /></Grid>
-                
-                <Grid item xs={12} md={4} lg={3}><BMIDistribution data={dashData} loading={dashLoading} /></Grid>
-                <Grid item xs={12} md={4} lg={3}><GenderDistribution data={dashData} loading={dashLoading} /></Grid>
-                <Grid item xs={12} md={4} lg={3}><AgeGroupDistribution data={dashData} loading={dashLoading} /></Grid>
-                <Grid item xs={12} md={12} lg={3}><SomatotypeAnalysis data={dashData} loading={dashLoading} /></Grid>
-
-                <RegionStats data={dashData} loading={dashLoading} />
-            </Grid>
-        </Box>
-      );
-    }
-
+  // Check role for authenticated users
+  if (user.role !== "admin" && user.role !== "superadmin") {
     return (
-      <Box sx={{ py: 2 }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} gap={2}>
-           <Typography variant="h5" fontWeight="bold">Foydalanuvchilar Listi</Typography>
-           <Box display="flex" gap={1}>
-             <Button variant="outlined" startIcon={<Download />} onClick={onExportXlsx} sx={{ borderRadius: 2 }}>XLSX Export</Button>
-             <Button variant="outlined" color="error" startIcon={<Delete />} onClick={onDeleteSelected} disabled={!checked.size} sx={{ borderRadius: 2 }}>O'chirish ({checked.size})</Button>
-           </Box>
-        </Box>
-        
-        <AdminFilters 
-            q={q} setQ={setQ} gender={gender} setGender={setGender} 
-            ageMin={ageMin} setAgeMin={setAgeMin} ageMax={ageMax} setAgeMax={setAgeMax}
-            dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo}
-            region={region} setRegion={setRegion}
-        />
-
-        <Paper elevation={0} sx={{ mt: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-          {loading && <LinearProgress />}
-          <AdminTable 
-            rows={raw} checked={checked} toggleAll={toggleAll} toggleOne={toggleOne} 
-            allChecked={raw.length > 0 && raw.every(r => checked.has(r.id))} 
-            setViewRow={setViewRow} formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")} 
-            user={user}
-          />
-          <TablePagination
-            component="div" count={totalCount} rowsPerPage={rowsPerPage} page={page}
-            onPageChange={(e, p) => setPage(p)}
-            onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-          />
-        </Paper>
-      </Box>
+      <Container maxWidth="sm" sx={{ py: 8 }}>
+        <Typography variant="h5" textAlign="center">Ruxsat berilmagan</Typography>
+        <Button fullWidth variant="contained" onClick={() => navigate("/")} sx={{ mt: 2 }}>Bosh sahifa</Button>
+      </Container>
     );
-  };
+  }
 
-  const isDark = theme.palette.mode === 'dark';
+
+
+  const renderContent = () => {
+    const currentTab = availableTabs.find(t => t.id === activeTab) || availableTabs[0];
+    return currentTab?.content || null;
+  };
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
-      <AppBar 
-        position="sticky" 
-        elevation={0} 
-        sx={{ 
-            bgcolor: isDark ? "rgba(23, 26, 33, 0.8)" : "rgba(255, 255, 255, 0.8)", 
-            backdropFilter: 'blur(10px)',
-            color: "text.primary", 
-            borderBottom: "1px solid",
-            borderColor: "divider"
-        }}
-      >
+      <AppBar position="sticky" elevation={0} sx={{ bgcolor: isDark ? "rgba(23, 26, 33, 0.8)" : "rgba(255, 255, 255, 0.8)", backdropFilter: 'blur(10px)', color: "text.primary", borderBottom: "1px solid", borderColor: "divider" }}>
         <Container maxWidth="xl">
             <Toolbar disableGutters>
-                <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, letterSpacing: -0.5, color: 'primary.main' }}>
-                   MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box>
-                </Typography>
-                <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ minHeight: 64 }}>
-                    <Tab icon={<DashboardIcon />} iconPosition="start" label="Dashboard" sx={{ fontWeight: 'bold' }} />
-                    <Tab icon={<ListIcon />} iconPosition="start" label="Ma'lumotlar" sx={{ fontWeight: 'bold' }} />
+                <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, color: 'primary.main' }}>MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box></Typography>
+                <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
+                    {availableTabs.map((tab) => (
+                      <Tab key={tab.id} icon={tab.icon} iconPosition="start" label={tab.label} value={tab.id} />
+                    ))}
                 </Tabs>
             </Toolbar>
         </Container>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ mt: 4 }}>
-        {renderTabContent()}
+      <Container maxWidth={false} sx={{ mt: 4, px: { xs: 2, md: 4 } }}>
+        <AnimatePresence mode="wait">
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </Container>
 
       {viewRow && (
-        <CustomModal 
-            title="Tizim Ma'lumoti" onClose={() => setViewRow(null)} 
-            onDownloadDocx={handleDownloadDocx} isDownloading={downloadingDocx}
-            onDownloadPdf={handleDownloadPdf} isPdfDownloading={downloadingPdf}
-            pdfLang={pdfLang} setPdfLang={setPdfLang}
-        >
-          <TableContainer><Table size="small">
+        <CustomModal title="Batafsil ma'lumot" onClose={() => setViewRow(null)} onDownloadDocx={handleDownloadDocx} isDownloading={downloadingDocx} onDownloadPdf={handleDownloadPdf} isPdfDownloading={downloadingPdf} pdfLang={pdfLang} setPdfLang={setPdfLang}>
+          <Table size="small">
              <TableBody>
                  <TableRow><TableCell>ID</TableCell><TableCell><strong>{viewRow.idCode}</strong></TableCell></TableRow>
                  <TableRow><TableCell>Ism Familiya</TableCell><TableCell>{viewRow.lastName} {viewRow.firstName}</TableCell></TableRow>
                  <TableRow><TableCell>Sana</TableCell><TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell></TableRow>
-                 <TableRow><TableCell>Hudud</TableCell><TableCell>{viewRow.region}, {viewRow.district}</TableCell></TableRow>
-                 <TableRow><TableCell>Vazn / Bo'y</TableCell><TableCell>{viewRow.weight} kg / {viewRow.height} sm</TableCell></TableRow>
-                 <TableRow><TableCell>IBT (BMI)</TableCell><TableCell><strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})</TableCell></TableRow>
+                 <TableRow><TableCell>Hudud</TableCell><TableCell>{viewRow.region}</TableCell></TableRow>
+                 <TableRow><TableCell>BMI</TableCell><TableCell><strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})</TableCell></TableRow>
              </TableBody>
-          </Table></TableContainer>
+          </Table>
         </CustomModal>
       )}
+
+      {editRow && (
+        <Dialog 
+          open={true} 
+          onClose={() => setEditRow(null)} 
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{ 
+            sx: { 
+              borderRadius: 4, 
+              bgcolor: 'background.paper',
+              boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+              overflow: 'hidden'
+            } 
+          }}
+        >
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 4, pt: 3, pb: 2 }}>
+            <Typography variant="h5" fontWeight={800}>Ma'lumotni tahrirlash</Typography>
+            <IconButton onClick={() => setEditRow(null)}>
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ px: { xs: 2, md: 4 }, py: 0 }}>
+             <InputForm 
+                formData={editRow} 
+                handleInputChange={handleEditInputChange} 
+                handleSubmit={handleUpdateAnalysis} 
+                loading={updating} 
+                isAdminView={true}
+                submitLabel="Saqlash"
+              />
+          </DialogContent>
+          <DialogActions sx={{ p: 4, pt: 2 }}>
+             <Button onClick={() => setEditRow(null)} color="inherit" sx={{ mr: 2 }}>Bekor qilish</Button>
+             <Button variant="contained" size="large" onClick={handleUpdateAnalysis} disabled={updating} sx={{ borderRadius: 3, px: 4 }}>
+                {updating ? <CircularProgress size={24} color="inherit" /> : "Saqlash"}
+             </Button>
+          </DialogActions>
+        </Dialog>
+      )}
+
+      {/* Delete Confirmation Dialog for Super Admin */}
+      <Dialog 
+        open={deleteConfirmOpen} 
+        onClose={() => setDeleteConfirmOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. Qanday o'chirishni xohlaysiz?
+          </Typography>
+          <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+            <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Lock fontSize="small" /> Hard delete (butunlay o'chirish) qaytarib bo'lmaydigan amaldir.
+            </Typography>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">Bekor qilish</Button>
+          <Button 
+            variant="outlined" 
+            color="error" 
+            onClick={() => handleDeleteConfirm("soft")} 
+            disabled={deleteConfirmLoading}
+          >
+            Savatga yuborish
+          </Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={() => handleDeleteConfirm("hard")} 
+            disabled={deleteConfirmLoading}
+          >
+            Butunlay o'chirish
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Import XLSX Dialog */}
+      <Dialog 
+        open={importConfirmOpen} 
+        onClose={() => !importingXlsx && setImportConfirmOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Excel-dan Ma'lumotlarni Import Qilish</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+            Ma'lumotlarni ommaviy qo'shish uchun shablonni to'ldiring va shu erga yuklang. Ism, Familiya, Bo'y va Vazn ustunlari to'ldirilishi majburiy.
+          </Typography>
+          
+          <Box 
+            sx={{ 
+              mt: 2, 
+              p: 4, 
+              border: '2px dashed', 
+              borderColor: importFile ? 'primary.main' : 'divider',
+              borderRadius: 3,
+              textAlign: 'center',
+              bgcolor: 'background.default',
+              cursor: 'pointer',
+              '&:hover': { bgcolor: 'action.hover' }
+            }}
+            onClick={() => document.getElementById('xlsx-input').click()}
+          >
+            <input 
+              type="file" 
+              id="xlsx-input" 
+              hidden 
+              accept=".xlsx" 
+              onChange={(e) => setImportFile(e.target.files[0])} 
+            />
+            <Typography variant="h6" color={importFile ? 'primary.main' : 'text.disabled'}>
+              {importFile ? importFile.name : "XLSX faylni tanlang"}
+            </Typography>
+          </Box>
+
+          {importResult && importResult.errors && importResult.errors.length > 0 && (
+            <Box sx={{ mt: 3, p: 2, bgcolor: 'error.lighter', borderRadius: 2, maxHeight: 200, overflow: 'auto' }}>
+              <Typography variant="caption" color="error.main" fontWeight="bold">Xatoliklar topildi ({importResult.errors.length} ta):</Typography>
+              {importResult.errors.map((err, idx) => (
+                <Typography key={idx} variant="caption" display="block" sx={{ color: 'error.dark', mt: 0.5 }}>- {err}</Typography>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setImportConfirmOpen(false)} disabled={importingXlsx} color="inherit">Bekor qilish</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleImportXlsx} 
+            disabled={!importFile || importingXlsx}
+            startIcon={importingXlsx ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            Yuklash va Import
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

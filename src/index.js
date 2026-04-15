@@ -14,6 +14,7 @@ import "@fontsource-variable/inter";
 // Tema util + MUI provider — ham importlar qatorida
 import { applyTheme, getStoredTheme } from "./utils/theme";
 import ThemeProviderMUI from "./providers/ThemeProviderMUI";
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
 // Importlardan KEYIN boshlang'ich tema
 applyTheme(getStoredTheme());
@@ -28,4 +29,9 @@ root.render(
 );
 
 reportWebVitals();
+
+// If you want your app to work offline and load faster, you can change
+// unregister() to register() below. Note this comes with some pitfalls.
+// Learn more about service workers: https://cra.link/PWA
+serviceWorkerRegistration.register();
 // rebuild

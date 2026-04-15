@@ -148,11 +148,30 @@ _T = {
         "en": "The adaptation process is slightly slowed. Focus on strengthening immunity, hardening procedures and proper rest.",
         "kz": "Бейімделу процесі сәл баяулады. Иммунитетті нығайтуға, шынықтыру рәсімдеріне және дұрыс демалысқа назар аударыңыз.",
     },
+
     "adv_hmai_ok": {
         "uz": "{sub_pos} tashqi muhitga moslashuv me'yorda. Hozirgi sog'lom turmush tarzini {v_keep}.",
         "ru": "Адаптация к внешней среде в норме. Продолжайте вести здоровый образ жизни.",
         "en": "Adaptation to the environment is normal. Continue maintaining a healthy lifestyle.",
         "kz": "{sub_pos} сыртқы ортаға бейімделуі қалыпты. Қазіргі салауатты өмір салтын жалғастырыңыз.",
+    },
+    "adv_body_len_high": {
+        "uz": "{sub_pos} tana uzunligi ushbu yosh uchun me'yordan ancha yuqori (gipermetriya).",
+        "ru": "Длина тела {sub_pos_lc} значительно выше нормы для данного возраста (гиперметрия).",
+        "en": "Body length is significantly above the norm for this age (hypermetry).",
+        "kz": "{sub_pos} дене ұзындығы осы жас үшін нормадан әлдеқайда жоғары (гиперметрия).",
+    },
+    "adv_body_len_low": {
+        "uz": "{sub_pos} tana uzunligi me'yordan ancha past. Bu rivojlanishning sekinlashishi belgisi bo'lishi mumkin, mutaxassis ko'rigi tavsiya etiladi.",
+        "ru": "Длина тела {sub_pos_lc} значительно ниже нормы. Это может быть признаком замедления развития — рекомендуется консультация специалиста.",
+        "en": "Body length is significantly below normal. This may indicate developmental delay — specialist consultation is recommended.",
+        "kz": "{sub_pos} дене ұзындығы нормадан әлдеқайда төмен. Бұл дамудың баяулауының белгісі болуы мүмкін, маман кеңесі ұсынылады.",
+    },
+    "adv_body_len_ok": {
+        "uz": "{sub_pos} tana uzunligi yoshga mos va me'yor atrofida.",
+        "ru": "Длина тела {sub_pos_lc} соответствует возрасту и находится в пределах нормы.",
+        "en": "Body length is age-appropriate and within the normal range.",
+        "kz": "{sub_pos} дене ұзындығы жасқа сәйкес және норма шеңберінде.",
     },
     "adv_mii_very_low": {
         "uz": "Tana komponentlari o'rtasida yaqqol nomutanosiblik kuzatilyapti. Maxsus jismoniy mashqlar majmuasi va mutaxassis maslahati zarur.",
@@ -262,6 +281,30 @@ _T = {
         "en": "Visceral (internal) fat level is high. This may lead to metabolic disorders. A healthy diet and cardio exercises are necessary.",
         "kz": "Висцеральды (ішкі) май деңгейі жоғары. Бұл зат алмасу бұзылысына әкелуі мүмкін. Салауатты тамақтану және кардио жаттығулар қажет.",
     },
+    "mcri_optimal": {
+        "uz": "Xavf past",
+        "ru": "Низкий риск",
+        "en": "Low risk",
+        "kz": "Қауіп төмен",
+    },
+    "mcri_moderate": {
+        "uz": "O'rtacha xavf (Adipoz fenotip bosqichi)",
+        "ru": "Умеренный риск (Стадия адипозного фенотипа)",
+        "en": "Moderate risk (Adipose phenotype stage)",
+        "kz": "Орташа қауіп",
+    },
+    "mcri_high": {
+        "uz": "Yuqori xavf (Ortiqcha yog' va mushak yetishmovchiligi)",
+        "ru": "Высокий риск (Избыток жира и дефицит мышц)",
+        "en": "High risk (Fat excess and muscle deficit)",
+        "kz": "Жоғары қауіп",
+    },
+    "adv_mcri_high": {
+        "uz": "⚠️ Внимание! MCRI (Kompleks risk indeksi) yuqori. Moddalar almashinuvida adipoz fenotip aniqlandi, mutaxassis (endokrinolog, diyetolog) ko'rigi zudlik bilan tavsiya etiladi.",
+        "ru": "⚠️ Внимание! MCRI (Комплекс Риск Индекс) высокий. Выявлен адипозный фенотип в обмене веществ, настоятельно рекомендуется консультация специалиста (эндокринолог, диетолог).",
+        "en": "⚠️ Attention! High MCRI. An adipose phenotype in metabolism has been identified, specialist consultation is strongly recommended.",
+        "kz": "⚠️ Назар аударыңыз! MCRI жоғары. Зат алмасуда адипозды фенотип анықталды, маман кеңесі қатаң ұсынылады.",
+    },
     "cm": {
         "uz": "см",
         "ru": "см",
@@ -337,6 +380,99 @@ def get_fm_percent_norm(age: int, gender: str) -> tuple:
     return table.get(age_key, (10, 25))
 
 
+def get_tbw_percent_norm(age: int, gender: str) -> tuple:
+    """Yoshga qarab umumiy suv (TBW %) me'yorini qaytaradi."""
+    gender = (gender or "").lower()
+    is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
+
+    if age < 13:
+        return (60, 75)
+    elif age <= 18:
+        return (60, 70) if is_male else (55, 65)
+    else:
+        return (60, 65) if is_male else (50, 60)
+
+
+def get_muscle_percent_norm(age: int, gender: str) -> tuple:
+    """Yoshga qarab muskul massa (%) me'yorini qaytaradi."""
+    gender = (gender or "").lower()
+    is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
+
+    if age < 13:
+        return (35, 45)
+    elif age <= 18:
+        return (40, 55) if is_male else (30, 38)
+    else:
+        return (38, 50) if is_male else (30, 39)
+
+
+def get_bone_percent_norm(age: int) -> tuple:
+    """Yoshga qarab suyak massa (%) me'yorini qaytaradi."""
+    if age < 13:
+        return (3, 5)
+    else:
+        return (4, 6)
+
+
+def get_visceral_norm(age: int) -> tuple:
+    """Yoshga qarab visseral yog' darajasi me'yorini qaytaradi."""
+    if age < 13:
+        return (1, 3)
+    elif age <= 18:
+        return (1, 4)
+    else:
+        return (1, 9)
+
+
+def get_ecological_factor(m: Dict[str, Any]) -> float:
+    """Yashash hududiga asoslangan ekologik koeffitsientni (E) aniqlaydi."""
+    if not m: return 1.05
+    region = str(m.get("region", "")).lower()
+    district = str(m.get("district", "")).lower()
+    address = str(m.get("address", "")).lower()
+    combined = f"{region} {district} {address}"
+    
+    # Shahar (Urban)
+    is_city = any(k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город"))
+    if is_city:
+        return 1.00
+        
+    # Cho'l - yarim cho'l
+    if any(k in region for k in ("navoi", "навои", "buxor", "бухор", "xorazm", "хоразм", "qoraqalpoq", "қорақалпоқ", "karakalpak")):
+        return 1.10
+        
+    # Tog'
+    if any(k in region for k in ("toshkent", "тошкент", "namangan", "наманган", "samarqand", "самарқанд", "andijon", "андижон", "farg'ona", "фарғона", "fargona")):
+        return 1.15
+        
+    # Dasht (Jizzax, Sirdaryo, Qashqadaryo, Surxondaryo va default qishloq/tumanlar)
+    return 1.05
+
+def get_centile_from_z(z: float) -> str:
+    """Z-score asosida WHO sentil intervalini qaytaradi."""
+    if z is None: return ""
+    if z < -1.88: return "< 3"
+    elif z < -1.04: return "3 - 15"
+    elif z < 1.04: return "15 - 85"
+    elif z < 1.88: return "85 - 97"
+    else: return "> 97"
+
+def get_corridor_from_z(z: float, lang: str) -> str:
+    """Z-score asosida sog'lomlik yo'lagini quaytaradi."""
+    if z is None: return ""
+    corridors = {
+        "uz": ["Juda kam vazn (<3-sentil)", "Kam vazn (3-15-sentil)", "Me'yor (15-85-sentil)", "Ortiqcha vazn (85-97-sentil)", "Semizlik (>97-sentil)"],
+        "ru": ["Крайний дефицит массы (<3-центиль)", "Дефицит массы (3-15-центиль)", "Норма (15-85-центиль)", "Избыточная масса (85-97-центиль)", "Ожирение (>97-центиль)"],
+        "en": ["Severe underweight (<3rd centile)", "Underweight (3rd-15th centile)", "Normal (15th-85th centile)", "Overweight (85th-97th centile)", "Obesity (>97th centile)"],
+        "kz": ["Салмақтың өте төмендігі (<3-центиль)", "Салмақ тапшылығы (3-15-центиль)", "Норма (15-85-центиль)", "Артық салмақ (85-97-центиль)", "Семіздік (>97-центиль)"]
+    }
+    texts = corridors.get(lang, corridors["uz"])
+    if z < -1.88: return texts[0]
+    elif z < -1.04: return texts[1]
+    elif z < 1.04: return texts[2]
+    elif z < 1.88: return texts[3]
+    else: return texts[4]
+
 def calculate_detailed_indices(
     age: int,
     gender: str,
@@ -344,8 +480,30 @@ def calculate_detailed_indices(
     weight: float,
     bmi: float,
     manual_data: Dict[str, Any] = None,
-    lang: str = "uz"
+    lang: str = "uz",
+    all_settings: Dict[str, Any] = None
 ) -> Dict[str, Any]:
+    # Dinamik tarjimalar uchun yordamchi
+    def _local_t(key, l, **kwargs):
+        if all_settings:
+            # Key: 'interp_astenik', 'adv_body_len_high', etc.
+            # Avval interp_ prefixi bilan qidiramiz
+            s_key = f"interp_{key}"
+            if s_key not in all_settings:
+                # Keyni o'zini qidiramiz (adv_ bilan boshlangan bo'lishi mumkin)
+                s_key = key
+            
+            val = all_settings.get(s_key)
+            if val and isinstance(val, dict):
+                text = val.get(l, val.get("uz", key))
+                if kwargs:
+                    try: text = text.format(**kwargs)
+                    except: pass
+                return text
+        
+        # Fallback to hardcoded _T
+        return _t(key, l, **kwargs)
+
     gender_norm = (gender or "").strip().lower()
     is_male = "erkak" in gender_norm or "o'g'il" in gender_norm or "ogil" in gender_norm
     m = manual_data or {}
@@ -498,64 +656,123 @@ def calculate_detailed_indices(
     fm_kg_norm_str = f"{fm_kg_low}-{fm_kg_high} {_t('kg', lang)}"
     fm_norm = fm_norm_str
 
-    tbw_min, tbw_max = (60.0, 70.0) if is_male else (55.0, 65.0)
+    tbw_min, tbw_max = get_tbw_percent_norm(age, gender_norm)
     tbw_norm_str = f"{int(tbw_min)}-{int(tbw_max)}%"
-    muscle_min, muscle_max = (35.0, 45.0) if is_male else (30.0, 40.0)
-    muscle_norm_str = f"{int(muscle_min)}-{int(muscle_max)}%"
-    bone_norm = "4-6%"
-    acm_norm = "50-60%"
-    visceral_norm = "1-4"
-    visceral_max = 4.0
 
-    # 4. Z-scores
+    muscle_min, muscle_max = get_muscle_percent_norm(age, gender_norm)
+    muscle_kg_low = round(weight * (muscle_min / 100), 1)
+    muscle_kg_high = round(weight * (muscle_max / 100), 1)
+    muscle_norm_str = f"{muscle_kg_low}-{muscle_kg_high} {_t('kg', lang)}"
+
+    bone_min, bone_max = get_bone_percent_norm(age)
+    bone_kg_low = round(weight * (bone_min / 100), 1)
+    bone_kg_high = round(weight * (bone_max / 100), 1)
+    bone_norm = f"{bone_kg_low}-{bone_kg_high} {_t('kg', lang)}"
+
+    acm_norm = "50-60%"
+    visceral_min, visceral_max = get_visceral_norm(age)
+    visceral_norm = f"{visceral_min}-{visceral_max}"
+
+    # 4. Z-scores (WHO Standards Approximation)
     if age < 5:
         sd_h = 3.5 + (age * 0.3)
+        sd_w = ideal_w * 0.12 if ideal_w > 0 else 1.0
+        sd_bmi = 1.2
     elif age < 12:
         sd_h = 5.0 + ((age - 5) * 0.4)
+        sd_w = ideal_w * 0.14 if ideal_w > 0 else 1.2
+        sd_bmi = 1.4
     else:
         sd_h = 7.0 + ((age - 12) * 0.2)
+        sd_w = ideal_w * 0.16 if ideal_w > 0 else 1.5
+        sd_bmi = 1.8
 
-    sd_w = ideal_w * 0.15 if ideal_w > 0 else 1.0
-    sd_bmi = 1.5 if age < 19 else 2.0
     sd_tbw = ideal_tbw * 0.12 if ideal_tbw > 0 else 1.0
 
-    z_h = round((height - ideal_h) / sd_h, 2)
+    z_h = round((height - ideal_h) / sd_h, 2) if sd_h > 0 else 0
 
     body_length = m.get("body_length")
     z_body_length = None
     if body_length:
-        z_body_length = round((float(body_length) - ideal_h) / sd_h, 2)
+        # Interpolating body trunk length standard deviation proportionally from height
+        ideal_body_len = ideal_h * 0.45  # approximation of trunk ratio
+        sd_body_len = sd_h * 0.45
+        z_body_length = round((float(body_length) - ideal_body_len) / sd_body_len, 2) if sd_body_len > 0 else 0
 
-    z_w = round((weight - ideal_w) / sd_w, 2)
-    z_bmi = round((bmi - ideal_bmi) / sd_bmi, 2)
-    z_tbw = round((tbw - ideal_tbw) / sd_tbw, 2)
+    z_w = round((weight - ideal_w) / sd_w, 2) if sd_w > 0 else 0
+    z_bmi = round((bmi - ideal_bmi) / sd_bmi, 2) if sd_bmi > 0 else 0
+    z_tbw = round((tbw - ideal_tbw) / sd_tbw, 2) if sd_tbw > 0 else 0
 
-    # 5. Main Indices
-    hmai = round((z_h + z_w + z_bmi + z_tbw) / 4, 2)
-    mii = round((ffm / (fm + 1.0)) * (height / weight), 2) if weight > 0 else 0
+    # 4.1 FM_z, MM_z and MCRI calculation
+    median_fm_p = (low_fm + high_fm) / 2
+    sd_fm_p = (high_fm - low_fm) / 4 if (high_fm - low_fm) > 0 else 1.0
+    fm_z = round((fm_percent - median_fm_p) / sd_fm_p, 2)
+
+    median_mm_p = (muscle_min + muscle_max) / 2
+    sd_mm_p = (muscle_max - muscle_min) / 4 if (muscle_max - muscle_min) > 0 else 1.0
+    muscle_p = (muscle_mass / weight) * 100 if weight > 0 else 0
+    mm_z = round((muscle_p - median_mm_p) / sd_mm_p, 2)
+
+    mcri = round((z_bmi + fm_z - mm_z) / 3, 2)
+
+    # 4.2 Z_chest calculation for MII
+    chest_val = float(m.get("chest") or 0)
+    if chest_val > 0 and ideal_h > 0:
+        ideal_chest = ideal_h * 0.5
+        sd_chest = ideal_chest * 0.1
+        z_chest = round((chest_val - ideal_chest) / sd_chest, 2)
+    else:
+        z_chest = 0
+
+    # 5. Centile and Corridor (WHO based on BMI Z-score)
+    centile = get_centile_from_z(z_bmi)
+    corridor = get_corridor_from_z(z_bmi, lang)
+
+    # 6. Main Indices
+
+    # HMAI (Hududiy Morfologik Adaptatsiya Indeksi)
+    e_factor = get_ecological_factor(m)
+    if fm_percent > 0 and bmi > 0:
+        hmai = round((muscle_p / (fm_percent * bmi)) * e_factor, 3)
+    else:
+        hmai = 0.0
+
+    # MII (Morfologik Integratsiya Indeksi) Individual Concordance variant
+    sim_h_w = math.exp(-abs(z_h - z_w))
+    sim_w_c = math.exp(-abs(z_w - z_chest))
+    sim_bmi_fm = math.exp(-abs(z_bmi - fm_z))
+    mii = round((sim_h_w + sim_w_c + sim_bmi_fm) / 3, 2)
+
     adi = round(abs(z_h) + abs(z_w) + abs(z_bmi), 2)
 
     # Interpretation — 4 tilda
-    if abs(hmai) <= 0.5:
-        hmai_desc = _t("hmai_optimal", lang)
-    elif hmai > 0.5:
-        hmai_desc = _t("hmai_accel", lang)
+    if 0.1 <= hmai <= 0.3:
+        hmai_desc = _local_t("hmai_optimal", lang)
+    elif hmai > 0.3:
+        hmai_desc = _local_t("hmai_accel", lang)
     else:
-        hmai_desc = _t("hmai_stress", lang)
+        hmai_desc = _local_t("hmai_stress", lang)
 
-    if mii > 2.5:
-        mii_desc = _t("mii_high", lang)
-    elif 1.5 <= mii <= 2.5:
-        mii_desc = _t("mii_normal", lang)
+    if mii >= 0.8:
+        mii_desc = _local_t("mii_high", lang)
+    elif mii >= 0.5:
+        mii_desc = _local_t("mii_normal", lang)
     else:
-        mii_desc = _t("mii_low", lang)
+        mii_desc = _local_t("mii_low", lang)
 
     if adi <= 1:
-        adi_desc = _t("adi_harmony", lang)
+        adi_desc = _local_t("adi_harmony", lang)
     elif 1 < adi <= 2:
-        adi_desc = _t("adi_mid", lang)
+        adi_desc = _local_t("adi_mid", lang)
     else:
-        adi_desc = _t("adi_high", lang)
+        adi_desc = _local_t("adi_high", lang)
+
+    if mcri < 0.5:
+        mcri_desc = _local_t("mcri_optimal", lang)
+    elif mcri <= 1.5:
+        mcri_desc = _local_t("mcri_moderate", lang)
+    else:
+        mcri_desc = _local_t("mcri_high", lang)
 
     # 6. Morphological Type
     if z_bmi < -1.5 or (z_h > 1.0 and z_bmi < -0.5):
@@ -565,93 +782,96 @@ def calculate_detailed_indices(
     else:
         morph_type_key = "normostenik"
     
-    morphological_type = _t(morph_type_key, lang)
+    morphological_type = _local_t(morph_type_key, lang)
 
     if -1.0 <= z_h <= 1.0:
         bio_age_key = "mos"
     else:
         bio_age_key = "mos_emas"
     
-    biological_age_status = _t(bio_age_key, lang)
+    biological_age_status = _local_t(bio_age_key, lang)
 
     secular_trend_key = "mavjud" if z_h > 1.0 else "yo'q"
-    secular_trend = _t(secular_trend_key, lang)
+    secular_trend = _local_t(secular_trend_key, lang)
 
     # 7. Personalized Advice — 4 tilda
     advice = []
 
     if z_body_length is not None:
         if z_body_length > 2.0:
-            advice.append(_t("adv_body_len_high", lang, **fmt))
+            advice.append(_local_t("adv_body_len_high", lang, **fmt))
         elif z_body_length < -2.0:
-            advice.append(_t("adv_body_len_low", lang, **fmt))
+            advice.append(_local_t("adv_body_len_low", lang, **fmt))
         elif -1.0 <= z_body_length <= 1.0:
-            advice.append(_t("adv_body_len_ok", lang, **fmt))
+            advice.append(_local_t("adv_body_len_ok", lang, **fmt))
 
     # HMAI
-    if hmai > 0.8:
-        advice.append(_t("adv_hmai_very_high", lang, **fmt))
-    elif hmai > 0.5:
-        advice.append(_t("adv_hmai_high", lang, **fmt))
-    elif hmai < -0.8:
-        advice.append(_t("adv_hmai_very_low", lang, **fmt))
-    elif hmai < -0.5:
-        advice.append(_t("adv_hmai_low", lang, **fmt))
+    if hmai > 0.5:
+        advice.append(_local_t("adv_hmai_very_high", lang, **fmt))
+    elif hmai > 0.3:
+        advice.append(_local_t("adv_hmai_high", lang, **fmt))
+    elif hmai < 0.05:
+        advice.append(_local_t("adv_hmai_very_low", lang, **fmt))
+    elif hmai < 0.1:
+        advice.append(_local_t("adv_hmai_low", lang, **fmt))
     else:
-        advice.append(_t("adv_hmai_ok", lang, **fmt))
+        advice.append(_local_t("adv_hmai_ok", lang, **fmt))
 
     # MII
-    if mii < 1.0:
-        advice.append(_t("adv_mii_very_low", lang, **fmt))
-    elif mii < 1.5:
-        advice.append(_t("adv_mii_low", lang, **fmt))
-    elif mii > 3.0:
-        advice.append(_t("adv_mii_high", lang, **fmt))
+    if mii < 0.3:
+        advice.append(_local_t("adv_mii_very_low", lang, **fmt))
+    elif mii < 0.5:
+        advice.append(_local_t("adv_mii_low", lang, **fmt))
+    elif mii >= 0.8:
+        advice.append(_local_t("adv_mii_high", lang, **fmt))
 
-    # ADI
+    # ADI and MCRI
     if adi > 3.0:
-        advice.append(_t("adv_adi_very_high", lang, **fmt))
+        advice.append(_local_t("adv_adi_very_high", lang, **fmt))
     elif adi > 2.0:
-        advice.append(_t("adv_adi_high", lang, **fmt))
+        advice.append(_local_t("adv_adi_high", lang, **fmt))
     elif adi <= 1.0:
-        advice.append(_t("adv_adi_ok", lang, **fmt))
+        advice.append(_local_t("adv_adi_ok", lang, **fmt))
+
+    if mcri > 1.5:
+        advice.append(_local_t("adv_mcri_high", lang, **fmt))
 
     # BMI
     if z_bmi < -2.0:
-        advice.append(_t("adv_bmi_very_low", lang, **fmt))
+        advice.append(_local_t("adv_bmi_very_low", lang, **fmt))
     elif z_bmi < -1.0:
-        advice.append(_t("adv_bmi_low", lang, **fmt))
+        advice.append(_local_t("adv_bmi_low", lang, **fmt))
     elif z_bmi > 2.0:
-        advice.append(_t("adv_bmi_very_high", lang, **fmt))
+        advice.append(_local_t("adv_bmi_very_high", lang, **fmt))
     elif z_bmi > 1.0:
-        advice.append(_t("adv_bmi_high", lang, **fmt))
+        advice.append(_local_t("adv_bmi_high", lang, **fmt))
 
     # Somatotype
     if morph_type_key == "astenik":
-        advice.append(_t("adv_soma_astenik", lang, **fmt))
+        advice.append(_local_t("adv_soma_astenik", lang, **fmt))
     elif morph_type_key == "giperstenik":
-        advice.append(_t("adv_soma_giper", lang, **fmt))
+        advice.append(_local_t("adv_soma_giper", lang, **fmt))
     else:
-        advice.append(_t("adv_soma_normo", lang, **fmt))
+        advice.append(_local_t("adv_soma_normo", lang, **fmt))
 
 
     # Bioimpedance
     fm_p = (fm / weight) * 100 if weight > 0 else 0
     if fm_p > high_fm:
-        advice.append(_t("adv_fat_high", lang, **fmt))
+        advice.append(_local_t("adv_fat_high", lang, **fmt))
     elif fm_p < low_fm:
-        advice.append(_t("adv_fat_low", lang, **fmt))
+        advice.append(_local_t("adv_fat_low", lang, **fmt))
 
     m_p = (muscle_mass / weight) * 100 if weight > 0 else 0
     if m_p < muscle_min:
-        advice.append(_t("adv_muscle_low", lang, **fmt))
+        advice.append(_local_t("adv_muscle_low", lang, **fmt))
 
     tbw_p = (tbw / weight) * 100 if weight > 0 else 0
     if tbw_p < tbw_min:
-        advice.append(_t("adv_water_low", lang, **fmt))
+        advice.append(_local_t("adv_water_low", lang, **fmt))
 
     if visceral_fat > visceral_max:
-        advice.append(_t("adv_visceral_high", lang, **fmt))
+        advice.append(_local_t("adv_visceral_high", lang, **fmt))
 
     return {
         "z_h": z_h,
@@ -677,14 +897,21 @@ def calculate_detailed_indices(
         "acm_norm": acm_norm,
         "visceral_fat": visceral_fat,
         "visceral_norm": visceral_norm,
+        "centile": centile,
+        "corridor": corridor,
         "hmai": hmai,
         "hmai_desc": hmai_desc,
         "mii": mii,
         "mii_desc": mii_desc,
         "adi": adi,
         "adi_desc": adi_desc,
+        "mcri": mcri,
+        "mcri_desc": mcri_desc,
         "morphological_type": morphological_type,
+        "morphological_type_key": morph_type_key,
         "biological_age_status": biological_age_status,
+        "biological_age_status_key": bio_age_key,
         "secular_trend": secular_trend,
+        "secular_trend_key": secular_trend_key,
         "advice": advice
     }

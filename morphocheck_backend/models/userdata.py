@@ -57,6 +57,12 @@ class PatientAnalysis(Base):
     recommendations = Column(Text, nullable=False)
     
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    created_by = relationship("User")
+    created_by = relationship("User", foreign_keys=[created_by_id])
 
     created_at = Column(DateTime, server_default=func.now(), index=True)
+
+    # Soft Delete maydonlari
+    is_deleted    = Column(Integer, default=0, nullable=True)   # 0=yo'q, 1=ha
+    deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    deleted_at    = Column(DateTime, nullable=True)
+    deleted_by    = relationship("User", foreign_keys=[deleted_by_id])

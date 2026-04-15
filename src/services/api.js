@@ -402,8 +402,46 @@ export const AdminApi = {
       return data;
     },
 
+    update: async (id, data) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/${id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+
+      return resp.json();
+    },
+
     removeMany: async (ids) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/batch-delete`, {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+
+      const data = await resp.json();
+      return data;
+    },
+
+    // Restore — soft deleted ni tiklash (faqat super admin)
+    restore: async (ids) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/restore`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
@@ -419,6 +457,194 @@ export const AdminApi = {
 
       const data = await resp.json();
       return data;
+    },
+
+    // Hard delete — DB dan butunlay o'chirish (faqat super admin)
+    hardDelete: async (ids) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/hard-delete`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+
+      const data = await resp.json();
+      return data;
+    },
+
+    // O'chirilgan ma'lumotlar ro'yxati (faqat super admin)
+    deletedList: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/deleted-analyses?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+
+    // O'chirilgan ma'lumotlarni DOCX hisobot sifatida yuklab olish (faqat super admin)
+    exportDeletedDocx: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/export-deleted-docx?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.blob();
+    },
+
+    exportXlsx: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/export-xlsx?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.blob();
+    },
+  },
+
+  auditLogs: {
+    list: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/audit-logs?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+
+      const data = await resp.json();
+      return data;
+    },
+    clear: async (actionFilter = null) => {
+      const url = actionFilter && actionFilter !== "ALL" 
+        ? `${API_BASE}${API_PREFIX}/admin/audit-logs/clear?action=${actionFilter}`
+        : `${API_BASE}${API_PREFIX}/admin/audit-logs/clear`;
+        
+      const resp = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+  },
+
+  backup: {
+    list: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+    create: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/create`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+    restore: async (filename, mode = "replace") => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/restore/${filename}?mode=${mode}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+    delete: async (filename) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/${filename}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
     },
   },
 
@@ -506,23 +732,69 @@ export const AdminApi = {
     },
   },
 
-  stats: {
-    get: async () => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/stats`, {
+  stats: async () => {
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/stats`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+
+    const data = await resp.json();
+    return data;
+  },
+
+  clinical: {
+    list: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/settings`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
           "Content-Type": "application/json",
         },
       });
-
       if (!resp.ok) {
         const msg = await parseError(resp);
         throw new Error(msg);
       }
+      return resp.json();
+    },
 
-      const data = await resp.json();
-      return data;
+    update: async (key, data) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/settings/${key}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+
+    refreshCache: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/refresh-cache`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
     },
   },
 };

@@ -374,19 +374,26 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["weight_diff"], f"{analysis_data_dict.get('weight_diff', 0):.1f} kg", L["weight_diff_note"]],
     ]
 
+    shoulder_length_val = data.get('shoulder_length', 0) if isinstance(data, dict) else getattr(data, 'shoulder_length', 0)
+    try:
+        is_deep_analysis = float(shoulder_length_val) > 0
+    except:
+        is_deep_analysis = False
+
     detailed = analysis_data_dict.get('indices', {})
-    if detailed:
+    if detailed and is_deep_analysis:
         analysis_table_data.append([L["hmai"], f"{detailed.get('hmai', '')}", detailed.get('hmai_desc', '')])
         analysis_table_data.append([L["mii"], f"{detailed.get('mii', '')}", detailed.get('mii_desc', '')])
         analysis_table_data.append([L["adi"], f"{detailed.get('adi', '')}", detailed.get('adi_desc', '')])
 
-    shoulder_ratio = analysis_data_dict.get('shoulder_ratio', 0)
-    if shoulder_ratio:
-        analysis_table_data.append([L["shoulder_ratio"], f"{shoulder_ratio}%", L["shoulder_note"]])
+    if is_deep_analysis:
+        shoulder_ratio = analysis_data_dict.get('shoulder_ratio', 0)
+        if shoulder_ratio:
+            analysis_table_data.append([L["shoulder_ratio"], f"{shoulder_ratio}%", L["shoulder_note"]])
 
-    thigh_ratio = analysis_data_dict.get('thigh_ratio', 0)
-    if thigh_ratio:
-        analysis_table_data.append([L["thigh_ratio"], f"{thigh_ratio}%", L["thigh_note"]])
+        thigh_ratio = analysis_data_dict.get('thigh_ratio', 0)
+        if thigh_ratio:
+            analysis_table_data.append([L["thigh_ratio"], f"{thigh_ratio}%", L["thigh_note"]])
 
     col_widths = [2.2*inch, 0.8*inch, 3.4*inch]
 

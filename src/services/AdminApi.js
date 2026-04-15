@@ -86,10 +86,10 @@ export const AdminApi = {
           gender: opts.gender,
           age_min: opts.ageMin,
           age_max: opts.ageMax,
-          date_from: opts.dateFrom, // "YYYY-MM-DD"
-          date_to: opts.dateTo, // "YYYY-MM-DD"
-          sort_key: opts.sortKey, // masalan: "created_at" | "age" | "bmi"
-          sort_dir: opts.sortDir, // "asc" | "desc"
+          date_from: opts.dateFrom,
+          date_to: opts.dateTo,
+          sort_key: opts.sortKey,
+          sort_dir: opts.sortDir,
           region: opts.region,
           page: opts.page ?? 1,
           page_size: opts.pageSize ?? 20,
@@ -98,8 +98,12 @@ export const AdminApi = {
     get: (id) => call(`/admin/analyses/${id}`),
     update: (id, data) => call(`/admin/analyses/${id}`, { method: "PUT", body: data }),
     remove: (id) => call(`/admin/analyses/${id}`, { method: "DELETE" }),
-    // Backend: DELETE /api/admin/analyses  body: { ids: [...] }
+    // Soft delete (bir nechta)
     removeMany: (ids) => call(`/admin/analyses`, { method: "DELETE", body: { ids } }),
+    // Hard delete — faqat super admin (DB dan butunlay o'chiradi)
+    hardDelete: (ids) => call(`/admin/analyses/hard-delete`, { method: "POST", body: { ids } }),
+    // Restore — soft deleted ni tiklash (faqat super admin)
+    restore: (ids) => call(`/admin/analyses/restore`, { method: "POST", body: { ids } }),
     exportXlsx: (params) => {
       const q = withQuery("/admin/export-xlsx", params);
       return fetch(`${API_BASE}${API_PREFIX}${q}`, {
@@ -109,6 +113,39 @@ export const AdminApi = {
       }).then((r) => {
         if (!r.ok) throw new Error("Eksport qilishda xatolik");
         return r.blob();
+      });
+    },
+    exportTemplate: () => {
+      return fetch(`${API_BASE}${API_PREFIX}/admin/export-template`, {
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      }).then((r) => {
+        if (!r.ok) throw new Error("Shablonni yuklashda xatolik");
+        return r.blob();
+      });
+    },
+    importXlsx: (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return fetch(`${API_BASE}${API_PREFIX}/admin/import-xlsx`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+          // Content-Type should NOT be set manually for FormData
+        },
+        body: formData,
+      }).then(async (r) => {
+        const text = await r.text();
+        if (!r.ok) {
+          try {
+            const j = JSON.parse(text);
+            throw new Error(j.detail || "Importda xatolik");
+          } catch {
+            throw new Error(text || "Importda xatolik");
+          }
+        }
+        return JSON.parse(text);
       });
     },
   },
@@ -128,4 +165,23 @@ export const AdminApi = {
 
   // STATS
   stats: () => call(`/admin/stats`),
+
+  // AUDIT LOGS
+  audit: {
+    list: (opts = {}) =>
+      call(
+        withQuery("/admin/audit-logs", {
+          page: opts.page ?? 1,
+          page_size: opts.pageSize ?? 50,
+          action: opts.action,
+          user_id: opts.userId,
+        }),
+      ),
+  },
+  
+  // ADMIN ACTIVITY
+  activity: {
+    list: () => call("/admin/activity"),
+    pingFormStart: () => call("/admin/activity/ping-form-start", { method: "POST" }),
+  }
 };

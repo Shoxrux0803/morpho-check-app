@@ -25,8 +25,11 @@ import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import MonitorWeightOutlinedIcon from "@mui/icons-material/MonitorWeightOutlined";
 import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlined";
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import GrowthChart from "./Charts/GrowthChart";
 import PersonOutline from "@mui/icons-material/PersonOutline";
 import { useLanguage, LANGUAGES } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function AnalysisResults({
   formData,
@@ -34,7 +37,9 @@ export default function AnalysisResults({
   generatePDF,
 }) {
   const { t, lang } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const [pdfLang, setPdfLang] = useState(lang);
+  const [chartType, setChartType] = useState('height');
 
   // 1) Natija yo'q
   if (!results) {
@@ -83,6 +88,8 @@ export default function AnalysisResults({
   const regionText = formData?.region || patientInfo?.region || "";
   const ageText = patientInfo?.age ?? formData?.age ?? "—";
   const genderValue = patientInfo?.gender ?? formData?.gender;
+  const age = patientInfo?.age ?? formData?.age;
+  const gender = genderValue;
   const genderText = genderValue === "erkak" ? t("male") : genderValue === "ayol" ? t("female") : (genderValue || "—");
 
   const usedHeight = measurements?.height ?? formData.height;
@@ -280,7 +287,7 @@ export default function AnalysisResults({
               <Box sx={{ mt: 2 }}>
                 <Typography variant="caption" color="text.secondary">
                   {t("heightLabel")}: {usedHeight ?? "—"} | {t("bodyLengthLabel")}: {analysis?.indices?.body_length ?? "—"} | {t("weightLabel")}: {usedWeight ?? "—"} | {t("chestLabel")}:{" "}
-                  {usedChest ?? "—"} | {t("headLabel")}: {usedHead ?? "—"}
+                  {usedChest ?? "—"} | {t("headLabel")}: {usedHead ?? "—"} | {t("calfLength")}: {formData.calfLength || "—"} | {t("calfCircumference")}: {formData.calfCircumference || "—"} | {t("footLength")}: {formData.footLength || "—"}
                 </Typography>
                 {analysis?.indices?.z_body_length != null && (
                   <Box sx={{ mt: 1 }}>
@@ -291,58 +298,125 @@ export default function AnalysisResults({
                 )}
               </Box>
 
-              {/* Detal ko'rsatkichlar (HMAI, MII, ADI) */}
-              <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 700, color: 'primary.main' }}>
-                {t("detailedIndices")}
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={4}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #3f51b5' }}>
-                    <Typography variant="subtitle2" color="text.secondary">{t("hmai")}</Typography>
-                    <Typography variant="h5" fontWeight={700}>{analysis?.indices?.hmai ?? "—"}</Typography>
-                    <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
-                      {analysis?.indices?.hmai_desc ?? "—"}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #4caf50' }}>
-                    <Typography variant="subtitle2" color="text.secondary">{t("mii")}</Typography>
-                    <Typography variant="h5" fontWeight={700}>{analysis?.indices?.mii ?? "—"}</Typography>
-                    <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
-                      {analysis?.indices?.mii_desc ?? "—"}
-                    </Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #ff9800' }}>
-                    <Typography variant="subtitle2" color="text.secondary">{t("adi")}</Typography>
-                    <Typography variant="h5" fontWeight={700}>{analysis?.indices?.adi ?? "—"}</Typography>
-                    <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
-                      {analysis?.indices?.adi_desc ?? "—"}
-                    </Typography>
-                  </Paper>
-                </Grid>
+              {/* Detal ko'rsatkichlar (HMAI, MII, ADI) - Faqat ro'yxatdan o'tgan mutaxassislar uchun */}
+              {isAuthenticated && (
+                <>
+                  <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 700, color: 'primary.main' }}>
+                    {t("detailedIndices")}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #3f51b5' }}>
+                        <Typography variant="subtitle2" color="text.secondary">{t("hmai")}</Typography>
+                        <Typography variant="h5" fontWeight={700}>{analysis?.indices?.hmai ?? "—"}</Typography>
+                        <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
+                          {analysis?.indices?.hmai_desc ?? "—"}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #4caf50' }}>
+                        <Typography variant="subtitle2" color="text.secondary">{t("mii")}</Typography>
+                        <Typography variant="h5" fontWeight={700}>{analysis?.indices?.mii ?? "—"}</Typography>
+                        <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
+                          {analysis?.indices?.mii_desc ?? "—"}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #ff9800' }}>
+                        <Typography variant="subtitle2" color="text.secondary">{t("adi")}</Typography>
+                        <Typography variant="h5" fontWeight={700}>{analysis?.indices?.adi ?? "—"}</Typography>
+                        <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
+                          {analysis?.indices?.adi_desc ?? "—"}
+                        </Typography>
+                      </Paper>
+                    </Grid>
 
-                <Grid item xs={6} md={4}>
-                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">{t("morphologicalType")}</Typography>
-                    <Typography variant="body2" fontWeight={600}>{analysis?.indices?.morphological_type ?? "—"}</Typography>
+                    <Grid item xs={6} md={4}>
+                      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">{t("morphologicalType")}</Typography>
+                        <Typography variant="body2" fontWeight={600}>{analysis?.indices?.morphological_type ?? "—"}</Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={6} md={4}>
+                      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">{t("biologicalAgeStatus")}</Typography>
+                        <Typography variant="body2" fontWeight={600}>{analysis?.indices?.biological_age_status ?? "—"}</Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                        <Typography variant="caption" color="text.secondary" display="block">{t("secularTrend")}</Typography>
+                        <Typography variant="body2" fontWeight={600}>{analysis?.indices?.secular_trend ?? "—"}</Typography>
+                      </Paper>
+                    </Grid>
+                  </Grid>
+                </>
+              )}
+
+              {/* WHO Growth Charts section */}
+              {age >= 5 && age <= 19 && (
+                <Box sx={{ mt: 4 }}>
+                  <Divider sx={{ mb: 3 }}>
+                    <Chip 
+                      icon={<ShowChartIcon />} 
+                      label={t("growthChartsTitle")} 
+                      color="primary" 
+                      variant="outlined" 
+                      sx={{ fontWeight: 700, px: 2 }}
+                    />
+                  </Divider>
+
+                  <Stack direction="row" spacing={1} sx={{ mb: 2, justifyContent: 'center' }}>
+                    <Button 
+                      variant={chartType === 'height' ? 'contained' : 'outlined'} 
+                      onClick={() => setChartType('height')}
+                      size="small"
+                      sx={{ borderRadius: 5 }}
+                    >
+                      {t("showHeightChart")}
+                    </Button>
+                    <Button 
+                      variant={chartType === 'bmi' ? 'contained' : 'outlined'} 
+                      onClick={() => setChartType('bmi')}
+                      size="small"
+                      sx={{ borderRadius: 5 }}
+                    >
+                      {t("showBmiChart")}
+                    </Button>
+                  </Stack>
+
+                  <Paper 
+                    variant="outlined" 
+                    sx={{ 
+                      p: { xs: 1, md: 3 }, 
+                      borderRadius: 4, 
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+                      borderStyle: 'dashed'
+                    }}
+                  >
+                    <Typography variant="subtitle1" align="center" fontWeight={600} gutterBottom>
+                      {chartType === 'height' ? t("heightForAgeChart") : t("bmiForAgeChart")}
+                    </Typography>
+                    
+                    <GrowthChart 
+                      gender={gender} 
+                      age={age} 
+                      type={chartType} 
+                      value={chartType === 'height' ? usedHeight : bmi} 
+                    />
+
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', px: 2, textAlign: 'center' }}>
+                      {chartType === 'height' ? (
+                        "Ushbu grafik balandlikning yoshga nisbatan me'yorlarini (SDS) ko'rsatadi. Yashil chiziq - median (o'rtacha)."
+                      ) : (
+                        "BMI grafigi tana vazni indeksining yoshga nisbatan o'zgarishini ko'rsatadi."
+                      )}
+                    </Typography>
                   </Paper>
-                </Grid>
-                <Grid item xs={6} md={4}>
-                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">{t("biologicalAgeStatus")}</Typography>
-                    <Typography variant="body2" fontWeight={600}>{analysis?.indices?.biological_age_status ?? "—"}</Typography>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                    <Typography variant="caption" color="text.secondary" display="block">{t("secularTrend")}</Typography>
-                    <Typography variant="body2" fontWeight={600}>{analysis?.indices?.secular_trend ?? "—"}</Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
+                </Box>
+              )}
             </CardContent>
           </Card>
 
@@ -379,6 +453,7 @@ export default function AnalysisResults({
                   </Grid>
                 ))}
               </Grid>
+              
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 4, alignItems: "center" }}>
                 <FormControl size="small" sx={{ minWidth: 100 }}>

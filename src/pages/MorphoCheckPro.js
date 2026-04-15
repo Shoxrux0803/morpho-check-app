@@ -3,11 +3,16 @@ import React, { useState, useRef, useEffect } from "react";
 import InputForm from "../components/InputForm";
 import AnalysisResults from "../components/AnalysisResults";
 import { postAnalysis, generatePdf, generateDocx, sendRating as submitRatingApi } from "../services/api";
+import { AdminApi } from "../services/AdminApi";
+import { useAuth } from "../contexts/AuthContext";
 
 import { useLanguage } from "../contexts/LanguageContext";
+import { useOfflineSync } from "../providers/OfflineSyncProvider";
+import { toast } from "react-hot-toast";
 
 export default function MorphoCheckPro() {
   const { t, lang } = useLanguage();
+  const { addToQueue, isOnline } = useOfflineSync();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -51,6 +56,13 @@ export default function MorphoCheckPro() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("form");
   const resultsRef = useRef(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.role === "admin" || user?.role === "superadmin") {
+      AdminApi.activity.pingFormStart().catch(() => {});
+    }
+  }, [user]);
 
   useEffect(() => {
     if (formData.birthDate) {
@@ -146,6 +158,13 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
       };
+
+      if (!navigator.onLine) {
+        await addToQueue(payload, lang);
+        setFormData({ ...formData, firstName: "", lastName: "" }); // Clear common fields or keep them?
+        setActiveTab("form");
+        return;
+      }
 
       const raw = await postAnalysis(payload, lang);
       // 🔴 Muhimi: Normalizatsiya QILMAYMIZ. Backend qanday yuborsa shunday saqlaymiz:
