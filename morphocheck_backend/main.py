@@ -23,6 +23,7 @@ from routers.pdf_router import router as pdf_router
 from routers.auth_router import router as auth_router
 from routers.clinical_router import router as clinical_router
 from routers.backup_router import router as backup_router
+from routers.research_router import router as research_router
 
 # DB init
 from utils.database import engine, get_db, init_db
@@ -89,6 +90,7 @@ app.include_router(admin_router,  prefix=f"{API_PREFIX}/admin",   tags=["Admin"]
 app.include_router(pdf_router,    prefix=f"{API_PREFIX}/pdf",     tags=["PDF Hisobot"])
 app.include_router(clinical_router, prefix=f"{API_PREFIX}/clinical", tags=["Klinik CMS"])
 app.include_router(backup_router, prefix=f"{API_PREFIX}/backup",  tags=["Zaxira (Backup)"])
+app.include_router(research_router, prefix=f"{API_PREFIX}/research", tags=["Izlanuvchi"])
 app.include_router(auth_router,   prefix=f"{API_PREFIX}")
 
 # Sog'liqni tekshirish

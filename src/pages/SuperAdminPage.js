@@ -1,36 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   Box, Container, Typography, Paper, Tabs, Tab, TextField, Button, Avatar, Stack, 
-  IconButton, Tooltip, Fade, InputAdornment, Alert, CircularProgress, Table, 
+  IconButton, Tooltip, InputAdornment, Alert, CircularProgress, Table, 
   TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, 
   DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, Divider,
-  Chip
+  Chip, Collapse, Grid
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 import {
-  AdminPanelSettings,
-  Lock,
-  Person,
-  Logout,
-  Dashboard,
-  People,
-  Assessment,
-  Add,
-  Edit,
-  Delete,
-  Visibility,
-  VisibilityOff,
-  Security,
-  History,
-  Storage,
-  RestoreFromTrash,
-  Assignment,
-  AutoGraph,
-  SettingsSuggest,
-  Refresh,
-  CloudUpload,
-  Download,
+  Lock, Person, Logout, Dashboard, People, Add, Edit, Delete, Visibility,
+  VisibilityOff, Security, History, Storage, RestoreFromTrash, Assignment, AutoGraph,
+  SettingsSuggest, Refresh, CloudUpload, Download, FilterList, Search, DeleteForever,
+  Science, FitnessCenter, Place, Close, InfoOutlined,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
@@ -39,27 +21,24 @@ import { AdminApi } from "../services/api";
 import { toast } from "react-hot-toast";
 import { UZB_LOCATIONS } from "../data/uzbLocations";
 
-// New Components
+// Components
 import SuperAdminDashboard from "../components/Dashboard/SuperAdminDashboard";
 import ScientificAnalysis from "../components/Dashboard/ScientificAnalysis";
 import ClinicalCMS from "../components/Admin/ClinicalCMS";
 import AdminActivity from "../components/Admin/AdminActivity";
+import ResearcherDataView from "../components/Admin/ResearcherDataView";
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
       background: (theme) =>
-        theme.palette.mode === "dark"
-          ? "rgba(30, 30, 40, 0.7)"
-          : "rgba(255, 255, 255, 0.7)",
+        theme.palette.mode === "dark" ? "rgba(30,30,40,0.7)" : "rgba(255,255,255,0.85)",
       backdropFilter: "blur(20px)",
       borderRadius: 4,
       border: "1px solid",
       borderColor: (theme) =>
-        theme.palette.mode === "dark"
-          ? "rgba(255, 255, 255, 0.08)"
-          : "rgba(0, 0, 0, 0.05)",
+        theme.palette.mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
       overflow: "hidden",
       ...sx,
     }}
@@ -87,10 +66,12 @@ const SuperAdminPage = () => {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "admin",
     phone: "",
     region: "",
   });
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
 
   // Deleted Data State
   const [deletedData, setDeletedData] = useState([]);
@@ -120,6 +101,8 @@ const SuperAdminPage = () => {
       if (activeTab === 6) fetchBackups();
     }
   }, [user, activeTab]);
+
+
 
   const fetchDashboardStats = async () => {
     setStatsLoading(true);
@@ -198,13 +181,36 @@ const SuperAdminPage = () => {
   };
 
   const handleAdminAction = async () => {
+    // Validation
+    if (adminForm.password) {
+      if (adminForm.password !== adminForm.confirmPassword) {
+        toast.error("Parollar mos kelmadi!");
+        return;
+      }
+      if (adminForm.password.length < 6) {
+        toast.error("Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
+        return;
+      }
+    } else if (!currentAdmin) {
+      // New admin must have a password
+      toast.error("Parol kiritish majburiy!");
+      return;
+    }
+
     try {
+      const { confirmPassword, ...payload } = adminForm;
+      
       if (currentAdmin) {
-        await AdminApi.users.update(currentAdmin.id, adminForm);
-        toast.promise(Promise.resolve(), { loading: 'Saqlanmoqda...', success: 'Admin yangilandi', error: 'Xatolik' });
+        // UserUpdate doesn't have password_confirm
+        if (!payload.password) delete payload.password;
+        
+        await AdminApi.users.update(currentAdmin.id, payload);
+        toast.success('Admin muvaffaqiyatli yangilandi');
       } else {
-        await AdminApi.users.create(adminForm);
-        toast.success("Yangi admin qo'shildi");
+        // UserCreate needs password_confirm
+        payload.password_confirm = confirmPassword;
+        await AdminApi.users.create(payload);
+        toast.success("Yangi admin muvaffaqiyatli qo'shildi");
       }
       setAdminDialogOpen(false);
       fetchAdmins();
@@ -428,7 +434,8 @@ const SuperAdminPage = () => {
                 startIcon={<Add />}
                 onClick={() => {
                   setCurrentAdmin(null);
-                  setAdminForm({ name: "", email: "", password: "", role: "admin", phone: "", region: "" });
+                  setAdminForm({ name: "", email: "", password: "", confirmPassword: "", role: "admin", phone: "", region: "" });
+                  setShowAdminPassword(false);
                   setAdminDialogOpen(true);
                 }}
                 sx={{ borderRadius: 2 }}
@@ -467,7 +474,14 @@ const SuperAdminPage = () => {
                         <TableCell>{admin.phone || "-"}</TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <IconButton size="small" onClick={() => { setCurrentAdmin(admin); setAdminForm({ ...admin, password: "" }); setAdminDialogOpen(true); }}><Edit fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => { 
+                              setCurrentAdmin(admin); 
+                              setAdminForm({ ...admin, password: "", confirmPassword: "" }); 
+                              setShowAdminPassword(false);
+                              setAdminDialogOpen(true); 
+                            }}>
+                              <Edit fontSize="small" />
+                            </IconButton>
                             <IconButton size="small" color="error" onClick={() => handleDeleteAdmin(admin.id)} disabled={admin.id === user.id}><Delete fontSize="small" /></IconButton>
                           </Stack>
                         </TableCell>
@@ -602,9 +616,17 @@ const SuperAdminPage = () => {
         );
       case 7: return <ClinicalCMS />;
       case 8: return <AdminActivity />;
+      case 9: return renderResearchTab();
       default: return null;
     }
   };
+
+  // ══════════════════════════════════════════════════
+  //  IZLANUVCHILAR TAB RENDERER
+  // ══════════════════════════════════════════════════
+  const renderResearchTab = () => (
+    <ResearcherDataView isSuperAdmin={true} />
+  );
 
   return (
     <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 } }}>
@@ -642,6 +664,12 @@ const SuperAdminPage = () => {
               <Tab icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Backup" />
               <Tab icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Klinik CMS" />
               <Tab icon={<Assignment sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Monitoring" />
+              <Tab
+                icon={<Science sx={{ mr: 1.5, fontSize: 20 }} />}
+                iconPosition="start"
+                label="Izlanuvchilar"
+                sx={{ mt: 1, borderTop: "1px solid rgba(0,0,0,0.06)" }}
+              />
             </Tabs>
 
             <Box mt={2} pt={2} borderTop="1px solid rgba(0,0,0,0.05)">
@@ -672,8 +700,50 @@ const SuperAdminPage = () => {
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField label="F.I.SH" fullWidth value={adminForm.name} onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })} />
             <TextField label="Email" fullWidth value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
-            <TextField label="Yangi parol" type="password" fullWidth value={adminForm.password} onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })} />
-            <FormControl fullWidth><InputLabel>Rol</InputLabel><Select value={adminForm.role} label="Rol" onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}><MenuItem value="admin">Administrator</MenuItem><MenuItem value="superadmin">Super Administrator</MenuItem></Select></FormControl>
+            
+            <TextField 
+              label={currentAdmin ? "Yangi parol (ixtiyoriy)" : "Parol"} 
+              type={showAdminPassword ? "text" : "password"} 
+              fullWidth 
+              value={adminForm.password} 
+              onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowAdminPassword(!showAdminPassword)} edge="end">
+                      {showAdminPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <TextField 
+              label="Parolni tasdiqlash" 
+              type={showAdminPassword ? "text" : "password"} 
+              fullWidth 
+              value={adminForm.confirmPassword} 
+              onChange={(e) => setAdminForm({ ...adminForm, confirmPassword: e.target.value })}
+              error={adminForm.password !== adminForm.confirmPassword && adminForm.confirmPassword !== ""}
+              helperText={adminForm.password !== adminForm.confirmPassword && adminForm.confirmPassword !== "" ? "Parollar mos kelmadi" : ""}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowAdminPassword(!showAdminPassword)} edge="end">
+                      {showAdminPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
+            <FormControl fullWidth><InputLabel>Rol</InputLabel>
+              <Select value={adminForm.role} label="Rol" onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}>
+                <MenuItem value="admin">Administrator</MenuItem>
+                <MenuItem value="superadmin">Super Administrator</MenuItem>
+                <MenuItem value="researcher">Izlanuvchi</MenuItem>
+              </Select>
+            </FormControl>
             <TextField label="Telefon" fullWidth value={adminForm.phone || ""} onChange={(e) => setAdminForm({ ...adminForm, phone: e.target.value })} />
             <FormControl fullWidth>
               <InputLabel>Hudud</InputLabel>

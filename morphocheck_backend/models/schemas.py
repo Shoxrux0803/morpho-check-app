@@ -269,3 +269,95 @@ class AnalysisInput(BaseModel):
         if errs:
             raise ValueError(" / ".join(errs))
         return self
+
+class ResearchRecordCreate(BaseModel):
+    full_name: Optional[str] = None
+    school_name: Optional[str] = None
+    settlement: Optional[str] = None
+    birth_place: Optional[str] = None
+    birth_date: Optional[str] = None
+    father_nationality: Optional[str] = None
+    mother_nationality: Optional[str] = None
+    living_since: Optional[str] = None
+    enrolled_date: Optional[str] = None
+    living_conditions: Optional[str] = None
+    labor_regime: Optional[str] = None
+    past_illnesses: Optional[str] = None
+    children_count: Optional[int] = None
+    child_order: Optional[int] = None
+    feeding_type: Optional[str] = None
+    parents_marriage: Optional[str] = None
+    mother_health_status: Optional[str] = None
+    examination_date: Optional[str] = None
+
+    lower_leg_spina_iliaca: Optional[float] = None
+    lower_leg_symphysion: Optional[float] = None
+    tibiale_height: Optional[float] = None
+    pelvic_width: Optional[float] = None
+    thigh_length: Optional[float] = None
+    thigh_circumference: Optional[float] = None
+    calf_length: Optional[float] = None
+    calf_circumference: Optional[float] = None
+    foot_length: Optional[float] = None
+    teeth_count: Optional[int] = None
+    menstruation_start: Optional[str] = None
+
+    skull_longitudinal: Optional[float] = None
+    skull_transverse: Optional[float] = None
+    head_circumference: Optional[float] = None
+    forehead_transverse: Optional[float] = None
+    skull_height: Optional[float] = None
+
+    skull_base_length: Optional[float] = None
+    skull_base_width: Optional[float] = None
+
+    face_bizygomatic: Optional[float] = None
+    face_bigonial: Optional[float] = None
+    face_morphological_height: Optional[float] = None
+    face_physiognomic_height: Optional[float] = None
+    nose_height: Optional[float] = None
+    nose_width: Optional[float] = None
+    outer_canthal_width: Optional[float] = None
+    inner_canthal_width: Optional[float] = None
+    lips_mucosa_height: Optional[float] = None
+    mouth_width: Optional[float] = None
+
+    chest_standing_height: Optional[float] = None
+    chest_sitting_height: Optional[float] = None
+    weight: Optional[float] = None
+    trunk_length: Optional[float] = None
+    torso_length: Optional[float] = None
+    chest_circumference_pause: Optional[float] = None
+    chest_circumference_inhale: Optional[float] = None
+    chest_circumference_exhale: Optional[float] = None
+    waist_circumference: Optional[float] = None
+    abdomen_circumference: Optional[float] = None
+    upper_segment_length: Optional[float] = None
+    chest_transverse_diameter: Optional[float] = None
+    chest_anteroposterior_diameter: Optional[float] = None
+    chest_height: Optional[float] = None
+
+    arm_length: Optional[float] = None
+    shoulder_length: Optional[float] = None
+    shoulder_width: Optional[float] = None
+    shoulder_circumference_rest: Optional[float] = None
+    shoulder_circumference_flexed: Optional[float] = None
+    forearm_length: Optional[float] = None
+    hand_length: Optional[float] = None
+    dynamometry: Optional[float] = None
+
+    fat_triceps: Optional[float] = None
+    fat_biceps: Optional[float] = None
+    fat_subscapular: Optional[float] = None
+    fat_iliac: Optional[float] = None
+    fat_popliteal: Optional[float] = None
+
+class ResearchRecordOut(ResearchRecordCreate):
+    id: int
+    created_by_id: Optional[int] = None
+    created_at: datetime.datetime
+    is_deleted: Optional[int] = 0
+    deleted_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True

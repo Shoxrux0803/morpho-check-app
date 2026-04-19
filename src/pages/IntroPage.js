@@ -33,9 +33,11 @@ import {
 import { useThemeMode } from "../providers/ThemeProviderMUI";
 import DOFLinesAnimation from "../components/DOFLinesAnimation";
 import { useLanguage } from "../contexts/LanguageContext";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function IntroPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { mode } = useThemeMode();
   const { t } = useLanguage();
   const theme = useTheme();
@@ -159,7 +161,7 @@ export default function IntroPage() {
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 6 }}>
                       <Button
                         variant="contained"
-                        onClick={() => navigate("/morphocheck-pro")}
+                        onClick={() => navigate(user?.role === "researcher" ? "/researcher" : "/morphocheck-pro")}
                         sx={{
                           ...styles.actionButton,
                           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #8b5cf6 100%)`,

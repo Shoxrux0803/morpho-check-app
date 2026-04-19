@@ -24,8 +24,12 @@ export const AuthProvider = ({ children }) => {
         setUser(profile);
         return profile;
       }
-      throw new Error("Token topilmadi");
+      throw new Error("Token topilmadi. Backend javobi noto'g'ri formatda.");
     } catch (err) {
+      // Network xatosi yoki proxy xatosini aniqroq ko'rsatish
+      if (err.message && err.message.includes("Failed to fetch")) {
+        throw new Error("Backend serverga ulanib bo'lmadi. Backend ishlaayotganini tekshiring (port 8000).");
+      }
       throw err;
     }
   };

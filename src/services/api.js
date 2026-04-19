@@ -2,8 +2,8 @@
 // proxy (package.json "proxy": "http://localhost:8000") orqali CORS bartaraf etiladi.
 // Development da API_BASE bo'sh - nisbiy URL lar proxy orqali o'tadi.
 // Production da REACT_APP_API_URL ni to'liq URL ga o'rnating.
-const API_BASE = process.env.REACT_APP_API_URL || "";
-const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
+export const API_BASE = process.env.REACT_APP_API_URL || "";
+export const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
 
 
 /* -------------------- Yordamchi: xatoni ajratib olish -------------------- */
@@ -800,6 +800,120 @@ export const AdminApi = {
 };
 
 
+/* -------------------- RESEARCH API -------------------- */
+export const ResearchApi = {
+  /** Barcha aktiv yozuvlar (superadmin — hammani, researcher — o'zini) */
+  list: async (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+    });
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/?${q.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** Bitta yozuv */
+  get: async (id) => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** Yangi yozuv yaratish */
+  create: async (data) => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** Yozuvni tahrirlash */
+  update: async (id, data) => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** Soft delete */
+  softDelete: async (id) => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** Hard delete — faqat superadmin */
+  hardDelete: async (id) => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}/hard`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** Restore — faqat superadmin */
+  restore: async (id) => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}/restore`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** O'chirilganlar ro'yxati — faqat superadmin */
+  deletedList: async () => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/deleted/list`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.json();
+  },
+
+  /** DOCX yuklash */
+  downloadDocx: (id, lang = "ru") => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    window.open(`${API_BASE}${API_PREFIX}/research/${id}/docx?accessToken=${token}&lang=${lang}`, "_blank");
+  },
+
+  /** XLSX export */
+  exportXlsx: async (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+    });
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/xlsx?${q.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.blob();
+  },
+};
+
 // API service object - ESLint xatosini bartaraf qilish uchun
 const apiService = {
   postAnalysis,
@@ -819,6 +933,7 @@ const apiService = {
   getRegionalStats,
   uploadImage,
   AdminApi,
+  ResearchApi,
 };
 
 export default apiService;

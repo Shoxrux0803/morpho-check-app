@@ -23,6 +23,7 @@ import ThemeSync from "./components/ThemeSync";
 const MorphoCheckPro = lazy(() => import("./pages/MorphoCheckPro"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
+const ResearcherPage = lazy(() => import("./pages/ResearcherPage"));
 const InfoDetail = lazy(() => import("./pages/InfoDetail"));
 
 // 404
@@ -68,9 +69,8 @@ const AdminWrapper = () => {
   
   if (loading) return <PageLoader />;
 
-  // If not logged in, show AdminPage (login form)
-  // If logged in as admin or superadmin, show AdminPage (data)
-  if (!user || user.role === "admin" || user.role === "superadmin") {
+  // Admin login screen for guests
+  if (!user) {
     return (
       <PageTransition>
         <AdminPage />
@@ -78,7 +78,16 @@ const AdminWrapper = () => {
     );
   }
 
-  return <Navigate to="/" replace />;
+  // Redirect based on role if logged in
+  if (user.role === "researcher") {
+    return <Navigate to="/researcher" replace />;
+  }
+
+  return (
+    <PageTransition>
+      <AdminPage />
+    </PageTransition>
+  );
 };
 
 // Super Admin Wrapper (Admin Management)
@@ -96,6 +105,22 @@ const SuperAdminWrapper = () => {
   }
 
   // If not superadmin, redirect to the data dashboard
+  return <Navigate to="/admin" replace />;
+};
+
+const ResearcherWrapper = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <PageLoader />;
+
+  if (user?.role === "researcher" || user?.role === "superadmin") {
+    return (
+      <PageTransition>
+        <ResearcherPage />
+      </PageTransition>
+    );
+  }
+
   return <Navigate to="/admin" replace />;
 };
 
@@ -137,6 +162,10 @@ function AnimatedRoutes() {
         <Route
           path="/superadmin"
           element={<SuperAdminWrapper />}
+        />
+        <Route
+          path="/researcher"
+          element={<ResearcherWrapper />}
         />
         <Route
           path="/morphoadmin"

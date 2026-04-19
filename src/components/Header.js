@@ -28,6 +28,7 @@ import { THEME_VARIANTS } from "../theme/muiTheme";
 import logo from "../assets/morphocheck-logo.png";
 import { useLanguage, LANGUAGES } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
+import WeatherClock from "./WeatherClock";
 
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
@@ -100,7 +101,7 @@ export default function Header() {
               <Box component="span" sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 } }}>
                 MorphoCheck Pro
               </Box>
-              {(user?.role === "admin" || user?.role === "superadmin") && (
+              {user && (
                 <Box
                   component="span"
                   sx={{
@@ -111,27 +112,31 @@ export default function Header() {
                     background: (theme) =>
                       user.role === "superadmin"
                         ? "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+                        : user.role === "researcher"
+                        ? "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)"
                         : theme.palette.mode === "dark"
                         ? "rgba(255, 255, 255, 0.1)"
                         : "rgba(0, 0, 0, 0.05)",
-                    color: user.role === "superadmin" ? "#000" : "text.secondary",
+                    color: (user.role === "superadmin" || user.role === "researcher") ? "#fff" : "text.secondary",
                     fontWeight: 700,
                     textTransform: "uppercase",
                     letterSpacing: 0.5,
                     display: { xs: "none", lg: "flex" },
                     alignItems: "center",
                     gap: 0.5,
-                    border: user.role === "superadmin" ? "none" : "1px solid rgba(0,0,0,0.1)",
-                    boxShadow: user.role === "superadmin" ? "0 2px 8px rgba(255, 215, 0, 0.3)" : "none",
+                    border: (user.role === "superadmin" || user.role === "researcher") ? "none" : "1px solid rgba(0,0,0,0.1)",
+                    boxShadow: user.role === "superadmin" ? "0 2px 8px rgba(255, 215, 0, 0.3)" : (user.role === "researcher" ? "0 2px 8px rgba(0, 123, 255, 0.3)" : "none"),
                   }}
                 >
-                  <Box component="span" sx={{ opacity: 0.8 }}>
+                  <Box component="span" sx={{ opacity: 0.9 }}>
                     {user.name}
                   </Box>
                   <Box component="span" sx={{ mx: 0.25, opacity: 0.5 }}>
                     |
                   </Box>
-                  <Box component="span">{t(user.role === "superadmin" ? "roleSuperAdmin" : "roleAdmin")}</Box>
+                  <Box component="span">
+                    {user.role === "superadmin" ? t("roleSuperAdmin") : user.role === "researcher" ? "Izlanuvchi" : t("roleAdmin")}
+                  </Box>
                 </Box>
               )}
             </Box>
@@ -143,6 +148,8 @@ export default function Header() {
             </Box>
           </Box>
         </Stack>
+
+        <WeatherClock />
 
         {/* Nav + Theme + Variant + Lang */}
         <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -164,7 +171,7 @@ export default function Header() {
           <Tooltip title={t("analyzeTooltip")}>
             <Button
               component={NavLink}
-              to="/morphocheck-pro"
+              to={user?.role === "researcher" ? "/researcher" : "/morphocheck-pro"}
               sx={navButtonSx}
               startIcon={<AnalyticsIcon fontSize="small" />}
             >

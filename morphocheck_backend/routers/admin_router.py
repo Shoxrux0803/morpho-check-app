@@ -175,6 +175,10 @@ def create_user(
         if password:
             user_data["hashed_password"] = get_password_hash(password)
             
+    # Remove password_confirm before DB model creation
+    if "password_confirm" in user_data:
+        user_data.pop("password_confirm")
+            
     user = User(**user_data)
     db.add(user)
     db.commit()
@@ -322,9 +326,11 @@ def list_analyses(
     if age_max is not None:
         base = base.filter(PatientAnalysis.age <= age_max)
     if date_from:
-        base = base.filter(cast(PatientAnalysis.created_at, Date) >= date_from)
+        start_dt = datetime.combine(date_from, datetime.min.time())
+        base = base.filter(PatientAnalysis.created_at >= start_dt)
     if date_to:
-        base = base.filter(cast(PatientAnalysis.created_at, Date) <= date_to)
+        end_dt = datetime.combine(date_to, datetime.max.time())
+        base = base.filter(PatientAnalysis.created_at <= end_dt)
     if region:
         base = base.filter(PatientAnalysis.region == region)
 
@@ -661,8 +667,10 @@ def stats(
     # Base count of users (only for superadmin?)
     total_users = db.query(func.count(User.id)).scalar() or 0
     
-    # Filter analyses stats by ownership
-    analysis_q = db.query(PatientAnalysis)
+    # Filter analyses stats by ownership and exclusion of deleted records
+    analysis_q = db.query(PatientAnalysis).filter(
+        (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
+    )
     if current_user.role != "superadmin":
         analysis_q = analysis_q.filter(PatientAnalysis.created_by_id == current_user.id)
         
@@ -670,8 +678,8 @@ def stats(
     total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
     
     # Additional Stats
-    today = date.today()
-    today_analyses = analysis_q.filter(cast(PatientAnalysis.created_at, Date) == today).count()
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    today_analyses = analysis_q.filter(PatientAnalysis.created_at >= today_start).count()
     
     avg_bmi = analysis_q.with_entities(func.avg(PatientAnalysis.bmi)).scalar() or 0
     
@@ -759,8 +767,8 @@ def stats(
         monthly_avg = 0
 
     # Calculate monthly growth (current month analyses)
-    current_month_start = date.today().replace(day=1)
-    monthly_analyses = analysis_q.filter(cast(PatientAnalysis.created_at, Date) >= current_month_start).count()
+    current_month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
+    monthly_analyses = analysis_q.filter(PatientAnalysis.created_at >= current_month_start).count()
 
     return {
         "total_users": int(total_users),
@@ -810,9 +818,11 @@ def export_analyses_xlsx(
     if age_max is not None:
         base = base.filter(PatientAnalysis.age <= age_max)
     if date_from:
-        base = base.filter(cast(PatientAnalysis.created_at, Date) >= date_from)
+        start_dt = datetime.combine(date_from, datetime.min.time())
+        base = base.filter(PatientAnalysis.created_at >= start_dt)
     if date_to:
-        base = base.filter(cast(PatientAnalysis.created_at, Date) <= date_to)
+        end_dt = datetime.combine(date_to, datetime.max.time())
+        base = base.filter(PatientAnalysis.created_at <= end_dt)
     if region:
         base = base.filter(PatientAnalysis.region == region)
 

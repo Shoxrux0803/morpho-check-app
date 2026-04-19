@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import {
   Delete, Download, FilterList, Close, Dashboard as DashboardIcon, 
-  List as ListIcon, Lock, Person, Visibility, VisibilityOff
+  List as ListIcon, Lock, Person, Visibility, VisibilityOff, Assessment
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -25,6 +25,7 @@ import AdminDashboard from "../components/Dashboard/AdminDashboard";
 import AdminFilters from "../components/Admin/AdminFilters";
 import AdminTable from "../components/Admin/AdminTable";
 import InputForm from "../components/InputForm";
+import ResearcherDataView from "../components/Admin/ResearcherDataView";
 
 /** ===== Helpers ===== */
 const calcBMI = (wKg, hCm) => {
@@ -427,6 +428,13 @@ export default function AdminPage() {
             </Paper>
           </Box>
         )
+      },
+      { 
+        id: 2, 
+        label: "Izlanuvchi ma'lumotlari", 
+        icon: <Assessment />, 
+        roles: ["superadmin"],
+        content: <ResearcherDataView />
       },
     ];
     return allTabs.filter(tab => tab.roles.includes(user?.role));
