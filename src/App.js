@@ -25,6 +25,7 @@ const AdminPage = lazy(() => import("./pages/AdminPage"));
 const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
 const ResearcherPage = lazy(() => import("./pages/ResearcherPage"));
 const InfoDetail = lazy(() => import("./pages/InfoDetail"));
+const AuthorPage = lazy(() => import("./pages/AuthorPage"));
 
 // 404
 const NotFound = () => (
@@ -152,6 +153,14 @@ function AnimatedRoutes() {
           element={
             <PageTransition>
               <InfoDetail />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/author"
+          element={
+            <PageTransition>
+              <AuthorPage />
             </PageTransition>
           }
         />

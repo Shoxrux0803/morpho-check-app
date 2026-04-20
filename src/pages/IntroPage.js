@@ -14,6 +14,7 @@ import {
   Zap,
   BarChart3,
   Users,
+  GraduationCap,
 } from "lucide-react";
 import {
   Box,
@@ -188,6 +189,23 @@ export default function IntroPage() {
                         }}
                       >
                         {t("details")}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        onClick={() => navigate("/author")}
+                        startIcon={<GraduationCap size={18} />}
+                        sx={{
+                          ...styles.actionButton,
+                          borderColor: alpha("#8b5cf6", 0.35),
+                          color: "#8b5cf6",
+                          "&:hover": {
+                            borderColor: "#8b5cf6",
+                            bgcolor: alpha("#8b5cf6", 0.07),
+                            boxShadow: `0 0 20px ${alpha("#8b5cf6", 0.2)}`,
+                          },
+                        }}
+                      >
+                        Avtor haqida
                       </Button>
                     </Stack>
 
