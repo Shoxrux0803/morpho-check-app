@@ -20,8 +20,12 @@ const GlassPaper = ({ children, sx = {} }) => (
       borderRadius: 4,
       border: "1px solid",
       borderColor: (theme) =>
-        theme.palette.mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+        theme.palette.mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(100, 116, 139, 0.12)",
       overflow: "hidden",
+      boxShadow: (theme) => 
+        theme.palette.mode === "dark"
+          ? "0 8px 32px rgba(0,0,0,0.4)"
+          : "0 8px 32px rgba(100,116,139,0.08)",
       ...sx,
     }}
   >
@@ -122,7 +126,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch }) => {
 
         {/* Advanced Filters Panel */}
         <Collapse in={expanded}>
-          <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid rgba(0,0,0,0.05)" }}>
+          <Box sx={{ mt: 3, pt: 3, borderTop: (theme) => theme.palette.mode === 'dark' ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)" }}>
             <Grid container spacing={3}>
               {/* Demographics Group */}
               <Grid item xs={12} md={4}>
