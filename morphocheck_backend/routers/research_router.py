@@ -53,6 +53,13 @@ def get_current_researcher_or_superadmin(
     if user.role not in ["researcher", "superadmin"]:
         raise HTTPException(status_code=403, detail="Sizda ushbu amalni bajarish uchun ruxsat yo'q.")
     
+    # Update activity
+    user.last_active_at = datetime.utcnow()
+    try:
+        db.commit()
+    except:
+        db.rollback()
+
     return user
 
 
@@ -191,6 +198,10 @@ def create_research_record(
     record = ResearchRecord(**payload.model_dump(exclude_unset=True))
     record.created_by_id = current_user.id
     db.add(record)
+    
+    # Update user stats
+    current_user.completed_entries_count = (current_user.completed_entries_count or 0) + 1
+    
     db.commit()
     db.refresh(record)
     return record

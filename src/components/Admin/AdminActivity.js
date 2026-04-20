@@ -14,6 +14,8 @@ import {
   Tooltip,
   Paper,
   useTheme,
+  Button,
+  ButtonGroup,
 } from "@mui/material";
 import {
   Refresh,
@@ -22,6 +24,8 @@ import {
   QueryBuilder,
   LocationOn,
   AccountCircle,
+  Science,
+  SupervisorAccount,
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -37,8 +41,8 @@ const StatusBadge = ({ status, isTyping }) => {
     <Box display="flex" alignItems="center" gap={1}>
       <Box
         sx={{
-          width: 10,
-          height: 10,
+          width: 8,
+          height: 8,
           borderRadius: "50%",
           bgcolor: colors[status] || colors.offline,
           boxShadow: status === "online" ? `0 0 10px ${colors.online}` : "none",
@@ -47,14 +51,16 @@ const StatusBadge = ({ status, isTyping }) => {
         animate={status === "online" ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : {}}
         transition={{ repeat: Infinity, duration: 2 }}
       />
-      <Typography variant="caption" sx={{ textTransform: "capitalize", fontWeight: "bold", color: colors[status] }}>
-        {status} {isTyping && "• Ma'lumot kiritmoqda..."}
+      <Typography variant="caption" sx={{ textTransform: "capitalize", fontWeight: "bold", fontSize: '0.7rem', color: colors[status] }}>
+        {status} {isTyping && "• kiritmoqda..."}
       </Typography>
     </Box>
   );
 };
 
 const ActivityCard = ({ admin, isDark }) => {
+  const isResearcher = admin.role === "researcher";
+
   return (
     <motion.div
       layout
@@ -85,24 +91,35 @@ const ActivityCard = ({ admin, isDark }) => {
                 sx={{
                   width: 56,
                   height: 56,
-                  bgcolor: "primary.main",
-                  boxShadow: "0 4px 12px rgba(0,123,255,0.3)",
+                  bgcolor: isResearcher ? "secondary.main" : "primary.main",
+                  boxShadow: isResearcher 
+                    ? "0 4px 12px rgba(156,39,176,0.3)" 
+                    : "0 4px 12px rgba(0,123,255,0.3)",
                 }}
               >
-                {admin.name?.[0].toUpperCase() || "A"}
+                {isResearcher ? <Science /> : admin.name?.[0].toUpperCase() || "A"}
               </Avatar>
               <Box>
-                <Typography variant="h6" fontWeight="800">
+                <Typography variant="h6" fontWeight="800" sx={{ lineHeight: 1.2, mb: 0.5 }}>
                   {admin.name}
                 </Typography>
-                <StatusBadge status={admin.status} isTyping={admin.is_typing} />
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Chip 
+                    label={isResearcher ? "Izlanuvchi" : "Admin"} 
+                    size="small" 
+                    variant="outlined" 
+                    color={isResearcher ? "secondary" : "primary"}
+                    sx={{ height: 18, fontSize: '0.6rem', borderRadius: 1, fontWeight: 'bold' }}
+                  />
+                  <StatusBadge status={admin.status} isTyping={admin.is_typing} />
+                </Stack>
               </Box>
             </Box>
             <Chip
-              icon={<LocationOn sx={{ fontSize: "1rem !important" }} />}
-              label={admin.region || "Noma'lum hudud"}
+              icon={<LocationOn sx={{ fontSize: "0.9rem !important" }} />}
+              label={admin.region || "Global"}
               size="small"
-              sx={{ borderRadius: 2, fontWeight: "bold" }}
+              sx={{ borderRadius: 2, fontWeight: "bold", fontSize: '0.7rem' }}
             />
           </Box>
 
@@ -166,6 +183,7 @@ export default function AdminActivity() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [roleFilter, setRoleFilter] = useState("all");
   
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -186,37 +204,68 @@ export default function AdminActivity() {
 
   useEffect(() => {
     fetchActivity();
-    // Auto-refresh: 30 sekund
     const timer = setInterval(() => fetchActivity(true), 30000);
     return () => clearInterval(timer);
   }, [fetchActivity]);
+
+  const filteredData = data.filter(a => {
+    if (roleFilter === "all") return true;
+    return a.role === roleFilter;
+  });
 
   const onlineCount = data.filter(a => a.status === 'online').length;
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box display="flex" flexDirection={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} mb={4} gap={2}>
         <Box>
-          <Typography variant="h4" fontWeight="900" color="primary.main">
-            Admin Aktivligi
+          <Typography variant="h4" fontWeight="900" color="primary.main" gutterBottom>
+            Monitoring Markazi
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Hozirda {onlineCount} ta admin online • Oxirgi yangilanish: {lastUpdated.toLocaleTimeString()}
+            Hozirda {onlineCount} ta foydalanuvchi online • Oxirgi yangilanish: {lastUpdated.toLocaleTimeString()}
           </Typography>
         </Box>
-        <Tooltip title="Yangilash">
-            <IconButton 
-                onClick={() => fetchActivity()} 
-                disabled={loading}
-                sx={{ 
-                    bgcolor: 'background.paper', 
-                    boxShadow: 2,
-                    '&:hover': { bgcolor: 'primary.main', color: 'white' }
-                }}
+        
+        <Stack direction="row" spacing={2} alignItems="center" width={{ xs: "100%", md: "auto" }}>
+          <ButtonGroup size="small" variant="outlined" sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
+            <Button 
+                onClick={() => setRoleFilter("all")} 
+                variant={roleFilter === "all" ? "contained" : "outlined"}
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
             >
-                <Refresh sx={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
-            </IconButton>
-        </Tooltip>
+                Barchasi
+            </Button>
+            <Button 
+                onClick={() => setRoleFilter("admin")} 
+                variant={roleFilter === "admin" ? "contained" : "outlined"}
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            >
+                Adminlar
+            </Button>
+            <Button 
+                onClick={() => setRoleFilter("researcher")} 
+                variant={roleFilter === "researcher" ? "contained" : "outlined"}
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            >
+                Izlanuvchilar
+            </Button>
+          </ButtonGroup>
+
+          <Tooltip title="Yangilash">
+              <IconButton 
+                  onClick={() => fetchActivity()} 
+                  disabled={loading}
+                  sx={{ 
+                      bgcolor: 'background.paper', 
+                      boxShadow: 1,
+                      '&:hover': { bgcolor: 'primary.main', color: 'white' }
+                  }}
+              >
+                  <Refresh sx={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+              </IconButton>
+          </Tooltip>
+        </Stack>
       </Box>
 
       {loading && data.length === 0 ? (
@@ -227,16 +276,19 @@ export default function AdminActivity() {
       ) : (
         <AnimatePresence mode="popLayout">
           <Grid container spacing={3}>
-            {data.map((admin) => (
+            {filteredData.map((admin) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={admin.id}>
                 <ActivityCard admin={admin} isDark={isDark} />
               </Grid>
             ))}
-            {data.length === 0 && (
+            {filteredData.length === 0 && (
               <Grid item xs={12}>
                 <Paper sx={{ p: 10, textAlign: "center", borderRadius: 4, bgcolor: "transparent", border: "1px dashed", borderColor: "divider" }}>
                    <AccountCircle sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-                   <Typography color="text.secondary">Adminlar topilmadi</Typography>
+                   <Typography color="text.secondary">
+                     {roleFilter === "all" ? "Foydalanuvchilar topilmadi" : 
+                      roleFilter === "admin" ? "Adminlar topilmadi" : "Izlanuvchilar topilmadi"}
+                   </Typography>
                 </Paper>
               </Grid>
             )}

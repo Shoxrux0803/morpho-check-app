@@ -22,8 +22,8 @@ from docx.enum.table import WD_ALIGN_VERTICAL
 from utils.database import get_db
 from models.user import User
 from models.payment import Payment 
-from models.userdata import PatientAnalysis
-from routers.auth_router import get_current_admin, get_current_superadmin
+from models.userdata import PatientAnalysis, ResearchRecord
+from routers.auth_router import get_current_user, get_current_admin, get_current_superadmin
 from models.schemas import (
     UserCreate, UserUpdate, UserOut,
     PaymentCreate, PaymentOut
@@ -1479,7 +1479,7 @@ def list_audit_logs(
 @router.post("/activity/ping-form-start")
 def ping_form_start(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_user)
 ):
     """Admin forma ochganini belgilash (vaqtni hisoblash uchun)."""
     current_user.last_form_open_at = datetime.utcnow()
@@ -1491,57 +1491,62 @@ def get_admin_activity(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_superadmin)
 ):
-    """Faqat Super Admin uchun: barcha adminlar faolligini ko'rish."""
-    # Superadminlar o'zini o'zi ko'rmasligi uchun faqat 'admin' role degilarni olamiz
-    admins = db.query(User).filter(User.role == "admin").all()
+    """Faqat Super Admin uchun: barcha adminlar va izlanuvchilar faolligini ko'rish."""
+    # Adminlar va Researcherlarni olamiz
+    users = db.query(User).filter(User.role.in_(["admin", "researcher"])).all()
     
     now = datetime.utcnow()
     today_start = datetime.combine(date.today(), datetime.min.time())
     month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
     
     result = []
-    for admin in admins:
+    for u in users:
         # Status calculation
         status = "offline"
         is_typing = False
         
-        if admin.last_active_at:
-            diff = (now - admin.last_active_at).total_seconds()
+        if u.last_active_at:
+            diff = (now - u.last_active_at).total_seconds()
             if diff < 60: # 1 minut
                 status = "online"
                 # Agar oxirgi faollik juda yaqin bo'lsa va forma ochiq bo'lsa
-                if admin.last_form_open_at:
+                if u.last_form_open_at:
                    is_typing = True
             elif diff < 300: # 5 minut
                 status = "online"
             elif diff < 900: # 15 minut
                 status = "away"
         
-        # Stats
-        stats_today = db.query(func.count(PatientAnalysis.id)).filter(
-            PatientAnalysis.created_by_id == admin.id,
-            PatientAnalysis.created_at >= today_start
+        # Stats based on role
+        if u.role == "researcher":
+            model_class = ResearchRecord
+        else:
+            model_class = PatientAnalysis
+
+        stats_today = db.query(func.count(model_class.id)).filter(
+            model_class.created_by_id == u.id,
+            model_class.created_at >= today_start
         ).scalar() or 0
         
-        stats_month = db.query(func.count(PatientAnalysis.id)).filter(
-            PatientAnalysis.created_by_id == admin.id,
-            PatientAnalysis.created_at >= month_start
+        stats_month = db.query(func.count(model_class.id)).filter(
+            model_class.created_by_id == u.id,
+            model_class.created_at >= month_start
         ).scalar() or 0
         
         # Avg time
         avg_time = 0
-        if admin.completed_entries_count and admin.completed_entries_count > 0:
-            avg_time = round(admin.total_entry_time_seconds / admin.completed_entries_count, 1)
+        if u.completed_entries_count and u.completed_entries_count > 0:
+            avg_time = round(u.total_entry_time_seconds / u.completed_entries_count, 1)
             
         # Most active hour
         most_active_hour = None
         try:
             # SQLite uchun strftime ishlatamiz
             hour_query = db.query(
-                func.strftime('%H', PatientAnalysis.created_at).label("hour"),
-                func.count(PatientAnalysis.id).label("count")
+                func.strftime('%H', model_class.created_at).label("hour"),
+                func.count(model_class.id).label("count")
             ).filter(
-                PatientAnalysis.created_by_id == admin.id
+                model_class.created_by_id == u.id
             ).group_by("hour").order_by(desc("count")).first()
             
             if hour_query:
@@ -1550,18 +1555,19 @@ def get_admin_activity(
             pass
 
         result.append({
-            "id": admin.id,
-            "name": admin.name,
-            "email": admin.email,
-            "region": admin.region,
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.role,
+            "region": u.region,
             "status": status,
             "is_typing": is_typing,
-            "last_active_at": admin.last_active_at,
+            "last_active_at": u.last_active_at,
             "stats_today": stats_today,
             "stats_month": stats_month,
             "avg_entry_time": avg_time,
             "most_active_hour": most_active_hour,
-            "total_entries": admin.completed_entries_count or 0
+            "total_entries": u.completed_entries_count or 0
         })
         
     return {"items": result}
