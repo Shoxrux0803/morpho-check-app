@@ -356,10 +356,29 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
           {[
             ["F.I.SH", "full_name", "text"], ["Maktab / Bog'cha", "school_name", "text"],
             ["Aholi punkti", "settlement", "text"], ["Tug'ilgan joyi", "birth_place", "text"],
-            ["Tug'ilgan sana", "birth_date", "date"], ["Jinsi (Пол)", "gender", "select", [
-              { value: "Boy", label: "O'g'il (Мальчик)" },
-              { value: "Girl", label: "Qiz (Девочка)" }
-            ]], ["Ota millati", "father_nationality", "text"],
+          ["Tug'ilgan sana", "birth_date", "date"], ["Jinsi (Пол)", "gender", "select", (() => {
+            const calculateAge = (birthDate, examDate) => {
+              if (!birthDate) return null;
+              const bDate = new Date(birthDate);
+              const eDate = examDate ? new Date(examDate) : new Date();
+              let age = eDate.getFullYear() - bDate.getFullYear();
+              const m = eDate.getMonth() - bDate.getMonth();
+              if (m < 0 || (m === 0 && eDate.getDate() < bDate.getDate())) {
+                age--;
+              }
+              return age;
+            };
+            const age = calculateAge(form.birth_date, form.examination_date);
+            return age !== null && age >= 18 
+              ? [
+                  { value: "erkak", label: "Erkak (Мужчина)" },
+                  { value: "ayol", label: "Ayol (Женщина)" }
+                ]
+              : [
+                  { value: "Boy", label: "O'g'il bola (Мальчик)" },
+                  { value: "Girl", label: "Qiz bola (Девочка)" }
+                ];
+          })()], ["Ota millati", "father_nationality", "text"],
             ["Ona millati", "mother_nationality", "text"], ["Yashashni boshlagan", "living_since", "text"],
             ["Muassasaga qabul", "enrolled_date", "text"], ["Maishiy sharoit", "living_conditions", "text"],
             ["Mehnat rejimi", "labor_regime", "text"], ["O'tkir kasalliklar", "past_illnesses", "text"],

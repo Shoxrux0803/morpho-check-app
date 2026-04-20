@@ -318,8 +318,8 @@ export default function InputForm({
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <MCSelect select fullWidth label={t("genderLabel")} name="gender" value={formData.gender} onChange={handleInputChange} InputProps={adorn(<WcIcon />)} sx={inputSx}>
-                      <MenuItem value="erkak">{t("male")}</MenuItem>
-                      <MenuItem value="ayol">{t("female")}</MenuItem>
+                      <MenuItem value="erkak">{Number(formData.age) >= 18 ? t("male") : t("boy")}</MenuItem>
+                      <MenuItem value="ayol">{Number(formData.age) >= 18 ? t("female") : t("girl")}</MenuItem>
                     </MCSelect>
                   </Grid>
                 </Grid>
