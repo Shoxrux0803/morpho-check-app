@@ -3,7 +3,7 @@ import {
   Box, Container, Typography, Paper, Tabs, Tab, TextField, Button, Avatar, Stack,
   CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   IconButton, Tooltip, Dialog, DialogTitle, DialogContent, DialogActions, Divider,
-  Chip, InputAdornment, Grid, Alert, Collapse, Stepper, Step, StepLabel, MenuItem
+  Chip, InputAdornment, Grid, Alert, Collapse, Stepper, Step, StepLabel, MenuItem, useTheme
 } from "@mui/material";
 import {
   Description, Download, Add, Dashboard, Logout, Edit, Delete, DeleteForever,
@@ -29,8 +29,12 @@ const GlassPaper = ({ children, sx = {} }) => (
       borderRadius: 4,
       border: "1px solid",
       borderColor: (theme) =>
-        theme.palette.mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+        theme.palette.mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(100, 116, 139, 0.12)",
       overflow: "hidden",
+      boxShadow: (theme) => 
+        theme.palette.mode === "dark"
+          ? "0 8px 32px rgba(0,0,0,0.4)"
+          : "0 8px 32px rgba(100,116,139,0.08)",
       ...sx,
     }}
   >
@@ -87,7 +91,22 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
   );
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper">
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth 
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          background: (theme) => theme.palette.mode === 'dark' ? "rgba(23, 26, 33, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(20px)",
+          border: (theme) => theme.palette.mode === 'dark' ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(100,116,139,0.15)",
+          boxShadow: (theme) => theme.palette.mode === 'dark' ? "0 24px 48px rgba(0,0,0,0.5)" : "0 24px 48px rgba(100,116,139,0.15)",
+        }
+      }}
+    >
       <DialogTitle sx={{ pb: 1 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Box>
@@ -300,7 +319,22 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
   );
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper">
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="md" 
+      fullWidth 
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          borderRadius: 4,
+          background: (theme) => theme.palette.mode === 'dark' ? "rgba(23, 26, 33, 0.95)" : "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(20px)",
+          border: (theme) => theme.palette.mode === 'dark' ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(100,116,139,0.15)",
+          boxShadow: (theme) => theme.palette.mode === 'dark' ? "0 24px 48px rgba(0,0,0,0.5)" : "0 24px 48px rgba(100,116,139,0.15)",
+        }
+      }}
+    >
       <DialogTitle sx={{ fontWeight: 800 }}>
         Yozuvni tahrirlash
         <IconButton onClick={onClose} sx={{ position: "absolute", right: 12, top: 12 }}><Close /></IconButton>
@@ -434,7 +468,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
 const RecordsTable = ({ rows, loading, onView, onEdit, onDelete, isSuperAdmin, showDeleted = false }) => (
   <TableContainer component={GlassPaper}>
     <Table size="small">
-      <TableHead sx={{ background: "rgba(0,123,255,0.06)" }}>
+      <TableHead sx={{ background: (theme) => theme.palette.mode === 'dark' ? "rgba(255,255,255,0.03)" : "rgba(0,123,255,0.05)" }}>
         <TableRow>
           <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
           <TableCell sx={{ fontWeight: 700 }}>F.I.SH</TableCell>
@@ -874,6 +908,8 @@ const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
    MAIN PAGE
 ════════════════════════════════════════════════════ */
 const ResearcherPage = () => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
   const { user, logout } = useAuth();
   const isSuperAdmin = user?.role === "superadmin";
 
@@ -993,8 +1029,8 @@ const ResearcherPage = () => {
         ...(isSuperAdmin ? [{ label: "O'chirilganlar", value: deletedData.length, color: "#f44336", icon: <DeleteForever /> }] : []),
       ].map(({ label, value, color, icon }) => (
         <Grid item xs={12} sm={isSuperAdmin ? 4 : 6} key={label}>
-          <GlassPaper sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
-            <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: `${color}15`, color }}>{icon}</Box>
+          <GlassPaper sx={{ p: 2, display: "flex", alignItems: "center", gap: 2, border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}>
+            <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: isDark ? `${color}15` : `${color}08`, color }}>{icon}</Box>
             <Box>
               <Typography variant="h5" fontWeight={900} sx={{ color }}>{value}</Typography>
               <Typography variant="caption" color="text.secondary">{label}</Typography>
@@ -1006,7 +1042,8 @@ const ResearcherPage = () => {
   );
 
   return (
-    <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
+      <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
       {/* ── Page Header ── */}
       <GlassPaper sx={{ p: { xs: 2, md: 3 }, mb: 4, position: "sticky", top: 12, zIndex: 10 }}>
         <Grid container alignItems="center" spacing={2}>
@@ -1200,6 +1237,7 @@ const ResearcherPage = () => {
         onSaved={() => fetchData()}
       />
     </Container>
+  </Box>
   );
 };
 
