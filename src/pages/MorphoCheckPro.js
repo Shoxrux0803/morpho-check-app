@@ -11,9 +11,10 @@ import { useOfflineSync } from "../providers/OfflineSyncProvider";
 import { toast } from "react-hot-toast";
 
 export default function MorphoCheckPro() {
-  const { t, lang } = useLanguage();
-  const { addToQueue, isOnline } = useOfflineSync();
+  const { lang, t } = useLanguage();
+  const { addToQueue, isOnline, editingItem, setEditingItem, updateQueueItem, removeFromQueue } = useOfflineSync();
   const [formData, setFormData] = useState({
+
     firstName: "",
     lastName: "",
     region: "",
@@ -63,6 +64,20 @@ export default function MorphoCheckPro() {
       AdminApi.activity.pingFormStart().catch(() => {});
     }
   }, [user]);
+
+  // Load editing item into form
+  useEffect(() => {
+    if (editingItem) {
+      setFormData(prev => ({
+        ...prev,
+        ...editingItem.payload
+      }));
+      toast.success(t("fixingOfflineRecord") || "Fixing offline record...", { icon: "🔧" });
+      setError("");
+      setActiveTab("form");
+    }
+  }, [editingItem, t]);
+
 
   useEffect(() => {
     if (formData.birthDate) {
@@ -160,14 +175,26 @@ export default function MorphoCheckPro() {
       };
 
       if (!navigator.onLine) {
-        await addToQueue(payload, lang);
-        setFormData({ ...formData, firstName: "", lastName: "" }); // Clear common fields or keep them?
+        if (editingItem) {
+          await updateQueueItem(editingItem.id, payload);
+          setEditingItem(null);
+        } else {
+          await addToQueue(payload, lang);
+        }
+        setFormData({ ...formData, firstName: "", lastName: "" });
         setActiveTab("form");
         return;
       }
 
+      // If online but we were fixing an item, try to send and then remove from queue
       const raw = await postAnalysis(payload, lang);
-      // 🔴 Muhimi: Normalizatsiya QILMAYMIZ. Backend qanday yuborsa shunday saqlaymiz:
+      
+      if (editingItem) {
+        await removeFromQueue(editingItem.id);
+        setEditingItem(null);
+        toast.success("Corrected and synced!");
+      }
+      
       setResults(raw);
       setActiveTab("results");
     } catch (err) {
@@ -176,6 +203,7 @@ export default function MorphoCheckPro() {
       setLoading(false);
     }
   };
+
 
   const generatePDF = async (pdfLang) => {
     const selectedLang = pdfLang || lang;

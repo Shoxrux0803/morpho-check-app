@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Link as RouterLink, NavLink } from "react-router-dom";
+import { Link as RouterLink, NavLink, useNavigate } from "react-router-dom";
+
 import {
   AppBar,
   Toolbar,
@@ -23,20 +24,32 @@ import HomeIcon from "@mui/icons-material/Home";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import TranslateIcon from "@mui/icons-material/Translate";
 import LogoutIcon from "@mui/icons-material/Logout";
+import SyncIcon from "@mui/icons-material/Sync";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
+import Badge from "@mui/material/Badge";
+
 import { useThemeMode } from "../providers/ThemeProviderMUI";
 import { THEME_VARIANTS } from "../theme/muiTheme";
 import logo from "../assets/morphocheck-logo.png";
 import { useLanguage, LANGUAGES } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useOfflineSync } from "../providers/OfflineSyncProvider";
 import WeatherClock from "./WeatherClock";
+import SyncManager from "./SyncManager";
+
 
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
   const { user, logout } = useAuth();
+  const { pendingCount, isOnline, setEditingItem } = useOfflineSync();
+  const navigate = useNavigate();
+  
   const [anchorEl, setAnchorEl] = useState(null);
   const [langAnchorEl, setLangAnchorEl] = useState(null);
   const [langChanging, setLangChanging] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
+
 
   const handleLangChange = (code) => {
     if (code === lang) { setLangAnchorEl(null); return; }
@@ -407,7 +420,35 @@ export default function Header() {
             </IconButton>
           </Tooltip>
         </Stack>
+        
+        {/* Sync Manager & Toggle */}
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 1 }}>
+          {!isOnline && (
+            <Tooltip title="Oflayn rejim">
+              <CloudOffIcon color="error" fontSize="small" />
+            </Tooltip>
+          )}
+          
+          <Tooltip title={t("syncQueue") || "Oflayn navbat"}>
+            <IconButton color="inherit" onClick={() => setSyncOpen(true)}>
+              <Badge badgeContent={pendingCount} color="error" sx={{ "& .MuiBadge-badge": { fontSize: 10, height: 16, minWidth: 16 } }}>
+                <SyncIcon className={pendingCount > 0 ? "animate-pulse" : ""} />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
+        <SyncManager 
+          open={syncOpen} 
+          onClose={() => setSyncOpen(false)} 
+          onEditItem={(item) => {
+            setEditingItem(item);
+            setSyncOpen(false);
+            navigate("/morphocheck-pro");
+          }}
+        />
       </Toolbar>
     </AppBar>
+
   );
 }

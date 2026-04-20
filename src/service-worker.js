@@ -74,3 +74,60 @@ self.addEventListener('message', (event) => {
 });
 
 // Any other custom service worker logic can go here.
+import { get, set } from 'idb-keyval';
+
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-records') {
+    event.waitUntil(syncPendingRecords());
+  }
+});
+
+async function syncPendingRecords() {
+  const queue = await get('pending_measurements');
+  const token = await get('auth_token');
+
+  if (!queue || queue.length === 0 || !token) return;
+
+  const updatedQueue = [...queue];
+  let changed = false;
+
+  for (let i = 0; i < updatedQueue.length; i++) {
+    const item = updatedQueue[i];
+    if (item.status === 'syncing') continue; // Avoid double sync if tab is also syncing
+
+    try {
+      const response = await fetch('/api/analyze/full?lang=' + (item.lang || 'uz'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(item.payload)
+      });
+
+      if (response.ok) {
+        updatedQueue.splice(i, 1);
+        i--;
+        changed = true;
+      } else {
+        // Log error but keep in queue
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        item.status = 'failed';
+        item.lastError = errorData.detail || errorData.message || 'Server error';
+        item.attempts = (item.attempts || 0) + 1;
+        changed = true;
+      }
+    } catch (err) {
+      console.error('Background sync failed for item:', item.id, err);
+      // Network error, will retry later by browser
+    }
+  }
+
+  if (changed) {
+    await set('pending_measurements', updatedQueue);
+    // Notify clients if any are open
+    const clients = await self.clients.matchAll();
+    clients.forEach(client => client.postMessage({ type: 'SYNC_UPDATED' }));
+  }
+}
+

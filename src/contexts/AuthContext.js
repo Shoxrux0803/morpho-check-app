@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../services/api";
+import { set, del } from "idb-keyval";
+
 
 const AuthContext = createContext(null);
 
@@ -10,19 +12,23 @@ export const AuthProvider = ({ children }) => {
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user_role");
+    del("auth_token").catch(console.error);
     setUser(null);
   }, []);
+
 
   const login = async (credentials) => {
     try {
       const data = await api.login(credentials);
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
+        await set("auth_token", data.access_token);
         // User profile fetch qilish orqali rolni aniqlaymiz
         const profile = await api.getUserProfile();
         localStorage.setItem("user_role", profile.role);
         setUser(profile);
         return profile;
+
       }
       throw new Error("Token topilmadi. Backend javobi noto'g'ri formatda.");
     } catch (err) {
