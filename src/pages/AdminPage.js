@@ -71,9 +71,13 @@ const GlassPaper = ({ children, sx = {} }) => (
       border: "1px solid",
       borderColor: (theme) =>
         theme.palette.mode === "dark"
-          ? "rgba(255, 255, 255, 0.08)"
-          : "rgba(0, 0, 0, 0.05)",
+          ? "rgba(255, 255, 255, 0.12)"
+          : "rgba(100, 116, 139, 0.12)",
       overflow: "hidden",
+      boxShadow: (theme) => 
+        theme.palette.mode === "dark"
+          ? "0 8px 32px rgba(0,0,0,0.4)"
+          : "0 8px 32px rgba(100,116,139,0.1)",
       ...sx,
     }}
   >
@@ -568,7 +572,7 @@ export default function AdminPage() {
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
-      <AppBar position="sticky" elevation={0} sx={{ bgcolor: isDark ? "rgba(23, 26, 33, 0.8)" : "rgba(255, 255, 255, 0.8)", backdropFilter: 'blur(10px)', color: "text.primary", borderBottom: "1px solid", borderColor: "divider" }}>
+      <AppBar position="sticky" elevation={0} sx={{ bgcolor: isDark ? "rgba(23, 26, 33, 0.85)" : "rgba(255, 255, 255, 0.9)", backdropFilter: 'blur(20px)', color: "text.primary", borderBottom: "1px solid", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }}>
         <Container maxWidth="xl">
             <Toolbar disableGutters>
                 <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, color: 'primary.main' }}>MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box></Typography>

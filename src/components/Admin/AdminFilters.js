@@ -46,11 +46,11 @@ const AdminFilters = ({
           : 'rgba(255, 255, 255, 0.7)',
         backdropFilter: 'blur(10px)',
         border: isDark 
-          ? '1px solid rgba(255, 255, 255, 0.08)' 
-          : '1px solid rgba(255, 255, 255, 0.3)',
+          ? '1px solid rgba(255, 255, 255, 0.12)' 
+          : '1px solid rgba(100, 116, 139, 0.12)',
         boxShadow: isDark 
-          ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' 
-          : '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+          ? '0 8px 32px 0 rgba(0, 0, 0, 0.4)' 
+          : '0 8px 32px 0 rgba(100, 116, 139, 0.08)',
       }}
     >
       <CardContent>

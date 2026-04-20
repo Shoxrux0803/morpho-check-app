@@ -104,8 +104,10 @@ const BMIDistribution = ({ data, loading }) => {
         PaperProps={{ 
             sx: { 
                 borderRadius: 4,
-                background: theme.palette.mode === 'dark' ? "rgba(23, 26, 33, 0.9)" : "rgba(255, 255, 255, 0.9)",
+                background: theme.palette.mode === 'dark' ? "rgba(23, 26, 33, 0.95)" : "rgba(255, 255, 255, 0.95)",
                 backdropFilter: "blur(20px)",
+                border: theme.palette.mode === 'dark' ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(100,116,139,0.15)",
+                boxShadow: theme.palette.mode === 'dark' ? "0 24px 48px rgba(0,0,0,0.5)" : "0 24px 48px rgba(100,116,139,0.15)",
             } 
         }}
       >

@@ -4,7 +4,7 @@ import {
   IconButton, Tooltip, InputAdornment, Alert, CircularProgress, Table, 
   TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, 
   DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, Divider,
-  Chip, Collapse, Grid
+  Chip, Collapse, Grid, useTheme
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -628,135 +628,139 @@ const SuperAdminPage = () => {
     <ResearcherDataView isSuperAdmin={true} />
   );
 
+  const isDark = useTheme().palette.mode === 'dark';
+
   return (
-    <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 } }}>
-      <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="flex-start">
-        {/* Sidebar Tabs */}
-        <Box sx={{ width: { xs: "100%", md: 300 }, position: { md: "sticky" }, top: 24 }}>
-          <GlassPaper sx={{ p: 2 }}>
-            <Box p={2} mb={2} textAlign="center">
-              <Avatar sx={{ width: 64, height: 64, margin: "0 auto 16px", bgcolor: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>SA</Avatar>
-              <Typography variant="h6" fontWeight={700}>{user.name}</Typography>
-              <Typography variant="caption" color="text.secondary">Super Administrator</Typography>
-            </Box>
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
+      <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 } }}>
+        <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="flex-start">
+          {/* Sidebar Tabs */}
+          <Box sx={{ width: { xs: "100%", md: 300 }, position: { md: "sticky" }, top: 24 }}>
+            <GlassPaper sx={{ p: 2, border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(100,116,139,0.12)', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(100,116,139,0.08)' }}>
+              <Box p={2} mb={2} textAlign="center">
+                <Avatar sx={{ width: 64, height: 64, margin: "0 auto 16px", bgcolor: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>SA</Avatar>
+                <Typography variant="h6" fontWeight={700}>{user.name}</Typography>
+                <Typography variant="caption" color="text.secondary">Super Administrator</Typography>
+              </Box>
 
-            <Tabs
-              orientation="vertical"
-              value={activeTab}
-              onChange={(e, v) => setActiveTab(v)}
-              sx={{
-                "& .MuiTabs-indicator": { display: "none" },
-                "& .MuiTab-root": {
-                  borderRadius: 2, mb: 0.5, alignItems: "flex-start", textAlign: "left",
-                  minHeight: 44, textTransform: "none", fontWeight: 600, fontSize: "0.85rem",
-                  transition: "all 0.2s", color: "text.secondary",
-                  "&.Mui-selected": { bgcolor: "rgba(0, 123, 255, 0.1)", color: "primary.main" },
-                  "&:hover": { bgcolor: "rgba(0, 0, 0, 0.04)" },
-                },
-              }}
-            >
-              <Tab icon={<Dashboard sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Dashboard" />
-              <Tab icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Ilmiy Tahlil" />
-              <Tab icon={<People sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Adminlar" />
-              <Tab icon={<RestoreFromTrash sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="O'chirilganlar" />
-              <Tab icon={<Security sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Xavfsizlik" />
-              <Tab icon={<History sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Audit Jurnali" />
-              <Tab icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Backup" />
-              <Tab icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Klinik CMS" />
-              <Tab icon={<Assignment sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Monitoring" />
-              <Tab
-                icon={<Science sx={{ mr: 1.5, fontSize: 20 }} />}
-                iconPosition="start"
-                label="Izlanuvchilar"
-                sx={{ mt: 1, borderTop: "1px solid rgba(0,0,0,0.06)" }}
+              <Tabs
+                orientation="vertical"
+                value={activeTab}
+                onChange={(e, v) => setActiveTab(v)}
+                sx={{
+                  "& .MuiTabs-indicator": { display: "none" },
+                  "& .MuiTab-root": {
+                    borderRadius: 2, mb: 0.5, alignItems: "flex-start", textAlign: "left",
+                    minHeight: 44, textTransform: "none", fontWeight: 600, fontSize: "0.85rem",
+                    transition: "all 0.2s", color: "text.secondary",
+                    "&.Mui-selected": { bgcolor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 123, 255, 0.08)", color: "primary.main" },
+                    "&:hover": { bgcolor: isDark ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.04)" },
+                  },
+                }}
+              >
+                <Tab icon={<Dashboard sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Dashboard" />
+                <Tab icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Ilmiy Tahlil" />
+                <Tab icon={<People sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Adminlar" />
+                <Tab icon={<RestoreFromTrash sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="O'chirilganlar" />
+                <Tab icon={<Security sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Xavfsizlik" />
+                <Tab icon={<History sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Audit Jurnali" />
+                <Tab icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Backup" />
+                <Tab icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Klinik CMS" />
+                <Tab icon={<Assignment sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Monitoring" />
+                <Tab
+                  icon={<Science sx={{ mr: 1.5, fontSize: 20 }} />}
+                  iconPosition="start"
+                  label="Izlanuvchilar"
+                  sx={{ mt: 1, borderTop: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)" }}
+                />
+              </Tabs>
+
+              <Box mt={2} pt={2} borderTop={isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)"}>
+                <Button fullWidth color="error" startIcon={<Logout />} onClick={logout} sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}>Chiqish</Button>
+              </Box>
+            </GlassPaper>
+          </Box>
+
+          {/* Main Content Area */}
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+              >
+                {renderTabContent()}
+              </motion.div>
+            </AnimatePresence>
+          </Box>
+        </Stack>
+
+        <Dialog open={adminDialogOpen} onClose={() => setAdminDialogOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle sx={{ fontWeight: 800 }}>{currentAdmin ? "Adminni tahrirlash" : "Yangi Admin qo'shish"}</DialogTitle>
+          <DialogContent>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <TextField label="F.I.SH" fullWidth value={adminForm.name} onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })} />
+              <TextField label="Email" fullWidth value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
+              
+              <TextField 
+                label={currentAdmin ? "Yangi parol (ixtiyoriy)" : "Parol"} 
+                type={showAdminPassword ? "text" : "password"} 
+                fullWidth 
+                value={adminForm.password} 
+                onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowAdminPassword(!showAdminPassword)} edge="end">
+                        {showAdminPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
-            </Tabs>
 
-            <Box mt={2} pt={2} borderTop="1px solid rgba(0,0,0,0.05)">
-              <Button fullWidth color="error" startIcon={<Logout />} onClick={logout} sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}>Chiqish</Button>
-            </Box>
-          </GlassPaper>
-        </Box>
+              <TextField 
+                label="Parolni tasdiqlash" 
+                type={showAdminPassword ? "text" : "password"} 
+                fullWidth 
+                value={adminForm.confirmPassword} 
+                onChange={(e) => setAdminForm({ ...adminForm, confirmPassword: e.target.value })}
+                error={adminForm.password !== adminForm.confirmPassword && adminForm.confirmPassword !== ""}
+                helperText={adminForm.password !== adminForm.confirmPassword && adminForm.confirmPassword !== "" ? "Parollar mos kelmadi" : ""}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={() => setShowAdminPassword(!showAdminPassword)} edge="end">
+                        {showAdminPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-        {/* Main Content Area */}
-        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {renderTabContent()}
-            </motion.div>
-          </AnimatePresence>
-        </Box>
-      </Stack>
-
-      <Dialog open={adminDialogOpen} onClose={() => setAdminDialogOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>{currentAdmin ? "Adminni tahrirlash" : "Yangi Admin qo'shish"}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label="F.I.SH" fullWidth value={adminForm.name} onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })} />
-            <TextField label="Email" fullWidth value={adminForm.email} onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })} />
-            
-            <TextField 
-              label={currentAdmin ? "Yangi parol (ixtiyoriy)" : "Parol"} 
-              type={showAdminPassword ? "text" : "password"} 
-              fullWidth 
-              value={adminForm.password} 
-              onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowAdminPassword(!showAdminPassword)} edge="end">
-                      {showAdminPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <TextField 
-              label="Parolni tasdiqlash" 
-              type={showAdminPassword ? "text" : "password"} 
-              fullWidth 
-              value={adminForm.confirmPassword} 
-              onChange={(e) => setAdminForm({ ...adminForm, confirmPassword: e.target.value })}
-              error={adminForm.password !== adminForm.confirmPassword && adminForm.confirmPassword !== ""}
-              helperText={adminForm.password !== adminForm.confirmPassword && adminForm.confirmPassword !== "" ? "Parollar mos kelmadi" : ""}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowAdminPassword(!showAdminPassword)} edge="end">
-                      {showAdminPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-
-            <FormControl fullWidth><InputLabel>Rol</InputLabel>
-              <Select value={adminForm.role} label="Rol" onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}>
-                <MenuItem value="admin">Administrator</MenuItem>
-                <MenuItem value="superadmin">Super Administrator</MenuItem>
-                <MenuItem value="researcher">Izlanuvchi</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField label="Telefon" fullWidth value={adminForm.phone || ""} onChange={(e) => setAdminForm({ ...adminForm, phone: e.target.value })} />
-            <FormControl fullWidth>
-              <InputLabel>Hudud</InputLabel>
-              <Select value={adminForm.region || ""} label="Hudud" onChange={(e) => setAdminForm({ ...adminForm, region: e.target.value })}>
-                <MenuItem value="">Barchasi (Global)</MenuItem>
-                {Object.keys(UZB_LOCATIONS).map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </Stack>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}><Button onClick={() => setAdminDialogOpen(false)}>Bekor qilish</Button><Button variant="contained" onClick={handleAdminAction}>Saqlash</Button></DialogActions>
-      </Dialog>
-    </Container>
+              <FormControl fullWidth><InputLabel>Rol</InputLabel>
+                <Select value={adminForm.role} label="Rol" onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}>
+                  <MenuItem value="admin">Administrator</MenuItem>
+                  <MenuItem value="superadmin">Super Administrator</MenuItem>
+                  <MenuItem value="researcher">Izlanuvchi</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField label="Telefon" fullWidth value={adminForm.phone || ""} onChange={(e) => setAdminForm({ ...adminForm, phone: e.target.value })} />
+              <FormControl fullWidth>
+                <InputLabel>Hudud</InputLabel>
+                <Select value={adminForm.region || ""} label="Hudud" onChange={(e) => setAdminForm({ ...adminForm, region: e.target.value })}>
+                  <MenuItem value="">Barchasi (Global)</MenuItem>
+                  {Object.keys(UZB_LOCATIONS).map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
+                </Select>
+              </FormControl>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 3 }}><Button onClick={() => setAdminDialogOpen(false)}>Bekor qilish</Button><Button variant="contained" onClick={handleAdminAction}>Saqlash</Button></DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 

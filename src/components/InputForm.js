@@ -208,7 +208,7 @@ export default function InputForm({
       },
     },
     [`& .${stepConnectorClasses.line}`]: {
-      borderColor: theme.palette.mode === 'dark' ? theme.palette.grey[800] : theme.palette.grey[300],
+      borderColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
       borderTopWidth: 3,
       borderRadius: 1,
     },
@@ -243,19 +243,21 @@ export default function InputForm({
                   <StepLabel
                     StepIconComponent={({ active, completed }) => (
                       <Box
-                        sx={{
-                          width: 24,
-                          height: 24,
+                        sx={(theme) => ({
+                          width: 28,
+                          height: 28,
                           borderRadius: '50%',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          bgcolor: active || completed ? 'primary.main' : 'grey.400',
-                          color: '#fff',
+                          bgcolor: active || completed ? 'primary.main' : (theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'),
+                          color: active || completed ? '#fff' : 'text.disabled',
                           zIndex: 1,
-                        }}
+                          border: active ? `2px solid ${theme.palette.primary.main}` : 'none',
+                          boxShadow: active ? `0 0 15px ${theme.palette.primary.main}44` : 'none',
+                        })}
                       >
-                        {completed ? <Check sx={{ fontSize: 16 }} /> : <Typography variant="caption" sx={{ fontWeight: 800 }}>{index + 1}</Typography>}
+                        {completed ? <Check sx={{ fontSize: 18 }} /> : <Typography variant="caption" sx={{ fontWeight: 800 }}>{index + 1}</Typography>}
                       </Box>
                     )}
                   >

@@ -75,11 +75,13 @@ export const makeTheme = (mode = "light", variant = "neo") => {
       primary: {
         main: colors.primary,
         light: isDark ? `${colors.primary}99` : `${colors.primary}33`,
+        lighter: isDark ? `${colors.primary}1A` : `${colors.primary}1A`,
         dark: isDark ? `${colors.primary}CC` : `${colors.primary}CC`,
       },
       secondary: {
         main: colors.secondary,
         light: isDark ? `${colors.secondary}99` : `${colors.secondary}33`,
+        lighter: isDark ? `${colors.secondary}1A` : `${colors.secondary}1A`,
         dark: isDark ? `${colors.secondary}CC` : `${colors.secondary}CC`,
       },
       background: {
@@ -89,21 +91,25 @@ export const makeTheme = (mode = "light", variant = "neo") => {
       success: {
         main: colors.success,
         light: isDark ? `${colors.success}33` : `${colors.success}1A`,
+        lighter: isDark ? `${colors.success}0D` : `${colors.success}0D`,
         dark: isDark ? `${colors.success}CC` : `${colors.success}CC`,
       },
       warning: {
         main: colors.warning,
         light: isDark ? `${colors.warning}33` : `${colors.warning}1A`,
+        lighter: isDark ? `${colors.warning}0D` : `${colors.warning}0D`,
         dark: isDark ? `${colors.warning}CC` : `${colors.warning}CC`,
       },
       error: {
         main: colors.error,
         light: isDark ? `${colors.error}33` : `${colors.error}1A`,
+        lighter: isDark ? `${colors.error}0D` : `${colors.error}0D`,
         dark: isDark ? `${colors.error}CC` : `${colors.error}CC`,
       },
       info: {
         main: colors.info,
         light: isDark ? `${colors.info}33` : `${colors.info}1A`,
+        lighter: isDark ? `${colors.info}0D` : `${colors.info}0D`,
         dark: isDark ? `${colors.info}CC` : `${colors.info}CC`,
       },
       text: {

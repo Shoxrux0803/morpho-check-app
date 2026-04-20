@@ -392,7 +392,7 @@ export default function AnalysisResults({
                     sx={{ 
                       p: { xs: 1, md: 3 }, 
                       borderRadius: 4, 
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)',
                       borderStyle: 'dashed'
                     }}
                   >
