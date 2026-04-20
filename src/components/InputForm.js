@@ -46,6 +46,7 @@ import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 
 import { MCTextField as Field, MCSelect } from "./ui/MCField";
 import { UZB_LOCATIONS } from "../data/uzbLocations";
+import { useGrowthAnalytics } from "../hooks/useGrowthAnalytics";
 
 /* ===== Helpers (validatsiya mantiqi) ===== */
 const round1 = (x) => Math.round(x * 10) / 10;
@@ -109,6 +110,8 @@ export default function InputForm({
     return errs;
   };
 
+
+  const analytics = useGrowthAnalytics(formData);
 
   const smoothScrollToResults = useCallback(() => {
     if (scrollTargetId) {
@@ -381,12 +384,87 @@ export default function InputForm({
                 </Stack>
 
                 <Grid container spacing={2.5}>
-                  <Grid item xs={12} md={6}><Field fullWidth label={`${t("heightLabel")} (sm) *`} name="height" type="number" value={formData.height} onChange={handleInputChange} required InputProps={adorn(<HeightIcon />)} sx={inputSx} /></Grid>
-                  <Grid item xs={12} md={6}><Field fullWidth label={`${t("bodyLengthLabel")} (sm) *`} name="bodyLength" type="number" value={formData.bodyLength} onChange={handleInputChange} required InputProps={adorn(<HeightIcon />)} sx={inputSx} /></Grid>
-                  <Grid item xs={12} md={4}><Field fullWidth label={`${t("weightLabel")} (kg) *`} name="weight" type="number" value={formData.weight} onChange={handleInputChange} required InputProps={adorn(<MonitorWeightIcon />)} sx={inputSx} /></Grid>
+                  <Grid item xs={12} md={6}>
+                    <Field 
+                      fullWidth 
+                      label={`${t("heightLabel")} (sm) *`} 
+                      name="height" 
+                      type="number" 
+                      value={formData.height} 
+                      onChange={handleInputChange} 
+                      required 
+                      InputProps={adorn(<HeightIcon />)} 
+                      sx={{
+                        ...inputSx,
+                        "& .MuiOutlinedInput-notchedOutline": analytics?.height ? {
+                          borderColor: analytics.height.status.color,
+                          borderWidth: 2
+                        } : {}
+                      }} 
+                      helperText={analytics?.height ? `${t("zScoreLabel")}: ${analytics.height.zScore > 0 ? '+' : ''}${analytics.height.zScore} (${analytics.height.percentile}-p)` : ""}
+                      FormHelperTextProps={{ sx: { color: analytics?.height?.status.color, fontWeight: 700 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <Field 
+                      fullWidth 
+                      label={`${t("bodyLengthLabel")} (sm) *`} 
+                      name="bodyLength" 
+                      type="number" 
+                      value={formData.bodyLength} 
+                      onChange={handleInputChange} 
+                      required 
+                      InputProps={adorn(<HeightIcon />)} 
+                      sx={inputSx} 
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Field 
+                      fullWidth 
+                      label={`${t("weightLabel")} (kg) *`} 
+                      name="weight" 
+                      type="number" 
+                      value={formData.weight} 
+                      onChange={handleInputChange} 
+                      required 
+                      InputProps={adorn(<MonitorWeightIcon />)} 
+                      sx={{
+                        ...inputSx,
+                        "& .MuiOutlinedInput-notchedOutline": analytics?.weight ? {
+                          borderColor: analytics.weight.status.color,
+                          borderWidth: 2
+                        } : {}
+                      }}
+                      helperText={analytics?.weight ? `${t("zScoreLabel")}: ${analytics.weight.zScore > 0 ? '+' : ''}${analytics.weight.zScore} (${analytics.weight.percentile}-p)` : ""}
+                      FormHelperTextProps={{ sx: { color: analytics?.weight?.status.color, fontWeight: 700 } }}
+                    />
+                  </Grid>
                   <Grid item xs={12} md={4}><Field fullWidth label={`${t("chestLabel")} (sm) *`} name="chest" type="number" value={formData.chest} onChange={handleInputChange} required InputProps={adorn(<StraightenIcon />)} sx={inputSx} /></Grid>
                   <Grid item xs={12} md={4}><Field fullWidth label={`${t("waistLabel")} (sm) *`} name="waist" type="number" value={formData.waist} onChange={handleInputChange} required InputProps={adorn(<StraightenIcon />)} sx={inputSx} /></Grid>
                   <Grid item xs={12} md={4}><Field fullWidth label={`${t("headLabel")} (sm) *`} name="head" type="number" value={formData.head} onChange={handleInputChange} required InputProps={adorn(<Face6Icon />)} sx={inputSx} /></Grid>
+
+                  {analytics?.bmi && (
+                    <Grid item xs={12}>
+                      <Alert 
+                        icon={<AnalyticsIcon sx={{ color: analytics.bmi.status.color }} />}
+                        sx={{ 
+                          borderRadius: 3, 
+                          bgcolor: `${analytics.bmi.status.color}11`,
+                          border: `1px solid ${analytics.bmi.status.color}33`,
+                          "& .MuiAlert-message": { width: "100%" }
+                        }}
+                      >
+                        <Box display="flex" justifyContent="space-between" alignItems="center">
+                          <Typography variant="body2" fontWeight={700}>
+                            {t("bmiAnalysis")}: <span style={{ color: analytics.bmi.status.color }}>{analytics.bmi.value} kg/m²</span>
+                          </Typography>
+                          <Typography variant="caption" fontWeight={800} sx={{ bgcolor: analytics.bmi.status.color, color: "#fff", px: 1, py: 0.2, borderRadius: 1 }}>
+                            {t("zScoreLabel")}: {analytics.bmi.zScore > 0 ? '+' : ''}{analytics.bmi.zScore}
+                          </Typography>
+                        </Box>
+                      </Alert>
+                    </Grid>
+                  )}
 
                   {showAdvanced && (
                     <>

@@ -97,6 +97,19 @@ const translations = {
     detected: "Aniqlangan",
     notAvailable: "Mavjud emas",
     bmiLabel: "BMI",
+    whoScientificAnalysis: "BSST Standartlari Bo'yicha Ilmiy Z-Score Tahlili",
+    heightForAge: "Bo'y ko'rsatkichi (Height-for-Age Z-score, HAZ)",
+    weightForAge: "Vazn ko'rsatkichi (Weight-for-Age Z-score, WAZ)",
+    bmiForAge: "BMI ko'rsatkichi (BMI-for-Age Z-score, BAZ)",
+    hazDesc: "Balandlikning yoshga nisbatan og'ishi. Surunkali to'yib ovqatlanmaslikni ko'rsatishi mumkin.",
+    wazDesc: "Vaznning yoshga nisbatan og'ishi. Umumiy ovqatlanish holatini aks ettiradi.",
+    bazDesc: "Tana vazni indeksining yoshga nisbatan og'ishi. Semizlik yoki o'tkir oriqlikni aniqlaydi.",
+    status_normal: "Normal rivojlanish diapazoni",
+    status_monitor: "Klinik kuzatuv va nazorat talab etiladi",
+    status_risk: "Sog'liq uchun xavf guruhi (SDS > 2)",
+    status_severe: "Kritik sog'liq muammolari (SDS > 3)",
+    bmiAnalysis: "BMI Ilmiy Tahlili",
+    zScoreLabel: "Z-ko'rsatkichi (SDS)",
 
     // BMI categories
     bmi_underweight: "Vazn tanqisligi",
@@ -204,6 +217,11 @@ const translations = {
 
     // Footer
     footerCopy: "Barcha huquqlar himoyalangan.",
+    continueBtn: "Davom etish",
+    startNewEntry: "Yangi kiritish",
+    entrySavedSuccess: "Ma'lumot muvaffaqiyatli saqlandi!",
+    nextEntry: "Keyingi yozuv",
+    addRecord: "Yozuv qo'shish",
   },
 
   ru: {
@@ -288,6 +306,19 @@ const translations = {
     detected: "Определён",
     notAvailable: "Недоступно",
     bmiLabel: "ИМТ",
+    whoScientificAnalysis: "Научный Z-Score анализ по стандартам ВОЗ",
+    heightForAge: "Показатель Рост-к-возрасту (Height-for-Age Z-score, HAZ)",
+    weightForAge: "Показатель Вес-к-возрасту (Weight-for-Age Z-score, WAZ)",
+    bmiForAge: "Показатель ИМТ-к-возрасту (BMI-for-Age Z-score, BAZ)",
+    hazDesc: "Отклонение роста от нормы для данного возраста. Может указывать на хроническое недоедание (stunting).",
+    wazDesc: "Отклонение веса от нормы для данного возраста. Отражает общую картину упитанности.",
+    bazDesc: "Отклонение индекса массы тела от нормы. Выявляет ожирение или острое истощение.",
+    status_normal: "Нормальный диапазон развития",
+    status_monitor: "Требуется клиническое наблюдение и контроль",
+    status_risk: "Группа риска для здоровья (SDS > 2)",
+    status_severe: "Критическое отклонение здоровья (SDS > 3)",
+    bmiAnalysis: "Научный анализ ИМТ",
+    zScoreLabel: "Z-показатель (SDS)",
 
     // BMI categories
     bmi_underweight: "Дефицит веса",
@@ -387,6 +418,11 @@ const translations = {
 
 
     footerCopy: "Все права защищены.",
+    continueBtn: "Продолжить",
+    startNewEntry: "Начать новый ввод",
+    entrySavedSuccess: "Данные успешно сохранены!",
+    nextEntry: "Следующая запись",
+    addRecord: "Добавить запись",
   },
 
   en: {
@@ -471,6 +507,19 @@ const translations = {
     detected: "Detected",
     notAvailable: "Not available",
     bmiLabel: "BMI",
+    whoScientificAnalysis: "Scientific Z-Score Analysis (WHO Standards)",
+    heightForAge: "Height-for-age (HAZ)",
+    weightForAge: "Weight-for-age (WAZ)",
+    bmiForAge: "BMI-for-age (BAZ)",
+    hazDesc: "Height-for-age Z-score. Reflects linear growth and can indicate chronic malnutrition (stunting).",
+    wazDesc: "Weight-for-age Z-score. Reflects body mass in relation to age.",
+    bazDesc: "BMI-for-age Z-score. Used to identify thinness, overweight, and obesity.",
+    status_normal: "Normal development range",
+    status_monitor: "Clinical monitoring and control required",
+    status_risk: "Health risk group (SDS > 2)",
+    status_severe: "Critical health deviation (SDS > 3)",
+    bmiAnalysis: "Scientific BMI Analysis",
+    zScoreLabel: "Z-Score (SDS)",
 
     // BMI categories
     bmi_underweight: "Underweight",
@@ -570,6 +619,11 @@ const translations = {
 
 
     footerCopy: "All rights reserved.",
+    continueBtn: "Continue",
+    startNewEntry: "Start new entry",
+    entrySavedSuccess: "Data saved successfully!",
+    nextEntry: "Next entry",
+    addRecord: "Add Record",
   },
 
   kz: {
@@ -654,6 +708,19 @@ const translations = {
     detected: "Анықталды",
     notAvailable: "Қолжетімсіз",
     bmiLabel: "ДМИ",
+    whoScientificAnalysis: "ДДҰ стандарттары бойынша ғылыми Z-Score талдауы",
+    heightForAge: "Бой көрсеткіші (Height-for-Age Z-score, HAZ)",
+    weightForAge: "Салмақ көрсеткіші (Weight-for-Age Z-score, WAZ)",
+    bmiForAge: "ДМИ көрсеткіші (BMI-for-Age Z-score, BAZ)",
+    hazDesc: "Бойдың жасқа қатысты ауытқуы. Созылмалы тамақтанудың бұзылуын көрсетуі мүмкін.",
+    wazDesc: "Салмақтың жасқа қатысты ауытқуы. Жалпы тамақтану жағдайын көрсетеді.",
+    bazDesc: "Дене салмағы индексінің жасқа қатысты ауытқуы. Семіздікті немесе өткір арықтауды анықтайды.",
+    status_normal: "Қалыпты даму диапазоны",
+    status_monitor: "Клиникалық бақылау және бақылау қажет",
+    status_risk: "Денсаулыққа қауіп төндіретін топ (SDS > 2)",
+    status_severe: "Денсаулықтың критикалық ауытқуы (SDS > 3)",
+    bmiAnalysis: "ДМИ ғылыми талдауы",
+    zScoreLabel: "Z-көрсеткіші (SDS)",
 
     // BMI categories
     bmi_underweight: "Салмақ жетіспеушілігі",
@@ -753,6 +820,11 @@ const translations = {
 
 
     footerCopy: "Барлық құқықтар қорғалған.",
+    continueBtn: "Жалғастыру",
+    startNewEntry: "Жаңа енгізу",
+    entrySavedSuccess: "Мәлімет сәтті сақталды!",
+    nextEntry: "Келесі жазба",
+    addRecord: "Жазба қосу",
   },
 };
 

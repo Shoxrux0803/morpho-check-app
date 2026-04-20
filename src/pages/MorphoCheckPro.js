@@ -204,6 +204,45 @@ export default function MorphoCheckPro() {
     }
   };
 
+  const handleContinue = () => {
+    setResults(null);
+    setFormData((prev) => ({
+      ...prev,
+      firstName: "",
+      lastName: "",
+      birthDate: "",
+      age: "",
+      ageMonths: 0,
+      ageDays: 0,
+      height: "",
+      weight: "",
+      chest: "",
+      waist: "",
+      head: "",
+      shoulderLength: "",
+      shoulderBreadth: "",
+      shoulderCircumference: "",
+      armElbowLength: "",
+      handLength: "",
+      thighLength: "",
+      thighCircumference: "",
+      calfLength: "",
+      calfCircumference: "",
+      footLength: "",
+      totalBodyWater: "",
+      fatPercent: "",
+      fatMass: "",
+      muscleMass: "",
+      boneMass: "",
+      acm: "",
+      visceralFat: "",
+      bodyLength: "",
+      // We keep region, district, address, and examinationDate for faster multi-entry
+    }));
+    setActiveTab("form");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
 
   const generatePDF = async (pdfLang) => {
     const selectedLang = pdfLang || lang;
@@ -349,7 +388,7 @@ export default function MorphoCheckPro() {
             formData={formData}
             results={results}
             generatePDF={generatePDF}
-            setActiveTab={setActiveTab}
+            onContinue={handleContinue}
           />
         </div>
       )}

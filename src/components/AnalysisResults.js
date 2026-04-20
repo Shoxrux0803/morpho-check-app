@@ -19,6 +19,8 @@ import {
   Select,
   FormControl,
   InputLabel,
+  LinearProgress,
+  Tooltip,
 } from "@mui/material";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
@@ -28,18 +30,22 @@ import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlin
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import GrowthChart from "./Charts/GrowthChart";
 import PersonOutline from "@mui/icons-material/PersonOutline";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useLanguage, LANGUAGES } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useGrowthAnalytics } from "../hooks/useGrowthAnalytics";
 
 export default function AnalysisResults({
   formData,
   results,
   generatePDF,
+  onContinue,
 }) {
   const { t, lang } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [pdfLang, setPdfLang] = useState(lang);
   const [chartType, setChartType] = useState('height');
+  const analytics = useGrowthAnalytics(formData);
 
   // 1) Natija yo'q
   if (!results) {
@@ -156,7 +162,21 @@ export default function AnalysisResults({
               {t("downloadPdf")}
             </Button>
 
-
+            {onContinue && (
+              <Button
+                onClick={onContinue}
+                variant="contained"
+                startIcon={<ArrowForwardIcon />}
+                sx={{ 
+                  borderRadius: 2,
+                  px: 3,
+                  fontWeight: 700,
+                  background: theme => theme.palette.mode === 'dark' ? 'linear-gradient(90deg, #3f51b5, #00acc1)' : 'linear-gradient(90deg, #1976d2, #00bcd4)'
+                }}
+              >
+                {t("continueBtn")}
+              </Button>
+            )}
           </Stack>
         </Stack>
       </Paper>
@@ -180,24 +200,28 @@ export default function AnalysisResults({
             />
             <CardContent>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
+                <Grid item xs={12} md={6}>
+                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: analytics?.bmi ? `4px solid ${analytics.bmi.status.color}` : 'none' }}>
                     <Stack spacing={1}>
-                      <Typography variant="subtitle2" color="text.secondary">Z-score</Typography>
-                      <Typography variant="h3" sx={{ lineHeight: 1.1 }}>{showNum(zScore)}</Typography>
-                      <Stack direction="row" spacing={1} flexWrap="wrap">
-                        <Chip
-                          size="small"
-                          label={zScore == null ? "—" : Math.abs(Number(zScore)) > 1.5 ? t("outOfNorm") : t("inNorm")}
-                          color={zScoreColor}
-                          variant="filled"
-                        />
+                      <Typography variant="subtitle2" color="text.secondary">{t("bmiLabel")}</Typography>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography variant="h3" sx={{ lineHeight: 1.1 }}>{showNum(bmi)}</Typography>
+                        {analytics?.bmi ? (
+                          <Chip label={t("status_" + analytics.bmi.status.code)} sx={{ bgcolor: analytics.bmi.status.color, color: "#fff" }} size="small" />
+                        ) : (
+                          bmiCategory && <Chip label={bmiCategory} color={bmiChipColor} size="small" />
+                        )}
                       </Stack>
+                      {analytics?.bmi && (
+                        <Typography variant="caption" fontWeight={700} color="text.secondary">
+                          Z-Score: {analytics.bmi.zScore > 0 ? '+' : ''}{analytics.bmi.zScore}
+                        </Typography>
+                      )}
                     </Stack>
                   </Paper>
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={1}>
                       <Typography variant="subtitle2" color="text.secondary">{t("somatotypeLabel")}</Typography>
@@ -214,19 +238,94 @@ export default function AnalysisResults({
                     </Stack>
                   </Paper>
                 </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
-                    <Stack spacing={1}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("bmiLabel")}</Typography>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography variant="h3" sx={{ lineHeight: 1.1 }}>{showNum(bmi)}</Typography>
-                        {bmiCategory && <Chip label={bmiCategory} color={bmiChipColor} size="small" />}
-                      </Stack>
-                    </Stack>
-                  </Paper>
-                </Grid>
               </Grid>
+
+              {/* Расширенный научный анализ Z-Score */}
+              {analytics && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <InsightsOutlinedIcon color="primary" />
+                    {t("whoScientificAnalysis")}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {analytics.height && (
+                      <Grid item xs={12} md={4}>
+                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.height.status.color}05` }}>
+                          <Tooltip title={t("hazDesc")} arrow>
+                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
+                              {t("heightForAge")}
+                            </Typography>
+                          </Tooltip>
+                          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                            <Box>
+                              <Typography variant="h5" fontWeight={800}>{analytics.height.zScore > 0 ? '+' : ''}{analytics.height.zScore}</Typography>
+                              <Typography variant="caption" sx={{ color: analytics.height.status.color, fontWeight: 700 }}>
+                                {t("status_" + analytics.height.status.code)}
+                              </Typography>
+                            </Box>
+                            <Chip label={`${analytics.height.percentile}-p`} size="small" variant="outlined" />
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={Math.min(100, Math.max(0, (analytics.height.zScore + 4) * 12.5))} 
+                            sx={{ mt: 1.5, height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: analytics.height.status.color } }}
+                          />
+                        </Paper>
+                      </Grid>
+                    )}
+                    {analytics.weight && (
+                      <Grid item xs={12} md={4}>
+                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.weight.status.color}05` }}>
+                          <Tooltip title={t("wazDesc")} arrow>
+                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
+                              {t("weightForAge")}
+                            </Typography>
+                          </Tooltip>
+                          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                            <Box>
+                              <Typography variant="h5" fontWeight={800}>{analytics.weight.zScore > 0 ? '+' : ''}{analytics.weight.zScore}</Typography>
+                              <Typography variant="caption" sx={{ color: analytics.weight.status.color, fontWeight: 700 }}>
+                                {t("status_" + analytics.weight.status.code)}
+                              </Typography>
+                            </Box>
+                            <Chip label={`${analytics.weight.percentile}-p`} size="small" variant="outlined" />
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={Math.min(100, Math.max(0, (analytics.weight.zScore + 4) * 12.5))} 
+                            sx={{ mt: 1.5, height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: analytics.weight.status.color } }}
+                          />
+                        </Paper>
+                      </Grid>
+                    )}
+                    {analytics.bmi && (
+                      <Grid item xs={12} md={4}>
+                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.bmi.status.color}05` }}>
+                          <Tooltip title={t("bazDesc")} arrow>
+                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
+                              {t("bmiForAge")}
+                            </Typography>
+                          </Tooltip>
+                          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                            <Box>
+                              <Typography variant="h5" fontWeight={800}>{analytics.bmi.zScore > 0 ? '+' : ''}{analytics.bmi.zScore}</Typography>
+                              <Typography variant="caption" sx={{ color: analytics.bmi.status.color, fontWeight: 700 }}>
+                                {t("status_" + analytics.bmi.status.code)}
+                              </Typography>
+                            </Box>
+                            <Chip label={`${analytics.bmi.percentile}-p`} size="small" variant="outlined" />
+                          </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={Math.min(100, Math.max(0, (analytics.bmi.zScore + 4) * 12.5))} 
+                            sx={{ mt: 1.5, height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: analytics.bmi.status.color } }}
+                          />
+                        </Paper>
+                      </Grid>
+                    )}
+                  </Grid>
+                </Box>
+              )}
 
               <Divider sx={{ my: 3 }} />
 
@@ -483,6 +582,33 @@ export default function AnalysisResults({
               </Stack>
             </CardContent>
           </Card>
+
+          {onContinue && (
+            <Box sx={{ mt: 4, mb: 6, display: 'flex', justifyContent: 'center' }}>
+               <Button
+                onClick={onContinue}
+                variant="contained"
+                size="large"
+                startIcon={<ArrowForwardIcon />}
+                sx={{ 
+                  borderRadius: 4,
+                  px: 8,
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 800,
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                  background: theme => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 100%)`,
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 12px 30px rgba(0,0,0,0.2)',
+                  }
+                }}
+              >
+                {t("continueBtn")}
+              </Button>
+            </Box>
+          )}
         </>
       )}
 
