@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { AdminApi } from "../services/api";
 import { toast } from "react-hot-toast";
 import { UZB_LOCATIONS } from "../data/uzbLocations";
+import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 
 // Components
 import SuperAdminDashboard from "../components/Dashboard/SuperAdminDashboard";
@@ -55,6 +56,7 @@ const SuperAdminPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginInProgress, setLoginInProgress] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   // Admin Management State
   const [admins, setAdmins] = useState([]);
@@ -661,7 +663,7 @@ const SuperAdminPage = () => {
               </Tabs>
 
               <Box mt={2} pt={2} borderTop={isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)"}>
-                <Button fullWidth color="error" startIcon={<Logout />} onClick={logout} sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}>Chiqish</Button>
+                <Button fullWidth color="error" startIcon={<Logout />} onClick={() => setLogoutDialogOpen(true)} sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}>Chiqish</Button>
               </Box>
             </GlassPaper>
           </Box>
@@ -744,6 +746,15 @@ const SuperAdminPage = () => {
           </DialogContent>
           <DialogActions sx={{ p: 3 }}><Button onClick={() => setAdminDialogOpen(false)}>Bekor qilish</Button><Button variant="contained" onClick={handleAdminAction}>Saqlash</Button></DialogActions>
         </Dialog>
+
+        <LogoutConfirmDialog
+          open={logoutDialogOpen}
+          onClose={() => setLogoutDialogOpen(false)}
+          onConfirm={() => {
+            setLogoutDialogOpen(false);
+            logout();
+          }}
+        />
       </Container>
     </Box>
   );

@@ -23,6 +23,7 @@ import {
   Tooltip as RechartsTooltip, PieChart, Pie, Cell, BarChart, Bar, Legend,
   ComposedChart, Line
 } from "recharts";
+import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -886,6 +887,7 @@ const ResearcherPage = () => {
   // Modals
   const [detailRecord, setDetailRecord] = useState(null);
   const [editRecord, setEditRecord] = useState(null);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const fetchData = useCallback(async (filterParams = filter) => {
     setLoading(true);
@@ -998,7 +1000,7 @@ const ResearcherPage = () => {
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
       <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
       {/* ── Page Header ── */}
-      <GlassPaper sx={{ p: { xs: 2, md: 3 }, mb: 4, position: "sticky", top: 12, zIndex: 10 }}>
+      <GlassPaper sx={{ p: { xs: 2, md: 3 }, mb: 4, position: "sticky", top: 12, zIndex: 10, overflow: 'visible' }}>
         <Grid container alignItems="center" spacing={2}>
           <Grid item xs={12} md={4}>
             <Stack direction="row" spacing={2} alignItems="center">
@@ -1023,7 +1025,7 @@ const ResearcherPage = () => {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12} md={8}>
             <Tabs
               value={activeTab}
               onChange={(_, v) => setActiveTab(v)}
@@ -1062,31 +1064,6 @@ const ResearcherPage = () => {
                 />
               ))}
             </Tabs>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Stack direction="row" spacing={2} justifyContent="flex-end" alignItems="center">
-              <Tooltip title="Chiqish">
-                <Button
-                  variant="soft"
-                  color="error"
-                  onClick={logout}
-                  startIcon={<Logout />}
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    bgcolor: (theme) =>
-                      theme.palette.mode === "dark"
-                        ? "rgba(244, 67, 54, 0.1)"
-                        : "rgba(244, 67, 54, 0.05)",
-                    "&:hover": { bgcolor: "error.main", color: "#fff" }
-                  }}
-                >
-                  Chiqish
-                </Button>
-              </Tooltip>
-            </Stack>
           </Grid>
         </Grid>
       </GlassPaper>
@@ -1193,6 +1170,15 @@ const ResearcherPage = () => {
         open={!!editRecord}
         onClose={() => setEditRecord(null)}
         onSaved={() => fetchData()}
+      />
+
+      <LogoutConfirmDialog
+        open={logoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+        onConfirm={() => {
+          setLogoutDialogOpen(false);
+          logout();
+        }}
       />
     </Container>
   </Box>

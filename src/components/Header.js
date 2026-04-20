@@ -36,6 +36,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useOfflineSync } from "../providers/OfflineSyncProvider";
 import WeatherClock from "./WeatherClock";
 import SyncManager from "./SyncManager";
+import LogoutConfirmDialog from "./LogoutConfirmDialog";
 
 
 export default function Header() {
@@ -49,6 +50,7 @@ export default function Header() {
   const [langAnchorEl, setLangAnchorEl] = useState(null);
   const [langChanging, setLangChanging] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
 
   const handleLangChange = (code) => {
@@ -224,10 +226,10 @@ export default function Header() {
             </Tooltip>
           )}
 
-          {(user?.role === "admin" || user?.role === "superadmin") && (
+          {user && (
             <Tooltip title="Chiqish">
               <IconButton
-                onClick={logout}
+                onClick={() => setLogoutDialogOpen(true)}
                 sx={{
                   color: "error.main",
                   ml: 0.5,
@@ -445,6 +447,15 @@ export default function Header() {
             setEditingItem(item);
             setSyncOpen(false);
             navigate("/morphocheck-pro");
+          }}
+        />
+
+        <LogoutConfirmDialog
+          open={logoutDialogOpen}
+          onClose={() => setLogoutDialogOpen(false)}
+          onConfirm={() => {
+            setLogoutDialogOpen(false);
+            logout();
           }}
         />
       </Toolbar>
