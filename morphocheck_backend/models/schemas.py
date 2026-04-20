@@ -289,6 +289,7 @@ class ResearchRecordCreate(BaseModel):
     parents_marriage: Optional[str] = None
     mother_health_status: Optional[str] = None
     examination_date: Optional[str] = None
+    gender: Optional[str] = None
 
     lower_leg_spina_iliaca: Optional[float] = None
     lower_leg_symphysion: Optional[float] = None

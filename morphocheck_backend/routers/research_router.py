@@ -281,6 +281,9 @@ def list_research_records(
     researcher_id: Optional[int] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
+    gender: Optional[str] = Query(None),
+    age_min: Optional[int] = Query(None),
+    age_max: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
@@ -306,7 +309,11 @@ def list_research_records(
     if school_name:
         query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
     if settlement:
-        query = query.filter(ResearchRecord.settlement.ilike(f"%{settlement}%"))
+        s = settlement.strip()
+        query = query.filter(
+            (ResearchRecord.settlement.ilike(f"%{s}%")) |
+            (ResearchRecord.birth_place.ilike(f"%{s}%"))
+        )
     if feeding_type:
         query = query.filter(ResearchRecord.feeding_type == feeding_type)
     if parents_marriage:
@@ -328,7 +335,129 @@ def list_research_records(
     if date_to:
         query = query.filter(ResearchRecord.examination_date <= date_to)
 
-    return query.order_by(ResearchRecord.id.desc()).all()
+    if gender:
+        query = query.filter(ResearchRecord.gender == gender)
+
+    records = query.order_by(ResearchRecord.id.desc()).all()
+
+    # Age filter (in Python for accuracy)
+    if age_min is not None or age_max is not None:
+        filtered = []
+        for r in records:
+            try:
+                if not r.birth_date: continue
+                b_date = datetime.strptime(r.birth_date, "%Y-%m-%d")
+                e_date_str = r.examination_date if r.examination_date else datetime.now().strftime("%Y-%m-%d")
+                e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
+                age = (e_date - b_date).days / 365.25
+                if age_min is not None and age < age_min: continue
+                if age_max is not None and age > age_max: continue
+                filtered.append(r)
+            except Exception as e:
+                print(f"Age filter error for record {r.id}: {e}")
+                continue
+                # If date format is invalid, include in list only if no age filter applied
+                if age_min is None and age_max is None:
+                    filtered.append(r)
+        return filtered
+
+    return records
+
+
+@router.get("/export/dataset")
+def export_dataset_for_analysis(
+    gender: Optional[str] = Query(None),
+    age_min: Optional[float] = Query(None),
+    age_max: Optional[float] = Query(None),
+    settlement: Optional[str] = Query(None),
+    researcher_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_researcher_or_superadmin)
+):
+    """
+    Advanced export for statistical analysis (SPSS/Python).
+    - Numeric encoding for categorical variables.
+    - Machine-readable headers.
+    - Age calculation.
+    """
+    query = db.query(ResearchRecord).filter(ResearchRecord.is_deleted == 0)
+    if current_user.role == "researcher":
+        query = query.filter(ResearchRecord.created_by_id == current_user.id)
+    elif researcher_id:
+        query = query.filter(ResearchRecord.created_by_id == researcher_id)
+    
+    if settlement:
+        s = settlement.strip()
+        query = query.filter(
+            (ResearchRecord.settlement.ilike(f"%{s}%")) |
+            (ResearchRecord.birth_place.ilike(f"%{s}%"))
+        )
+    if gender:
+        query = query.filter(ResearchRecord.gender == gender)
+    
+    records = query.all()
+
+    # Filtered and Processed Data
+    dataset = []
+    for r in records:
+        try:
+            b_date = datetime.strptime(r.birth_date, "%Y-%m-%d")
+            # Examination date string to date
+            e_date_str = r.examination_date or datetime.now().strftime("%Y-%m-%d")
+            e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
+            age = round((e_date - b_date).days / 365.25, 2)
+        except:
+            age = None
+        
+        if age_min is not None and (age is None or age < age_min): continue
+        if age_max is not None and (age is None or age > age_max): continue
+
+        # Encoding categories
+        # Gender: 0=Boy, 1=Girl
+        gender_code = 0 if r.gender == "Boy" else 1
+        if not r.gender: gender_code = -1
+        
+        # Feeding: 0=Natural, 1=Artificial
+        feeding_code = 0 if "Tabiiy" in (r.feeding_type or "") else 1
+        
+        # Marriage: 0=Non-relative, 1=Distant, 2=Close
+        marriage_code = 2 if "Yaqin" in (r.parents_marriage or "") else 1 if "Uzoq" in (r.parents_marriage or "") else 0
+
+        dataset.append({
+            "id": r.id,
+            "full_name": r.full_name,
+            "age_years": age,
+            "gender": r.gender,
+            "gender_code": gender_code,
+            "settlement": r.settlement,
+            "school": r.school_name,
+            "weight": r.weight,
+            "height": r.chest_standing_height,
+            "bmi": round(r.weight / ((r.chest_standing_height/100)**2), 2) if r.weight and r.chest_standing_height else None,
+            "feeding_code": feeding_code,
+            "marriage_code": marriage_code,
+            "head_circ": r.head_circumference,
+            "waist_circ": r.waist_circumference,
+            "chest_circ": r.chest_circumference_pause,
+            "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else None
+        })
+
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Filterga mos ma'lumotlar topilmadi")
+
+    df = pd.DataFrame(dataset)
+    
+    # Save to Excel
+    buf = io.BytesIO()
+    df.to_excel(buf, index=False, engine='openpyxl')
+    buf.seek(0)
+
+    filename = f"dataset_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 

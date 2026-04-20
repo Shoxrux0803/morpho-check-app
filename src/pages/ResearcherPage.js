@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box, Container, Typography, Paper, Tabs, Tab, TextField, Button, Avatar, Stack,
   CircularProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -8,7 +8,8 @@ import {
 import {
   Description, Download, Add, Dashboard, Logout, Edit, Delete, DeleteForever,
   Search, FilterList, Close, Visibility, InfoOutlined, Person, Place, School,
-  Science, FitnessCenter, Refresh, ArrowForward, ArrowBack, Save, Analytics
+  Science, FitnessCenter, Refresh, ArrowForward, ArrowBack, Save, Analytics, CheckCircle,
+  Assessment, TrendingUp, People, Public
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,6 +18,11 @@ import CloudUpload from "@mui/icons-material/CloudUpload";
 import ResearcherForm from "../components/Research/ResearcherForm";
 import { toast } from "react-hot-toast";
 import AdvancedResearchFilter from "../components/Research/AdvancedResearchFilter";
+import { 
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, 
+  Tooltip as RechartsTooltip, PieChart, Pie, Cell, BarChart, Bar, Legend,
+  ComposedChart, Line
+} from "recharts";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -134,6 +140,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             ["Aholi punkti", "settlement"],
             ["Tug'ilgan joyi", "birth_place"],
             ["Tug'ilgan sana", "birth_date"],
+            ["Jinsi", "gender"],
             ["Ota millati", "father_nationality"],
             ["Ona millati", "mother_nationality"],
             ["Yashashni boshlagan", "living_since"],
@@ -348,7 +355,10 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
           {[
             ["F.I.SH", "full_name", "text"], ["Maktab / Bog'cha", "school_name", "text"],
             ["Aholi punkti", "settlement", "text"], ["Tug'ilgan joyi", "birth_place", "text"],
-            ["Tug'ilgan sana", "birth_date", "date"], ["Ota millati", "father_nationality", "text"],
+            ["Tug'ilgan sana", "birth_date", "date"], ["Jinsi (Пол)", "gender", "select", [
+              { value: "Boy", label: "O'g'il (Мальчик)" },
+              { value: "Girl", label: "Qiz (Девочка)" }
+            ]], ["Ota millati", "father_nationality", "text"],
             ["Ona millati", "mother_nationality", "text"], ["Yashashni boshlagan", "living_since", "text"],
             ["Muassasaga qabul", "enrolled_date", "text"], ["Maishiy sharoit", "living_conditions", "text"],
             ["Mehnat rejimi", "labor_regime", "text"], ["O'tkir kasalliklar", "past_illnesses", "text"],
@@ -623,6 +633,228 @@ const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
 };
 
 /* ════════════════════════════════════════════════════
+   RESEARCH ANALYTICS (Professional Dashboard)
+════════════════════════════════════════════════════ */
+const ResearchAnalytics = ({ data, isDark }) => {
+  const [timeRange, setTimeRange] = useState("all"); // "all" or "30d"
+
+  // 1. Data Aggregation
+  const stats = useMemo(() => {
+    let filteredData = data;
+    if (timeRange === "30d") {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      filteredData = data.filter(r => new Date(r.created_at) >= thirtyDaysAgo);
+    }
+
+    const total = filteredData.length;
+    const boys = filteredData.filter(r => {
+      const g = (r.gender || "").toLowerCase();
+      return g === "boy" || g === "m" || g === "male" || g === "erkak" || g.includes("o'g'il") || g.includes("о'ғил");
+    }).length;
+    const girls = filteredData.filter(r => {
+      const g = (r.gender || "").toLowerCase();
+      return g === "girl" || g === "f" || g === "female" || g === "ayol" || g.includes("qiz") || g.includes("қиз");
+    }).length;
+    
+    // Average BMI Calculation
+    const bmis = filteredData.map(r => (r.weight && r.chest_standing_height) ? (r.weight / Math.pow(r.chest_standing_height/100, 2)) : null).filter(v => v);
+    const avgBmi = bmis.length ? (bmis.reduce((a, b) => a + b, 0) / bmis.length).toFixed(1) : "0";
+
+    // Settlement Distribution
+    const citiesMap = filteredData.reduce((acc, r) => {
+      const city = r.settlement || "Noma'lum";
+      acc[city] = (acc[city] || 0) + 1;
+      return acc;
+    }, {});
+    const citiesData = Object.entries(citiesMap).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5);
+
+    // Gender Data
+    const genderData = [
+      { name: "O'g'il bolalar", value: boys, color: "#007bff" },
+      { name: "Qiz bolalar", value: girls, color: "#f50057" },
+      { name: "Noma'lum", value: total - boys - girls, color: "#9e9e9e" }
+    ].filter(g => g.value > 0);
+
+    // Age distribution metrics (Avg W/H by Age)
+    const ageMap = filteredData.reduce((acc, r) => {
+      if (!r.birth_date) return acc;
+      const bDate = new Date(r.birth_date);
+      const eDate = r.examination_date ? new Date(r.examination_date) : new Date();
+      const age = Math.floor((eDate - bDate) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age < 0 || age > 20) return acc;
+      
+      if (!acc[age]) acc[age] = { age, weight: [], height: [], count: 0 };
+      if (r.weight) acc[age].weight.push(r.weight);
+      if (r.chest_standing_height) acc[age].height.push(r.chest_standing_height);
+      acc[age].count++;
+      return acc;
+    }, {});
+
+    const ageData = Object.values(ageMap).map(a => ({
+      age: `${a.age} yosh`,
+      vazn: a.weight.length ? (a.weight.reduce((v1, v2) => v1 + v2, 0) / a.weight.length).toFixed(1) : 0,
+      "bo'y": a.height.length ? (a.height.reduce((h1, h2) => h1 + h2, 0) / a.height.length).toFixed(1) : 0,
+    })).sort((a,b) => parseInt(a.age) - parseInt(b.age));
+
+    // Progress Over Time
+    const timelineMap = filteredData.reduce((acc, r) => {
+      const date = new Date(r.created_at).toISOString().slice(0, 10);
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+    const timelineData = Object.entries(timelineMap).map(([date, count]) => ({ date, count })).sort((a,b) => a.date.localeCompare(b.date));
+
+    return { total, boys, girls, avgBmi, genderData, citiesData, ageData, timelineData };
+  }, [data, timeRange]);
+
+  return (
+    <Stack spacing={4}>
+      {/* ── Analytics Header ── */}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box>
+          <Typography variant="h4" fontWeight={900}>Analitika Markazi</Typography>
+          <Typography variant="body2" color="text.secondary">Tadqiqot ma'lumotlarinning professional tahlili</Typography>
+        </Box>
+        <Stack direction="row" spacing={1} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', p: 0.5, borderRadius: 3 }}>
+          <Button 
+            size="small" 
+            variant={timeRange === "all" ? "contained" : "text"} 
+            onClick={() => setTimeRange("all")}
+            sx={{ borderRadius: 2, textTransform: 'none', px: 3, fontWeight: 700 }}
+          >
+            Hammasi
+          </Button>
+          <Button 
+            size="small" 
+            variant={timeRange === "30d" ? "contained" : "text"} 
+            onClick={() => setTimeRange("30d")}
+            sx={{ borderRadius: 2, textTransform: 'none', px: 3, fontWeight: 700 }}
+          >
+            Oxirgi 30 kun
+          </Button>
+        </Stack>
+      </Box>
+
+      {/* ── Key Metrics Cards ── */}
+      <Grid container spacing={3}>
+        {[
+          { label: "Jami yozuvlar", value: stats.total, icon: <People />, color: "#007bff" },
+          { label: "O'g'il bolalar", value: stats.boys, icon: <TrendingUp />, color: "#0ea5e9" },
+          { label: "Qiz bolalar", value: stats.girls, icon: <TrendingUp />, color: "#ec4899" },
+          { label: "O'rtacha BMI", value: stats.avgBmi, icon: <Assessment />, color: "#10b981" },
+        ].map((card, i) => (
+          <Grid item xs={12} sm={6} md={3} key={i}>
+            <GlassPaper sx={{ p: 3, textAlign: 'center', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}>
+              <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: `${card.color}15`, color: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>{card.icon}</Box>
+              <Typography variant="h4" fontWeight={900} sx={{ color: card.color }}>{card.value}</Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight={600}>{card.label}</Typography>
+            </GlassPaper>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* ── Charts Section ── */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <GlassPaper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="subtitle1" fontWeight={800} mb={3}>Jinsi bo'yicha taqsimot</Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={stats.genderData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  {stats.genderData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                </Pie>
+                <RechartsTooltip />
+                <Legend iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+
+        <Grid item xs={12} md={8}>
+          <GlassPaper sx={{ p: 3, height: '100%' }}>
+            <Typography variant="subtitle1" fontWeight={800} mb={3}>Top 5 hududlar</Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.citiesData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"} />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12, fontWeight: 600, fill: isDark ? "#eee" : "#555" }} axisLine={false} tickLine={false} />
+                <RechartsTooltip cursor={{ fill: 'transparent' }} />
+                <Bar dataKey="value" fill="#007bff" radius={[0, 4, 4, 0]} barSize={25} />
+              </BarChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <GlassPaper sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight={800} mb={3}>Ma'lumotlar yig'ish dinamikasi</Typography>
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={stats.timelineData}>
+                <defs>
+                  <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#007bff" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#007bff" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: "text.secondary" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "text.secondary" }} axisLine={false} tickLine={false} />
+                <RechartsTooltip />
+                <Area type="monotone" dataKey="count" stroke="#007bff" strokeWidth={3} fillOpacity={1} fill="url(#colorCount)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <GlassPaper sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight={800} mb={3}>Yosh bo'yicha antropometrik ko'rsatkichlar (O'rtacha)</Typography>
+            <ResponsiveContainer width="100%" height={350}>
+              <ComposedChart data={stats.ageData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="age" />
+                <YAxis yAxisId="left" orientation="left" stroke="#007bff" label={{ value: "Vazn (kg)", angle: -90, position: 'insideLeft' }} />
+                <YAxis yAxisId="right" orientation="right" stroke="#f50057" label={{ value: "Bo'y (sm)", angle: 90, position: 'insideRight' }} />
+                <RechartsTooltip />
+                <Legend />
+                <Bar yAxisId="left" dataKey="vazn" fill="#007bff" radius={[4, 4, 0, 0]} opacity={0.6} name="O'rtacha vazn (kg)" />
+                <Line yAxisId="right" type="monotone" dataKey="bo'y" stroke="#f50057" strokeWidth={4} dot={{ r: 6 }} name="O'rtacha bo'y (sm)" />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+      </Grid>
+
+      <GlassPaper sx={{ p: 4, textAlign: 'center', background: isDark ? 'linear-gradient(135deg, rgba(0,123,255,0.15) 0%, rgba(0,123,255,0) 100%)' : 'linear-gradient(135deg, rgba(0,123,255,0.05) 0%, rgba(255,255,255,0.5) 100%)' }}>
+        <Typography variant="h5" fontWeight={900} mb={1}>Tadqiqot Hisoboti</Typography>
+        <Typography variant="body2" color="text.secondary" mb={4}>Barcha to'plangan ma'lumotlarni tahliliy formatda (.xlsx) yuklab oling</Typography>
+        <Button
+          variant="contained" size="large"
+          onClick={async () => {
+            try {
+              const blob = await ResearchApi.exportDataset({});
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `full_analysis_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+              document.body.appendChild(a); a.click(); a.remove();
+              toast.success("Yuklab olish yakunlandi");
+            } catch (err) {
+              toast.error("Xatolik: " + err.message);
+            }
+          }}
+          startIcon={<Download />}
+          sx={{ borderRadius: 3, px: 8, py: 2, fontWeight: 800, background: 'linear-gradient(135deg, #007bff 0%, #00d4ff 100%)' }}
+        >
+          To'liq bazani eksport qilish
+        </Button>
+      </GlassPaper>
+    </Stack>
+  );
+};
+
+/* ════════════════════════════════════════════════════
    MAIN PAGE
 ════════════════════════════════════════════════════ */
 const ResearcherPage = () => {
@@ -682,8 +914,8 @@ const ResearcherPage = () => {
   }, [isSuperAdmin]);
 
   useEffect(() => {
-    if (activeTab === 1) fetchData();
-    if (activeTab === 2 && isSuperAdmin) fetchDeleted();
+    if (activeTab === 1 || activeTab === 2) fetchData();
+    if (activeTab === 3 && isSuperAdmin) fetchDeleted();
   }, [activeTab, fetchData, fetchDeleted, isSuperAdmin]);
 
   const handleSearch = () => fetchData(filter);
@@ -735,6 +967,7 @@ const ResearcherPage = () => {
   const TABS = [
     { label: "Yangi qo'shish", icon: <Add />, color: "#007bff" },
     { label: "Ma'lumotlar ro'yxati", icon: <Dashboard />, color: "#00c853" },
+    { label: "Analitika", icon: <Assessment />, color: "#673ab7" },
     ...(isSuperAdmin ? [{ label: "O'chirilganlar", icon: <Delete />, color: "#f44336" }] : []),
   ];
 
@@ -909,7 +1142,11 @@ const ResearcherPage = () => {
               </Stack>
             )}
 
-            {activeTab === 2 && isSuperAdmin && (
+            {activeTab === 2 && (
+              <ResearchAnalytics data={data} isDark={isDark} />
+            )}
+
+            {activeTab === 3 && isSuperAdmin && (
               <Stack spacing={3}>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Box>

@@ -106,9 +106,15 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
   const localStats = useMemo(() => {
     if (!data.length) return { avgBmi: 0, maleCount: 0, femaleCount: 0, unknownCount: 0, avgAge: 0, bmiCategories: [] };
 
-    const maleCount = data.filter(r => (r.gender || "").toLowerCase() === "erkak" || (r.gender || "").toLowerCase() === "male" || (r.gender || "") === "m").length;
-    const femaleCount = data.filter(r => (r.gender || "").toLowerCase() === "ayol" || (r.gender || "").toLowerCase() === "female" || (r.gender || "") === "f").length;
-    const unknownCount = data.length - maleCount - femaleCount;
+    const maleCount = data.filter(r => {
+      const g = (r.gender || "").toLowerCase();
+      return g === "erkak" || g === "male" || g === "m" || g === "boy" || g.includes("o'g'il") || g.includes("о'ғил");
+    }).length;
+    const femaleCount = data.filter(r => {
+      const g = (r.gender || "").toLowerCase();
+      return g === "ayol" || g === "female" || g === "f" || g === "girl" || g.includes("qiz") || g.includes("қиз");
+    }).length;
+     const unknownCount = data.length - maleCount - femaleCount;
 
     const bmiValues = data.filter(r => r.bmi && !isNaN(r.bmi)).map(r => parseFloat(r.bmi));
     const avgBmi = bmiValues.length ? (bmiValues.reduce((s, v) => s + v, 0) / bmiValues.length).toFixed(1) : 0;

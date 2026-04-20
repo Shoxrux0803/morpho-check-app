@@ -15,8 +15,14 @@ const GenderDistribution = ({ data, loading }) => {
 
     data.forEach((user) => {
       const g = (user.gender || '').toLowerCase();
-      if (g.includes('m') || g.includes('o\'g\'il') || g.includes('муж')) male++;
-      else if (g.includes('f') || g.includes('qiz') || g.includes('жен')) female++;
+      
+      // Robust male check
+      const isMale = g === 'm' || g === 'male' || g === 'boy' || g.includes('o\'g\'il') || g.includes('о\'ғил') || g.includes('муж');
+      // Robust female check
+      const isFemale = g === 'f' || g === 'female' || g === 'girl' || g.includes('qiz') || g.includes('қиз') || g.includes('жен');
+
+      if (isMale) male++;
+      else if (isFemale) female++;
     });
 
     return [

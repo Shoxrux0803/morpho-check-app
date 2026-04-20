@@ -715,7 +715,23 @@ def stats(
         .group_by(PatientAnalysis.gender)
         .all()
     )
-    gender_map = {g.lower() if g else "noma'lum": int(c) for g, c in gender_counts}
+    gender_map = {"erkak": 0, "ayol": 0, "noma'lum": 0}
+    for g, c in gender_counts:
+        if not g:
+            gender_map["noma'lum"] += int(c)
+            continue
+        gl = g.lower()
+        # Robust check for male variants
+        is_male = gl in ['erkak', 'male', 'boy', 'm', 'male'] or "o'g'il" in gl or "о'ғил" in gl or 'муж' in gl
+        # Robust check for female variants
+        is_female = gl in ['ayol', 'female', 'girl', 'f'] or 'qiz' in gl or 'қиз' in gl or 'жен' in gl
+        
+        if is_male:
+            gender_map["erkak"] += int(c)
+        elif is_female:
+            gender_map["ayol"] += int(c)
+        else:
+            gender_map["noma'lum"] += int(c)
 
     # Somatotype Distribution
     somatotype_counts = (

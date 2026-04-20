@@ -166,6 +166,8 @@ class ResearchRecord(Base):
     fat_iliac = Column(Float, nullable=True) 
     fat_popliteal = Column(Float, nullable=True)
 
+    gender = Column(String(20), nullable=True, index=True) # Boy / Girl or Erkak / Ayol
+
     # Soft Delete maydonlari
     is_deleted    = Column(Integer, default=0, nullable=True, index=True)   # 0=yo'q, 1=ha
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
