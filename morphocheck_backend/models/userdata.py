@@ -62,7 +62,7 @@ class PatientAnalysis(Base):
     created_at = Column(DateTime, server_default=func.now(), index=True)
 
     # Soft Delete maydonlari
-    is_deleted    = Column(Integer, default=0, nullable=True)   # 0=yo'q, 1=ha
+    is_deleted    = Column(Integer, default=0, nullable=True, index=True)   # 0=yo'q, 1=ha
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deleted_at    = Column(DateTime, nullable=True)
     deleted_by    = relationship("User", foreign_keys=[deleted_by_id])
@@ -76,11 +76,11 @@ class ResearchRecord(Base):
     created_at = Column(DateTime, server_default=func.now(), index=True)
 
     # Demographics
-    full_name = Column(String(255), nullable=True)
-    school_name = Column(String(255), nullable=True)
-    settlement = Column(String(255), nullable=True)
+    full_name = Column(String(255), nullable=True, index=True)
+    school_name = Column(String(255), nullable=True, index=True)
+    settlement = Column(String(255), nullable=True, index=True)
     birth_place = Column(String(255), nullable=True)
-    birth_date = Column(String(50), nullable=True)  # Yil, oy, kun
+    birth_date = Column(String(50), nullable=True, index=True)  # Yil, oy, kun
     father_nationality = Column(String(100), nullable=True)
     mother_nationality = Column(String(100), nullable=True)
     living_since = Column(String(100), nullable=True)
@@ -95,7 +95,7 @@ class ResearchRecord(Base):
     mother_health_status = Column(String(255), nullable=True)
 
     # Date of examination
-    examination_date = Column(String(50), nullable=True)
+    examination_date = Column(String(50), nullable=True, index=True)
 
     # I Показатели физического развития
     lower_leg_spina_iliaca = Column(Float, nullable=True) 
@@ -167,7 +167,7 @@ class ResearchRecord(Base):
     fat_popliteal = Column(Float, nullable=True)
 
     # Soft Delete maydonlari
-    is_deleted    = Column(Integer, default=0, nullable=True)   # 0=yo'q, 1=ha
+    is_deleted    = Column(Integer, default=0, nullable=True, index=True)   # 0=yo'q, 1=ha
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deleted_at    = Column(DateTime, nullable=True)
     deleted_by    = relationship("User", foreign_keys=[deleted_by_id])

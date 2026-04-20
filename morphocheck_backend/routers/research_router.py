@@ -116,6 +116,15 @@ def export_research_xlsx(
 @router.get("/", response_model=List[ResearchRecordOut])
 def list_research_records(
     search: Optional[str] = Query(None),
+    full_name: Optional[str] = Query(None),
+    school_name: Optional[str] = Query(None),
+    settlement: Optional[str] = Query(None),
+    feeding_type: Optional[str] = Query(None),
+    parents_marriage: Optional[str] = Query(None),
+    weight_min: Optional[float] = Query(None),
+    weight_max: Optional[float] = Query(None),
+    height_min: Optional[float] = Query(None),
+    height_max: Optional[float] = Query(None),
     researcher_id: Optional[int] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to: Optional[str] = Query(None),
@@ -129,6 +138,7 @@ def list_research_records(
     elif researcher_id:
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
+    # Generic search
     if search:
         like = f"%{search}%"
         query = query.filter(
@@ -136,13 +146,37 @@ def list_research_records(
             ResearchRecord.school_name.ilike(like) |
             ResearchRecord.settlement.ilike(like)
         )
+    
+    # Specific demographic filters
+    if full_name:
+        query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
+    if school_name:
+        query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
+    if settlement:
+        query = query.filter(ResearchRecord.settlement.ilike(f"%{settlement}%"))
+    if feeding_type:
+        query = query.filter(ResearchRecord.feeding_type == feeding_type)
+    if parents_marriage:
+        query = query.filter(ResearchRecord.parents_marriage == parents_marriage)
+    
+    # Biometric filters
+    if weight_min is not None:
+        query = query.filter(ResearchRecord.weight >= weight_min)
+    if weight_max is not None:
+        query = query.filter(ResearchRecord.weight <= weight_max)
+    if height_min is not None:
+        query = query.filter(ResearchRecord.chest_standing_height >= height_min)
+    if height_max is not None:
+        query = query.filter(ResearchRecord.chest_standing_height <= height_max)
 
+    # Date filters
     if date_from:
         query = query.filter(ResearchRecord.examination_date >= date_from)
     if date_to:
         query = query.filter(ResearchRecord.examination_date <= date_to)
 
     return query.order_by(ResearchRecord.id.desc()).all()
+
 
 
 # ═══════════════════════════════════════════════

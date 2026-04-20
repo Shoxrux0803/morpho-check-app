@@ -14,6 +14,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ResearchApi } from "../services/api";
 import { toast } from "react-hot-toast";
+import AdvancedResearchFilter from "../components/Research/AdvancedResearchFilter";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -881,7 +882,20 @@ const ResearcherPage = () => {
   const [deletedData, setDeletedData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletedLoading, setDeletedLoading] = useState(false);
-  const [filter, setFilter] = useState({ search: "", date_from: "", date_to: "" });
+  const [filter, setFilter] = useState({
+    search: "",
+    full_name: "",
+    school_name: "",
+    settlement: "",
+    feeding_type: "",
+    parents_marriage: "",
+    weight_min: "",
+    weight_max: "",
+    height_min: "",
+    height_max: "",
+    date_from: "",
+    date_to: ""
+  });
 
   // Modals
   const [detailRecord, setDetailRecord] = useState(null);
@@ -1120,11 +1134,10 @@ const ResearcherPage = () => {
 
                 <Stats />
 
-                <FilterBar
+                <AdvancedResearchFilter
                   filter={filter}
                   setFilter={setFilter}
                   onSearch={handleSearch}
-                  onExport={handleExport}
                 />
 
                 <RecordsTable

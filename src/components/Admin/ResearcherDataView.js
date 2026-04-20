@@ -12,6 +12,7 @@ import {
 } from "@mui/icons-material";
 import { ResearchApi } from "../../services/api";
 import { toast } from "react-hot-toast";
+import AdvancedResearchFilter from "../Research/AdvancedResearchFilter";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -53,7 +54,20 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const [deletedLoading, setDeletedLoading] = useState(false);
   
   const [activeTab, setActiveTab] = useState(0); // 0: Active, 1: Deleted
-  const [filter, setFilter] = useState({ search: "", date_from: "", date_to: "" });
+  const [filter, setFilter] = useState({
+    search: "",
+    full_name: "",
+    school_name: "",
+    settlement: "",
+    feeding_type: "",
+    parents_marriage: "",
+    weight_min: "",
+    weight_max: "",
+    height_min: "",
+    height_max: "",
+    date_from: "",
+    date_to: ""
+  });
   const [filterOpen, setFilterOpen] = useState(false);
   
   const [detailRecord, setDetailRecord] = useState(null);
@@ -249,29 +263,11 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
       {activeTab === 0 && (
         <Stack spacing={3}>
-          <GlassPaper sx={{ p: 2 }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                size="small" placeholder="Ism, maktab, shahar bo'yicha qidirish..."
-                value={filter.search}
-                onChange={(e) => setFilter(f => ({ ...f, search: e.target.value }))}
-                onKeyDown={(e) => e.key === "Enter" && fetchData()}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start"><Search sx={{ fontSize: 18 }} /></InputAdornment>,
-                }}
-                sx={{ flex: 1, maxWidth: 400 }}
-              />
-              <Button startIcon={<FilterList />} variant="outlined" size="small" onClick={() => setFilterOpen(!filterOpen)}>Filter</Button>
-              <Button startIcon={<Search />} variant="contained" size="small" onClick={() => fetchData()}>Qidirish</Button>
-              <Button size="small" onClick={() => { setFilter({ search: "", date_from: "", date_to: "" }); fetchData({ search: "", date_from: "", date_to: "" }); }}>Tozalash</Button>
-            </Stack>
-            <Collapse in={filterOpen}>
-              <Stack direction="row" spacing={2} mt={2}>
-                <TextField size="small" label="Dan (sana)" placeholder="2024-01-01" value={filter.date_from} onChange={e => setFilter(f => ({ ...f, date_from: e.target.value }))} InputLabelProps={{ shrink: true }} />
-                <TextField size="small" label="Gacha (sana)" placeholder="2024-12-31" value={filter.date_to} onChange={e => setFilter(f => ({ ...f, date_to: e.target.value }))} InputLabelProps={{ shrink: true }} />
-              </Stack>
-            </Collapse>
-          </GlassPaper>
+          <AdvancedResearchFilter
+            filter={filter}
+            setFilter={setFilter}
+            onSearch={fetchData}
+          />
 
           {renderTable(data, loading)}
         </Stack>
