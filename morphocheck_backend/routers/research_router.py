@@ -14,6 +14,9 @@ import io
 import urllib.parse
 from jose import JWTError, jwt
 import os
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from utils.translit import lat2cyr
 
 SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
@@ -89,7 +92,7 @@ def export_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
-    """XLSX Export"""
+    """XLSX Export - Advanced version with styling and Cyrillic headers"""
     query = db.query(ResearchRecord).filter(ResearchRecord.is_deleted == 0)
     if current_user.role == "researcher":
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
@@ -97,23 +100,166 @@ def export_research_xlsx(
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
     records = query.all()
-    data_list = [
-        {c.name: getattr(r, c.name) for c in r.__table__.columns}
-        for r in records
-    ]
-
-    if not data_list:
+    if not records:
         raise HTTPException(status_code=404, detail="Ma'lumotlar mavjud emas")
 
-    df = pd.DataFrame(data_list)
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Research Data"
+
+    # 1. Заголовки (Кириллица)
+    headers_map = [
+        ("Сана", "created_at"),
+        ("ID", "id"),
+        ("Ф.И.Ш.", "full_name"),
+        ("Мактаб/Муассаса", "school_name"),
+        ("Аҳоли пункти", "settlement"),
+        ("Туғилган жойи", "birth_place"),
+        ("Туғилган санаси", "birth_date"),
+        ("Отасининг миллати", "father_nationality"),
+        ("Онасининг миллати", "mother_nationality"),
+        ("Қачондан бери яшайди", "living_since"),
+        ("Рўйхатга олинган сана", "enrolled_date"),
+        ("Яшаш шароити", "living_conditions"),
+        ("Меҳнат режими", "labor_regime"),
+        ("Ўтказилган касалликлар", "past_illnesses"),
+        ("Болалар сони", "children_count"),
+        ("Бола нечанчи", "child_order"),
+        ("Озиқланиш тури", "feeding_type"),
+        ("Ота-она никоҳи", "parents_marriage"),
+        ("Она соғлиғи", "mother_health_status"),
+        ("Текширув санаси", "examination_date"),
+        
+        # I Показатели физического развития
+        ("Олд юқори ёнбош ўсимтасидан (см)", "lower_leg_spina_iliaca"),
+        ("Қовуқ устидан (см)", "lower_leg_symphysion"),
+        ("Болдир баландлиги (см)", "tibiale_height"),
+        ("Чанноқ кенглиги (см)", "pelvic_width"),
+        ("Сон узунлиги (см)", "thigh_length"),
+        ("Сон айланаси (см)", "thigh_circumference"),
+        ("Болдир узунлиги (см)", "calf_length"),
+        ("Болдир айланаси (см)", "calf_circumference"),
+        ("Оёқ кафти узунлиги (см)", "foot_length"),
+        ("Тишлар сони", "teeth_count"),
+        ("Ҳайз бошланиши", "menstruation_start"),
+
+        # II Определение формы черепа
+        ("Бош суяги бўйлама (см)", "skull_longitudinal"),
+        ("Бош суяги кўндаланг (см)", "skull_transverse"),
+        ("Бош айланаси (см)", "head_circumference"),
+        ("Пешона кўндаланг (см)", "forehead_transverse"),
+        ("Бош суяги баландлиги (см)", "skull_height"),
+        ("Бош суяги асоси узунлиги (см)", "skull_base_length"),
+        ("Бош суяги асоси кенглиги (см)", "skull_base_width"),
+
+        # Лицо
+        ("Юз кенглиги (cm)", "face_bizygomatic"),
+        ("Пастки жағ кенглиги (cm)", "face_bigonial"),
+        ("Юз морфологик баландлиги (cm)", "face_morphological_height"),
+        ("Юз физиогномик баландлиги (cm)", "face_physiognomic_height"),
+        ("Бурун баландлиги (cm)", "nose_height"),
+        ("Бурун кенглиги (cm)", "nose_width"),
+        ("Кўз ташқи бурчаклари (cm)", "outer_canthal_width"),
+        ("Кўз ички бурчаклари (cm)", "inner_canthal_width"),
+        ("Лаблар шиллиқ қавати (cm)", "lips_mucosa_height"),
+        ("Оғиз кенглиги (cm)", "mouth_width"),
+
+        # Грудь
+        ("Бўйи (тик) (см)", "chest_standing_height"),
+        ("Бўйи (ўтирган) (см)", "chest_sitting_height"),
+        ("Вазн (кг)", "weight"),
+        ("Гавда узунлиги (см)", "trunk_length"),
+        ("Тана узунлиги (см)", "torso_length"),
+        ("Кўкрак айланаси (пауза) (см)", "chest_circumference_pause"),
+        ("Кўкрак айланаси (нафас) (см)", "chest_circumference_inhale"),
+        ("Кўкрак айланаси (чиқариш) (см)", "chest_circumference_exhale"),
+        ("Бел айланаси (см)", "waist_circumference"),
+        ("Қорин айланаси (см)", "abdomen_circumference"),
+        ("Юқори сегмент узунлиги (см)", "upper_segment_length"),
+        ("Кўкрак кўндаланг (см)", "chest_transverse_diameter"),
+        ("Кўкрак олд-орқа (см)", "chest_anteroposterior_diameter"),
+        ("Кўкрак баландлиги (см)", "chest_height"),
+
+        # Верхняя конечность
+        ("Қўл узунлиги (см)", "arm_length"),
+        ("Елка узунлиги (см)", "shoulder_length"),
+        ("Елка кенглиги (см)", "shoulder_width"),
+        ("Елка айланаси (тинч) (см)", "shoulder_circumference_rest"),
+        ("Елка айланаси (букилган) (см)", "shoulder_circumference_flexed"),
+        ("Билак узунлиги (см)", "forearm_length"),
+        ("Қўл кафти узунлиги (см)", "hand_length"),
+        ("Динамометрия (кг)", "dynamometry"),
+
+        # Толщина подкожно-жировой клетчатки
+        ("Трицепс ёғ (мм)", "fat_triceps"),
+        ("Бицепс ёғ (мм)", "fat_biceps"),
+        ("Курак ости ёғ (мм)", "fat_subscapular"),
+        ("Ёнбош ёғ (мм)", "fat_iliac"),
+        ("Тизза ости ёғ (мм)", "fat_popliteal"),
+    ]
+
+    # Style definitions
+    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    zebra_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    center_align = Alignment(horizontal='center', vertical='center')
+    left_align = Alignment(horizontal='left', vertical='center')
+
+    # Writing headers
+    for col_num, (header_text, _) in enumerate(headers_map, 1):
+        cell = ws.cell(row=1, column=col_num, value=header_text)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = border
+
+    # Writing data
+    for row_num, record in enumerate(records, 2):
+        for col_num, (_, field_name) in enumerate(headers_map, 1):
+            val = getattr(record, field_name)
+            
+            # Special formatting
+            if field_name == "created_at":
+                display_val = val.strftime("%Y-%m-%d %H:%M") if val else "-"
+            elif field_name == "id":
+                display_val = val # ID o'zgarmasin
+            elif isinstance(val, str):
+                display_val = lat2cyr(val) if val else "-"
+            elif val is None:
+                display_val = "-"
+            else:
+                display_val = val
+            
+            cell = ws.cell(row=row_num, column=col_num, value=display_val)
+            cell.alignment = left_align
+            cell.border = border
+            
+            # Zebra rows
+            if row_num % 2 == 0:
+                cell.fill = zebra_fill
+
+    # Auto-width
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        ws.column_dimensions[column].width = min(50, max_length + 2)
+
     buf = io.BytesIO()
-    with pd.ExcelWriter(buf, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name="Research Data")
+    wb.save(buf)
     buf.seek(0)
+    
+    filename = f"research_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=research_data.xlsx"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 

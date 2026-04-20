@@ -7,7 +7,7 @@ import {
 import {
   Search, FilterList, Close, RestartAlt, 
   ExpandMore, ExpandLess, School, Place, 
-  Person, FitnessCenter, CalendarMonth
+  Person, FitnessCenter, CalendarMonth, Download
 } from "@mui/icons-material";
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -33,7 +33,7 @@ const GlassPaper = ({ children, sx = {} }) => (
   </Paper>
 );
 
-const AdvancedResearchFilter = ({ filter, setFilter, onSearch }) => {
+const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
   const [expanded, setExpanded] = useState(false);
 
   // Feeding type options
@@ -122,6 +122,18 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch }) => {
           >
             Qidirish
           </Button>
+
+          {onExport && (
+            <Button
+              variant="outlined"
+              color="success"
+              startIcon={<Download />}
+              onClick={onExport}
+              sx={{ borderRadius: 3, px: 2, textTransform: "none", whiteSpace: "nowrap" }}
+            >
+              XLSX
+            </Button>
+          )}
         </Stack>
 
         {/* Advanced Filters Panel */}

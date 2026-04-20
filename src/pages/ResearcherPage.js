@@ -690,13 +690,15 @@ const ResearcherPage = () => {
 
   const handleExport = async () => {
     try {
-      const blob = await ResearchApi.exportXlsx();
+      const blob = await ResearchApi.exportXlsx(filter);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = "research_data.xlsx";
+      a.href = url;
+      a.download = `research_data_${new Date().toISOString().slice(0, 10)}.xlsx`;
       document.body.appendChild(a); a.click(); a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error("Ma'lumot mavjud emas: " + err.message);
+      toast.error("Eksport xatosi: " + err.message);
     }
   };
 
@@ -893,6 +895,7 @@ const ResearcherPage = () => {
                   filter={filter}
                   setFilter={setFilter}
                   onSearch={handleSearch}
+                  onExport={handleExport}
                 />
 
                 <RecordsTable
