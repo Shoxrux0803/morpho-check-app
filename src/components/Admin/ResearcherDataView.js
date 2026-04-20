@@ -8,10 +8,12 @@ import {
 import {
   Download, Description, Edit, Delete, DeleteForever, Search,
   FilterList, Refresh, Visibility, Close, Person, Place, Science,
-  FitnessCenter, RestoreFromTrash
+  FitnessCenter, RestoreFromTrash, Add
 } from "@mui/icons-material";
+import ResearcherForm from "../Research/ResearcherForm";
 import { ResearchApi } from "../../services/api";
 import { toast } from "react-hot-toast";
+import { useLanguage } from "../../contexts/LanguageContext";
 import AdvancedResearchFilter from "../Research/AdvancedResearchFilter";
 
 /* ════════════════════════════════════════════════════
@@ -48,6 +50,7 @@ const SectionTitle = ({ icon: Icon, title }) => (
    MAIN COMPONENT
 ════════════════════════════════════════════════════ */
 const ResearcherDataView = ({ isSuperAdmin = true }) => {
+  const { t } = useLanguage();
   const [data, setData] = useState([]);
   const [deletedData, setDeletedData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,6 +77,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const [editRecord, setEditRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
     if (activeTab === 0) fetchData();
@@ -226,7 +230,9 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                       <>
                         <Tooltip title="Tahrirlash"><IconButton size="small" color="primary" onClick={() => { setEditRecord(row); setEditForm({ ...row }); }}><Edit fontSize="small" /></IconButton></Tooltip>
                         <Tooltip title="Soft o'chirish"><IconButton size="small" color="warning" onClick={() => handleDelete(row.id, "soft")}><Delete fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleDelete(row.id, "hard")}><DeleteForever fontSize="small" /></IconButton></Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleDelete(row.id, "hard")}><DeleteForever fontSize="small" /></IconButton></Tooltip>
+                        )}
                       </>
                     ) : (
                       <>
@@ -251,6 +257,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" fontWeight={900}>Izlanuvchi Ma'lumotlari</Typography>
         <Stack direction="row" spacing={2}>
+          <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => setShowAdd(true)}>{t("addRecord")}</Button>
           <Button variant="contained" color="success" startIcon={<Download />} onClick={handleExportXlsx}>XLSX</Button>
           <Button variant="outlined" startIcon={<Refresh />} onClick={() => activeTab === 0 ? fetchData() : fetchDeletedData()}>Yangilash</Button>
         </Stack>
@@ -444,6 +451,20 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             {saving ? <CircularProgress size={20} /> : "Saqlash"}
           </Button>
         </DialogActions>
+      </Dialog>
+
+      {/* ── Add New Record Modal ── */}
+      <Dialog open={showAdd} onClose={() => setShowAdd(false)} maxWidth="md" fullWidth scroll="paper">
+        <DialogTitle sx={{ fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {t("addRecord")}
+          <IconButton onClick={() => setShowAdd(false)} size="small"><Close /></IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <ResearcherForm 
+            onSuccess={() => { setShowAdd(false); fetchData(); }} 
+            onCancel={() => setShowAdd(false)} 
+          />
+        </DialogContent>
       </Dialog>
     </Box>
   );

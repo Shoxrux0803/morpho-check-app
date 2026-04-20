@@ -438,7 +438,7 @@ export default function AdminPage() {
         label: "Izlanuvchi ma'lumotlari", 
         icon: <Assessment />, 
         roles: ["superadmin"],
-        content: <ResearcherDataView />
+        content: <ResearcherDataView isSuperAdmin={user?.role === 'superadmin'} />
       },
     ];
     return allTabs.filter(tab => tab.roles.includes(user?.role));

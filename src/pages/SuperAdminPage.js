@@ -26,7 +26,6 @@ import SuperAdminDashboard from "../components/Dashboard/SuperAdminDashboard";
 import ScientificAnalysis from "../components/Dashboard/ScientificAnalysis";
 import ClinicalCMS from "../components/Admin/ClinicalCMS";
 import AdminActivity from "../components/Admin/AdminActivity";
-import ResearcherDataView from "../components/Admin/ResearcherDataView";
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
@@ -616,17 +615,9 @@ const SuperAdminPage = () => {
         );
       case 7: return <ClinicalCMS />;
       case 8: return <AdminActivity />;
-      case 9: return renderResearchTab();
       default: return null;
     }
   };
-
-  // ══════════════════════════════════════════════════
-  //  IZLANUVCHILAR TAB RENDERER
-  // ══════════════════════════════════════════════════
-  const renderResearchTab = () => (
-    <ResearcherDataView isSuperAdmin={true} />
-  );
 
   const isDark = useTheme().palette.mode === 'dark';
 
@@ -667,12 +658,6 @@ const SuperAdminPage = () => {
                 <Tab icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Backup" />
                 <Tab icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Klinik CMS" />
                 <Tab icon={<Assignment sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Monitoring" />
-                <Tab
-                  icon={<Science sx={{ mr: 1.5, fontSize: 20 }} />}
-                  iconPosition="start"
-                  label="Izlanuvchilar"
-                  sx={{ mt: 1, borderTop: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)" }}
-                />
               </Tabs>
 
               <Box mt={2} pt={2} borderTop={isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)"}>
