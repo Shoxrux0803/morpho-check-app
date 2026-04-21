@@ -24,6 +24,8 @@ import {
   ComposedChart, Line
 } from "recharts";
 import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
+import DashboardFilters from "../components/Dashboard/DashboardFilters";
+
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -736,25 +738,8 @@ const ResearchAnalytics = ({ data, isDark }) => {
           <Typography variant="h4" fontWeight={900}>Analitika Markazi</Typography>
           <Typography variant="body2" color="text.secondary">Tadqiqot ma'lumotlarinning professional tahlili</Typography>
         </Box>
-        <Stack direction="row" spacing={1} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', p: 0.5, borderRadius: 3 }}>
-          <Button 
-            size="small" 
-            variant={timeRange === "all" ? "contained" : "text"} 
-            onClick={() => setTimeRange("all")}
-            sx={{ borderRadius: 2, textTransform: 'none', px: 3, fontWeight: 700 }}
-          >
-            Hammasi
-          </Button>
-          <Button 
-            size="small" 
-            variant={timeRange === "30d" ? "contained" : "text"} 
-            onClick={() => setTimeRange("30d")}
-            sx={{ borderRadius: 2, textTransform: 'none', px: 3, fontWeight: 700 }}
-          >
-            Oxirgi 30 kun
-          </Button>
-        </Stack>
       </Box>
+
 
       {/* ── Key Metrics Cards ── */}
       <Grid container spacing={3}>
@@ -1139,8 +1124,27 @@ const ResearcherPage = () => {
             )}
 
             {activeTab === 2 && (
-              <ResearchAnalytics data={data} isDark={isDark} />
+              <Box>
+                <DashboardFilters 
+                  filters={filter} 
+                  onFilterChange={(newFilters) => {
+                    setFilter(newFilters);
+                    fetchData(newFilters);
+                  }} 
+                  onReset={() => {
+                    const empty = {
+                      search: "", full_name: "", school_name: "", settlement: "", 
+                      gender: "", age_min: 0, age_max: 100, bmi_min: 10, bmi_max: 50,
+                      somatotype: "", date_from: "", date_to: ""
+                    };
+                    setFilter(empty);
+                    fetchData(empty);
+                  }}
+                />
+                <ResearchAnalytics data={data} isDark={isDark} />
+              </Box>
             )}
+
 
             {activeTab === 3 && isSuperAdmin && (
               <Stack spacing={3}>

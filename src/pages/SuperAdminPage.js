@@ -27,6 +27,8 @@ import SuperAdminDashboard from "../components/Dashboard/SuperAdminDashboard";
 import ScientificAnalysis from "../components/Dashboard/ScientificAnalysis";
 import ClinicalCMS from "../components/Admin/ClinicalCMS";
 import AdminActivity from "../components/Admin/AdminActivity";
+import DashboardFilters from "../components/Dashboard/DashboardFilters";
+
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
@@ -85,15 +87,27 @@ const SuperAdminPage = () => {
   // Dashboard Stats State
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [dashFilters, setDashFilters] = useState({
+    gender: "",
+    region: "",
+    age_min: 0,
+    age_max: 100,
+    bmi_min: 10,
+    bmi_max: 50,
+    somatotype: "",
+    date_from: "",
+    date_to: ""
+  });
 
   // Backup State
   const [backups, setBackups] = useState([]);
   const [backupLoading, setBackupLoading] = useState(false);
 
+
   useEffect(() => {
     if (user?.role === "superadmin") {
       if (activeTab === 0 || activeTab === 1) {
-        fetchDashboardStats();
+        fetchDashboardStats(dashFilters);
         fetchAdmins();
       }
       if (activeTab === 2) fetchAdmins();
@@ -101,14 +115,15 @@ const SuperAdminPage = () => {
       if (activeTab === 5) fetchAuditLogs();
       if (activeTab === 6) fetchBackups();
     }
-  }, [user, activeTab]);
+  }, [user, activeTab, dashFilters]);
 
 
 
-  const fetchDashboardStats = async () => {
+
+  const fetchDashboardStats = async (filters = dashFilters) => {
     setStatsLoading(true);
     try {
-      const data = await AdminApi.stats();
+      const data = await AdminApi.stats(filters);
       setStats(data);
     } catch (err) {
       console.error("Failed to fetch dashboard stats:", err);
@@ -116,6 +131,7 @@ const SuperAdminPage = () => {
       setStatsLoading(false);
     }
   };
+
 
   const fetchAdmins = async () => {
     setAdminsLoading(true);
@@ -423,8 +439,35 @@ const SuperAdminPage = () => {
   // MAIN CONTENT RENDERER
   const renderTabContent = () => {
     switch (activeTab) {
-      case 0: return <SuperAdminDashboard stats={stats} statsLoading={statsLoading} admins={admins} />;
-      case 1: return <ScientificAnalysis stats={stats} loading={statsLoading} />;
+      case 0: 
+        return (
+          <Box>
+            <DashboardFilters 
+              filters={dashFilters} 
+              onFilterChange={setDashFilters} 
+              onReset={() => setDashFilters({
+                gender: "", region: "", age_min: 0, age_max: 100, 
+                bmi_min: 10, bmi_max: 50, somatotype: "", date_from: "", date_to: ""
+              })}
+            />
+            <SuperAdminDashboard stats={stats} statsLoading={statsLoading} admins={admins} />
+          </Box>
+        );
+      case 1: 
+        return (
+          <Box>
+            <DashboardFilters 
+              filters={dashFilters} 
+              onFilterChange={setDashFilters} 
+              onReset={() => setDashFilters({
+                gender: "", region: "", age_min: 0, age_max: 100, 
+                bmi_min: 10, bmi_max: 50, somatotype: "", date_from: "", date_to: ""
+              })}
+            />
+            <ScientificAnalysis stats={stats} loading={statsLoading} />
+          </Box>
+        );
+
       case 2:
         return (
           <Stack spacing={3}>

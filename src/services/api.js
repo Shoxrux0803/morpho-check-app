@@ -550,6 +550,24 @@ export const AdminApi = {
       }
       return resp.blob();
     },
+
+    exportDataset: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          queryParams.append(key, value.toString());
+        }
+      });
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/dataset?${queryParams.toString()}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.blob();
+    },
   },
 
   auditLogs: {
@@ -732,8 +750,15 @@ export const AdminApi = {
     },
   },
 
-  stats: async () => {
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/stats`, {
+  stats: async (params = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/stats?${queryParams.toString()}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
@@ -749,6 +774,7 @@ export const AdminApi = {
     const data = await resp.json();
     return data;
   },
+
 
   clinical: {
     list: async () => {
@@ -907,6 +933,20 @@ export const ResearchApi = {
     });
     const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/xlsx?${q.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    return resp.blob();
+  },
+
+  /** Dataset export for statistics */
+  exportDataset: async (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+    });
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/dataset?${q.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }

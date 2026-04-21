@@ -662,7 +662,14 @@ def create_payment(payload: PaymentCreate, db: Session = Depends(get_db)):
 @router.get("/stats")
 def stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
+    gender: Optional[str] = Query(None),
+    age_min: Optional[int] = Query(None),
+    age_max: Optional[int] = Query(None),
+    region: Optional[str] = Query(None),
+    date_from: Optional[date] = Query(None),
+    date_to: Optional[date] = Query(None),
+    somatotype: Optional[str] = Query(None)
 ):
     # Base count of users (only for superadmin?)
     total_users = db.query(func.count(User.id)).scalar() or 0
@@ -673,6 +680,24 @@ def stats(
     )
     if current_user.role != "superadmin":
         analysis_q = analysis_q.filter(PatientAnalysis.created_by_id == current_user.id)
+
+    # Apply Filters
+    if gender:
+        analysis_q = analysis_q.filter(func.lower(PatientAnalysis.gender) == gender.lower())
+    if age_min is not None:
+        analysis_q = analysis_q.filter(PatientAnalysis.age >= age_min)
+    if age_max is not None:
+        analysis_q = analysis_q.filter(PatientAnalysis.age <= age_max)
+    if region:
+        analysis_q = analysis_q.filter(PatientAnalysis.region == region)
+    if somatotype:
+        analysis_q = analysis_q.filter(PatientAnalysis.somatotype == somatotype)
+    if date_from:
+        start_dt = datetime.combine(date_from, datetime.min.time())
+        analysis_q = analysis_q.filter(PatientAnalysis.created_at >= start_dt)
+    if date_to:
+        end_dt = datetime.combine(date_to, datetime.max.time())
+        analysis_q = analysis_q.filter(PatientAnalysis.created_at <= end_dt)
         
     total_analyses = analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
     total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
@@ -682,6 +707,7 @@ def stats(
     today_analyses = analysis_q.filter(PatientAnalysis.created_at >= today_start).count()
     
     avg_bmi = analysis_q.with_entities(func.avg(PatientAnalysis.bmi)).scalar() or 0
+
     
     # BMI Distribution
     bmi_dist = {

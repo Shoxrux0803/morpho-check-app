@@ -26,6 +26,8 @@ import AdminFilters from "../components/Admin/AdminFilters";
 import AdminTable from "../components/Admin/AdminTable";
 import InputForm from "../components/InputForm";
 import ResearcherDataView from "../components/Admin/ResearcherDataView";
+import DashboardFilters from "../components/Dashboard/DashboardFilters";
+
 
 /** ===== Helpers ===== */
 const calcBMI = (wKg, hCm) => {
@@ -131,14 +133,21 @@ export default function AdminPage() {
   const [pdfLang, setPdfLang] = useState("uz");
 
   // Filters
-  const [q, setQ] = useState("");
-  const [gender, setGender] = useState("");
-  const [ageMin, setAgeMin] = useState("");
-  const [ageMax, setAgeMax] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [region, setRegion] = useState("");
+  // Unified Filters for both Table and Dashboard
+  const [dashFilters, setDashFilters] = useState({
+    q: "",
+    gender: "",
+    age_min: 0,
+    age_max: 100,
+    bmi_min: 10,
+    bmi_max: 50,
+    region: "",
+    somatotype: "",
+    date_from: "",
+    date_to: "",
+  });
   const [sort, setSort] = useState({ key: "createdAt", dir: "desc" });
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [checked, setChecked] = useState(new Set());
@@ -169,7 +178,14 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const resp = await AdminApi.analyses.list({
-        q, gender, ageMin, ageMax, dateFrom, dateTo, region,
+        q: dashFilters.q,
+        gender: dashFilters.gender,
+        ageMin: dashFilters.age_min,
+        ageMax: dashFilters.age_max,
+        dateFrom: dashFilters.date_from,
+        dateTo: dashFilters.date_to,
+        region: dashFilters.region,
+        somatotype: dashFilters.somatotype,
         sortKey: sort.key === "createdAt" ? "created_at" : sort.key,
         sortDir: sort.dir,
         page: page + 1,
@@ -182,20 +198,21 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  }, [user, q, gender, ageMin, ageMax, dateFrom, dateTo, region, sort, page, rowsPerPage]);
+  }, [user, dashFilters, sort, page, rowsPerPage]);
 
-  const fetchDashboardStats = useCallback(async () => {
+  const fetchDashboardStats = useCallback(async (filters = dashFilters) => {
     if (!user) return;
     setStatsLoading(true);
     try {
-      const data = await AdminApi.stats();
+      const data = await AdminApi.stats(filters);
       setStats(data);
     } catch (e) {
       console.error("Failed to fetch admin stats:", e);
     } finally {
       setStatsLoading(false);
     }
-  }, [user]);
+  }, [user, dashFilters]);
+
 
   useEffect(() => {
     load();
@@ -331,14 +348,15 @@ export default function AdminPage() {
       a.click();
     } catch (e) { alert("Word Error: " + e.message); }
     finally { setDownloadingDocx(false); }
-  }, [viewRow, pdfLang]);
+  }, [handleDownloadPdf, viewRow, pdfLang]);
 
   const handleExportXlsx = useCallback(async () => {
     setExportingXlsx(true);
     try {
       const blob = await AdminApi.analyses.exportXlsx({
-        q, gender, ageMin, ageMax, dateFrom, dateTo, region
+        ...dashFilters
       });
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -350,7 +368,8 @@ export default function AdminPage() {
     } finally {
       setExportingXlsx(false);
     }
-  }, [q, gender, ageMin, ageMax, dateFrom, dateTo, region]);
+  }, [dashFilters]);
+
 
   const handleDownloadTemplate = useCallback(async () => {
     try {
@@ -424,7 +443,14 @@ export default function AdminPage() {
                  <Button variant="outlined" color="error" startIcon={<Delete />} onClick={onDeleteSelected} disabled={!checked.size}>O'chirish ({checked.size})</Button>
                </Box>
             </Box>
-            <AdminFilters q={q} setQ={setQ} gender={gender} setGender={setGender} ageMin={ageMin} setAgeMin={setAgeMin} ageMax={ageMax} setAgeMax={setAgeMax} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} region={region} setRegion={setRegion} />
+            <DashboardFilters 
+              filters={dashFilters} 
+              onFilterChange={setDashFilters} 
+              onReset={() => setDashFilters({
+                q: "", gender: "", region: "", age_min: 0, age_max: 100, 
+                bmi_min: 10, bmi_max: 50, somatotype: "", date_from: "", date_to: ""
+              })}
+            />
             <Paper sx={{ mt: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
               {loading && <LinearProgress />}
               <AdminTable rows={raw} checked={checked} toggleAll={toggleAll} toggleOne={toggleOne} allChecked={raw.length > 0 && raw.every(r => checked.has(r.id))} setViewRow={setViewRow} onEdit={(r) => setEditRow(r)} formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")} user={user} />
@@ -433,6 +459,7 @@ export default function AdminPage() {
           </Box>
         )
       },
+
       { 
         id: 2, 
         label: "Izlanuvchi ma'lumotlari", 
@@ -442,7 +469,8 @@ export default function AdminPage() {
       },
     ];
     return allTabs.filter(tab => tab.roles.includes(user?.role));
-  }, [user, raw, loading, stats, statsLoading, totalCount, handleDownloadTemplate, setImportConfirmOpen, importingXlsx, exportingXlsx, handleExportXlsx, onDeleteSelected, checked, q, setQ, gender, setGender, ageMin, setAgeMin, ageMax, setAgeMax, dateFrom, setDateFrom, dateTo, setDateTo, region, setRegion, toggleAll, toggleOne, setViewRow, rowsPerPage, page, setPage, setRowsPerPage]);
+  }, [user, raw, loading, stats, statsLoading, totalCount, handleDownloadTemplate, setImportConfirmOpen, importingXlsx, exportingXlsx, handleExportXlsx, onDeleteSelected, checked, dashFilters, setDashFilters, toggleAll, toggleOne, setViewRow, rowsPerPage, page, setPage, setRowsPerPage]);
+
 
   if (authLoading) return <Box display="flex" justifyContent="center" py={10}><CircularProgress /></Box>;
 
