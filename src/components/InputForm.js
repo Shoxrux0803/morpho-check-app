@@ -12,6 +12,7 @@ import {
   Typography,
   Stack,
   Collapse,
+  CircularProgress,
 } from "@mui/material";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import PersonOutline from "@mui/icons-material/PersonOutline";
@@ -44,6 +45,8 @@ import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
 import ScienceIcon from "@mui/icons-material/Science";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import aiService from "../services/aiService";
 
 import { MCTextField as Field, MCSelect } from "./ui/MCField";
 import { UZB_LOCATIONS } from "../data/uzbLocations";
@@ -67,11 +70,13 @@ export default function InputForm({
   scrollTargetRef,
   isAdminView,
   submitLabel,
+  onBulkUpdate,
 }) {
   const { t } = useLanguage();
   const { isAuthenticated } = useAuth();
   const btnRef = useRef(null);
   const [activeStep, setActiveStep] = useState(0);
+  const [predictLoading, setPredictLoading] = useState(false);
 
   // Admin modini aniqlash: prop berilgan bo'lsa shuni, aks holda login holatini oladi
   const showAdvanced = isAdminView !== undefined ? isAdminView : isAuthenticated;
@@ -185,6 +190,26 @@ export default function InputForm({
 
   const nextStep = () => setActiveStep((prev) => prev + 1);
   const prevStep = () => setActiveStep((prev) => prev - 1);
+
+  const handleAiPredict = async () => {
+    if (!formData.age || !formData.gender) {
+      toast.error("Iltimos, avval yosh va jinsni kiriting!");
+      return;
+    }
+    
+    setPredictLoading(true);
+    try {
+      const res = await aiService.predictParams(formData.age, formData.gender, "analysis");
+      if (res.params && onBulkUpdate) {
+        onBulkUpdate(res.params);
+        toast.success("Gemini: Normativ ko'rsatkichlar muvaffaqiyatli yuklandi!", { icon: "🤖" });
+      }
+    } catch (err) {
+      toast.error("AI tahlilda xatolik yuz berdi");
+    } finally {
+      setPredictLoading(false);
+    }
+  };
 
   const inputSx = {
     "& .MuiInputBase-input": { py: 2.2, fontSize: 16 },
@@ -395,6 +420,17 @@ export default function InputForm({
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     {t("anthroMeasurements")}
                   </Typography>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Button 
+                    variant="outlined" 
+                    color="primary" 
+                    startIcon={predictLoading ? <CircularProgress size={20} /> : <AutoAwesomeIcon />}
+                    onClick={handleAiPredict}
+                    disabled={predictLoading}
+                    sx={{ borderRadius: 2, textTransform: 'none' }}
+                  >
+                    {predictLoading ? "AI..." : "AI Predict"}
+                  </Button>
                 </Stack>
 
                 <Grid container spacing={2.5}>

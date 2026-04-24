@@ -19,6 +19,7 @@ import Footer from "./components/Footer";
 import IntroPage from "./pages/IntroPage";
 import ThemeSync from "./components/ThemeSync";
 import ChatWidget from "./components/Chat/ChatWidget";
+import AIAssistantWidget from "./components/AI/AIAssistantWidget";
 
 // Lazy pages - YANGI SAHIFALAR QO'SHILDI
 const MorphoCheckPro = lazy(() => import("./pages/MorphoCheckPro"));
@@ -294,6 +295,7 @@ export default function App() {
             </main>
             
             <ChatWidget />
+            <AIAssistantWidget />
 
             <Footer />
           </div>

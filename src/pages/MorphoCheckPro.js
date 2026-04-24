@@ -120,6 +120,10 @@ export default function MorphoCheckPro() {
     setFormData((prev) => ({ ...prev, [name]: v }));
   };
 
+  const handleBulkUpdate = (data) => {
+    setFormData((prev) => ({ ...prev, ...data }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -382,6 +386,7 @@ export default function MorphoCheckPro() {
         <InputForm
           formData={formData}
           handleInputChange={handleInputChange}
+          onBulkUpdate={handleBulkUpdate}
           handleSubmit={handleSubmit}
           loading={loading}
           error={error}

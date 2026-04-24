@@ -75,6 +75,9 @@ const ChatWidget = () => {
   };
 
   const fetchMessages = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
     try {
       const data = await chatService.getMessages();
       const sorted = [...data].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -86,10 +89,15 @@ const ChatWidget = () => {
       }
     } catch (error) {
       console.error("Fetch messages error", error);
+      if (error.response?.status === 401) {
+        // Token expired or invalid
+      }
     }
   };
 
   const fetchUsers = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
     try {
       const data = await chatService.getUsersForSuperadmin();
       setUsers(data.filter(u => u.id !== user.id));
@@ -99,11 +107,15 @@ const ChatWidget = () => {
   };
 
   const fetchTypingStatus = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
     try {
       const data = await chatService.getTypingStatus();
       setTypingUsers(data);
     } catch (error) {
-      console.error("Fetch typing status error", error);
+      if (error.response?.status !== 401) {
+        console.error("Fetch typing status error", error);
+      }
     }
   };
 

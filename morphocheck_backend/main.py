@@ -26,6 +26,8 @@ from routers.clinical_router import router as clinical_router
 from routers.backup_router import router as backup_router
 from routers.research_router import router as research_router
 from routers.chat_router import router as chat_router
+from routers.ai_router import router as ai_router
+from routers.utils_router import router as utils_router
 
 # DB init
 from utils.database import engine, get_db, init_db
@@ -110,6 +112,8 @@ app.include_router(clinical_router, prefix=f"{API_PREFIX}/clinical", tags=["Klin
 app.include_router(backup_router, prefix=f"{API_PREFIX}/backup",  tags=["Zaxira (Backup)"])
 app.include_router(research_router, prefix=f"{API_PREFIX}/research", tags=["Izlanuvchi"])
 app.include_router(chat_router,     prefix=f"{API_PREFIX}/chat",     tags=["Chat"])
+app.include_router(ai_router,       prefix=f"{API_PREFIX}/ai",       tags=["AI Assistant"])
+app.include_router(utils_router,    prefix=f"{API_PREFIX}/utils",    tags=["Utilities"])
 app.include_router(auth_router,   prefix=f"{API_PREFIX}")
 
 # Sog'liqni tekshirish
