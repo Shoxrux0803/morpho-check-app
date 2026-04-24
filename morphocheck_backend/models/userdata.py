@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, String, Float, Text, DateTime, func, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Text, DateTime, func, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from .base import Base
 
 class PatientAnalysis(Base):
     __tablename__ = "patient_analysis"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     id_code = Column(String(50), nullable=True, index=True)
     name = Column(String(100), nullable=False, index=True)
 
@@ -69,11 +69,15 @@ class PatientAnalysis(Base):
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deleted_at    = Column(DateTime, nullable=True)
     deleted_by    = relationship("User", foreign_keys=[deleted_by_id])
+    
+    __table_args__ = (
+        Index('ix_patient_analysis_deleted_created', 'is_deleted', 'created_at'),
+    )
 
 class ResearchRecord(Base):
     __tablename__ = "research_records"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_by = relationship("User", foreign_keys=[created_by_id])
     created_at = Column(DateTime, server_default=func.now(), index=True)
@@ -176,3 +180,7 @@ class ResearchRecord(Base):
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deleted_at    = Column(DateTime, nullable=True)
     deleted_by    = relationship("User", foreign_keys=[deleted_by_id])
+
+    __table_args__ = (
+        Index('ix_research_records_deleted_created', 'is_deleted', 'created_at'),
+    )
