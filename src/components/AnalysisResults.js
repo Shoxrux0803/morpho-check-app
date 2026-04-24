@@ -116,6 +116,13 @@ export default function AnalysisResults({
   };
 
   useEffect(() => {
+    // Agar backenddan tayyor maslahatlar kelgan bo'lsa, ularni ishlatamiz
+    if (root?.ai_parent_tips && root.ai_parent_tips.length > 0 && aiTips.length === 0) {
+      setAiTips(root.ai_parent_tips);
+      return;
+    }
+
+    // Aks holda (masalan, eski ma'lumotlar), yangidan generatsiya qilamiz
     if (root?.ai_predictions && aiTips.length === 0) {
       const fetchTips = async () => {
         setTipsLoading(true);
@@ -141,7 +148,7 @@ export default function AnalysisResults({
       };
       fetchTips();
     }
-  }, [root, lang]);
+  }, [root, lang, aiTips.length]);
 
 
 

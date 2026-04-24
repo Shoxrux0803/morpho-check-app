@@ -740,10 +740,24 @@ async def analyze_full(
             request=request
         )
 
+        # Generate AI Tips (NEW)
+        from services.ai_advice_service import generate_parent_tips
+        ai_tips = generate_parent_tips(
+            patient_data={
+                "age": int(data.age),
+                "gender": gender_norm,
+                "bmi": analysis["bmi"],
+                "z_score": analysis["z_score"]
+            },
+            ml_predictions=ml_predictions,
+            lang=lang
+        )
+
         # 3) Frontendga natija — TOP-LEVEL da analysis/advices (api.js kutganidek)
         return {
             "status": "success",
             "id": rec.id,
+            "ai_parent_tips": ai_tips,
             "patient_info": {
                 "id_code": id_code,
                 "full_name": full_name,
@@ -785,6 +799,7 @@ def generate_pdf_report_endpoint(
     """
     try:
         all_settings = clinical_service.get_all_settings(db)
+        # 1. Base Analysis
         analysis = calculate_bmi(data, all_settings, lang=lang)
         
         # AI Predictions
@@ -800,10 +815,36 @@ def generate_pdf_report_endpoint(
             "mother_height": float(data.mother_height) if data.mother_height else None
         }
         ai_preds = get_ml_predictions(ml_data)
+
+        # 2. Advices generation
+        advices = generate_advices(
+            analysis["bmi"],
+            analysis["weight_diff"],
+            int(data.age),
+            (data.gender or "").lower(),
+            all_settings,
+            bio_data=analysis["indices"],
+            lang=lang
+        )
+
+        # 3. AI Parent Tips generation (NEW)
+        from services.ai_advice_service import generate_parent_tips
+        ai_tips = generate_parent_tips(
+            patient_data={
+                "age": int(data.age),
+                "gender": (data.gender or "").lower(),
+                "bmi": analysis["bmi"],
+                "z_score": analysis["z_score"]
+            },
+            ml_predictions=ai_preds,
+            lang=lang
+        )
         
         full_report_data = data.model_dump(by_alias=True)
         full_report_data["analysis"] = analysis
         full_report_data["ai_predictions"] = ai_preds
+        full_report_data["advices"] = advices
+        full_report_data["ai_parent_tips"] = ai_tips
         
         pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
 
@@ -923,6 +964,44 @@ def generate_pdf_by_patient_id(
             "indices": detailed,
         }
 
+        # Generate advices
+        advices = generate_advices(
+            analysis["bmi"],
+            analysis["weight_diff"],
+            int(mini.age),
+            (mini.gender or "").lower(),
+            all_settings,
+            bio_data=analysis["indices"],
+            lang=lang
+        )
+
+        # AI Predictions (if needed for tips)
+        from services.ml_service import get_ml_predictions
+        ml_data = {
+            "age": int(mini.age),
+            "gender": (mini.gender or "").lower(),
+            "height": float(mini.height),
+            "bmi": float(analysis["bmi"]),
+            "z_score": float(analysis["z_score"]),
+            "somatotype": str(analysis["somatotype"]),
+            "father_height": float(rec.father_height) if rec.father_height else None,
+            "mother_height": float(rec.mother_height) if rec.mother_height else None
+        }
+        ai_preds = get_ml_predictions(ml_data)
+
+        # Generate AI Tips
+        from services.ai_advice_service import generate_parent_tips
+        ai_tips = generate_parent_tips(
+            patient_data={
+                "age": int(mini.age),
+                "gender": (mini.gender or "").lower(),
+                "bmi": analysis["bmi"],
+                "z_score": analysis["z_score"]
+            },
+            ml_predictions=ai_preds,
+            lang=lang
+        )
+
         report_data = {
             "first_name": first_name,
             "last_name": last_name,
@@ -937,6 +1016,9 @@ def generate_pdf_by_patient_id(
             "district": rec.district or "",
             "address": rec.address or "",
             "analysis": analysis,
+            "advices": advices,
+            "ai_parent_tips": ai_tips,
+            "ai_predictions": ai_preds
         }
 
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
