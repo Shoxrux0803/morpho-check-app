@@ -32,7 +32,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useThemeMode } from "../providers/ThemeProviderMUI";
-import DOFLinesAnimation from "../components/DOFLinesAnimation";
+import MorphoProBackground from "../components/MorphoProBackground";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -90,8 +90,8 @@ export default function IntroPage() {
 
   return (
     <Box sx={{ minHeight: "100vh", position: "relative", overflow: "hidden" }}>
-      {/* Premium DOFLines Renderer Background */}
-      <DOFLinesAnimation theme={mode} />
+      {/* Premium MorphoPro Background Animation */}
+      <MorphoProBackground theme={mode} />
 
       {/* Hero Section */}
       <Box sx={{ position: "relative", zIndex: 10 }}>

@@ -20,6 +20,8 @@ import IntroPage from "./pages/IntroPage";
 import ThemeSync from "./components/ThemeSync";
 import ChatWidget from "./components/Chat/ChatWidget";
 import AIAssistantWidget from "./components/AI/AIAssistantWidget";
+import MorphoProBackground from "./components/MorphoProBackground";
+import { useThemeMode } from "./providers/ThemeProviderMUI";
 
 // Lazy pages - YANGI SAHIFALAR QO'SHILDI
 const MorphoCheckPro = lazy(() => import("./pages/MorphoCheckPro"));
@@ -130,9 +132,15 @@ const ResearcherWrapper = () => {
 // Animated Routes komponenti
 function AnimatedRoutes() {
   const location = useLocation();
+  const { mode } = useThemeMode();
+  
+  const publicRoutes = ["/", "/info", "/author"];
+  const showBg = publicRoutes.includes(location.pathname);
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      {showBg && <MorphoProBackground theme={mode} pathname={location.pathname} />}
+      <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route
           path="/"
@@ -192,6 +200,7 @@ function AnimatedRoutes() {
         />
       </Routes>
     </AnimatePresence>
+    </>
   );
 }
 

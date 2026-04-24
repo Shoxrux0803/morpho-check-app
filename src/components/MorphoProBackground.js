@@ -7,7 +7,7 @@ import { EffectComposer, N8AO, SMAA, Bloom } from "@react-three/postprocessing";
 
 const rfs = THREE.MathUtils.randFloatSpread;
 
-function Clump({ isDark, mat = new THREE.Matrix4(), vec = new THREE.Vector3() }) {
+function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Vector3() }) {
   // Generate a dynamic "M" texture that changes based on theme
   const mTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
@@ -56,18 +56,44 @@ function Clump({ isDark, mat = new THREE.Matrix4(), vec = new THREE.Vector3() })
     mass: 1, 
     angularDamping: 0.1, 
     linearDamping: 0.65, 
+    sleepSpeedLimit: 1,
+    sleepTimeLimit: 1,
     position: [rfs(20), rfs(20), rfs(20)] 
   }));
 
+  // Trigger a seamless explosion effect when navigating between pages!
+  // We increase the delay slightly to ensure the heavy DOM work is done first.
+  useEffect(() => {
+    if (pathname) {
+      const timer = setTimeout(() => {
+        for (let i = 0; i < 35; i++) { // Slightly fewer spheres for better performance
+          api.at(i).applyImpulse(
+            [
+              (Math.random() - 0.5) * 35, 
+              (Math.random() - 0.5) * 35,
+              (Math.random() - 0.5) * 35
+            ],
+            [0, 0, 0]
+          );
+        }
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [pathname, api]);
+
   useFrame((state) => {
-    for (let i = 0; i < 40; i++) {
+    // Apply center force only to active (non-sleeping) bodies to save CPU
+    for (let i = 0; i < 35; i++) {
       ref.current.getMatrixAt(i, mat);
-      api.at(i).applyForce(vec.setFromMatrixPosition(mat).normalize().multiplyScalar(-40).toArray(), [0, 0, 0]);
+      vec.setFromMatrixPosition(mat);
+      if (vec.length() > 0.1) {
+        api.at(i).applyForce(vec.normalize().multiplyScalar(-35).toArray(), [0, 0, 0]);
+      }
     }
   });
 
   return (
-    <instancedMesh ref={ref} castShadow receiveShadow args={[sphereGeometry, baubleMaterial, 40]} material-map={mTexture}>
+    <instancedMesh ref={ref} castShadow receiveShadow args={[sphereGeometry, baubleMaterial, 35]} material-map={mTexture}>
       <Outlines thickness={0.0} color={isDark ? "white" : "black"} />
     </instancedMesh>
   );
@@ -192,7 +218,7 @@ function BackgroundAtmosphere({ isDark }) {
   );
 }
 
-export default function MorphoProBackground({ theme }) {
+export default function MorphoProBackground({ theme, pathname }) {
   const isDark = theme === "dark";
   const bg = isDark ? "#020617" : "#dfdfdf";
   
@@ -235,9 +261,9 @@ export default function MorphoProBackground({ theme }) {
           
           <BackgroundAtmosphere isDark={isDark} />
           
-          <Physics gravity={[0, 2, 0]} iterations={10}>
+          <Physics gravity={[0, 2, 0]} iterations={5} allowSleep>
             <Pointer mouseGlobal={mouseGlobal} isDark={isDark} />
-            <Clump isDark={isDark} />
+            <Clump isDark={isDark} pathname={pathname} />
           </Physics>
           
           <Environment files="/adamsbridge.hdr" />

@@ -32,7 +32,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import DOFLinesAnimation from "../components/DOFLinesAnimation";
+import MorphoProBackground from "../components/MorphoProBackground";
 import { useThemeMode } from "../providers/ThemeProviderMUI";
 import { useLanguage } from "../contexts/LanguageContext";
 import authorPortrait from "../assets/author_portrait.png";
@@ -168,7 +168,7 @@ export default function AuthorPage() {
         py: { xs: 8, md: 10 },
       }}
     >
-      <DOFLinesAnimation theme={mode} />
+      <MorphoProBackground theme={mode} />
 
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 10 }}>
         {/* ── Orqaga tugmasi ── */}

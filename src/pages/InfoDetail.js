@@ -22,7 +22,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import DOFLinesAnimation from "../components/DOFLinesAnimation";
+import MorphoProBackground from "../components/MorphoProBackground";
 import { useThemeMode } from "../providers/ThemeProviderMUI";
 import { useLanguage } from "../contexts/LanguageContext";
 
@@ -68,7 +68,7 @@ export default function InfoDetail() {
 
   return (
     <Box sx={{ minHeight: "100vh", position: "relative", overflow: "hidden", py: 10 }}>
-      <DOFLinesAnimation theme={mode} />
+      <MorphoProBackground theme={mode} />
 
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 10 }}>
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
