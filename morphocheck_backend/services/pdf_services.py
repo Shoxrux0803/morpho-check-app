@@ -469,7 +469,63 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         ('BORDER', (0, 0), (-1, -1), 1, colors.white),
     ]))
     elements.append(bmi_table)
-    elements.append(Spacer(1, 25))
+    elements.append(Spacer(1, 20))
+
+    # AI Bashoratlari bo'limi
+    ai_preds = data.get('ai_predictions', {}) if isinstance(data, dict) else getattr(data, 'ai_predictions', {})
+    if ai_preds:
+        elements.append(Paragraph("PROGNOSTIK TAHLIL VA XAVFLAR (AI YORDAMIDA)", section_title_style))
+        
+        # 1. 18 Yoshdagi Taxminiy Bo'y (faqat 18 yoshdan kichiklar uchun)
+        try:
+            current_age = int(float(age_y))
+        except:
+            current_age = 0
+            
+        if current_age < 18:
+            adult_height = ai_preds.get('adult_height_prediction', 0)
+            ai_height_info = [
+                [Paragraph("<b>18 yoshdagi taxminiy bo'y:</b>", styles['Normal']), Paragraph(f"<b>{adult_height} sm</b>", styles['Normal'])]
+            ]
+            
+            t_ai_height = Table(ai_height_info, colWidths=[3*inch, 3*inch])
+            t_ai_height.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, -1), font_name),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#f4ecf7")),
+                ('PADDING', (0, 0), (-1, -1), 8),
+                ('BORDER', (0, 0), (-1, -1), 1, colors.HexColor("#d2b4de")),
+            ]))
+            elements.append(t_ai_height)
+            elements.append(Spacer(1, 10))
+        
+        # 2. Xavflar
+        risks = ai_preds.get('risks', {})
+        ai_risks_data = [
+            [Paragraph("<b>Xavf turi</b>", styles['Normal']), Paragraph("<b>Ehtimollik (%)</b>", styles['Normal'])]
+        ]
+        
+        risk_labels = [
+            ("Semizlik (Obesity)", risks.get('obesity_risk', 0)),
+            ("Metabolik Sindrom", risks.get('metabolic_syndrome_risk', 0)),
+            ("Tayanch-harakat tizimi buzilishlari", risks.get('musculoskeletal_risk', 0))
+        ]
+        
+        for label, val in risk_labels:
+            color = "#e74c3c" if val > 50 else ("#f39c12" if val > 25 else "#2ecc71")
+            val_para = Paragraph(f"<font color='{color}'><b>{val}%</b></font>", styles['Normal'])
+            ai_risks_data.append([Paragraph(label, styles['Normal']), val_para])
+            
+        t_ai_risks = Table(ai_risks_data, colWidths=[4*inch, 2*inch])
+        t_ai_risks.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#ecf0f1")),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#fdfefe")),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(t_ai_risks)
+        elements.append(Spacer(1, 20))
 
     # Tavsiyalar bo'limi
     age_y_val = 0

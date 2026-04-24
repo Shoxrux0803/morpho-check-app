@@ -154,6 +154,9 @@ class PatientData(BaseModel):
     waist: float = 0.0
     head: float
 
+    father_height: Optional[float] = Field(None, alias="fatherHeight")
+    mother_height: Optional[float] = Field(None, alias="motherHeight")
+
     # Bioimpedance Analysis
     total_body_water: Optional[float] = Field(None, alias="totalBodyWater")
     fat_percent: Optional[float] = Field(None, alias="fatPercent")
@@ -617,6 +620,21 @@ async def analyze_full(
             bio_data=analysis["indices"],
             lang=lang
         )
+        
+        # ML Bashoratlari
+        from services.ml_service import get_ml_predictions
+        ml_data_for_pred = {
+            "age": int(data.age),
+            "gender": gender_norm,
+            "height": float(data.height),
+            "bmi": float(analysis["bmi"]),
+            "z_score": float(analysis["z_score"]),
+            "somatotype": str(analysis["somatotype"]),
+            "father_height": float(data.father_height) if data.father_height else None,
+            "mother_height": float(data.mother_height) if data.mother_height else None
+        }
+        ml_predictions = get_ml_predictions(ml_data_for_pred)
+        
         clean_region, clean_district = _split_region_and_district(data.region, getattr(data, "district", None))
 
         # 2) DBga saqlash
@@ -640,6 +658,9 @@ async def analyze_full(
             waist=float(data.waist or 0.0),
             hip=0.0,
             head=float(data.head),
+            
+            father_height=float(data.father_height) if data.father_height else None,
+            mother_height=float(data.mother_height) if data.mother_height else None,
             
             examination_date=data.examination_date,
             birth_date=data.birth_date,
@@ -726,7 +747,8 @@ async def analyze_full(
                 "head": data.head
             },
             "analysis": analysis,
-            "advices": advices
+            "advices": advices,
+            "ai_predictions": ml_predictions
         }
 
     except Exception as e:

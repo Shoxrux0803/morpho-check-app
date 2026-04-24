@@ -41,6 +41,9 @@ class PatientAnalysis(Base):
     hip    = Column(Float, nullable=False)
     head   = Column(Float, nullable=False)
 
+    father_height = Column(Float, nullable=True)
+    mother_height = Column(Float, nullable=True)
+
     bmi         = Column(Float, nullable=False)
     z_score     = Column(Float, nullable=False)
     somatotype  = Column(String(50), nullable=False)

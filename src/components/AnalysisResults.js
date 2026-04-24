@@ -519,6 +519,67 @@ export default function AnalysisResults({
             </CardContent>
           </Card>
 
+          {/* AI Prognostik Tahlil */}
+          {root?.ai_predictions && (
+            <Card elevation={2} sx={{ mb: 3, borderRadius: 2, background: theme => theme.palette.mode === 'dark' ? 'linear-gradient(145deg, #1e1e1e, #2d2d2d)' : 'linear-gradient(145deg, #f8f9fa, #ffffff)' }}>
+              <CardHeader
+                avatar={<InsightsOutlinedIcon />}
+                title={<Typography variant="h6" fontWeight={700}>{t("aiPrognosticTitle")}</Typography>}
+                sx={{
+                  background: 'linear-gradient(90deg, #6a1b9a, #8e24aa)',
+                  color: '#fff',
+                  "& .MuiCardHeader-avatar": { color: "inherit" },
+                }}
+              />
+              <CardContent>
+                <Grid container spacing={3}>
+                  {age < 18 && (
+                    <Grid item xs={12} md={4}>
+                      <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, height: "100%", textAlign: "center", borderColor: '#8e24aa', borderWidth: 2, boxShadow: '0 4px 15px rgba(142,36,170,0.1)' }}>
+                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 1 }}>{t("estimatedAdultHeight")}</Typography>
+                        <Typography variant="h2" sx={{ color: '#8e24aa', fontWeight: 800, mb: 1 }}>
+                          {root.ai_predictions.adult_height_prediction} <Typography component="span" variant="h5">sm</Typography>
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("estimatedAdultHeightDesc")}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  )}
+
+                  <Grid item xs={12} md={age < 18 ? 8 : 12}>
+                    <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, height: "100%" }}>
+                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>{t("healthRiskTitle")}</Typography>
+                      
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600}>{t("obesityRisk")}</Typography>
+                          <Typography variant="body2" fontWeight={800} color={root.ai_predictions.risks.obesity_risk > 50 ? 'error.main' : 'text.primary'}>{root.ai_predictions.risks.obesity_risk}%</Typography>
+                        </Box>
+                        <LinearProgress variant="determinate" value={root.ai_predictions.risks.obesity_risk} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: root.ai_predictions.risks.obesity_risk > 50 ? '#e53935' : (root.ai_predictions.risks.obesity_risk > 25 ? '#ff9800' : '#43a047') } }} />
+                      </Box>
+                      
+                      <Box sx={{ mb: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600}>{t("metabolicRisk")}</Typography>
+                          <Typography variant="body2" fontWeight={800} color={root.ai_predictions.risks.metabolic_syndrome_risk > 50 ? 'error.main' : 'text.primary'}>{root.ai_predictions.risks.metabolic_syndrome_risk}%</Typography>
+                        </Box>
+                        <LinearProgress variant="determinate" value={root.ai_predictions.risks.metabolic_syndrome_risk} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: root.ai_predictions.risks.metabolic_syndrome_risk > 50 ? '#e53935' : (root.ai_predictions.risks.metabolic_syndrome_risk > 25 ? '#ff9800' : '#43a047') } }} />
+                      </Box>
+                      
+                      <Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600}>{t("musculoskeletalRisk")}</Typography>
+                          <Typography variant="body2" fontWeight={800} color={root.ai_predictions.risks.musculoskeletal_risk > 50 ? 'error.main' : 'text.primary'}>{root.ai_predictions.risks.musculoskeletal_risk}%</Typography>
+                        </Box>
+                        <LinearProgress variant="determinate" value={root.ai_predictions.risks.musculoskeletal_risk} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: root.ai_predictions.risks.musculoskeletal_risk > 50 ? '#e53935' : (root.ai_predictions.risks.musculoskeletal_risk > 25 ? '#ff9800' : '#43a047') } }} />
+                      </Box>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Tavsiyalar */}
           <Card elevation={2} sx={{ mb: 3, borderRadius: 2 }}>

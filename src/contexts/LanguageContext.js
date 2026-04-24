@@ -111,6 +111,15 @@ const translations = {
     bmiAnalysis: "BMI Ilmiy Tahlili",
     zScoreLabel: "Z-ko'rsatkichi (SDS)",
 
+    // AI Predictions
+    aiPrognosticTitle: "AI Prognostik Tahlil (Mashinali O'qitish)",
+    estimatedAdultHeight: "18 Yoshdagi Taxminiy Bo'y",
+    estimatedAdultHeightDesc: "Genetik va antropometrik dinamika asosida hisoblandi",
+    healthRiskTitle: "Kasalliklar rivojlanish xavfi",
+    obesityRisk: "Semizlik (Obesity)",
+    metabolicRisk: "Metabolik Sindrom",
+    musculoskeletalRisk: "Tayanch-harakat tizimi buzilishlari",
+
     // BMI categories
     bmi_underweight: "Vazn tanqisligi",
     bmi_normal: "Me'yor",
@@ -175,6 +184,8 @@ const translations = {
     female: "Ayol",
     boy: "O'g'il bola",
     girl: "Qiz bola",
+    fatherHeightLabel: "Otaning bo'yi",
+    motherHeightLabel: "Onaning bo'yi",
     preschoolInstitutionLabel: "Maktab / Maktabgacha ta'lim muassasasi",
     territorialData: "Hududiy ma'lumotlar",
     regionLabel: "Viloyat",
@@ -342,6 +353,15 @@ const translations = {
     bmiAnalysis: "Научный анализ ИМТ",
     zScoreLabel: "Z-показатель (SDS)",
 
+    // AI Predictions
+    aiPrognosticTitle: "AI Прогностический анализ (ML)",
+    estimatedAdultHeight: "Предполагаемый рост в 18 лет",
+    estimatedAdultHeightDesc: "Рассчитано на основе генетики и антропометрии",
+    healthRiskTitle: "Риск развития заболеваний",
+    obesityRisk: "Ожирение",
+    metabolicRisk: "Метаболический синдром",
+    musculoskeletalRisk: "Нарушения опорно-двигательного аппарата",
+
     // BMI categories
     bmi_underweight: "Дефицит веса",
     bmi_normal: "Норма",
@@ -398,6 +418,8 @@ const translations = {
     female: "Женский",
     boy: "Мальчик",
     girl: "Девочка",
+    fatherHeightLabel: "Рост отца",
+    motherHeightLabel: "Рост матери",
     preschoolInstitutionLabel: "Школа / Дошкольное учреждение",
     territorialData: "Территориальные данные",
     regionLabel: "Область",
@@ -565,6 +587,15 @@ const translations = {
     bmiAnalysis: "Scientific BMI Analysis",
     zScoreLabel: "Z-Score (SDS)",
 
+    // AI Predictions
+    aiPrognosticTitle: "AI Prognostic Analysis (Machine Learning)",
+    estimatedAdultHeight: "Estimated Height at 18",
+    estimatedAdultHeightDesc: "Calculated based on genetics and anthropometry",
+    healthRiskTitle: "Health Risk Prediction",
+    obesityRisk: "Obesity",
+    metabolicRisk: "Metabolic Syndrome",
+    musculoskeletalRisk: "Musculoskeletal Disorders",
+
     // BMI categories
     bmi_underweight: "Underweight",
     bmi_normal: "Normal",
@@ -619,6 +650,8 @@ const translations = {
     genderLabel: "Gender",
     male: "Male",
     female: "Female",
+    fatherHeightLabel: "Father's Height",
+    motherHeightLabel: "Mother's Height",
     preschoolInstitutionLabel: "School / Preschool Institution",
     territorialData: "Territorial Data",
     regionLabel: "Region",
@@ -786,6 +819,15 @@ const translations = {
     bmiAnalysis: "ДМИ ғылыми талдауы",
     zScoreLabel: "Z-көрсеткіші (SDS)",
 
+    // AI Predictions
+    aiPrognosticTitle: "AI Прогностикалық талдау (ML)",
+    estimatedAdultHeight: "18 жастағы болжамды бой",
+    estimatedAdultHeightDesc: "Генетикалық және антропометриялық динамика негізінде есептелген",
+    healthRiskTitle: "Аурулардың даму қаупі",
+    obesityRisk: "Семіздік (Obesity)",
+    metabolicRisk: "Метаболикалық синдром",
+    musculoskeletalRisk: "Тірек-қимыл аппаратының бұзылуы",
+
     // BMI categories
     bmi_underweight: "Салмақ жетіспеушілігі",
     bmi_normal: "Норма",
@@ -840,7 +882,9 @@ const translations = {
     genderLabel: "Жынысы",
     male: "Ер",
     female: "Әйел",
-    preschoolInstitutionLabel: "Мектеп / Мектепке дейінгі мекеме",
+    fatherHeightLabel: "Әкенің бойы",
+    motherHeightLabel: "Ананың бойы",
+    preschoolInstitutionLabel: "Мектеп / Мектепке дейінгі білім беру мекемесі",
     territorialData: "Аумақтық мәліметтер",
     regionLabel: "Облыс",
     selectLabel: "Таңдаңыз",

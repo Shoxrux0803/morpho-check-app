@@ -11,6 +11,7 @@ import {
   Divider,
   Typography,
   Stack,
+  Collapse,
 } from "@mui/material";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import PersonOutline from "@mui/icons-material/PersonOutline";
@@ -321,6 +322,19 @@ export default function InputForm({
                       <MenuItem value="erkak">{Number(formData.age) >= 18 ? t("male") : t("boy")}</MenuItem>
                       <MenuItem value="ayol">{Number(formData.age) >= 18 ? t("female") : t("girl")}</MenuItem>
                     </MCSelect>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Collapse in={Number(formData.age) > 0 && Number(formData.age) < 18} timeout={600}>
+                      <Grid container spacing={3}>
+                        <Grid item xs={12} md={6}>
+                          <Field fullWidth label={`${t("fatherHeightLabel")} (sm)`} name="fatherHeight" type="number" value={formData.fatherHeight || ""} onChange={handleInputChange} InputProps={adorn(<HeightIcon />)} sx={inputSx} placeholder={t("optionalLabel")} />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Field fullWidth label={`${t("motherHeightLabel")} (sm)`} name="motherHeight" type="number" value={formData.motherHeight || ""} onChange={handleInputChange} InputProps={adorn(<HeightIcon />)} sx={inputSx} placeholder={t("optionalLabel")} />
+                        </Grid>
+                      </Grid>
+                    </Collapse>
                   </Grid>
                 </Grid>
 
