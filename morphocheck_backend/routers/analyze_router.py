@@ -640,17 +640,18 @@ async def analyze_full(
         # 2) DBga saqlash
         id_code = generate_region_based_id(db, clean_region)
         
+        full_name = f"{data.first_name} {data.last_name}".strip()
+        
         # Bemor tahlilini bazaga saqlash
         rec = PatientAnalysis(
-            user_id=current_user.id if current_user else None,
-            name=f"{data.firstName} {data.lastName}".strip(),
+            name=full_name,
             id_code=id_code,
             region=clean_region,
             district=clean_district,
             address=(data.address or "").strip() or None,
-            age=final_age,
-            age_months=final_months,
-            age_days=final_days,
+            age=data.age,
+            age_months=data.age_months,
+            age_days=data.age_days,
             gender=gender_norm,
             height=float(data.height),
             weight=float(data.weight),

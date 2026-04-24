@@ -41,15 +41,24 @@ async def generate_pdf_endpoint(
 ):
     try:
         # Yoshni qayta hisoblash (umumiy xatoni to'g'irlash uchun)
-        y, m, d = calculate_age_precise(request_data.birthDate, request_data.examinationDate)
+        y, m, d = calculate_age_precise(request_data.birth_date, request_data.examination_date)
         if y is not None:
             request_data.age = y
             request_data.age_months = m
             request_data.age_days = d
 
+        all_settings = clinical_service.get_all_settings(db)
         analysis = calculate_bmi(request_data, all_settings, lang=lang)
         gender_norm = (request_data.gender or "").strip().lower()
-        advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(request_data.age), gender_norm, all_settings)
+        advices = generate_advices(
+            analysis["bmi"],
+            analysis["weight_diff"],
+            int(request_data.age),
+            gender_norm,
+            all_settings,
+            bio_data=analysis.get("indices"),
+            lang=lang
+        )
 
         data_dict = request_data.model_dump(by_alias=False)
 
