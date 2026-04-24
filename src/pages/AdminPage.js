@@ -277,6 +277,10 @@ export default function AdminPage() {
     setEditRow(prev => ({ ...prev, [name]: v }));
   }, []);
 
+  const handleBulkUpdateEdit = useCallback((data) => {
+    setEditRow(prev => ({ ...prev, ...data }));
+  }, []);
+
   const toggleAll = useCallback(() => {
     const next = new Set(checked);
     const allChecked = raw.length > 0 && raw.every((r) => checked.has(r.id));
@@ -660,6 +664,7 @@ export default function AdminPage() {
              <InputForm 
                 formData={editRow} 
                 handleInputChange={handleEditInputChange} 
+                onBulkUpdate={handleBulkUpdateEdit}
                 handleSubmit={handleUpdateAnalysis} 
                 loading={updating} 
                 isAdminView={true}

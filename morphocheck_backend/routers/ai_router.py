@@ -193,28 +193,47 @@ async def predict_params(req: PredictParamsRequest, current_user: User = Depends
         # Define fields based on target_form
         fields_str = ""
         if req.target_form == 'analysis':
-            fields_str = "height, bodyLength, weight, chest, waist, head, shoulderLength, shoulderBreadth, shoulderCircumference, armElbowLength, handLength, thighLength, thighCircumference, calfLength, calfCircumference, footLength (all in cm, weight in kg)"
+            fields_str = """
+            height, bodyLength, weight, chest, waist, head, 
+            shoulderLength, shoulderBreadth, shoulderCircumference, 
+            armElbowLength, handLength, thighLength, thighCircumference, 
+            calfLength, calfCircumference, footLength,
+            totalBodyWater, fatPercent, fatMass, muscleMass, boneMass, acm, visceralFat
+            """
         else:
             fields_str = """
             lower_leg_spina_iliaca, lower_leg_symphysion, tibiale_height, pelvic_width, 
             thigh_length, thigh_circumference, calf_length, calf_circumference, 
-            foot_length, head_circumference, chest_standing_height, weight, 
-            arm_length, shoulder_length, shoulder_width, forearm_length, hand_length
+            foot_length, teeth_count, menstruation_start,
+            skull_longitudinal, skull_transverse, head_circumference, 
+            forehead_transverse, skull_height, skull_base_length, skull_base_width,
+            face_bizygomatic, face_bigonial, face_morphological_height, 
+            face_physiognomic_height, nose_height, nose_width, outer_canthal_width, 
+            inner_canthal_width, lips_mucosa_height, mouth_width,
+            chest_standing_height, chest_sitting_height, weight, trunk_length, 
+            torso_length, chest_circumference_pause, chest_circumference_inhale, 
+            chest_circumference_exhale, waist_circumference, abdomen_circumference, 
+            upper_segment_length, chest_transverse_diameter, chest_anteroposterior_diameter, 
+            chest_height, arm_length, shoulder_length, shoulder_width, 
+            shoulder_circumference_rest, shoulder_circumference_flexed, 
+            forearm_length, hand_length, dynamometry,
+            fat_triceps, fat_biceps, fat_subscapular, fat_iliac, fat_popliteal
             """
 
         prompt = f"""
         Act as a professional medical anthropometry expert. 
         Provide typical (average/normative/WHO standard based) anthropometric measurements for a {req.age} year old {gender_norm} individual.
-        The data is intended for a '{req.target_form}' form.
+        The data is intended for a '{req.target_form}' form in the MorphoCheck Pro system.
         
-        Target fields: {fields_str}
+        Target fields to populate:
+        {fields_str}
         
         CRITICAL INSTRUCTIONS:
-        1. Return ONLY a valid JSON object. No trailing commas.
-        2. Keys must match the target fields exactly. Do not use "(all in cm...)" as a key.
-        3. Values must be numbers (floats or ints).
-        4. No markdown, no conversational text, no explanations.
-        5. Ensure values are anatomically proportional and realistic for this specific age and gender.
+        1. Return ONLY a valid JSON object.
+        2. Keys MUST match the target fields exactly as written above.
+        3. Values MUST be numbers (floats or ints), except for 'menstruation_start' which should be a string (e.g., "12 years" or "none" if male/too young).
+        4. ANATOMICAL CONSISTENCY: Ensure all values (height, limb lengths, circumferences, weights) are anatomically proportional and realistic for a {req.age}-year-old {gender_norm}.
+        5. No markdown code blocks, no conversational text, no explanations. Just the JSON object.
         """
         
         try:

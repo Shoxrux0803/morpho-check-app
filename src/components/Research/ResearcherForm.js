@@ -9,6 +9,8 @@ import {
 import { ResearchApi } from "../../services/api";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import aiService from "../../services/aiService";
 
 /* ════════════════════════════════════════════════════
    Utility Component: GlassPaper
@@ -42,6 +44,7 @@ const GlassPaper = ({ children, sx = {} }) => (
 const ResearcherForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+  const [predictLoading, setPredictLoading] = useState(false);
   
   const emptyForm = {
     full_name: "", school_name: "", settlement: "", birth_place: "", birth_date: "",
@@ -102,6 +105,27 @@ const ResearcherForm = ({ onSuccess }) => {
       age--;
     }
     return age;
+  };
+
+  const handleAiPredict = async () => {
+    const age = calculateAge(formData.birth_date, formData.examination_date);
+    if (!age || !formData.gender) {
+      toast.error("Iltimos, avval tug'ilgan sana va jinsni kiriting!");
+      return;
+    }
+    
+    setPredictLoading(true);
+    try {
+      const res = await aiService.predictParams(age, formData.gender, "research");
+      if (res.params) {
+        setFormData(prev => ({ ...prev, ...res.params }));
+        toast.success("Gemini: Normativ ko'rsatkichlar yuklandi!", { icon: "🤖" });
+      }
+    } catch (err) {
+      toast.error("AI tahlilda xatolik yuz berdi");
+    } finally {
+      setPredictLoading(false);
+    }
   };
 
   const ageForLabels = calculateAge(formData.birth_date, formData.examination_date);
@@ -220,7 +244,19 @@ const ResearcherForm = ({ onSuccess }) => {
             <Box>
               <Grid container spacing={3}>
                 <Grid item xs={12}>
-                  {SL("II. Jismoniy Rivojlanish (Oyoqlar)")}
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2, mb: 1.5 }}>
+                {SL("II. Jismoniy Rivojlanish (Oyoqlar)")}
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  startIcon={predictLoading ? <CircularProgress size={16} /> : <AutoAwesomeIcon />}
+                  onClick={handleAiPredict}
+                  disabled={predictLoading}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {predictLoading ? "AI..." : "AI Predict"}
+                </Button>
+              </Stack>
                   <Grid container spacing={2}>
                     {[
                       ["lower_leg_spina_iliaca","Spina iliaca"],["lower_leg_symphysion","Symphysion"],
