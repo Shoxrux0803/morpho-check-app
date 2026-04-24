@@ -65,6 +65,16 @@ PDF_LABELS = {
         "bmi_normal": "Me'yor",
         "bmi_overweight": "Ortiqcha vazn",
         "bmi_obese": "Semizlik",
+        "ai_title": "PROGNOSTIK TAHLIL VA XAVFLAR (AI YORDAMIDA)",
+        "ai_adult_height": "18 yoshdagi taxminiy bo'y:",
+        "ai_risk_type": "Xavf turi",
+        "ai_probability": "Ehtimollik (%)",
+        "risk_obesity": "Semizlik (Obesity)",
+        "risk_metabolic": "Metabolik Sindrom",
+        "risk_musculoskeletal": "Tayanch-harakat tizimi buzilishlari",
+        "unit_year": "yosh",
+        "unit_month": "oy",
+        "unit_day": "kun",
     },
     "ru": {
         "title": "MORPHOCHECK PRO ОТЧЁТ АНТРОПОМЕТРИЧЕСКОГО АНАЛИЗА",
@@ -113,6 +123,16 @@ PDF_LABELS = {
         "bmi_normal": "Норма",
         "bmi_overweight": "Избыточный вес",
         "bmi_obese": "Ожирение",
+        "ai_title": "ПРОГНОСТИЧЕСКИЙ АНАЛИЗ И РИСКИ (ИИ)",
+        "ai_adult_height": "Предполагаемый рост в 18 лет:",
+        "ai_risk_type": "Тип риска",
+        "ai_probability": "Вероятность (%)",
+        "risk_obesity": "Ожирение (Obesity)",
+        "risk_metabolic": "Метаболический синдром",
+        "risk_musculoskeletal": "Нарушения опорно-двигательного аппарата",
+        "unit_year": "лет",
+        "unit_month": "мес",
+        "unit_day": "дн",
     },
     "en": {
         "title": "MORPHOCHECK PRO ANTHROPOMETRIC ANALYSIS REPORT",
@@ -161,6 +181,16 @@ PDF_LABELS = {
         "bmi_normal": "Normal",
         "bmi_overweight": "Overweight",
         "bmi_obese": "Obesity",
+        "ai_title": "PROGNOSTIC ANALYSIS AND RISKS (AI)",
+        "ai_adult_height": "Estimated height at age 18:",
+        "ai_risk_type": "Risk Type",
+        "ai_probability": "Probability (%)",
+        "risk_obesity": "Obesity",
+        "risk_metabolic": "Metabolic Syndrome",
+        "risk_musculoskeletal": "Musculoskeletal disorders",
+        "unit_year": "years",
+        "unit_month": "months",
+        "unit_day": "days",
     },
     "kz": {
         "title": "MORPHOCHECK PRO АНТРОПОМЕТРИЯЛЫҚ ТАЛДАУ ЕСЕБІ",
@@ -209,6 +239,16 @@ PDF_LABELS = {
         "bmi_normal": "Норма",
         "bmi_overweight": "Артық салмақ",
         "bmi_obese": "Семіздік",
+        "ai_title": "ПРОГНОСТИКАЛЫҚ ТАЛДАУ ЖӘНЕ ҚАУІПТЕР (AI)",
+        "ai_adult_height": "18 жастағы болжамды бойы:",
+        "ai_risk_type": "Қауіп түрі",
+        "ai_probability": "Ықтималдық (%)",
+        "risk_obesity": "Семіздік (Obesity)",
+        "risk_metabolic": "Метаболикалық синдром",
+        "risk_musculoskeletal": "Тірек-қимыл аппаратының бұзылуы",
+        "unit_year": "жас",
+        "unit_month": "ай",
+        "unit_day": "күн",
     },
 }
 
@@ -308,26 +348,56 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     elements.append(create_header())
     elements.append(Spacer(1, 15))
 
-    # Ma'lumotlarni olish
-    first_name = data.get('first_name', '') if isinstance(data, dict) else getattr(data, 'first_name', '')
-    last_name = data.get('last_name', '') if isinstance(data, dict) else getattr(data, 'last_name', '')
-    age_y = data.get('age', '') if isinstance(data, dict) else getattr(data, 'age', '')
-    age_m = data.get('age_months', 0) if isinstance(data, dict) else getattr(data, 'age_months', 0)
-    age_d = data.get('age_days', 0) if isinstance(data, dict) else getattr(data, 'age_days', 0)
+    # Ma'lumotlarni olish (snake_case va camelCase variantlarini tekshiramiz)
+    def gv(key_snake, key_camel, default=None):
+        if isinstance(data, dict):
+            return data.get(key_snake, data.get(key_camel, default))
+        return getattr(data, key_snake, getattr(data, key_camel, default))
 
-    gender = data.get('gender', '') if isinstance(data, dict) else getattr(data, 'gender', '')
-    birth_date = data.get('birth_date', '') if isinstance(data, dict) else getattr(data, 'birth_date', '')
-    examination_date = data.get('examination_date', '') if isinstance(data, dict) else getattr(data, 'examination_date', '')
-    preschool_institution = data.get('preschool_institution', '') if isinstance(data, dict) else getattr(data, 'preschool_institution', '')
-    region = data.get('region', '') if isinstance(data, dict) else getattr(data, 'region', '')
-    district = data.get('district', '') if isinstance(data, dict) else getattr(data, 'district', '')
-    address = data.get('address', '') if isinstance(data, dict) else getattr(data, 'address', '')
-    id_code_val = data.get('id_code', '') if isinstance(data, dict) else getattr(data, 'id_code', '')
+    first_name = gv('first_name', 'firstName', '')
+    last_name = gv('last_name', 'lastName', '')
+    age_y = gv('age', 'age', 0)
+    age_m = gv('age_months', 'ageMonths', 0)
+    age_d = gv('age_days', 'ageDays', 0)
 
+    # Ensure integers
+    try: age_y = int(age_y or 0)
+    except: age_y = 0
+    try: age_m = int(age_m or 0)
+    except: age_m = 0
+    try: age_d = int(age_d or 0)
+    except: age_d = 0
 
-    age_str = f"{age_y}"
-    if age_m or age_d:
-        age_str += f", {age_m}m, {age_d}d"
+    gender = gv('gender', 'gender', '')
+    birth_date = gv('birth_date', 'birthDate', '')
+    examination_date = gv('examination_date', 'examinationDate', '')
+    preschool_institution = gv('preschool_institution', 'preschoolInstitution', '')
+    region = gv('region', 'region', '')
+    district = gv('district', 'district', '')
+    address = gv('address', 'address', '')
+    id_code_val = gv('id_code', 'idCode', '')
+
+    # Sana formatini o'zgartirish (YYYY-MM-DD -> DD.MM.YYYY)
+    def format_date_str(d_str):
+        if not d_str or not isinstance(d_str, str): return d_str
+        try:
+            # Agar format YYYY-MM-DD bo'lsa
+            if len(d_str) == 10 and d_str[4] == '-' and d_str[7] == '-':
+                parts = d_str.split('-')
+                return f"{parts[2]}.{parts[1]}.{parts[0]}"
+        except:
+            pass
+        return d_str
+
+    birth_date = format_date_str(birth_date)
+    examination_date = format_date_str(examination_date)
+
+    # Yoshni formatlash: 5 yosh, 8 oy, 19 kun
+    age_str = f"{age_y} {L.get('unit_year', 'yosh')}"
+    if age_m:
+        age_str += f", {age_m} {L.get('unit_month', 'oy')}"
+    if age_d:
+        age_str += f", {age_d} {L.get('unit_day', 'kun')}"
 
     gender_lower = (gender or "").lower()
     gender_text = L["male"] if ("erkak" in gender_lower or "o'g'il" in gender_lower or "male" in gender_lower) else L["female"]
@@ -474,7 +544,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     # AI Bashoratlari bo'limi
     ai_preds = data.get('ai_predictions', {}) if isinstance(data, dict) else getattr(data, 'ai_predictions', {})
     if ai_preds:
-        elements.append(Paragraph("PROGNOSTIK TAHLIL VA XAVFLAR (AI YORDAMIDA)", section_title_style))
+        elements.append(Paragraph(L.get("ai_title", "PROGNOSTIK TAHLIL VA XAVFLAR (AI YORDAMIDA)"), section_title_style))
         
         # 1. 18 Yoshdagi Taxminiy Bo'y (faqat 18 yoshdan kichiklar uchun)
         try:
@@ -485,10 +555,10 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         if current_age < 18:
             adult_height = ai_preds.get('adult_height_prediction', 0)
             ai_height_info = [
-                [Paragraph("<b>18 yoshdagi taxminiy bo'y:</b>", styles['Normal']), Paragraph(f"<b>{adult_height} sm</b>", styles['Normal'])]
+                [Paragraph(f"<b>{L.get('ai_adult_height', '18 yoshdagi taxminiy bo\'y:')}</b>", styles['Normal']), Paragraph(f"<b>{adult_height} sm</b>", styles['Normal'])]
             ]
             
-            t_ai_height = Table(ai_height_info, colWidths=[3*inch, 3*inch])
+            t_ai_height = Table(ai_height_info, colWidths=[3.5*inch, 2.5*inch])
             t_ai_height.setStyle(TableStyle([
                 ('FONTNAME', (0, 0), (-1, -1), font_name),
                 ('FONTSIZE', (0, 0), (-1, -1), 10),
@@ -502,13 +572,13 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         # 2. Xavflar
         risks = ai_preds.get('risks', {})
         ai_risks_data = [
-            [Paragraph("<b>Xavf turi</b>", styles['Normal']), Paragraph("<b>Ehtimollik (%)</b>", styles['Normal'])]
+            [Paragraph(f"<b>{L.get('ai_risk_type', 'Xavf turi')}</b>", styles['Normal']), Paragraph(f"<b>{L.get('ai_probability', 'Ehtimollik (%)')}</b>", styles['Normal'])]
         ]
         
         risk_labels = [
-            ("Semizlik (Obesity)", risks.get('obesity_risk', 0)),
-            ("Metabolik Sindrom", risks.get('metabolic_syndrome_risk', 0)),
-            ("Tayanch-harakat tizimi buzilishlari", risks.get('musculoskeletal_risk', 0))
+            (L.get("risk_obesity", "Semizlik (Obesity)"), risks.get('obesity_risk', 0)),
+            (L.get("risk_metabolic", "Metabolik Sindrom"), risks.get('metabolic_syndrome_risk', 0)),
+            (L.get("risk_musculoskeletal", "Tayanch-harakat tizimi buzilishlari"), risks.get('musculoskeletal_risk', 0))
         ]
         
         for label, val in risk_labels:
@@ -516,7 +586,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             val_para = Paragraph(f"<font color='{color}'><b>{val}%</b></font>", styles['Normal'])
             ai_risks_data.append([Paragraph(label, styles['Normal']), val_para])
             
-        t_ai_risks = Table(ai_risks_data, colWidths=[4*inch, 2*inch])
+        t_ai_risks = Table(ai_risks_data, colWidths=[4.2*inch, 1.8*inch])
         t_ai_risks.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), font_name),
             ('FONTSIZE', (0, 0), (-1, -1), 10),

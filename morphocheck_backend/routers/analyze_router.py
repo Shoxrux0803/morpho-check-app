@@ -639,18 +639,18 @@ async def analyze_full(
 
         # 2) DBga saqlash
         id_code = generate_region_based_id(db, clean_region)
-        full_name = f"{data.first_name} {data.last_name}".strip()
         
-
+        # Bemor tahlilini bazaga saqlash
         rec = PatientAnalysis(
-            name=full_name,
+            user_id=current_user.id if current_user else None,
+            name=f"{data.firstName} {data.lastName}".strip(),
             id_code=id_code,
             region=clean_region,
             district=clean_district,
             address=(data.address or "").strip() or None,
-            age=int(data.age),
-            age_months=int(data.age_months or 0),
-            age_days=int(data.age_days or 0),
+            age=final_age,
+            age_months=final_months,
+            age_days=final_days,
             gender=gender_norm,
             height=float(data.height),
             weight=float(data.weight),
@@ -770,8 +770,25 @@ def generate_pdf_report_endpoint(
     try:
         all_settings = clinical_service.get_all_settings(db)
         analysis = calculate_bmi(data, all_settings, lang=lang)
+        
+        # AI Predictions
+        from services.ml_service import get_ml_predictions
+        ml_data = {
+            "age": int(data.age),
+            "gender": (data.gender or "").lower(),
+            "height": float(data.height),
+            "bmi": float(analysis["bmi"]),
+            "z_score": float(analysis["z_score"]),
+            "somatotype": str(analysis["somatotype"]),
+            "father_height": float(data.father_height) if data.father_height else None,
+            "mother_height": float(data.mother_height) if data.mother_height else None
+        }
+        ai_preds = get_ml_predictions(ml_data)
+        
         full_report_data = data.model_dump(by_alias=True)
         full_report_data["analysis"] = analysis
+        full_report_data["ai_predictions"] = ai_preds
+        
         pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
 
         return StreamingResponse(

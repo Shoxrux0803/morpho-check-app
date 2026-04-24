@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 from utils.audit_helper import record_audit_log
 from routers.auth_router import get_optional_user
 from models.user import User
+from services.ml_service import get_ml_predictions
+from utils.date_utils import calculate_age_precise
 
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
 
@@ -38,7 +40,13 @@ async def generate_pdf_endpoint(
     db: Session = Depends(get_db)
 ):
     try:
-        all_settings = clinical_service.get_all_settings(db)
+        # Yoshni qayta hisoblash (umumiy xatoni to'g'irlash uchun)
+        y, m, d = calculate_age_precise(request_data.birthDate, request_data.examinationDate)
+        if y is not None:
+            request_data.age = y
+            request_data.age_months = m
+            request_data.age_days = d
+
         analysis = calculate_bmi(request_data, all_settings, lang=lang)
         gender_norm = (request_data.gender or "").strip().lower()
         advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(request_data.age), gender_norm, all_settings)
@@ -51,6 +59,19 @@ async def generate_pdf_endpoint(
 
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
+
+        # AI Predictions
+        ml_data = {
+            "age": int(request_data.age),
+            "gender": gender_norm,
+            "height": float(request_data.height),
+            "bmi": float(analysis["bmi"]),
+            "z_score": float(analysis["z_score"]),
+            "somatotype": str(analysis["somatotype"]),
+            "father_height": float(request_data.father_height) if request_data.father_height else None,
+            "mother_height": float(request_data.mother_height) if request_data.mother_height else None
+        }
+        data_dict["ai_predictions"] = get_ml_predictions(ml_data)
 
         buffer = generate_pdf_file(data_dict, lang=lang)
 
@@ -118,12 +139,18 @@ async def generate_pdf_by_id_endpoint(
             "acm": rec.acm,
             "visceral_fat": rec.visceral_fat,
         }
-        detailed = calculate_detailed_indices(rec.age or 0, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+        # Recalculate age
+        y, m, d = calculate_age_precise(rec.birth_date, rec.examination_date)
+        actual_age = y if y is not None else (rec.age or 0)
+        actual_months = m if y is not None else (rec.age_months or 0)
+        actual_days = d if y is not None else (rec.age_days or 0)
 
-        ideal_range = get_bmi_range_by_age_and_gender(rec.age or 0, rec.gender or "")
+        detailed = calculate_detailed_indices(actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+
+        ideal_range = get_bmi_range_by_age_and_gender(actual_age, rec.gender or "")
         min_w = round(ideal_range["min"] * h2, 1)
         max_w = round(ideal_range["max"] * h2, 1)
-        ideal_w = get_ideal_weight_by_age_and_gender(rec.age or 0, h, rec.gender or "")
+        ideal_w = get_ideal_weight_by_age_and_gender(actual_age, h, rec.gender or "")
 
         # Localize BMI category
         from routers.analyze_router import BMI_CATEGORIES
@@ -157,9 +184,9 @@ async def generate_pdf_by_id_endpoint(
         report_data = {
             "first_name": first_name,
             "last_name": last_name,
-            "age": rec.age or 0,
-            "age_months": rec.age_months or 0,
-            "age_days": rec.age_days or 0,
+            "age": actual_age,
+            "age_months": actual_months,
+            "age_days": actual_days,
             "gender": rec.gender or "",
             "birth_date": rec.birth_date or "",
             "examination_date": rec.examination_date or "",
@@ -171,6 +198,18 @@ async def generate_pdf_by_id_endpoint(
             "analysis": analysis,
         }
 
+        # AI Predictions
+        ml_data = {
+            "age": int(actual_age),
+            "gender": (rec.gender or "").lower(),
+            "height": float(rec.height or 0),
+            "bmi": float(analysis["bmi"]),
+            "z_score": float(analysis["z_score"]),
+            "somatotype": str(analysis["somatotype"]),
+            "father_height": float(rec.father_height) if rec.father_height else None,
+            "mother_height": float(rec.mother_height) if rec.mother_height else None
+        }
+        report_data["ai_predictions"] = get_ml_predictions(ml_data)
 
         buffer = generate_pdf_file(report_data, lang=lang)
         buffer.seek(0)
@@ -251,12 +290,18 @@ async def generate_docx_by_id_endpoint(
             "acm": rec.acm,
             "visceral_fat": rec.visceral_fat,
         }
-        detailed = calculate_detailed_indices(rec.age or 0, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+        # Recalculate age
+        y, m, d = calculate_age_precise(rec.birth_date, rec.examination_date)
+        actual_age = y if y is not None else (rec.age or 0)
+        actual_months = m if y is not None else (rec.age_months or 0)
+        actual_days = d if y is not None else (rec.age_days or 0)
 
-        ideal_range = get_bmi_range_by_age_and_gender(rec.age or 0, rec.gender or "")
+        detailed = calculate_detailed_indices(actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+
+        ideal_range = get_bmi_range_by_age_and_gender(actual_age, rec.gender or "")
         min_w = round(ideal_range["min"] * h2, 1)
         max_w = round(ideal_range["max"] * h2, 1)
-        ideal_w = get_ideal_weight_by_age_and_gender(rec.age or 0, h, rec.gender or "")
+        ideal_w = get_ideal_weight_by_age_and_gender(actual_age, h, rec.gender or "")
 
         # Localize BMI category
         from routers.analyze_router import BMI_CATEGORIES
@@ -289,9 +334,9 @@ async def generate_docx_by_id_endpoint(
         report_data = {
             "first_name": first_name,
             "last_name": last_name,
-            "age": rec.age or 0,
-            "age_months": rec.age_months or 0,
-            "age_days": rec.age_days or 0,
+            "age": actual_age,
+            "age_months": actual_months,
+            "age_days": actual_days,
             "gender": rec.gender or "",
             "birth_date": rec.birth_date or "",
             "examination_date": rec.examination_date or "",
