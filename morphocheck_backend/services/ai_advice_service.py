@@ -80,6 +80,8 @@ def generate_parent_tips(patient_data: Dict, ml_predictions: Dict, lang: str = "
     """
 
     last_error = None
+    model_names = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    
     for model_name in model_names:
         try:
             model = genai.GenerativeModel(model_name)

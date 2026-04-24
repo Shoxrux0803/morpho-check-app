@@ -76,6 +76,11 @@ PDF_LABELS = {
         "unit_month": "oy",
         "unit_day": "kun",
         "ai_parent_tips_title": "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR",
+        "adv_specialist": "👨‍⚕️ Mutaxassis",
+        "adv_nutrition": "🍎 Ovqatlanish",
+        "adv_activity": "🏃 Faollik",
+        "adv_checkups": "🏥 Tekshiruvlar",
+        "adv_general": "📝 Umumiy tavsiya",
     },
     "ru": {
         "title": "MORPHOCHECK PRO ОТЧЁТ АНТРОПОМЕТРИЧЕСКОГО АНАЛИЗА",
@@ -135,6 +140,12 @@ PDF_LABELS = {
         "unit_month": "мес",
         "unit_day": "дн",
         "ai_parent_tips_title": "MORPHOAI: КРАТКИЕ СОВЕТЫ ДЛЯ РОДИТЕЛЕЙ",
+        "adv_specialist": "👨‍⚕️ Специалист",
+        "adv_nutrition": "🍎 Питание",
+        "adv_activity": "🏃 Активность",
+        "adv_checkups": "🏥 Обследования",
+        "adv_general": "📝 Общая рекомендация",
+        "detailed_advices_label": "ДОПОЛНИТЕЛЬНЫЕ УКАЗАНИЯ:",
     },
     "en": {
         "title": "MORPHOCHECK PRO ANTHROPOMETRIC ANALYSIS REPORT",
@@ -194,6 +205,12 @@ PDF_LABELS = {
         "unit_month": "months",
         "unit_day": "days",
         "ai_parent_tips_title": "MORPHOAI: SHORT TIPS FOR PARENTS",
+        "adv_specialist": "👨‍⚕️ Specialist",
+        "adv_nutrition": "🍎 Nutrition",
+        "adv_activity": "🏃 Activity",
+        "adv_checkups": "🏥 Checkups",
+        "adv_general": "📝 General advice",
+        "detailed_advices_label": "ADDITIONAL INSTRUCTIONS:",
     },
     "kz": {
         "title": "MORPHOCHECK PRO АНТРОПОМЕТРИЯЛЫҚ ТАЛДАУ ЕСЕБІ",
@@ -253,6 +270,12 @@ PDF_LABELS = {
         "unit_month": "ай",
         "unit_day": "күн",
         "ai_parent_tips_title": "MORPHOAI: АТА-АНАЛАРҒА АРНАЛҒАН ҚЫСҚА КЕҢЕСТЕР",
+        "adv_specialist": "👨‍⚕️ Маман",
+        "adv_nutrition": "🍎 Тамақтану",
+        "adv_activity": "🏃 Белсенділік",
+        "adv_checkups": "🏥 Тексерулер",
+        "adv_general": "📝 Жалпы ұсыныс",
+        "detailed_advices_label": "ҚОСЫМША НҰСҚАУЛАР:",
     },
 }
 
@@ -637,29 +660,70 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
 
     elements.append(Paragraph(section_title, section_title_style))
 
+    # 1. Structured Advices (Specialist, Nutrition, Activity, Checkups)
+    advices_dict = data.get('advices', {}) if isinstance(data, dict) else getattr(data, 'advices', {})
+    if advices_dict:
+        advice_categories = [
+            ("specialist", L.get("adv_specialist", "Specialist")),
+            ("nutrition", L.get("adv_nutrition", "Nutrition")),
+            ("activity", L.get("adv_activity", "Activity")),
+            ("checkups", L.get("adv_checkups", "Checkups")),
+        ]
+        
+        cat_elements = []
+        for key, title in advice_categories:
+            val = advices_dict.get(key)
+            if val and val != "—":
+                cat_elements.append([
+                    Paragraph(f"<b>{title}:</b>", styles['Normal']),
+                    Paragraph(str(val), styles['Normal'])
+                ])
+        
+        if cat_elements:
+            cat_table = Table(cat_elements, colWidths=[1.8*inch, 4.2*inch])
+            cat_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, -1), font_name),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#d5dbdb")),
+                ('PADDING', (0, 0), (-1, -1), 6),
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#f4f6f7")),
+            ]))
+            elements.append(cat_table)
+            elements.append(Spacer(1, 15))
+
+    # 2. Detailed advice list (from Bioimpedance/Indices)
     detailed = analysis_data_dict.get('indices', {})
     advice_list = detailed.get('advice', [])
 
     if advice_list:
+        elements.append(Paragraph(L.get("detailed_advices_label", "QO'SHIMCHA KO'RSATMALAR:"), styles['Normal']))
+        elements.append(Spacer(1, 5))
+        
         advice_elements = []
         for item in advice_list:
-            p = Paragraph(f"{item}", styles['Normal'])
-            bullet_p = Paragraph("•", styles['Normal'])
-            advice_elements.append([bullet_p, p])
+            # Avoid showing items already present in categorized advice
+            item_clean = str(item).strip()
+            already_shown = False
+            for v in advices_dict.values():
+                if item_clean in str(v):
+                    already_shown = True
+                    break
+            
+            if not already_shown:
+                p = Paragraph(f"{item}", styles['Normal'])
+                bullet_p = Paragraph("•", styles['Normal'])
+                advice_elements.append([bullet_p, p])
 
-        advice_table = Table(advice_elements, colWidths=[0.2*inch, 5.8*inch])
-        advice_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#fdfefe")),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#d5dbdb")),
-            ('FONTNAME', (0, 0), (-1, -1), font_name),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('PADDING', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-            ('TOPPADDING', (0, 0), (-1, -1), 8),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ]))
-        elements.append(advice_table)
+        if advice_elements:
+            advice_table = Table(advice_elements, colWidths=[0.2*inch, 5.8*inch])
+            advice_table.setStyle(TableStyle([
+                ('FONTNAME', (0, 0), (-1, -1), font_name),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('PADDING', (0, 0), (-1, -1), 4),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            elements.append(advice_table)
     else:
         elements.append(Paragraph(L["no_advice"], styles['Normal']))
     elements.append(Spacer(1, 30))

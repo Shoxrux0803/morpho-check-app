@@ -374,103 +374,118 @@ def _get_bmi_cat(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
 # ─────────────────────────────────────────────
 _ADVICE_I18N = {
     "default_general": {
-        "uz": "Sog'lom turmush tarzini davom ettiring.",
-        "ru": "Продолжайте вести здоровый образ жизни.",
-        "en": "Continue to maintain a healthy lifestyle.",
-        "kz": "Салауатты өмір салтын жалғастырыңыз.",
+        "uz": "Sizning jismoniy rivojlanishingiz me'yorida. Salomatlikni saqlashda davom eting.",
+        "ru": "Ваше физическое развитие в норме. Продолжайте поддерживать здоровье.",
+        "en": "Your physical development is normal. Continue to maintain your health.",
+        "kz": "Сіздің физикалық дамуыңыз қалыпты. Денсаулығыңызды сақтауды жалғастырыңыз."
     },
     "default_specialist": {
-        "uz": "Doimiy nazorat zarur emas.",
-        "ru": "Постоянное наблюдение не требуется.",
-        "en": "Constant medical supervision is not required.",
-        "kz": "Тұрақты бақылау қажет емес.",
+        "uz": "Doimiy nazorat zarur emas. Yillik tibbiy ko'rikdan o'tib turing.",
+        "ru": "Постоянное наблюдение не требуется. Проходите ежегодный медосмотр.",
+        "en": "No constant supervision required. Undergo an annual medical check-up.",
+        "kz": "Тұрақты бақылау қажет емес. Жыл сайынғы медициналық тексеруден өтіңіз."
     },
     "default_nutrition": {
-        "uz": "Balanslangan ovqatlanish tartibiga rioya qiling.",
-        "ru": "Соблюдайте сбалансированный режим питания.",
-        "en": "Follow a balanced nutrition regimen.",
-        "kz": "Теңдестірілген тамақтану режиміне сүйеніңіз.",
+        "uz": "Sog'lom va muvozanatli ovqatlanish tartibiga rioya qiling.",
+        "ru": "Соблюдайте здоровое и сбалансированное питание.",
+        "en": "Follow a healthy and balanced diet.",
+        "kz": "Салауатты және теңгерімді тамақтану режимін сақтаңыз."
     },
     "default_activity": {
-        "uz": "Kunlik jismoniy faollikni saqlab turing.",
-        "ru": "Поддерживайте ежедневную физическую активность.",
-        "en": "Maintain daily physical activity.",
-        "kz": "Күнделікті дене белсенділігін сақтаңыз.",
+        "uz": "Yoshga mos ravishda kundalik jismoniy faollikni ta'minlang.",
+        "ru": "Обеспечьте ежедневную физическую активность в соответствии с возрастом.",
+        "en": "Ensure daily physical activity appropriate for age.",
+        "kz": "Жасына сәйкес күнделікті физикалық белсенділікті қамтамасыз етіңіз."
     },
     "default_checkups": {
-        "uz": "Yiliga 1 marta profilaktik tekshiruvdan o'ting.",
-        "ru": "Проходите профилактическое обследование 1 раз в год.",
-        "en": "Undergo a preventive medical check-up once a year.",
-        "kz": "Жылына 1 рет алдын алу тексерісінен өтіңіз.",
+        "uz": "Rejali profilaktik ko'riklar yetarli.",
+        "ru": "Достаточно плановых профилактических осмотров.",
+        "en": "Routine preventive check-ups are sufficient.",
+        "kz": "Жоспарлы профилактикалық тексерулер жеткілікті."
     },
+
+    # Low BMI (Underweight)
     "low_bmi_general": {
-        "uz": "Tana vazni yetarli emas (Kam vazn). Diqqat qiling.",
-        "ru": "Масса тела недостаточна (дефицит веса). Обратите внимание.",
-        "en": "Body weight is insufficient (underweight). Please pay attention.",
-        "kz": "Дене салмағы жеткіліксіз (салмақ тапшылығы). Назар аударыңыз.",
+        "uz": "Tana vazni yetishmasligi (vazn tanqisligi) aniqlandi. Diqqat qaratish lozim.",
+        "ru": "Выявлен дефицит массы тела. Требуется внимание к здоровью.",
+        "en": "Underweight (weight deficiency) identified. Attention is required.",
+        "kz": "Салмақ жетіспеушілігі (салмақ тапшылығы) анықталды. Көңіл бөлу қажет."
     },
     "low_bmi_specialist": {
-        "uz": "Pediatr yoki parhezshunos (dietolog) ko'rigi tavsiya etiladi.",
-        "ru": "Рекомендуется консультация педиатра или диетолога.",
-        "en": "A consultation with a pediatrician or dietitian is recommended.",
-        "kz": "Педиатр немесе диетолог кеңесі ұсынылады.",
+        "uz": "👨‍⚕️ Pediatr yoki parhezshunos (dietolog) ko'rigi tavsiya etiladi. Vazn yetishmasligi sabablarini aniqlash zarur.",
+        "ru": "👨‍⚕️ Рекомендуется консультация педиатра или диетолога для выявления причин дефицита массы тела.",
+        "en": "👨‍⚕️ Consultation with a pediatrician or nutritionist is recommended to identify the causes of underweight.",
+        "kz": "👨‍⚕️ Салмақ жетіспеушілігіnin себептерін анықтау үшін педиатр немесе диетологтың кеңесі ұсынылады."
     },
     "low_bmi_nutrition": {
-        "uz": "Energetik qiymati yuqori, oqsil va sog'lom yog'larga boy taomlarni ko'paytiring.",
-        "ru": "Увеличьте потребление высококалорийной пищи, богатой белком и полезными жирами.",
-        "en": "Increase consumption of high-calorie foods rich in protein and healthy fats.",
-        "kz": "Энергетикалық мәні жоғары, ақуыз бен пайдалы майларға бай тамақтарды көбейтіңіз.",
+        "uz": "🍎 Yuqori kaloriyali va oqsillarga boy ovqatlanish tartibiga o'ting. Kuniga 5-6 marta kichik porsiyalarda ovqatlaning.",
+        "ru": "🍎 Перейдите на высококалорийное питание, богатое белками. Питайтесь 5-6 раз в день небольшими порциями.",
+        "en": "🍎 Switch to a high-calorie, protein-rich diet. Eat 5-6 times a day in small portions.",
+        "kz": "🍎 Ақуызға бай жоғары калориялы диетаға көшіңіз. Күніне 5-6 рет аз порциямен тамақтаныңыз."
     },
     "low_bmi_activity": {
-        "uz": "Yoshga mos ravishda mushak massasini oshiruvchi yengil mashqlar.",
-        "ru": "Лёгкие упражнения для увеличения мышечной массы, соответствующие возрасту.",
-        "en": "Light exercises to increase muscle mass appropriate for the age.",
-        "kz": "Жасқа сәйкес бұлшық ет массасын арттыратын жеңіл жаттығулар.",
+        "uz": "🏃 Kuchli kardio mashqlarni kamaytirib, mushak massasini oshirishga qaratilgan mashqlarni bajaring.",
+        "ru": "🏃 Уменьшите интенсивные кардионагрузки, сосредоточьтесь на упражнениях для набора мышечной массы.",
+        "en": "🏃 Reduce intense cardio, focus on exercises to build muscle mass.",
+        "kz": "🏃 Қарқынды кардио жаттығуларын азайтып, бұлшықет массасын арттыруға бағытталған жаттығуларға назар аударыңыз."
     },
     "low_bmi_checkups": {
-        "uz": "Har 6 oyda tahlillar topshirib turish tavsiya etiladi.",
-        "ru": "Рекомендуется сдавать анализы каждые 6 месяцев.",
-        "en": "It is recommended to undergo laboratory tests every 6 months.",
-        "kz": "Әр 6 айда сынақтар тапсыру ұсынылады.",
+        "uz": "🏥 Qon tahlili (gemoglobin), gormonal fon va oshqozon-ichak tizimi tekshiruvidan o'tish tavsiya etiladi.",
+        "ru": "🏥 Рекомендуется сдать анализ крови (гемоглобин), проверить гормональный фон и ЖКТ.",
+        "en": "🏥 Blood test (hemoglobin), hormonal profile, and gastrointestinal check-up are recommended.",
+        "kz": "🏥 Қан анализін (гемоглобин) тапсыру, гормоналды фон мен асқазан-ішек жолдарын тексеру ұсынылады."
     },
     "high_bmi_general": {
-        "uz": "Ortiqcha vazn aniqlandi. Bu kelajakda salomatlikka salbiy ta'sir qilishi mumkin.",
+        "uz": "Ortiqcha tana vazni aniqlandi. Bu kelajakda salomatlikka salbiy ta'sir qilishi mumkin.",
         "ru": "Выявлен избыточный вес. В будущем это может негативно сказаться на здоровье.",
-        "en": "Excess weight was identified. This may negatively affect health in the future.",
-        "kz": "Артық салмақ анықталды. Бұл болашақта денсаулыққа кері әсер етуі мүмкін.",
+        "en": "Excess weight identified. This may negatively affect health in the future.",
+        "kz": "Артық салмақ анықталды. Бұл болашақта денсаулыққа кері әсер етуі мүмкін."
     },
     "high_bmi_specialist": {
-        "uz": "Endokrinolog va parhezshunos ko'rigidan o'tish maqsadga muvofiq.",
-        "ru": "Целесообразно пройти консультацию эндокринолога и диетолога.",
-        "en": "It is advisable to consult an endocrinologist and dietitian.",
-        "kz": "Эндокринолог пен диетолог кеңесінен өту мақсатқа сай.",
+        "uz": "👨‍⚕️ Endokrinolog va parhezshunos ko'rigidan o'tish maqsadga muvofiq.",
+        "ru": "👨‍⚕️ Целесообразно пройти консультацию эндокринолога и диетолога.",
+        "en": "👨‍⚕️ It is advisable to consult an endocrinologist and dietitian.",
+        "kz": "👨‍⚕️ Эндокринолог пен диетолог кеңесінен өту мақсатқа сай."
     },
     "high_bmi_nutrition": {
-        "uz": "Past kaloriyali, kletchatka (sabzavotlar)ga boy ratsionga o'ting, shirinliklarni cheklang.",
-        "ru": "Перейдите на низкокалорийный рацион, богатый клетчаткой (овощи), ограничьте сладкое.",
-        "en": "Switch to a low-calorie diet rich in fiber (vegetables), limit sweets.",
-        "kz": "Талшыққа (көкөністер) бай, аз калориялы рационға көшіңіз, тәттілерді шектеңіз.",
+        "uz": "🍎 Ratsionda shakar va tez hazm bo'luvchi uglevodlarni cheklang. Ko'proq sabzavotlar iste'mol qiling.",
+        "ru": "🍎 Ограничьте сахар и быстрые углеводы в рационе. Употребляйте больше овощей.",
+        "en": "🍎 Limit sugar and fast carbohydrates in your diet. Consume more vegetables.",
+        "kz": "🍎 Рациондағы қант пен тез қорытылатын көмірсуларды шектеңіз. Көбірек көкөністерді тұтыныңыз."
     },
     "high_bmi_activity": {
-        "uz": "Kundalik 40-60 daqiqa faol harakat (yugurish, suzish, sport o'yinlari) zarur.",
-        "ru": "Необходимо 40–60 минут активного движения в день (бег, плавание, спортивные игры).",
-        "en": "40–60 minutes of active movement per day is necessary (running, swimming, sports games).",
-        "kz": "Күнделікті 40-60 минут белсенді қозғалыс (жүгіру, жүзу, спорт ойындары) қажет.",
+        "uz": "🏃 Kundalik piyoda yurish va suzish kabi aerob mashqlarni ko'paytiring.",
+        "ru": "🏃 Увеличьте аэробные нагрузки, такие как ежедневные прогулки и плавание.",
+        "en": "🏃 Increase aerobic activities such as daily walking and swimming.",
+        "kz": "🏃 Күнделікті серуендеу және жүзу сияқты аэробты жаттығуларды көбейтіңіз."
     },
     "high_bmi_checkups": {
-        "uz": "Har 3-6 oyda vazn va metabolik ko'rsatkichlarni tekshirib turing.",
-        "ru": "Контролируйте вес и метаболические показатели каждые 3–6 месяцев.",
-        "en": "Monitor weight and metabolic indicators every 3–6 months.",
-        "kz": "Салмақ пен метаболикалық көрсеткіштерді 3-6 айда бір тексеріп тұрыңыз.",
-    },
+        "uz": "🏥 Qondagi qand miqdori va lipid profilini tekshirish tavsiya etiladi.",
+        "ru": "🏥 Рекомендуется проверить уровень сахара в крови и липидный профиль.",
+        "en": "🏥 It is recommended to check blood sugar levels and lipid profile.",
+        "kz": "🏥 Қандағы қант мөлшерін және липидтік профильді тексеру ұсынылады."
+    }
 }
 
 
 def _ai(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
-    """Maslahat lug'atidan matnni oladi."""
+    """Maslahat lug'atidan matnni oladi. Agar sozlamalarda bo'lmasa, _ADVICE_I18N dan oladi."""
     setting_key = f"adv_{key}"
     val = all_settings.get(setting_key, {})
-    return val.get(lang) or val.get("uz") or key
+    
+    # 1. Database settings (override)
+    res = val.get(lang) or val.get("uz")
+    if res:
+        return res
+        
+    # 2. Local dictionary fallback
+    local_val = _ADVICE_I18N.get(key, {})
+    res = local_val.get(lang) or local_val.get("uz")
+    if res:
+        return res
+        
+    # 3. Final fallback to key itself
+    return key
 
 
 # Kalit so'zlar til bo'yicha (bio_data advice larini guruhlash uchun)
