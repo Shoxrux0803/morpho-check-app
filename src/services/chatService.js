@@ -48,8 +48,10 @@ export const chatService = {
     return response.data;
   },
 
-  getMessages: async () => {
+  getMessages: async (messageType = null) => {
+    const params = messageType ? { message_type: messageType } : {};
     const response = await axios.get(`${API_BASE_URL}/chat/my-messages`, {
+      params,
       headers: getAuthHeader(),
     });
     return response.data;
@@ -57,6 +59,13 @@ export const chatService = {
 
   getSuperadminConversations: async () => {
     const response = await axios.get(`${API_BASE_URL}/chat/conversations`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  getHistoryWithUser: async (userId) => {
+    const response = await axios.get(`${API_BASE_URL}/chat/history/${userId}`, {
       headers: getAuthHeader(),
     });
     return response.data;
@@ -71,6 +80,13 @@ export const chatService = {
   
   markAllRead: async () => {
     const response = await axios.post(`${API_BASE_URL}/chat/mark-all-read`, {}, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  markUserMessagesRead: async (userId) => {
+    const response = await axios.post(`${API_BASE_URL}/chat/mark-read/user/${userId}`, {}, {
       headers: getAuthHeader(),
     });
     return response.data;
