@@ -90,6 +90,19 @@ const ChatWidget = () => {
     }
   }, [isOpen, currentView, selectedUser, messages.length]);
 
+  // Mutual exclusion logic
+  useEffect(() => {
+    const handleCloseMainChat = () => setIsOpen(false);
+    window.addEventListener('close-main-chat', handleCloseMainChat);
+    return () => window.removeEventListener('close-main-chat', handleCloseMainChat);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent('close-ai-chat'));
+    }
+  }, [isOpen]);
+
   const fetchConversations = async () => {
     try {
       const data = await chatService.getSuperadminConversations();

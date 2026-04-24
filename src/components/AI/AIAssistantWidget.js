@@ -104,6 +104,19 @@ const AIAssistantWidget = () => {
     }
   }, [messages, isLoading, isOpen, scrollToBottom]);
 
+  // Mutual exclusion logic
+  useEffect(() => {
+    const handleCloseAIChat = () => setIsOpen(false);
+    window.addEventListener('close-ai-chat', handleCloseAIChat);
+    return () => window.removeEventListener('close-ai-chat', handleCloseAIChat);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      window.dispatchEvent(new CustomEvent('close-main-chat'));
+    }
+  }, [isOpen]);
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith('image/')) {
