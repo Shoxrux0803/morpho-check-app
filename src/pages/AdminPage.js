@@ -224,6 +224,7 @@ export default function AdminPage() {
     }
   }, [activeTab, fetchDashboardStats]);
 
+
   const handleLogin = useCallback(async (e) => {
     e.preventDefault();
     setLoginError("");
@@ -318,13 +319,29 @@ export default function AdminPage() {
 
   const onDeleteSelected = useCallback(async () => {
     if (!checked.size) return;
-    if (user.role === "superadmin") {
-      setDeleteConfirmOpen(true);
-    } else {
-      if (!window.confirm(`${checked.size} ta yozuvni savatga yuborasizmi?`)) return;
-      handleDeleteConfirm("soft");
-    }
-  }, [checked.size, user?.role, handleDeleteConfirm]);
+    setDeleteConfirmOpen(true);
+  }, [checked.size]);
+
+  // Keyboard shortcut for deletion
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Delete" || e.code === "Delete" || e.key === "Backspace") {
+        // Don't trigger if user is typing in a text input or textarea
+        const el = document.activeElement;
+        const tag = el.tagName.toUpperCase();
+        const isTextInput = (tag === "INPUT" && !["checkbox", "radio", "range", "button", "submit"].includes(el.type)) || tag === "TEXTAREA" || el.isContentEditable;
+        
+        if (isTextInput) return;
+
+        if (checked.size > 0 && activeTab === 1) {
+          onDeleteSelected();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [checked.size, activeTab, onDeleteSelected]);
 
   const handleDownloadPdf = useCallback(async () => {
     if (!viewRow) return;
@@ -689,32 +706,36 @@ export default function AdminPage() {
         <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. Qanday o'chirishni xohlaysiz?
+            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {user.role === "superadmin" ? "Qanday o'chirishni xohlaysiz?" : "Haqiqatan ham o'chirmoqchimisiz?"}
           </Typography>
-          <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
-            <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Lock fontSize="small" /> Hard delete (butunlay o'chirish) qaytarib bo'lmaydigan amaldir.
-            </Typography>
-          </Box>
+          {user.role === "superadmin" && (
+            <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+              <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Lock fontSize="small" /> Hard delete (butunlay o'chirish) qaytarib bo'lmaydigan amaldir.
+              </Typography>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
           <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">Bekor qilish</Button>
           <Button 
-            variant="outlined" 
+            variant={user.role === "superadmin" ? "outlined" : "contained"} 
             color="error" 
             onClick={() => handleDeleteConfirm("soft")} 
             disabled={deleteConfirmLoading}
           >
-            Savatga yuborish
+            {user.role === "superadmin" ? "Savatga yuborish" : "O'chirish"}
           </Button>
-          <Button 
-            variant="contained" 
-            color="error" 
-            onClick={() => handleDeleteConfirm("hard")} 
-            disabled={deleteConfirmLoading}
-          >
-            Butunlay o'chirish
-          </Button>
+          {user.role === "superadmin" && (
+            <Button 
+              variant="contained" 
+              color="error" 
+              onClick={() => handleDeleteConfirm("hard")} 
+              disabled={deleteConfirmLoading}
+            >
+              Butunlay o'chirish
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

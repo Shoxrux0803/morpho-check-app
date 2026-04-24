@@ -103,6 +103,63 @@ const SuperAdminPage = () => {
   const [backups, setBackups] = useState([]);
   const [backupLoading, setBackupLoading] = useState(false);
 
+  const [checked, setChecked] = useState(new Set());
+  const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+
+  const toggleAll = useCallback((rows) => {
+    const next = new Set(checked);
+    const allChecked = rows.length > 0 && rows.every((r) => checked.has(r.id));
+    if (allChecked) rows.forEach((r) => next.delete(r.id));
+    else rows.forEach((r) => next.add(r.id));
+    setChecked(next);
+  }, [checked]);
+
+  const toggleOne = useCallback((id) => {
+    const next = new Set(checked);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setChecked(next);
+  }, [checked]);
+
+
+  const handleBulkRestore = async () => {
+    if (checked.size === 0) return;
+    try {
+      await AdminApi.analyses.restore(Array.from(checked));
+      toast.success("Ma'lumotlar tiklandi");
+      setChecked(new Set());
+      fetchDeletedAnalyses();
+    } catch (err) {
+      toast.error("Xatolik: " + err.message);
+    }
+  };
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const handleBulkHardDelete = async () => {
+    if (checked.size === 0) return;
+    setDeleteConfirmOpen(true);
+  };
+
+  // Keyboard shortcut for deletion
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Delete" || e.code === "Delete" || e.key === "Backspace") {
+        const el = document.activeElement;
+        const tag = el.tagName.toUpperCase();
+        const isTextInput = (tag === "INPUT" && !["checkbox", "radio", "range", "button", "submit"].includes(el.type)) || tag === "TEXTAREA" || el.isContentEditable;
+        
+        if (isTextInput) return;
+
+        if (checked.size > 0 && activeTab === 3) {
+           handleBulkHardDelete();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [checked.size, activeTab, handleBulkHardDelete]);
+
 
   useEffect(() => {
     if (user?.role === "superadmin") {
@@ -540,27 +597,55 @@ const SuperAdminPage = () => {
       case 3:
         return (
           <Stack spacing={3}>
-             <Typography variant="h4" fontWeight={800}>O'chirilgan ma'lumotlar</Typography>
+             <Box display="flex" justifyContent="space-between" alignItems="center">
+               <Typography variant="h4" fontWeight={800}>O'chirilgan ma'lumotlar</Typography>
+               {checked.size > 0 && (
+                 <Stack direction="row" spacing={2}>
+                    <Button variant="contained" color="success" startIcon={<Refresh />} onClick={handleBulkRestore}>Tiklash ({checked.size})</Button>
+                    <Button variant="contained" color="error" startIcon={<DeleteForever />} onClick={handleBulkHardDelete}>Butunlay o'chirish ({checked.size})</Button>
+                 </Stack>
+               )}
+             </Box>
              <TableContainer component={GlassPaper}>
                <Table>
-                 <TableHead><TableRow>
-                   <TableCell sx={{ fontWeight: 700 }}>ID Kod</TableCell>
-                   <TableCell sx={{ fontWeight: 700 }}>Bemor</TableCell>
-                   <TableCell sx={{ fontWeight: 700 }}>O'chirilgan sana</TableCell>
-                   <TableCell sx={{ fontWeight: 700 }} align="right">Amallar</TableCell>
-                 </TableRow></TableHead>
+                 <TableHead>
+                   <TableRow>
+                    <TableCell sx={{ width: 40 }}>
+                       <IconButton size="small" onClick={() => toggleAll(deletedData)}>
+                         {deletedData.length > 0 && deletedData.every(r => checked.has(r.id)) ? <Security color="primary" /> : <InfoOutlined />}
+                       </IconButton>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>ID Kod</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Bemor</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>O'chirilgan sana</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="right">Amallar</TableCell>
+                  </TableRow>
+                 </TableHead>
                  <TableBody>
                    {deletedLoading ? (
-                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 8 }}><CircularProgress /></TableCell></TableRow>
+                     <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}><CircularProgress /></TableCell></TableRow>
                    ) : deletedData.length === 0 ? (
-                     <TableRow><TableCell colSpan={4} align="center" sx={{ py: 8 }}>Bo'sh</TableCell></TableRow>
+                     <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Bo'sh</TableCell></TableRow>
                    ) : (
                      deletedData.map((item) => (
-                       <TableRow key={item.id} hover>
+                       <TableRow 
+                         key={item.id} 
+                         hover 
+                         onClick={() => toggleOne(item.id)}
+                         sx={{ 
+                           cursor: 'pointer',
+                           bgcolor: checked.has(item.id) ? "rgba(0,123,255,0.08)" : "inherit"
+                         }}
+                       >
+                         <TableCell>
+                            <IconButton size="small" color={checked.has(item.id) ? "primary" : "default"}>
+                              {checked.has(item.id) ? <Security /> : <Box sx={{ width: 18, height: 18, border: '2px solid', borderColor: 'divider', borderRadius: '4px' }} />}
+                            </IconButton>
+                         </TableCell>
                          <TableCell fontWeight="bold">{item.id_code}</TableCell>
                          <TableCell>{item.last_name} {item.first_name}</TableCell>
                          <TableCell>{new Date(item.deleted_at).toLocaleString()}</TableCell>
-                         <TableCell align="right">
+                         <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                            <Stack direction="row" spacing={1} justifyContent="flex-end">
                              <Tooltip title="Tiklash"><IconButton size="small" color="success" onClick={() => handleRestoreAnalysis(item.id)}><Refresh /></IconButton></Tooltip>
                              <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleHardDeleteAnalysis(item.id)}><Delete /></IconButton></Tooltip>
@@ -805,6 +890,46 @@ const SuperAdminPage = () => {
             logout();
           }}
         />
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <Dialog 
+          open={deleteConfirmOpen} 
+          onClose={() => setDeleteConfirmOpen(false)}
+          PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+        >
+          <DialogTitle sx={{ fontWeight: 800 }}>Butunlay o'chirish</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. Bularni bazadan butunlay o'chirib tashlamoqchimisiz?
+            </Typography>
+            <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+              <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <DeleteForever fontSize="small" /> DIQQAT: Bu amalni qaytarib bo'lmaydi!
+              </Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">Bekor qilish</Button>
+            <Button 
+              variant="contained" 
+              color="error" 
+              onClick={async () => {
+                setDeleteConfirmLoading(true);
+                try {
+                  await AdminApi.analyses.hardDelete(Array.from(checked));
+                  toast.success("Ma'lumotlar o'chirildi");
+                  setChecked(new Set());
+                  setDeleteConfirmOpen(false);
+                  fetchDeletedAnalyses();
+                } catch (e) { toast.error(e.message); }
+                finally { setDeleteConfirmLoading(false); }
+              }} 
+              disabled={deleteConfirmLoading}
+            >
+              {deleteConfirmLoading ? <CircularProgress size={20} color="inherit" /> : "Ha, butunlay o'chirilsin"}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   );

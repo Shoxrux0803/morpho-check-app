@@ -8,7 +8,7 @@ import {
 import {
   Download, Description, Edit, Delete, DeleteForever, Search,
   FilterList, Refresh, Visibility, Close, Person, Place, Science,
-  FitnessCenter, RestoreFromTrash, Add
+  FitnessCenter, RestoreFromTrash, Add, CheckCircle, InfoOutlined, Lock
 } from "@mui/icons-material";
 import ResearcherForm from "../Research/ResearcherForm";
 import { ResearchApi } from "../../services/api";
@@ -79,6 +79,49 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const [saving, setSaving] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
 
+  const [checked, setChecked] = useState(new Set());
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+
+  const toggleAll = useCallback(() => {
+    const rows = activeTab === 0 ? data : deletedData;
+    const next = new Set(checked);
+    const allChecked = rows.length > 0 && rows.every((r) => checked.has(r.id));
+    if (allChecked) rows.forEach((r) => next.delete(r.id));
+    else rows.forEach((r) => next.add(r.id));
+    setChecked(next);
+  }, [checked, data, deletedData, activeTab]);
+
+  const toggleOne = useCallback((id) => {
+    const next = new Set(checked);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setChecked(next);
+  }, [checked]);
+
+  const onDeleteSelected = useCallback(() => {
+    if (checked.size > 0) setDeleteConfirmOpen(true);
+  }, [checked.size]);
+
+  // Keyboard shortcut for deletion
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Delete" || e.code === "Delete" || e.key === "Backspace") {
+        const el = document.activeElement;
+        const tag = el.tagName.toUpperCase();
+        const isTextInput = (tag === "INPUT" && !["checkbox", "radio", "range", "button", "submit"].includes(el.type)) || tag === "TEXTAREA" || el.isContentEditable;
+        
+        if (isTextInput) return;
+
+        if (checked.size > 0) {
+          onDeleteSelected();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [checked.size, onDeleteSelected]);
+
   useEffect(() => {
     if (activeTab === 0) fetchData();
     else if (activeTab === 1) fetchDeletedData();
@@ -108,32 +151,33 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     }
   };
 
-  const handleDelete = async (id, type) => {
-    const msg = type === "hard"
-      ? "DIQQAT! Bu yozuv bazadan butunlay o'chiriladi. Davom etamizmi?"
-      : type === "restore"
-        ? "Bu yozuvni tiklashni istaysizmi?"
-        : "Bu yozuvni o'chirmoqchimisiz? (tiklash mumkin)";
+  const handleDelete = async (idOrIds, type) => {
+    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
+    if (ids.length === 0) return;
 
-    if (!window.confirm(msg)) return;
+    setDeleteConfirmLoading(true);
     try {
       if (type === "hard") {
-        await ResearchApi.hardDelete(id);
-        toast.success("Butunlay o'chirildi");
-        if (activeTab === 0) setData(d => d.filter(r => r.id !== id));
-        else setDeletedData(d => d.filter(r => r.id !== id));
+        for (const id of ids) await ResearchApi.hardDelete(id);
+        toast.success(ids.length > 1 ? "Ma'lumotlar butunlay o'chirildi" : "Butunlay o'chirildi");
       } else if (type === "restore") {
-        await ResearchApi.restore(id);
-        toast.success("Tiklandi");
+        for (const id of ids) await ResearchApi.restore(id);
+        toast.success(ids.length > 1 ? "Ma'lumotlar tiklandi" : "Tiklandi");
         fetchDeletedData();
       } else {
-        await ResearchApi.softDelete(id);
-        toast.success("O'chirildi");
-        setData(d => d.filter(r => r.id !== id));
+        for (const id of ids) await ResearchApi.softDelete(id);
+        toast.success(ids.length > 1 ? "Ma'lumotlar savatga yuborildi" : "O'chirildi");
       }
-      if (detailRecord?.id === id) setDetailRecord(null);
+      
+      setChecked(new Set());
+      setDeleteConfirmOpen(false);
+      fetchData();
+      if (activeTab === 1) fetchDeletedData();
+      if (detailRecord && ids.includes(detailRecord.id)) setDetailRecord(null);
     } catch (err) {
       toast.error("Xatolik: " + err.message);
+    } finally {
+      setDeleteConfirmLoading(false);
     }
   };
 
@@ -174,6 +218,11 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       <Table size="small">
         <TableHead sx={{ background: isDeletedView ? "rgba(244,67,54,0.06)" : "rgba(0,123,255,0.06)" }}>
           <TableRow>
+            <TableCell sx={{ width: 40, p: 1 }}>
+               <IconButton size="small" onClick={toggleAll} color="primary">
+                 {rows.length > 0 && rows.every(r => checked.has(r.id)) ? <CheckCircle fontSize="small" /> : <InfoOutlined fontSize="small" />}
+               </IconButton>
+            </TableCell>
             <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>F.I.SH</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>Maktab / Bog'cha</TableCell>
@@ -193,9 +242,18 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
               <TableRow
                 key={row.id}
                 hover
-                sx={{ cursor: "pointer", "&:hover": { background: "rgba(0,123,255,0.04)" } }}
+                sx={{ 
+                  cursor: "pointer", 
+                  "&:hover": { background: "rgba(0,123,255,0.04)" },
+                  bgcolor: checked.has(row.id) ? "rgba(0,123,255,0.08)" : "inherit"
+                }}
                 onClick={() => setDetailRecord(row)}
               >
+                <TableCell sx={{ p: 1 }} onClick={(e) => { e.stopPropagation(); toggleOne(row.id); }}>
+                   <IconButton size="small" color={checked.has(row.id) ? "primary" : "default"}>
+                     {checked.has(row.id) ? <CheckCircle fontSize="small" /> : <Box sx={{ width: 18, height: 18, border: '2px solid', borderColor: 'divider', borderRadius: '4px' }} />}
+                   </IconButton>
+                </TableCell>
                 <TableCell><Typography variant="caption" color="text.secondary">{idx + 1}</Typography></TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={1} alignItems="center">
@@ -229,9 +287,9 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                     {!isDeletedView ? (
                       <>
                         <Tooltip title="Tahrirlash"><IconButton size="small" color="primary" onClick={() => { setEditRecord(row); setEditForm({ ...row }); }}><Edit fontSize="small" /></IconButton></Tooltip>
-                        <Tooltip title="Soft o'chirish"><IconButton size="small" color="warning" onClick={() => handleDelete(row.id, "soft")}><Delete fontSize="small" /></IconButton></Tooltip>
+                        <Tooltip title="Soft o'chirish"><IconButton size="small" color="warning" onClick={() => { setChecked(new Set([row.id])); setDeleteConfirmOpen(true); }}><Delete fontSize="small" /></IconButton></Tooltip>
                         {isSuperAdmin && (
-                          <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleDelete(row.id, "hard")}><DeleteForever fontSize="small" /></IconButton></Tooltip>
+                          <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => { setChecked(new Set([row.id])); setDeleteConfirmOpen(true); }}><DeleteForever fontSize="small" /></IconButton></Tooltip>
                         )}
                       </>
                     ) : (
@@ -257,6 +315,9 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" fontWeight={900}>Izlanuvchi Ma'lumotlari</Typography>
         <Stack direction="row" spacing={2}>
+          {checked.size > 0 && (
+             <Button variant="outlined" color="error" startIcon={<Delete />} onClick={() => setDeleteConfirmOpen(true)}>O'chirish ({checked.size})</Button>
+          )}
           <Button variant="contained" color="primary" startIcon={<Add />} onClick={() => setShowAdd(true)}>{t("addRecord")}</Button>
           <Button variant="contained" color="success" startIcon={<Download />} onClick={handleExportXlsx}>XLSX</Button>
           <Button variant="outlined" startIcon={<Refresh />} onClick={() => activeTab === 0 ? fetchData() : fetchDeletedData()}>Yangilash</Button>
@@ -465,6 +526,37 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             onCancel={() => setShowAdd(false)} 
           />
         </DialogContent>
+      </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={deleteConfirmOpen} 
+        onClose={() => setDeleteConfirmOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {activeTab === 1 ? "Bularni butunlay o'chirib tashlamoqchimisiz?" : "Haqiqatan ham o'chirmoqchimisiz?"}
+          </Typography>
+          {activeTab === 1 && (
+            <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+              <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Lock fontSize="small" /> Bu amalni qaytarib bo'lmaydi!
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">Bekor qilish</Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={() => handleDelete(Array.from(checked), activeTab === 1 ? "hard" : "soft")} 
+            disabled={deleteConfirmLoading}
+          >
+            {deleteConfirmLoading ? <CircularProgress size={20} color="inherit" /> : "O'chirish"}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Box>
   );
