@@ -37,6 +37,17 @@ const aiService = {
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;
+  },
+
+  generateParentTips: async (patientData, mlPredictions, lang = 'uz') => {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error("No token found");
+    const response = await axios.post(
+      `${API_URL}/ai/generate-parent-tips`,
+      { patient_data: patientData, ml_predictions: mlPredictions, lang },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
   }
 };
 

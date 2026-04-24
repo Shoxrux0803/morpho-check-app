@@ -1,5 +1,5 @@
 // src/components/AnalysisResults.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -34,6 +34,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useLanguage, LANGUAGES } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useGrowthAnalytics } from "../hooks/useGrowthAnalytics";
+import aiService from "../services/aiService";
 
 export default function AnalysisResults({
   formData,
@@ -46,6 +47,8 @@ export default function AnalysisResults({
   const [pdfLang, setPdfLang] = useState(lang);
   const [chartType, setChartType] = useState('height');
   const analytics = useGrowthAnalytics(formData);
+  const [aiTips, setAiTips] = useState([]);
+  const [tipsLoading, setTipsLoading] = useState(false);
 
   // 1) Natija yo'q
   if (!results) {
@@ -111,6 +114,34 @@ export default function AnalysisResults({
       generatePDF(pdfLang);
     }
   };
+
+  useEffect(() => {
+    if (root?.ai_predictions && aiTips.length === 0) {
+      const fetchTips = async () => {
+        setTipsLoading(true);
+        try {
+          const res = await aiService.generateParentTips(
+            {
+              age: patientInfo?.age ?? formData?.age,
+              gender: patientInfo?.gender ?? formData?.gender,
+              bmi: analysis?.bmi,
+              z_score: analysis?.z_score
+            },
+            root.ai_predictions,
+            lang
+          );
+          if (res?.tips && res.tips.length > 0) {
+            setAiTips(res.tips);
+          }
+        } catch (err) {
+          console.error("AI Tips error:", err);
+        } finally {
+          setTipsLoading(false);
+        }
+      };
+      fetchTips();
+    }
+  }, [root, lang]);
 
 
 
@@ -577,6 +608,53 @@ export default function AnalysisResults({
                     </Paper>
                   </Grid>
                 </Grid>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AI Parent Tips */}
+          {(tipsLoading || aiTips.length > 0) && (
+            <Card elevation={2} sx={{ mb: 3, borderRadius: 2, border: '1px solid #e0f2f1', overflow: 'hidden' }}>
+              <CardHeader
+                avatar={<TipsAndUpdatesOutlinedIcon sx={{ color: '#00897b' }} />}
+                title={<Typography variant="h6" fontWeight={700} color="#004d40">{t("parentTipsTitle")}</Typography>}
+                sx={{ bgcolor: '#e0f2f1' }}
+              />
+              <CardContent>
+                {tipsLoading ? (
+                  <LinearProgress sx={{ my: 2, borderRadius: 1, bgcolor: '#b2dfdb', "& .MuiLinearProgress-bar": { bgcolor: '#00897b' } }} />
+                ) : (
+                  <Stack spacing={2}>
+                    {aiTips.map((tip, idx) => (
+                      <Box key={idx} sx={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 2, 
+                        p: 2, 
+                        borderRadius: 3, 
+                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,137,123,0.1)' : '#f1f8f7',
+                        border: '1px solid rgba(0,137,123,0.1)',
+                        transition: 'transform 0.2s',
+                        '&:hover': { transform: 'translateX(8px)' }
+                      }}>
+                         <Box sx={{ 
+                           minWidth: 32, 
+                           height: 32, 
+                           borderRadius: '50%', 
+                           bgcolor: '#00897b', 
+                           color: '#fff', 
+                           display: 'flex', 
+                           alignItems: 'center', 
+                           justifyContent: 'center', 
+                           fontSize: '0.9rem', 
+                           fontWeight: 900,
+                           boxShadow: '0 2px 8px rgba(0,137,123,0.3)'
+                         }}>{idx + 1}</Box>
+                         <Typography variant="body1" fontWeight={600} color="text.primary">{tip}</Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
               </CardContent>
             </Card>
           )}

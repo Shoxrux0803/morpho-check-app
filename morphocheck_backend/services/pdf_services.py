@@ -75,6 +75,7 @@ PDF_LABELS = {
         "unit_year": "yosh",
         "unit_month": "oy",
         "unit_day": "kun",
+        "ai_parent_tips_title": "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR",
     },
     "ru": {
         "title": "MORPHOCHECK PRO ОТЧЁТ АНТРОПОМЕТРИЧЕСКОГО АНАЛИЗА",
@@ -133,6 +134,7 @@ PDF_LABELS = {
         "unit_year": "лет",
         "unit_month": "мес",
         "unit_day": "дн",
+        "ai_parent_tips_title": "MORPHOAI: КРАТКИЕ СОВЕТЫ ДЛЯ РОДИТЕЛЕЙ",
     },
     "en": {
         "title": "MORPHOCHECK PRO ANTHROPOMETRIC ANALYSIS REPORT",
@@ -191,6 +193,7 @@ PDF_LABELS = {
         "unit_year": "years",
         "unit_month": "months",
         "unit_day": "days",
+        "ai_parent_tips_title": "MORPHOAI: SHORT TIPS FOR PARENTS",
     },
     "kz": {
         "title": "MORPHOCHECK PRO АНТРОПОМЕТРИЯЛЫҚ ТАЛДАУ ЕСЕБІ",
@@ -249,6 +252,7 @@ PDF_LABELS = {
         "unit_year": "жас",
         "unit_month": "ай",
         "unit_day": "күн",
+        "ai_parent_tips_title": "MORPHOAI: АТА-АНАЛАРҒА АРНАЛҒАН ҚЫСҚА КЕҢЕСТЕР",
     },
 }
 
@@ -595,6 +599,29 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             ('PADDING', (0, 0), (-1, -1), 6),
         ]))
         elements.append(t_ai_risks)
+        elements.append(Spacer(1, 20))
+
+    # AI Parent Tips (NEW)
+    ai_tips = data.get('ai_parent_tips', []) if isinstance(data, dict) else getattr(data, 'ai_parent_tips', [])
+    if ai_tips:
+        elements.append(Paragraph(L.get("ai_parent_tips_title", "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR"), section_title_style))
+        
+        import html
+        tips_data = []
+        for tip in ai_tips:
+            # Escape HTML characters to prevent ReportLab Paragraph errors
+            safe_tip = html.escape(str(tip))
+            tips_data.append([Paragraph(f"• {safe_tip}", styles['Normal'])])
+            
+        t_tips = Table(tips_data, colWidths=[6.0*inch])
+        t_tips.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#e8f8f5")),
+            ('PADDING', (0, 0), (-1, -1), 8),
+            ('BORDER', (0, 0), (-1, -1), 1, colors.HexColor("#a3e4d7")),
+        ]))
+        elements.append(t_tips)
         elements.append(Spacer(1, 20))
 
     # Tavsiyalar bo'limi

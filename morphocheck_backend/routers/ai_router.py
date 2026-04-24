@@ -8,6 +8,7 @@ import google.generativeai as genai
 from routers.auth_router import get_current_user
 from models.user import User
 from dotenv import load_dotenv
+from services.ai_advice_service import generate_parent_tips
 
 load_dotenv()
 
@@ -279,3 +280,18 @@ async def predict_params(req: PredictParamsRequest, current_user: User = Depends
     except Exception as e:
         print(f"[AI PREDICT ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail="Error predicting parameters")
+@router.post("/generate-parent-tips")
+async def ai_parent_tips(req: Dict, current_user: User = Depends(get_current_user)):
+    """
+    Generates ultra-short AI tips for parents based on patient data and predictions.
+    """
+    try:
+        patient_data = req.get("patient_data", {})
+        ml_predictions = req.get("ml_predictions", {})
+        lang = req.get("lang", "uz")
+        
+        tips = generate_parent_tips(patient_data, ml_predictions, lang=lang)
+        return {"tips": tips}
+    except Exception as e:
+        print(f"[AI TIPS ROUTER ERROR] {str(e)}")
+        return {"tips": []}

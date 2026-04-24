@@ -15,6 +15,7 @@ from routers.auth_router import get_optional_user
 from models.user import User
 from services.ml_service import get_ml_predictions
 from utils.date_utils import calculate_age_precise
+from services.ai_advice_service import generate_parent_tips
 
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
 
@@ -81,6 +82,18 @@ async def generate_pdf_endpoint(
             "mother_height": float(request_data.mother_height) if request_data.mother_height else None
         }
         data_dict["ai_predictions"] = get_ml_predictions(ml_data)
+        
+        # Add AI Parent Tips
+        data_dict["ai_parent_tips"] = generate_parent_tips(
+            {
+                "age": int(request_data.age),
+                "gender": gender_norm,
+                "bmi": float(analysis["bmi"]),
+                "z_score": float(analysis["z_score"])
+            },
+            data_dict["ai_predictions"],
+            lang=lang
+        )
 
         buffer = generate_pdf_file(data_dict, lang=lang)
 
@@ -219,6 +232,18 @@ async def generate_pdf_by_id_endpoint(
             "mother_height": float(rec.mother_height) if rec.mother_height else None
         }
         report_data["ai_predictions"] = get_ml_predictions(ml_data)
+        
+        # Add AI Parent Tips
+        report_data["ai_parent_tips"] = generate_parent_tips(
+            {
+                "age": int(actual_age),
+                "gender": (rec.gender or "").lower(),
+                "bmi": float(analysis["bmi"]),
+                "z_score": float(analysis["z_score"])
+            },
+            report_data["ai_predictions"],
+            lang=lang
+        )
 
         buffer = generate_pdf_file(report_data, lang=lang)
         buffer.seek(0)
