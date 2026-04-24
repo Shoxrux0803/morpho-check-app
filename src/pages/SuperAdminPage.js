@@ -671,7 +671,14 @@ const SuperAdminPage = () => {
       <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 } }}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="flex-start">
           {/* Sidebar Tabs */}
-          <Box sx={{ width: { xs: "100%", md: 300 }, position: { md: "sticky" }, top: 24 }}>
+          <Box sx={{ 
+            width: { xs: "100%", md: 300 }, 
+            minWidth: { md: 300 },
+            maxWidth: { md: 300 },
+            flexShrink: 0,
+            position: { md: "sticky" }, 
+            top: 24 
+          }}>
             <GlassPaper sx={{ p: 2, border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(100,116,139,0.12)', boxShadow: isDark ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(100,116,139,0.08)' }}>
               <Box p={2} mb={2} textAlign="center">
                 <Avatar sx={{ width: 64, height: 64, margin: "0 auto 16px", bgcolor: "primary.main", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>SA</Avatar>
@@ -712,7 +719,7 @@ const SuperAdminPage = () => {
           </Box>
 
           {/* Main Content Area */}
-          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+          <Box sx={{ flexGrow: 1, minWidth: 0, overflowX: "auto" }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
