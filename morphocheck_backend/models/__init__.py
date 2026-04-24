@@ -7,6 +7,7 @@ from .user import User
 from .payment import Payment
 
 from .clinical import ClinicalSetting
+from .chat import ChatMessage
 
 __all__ = [
     "Base",
@@ -14,5 +15,6 @@ __all__ = [
     "PatientAnalysis",
     "User",
     "Payment",
-    "ClinicalSetting"
+    "ClinicalSetting",
+    "ChatMessage"
 ]

@@ -200,7 +200,7 @@ export default function AnalysisResults({
             />
             <CardContent>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: analytics?.bmi ? `4px solid ${analytics.bmi.status.color}` : 'none' }}>
                     <Stack spacing={1}>
                       <Typography variant="subtitle2" color="text.secondary">{t("bmiLabel")}</Typography>
@@ -221,7 +221,7 @@ export default function AnalysisResults({
                   </Paper>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={1}>
                       <Typography variant="subtitle2" color="text.secondary">{t("somatotypeLabel")}</Typography>
@@ -249,7 +249,7 @@ export default function AnalysisResults({
                   </Typography>
                   <Grid container spacing={2}>
                     {analytics.height && (
-                      <Grid item xs={12} md={4}>
+                      <Grid xs={12} md={4}>
                         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.height.status.color}05` }}>
                           <Tooltip title={t("hazDesc")} arrow>
                             <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
@@ -274,7 +274,7 @@ export default function AnalysisResults({
                       </Grid>
                     )}
                     {analytics.weight && (
-                      <Grid item xs={12} md={4}>
+                      <Grid xs={12} md={4}>
                         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.weight.status.color}05` }}>
                           <Tooltip title={t("wazDesc")} arrow>
                             <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
@@ -299,7 +299,7 @@ export default function AnalysisResults({
                       </Grid>
                     )}
                     {analytics.bmi && (
-                      <Grid item xs={12} md={4}>
+                      <Grid xs={12} md={4}>
                         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.bmi.status.color}05` }}>
                           <Tooltip title={t("bazDesc")} arrow>
                             <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
@@ -330,7 +330,7 @@ export default function AnalysisResults({
               <Divider sx={{ my: 3 }} />
 
               <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
                       <Typography variant="subtitle2" color="text.secondary">{t("idealWeight")}</Typography>
@@ -344,7 +344,7 @@ export default function AnalysisResults({
                   </Paper>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
                       <Typography variant="subtitle2" color="text.secondary">{t("weightDiff")}</Typography>
@@ -365,7 +365,7 @@ export default function AnalysisResults({
               </Grid>
 
               <Grid container spacing={3} sx={{ mt: 1 }}>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
                       <Typography variant="subtitle2" color="text.secondary">{t("shoulderRatio")}</Typography>
@@ -373,7 +373,7 @@ export default function AnalysisResults({
                     </Stack>
                   </Paper>
                 </Grid>
-                <Grid item xs={12} md={6}>
+                <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
                       <Typography variant="subtitle2" color="text.secondary">{t("thighRatio")}</Typography>
@@ -404,7 +404,7 @@ export default function AnalysisResults({
                     {t("detailedIndices")}
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={4}>
+                    <Grid xs={12} sm={4}>
                       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #3f51b5' }}>
                         <Typography variant="subtitle2" color="text.secondary">{t("hmai")}</Typography>
                         <Typography variant="h5" fontWeight={700}>{analysis?.indices?.hmai ?? "—"}</Typography>
@@ -413,7 +413,7 @@ export default function AnalysisResults({
                         </Typography>
                       </Paper>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid xs={12} sm={4}>
                       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #4caf50' }}>
                         <Typography variant="subtitle2" color="text.secondary">{t("mii")}</Typography>
                         <Typography variant="h5" fontWeight={700}>{analysis?.indices?.mii ?? "—"}</Typography>
@@ -422,7 +422,7 @@ export default function AnalysisResults({
                         </Typography>
                       </Paper>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid xs={12} sm={4}>
                       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #ff9800' }}>
                         <Typography variant="subtitle2" color="text.secondary">{t("adi")}</Typography>
                         <Typography variant="h5" fontWeight={700}>{analysis?.indices?.adi ?? "—"}</Typography>
@@ -432,19 +432,19 @@ export default function AnalysisResults({
                       </Paper>
                     </Grid>
 
-                    <Grid item xs={6} md={4}>
+                    <Grid xs={6} md={4}>
                       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                         <Typography variant="caption" color="text.secondary" display="block">{t("morphologicalType")}</Typography>
                         <Typography variant="body2" fontWeight={600}>{analysis?.indices?.morphological_type ?? "—"}</Typography>
                       </Paper>
                     </Grid>
-                    <Grid item xs={6} md={4}>
+                    <Grid xs={6} md={4}>
                       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                         <Typography variant="caption" color="text.secondary" display="block">{t("biologicalAgeStatus")}</Typography>
                         <Typography variant="body2" fontWeight={600}>{analysis?.indices?.biological_age_status ?? "—"}</Typography>
                       </Paper>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid xs={12} md={4}>
                       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
                         <Typography variant="caption" color="text.secondary" display="block">{t("secularTrend")}</Typography>
                         <Typography variant="body2" fontWeight={600}>{analysis?.indices?.secular_trend ?? "—"}</Typography>

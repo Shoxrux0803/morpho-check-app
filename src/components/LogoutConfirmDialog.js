@@ -39,7 +39,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
         },
       }}
     >
-      <DialogTitle sx={{ m: 0, p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+      <DialogTitle component="div" sx={{ m: 0, p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
         <Box
           sx={{
             display: "flex",

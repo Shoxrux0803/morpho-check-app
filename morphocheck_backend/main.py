@@ -2,8 +2,9 @@
 import os
 from typing import Optional
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -24,11 +25,14 @@ from routers.auth_router import router as auth_router
 from routers.clinical_router import router as clinical_router
 from routers.backup_router import router as backup_router
 from routers.research_router import router as research_router
+from routers.chat_router import router as chat_router
 
 # DB init
 from utils.database import engine, get_db, init_db
 from models.base import Base
+from models.user import User
 from models.userdata import PatientAnalysis
+from models.chat import ChatMessage
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
@@ -52,6 +56,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    print(f"[DEBUG] Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    print(f"[DEBUG] Response status: {response.status_code}")
+    return response
 
 # CORS sozlamalari
 _origins = os.getenv("CORS_ORIGINS", "")
@@ -79,6 +90,13 @@ app.add_middleware(
     max_age=600,
 )
 
+# Uploads papkasini yaratish va static qilish
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 @app.on_event("startup")
 def on_startup():
     # Jadval(lar) mavjud bo'lmasa yaratadi + ulanishni tekshiradi
@@ -91,6 +109,7 @@ app.include_router(pdf_router,    prefix=f"{API_PREFIX}/pdf",     tags=["PDF His
 app.include_router(clinical_router, prefix=f"{API_PREFIX}/clinical", tags=["Klinik CMS"])
 app.include_router(backup_router, prefix=f"{API_PREFIX}/backup",  tags=["Zaxira (Backup)"])
 app.include_router(research_router, prefix=f"{API_PREFIX}/research", tags=["Izlanuvchi"])
+app.include_router(chat_router,     prefix=f"{API_PREFIX}/chat",     tags=["Chat"])
 app.include_router(auth_router,   prefix=f"{API_PREFIX}")
 
 # Sog'liqni tekshirish

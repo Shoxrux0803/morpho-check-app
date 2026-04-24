@@ -40,3 +40,6 @@ test_pdf*.pdf
 test_report_with_watermark.pdf
 morphocheck_backend/test_output.docx
 morphocheck_backend/test_pdf.pdf
+morphocheck_backend/uploads/
+morphocheck_backend/*.db-shm
+morphocheck_backend/*.db-wal

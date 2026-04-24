@@ -18,6 +18,7 @@ import { OfflineSyncProvider } from "./providers/OfflineSyncProvider";
 import Footer from "./components/Footer";
 import IntroPage from "./pages/IntroPage";
 import ThemeSync from "./components/ThemeSync";
+import ChatWidget from "./components/Chat/ChatWidget";
 
 // Lazy pages - YANGI SAHIFALAR QO'SHILDI
 const MorphoCheckPro = lazy(() => import("./pages/MorphoCheckPro"));
@@ -291,6 +292,8 @@ export default function App() {
                 <AnimatedRoutes />
               </Suspense>
             </main>
+            
+            <ChatWidget />
 
             <Footer />
           </div>

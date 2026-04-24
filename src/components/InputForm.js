@@ -301,7 +301,7 @@ export default function InputForm({
                 </Stack>
 
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <Field fullWidth label={`${t("firstNameLabel")} *`} name="firstName" value={formData.firstName} onChange={handleInputChange} required InputProps={adorn(<PersonOutline />)} sx={inputSx} />
                   </Grid>
                   <Grid item xs={12} md={6}>
@@ -330,7 +330,7 @@ export default function InputForm({
                 </Box>
 
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <MCSelect select fullWidth label={`${t("regionLabel")} *`} name="region" value={region} onChange={onRegionChange} InputProps={adorn(null)} sx={inputSx}>
                       <MenuItem value="">{t("selectLabel")}</MenuItem>
                       {REGIONS.map((r) => <MenuItem key={r} value={r}>{r}</MenuItem>)}
@@ -384,7 +384,7 @@ export default function InputForm({
                 </Stack>
 
                 <Grid container spacing={2.5}>
-                  <Grid item xs={12} md={6}>
+                  <Grid xs={12} md={6}>
                     <Field 
                       fullWidth 
                       label={`${t("heightLabel")} (sm) *`} 
@@ -547,7 +547,7 @@ export default function InputForm({
                 </Stack>
 
                 <Grid container spacing={2.5}>
-                  <Grid item xs={12} md={6}><Field fullWidth label={`${t("tbwLabel")} (l) (${t("optionalLabel")})`} name="totalBodyWater" type="number" value={formData.totalBodyWater || ""} onChange={handleInputChange} InputProps={adorn(<WaterIcon />)} sx={inputSx} /></Grid>
+                  <Grid xs={12} md={6}><Field fullWidth label={`${t("tbwLabel")} (l) (${t("optionalLabel")})`} name="totalBodyWater" type="number" value={formData.totalBodyWater || ""} onChange={handleInputChange} InputProps={adorn(<WaterIcon />)} sx={inputSx} /></Grid>
                   <Grid item xs={12} md={6}><Field fullWidth label={`${t("fatPercentLabel")} (%) (${t("optionalLabel")})`} name="fatPercent" type="number" value={formData.fatPercent || ""} onChange={handleInputChange} InputProps={adorn(<ShutterSpeedIcon />)} sx={inputSx} /></Grid>
                   <Grid item xs={12} md={4}><Field fullWidth label={`${t("fatMassLabel")} (kg) (${t("optionalLabel")})`} name="fatMass" type="number" value={formData.fatMass || ""} onChange={handleInputChange} InputProps={adorn(<MonitorWeightIcon />)} sx={inputSx} /></Grid>
                   <Grid item xs={12} md={4}><Field fullWidth label={`${t("muscleMassLabel")} (kg) (${t("optionalLabel")})`} name="muscleMass" type="number" value={formData.muscleMass || ""} onChange={handleInputChange} InputProps={adorn(<FitnessCenterIcon />)} sx={inputSx} /></Grid>

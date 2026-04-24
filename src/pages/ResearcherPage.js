@@ -83,7 +83,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
       <Grid container spacing={2}>
         {fields.map(([label, key]) =>
           record[key] !== null && record[key] !== undefined && record[key] !== "" ? (
-            <Grid item xs={12} sm={6} md={4} key={key}>
+            <Grid xs={12} sm={6} md={4} key={key}>
               <Box
                 sx={{
                   p: 1.5, borderRadius: 2,
@@ -396,7 +396,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ]],
             ["Ona sog'ligi", "mother_health_status", "text"], ["Tekshiruv sanasi", "examination_date", "date"]
           ].map(([label, k, type, options]) => (
-            <Grid item xs={12} sm={6} md={k === "feeding_type" || k === "parents_marriage" ? 6 : 4} key={k}>
+            <Grid xs={12} sm={6} md={k === "feeding_type" || k === "parents_marriage" ? 6 : 4} key={k}>
               <F label={label} k={k} type={type} options={options} />
             </Grid>
           ))}
@@ -413,7 +413,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ["Oyoq panja uzunligi", "foot_length"], ["Tishlar soni", "teeth_count"],
             ["Menstruatsiya", "menstruation_start", "text"]
           ].map(([label, k, type]) => (
-            <Grid item xs={12} sm={6} md={4} key={k}>
+            <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type={type || "number"} />
             </Grid>
           ))}
@@ -428,7 +428,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ["Bosh balandligi", "skull_height"], ["Asos uzunligi", "skull_base_length"],
             ["Asos kengligi", "skull_base_width"]
           ].map(([label, k]) => (
-            <Grid item xs={12} sm={6} md={4} key={k}>
+            <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
             </Grid>
           ))}
@@ -444,7 +444,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ["Tashqi ko'z kengligi", "outer_canthal_width"], ["Ichki ko'z kengligi", "inner_canthal_width"],
             ["Lab qalinligi", "lips_mucosa_height"], ["Og'iz kengligi", "mouth_width"]
           ].map(([label, k]) => (
-            <Grid item xs={12} sm={6} md={4} key={k}>
+            <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
             </Grid>
           ))}
@@ -462,7 +462,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ["Ko'ndalang diametr", "chest_transverse_diameter"], ["Old-orqa diametr", "chest_anteroposterior_diameter"],
             ["Ko'krak balandligi", "chest_height"]
           ].map(([label, k]) => (
-            <Grid item xs={12} sm={6} md={4} key={k}>
+            <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
             </Grid>
           ))}
@@ -480,7 +480,7 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ["Kurak osti yog'i", "fat_subscapular"], ["Yonbosh yog'i", "fat_iliac"],
             ["Tizza orqa yog'i", "fat_popliteal"]
           ].map(([label, k]) => (
-            <Grid item xs={12} sm={6} md={4} key={k}>
+            <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
             </Grid>
           ))}
@@ -749,7 +749,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
           { label: "Qiz bolalar", value: stats.girls, icon: <TrendingUp />, color: "#ec4899" },
           { label: "O'rtacha BMI", value: stats.avgBmi, icon: <Assessment />, color: "#10b981" },
         ].map((card, i) => (
-          <Grid item xs={12} sm={6} md={3} key={i}>
+          <Grid xs={12} sm={6} md={3} key={i}>
             <GlassPaper sx={{ p: 3, textAlign: 'center', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}>
               <Box sx={{ width: 40, height: 40, borderRadius: 2, bgcolor: `${card.color}15`, color: card.color, display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>{card.icon}</Box>
               <Typography variant="h4" fontWeight={900} sx={{ color: card.color }}>{card.value}</Typography>
@@ -761,7 +761,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
       {/* ── Charts Section ── */}
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid xs={12} md={4}>
           <GlassPaper sx={{ p: 3, height: '100%' }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>Jinsi bo'yicha taqsimot</Typography>
             <ResponsiveContainer width="100%" height={300}>
@@ -776,7 +776,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
           </GlassPaper>
         </Grid>
 
-        <Grid item xs={12} md={8}>
+        <Grid xs={12} md={8}>
           <GlassPaper sx={{ p: 3, height: '100%' }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>Top 5 hududlar</Typography>
             <ResponsiveContainer width="100%" height={300}>
@@ -791,7 +791,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
           </GlassPaper>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid xs={12}>
           <GlassPaper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>Ma'lumotlar yig'ish dinamikasi</Typography>
             <ResponsiveContainer width="100%" height={350}>
@@ -812,7 +812,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
           </GlassPaper>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid xs={12}>
           <GlassPaper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>Yosh bo'yicha antropometrik ko'rsatkichlar (O'rtacha)</Typography>
             <ResponsiveContainer width="100%" height={350}>
@@ -987,7 +987,7 @@ const ResearcherPage = () => {
           }).length, color: "#00c853", icon: <Refresh /> },
         ...(isSuperAdmin ? [{ label: "O'chirilganlar", value: deletedData.length, color: "#f44336", icon: <DeleteForever /> }] : []),
       ].map(({ label, value, color, icon }) => (
-        <Grid item xs={12} sm={isSuperAdmin ? 4 : 6} key={label}>
+        <Grid xs={12} sm={isSuperAdmin ? 4 : 6} key={label}>
           <GlassPaper sx={{ p: 2, display: "flex", alignItems: "center", gap: 2, border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}>
             <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: isDark ? `${color}15` : `${color}08`, color }}>{icon}</Box>
             <Box>
@@ -1006,7 +1006,7 @@ const ResearcherPage = () => {
       {/* ── Page Header ── */}
       <GlassPaper sx={{ p: { xs: 2, md: 3 }, mb: 4, position: "sticky", top: 12, zIndex: 10, overflow: 'visible' }}>
         <Grid container alignItems="center" spacing={2}>
-          <Grid item xs={12} md={4}>
+          <Grid xs={12} md={4}>
             <Stack direction="row" spacing={2} alignItems="center">
               <Avatar
                 sx={{
@@ -1029,7 +1029,7 @@ const ResearcherPage = () => {
             </Stack>
           </Grid>
 
-          <Grid item xs={12} md={8}>
+          <Grid xs={12} md={8}>
             <Tabs
               value={activeTab}
               onChange={(_, v) => setActiveTab(v)}
