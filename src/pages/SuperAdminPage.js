@@ -4,7 +4,7 @@ import {
   IconButton, Tooltip, InputAdornment, Alert, CircularProgress, Table, 
   TableBody, TableCell, TableContainer, TableHead, TableRow, Dialog, DialogTitle, 
   DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, Divider,
-  Chip, Collapse, Grid, useTheme
+  Chip, Collapse, Grid, useTheme, Checkbox
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
@@ -78,6 +78,7 @@ const SuperAdminPage = () => {
 
   // Deleted Data State
   const [deletedData, setDeletedData] = useState([]);
+  const [deletedAdmins, setDeletedAdmins] = useState([]);
   const [deletedLoading, setDeletedLoading] = useState(false);
   
   // Audit Logs State
@@ -98,6 +99,7 @@ const SuperAdminPage = () => {
     date_from: "",
     date_to: ""
   });
+  const [viewRow, setViewRow] = useState(null);
 
   // Backup State
   const [backups, setBackups] = useState([]);
@@ -168,7 +170,10 @@ const SuperAdminPage = () => {
         fetchAdmins();
       }
       if (activeTab === 2) fetchAdmins();
-      if (activeTab === 3) fetchDeletedAnalyses();
+      if (activeTab === 3) {
+        fetchDeletedAnalyses();
+        fetchDeletedAdmins();
+      }
       if (activeTab === 5) fetchAuditLogs();
       if (activeTab === 6) fetchBackups();
     }
@@ -205,10 +210,21 @@ const SuperAdminPage = () => {
   const fetchDeletedAnalyses = async () => {
     setDeletedLoading(true);
     try {
-      const data = await AdminApi.analyses.deletedList();
-      setDeletedData(data.items || []);
+      const data = await AdminApi.analyses.deletedList({ show_deleted: true, page_size: 100 });
+      setDeletedData((data.items || []).filter(i => i.is_deleted));
     } catch (err) {
       console.error("Failed to fetch deleted analyses:", err);
+    } finally {
+      setDeletedLoading(false);
+    }
+  };
+  const fetchDeletedAdmins = async () => {
+    setDeletedLoading(true);
+    try {
+      const data = await AdminApi.users.deletedList();
+      setDeletedAdmins((data || []).filter(u => u.is_deleted));
+    } catch (err) {
+      console.error("Failed to fetch deleted admins:", err);
     } finally {
       setDeletedLoading(false);
     }
@@ -310,6 +326,17 @@ const SuperAdminPage = () => {
       await AdminApi.analyses.restore([id]);
       toast.success("Ma'lumot tiklandi");
       fetchDeletedAnalyses();
+    } catch (err) {
+      toast.error("Xatolik: " + err.message);
+    }
+  };
+
+  const handleRestoreAdmin = async (id) => {
+    try {
+      await AdminApi.users.restore(id);
+      toast.success("Admin muvaffaqiyatli tiklandi");
+      fetchDeletedAdmins();
+      fetchAdmins();
     } catch (err) {
       toast.error("Xatolik: " + err.message);
     }
@@ -610,22 +637,26 @@ const SuperAdminPage = () => {
                <Table>
                  <TableHead>
                    <TableRow>
-                    <TableCell sx={{ width: 40 }}>
-                       <IconButton size="small" onClick={() => toggleAll(deletedData)}>
-                         {deletedData.length > 0 && deletedData.every(r => checked.has(r.id)) ? <Security color="primary" /> : <InfoOutlined />}
-                       </IconButton>
-                    </TableCell>
+                      <TableCell sx={{ width: 40 }}>
+                         <Checkbox 
+                           size="small" 
+                           indeterminate={checked.size > 0 && checked.size < deletedData.length}
+                           checked={deletedData.length > 0 && deletedData.every(r => checked.has(r.id))}
+                           onChange={() => toggleAll(deletedData)}
+                         />
+                      </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>ID Kod</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Bemor</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Kim o'chirdi</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>O'chirilgan sana</TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">Amallar</TableCell>
                   </TableRow>
                  </TableHead>
                  <TableBody>
                    {deletedLoading ? (
-                     <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}><CircularProgress /></TableCell></TableRow>
+                     <TableRow><TableCell colSpan={6} align="center" sx={{ py: 8 }}><CircularProgress /></TableCell></TableRow>
                    ) : deletedData.length === 0 ? (
-                     <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Bo'sh</TableCell></TableRow>
+                     <TableRow><TableCell colSpan={6} align="center" sx={{ py: 8 }}>Bo'sh</TableCell></TableRow>
                    ) : (
                      deletedData.map((item) => (
                        <TableRow 
@@ -637,19 +668,71 @@ const SuperAdminPage = () => {
                            bgcolor: checked.has(item.id) ? "rgba(0,123,255,0.08)" : "inherit"
                          }}
                        >
-                         <TableCell>
-                            <IconButton size="small" color={checked.has(item.id) ? "primary" : "default"}>
-                              {checked.has(item.id) ? <Security /> : <Box sx={{ width: 18, height: 18, border: '2px solid', borderColor: 'divider', borderRadius: '4px' }} />}
-                            </IconButton>
-                         </TableCell>
-                         <TableCell fontWeight="bold">{item.id_code}</TableCell>
+                          <TableCell>
+                             <Checkbox 
+                               size="small" 
+                               checked={checked.has(item.id)}
+                               onChange={() => toggleOne(item.id)}
+                             />
+                          </TableCell>
+                         <TableCell sx={{ fontWeight: "bold" }}>{item.id_code}</TableCell>
                          <TableCell>{item.last_name} {item.first_name}</TableCell>
+                         <TableCell>
+                           <Stack direction="row" spacing={1} alignItems="center">
+                             <Avatar sx={{ width: 24, height: 24, fontSize: 10, bgcolor: "error.main" }}>{(item.deleted_by_name || "?").charAt(0)}</Avatar>
+                             <Typography variant="caption" fontWeight={600}>{item.deleted_by_name || "Noma'lum"}</Typography>
+                           </Stack>
+                         </TableCell>
                          <TableCell>{new Date(item.deleted_at).toLocaleString()}</TableCell>
                          <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                             <Tooltip title="Batafsil"><IconButton size="small" color="info" onClick={() => setViewRow(item)}><Visibility /></IconButton></Tooltip>
                              <Tooltip title="Tiklash"><IconButton size="small" color="success" onClick={() => handleRestoreAnalysis(item.id)}><Refresh /></IconButton></Tooltip>
                              <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleHardDeleteAnalysis(item.id)}><Delete /></IconButton></Tooltip>
                            </Stack>
+                         </TableCell>
+                       </TableRow>
+                     ))
+                   )}
+                 </TableBody>
+               </Table>
+             </TableContainer>
+
+             <Typography variant="h5" fontWeight={700} sx={{ mt: 4, mb: 2 }}>O'chirilgan Adminlar / Izlanuvchilar</Typography>
+             <TableContainer component={GlassPaper}>
+               <Table>
+                 <TableHead>
+                   <TableRow>
+                    <TableCell sx={{ fontWeight: 700 }}>Ism</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Rol</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>O'chirilgan sana</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="right">Amallar</TableCell>
+                  </TableRow>
+                 </TableHead>
+                 <TableBody>
+                   {deletedLoading ? (
+                     <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}><CircularProgress /></TableCell></TableRow>
+                   ) : deletedAdmins.length === 0 ? (
+                     <TableRow><TableCell colSpan={5} align="center" sx={{ py: 8 }}>Bo'sh</TableCell></TableRow>
+                   ) : (
+                     deletedAdmins.map((item) => (
+                       <TableRow key={item.id} hover>
+                         <TableCell>
+                           <Stack direction="row" spacing={1.5} alignItems="center">
+                             <Avatar sx={{ width: 32, height: 32, bgcolor: "warning.light" }}>{item.name.charAt(0)}</Avatar>
+                             <Typography variant="body2" fontWeight={600}>{item.name}</Typography>
+                           </Stack>
+                         </TableCell>
+                         <TableCell>{item.email}</TableCell>
+                         <TableCell><Chip label={item.role.toUpperCase()} size="small" variant="outlined" /></TableCell>
+                         <TableCell>{item.deleted_at ? new Date(item.deleted_at).toLocaleString() : "-"}</TableCell>
+                         <TableCell align="right">
+                           <Tooltip title="Tiklash">
+                             <IconButton size="small" color="success" onClick={() => handleRestoreAdmin(item.id)}>
+                               <Refresh />
+                             </IconButton>
+                           </Tooltip>
                          </TableCell>
                        </TableRow>
                      ))
@@ -891,7 +974,6 @@ const SuperAdminPage = () => {
           }}
         />
 
-        {/* Bulk Delete Confirmation Dialog */}
         <Dialog 
           open={deleteConfirmOpen} 
           onClose={() => setDeleteConfirmOpen(false)}
@@ -902,7 +984,7 @@ const SuperAdminPage = () => {
             <Typography variant="body1" sx={{ mb: 2 }}>
               Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. Bularni bazadan butunlay o'chirib tashlamoqchimisiz?
             </Typography>
-            <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+            <Box sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.15)' : 'rgba(211, 47, 47, 0.05)', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
               <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <DeleteForever fontSize="small" /> DIQQAT: Bu amalni qaytarib bo'lmaydi!
               </Typography>
@@ -930,6 +1012,70 @@ const SuperAdminPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {viewRow && (
+          <Dialog open={true} onClose={() => setViewRow(null)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+            <DialogTitle>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="h6" fontWeight="bold">O'chirilgan ma'lumot tafsiloti</Typography>
+                <IconButton onClick={() => setViewRow(null)} size="small"><Close /></IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent dividers>
+               <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">ID Kod</Typography>
+                      <Typography variant="body1" fontWeight="bold">{viewRow.id_code}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">Bemor</Typography>
+                      <Typography variant="body1" fontWeight="bold">{viewRow.last_name} {viewRow.first_name}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">Yoshi / Jinsi</Typography>
+                      <Typography variant="body1">{viewRow.age} yosh / {viewRow.gender === 'male' ? 'Erkak' : 'Ayol'}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                      <Typography variant="caption" color="text.secondary">BMI</Typography>
+                      <Typography variant="body1">{viewRow.bmi} ({viewRow.bmi_status})</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)', borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+                      <Typography variant="caption" color="error.dark">O'chirgan shaxs</Typography>
+                      <Typography variant="body1" fontWeight="bold">{viewRow.deleted_by_name || "Noma'lum"}</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)', borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
+                      <Typography variant="caption" color="error.dark">O'chirilgan vaqt</Typography>
+                      <Typography variant="body1">{new Date(viewRow.deleted_at).toLocaleString()}</Typography>
+                    </Box>
+                  </Grid>
+                  {viewRow.region && (
+                    <Grid item xs={12}>
+                      <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                        <Typography variant="caption" color="text.secondary">Hudud</Typography>
+                        <Typography variant="body1">{viewRow.region}</Typography>
+                      </Box>
+                    </Grid>
+                  )}
+               </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+              <Button variant="contained" color="success" startIcon={<Refresh />} onClick={() => { handleRestoreAnalysis(viewRow.id); setViewRow(null); }}>Tiklash</Button>
+              <Button variant="outlined" color="error" startIcon={<DeleteForever />} onClick={() => { handleHardDeleteAnalysis(viewRow.id); setViewRow(null); }}>Butunlay o'chirish</Button>
+              <Button onClick={() => setViewRow(null)} color="inherit">Yopish</Button>
+            </DialogActions>
+          </Dialog>
+        )}
       </Container>
     </Box>
   );

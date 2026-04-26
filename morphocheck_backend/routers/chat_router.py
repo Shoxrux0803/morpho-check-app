@@ -128,59 +128,65 @@ class ConversationOut(BaseModel):
     user_id: int
     user_name: str
     user_role: str
-    last_message: str
-    last_message_time: datetime
+    last_message: Optional[str] = None
+    last_message_time: Optional[datetime] = None
     unread_count: int
     is_last_message_mine: bool
 
 @router.get("/conversations", response_model=List[ConversationOut])
 def get_conversations(
-    current_user: User = Depends(get_current_superadmin), 
+    current_user: User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
-    # Get all users who have sent/received messages to/from superadmin
-    # We want to find unique "other" users
-    
-    # Find all unique user IDs that interacted with current_user
-    # Messages TO me
-    to_me = db.query(ChatMessage.sender_id).filter(ChatMessage.recipient_id == current_user.id).distinct()
-    # Messages FROM me
-    from_me = db.query(ChatMessage.recipient_id).filter(ChatMessage.sender_id == current_user.id).filter(ChatMessage.recipient_id.isnot(None)).distinct()
-    
-    interacted_user_ids = set([r[0] for r in to_me.all()] + [r[0] for r in from_me.all()])
+    # Determine which users should be visible to current_user
+    if current_user.role == "superadmin":
+        # Superadmin sees ALL admins and researchers
+        visible_users = db.query(User).filter(User.id != current_user.id).all()
+    else:
+        # Regular users and Admins ONLY see Superadmins
+        visible_users = db.query(User).filter(User.role == "superadmin").all()
     
     results = []
-    for uid in interacted_user_ids:
-        user_obj = db.query(User).filter(User.id == uid).first()
-        if not user_obj: continue
-        
-        # Get last message
+    for user_obj in visible_users:
+        # Get last message between current_user and user_obj
         last_msg = db.query(ChatMessage).filter(
-            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == uid)) |
-            ((ChatMessage.sender_id == uid) & (ChatMessage.recipient_id == current_user.id))
+            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == user_obj.id)) |
+            ((ChatMessage.sender_id == user_obj.id) & (ChatMessage.recipient_id == current_user.id))
         ).order_by(ChatMessage.created_at.desc()).first()
         
-        if not last_msg: continue
-        
-        # Get unread count (messages FROM them TO me)
+        # Unread count (messages FROM them TO me)
         unread = db.query(ChatMessage).filter(
-            ChatMessage.sender_id == uid,
+            ChatMessage.sender_id == user_obj.id,
             ChatMessage.recipient_id == current_user.id,
             ChatMessage.is_read == False
         ).count()
+        
+        # Only show in list if either:
+        # 1. They are a superadmin (everyone sees superadmins)
+        # 2. CURRENT user is a superadmin (superadmin sees everyone)
+        # 3. There is an existing conversation (should be covered by above but for safety)
         
         results.append({
             "user_id": user_obj.id,
             "user_name": user_obj.name,
             "user_role": user_obj.role,
-            "last_message": last_msg.content,
-            "last_message_time": last_msg.created_at,
+            "last_message": last_msg.content if last_msg else None,
+            "last_message_time": last_msg.created_at if last_msg else None,
             "unread_count": unread,
-            "is_last_message_mine": last_msg.sender_id == current_user.id
+            "is_last_message_mine": last_msg.sender_id == current_user.id if last_msg else False
         })
     
-    # Sort by last message time
-    results.sort(key=lambda x: x["last_message_time"], reverse=True)
+    # Sort by: unread count first, then last message time, then name
+    # We use a custom sort key
+    def sort_key(x):
+        # 1. Unread messages first
+        # 2. Most recent messages next
+        # 3. Then by name
+        unread_val = 1 if x["unread_count"] > 0 else 0
+        time_val = x["last_message_time"].timestamp() if x["last_message_time"] else 0
+        return (unread_val, time_val)
+
+    results.sort(key=sort_key, reverse=True)
     return results
 
 @router.get("/history/{user_id}", response_model=List[ChatMessageOut])

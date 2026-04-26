@@ -124,13 +124,13 @@ const ActivityCard = ({ admin, isDark }) => {
           </Box>
 
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, textAlign: "center", bgcolor: "transparent" }}>
                 <Typography variant="caption" color="text.secondary" display="block">Bugun</Typography>
                 <Typography variant="h5" fontWeight="900" color="primary">{admin.stats_today}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={6}>
+            <Grid size={{ xs: 6 }}>
               <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, textAlign: "center", bgcolor: "transparent" }}>
                 <Typography variant="caption" color="text.secondary" display="block">Shu oy</Typography>
                 <Typography variant="h5" fontWeight="900" color="secondary">{admin.stats_month}</Typography>
@@ -277,12 +277,12 @@ export default function AdminActivity() {
         <AnimatePresence mode="popLayout">
           <Grid container spacing={3}>
             {filteredData.map((admin) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={admin.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={admin.id}>
                 <ActivityCard admin={admin} isDark={isDark} />
               </Grid>
             ))}
             {filteredData.length === 0 && (
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Paper sx={{ p: 10, textAlign: "center", borderRadius: 4, bgcolor: "transparent", border: "1px dashed", borderColor: "divider" }}>
                    <AccountCircle sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
                    <Typography color="text.secondary">

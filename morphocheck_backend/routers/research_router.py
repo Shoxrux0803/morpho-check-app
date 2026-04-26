@@ -129,6 +129,8 @@ def export_research_xlsx(
         ("Ота-она никоҳи", "parents_marriage"),
         ("Она соғлиғи", "mother_health_status"),
         ("Текширув санаси", "examination_date"),
+        ("Отасининг бўйи (см)", "father_height"),
+        ("Онасининг бўйи (см)", "mother_height"),
         
         # I Показатели физического развития
         ("Олд юқори ёнбош ўсимтасидан (см)", "lower_leg_spina_iliaca"),
@@ -439,6 +441,8 @@ def export_dataset_for_analysis(
             "head_circ": r.head_circumference,
             "waist_circ": r.waist_circumference,
             "chest_circ": r.chest_circumference_pause,
+            "father_height": r.father_height,
+            "mother_height": r.mother_height,
             "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else None
         })
 

@@ -290,9 +290,14 @@ class ResearchRecordCreate(BaseModel):
     mother_health_status: Optional[str] = None
     examination_date: Optional[str] = None
     gender: Optional[str] = None
+    parents_phone: Optional[str] = None
+    father_height: Optional[float] = None
+    mother_height: Optional[float] = None
 
+    lower_leg_total: Optional[float] = None
     lower_leg_spina_iliaca: Optional[float] = None
     lower_leg_symphysion: Optional[float] = None
+    lower_leg_length: Optional[float] = None
     tibiale_height: Optional[float] = None
     pelvic_width: Optional[float] = None
     thigh_length: Optional[float] = None
@@ -341,6 +346,7 @@ class ResearchRecordCreate(BaseModel):
     arm_length: Optional[float] = None
     shoulder_length: Optional[float] = None
     shoulder_width: Optional[float] = None
+    arm_circumference_total: Optional[float] = None
     shoulder_circumference_rest: Optional[float] = None
     shoulder_circumference_flexed: Optional[float] = None
     forearm_length: Optional[float] = None

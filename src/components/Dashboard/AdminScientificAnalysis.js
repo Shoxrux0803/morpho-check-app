@@ -65,17 +65,36 @@ const SectionTitle = ({ icon, title, subtitle, badge }) => (
   </Box>
 );
 
-const CustomTooltipStyle = {
+const getTooltipStyle = (isDark) => ({
   contentStyle: {
-    borderRadius: 12, border: "none",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-    background: "rgba(15,15,25,0.95)",
-    color: "#fff", fontSize: 12,
+    borderRadius: "12px",
+    border: "none",
+    boxShadow: isDark ? "0 10px 15px -3px rgba(0, 0, 0, 0.4)" : "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+    background: isDark ? "#1e293b" : "#ffffff",
+    color: isDark ? "#f8fafc" : "#1e293b",
+    fontSize: "13px",
+    padding: "10px 14px",
+    borderLeft: isDark ? "4px solid #38bdf8" : "4px solid #0ea5e9",
   },
-  labelStyle: { color: "#7dd3fc", fontWeight: 700 },
-};
+  itemStyle: {
+    color: isDark ? "#f1f5f9" : "#334155",
+    padding: "2px 0",
+  },
+  labelStyle: { 
+    color: isDark ? "#38bdf8" : "#0ea5e9", 
+    fontWeight: 800,
+    marginBottom: "4px",
+    fontSize: "11px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
+  },
+  cursor: { stroke: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)", strokeWidth: 2 }
+});
 
-export default function AdminScientificAnalysis({ data = [], loading, totalCount = 0 }) {
+export default function AdminScientificAnalysis({ data = [], loading, totalCount = 0, filters }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+  const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
   // ---- BMI Histogram ----
   const bmiHistogram = useMemo(() => {
@@ -178,6 +197,13 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
     return Object.entries(buckets).map(([category, count]) => ({ category, count, fill: getBucketColor(category) }));
   }, [data]);
 
+  // ---- Correlation: Height vs Chest ----
+  const heightChestData = useMemo(() => 
+    data
+      .filter(d => d.height && d.chest && !isNaN(Number(d.height)) && !isNaN(Number(d.chest)))
+      .map(d => ({ height: Number(d.height), chest: Number(d.chest) })),
+    [data]);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
@@ -199,17 +225,24 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
   return (
     <Box>
       {/* Header */}
-      <Box mb={4}>
+      <Box mb={4} p={3} sx={{ borderRadius: 3, background: `linear-gradient(135deg, ${COLORS.primary}11, ${COLORS.teal}08)`, border: `1px solid ${COLORS.primary}22` }}>
         <Box display="flex" alignItems="center" gap={2} mb={1}>
-          <BiotechOutlined sx={{ fontSize: 32, color: COLORS.primary }} />
-          <Typography variant="h4" fontWeight={900} sx={{ background: `linear-gradient(90deg,${COLORS.primary},${COLORS.secondary},${COLORS.teal})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            Ilmiy Tahlil
-          </Typography>
-          <Chip label="Mening ma'lumotlarim" size="small" sx={{ bgcolor: `${COLORS.primary}22`, color: COLORS.primary, fontWeight: 700 }} />
+          <BiotechOutlined sx={{ fontSize: 40, color: COLORS.primary }} />
+          <Box>
+            <Typography variant="h4" fontWeight={900} sx={{ background: `linear-gradient(90deg,${COLORS.primary},${COLORS.secondary},${COLORS.teal})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", lineHeight: 1.2 }}>
+                Ilmiy-Antropometrik Tahlil
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+                Murakkab statistik modellar va korrelyatsion tahlil natijalari
+            </Typography>
+          </Box>
+          <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+            {filters && Object.values(filters).some(v => v !== "" && v !== 0 && v !== 100 && v !== 10 && v !== 50) && (
+              <Chip label="Filtrlangan" color="info" size="small" sx={{ fontWeight: 800 }} />
+            )}
+            <Chip label="PRO ANALYTICS" size="small" sx={{ bgcolor: COLORS.primary, color: 'white', fontWeight: 900, px: 1 }} />
+          </Box>
         </Box>
-        <Typography variant="body2" color="text.secondary">
-          Faqat siz kiritgan <strong>{totalCount}</strong> ta bemor ma'lumotlari bo'yicha statistik tahlil — BMI taqsimoti, Z-score, persentillar va xavf guruhlari
-        </Typography>
       </Box>
 
       {/* ===== ROW 1: BMI Histogram + Z-score ===== */}
@@ -218,8 +251,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard>
             <SectionTitle
               icon={<EqualizerOutlined sx={{ color: COLORS.primary }} />}
-              title="BMI histogrammasi"
-              subtitle="BMI qiymatlari bo'yicha taqsimot"
+              title="BMI Gistogrammasi"
+              subtitle="Bemorlarning BMI qiymatlari bo'yicha statistik taqsimoti"
               badge={`n=${data.length}`}
             />
             <Box sx={{ height: 270 }}>
@@ -229,7 +262,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   <XAxis dataKey="range" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} allowDecimals={false} />
                   <ReferenceLine x="18.5-22" stroke={COLORS.success} strokeDasharray="4 4" />
-                  <ReTooltip {...CustomTooltipStyle} />
+                  <ReTooltip {...customTooltip} />
                   <Bar dataKey="count" name="Bemorlar" radius={[6, 6, 0, 0]}>
                     {bmiHistogram.map((entry, i) => {
                       const isNormal = entry.range === "18.5-22" || entry.range === "22-25";
@@ -247,8 +280,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.secondary }} />}
-              title="Z-score taqsimoti"
-              subtitle="Normaldan chetlanish analizi (standart og'ish)"
+              title="Z-score (SD) Analizi"
+              subtitle="Populyatsiya normalidan chetlanish ko'rsatkichi"
             />
             <Box sx={{ height: 270 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -256,7 +289,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#94a3b8" }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} allowDecimals={false} />
-                  <ReTooltip {...CustomTooltipStyle} />
+                  <ReTooltip {...customTooltip} />
                   <Bar dataKey="count" name="Bemorlar soni" radius={[6, 6, 0, 0]}>
                     {zScoreData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                   </Bar>
@@ -270,68 +303,72 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
       {/* ===== ROW 2: Persentil + Xavf guruhlari ===== */}
       <Grid container spacing={3} mb={3}>
         <Grid item xs={12} md={5}>
-          <GlassCard>
+          <GlassCard sx={{ height: '100%' }}>
             <SectionTitle
               icon={<AutoGraphOutlined sx={{ color: COLORS.teal }} />}
-              title="Persentil jadval"
-              subtitle="Bemorlaringiz bo'yicha taqsimot chegaralari"
+              title="Statistik Persentillar"
+              subtitle="Guruh ichidagi o'lchovlar kvantillari"
             />
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    {["Persentil", "BMI", "Bo'y (sm)", "Vazn (kg)"].map(h => (
-                      <TableCell key={h} sx={{ fontWeight: 800, fontSize: "0.72rem", color: COLORS.primary }}>{h}</TableCell>
+                    {["Persentil", "BMI", "Bo'y", "Vazn"].map(h => (
+                      <TableCell key={h} sx={{ fontWeight: 800, fontSize: "0.75rem", color: COLORS.primary, borderBottom: `2px solid ${COLORS.primary}22` }}>{h}</TableCell>
                     ))}
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {percentileTable.map(row => (
-                    <TableRow key={row.p} hover>
+                    <TableRow key={row.p} hover sx={{ '&:last-child td': { border: 0 } }}>
                       <TableCell>
-                        <Chip label={row.p} size="small" sx={{ bgcolor: `${COLORS.primary}22`, color: COLORS.primary, fontWeight: 800, fontSize: "0.7rem" }} />
+                        <Chip label={row.p} size="small" sx={{ bgcolor: `${COLORS.primary}15`, color: COLORS.primary, fontWeight: 800, fontSize: "0.7rem", height: 20 }} />
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>{row.bmi}</TableCell>
-                      <TableCell>{row.height}</TableCell>
-                      <TableCell>{row.weight}</TableCell>
+                      <TableCell sx={{ fontWeight: 700, color: 'text.primary' }}>{row.bmi}</TableCell>
+                      <TableCell sx={{ color: 'text.secondary' }}>{row.height} sm</TableCell>
+                      <TableCell sx={{ color: 'text.secondary' }}>{row.weight} kg</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-              * Hisob-kitob real bemor ma'lumotlaridan
-            </Typography>
+            <Box mt={2} p={1.5} sx={{ borderRadius: 2, bgcolor: 'action.hover', border: '1px dashed', borderColor: 'divider' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    * P50 ko'rsatkichi guruh uchun mediana hisoblanadi.
+                </Typography>
+            </Box>
           </GlassCard>
         </Grid>
 
         <Grid item xs={12} md={7}>
-          <GlassCard>
+          <GlassCard sx={{ height: '100%' }}>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.error }} />}
-              title="Xavf guruhlari"
-              subtitle="Bemorlaringizning sog'liq xavfi bo'yicha guruhlari"
+              title="Sog'liq Xavfi Guruhlari"
+              subtitle="BMI asosida klinik xavf darajasini baholash"
             />
-            <Stack spacing={2.5} mt={1}>
+            <Stack spacing={3} mt={1}>
               {riskGroups.map((g) => (
                 <Box key={g.name}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                    <Typography variant="body2" fontWeight={700}>{g.name}</Typography>
-                    <Box display="flex" gap={1} alignItems="center">
-                      <Chip label={g.desc} size="small" sx={{ fontSize: "0.65rem", bgcolor: `${g.color}18`, color: g.color }} />
-                      <Typography variant="body2" fontWeight={800} sx={{ color: g.color }}>{g.pct}%</Typography>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Box>
+                        <Typography variant="body2" fontWeight={800}>{g.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">{g.count} ta bemor</Typography>
+                    </Box>
+                    <Box textAlign="right">
+                      <Chip label={g.desc} size="small" sx={{ fontSize: "0.65rem", bgcolor: `${g.color}18`, color: g.color, fontWeight: 700, mb: 0.5 }} />
+                      <Typography variant="h6" fontWeight={900} sx={{ color: g.color, lineHeight: 1 }}>{g.pct}%</Typography>
                     </Box>
                   </Box>
                   <LinearProgress
                     variant="determinate"
                     value={g.pct}
                     sx={{
-                      height: 10, borderRadius: 5,
-                      bgcolor: `${g.color}18`,
-                      "& .MuiLinearProgress-bar": { bgcolor: g.color, borderRadius: 5 },
+                      height: 12, borderRadius: 6,
+                      bgcolor: `${g.color}12`,
+                      "& .MuiLinearProgress-bar": { bgcolor: g.color, borderRadius: 6 },
                     }}
                   />
-                  <Typography variant="caption" color="text.secondary">{g.count} bemor</Typography>
                 </Box>
               ))}
             </Stack>
@@ -339,40 +376,59 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
         </Grid>
       </Grid>
 
-      {/* ===== ROW 3: Age vs BMI scatter ===== */}
-      {scatterData.length > 2 && (
-        <Grid container spacing={3} mb={3}>
-          <Grid item xs={12}>
+      {/* ===== ROW 3: Correlations ===== */}
+      <Grid container spacing={3} mb={3}>
+          <Grid item xs={12} md={6}>
             <GlassCard>
               <SectionTitle
                 icon={<AutoGraphOutlined sx={{ color: COLORS.warning }} />}
-                title="Yosh — BMI korrelyatsiyasi"
-                subtitle="Har bir bemorning yoshi va BMI ko'rsatkichi o'rtasidagi bog'liqlik"
-                badge="SCATTER"
+                title="Yosh — BMI Korrelyatsiyasi"
+                subtitle="Yosh o'tishi bilan tana vazni indeksi o'zgarishi"
+                badge="CORRELATION"
               />
-              <Box sx={{ height: 280 }}>
+              <Box sx={{ height: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <ScatterChart>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis type="number" dataKey="age" name="Yosh" unit=" yil" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={["auto", "auto"]} />
                     <YAxis type="number" dataKey="bmi" name="BMI" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={["auto", "auto"]} />
-                    <ReferenceLine y={18.5} stroke={COLORS.success} strokeDasharray="4 4" label={{ value: "Min norma", fill: COLORS.success, fontSize: 10 }} />
-                    <ReferenceLine y={25} stroke={COLORS.warning} strokeDasharray="4 4" label={{ value: "Ortiqcha", fill: COLORS.warning, fontSize: 10 }} />
-                    <ReferenceLine y={30} stroke={COLORS.error} strokeDasharray="4 4" label={{ value: "Semizlik", fill: COLORS.error, fontSize: 10 }} />
-                    <ReTooltip {...CustomTooltipStyle} cursor={{ strokeDasharray: "3 3" }} />
-                    <Scatter name="Bemorlar" data={scatterData} fill={COLORS.primary} opacity={0.7} />
+                    <ReferenceLine y={18.5} stroke={COLORS.success} strokeDasharray="4 4" />
+                    <ReferenceLine y={25} stroke={COLORS.warning} strokeDasharray="4 4" />
+                    <ReTooltip {...customTooltip} cursor={{ strokeDasharray: "3 3" }} />
+                    <Scatter name="Bemorlar" data={scatterData} fill={COLORS.primary} opacity={0.6} />
                   </ScatterChart>
                 </ResponsiveContainer>
               </Box>
             </GlassCard>
           </Grid>
-        </Grid>
-      )}
+          
+          <Grid item xs={12} md={6}>
+            <GlassCard>
+              <SectionTitle
+                icon={<BiotechOutlined sx={{ color: COLORS.info }} />}
+                title="Bo'y — Ko'krak qafasi"
+                subtitle="Antropometrik o'lchovlar o'rtasidagi bog'liqlik"
+                badge="MORPHOLOGY"
+              />
+              <Box sx={{ height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                    <XAxis type="number" dataKey="height" name="Bo'y" unit=" sm" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={["auto", "auto"]} />
+                    <YAxis type="number" dataKey="chest" name="Ko'krak" unit=" sm" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} domain={["auto", "auto"]} />
+                    <ReTooltip {...customTooltip} cursor={{ strokeDasharray: "3 3" }} />
+                    <Scatter name="O'lchovlar" data={heightChestData} fill={COLORS.teal} opacity={0.6} />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </Box>
+            </GlassCard>
+          </Grid>
+      </Grid>
 
       {/* Footer */}
-      <Box py={2} textAlign="center" mt={1}>
-        <Typography variant="caption" color="text.secondary">
-          🔬 Shaxsiy Ilmiy-Statistik Tahlil • Faqat siz kiritgan {totalCount} ta bemor • {new Date().toLocaleDateString("uz-UZ")}
+      <Box py={3} textAlign="center" mt={2} sx={{ borderTop: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 1, fontWeight: 600 }}>
+          🔬 MORPHOCHECK SCIENTIFIC ENGINE v2.0 • {totalCount} ta ma'lumot tahlili • {new Date().toLocaleDateString("uz-UZ")}
         </Typography>
       </Box>
     </Box>

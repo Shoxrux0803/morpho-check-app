@@ -75,6 +75,8 @@ export const AdminApi = {
     get: (id) => call(`/admin/users/${id}`),
     update: (id, data) => call(`/admin/users/${id}`, { method: "PUT", body: data }),
     remove: (id) => call(`/admin/users/${id}`, { method: "DELETE" }),
+    deletedList: () => call("/admin/users/deleted"),
+    restore: (id) => call(`/admin/users/${id}/restore`, { method: "POST" }),
   },
 
   // ANALYSES
@@ -104,6 +106,16 @@ export const AdminApi = {
     hardDelete: (ids) => call(`/admin/analyses/hard-delete`, { method: "POST", body: { ids } }),
     // Restore — soft deleted ni tiklash (faqat super admin)
     restore: (ids) => call(`/admin/analyses/restore`, { method: "POST", body: { ids } }),
+    // O'chirilganlarni ko'rish
+    deletedList: (opts = {}) =>
+      call(
+        withQuery("/admin/analyses", {
+          ...opts,
+          show_deleted: true,
+          page: opts.page ?? 1,
+          page_size: opts.pageSize ?? 50,
+        }),
+      ),
     exportXlsx: (params) => {
       const q = withQuery("/admin/export-xlsx", params);
       return fetch(`${API_BASE}${API_PREFIX}${q}`, {
@@ -164,7 +176,7 @@ export const AdminApi = {
   },
 
   // STATS
-  stats: () => call(`/admin/stats`),
+  stats: (filters = {}) => call(withQuery("/admin/stats", filters)),
 
   // AUDIT LOGS
   audit: {

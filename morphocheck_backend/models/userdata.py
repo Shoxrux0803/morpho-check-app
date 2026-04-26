@@ -8,16 +8,27 @@ class PatientAnalysis(Base):
     id = Column(Integer, primary_key=True)
     id_code = Column(String(50), nullable=True, index=True)
     name = Column(String(100), nullable=False, index=True)
-
-    # YANGI ustunlar:
+    
     region = Column(String(100), nullable=True, index=True)
     district = Column(String(100), nullable=True, index=True)
     address = Column(String(255), nullable=True)
-
+    
     examination_date = Column(String(50), nullable=True, index=True)
-    birth_date = Column(String(50), nullable=True, index=True)
+    birth_date = Column(String(50), nullable=True)
     preschool_institution = Column(String(255), nullable=True)
-
+    
+    gender = Column(String(10), nullable=False, index=True) # erkak / ayol
+    age = Column(Integer, nullable=False, index=True)
+    age_months = Column(Integer, nullable=True)
+    age_days = Column(Integer, nullable=True)
+    
+    height = Column(Float, nullable=False)
+    weight = Column(Float, nullable=False)
+    chest  = Column(Float, nullable=False)
+    waist  = Column(Float, nullable=False)
+    hip    = Column(Float, nullable=False)
+    head   = Column(Float, nullable=False)
+    
     shoulder_length = Column(Float, nullable=True)
     shoulder_breadth = Column(Float, nullable=True)
     shoulder_circumference = Column(Float, nullable=True)
@@ -29,17 +40,6 @@ class PatientAnalysis(Base):
     calf_circumference = Column(Float, nullable=True)
     foot_length = Column(Float, nullable=True)
     body_length = Column(Float, nullable=True)
-
-    age = Column(Integer, nullable=False, index=True)
-    age_months = Column(Integer, nullable=True)
-    age_days = Column(Integer, nullable=True)
-    gender = Column(String(10), nullable=False, index=True)
-    height = Column(Float, nullable=False)
-    weight = Column(Float, nullable=False)
-    chest  = Column(Float, nullable=False)
-    waist  = Column(Float, nullable=False)
-    hip    = Column(Float, nullable=False)
-    head   = Column(Float, nullable=False)
 
     father_height = Column(Float, nullable=True)
     mother_height = Column(Float, nullable=True)
@@ -58,6 +58,7 @@ class PatientAnalysis(Base):
     visceral_fat     = Column(Float, nullable=True)
 
     recommendations = Column(Text, nullable=False)
+    ai_recommendations = Column(Text, nullable=True)
     
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_by = relationship("User", foreign_keys=[created_by_id])
@@ -88,6 +89,7 @@ class ResearchRecord(Base):
     settlement = Column(String(255), nullable=True, index=True)
     birth_place = Column(String(255), nullable=True)
     birth_date = Column(String(50), nullable=True, index=True)  # Yil, oy, kun
+    gender = Column(String(20), nullable=True, index=True) # Boy / Girl or Erkak / Ayol
     father_nationality = Column(String(100), nullable=True)
     mother_nationality = Column(String(100), nullable=True)
     living_since = Column(String(100), nullable=True)
@@ -100,13 +102,16 @@ class ResearchRecord(Base):
     feeding_type = Column(String(100), nullable=True) 
     parents_marriage = Column(String(100), nullable=True) 
     mother_health_status = Column(String(255), nullable=True)
+    parents_phone = Column(String(50), nullable=True)
 
     # Date of examination
     examination_date = Column(String(50), nullable=True, index=True)
 
     # I Показатели физического развития
+    lower_leg_total = Column(Float, nullable=True)
     lower_leg_spina_iliaca = Column(Float, nullable=True) 
     lower_leg_symphysion = Column(Float, nullable=True)   
+    lower_leg_length = Column(Float, nullable=True) 
     tibiale_height = Column(Float, nullable=True) 
     pelvic_width = Column(Float, nullable=True) 
     thigh_length = Column(Float, nullable=True) 
@@ -160,6 +165,7 @@ class ResearchRecord(Base):
     arm_length = Column(Float, nullable=True) 
     shoulder_length = Column(Float, nullable=True) 
     shoulder_width = Column(Float, nullable=True) 
+    arm_circumference_total = Column(Float, nullable=True)
     shoulder_circumference_rest = Column(Float, nullable=True) 
     shoulder_circumference_flexed = Column(Float, nullable=True) 
     forearm_length = Column(Float, nullable=True) 
@@ -173,7 +179,8 @@ class ResearchRecord(Base):
     fat_iliac = Column(Float, nullable=True) 
     fat_popliteal = Column(Float, nullable=True)
 
-    gender = Column(String(20), nullable=True, index=True) # Boy / Girl or Erkak / Ayol
+    father_height = Column(Float, nullable=True)
+    mother_height = Column(Float, nullable=True)
 
     # Soft Delete maydonlari
     is_deleted    = Column(Integer, default=0, nullable=True, index=True)   # 0=yo'q, 1=ha

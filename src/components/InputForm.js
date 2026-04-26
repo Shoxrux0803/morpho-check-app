@@ -89,9 +89,9 @@ export default function InputForm({
     // const chest = Number(form.chest);
     // const head = Number(form.head);
 
-    // 1. Yosh chegarasi (3 dan 70 gacha)
-    if (isNaN(age) || age < 3 || age > 70) {
-      errs.push(t("errAgeRange"));
+    // 1. Yosh chegarasi (2 dan 120 gacha)
+    if (isNaN(age) || age < 2 || age > 120) {
+      errs.push(t("errAge"));
     }
 
     // BMI hisoblash (agar o'lchovlar bor bo'lsa)

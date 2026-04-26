@@ -66,20 +66,37 @@ const SectionTitle = ({ icon, title, subtitle, badge }) => (
   </Box>
 );
 
-const CustomTooltipStyle = {
+const getTooltipStyle = (isDark) => ({
   contentStyle: {
-    borderRadius: 12, border: "none",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-    background: "rgba(15,15,25,0.95)",
-    color: "#fff", fontSize: 12,
+    borderRadius: "12px",
+    border: "none",
+    boxShadow: isDark ? "0 10px 15px -3px rgba(0, 0, 0, 0.4)" : "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+    background: isDark ? "#1e293b" : "#ffffff",
+    color: isDark ? "#f8fafc" : "#1e293b",
+    fontSize: "13px",
+    padding: "10px 14px",
+    borderLeft: isDark ? "4px solid #8b5cf6" : "4px solid #6366f1",
   },
-  labelStyle: { color: "#a5b4fc", fontWeight: 700 },
-};
+  itemStyle: {
+    color: isDark ? "#f1f5f9" : "#334155",
+    padding: "2px 0",
+  },
+  labelStyle: { 
+    color: isDark ? "#a5b4fc" : "#6366f1", 
+    fontWeight: 800,
+    marginBottom: "4px",
+    fontSize: "11px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
+  },
+  cursor: { stroke: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)", strokeWidth: 2 }
+});
 
 // Z-score bar chart custom shape
 const ZScoreBar = (props) => {
-  const { x, y, width, height, value } = props;
-  const color = Math.abs(value) > 2 ? COLORS.error : Math.abs(value) > 1 ? COLORS.warning : COLORS.success;
+  const { x, y, width, height, payload } = props;
+  const z = payload?.zscore || 0;
+  const color = Math.abs(z) > 2 ? COLORS.error : Math.abs(z) > 1 ? COLORS.warning : COLORS.success;
   return <rect x={x} y={y} width={width} height={height} fill={color} rx={4} />;
 };
 
@@ -94,11 +111,16 @@ const getCorrColor = (val) => {
 
 export default function ScientificAnalysis({ stats, loading }) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+  const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
-  // Simulate percentile data from stats
+  // Percentile data from backend
   const percentileData = useMemo(() => {
-    if (!stats) return [];
-    const bmiAvg = parseFloat(stats.avg_bmi || 22);
+    if (stats?.percentile_data && stats.percentile_data.length > 0) {
+      return stats.percentile_data;
+    }
+    // Fallback/Simulated
+    const bmiAvg = parseFloat(stats?.avg_bmi || 22);
     return [
       { percentile: "P10", bmi: (bmiAvg - 5).toFixed(1), height: "153", weight: "48" },
       { percentile: "P25", bmi: (bmiAvg - 2.5).toFixed(1), height: "158", weight: "55" },
@@ -108,24 +130,28 @@ export default function ScientificAnalysis({ stats, loading }) {
     ];
   }, [stats]);
 
-  // BMI distribution histogram (by ranges)
+  // BMI distribution histogram
   const bmiHistogram = useMemo(() => {
-    if (!stats?.bmi_histogram) {
-      return [
-        { range: "<16", count: 0, zscore: -3.5 },
-        { range: "16-18.5", count: 0, zscore: -2 },
-        { range: "18.5-25", count: 0, zscore: 0 },
-        { range: "25-30", count: 0, zscore: 1 },
-        { range: "30-35", count: 0, zscore: 2 },
-        { range: "35-40", count: 0, zscore: 3 },
-        { range: ">40", count: 0, zscore: 3.5 },
-      ];
+    if (stats?.bmi_histogram && stats.bmi_histogram.length > 0) {
+      return stats.bmi_histogram;
     }
-    return stats.bmi_histogram;
+    return [
+      { range: "<16", count: 0, zscore: -3.5 },
+      { range: "16-18.5", count: 0, zscore: -2 },
+      { range: "18.5-25", count: 0, zscore: 0 },
+      { range: "25-30", count: 0, zscore: 1 },
+      { range: "30-35", count: 0, zscore: 2 },
+      { range: "35-40", count: 0, zscore: 3 },
+      { range: ">40", count: 0, zscore: 3.5 },
+    ];
   }, [stats]);
 
-  // Z-score taqsimoti (simulated)
+  // Z-score taqsimoti
   const zScoreData = useMemo(() => {
+    if (stats?.z_score_distribution && stats.z_score_distribution.length > 0) {
+      return stats.z_score_distribution;
+    }
+    // Simulated fallback
     const bd = stats?.bmi_distribution || {};
     const total = (bd.normal || 0) + (bd.underweight || 0) + (bd.overweight || 0) + (bd.obese || 0) || 1;
     return [
@@ -138,14 +164,19 @@ export default function ScientificAnalysis({ stats, loading }) {
     ];
   }, [stats]);
 
-  // Korrelyatsiya matritsasi (simulated based on stats)
-  const corrMatrix = [
-    { param: "BMI", bmi: 1.00, yosh: 0.31, boy: -0.18, vazn: 0.78, ko_krak: 0.42 },
-    { param: "Yosh", bmi: 0.31, yosh: 1.00, boy: -0.12, vazn: 0.29, ko_krak: 0.15 },
-    { param: "Bo'y", bmi: -0.18, yosh: -0.12, boy: 1.00, vazn: 0.55, ko_krak: 0.33 },
-    { param: "Vazn", bmi: 0.78, yosh: 0.29, boy: 0.55, vazn: 1.00, ko_krak: 0.61 },
-    { param: "Ko'krak", bmi: 0.42, yosh: 0.15, boy: 0.33, vazn: 0.61, ko_krak: 1.00 },
-  ];
+  // Korrelyatsiya matritsasi
+  const corrMatrix = useMemo(() => {
+    if (stats?.correlation_matrix && stats.correlation_matrix.length > 0) {
+      return stats.correlation_matrix;
+    }
+    return [
+      { param: "BMI", bmi: 1.00, yosh: 0.31, boy: -0.18, vazn: 0.78, ko_krak: 0.42 },
+      { param: "Yosh", bmi: 0.31, yosh: 1.00, boy: -0.12, vazn: 0.29, ko_krak: 0.15 },
+      { param: "Bo'y", bmi: -0.18, yosh: -0.12, boy: 1.00, vazn: 0.55, ko_krak: 0.33 },
+      { param: "Vazn", bmi: 0.78, yosh: 0.29, boy: 0.55, vazn: 1.00, ko_krak: 0.61 },
+      { param: "Ko'krak", bmi: 0.42, yosh: 0.15, boy: 0.33, vazn: 0.61, ko_krak: 1.00 },
+    ];
+  }, [stats]);
 
   // Risk groups
   const riskGroups = useMemo(() => {
@@ -193,7 +224,7 @@ export default function ScientificAnalysis({ stats, loading }) {
 
       {/* ===== ROW 1: Z-score taqsimoti ===== */}
       <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <GlassCard>
             <SectionTitle
               icon={<EqualizerOutlined sx={{ color: COLORS.primary }} />}
@@ -209,7 +240,7 @@ export default function ScientificAnalysis({ stats, loading }) {
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
                   <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" />
                   <ReTooltip
-                    {...CustomTooltipStyle}
+                    {...customTooltip}
                     formatter={(val, name) => [val, "Bemorlar soni"]}
                   />
                   <Bar dataKey="count" name="Bemorlar" radius={[6, 6, 0, 0]} shape={<ZScoreBar />} />
@@ -224,7 +255,7 @@ export default function ScientificAnalysis({ stats, loading }) {
             </Alert>
           </GlassCard>
         </Grid>
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.secondary }} />}
@@ -264,7 +295,7 @@ export default function ScientificAnalysis({ stats, loading }) {
 
       {/* ===== ROW 2: Korrelyatsiya matritsasi ===== */}
       <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <GlassCard>
             <SectionTitle
               icon={<AutoGraphOutlined sx={{ color: COLORS.teal }} />}
@@ -315,7 +346,7 @@ export default function ScientificAnalysis({ stats, loading }) {
         </Grid>
 
         {/* ===== Xavf guruhlari ===== */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <GlassCard>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.error }} />}
@@ -362,7 +393,7 @@ export default function ScientificAnalysis({ stats, loading }) {
       {/* ===== ROW 3: Trend tahlili ===== */}
       {trendData.length > 0 && (
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <GlassCard>
               <SectionTitle
                 icon={<AutoGraphOutlined sx={{ color: COLORS.warning }} />}
@@ -377,7 +408,7 @@ export default function ScientificAnalysis({ stats, loading }) {
                     <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
                     <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
                     <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                    <ReTooltip {...CustomTooltipStyle} />
+                    <ReTooltip {...customTooltip} />
                     <Legend />
                     <Area yAxisId="left" type="monotone" dataKey="count" name="Analizlar soni" fill={`${COLORS.primary}33`} stroke={COLORS.primary} strokeWidth={2} />
                     {trendData.some(d => d.avg_bmi) && (

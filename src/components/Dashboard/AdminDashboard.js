@@ -18,6 +18,7 @@ import {
   Tooltip as ReTooltip,
   Legend,
 } from "recharts";
+import { motion } from "framer-motion";
 
 const COLORS = {
   primary: "#0ea5e9",
@@ -36,22 +37,27 @@ const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        borderRadius: 3,
-        background: isDark ? "rgba(30,30,50,0.7)" : "rgba(255,255,255,0.9)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid",
-        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(14,165,233,0.12)",
-        transition: "transform 0.2s, box-shadow 0.2s",
-        "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 32px rgba(14,165,233,0.12)" },
-        ...sx,
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      {children}
-    </Paper>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          borderRadius: 3,
+          background: isDark ? "rgba(30,30,50,0.6)" : "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid",
+          borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(99,102,241,0.12)",
+          boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.3)" : "0 8px 32px rgba(99,102,241,0.08)",
+          ...sx,
+        }}
+      >
+        {children}
+      </Paper>
+    </motion.div>
   );
 };
 
@@ -89,19 +95,37 @@ const SectionTitle = ({ title, subtitle }) => (
   </Box>
 );
 
-const CustomTooltipStyle = {
+const getTooltipStyle = (isDark) => ({
   contentStyle: {
-    borderRadius: 12,
+    borderRadius: "12px",
     border: "none",
-    boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
-    background: "rgba(15,15,25,0.92)",
-    color: "#fff",
-    fontSize: 12,
+    boxShadow: isDark ? "0 10px 15px -3px rgba(0, 0, 0, 0.4)" : "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+    background: isDark ? "#1e293b" : "#ffffff",
+    color: isDark ? "#f8fafc" : "#1e293b",
+    fontSize: "13px",
+    padding: "10px 14px",
+    borderLeft: isDark ? "4px solid #38bdf8" : "4px solid #0ea5e9",
   },
-  labelStyle: { color: "#7dd3fc", fontWeight: 700 },
-};
+  itemStyle: {
+    color: isDark ? "#f1f5f9" : "#334155",
+    padding: "2px 0",
+  },
+  labelStyle: { 
+    color: isDark ? "#38bdf8" : "#0ea5e9", 
+    fontWeight: 800,
+    marginBottom: "4px",
+    fontSize: "11px",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px"
+  },
+  cursor: { stroke: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)", strokeWidth: 2 }
+});
 
-export default function AdminDashboard({ data = [], loading, stats, statsLoading, totalCount = 0, userName }) {
+export default function AdminDashboard({ data = [], loading, stats, statsLoading, totalCount = 0, userName, filters }) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === "dark";
+  const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
+  
   // Derive statistics from loaded data (admin's own data)
   const localStats = useMemo(() => {
     if (!data.length) return { avgBmi: 0, maleCount: 0, femaleCount: 0, unknownCount: 0, avgAge: 0, bmiCategories: [] };
@@ -140,14 +164,42 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
         { name: "Semizlik", pct: Math.round(obese / bmiTotal * 100), count: obese, color: COLORS.error },
         { name: "Ozg'in", pct: Math.round(underweight / bmiTotal * 100), count: underweight, color: COLORS.info },
       ],
+      stats: {
+        normalPct: Math.round(normal / bmiTotal * 100),
+        riskPct: Math.round((overweight + obese) / bmiTotal * 100),
+        underweightPct: Math.round(underweight / bmiTotal * 100),
+      }
     };
   }, [data]);
 
+  const scientificInsights = useMemo(() => {
+    if (!data.length) return null;
+    const { stats: s, avgBmi } = localStats;
+    const insights = [];
+    
+    if (s.normalPct > 60) insights.push("✅ Guruhdagi bemorlarning aksariyati (60%+) normal vaznga ega, bu ijobiy ko'rsatkich.");
+    else if (s.riskPct > 40) insights.push("⚠️ Diqqat! Guruhda ortiqcha vazn va semizlik ulushi yuqori (40%+).");
+    
+    if (avgBmi > 25) insights.push(`📊 O'rtacha BMI (${avgBmi}) me'yordan biroz yuqori. Profilaktik choralarni kuchaytirish tavsiya etiladi.`);
+    
+    const maleCount = stats?.by_gender?.erkak ?? localStats.maleCount;
+    const femaleCount = stats?.by_gender?.ayol ?? localStats.femaleCount;
+    const unknownCount = stats?.by_gender?.["noma'lum"] ?? localStats.unknownCount;
+    const totalN = maleCount + femaleCount + unknownCount;
+    
+    const malePct = totalN > 0 ? Math.round(maleCount / totalN * 100) : 0;
+    const femalePct = totalN > 0 ? Math.round(femaleCount / totalN * 100) : 0;
+    
+    insights.push(`👥 Kontingent tarkibi: ${malePct}% erkaklar va ${femalePct}% ayollarni tashkil etadi.`);
+
+    return insights;
+  }, [data, localStats]);
+
   const genderData = useMemo(() => [
-    { name: "Erkak", value: localStats.maleCount },
-    { name: "Ayol", value: localStats.femaleCount },
-    { name: "Noma'lum", value: localStats.unknownCount },
-  ].filter(d => d.value > 0), [localStats]);
+    { name: "Erkak", value: stats?.by_gender?.erkak ?? localStats.maleCount },
+    { name: "Ayol", value: stats?.by_gender?.ayol ?? localStats.femaleCount },
+    { name: "Noma'lum", value: stats?.by_gender?.["noma'lum"] ?? localStats.unknownCount },
+  ].filter(d => d.value > 0), [localStats, stats]);
 
   const ageGroupData = useMemo(() => {
     const groups = { "0-10": 0, "11-20": 0, "21-35": 0, "36-50": 0, "51-65": 0, "65+": 0 };
@@ -160,7 +212,7 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
       else if (age <= 65) groups["51-65"]++;
       else groups["65+"]++;
     });
-    return Object.entries(groups).map(([name, val]) => ({ name, value: val }));
+    return Object.entries(groups).map(([name, value]) => ({ name, value }));
   }, [data]);
 
   // Build daily trend from createdAt
@@ -182,55 +234,87 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
   const todayCount = data.filter(r => r.createdAt && r.createdAt.startsWith(todayKey)).length;
 
   return (
-    <Box>
-      {/* Welcome */}
-      <Box mb={3} p={3} sx={{ borderRadius: 3, background: `linear-gradient(135deg, ${COLORS.primary}22, ${COLORS.secondary}11)`, border: `1px solid ${COLORS.primary}33` }}>
-        <Typography variant="h5" fontWeight={900} sx={{ color: COLORS.primary }}>
-          👋 Xush kelibsiz, {userName || "Admin"}!
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Sizning shaxsiy analitika panelingiz — faqat siz kiritgan ma'lumotlar ko'rsatilmoqda.
-        </Typography>
-      </Box>
+    <Box sx={{ width: '100%', maxWidth: '100%' }}>
+      {/* Welcome & Insights */}
+      <Grid container spacing={3} mb={4}>
+        <Grid item xs={12} lg={8}>
+          <Box p={3.5} sx={{ height: '100%', borderRadius: 4, background: `linear-gradient(135deg, ${COLORS.primary}25, ${COLORS.secondary}15)`, border: `1px solid ${COLORS.primary}33`, boxShadow: '0 8px 32px rgba(0,0,0,0.05)' }}>
+            <Typography variant="h4" fontWeight={900} sx={{ color: COLORS.primary, mb: 1 }}>
+              👋 Xush kelibsiz, {userName || "Admin"}!
+            </Typography>
+            <Typography variant="h6" color="text.secondary" fontWeight={500}>
+              Sizning shaxsiy analitika panelingiz
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mt={1}>
+              Barcha kiritilgan ma'lumotlar tahlili. Filtrlardan foydalanib natijalarni saralashingiz mumkin.
+            </Typography>
+            <Divider sx={{ my: 3, borderColor: `${COLORS.primary}22` }} />
+            <Stack direction="row" spacing={2} flexWrap="wrap" gap={1.5}>
+                <Chip label={`Jami: ${totalCount}`} size="medium" variant="outlined" sx={{ fontWeight: 800, bgcolor: 'background.paper' }} />
+                <Chip label={`O'rtacha BMI: ${stats?.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : localStats.avgBmi}`} size="medium" color="primary" sx={{ fontWeight: 800 }} />
+                <Chip label={`O'rtacha yosh: ${localStats.avgAge}`} size="medium" color="secondary" sx={{ fontWeight: 800 }} />
+                {filters && Object.values(filters).some(v => v !== "" && v !== 0 && v !== 100 && v !== 10 && v !== 50) && (
+                    <Chip label="Filtrlangan holatda" color="info" variant="filled" size="medium" sx={{ fontWeight: 800 }} />
+                )}
+            </Stack>
+          </Box>
+        </Grid>
+        <Grid item xs={12} lg={4}>
+          <GlassCard sx={{ height: '100%', bgcolor: isDark ? "rgba(14,165,233,0.05)" : "rgba(14,165,233,0.02)", display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <SectionTitle title="🔬 Ilmiy Xulosalar" subtitle="Avtomatik tahlil natijalari" />
+            <Stack spacing={1.5}>
+              {scientificInsights ? scientificInsights.map((text, i) => (
+                <Box key={i} sx={{ p: 1, borderRadius: 1.5, bgcolor: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', borderLeft: `3px solid ${COLORS.primary}` }}>
+                  <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', lineHeight: 1.4, fontWeight: 500 }}>
+                    {text}
+                  </Typography>
+                </Box>
+              )) : (
+                <Typography variant="caption" color="text.secondary">Ma'lumotlar yetarli emas...</Typography>
+              )}
+            </Stack>
+          </GlassCard>
+        </Grid>
+      </Grid>
 
       {/* ===== KPI CARDS ===== */}
-      <Grid container spacing={2} mb={4}>
-        <Grid size={{ xs: 6, md: 3 }}>
+      <Grid container spacing={3} mb={5}>
+        <Grid item xs={12} sm={6} md={3}>
           <KpiCard
             label="Jami kiritganlarim"
             value={stats ? (stats.total_analyses?.toLocaleString("uz-UZ") ?? "0") : (totalCount.toLocaleString("uz-UZ"))}
             sub="Barcha vaqt davomida"
-            icon={<PersonAdd />}
+            icon={<PersonAdd fontSize="large" />}
             color={COLORS.primary}
             loading={loading}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <KpiCard
             label="Bugun kiritilganlar"
             value={stats ? (stats.today_analyses ?? 0) : todayCount}
             sub="Bugungi seans"
-            icon={<DateRangeOutlined />}
+            icon={<DateRangeOutlined fontSize="large" />}
             color={COLORS.success}
             loading={loading}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <KpiCard
             label="O'rtacha BMI"
             value={stats ? (stats.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : "—") : localStats.avgBmi}
-            sub="Ro'yxatingizdagi bemorlar"
-            icon={<MonitorWeightOutlined />}
+            sub="Guruh bo'yicha"
+            icon={<MonitorWeightOutlined fontSize="large" />}
             color={COLORS.warning}
             loading={loading}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
           <KpiCard
-            label="O'rtacha yosh"
+            label="Analitik O'sish"
             value={stats ? (stats.monthly_growth ? `+${stats.monthly_growth}` : "0") : (localStats.avgAge ? `${localStats.avgAge} yosh` : "—")}
-            sub="Tanlangan sahifadagi ma'lumot"
-            icon={<WcOutlined />}
+            sub="Oylik dinamika"
+            icon={<TrendingUp fontSize="large" />}
             color={COLORS.secondary}
             loading={loading}
           />
@@ -238,15 +322,15 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
       </Grid>
 
       {/* ===== CHARTS SECTION ===== */}
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         {/* ROW 1: Wide Chart (Daily trend) */}
-        <Grid size={{ xs: 12 }}>
+        <Grid item xs={12}>
           <GlassCard>
             <SectionTitle title="📊 Kunlik dinamika" subtitle="So'nggi 14 kunlik kiritilgan analizlar" />
             {dailyTrend.length === 0 ? (
-              <Box py={6} textAlign="center"><Typography color="text.secondary">Hali ma'lumot yo'q</Typography></Box>
+              <Box py={8} textAlign="center"><Typography color="text.secondary">Natija topilmadi</Typography></Box>
             ) : (
-              <Box sx={{ height: 320 }}>
+              <Box sx={{ height: 350 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={dailyTrend}>
                     <defs>
@@ -258,8 +342,8 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} allowDecimals={false} />
-                    <ReTooltip {...CustomTooltipStyle} />
-                    <Area type="monotone" dataKey="count" name="Kiritilganlar" stroke={COLORS.primary} strokeWidth={2.5} fill="url(#adminGrad)" dot={{ r: 3, fill: COLORS.primary }} />
+                    <ReTooltip {...customTooltip} />
+                    <Area type="monotone" dataKey="count" name="Kiritilganlar" stroke={COLORS.primary} strokeWidth={3} fill="url(#adminGrad)" dot={{ r: 4, fill: COLORS.primary }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </Box>
@@ -268,32 +352,32 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
         </Grid>
 
         {/* ROW 2: Triple Distribution Charts (Gender, Age, BMI) */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle title="⚥ Jins taqsimoti" subtitle="Erkak/ayol nisbati" />
-            <Box sx={{ height: 220 }}>
+            <Box sx={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={genderData} cx="50%" cy="50%" innerRadius={55} outerRadius={80} paddingAngle={4} dataKey="value">
+                  <Pie data={genderData} cx="50%" cy="50%" innerRadius={65} outerRadius={90} paddingAngle={5} dataKey="value">
                     {genderData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />)}
                   </Pie>
-                  <ReTooltip {...CustomTooltipStyle} />
-                  <Legend iconType="circle" iconSize={8} />
+                  <ReTooltip {...customTooltip} />
+                  <Legend iconType="circle" iconSize={10} />
                 </PieChart>
               </ResponsiveContainer>
             </Box>
-            <Divider sx={{ my: 1.5 }} />
-            <Stack spacing={1}>
+            <Divider sx={{ my: 2 }} />
+            <Stack spacing={1.5}>
               {genderData.map((g, i) => {
                 const total = genderData.reduce((s, d) => s + d.value, 0) || 1;
                 const pct = Math.round(g.value / total * 100);
                 return (
                   <Box key={i} display="flex" justifyContent="space-between" alignItems="center">
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: PIE_COLORS[i] }} />
-                      <Typography variant="caption" color="text.secondary" fontWeight={600}>{g.name}</Typography>
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                      <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: PIE_COLORS[i] }} />
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>{g.name}</Typography>
                     </Box>
-                    <Typography variant="caption" fontWeight={800}>{g.value} ({pct}%)</Typography>
+                    <Typography variant="body2" fontWeight={800}>{g.value} ({pct}%)</Typography>
                   </Box>
                 );
               })}
@@ -301,43 +385,43 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
           </GlassCard>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle title="👤 Yosh guruhlari" subtitle="Bemorlar yoshi bo'yicha" />
-            <Box sx={{ height: 260 }}>
+            <Box sx={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageGroupData} barCategoryGap="25%">
+                <BarChart data={ageGroupData} barCategoryGap="20%">
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} allowDecimals={false} />
-                  <ReTooltip {...CustomTooltipStyle} />
-                  <Bar dataKey="value" name="Bemorlar" fill={COLORS.secondary} radius={[6, 6, 0, 0]} barSize={32} />
+                  <ReTooltip {...customTooltip} />
+                  <Bar dataKey="value" name="Bemorlar" fill={COLORS.secondary} radius={[8, 8, 0, 0]} barSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
           </GlassCard>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid item xs={12} md={4}>
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle title="⚖️ BMI holati" subtitle="Sog'liq guruhlari bo'yicha" />
-            <Stack spacing={2.5} mt={1}>
+            <Stack spacing={3} mt={2}>
               {localStats.bmiCategories.map((cat) => (
                 <Box key={cat.name}>
-                  <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Typography variant="body2" fontWeight={700} fontSize="0.85rem">{cat.name}</Typography>
+                  <Box display="flex" justifyContent="space-between" mb={1}>
+                    <Typography variant="body2" fontWeight={700} fontSize="0.95rem">{cat.name}</Typography>
                     <Box display="flex" gap={1} alignItems="baseline">
                       <Typography variant="caption" color="text.secondary">{cat.count} ta</Typography>
-                      <Typography variant="body2" fontWeight={900} sx={{ color: cat.color }}>{cat.pct}%</Typography>
+                      <Typography variant="body1" fontWeight={900} sx={{ color: cat.color }}>{cat.pct}%</Typography>
                     </Box>
                   </Box>
                   <LinearProgress
                     variant="determinate"
                     value={cat.pct}
                     sx={{
-                      height: 10, borderRadius: 5,
+                      height: 12, borderRadius: 6,
                       bgcolor: `${cat.color}15`,
-                      "& .MuiLinearProgress-bar": { bgcolor: cat.color, borderRadius: 5 },
+                      "& .MuiLinearProgress-bar": { bgcolor: cat.color, borderRadius: 6 },
                     }}
                   />
                 </Box>
@@ -347,9 +431,9 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
         </Grid>
       </Grid>
 
-      <Box mt={4} textAlign="center">
-        <Typography variant="caption" color="text.secondary">
-          📋 Faqat siz kiritgan ma'lumotlar ko'rsatilmoqda • MorphoCheck Admin Panel • {new Date().toLocaleDateString("uz-UZ")}
+      <Box mt={6} textAlign="center" pb={4}>
+        <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
+          🔬 MORPHO CHECK PRO • Professional Analitika Tizimi • {new Date().toLocaleDateString("uz-UZ")}
         </Typography>
       </Box>
     </Box>

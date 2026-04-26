@@ -174,79 +174,89 @@ def _translate_uz_to_ru(text: str) -> str:
 LABELS = {
     "ru": {
         "title": "Карта исследования",
-        "fio": "Ф.И.О", "school": "Наименование школы", "settlement": "Населенный пункт",
-        "birth_place": "Место рождения", "birth_date": "Дата рождения",
+        "fio": "Ф.И.О", "school": "Наименование школы (дед. сад.)", "settlement": "Населенный пункт",
+        "birth_place": "Место рождения (город, область)", "birth_date": "Год, месяц и число рождения",
         "father_nat": "Национальность отца", "mother_nat": "матери",
-        "living_since": "Срок проживания в местности", "enrolled": "Дата зачисления",
+        "living_since": "С какого времени обследуемый проживает в данной местности", "enrolled": "Когда зачислен в школу (дед сад)",
         "living_cond": "Бытовые условия", "labor_regime": "Режим труда",
-        "past_illnesses": "Перенесенные заболевания", "children_count": "Кол-во детей",
-        "child_order": "Ребенок №", "feeding_a": "Находится на: а) естественном",
-        "feeding_b": "б) искусственном вскармливании", "marriage_a": "Брак: а) близкородственный",
-        "marriage_b": "б) дальнородственный", "mother_health": "Здоровье матери",
-        "measure_results": "Результаты измерения", "date_col": "Дата",
-        "cat_phys": "I. Физическое развитие", "lower_leg": "1. Нижняя конечность",
-        "lower_leg_len": "Длина ниж. кон.", "spina": "а. Ость подвзд. кости",
-        "symph": "б. Лобковое сочленение", "tibiale": "2.а. Мыщелок большеб. кости",
+        "past_illnesses": "Перенесенные заболевания", "children_count": "Сколько всего детей в семье",
+        "child_order": "Какой по счёту ребенок", "feeding_a": "Находится на: а) естественном",
+        "feeding_b": "б) искусственном вскармливании", "marriage_a": "Брак родственность: а) близкородственный",
+        "marriage_b": "б) дальнородственный", "mother_health": "Со слов матери (здорова или)",
+        "measure_results": "Результаты измерения", "date_col": "Дата", "indicator": "Показатель",
+        "gender": "Пол ребенка", "parents_phone": "Тел. родителей",
+        "cat_phys": "I. Показатели физического развития", "lower_leg": "1. Нижняя конечность",
+        "lower_leg_len": "Длина нижней конечности", 
+        "spina": "а. Точка верхней передней оси подвздошной кости",
+        "symph": "б. Точка на верхнем крае лобкового сочленения", 
+        "tibiale_title": "2.",
+        "tibiale": "а. Верхней точки на середине, над мыщелка большеберцовой кости",
         "pelvic": "3. Ширина таза", "thigh_l": "4. Длина бедра", "thigh_c": "5. Обхват бедра",
         "calf_l": "6. Длина голени", "calf_c": "7. Обхват голени", "foot_l": "8. Длина стопы",
-        "teeth": "9. Кол-во зубов", "menstr": "10. Менструация",
-        "cat_skull": "II. Форма черепа", "skull_long": "1. Продольный диам.",
-        "skull_trans": "2. Поперечный разм.", "head_circ": "3. Обхват головы",
-        "forehead": "4. Разм. лба", "skull_height": "5. Высотный диам.",
-        "skull_base_title": "Основание черепа", "skull_base_l": "1. Длина", "skull_base_w": "2. Ширина",
-        "cat_face": "Лицо", "face_biz": "1. Скуловой диам.", "face_big": "2. Нижнечел. диам.",
-        "face_morph": "3. Морфол. высота", "face_phys": "4. Физионом. высота",
-        "nose_h": "5. Высота носа", "nose_w": "6. Ширина носа", "outer_oc": "7. Наружная ширина глаз",
-        "inner_oc": "8. Межглаз. ширина", "lips_h": "9. Высота губ", "mouth_w": "10. Ширина рта",
-        "cat_chest": "Грудь", "height_stand": "1. Рост стоя", "height_sit": "2. Рост сидя",
+        "teeth": "9. Кол-во зубов", "menstr": "10. Начало менструации",
+        "cat_skull": "II. Определения формы черепа", "skull_long": "1. Продольный диаметр",
+        "skull_trans": "2. Поперечный размер", "head_circ": "3. Обхват головы",
+        "forehead": "4. Поперечный размер лба", "skull_height": "5. Высотный или вертикальный диаметр",
+        "skull_base_title": "Определения размера основания черепа", "skull_base_l": "1. Длина основания черепа", "skull_base_w": "2. Ширина основания черепа",
+        "cat_face": "Лицо", "face_biz": "1. Скуловой диаметр", "face_big": "2. Нижнечелюстной диаметр",
+        "face_morph": "3. Морфологическая высота лица", "face_phys": "4. Физиономическая высота лица",
+        "nose_h": "5. Высота носа", "nose_w": "6. Ширина носа", "outer_oc": "7. Наружно глазничная ширина",
+        "inner_oc": "8. Меж глазничная ширина", "lips_h": "9. Высота слизистой части обеих губ", "mouth_w": "10. Ширина рта",
+        "cat_chest": "Грудь", "height_body": "1. Длина тела", "height_stand": "1. Рост стоя", "height_sit": "2. рост сидя",
         "weight": "2. Вес тела", "trunk_l": "3. Длина туловища", "torso_l": "4. Длина корпуса",
-        "chest_p": "5. Окр. груди (пауза)", "chest_i": "-вдох", "chest_e": "-выдох",
-        "waist": "6. Обхват талии", "abd_c": "7. Окр. живота", "upper_s": "8. Верхний отрезок",
-        "chest_td": "9. Поперечный диам.", "chest_ad": "10. Передне-задний диам.",
-        "chest_h": "11. Высота груди", "cat_arm": "Верхняя конечность",
-        "arm_l": "1. Длина верх. кон.", "shoulder_l": "2. Длина плеча", "shoulder_w": "3. Ширина плеч",
-        "arm_circ": "4. Обхват плеча", "arm_circ_rest": "а) спокойное", "arm_circ_flex": "б) напряженное",
+        "chest_p": "5. Окружность груди в паузе", "chest_i": "- при полном вдохе", "chest_e": "- при полном выдохе",
+        "waist": "6. Обхват талии", "abd_c": "7. Окружность живота", "upper_s": "8. Длина верхнего отрезка",
+        "chest_td": "9. Поперечный диаметр груди", "chest_ad": "10. Переднее-задний диаметр",
+        "chest_h": "11. Высота грудной клетки", "cat_arm": "Верхняя конечность",
+        "arm_l": "1. Длина верхней конечности", "shoulder_l": "2. Длина плеча", "shoulder_w": "3. Ширина плеч",
+        "arm_circ": "4. Обхват плеча", "arm_circ_rest": "а) при спокойном состоянии", "arm_circ_flex": "б) при напряженном состоянии",
         "forearm_l": "5. Длина предплечья", "hand_l": "6. Длина кисти", "dynamo": "7. Динамометрия",
-        "fat_title": "8. Жировая клетчатка", "fat_tri": "а. трицепс", "fat_bi": "б. бицепс",
-        "fat_sub": "в. лопатка", "fat_iliac": "г. подвздох", "fat_pop": "д. подколено"
+        "fat_title": "8. Толщина подкожно-жировой клетчатки", 
+        "fat_tri": "а. над трехглавой мышцей", "fat_bi": "б. над двухглавой мышцей",
+        "fat_sub": "в. под нижним углом лопатки", "fat_iliac": "г. над гребнем подвздошной кости", "fat_pop": "д. в подколенной ямке"
     },
     "uz": {
         "title": "Tadqiqot kartasi",
-        "fio": "F.I.SH", "school": "Muassasa nomi", "settlement": "Aholi punkti",
-        "birth_place": "Tug'ilgan joyi", "birth_date": "Tug'ilgan sanasi",
+        "fio": "F.I.SH", "school": "Muassasa nomi (maktab, bog'cha)", "settlement": "Aholi punkti",
+        "birth_place": "Tug'ilgan joyi (shahar, viloyat)", "birth_date": "Tug'ilgan yili, oyi va kuni",
         "father_nat": "Otasi millati", "mother_nat": "onasi",
-        "living_since": "Yashash muddati", "enrolled": "Qabul sanasi",
+        "living_since": "Tekshiriluvchi ushbu hududda qancha vaqtdan beri yashaydi", "enrolled": "Maktabga (bog'chaga) qabul qilingan sana",
         "living_cond": "Maishiy sharoitlar", "labor_regime": "Mehnat rejimi",
-        "past_illnesses": "Kasalliklar", "children_count": "Bolalar soni",
-        "child_order": "Farzand №", "feeding_a": "Bo'lgan: a) tabiiy",
-        "feeding_b": "b) sun'iy emizishda", "marriage_a": "Nikoh: a) yaqin qarindosh",
-        "marriage_b": "b) uzoq qarindosh", "mother_health": "Onasi salomatligi",
-        "measure_results": "O'lchov natijalari", "date_col": "Sana",
-        "cat_phys": "I. Jismoniy rivojlanish", "lower_leg": "1. Pastki oyoq-qo'l",
-        "lower_leg_len": "Oyoq uzunligi", "spina": "a. Yonbosh o'qi",
-        "symph": "b. Qov suyagi", "tibiale": "2.a. Boldir do'ngligi",
+        "past_illnesses": "O'tkazilgan kasalliklar", "children_count": "Oilada jami nechta bola",
+        "child_order": "Farzand nechanchi", "feeding_a": "Bo'lgan: a) tabiiy",
+        "feeding_b": "b) sun'iy emizishda", "marriage_a": "Nikoh qarindoshligi: a) yaqin qarindosh",
+        "marriage_b": "b) uzoq qarindosh", "mother_health": "Onasining so'zlariga ko'ra (sog'lom yoki)",
+        "measure_results": "O'lchov natijalari", "date_col": "Sana", "indicator": "Ko'rsatkich",
+        "gender": "Bolaning jinsi", "parents_phone": "Ota-onaning tel. raqami",
+        "cat_phys": "I. Jismoniy rivojlanish ko'rsatkichlari", "lower_leg": "1. Pastki oyoq-qo'l",
+        "lower_leg_len": "Pastki oyoq-qo'l uzunligi", 
+        "spina": "a. Yonbosh suyagining yuqori oldingi o'simtasi nuqtasi",
+        "symph": "b. Qov suyagi birikmasining yuqori qirrasi nuqtasi", 
+        "tibiale_title": "2.",
+        "tibiale": "a. Boldir suyagi do'ngligi ustidagi o'rta yuqori nuqtasi",
         "pelvic": "3. Chanoq kengligi", "thigh_l": "4. Son uzunligi", "thigh_c": "5. Son aylanasi",
         "calf_l": "6. Boldir uzunligi", "calf_c": "7. Boldir aylanasi", "foot_l": "8. Panja uzunligi",
-        "teeth": "9. Tishlar soni", "menstr": "10. Menstruatsiya",
-        "cat_skull": "II. Bosh suyagi shakli", "skull_long": "1. Uzun. diametr",
+        "teeth": "9. Tishlar soni", "menstr": "10. Hayz ko'rishning boshlanishi",
+        "cat_skull": "II. Bosh suyagi shaklini aniqlash", "skull_long": "1. Uzunlamasiga diametr",
         "skull_trans": "2. Ko'ndalang o'lcham", "head_circ": "3. Bosh aylanasi",
-        "forehead": "4. Peshona o'lchami", "skull_height": "5. Vertikal diametr",
-        "skull_base_title": "Bosh asosi", "skull_base_l": "1. Uzunligi", "skull_base_w": "2. Kengligi",
-        "cat_face": "Yuz", "face_biz": "1. Yanoq diametri", "face_big": "2. Jag' diametri",
-        "face_morph": "3. Morfologik balandlik", "face_phys": "4. Fizionomik balandlik",
-        "nose_h": "5. Burun balandligi", "nose_w": "6. Burun kengligi", "outer_oc": "7. Tashqi ko'z orasida",
-        "inner_oc": "8. Ichki ko'z orasida", "lips_h": "9. Lab balandligi", "mouth_w": "10. Og'iz kengligi",
-        "cat_chest": "Ko'krak qafasi", "height_stand": "1. Bo'yi tik", "height_sit": "2. Bo'yi o'tirib",
-        "weight": "2. Vazni", "trunk_l": "3. Tana uzunligi", "torso_l": "4. Korpus uzunligi",
-        "chest_p": "5. Ko'krak aylanasi", "chest_i": "-nafas olganda", "chest_e": "-nafas chiqarganda",
-        "waist": "6. Bel aylanasi", "abd_c": "7. Qorin aylanasi", "upper_s": "8. Yuqori segment",
-        "chest_td": "9. Ko'ndalang diametr", "chest_ad": "10. Old-orqa diametr",
-        "chest_h": "11. Ko'krak balandligi", "cat_arm": "Yuqori oyoq-qo'l",
-        "arm_l": "1. Qo'l uzunligi", "shoulder_l": "2. Yelka uzunligi", "shoulder_w": "3. Yelka kengligi",
-        "arm_circ": "4. Yelka aylanasi", "arm_circ_rest": "a) tinch", "arm_circ_flex": "b) tarang",
+        "forehead": "4. Peshonaning ko'ndalang o'lchami", "skull_height": "5. Balandlik yoki vertikal diametr",
+        "skull_base_title": "Bosh suyagi asosi o'lchamini aniqlash", "skull_base_l": "1. Bosh suyagi asosi uzunligi", "skull_base_w": "2. Bosh suyagi asosi kengligi",
+        "cat_face": "Yuz", "face_biz": "1. Yanoq diametri", "face_big": "2. Pastki jag' diametri",
+        "face_morph": "3. Yuzning morfologik balandligi", "face_phys": "4. Yuzning fizionomik balandligi",
+        "nose_h": "5. Burun balandligi", "nose_w": "6. Burun kengligi", "outer_oc": "7. Tashqi ko'z burchaklari kengligi",
+        "inner_oc": "8. Ichki ko'z burchaklari kengligi", "lips_h": "9. Ikkala labning shilliq qismi balandligi", "mouth_w": "10. Og'iz kengligi",
+        "cat_chest": "Ko'krak qafasi", "height_body": "1. Tana uzunligi", "height_stand": "1. Bo'yi tik", "height_sit": "2. bo'yi o'tirib",
+        "weight": "2. Vazni", "trunk_l": "3. Gavda uzunligi", "torso_l": "4. Tana (korpus) uzunligi",
+        "chest_p": "5. Ko'krak aylanasi (pauza)", "chest_i": "- to'liq nafas olganda", "chest_e": "- to'liq nafas chiqarganda",
+        "waist": "6. Bel aylanasi", "abd_c": "7. Qorin aylanasi", "upper_s": "8. Yuqori segment uzunligi",
+        "chest_td": "9. Ko'krakning ko'ndalang diametri", "chest_ad": "10. Old-orqa diametr",
+        "chest_h": "11. Ko'krak qafasi balandligi", "cat_arm": "Yuqori oyoq-qo'l",
+        "arm_l": "1. Yuqori oyoq-qo'l uzunligi", "shoulder_l": "2. Yelka uzunligi", "shoulder_w": "3. Yelka kengligi",
+        "arm_circ": "4. Yelka aylanasi", "arm_circ_rest": "a) tinch holatda", "arm_circ_flex": "b) tarang holatda",
         "forearm_l": "5. Bilak uzunligi", "hand_l": "6. Panja uzunligi", "dynamo": "7. Dinamometriya",
-        "fat_title": "8. Yog' qatlami", "fat_tri": "a. uch boshli", "fat_bi": "b. ikki boshli",
-        "fat_sub": "v. kurak osti", "fat_iliac": "g. yonbosh qirrasi", "fat_pop": "d. tizza orqasi"
+        "fat_title": "8. Teri osti yog' qatlami qalinligi", 
+        "fat_tri": "a. uch boshli mushak ustida", "fat_bi": "b. ikki boshli mushak ustida",
+        "fat_sub": "v. kurakning pastki burchagi ostida", "fat_iliac": "g. yonbosh suyagi qirrasi ustida", "fat_pop": "d. tizza osti chuqurchasida"
     }
 }
 
@@ -284,6 +294,14 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     def T(val, capitalize=False):
         if not val: return val
         res = str(val)
+        
+        # Gender translation logic
+        v_low = res.lower()
+        if v_low in ["boy", "erkak"]:
+            res = "O'g'il bola" if lang == "uz" else "Мальчик"
+        elif v_low in ["girl", "ayol"]:
+            res = "Qiz bola" if lang == "uz" else "Девочка"
+        
         import re
         if lang == "ru":
             res = _translate_uz_to_ru(res)
@@ -300,6 +318,8 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     add_demo(left_cell, L["settlement"], T(data.get("settlement")))
     add_demo(left_cell, L["birth_place"], T(data.get("birth_place")))
     add_demo(left_cell, L["birth_date"], _format_date(data.get("birth_date")))
+    add_demo(left_cell, L["gender"], T(data.get("gender")))
+    add_demo(left_cell, L["parents_phone"], data.get("parents_phone"))
     nat_p = left_cell.add_paragraph()
     nat_p.paragraph_format.space_after = Pt(0); nat_p.paragraph_format.line_spacing = 1.0
     r1 = nat_p.add_run(L["father_nat"]+": "); r1.bold = True; r1.font.size = Pt(8.5); r1.font.name = "Times New Roman"
@@ -347,12 +367,11 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
             _set_cell_font(row[i], text_val, size=7, align=WD_ALIGN_PARAGRAPH.CENTER, shading=bg)
 
     add_l_row("I", L["cat_phys"], "", is_cat=True)
-    for k,v in [("1",L["lower_leg"]),("",L["lower_leg_len"]),("a",L["spina"]),("б",L["symph"]),("a",L["tibiale"]),("3",L["pelvic"]),("4",L["thigh_l"]),("5",L["thigh_c"]),("6",L["calf_l"]),("7",L["calf_c"]),("8",L["foot_l"]),("9",L["teeth"]),("10",L["menstr"])]:
-        add_l_row(k, v, data.get(k) if isinstance(k,int) else None)
-    # Manual data mapping for specific keys
+    add_l_row("1", L["lower_leg"], data.get('lower_leg_total') or data.get('lower_leg_spina_iliaca'), bold=True)
+    add_l_row("", L["lower_leg_len"], data.get('lower_leg_length') or data.get('lower_leg_symphysion'))
     add_l_row("a", L["spina"], data.get('lower_leg_spina_iliaca'))
-    add_l_row("б", L["symph"], data.get('lower_leg_symphysion'))
-    add_l_row("a", L["tibiale"], data.get('tibiale_height'))
+    add_l_row("b", L["symph"], data.get('lower_leg_symphysion'))
+    add_l_row("2.a", L["tibiale"], data.get('tibiale_height'))
     add_l_row("3", L["pelvic"], data.get('pelvic_width'))
     add_l_row("4", L["thigh_l"], data.get('thigh_length'))
     add_l_row("5", L["thigh_c"], data.get('thigh_circumference'))
@@ -360,7 +379,12 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     add_l_row("7", L["calf_c"], data.get('calf_circumference'))
     add_l_row("8", L["foot_l"], data.get('foot_length'))
     add_l_row("9", L["teeth"], data.get('teeth_count'))
-    add_l_row("10", L["menstr"], data.get('menstruation_start'))
+    
+    # Show menstruation only for females
+    gender_val = str(data.get('gender', '')).lower()
+    if any(g in gender_val for g in ['ayol', 'girl', 'qiz', 'жен']):
+        add_l_row("10", L["menstr"], data.get('menstruation_start'))
+
     add_l_row("II", L["cat_skull"], "", is_cat=True)
     add_l_row("1", L["skull_long"], data.get('skull_longitudinal'))
     add_l_row("2", L["skull_trans"], data.get('skull_transverse'))
@@ -419,9 +443,9 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     add_r_row("1", L["arm_l"], data.get('arm_length'))
     add_r_row("2", L["shoulder_l"], data.get('shoulder_length'))
     add_r_row("3", L["shoulder_w"], data.get('shoulder_width'))
-    add_r_row("4", L["arm_circ"], "")
-    add_r_row("", L["arm_circ_rest"], data.get('shoulder_circumference_rest'))
-    add_r_row("", L["arm_circ_flex"], data.get('shoulder_circumference_flexed'))
+    add_r_row("4", L["arm_circ"], data.get('arm_circumference_total') or data.get('shoulder_circumference_rest'))
+    add_r_row("a", L["arm_circ_rest"], data.get('shoulder_circumference_rest'))
+    add_r_row("b", L["arm_circ_flex"], data.get('shoulder_circumference_flexed'))
     add_r_row("5", L["forearm_l"], data.get('forearm_length'))
     add_r_row("6", L["hand_l"], data.get('hand_length'))
     add_r_row("7", L["dynamo"], data.get('dynamometry'))
@@ -431,6 +455,7 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     add_r_row("в", L["fat_sub"], data.get('fat_subscapular'))
     add_r_row("г", L["fat_iliac"], data.get('fat_iliac'))
     add_r_row("д", L["fat_pop"], data.get('fat_popliteal'))
+
     
     # Signature block at the bottom
     doc.add_paragraph().paragraph_format.space_before = Pt(10)

@@ -33,13 +33,6 @@ export default function InfoDetail() {
   const { t } = useLanguage();
 
   const styles = {
-    heroGradient: {
-      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #8b5cf6 50%, #ec4899 100%)`,
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
-      backgroundClip: "text",
-      fontWeight: 900,
-    },
     premiumCard: {
       background: alpha(theme.palette.background.paper, mode === "dark" ? 0.4 : 0.7),
       backdropFilter: "blur(20px) saturate(180%)",
@@ -84,11 +77,26 @@ export default function InfoDetail() {
         <Grid container spacing={6}>
           <Grid item xs={12} md={7}>
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <Typography variant="h2" sx={{ mb: 3, fontWeight: 900 }}>
-                MorphoCheck Pro —{" "}
-                <Box component="span" sx={styles.heroGradient}>
-                  {t("infoTitle")}
-                </Box>
+              <Typography
+                variant="h2"
+                sx={{
+                  mb: 3,
+                  fontWeight: 900,
+                  background: (theme) => `linear-gradient(to right, 
+                    #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000)`,
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                  animation: "rainbow 4s linear infinite",
+                  "@keyframes rainbow": {
+                    "0%": { backgroundPosition: "0% 50%" },
+                    "50%": { backgroundPosition: "100% 50%" },
+                    "100%": { backgroundPosition: "0% 50%" }
+                  }
+                }}
+              >
+                MorphoCheck Pro — {t("infoTitle")}
               </Typography>
               <Typography variant="h6" color="text.secondary" sx={{ mb: 6, opacity: 0.9 }}>
                 {t("infoSubtitle")}

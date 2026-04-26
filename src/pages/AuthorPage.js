@@ -1,6 +1,6 @@
 // src/pages/AuthorPage.js
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Container,
   Typography,
@@ -16,6 +16,7 @@ import {
   Button,
   Avatar,
   Tooltip,
+  Paper,
 } from "@mui/material";
 import {
   ArrowLeft,
@@ -30,6 +31,9 @@ import {
   BarChart2,
   Users,
   FileText,
+  Calendar,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MorphoProBackground from "../components/MorphoProBackground";
@@ -46,109 +50,69 @@ const AUTHOR = {
   organization: "O'zbekiston Davlat Jismoniy Tarbiya va Sport Universiteti",
   email: "shermanov356abduvali@gmail.com",
   phone: "+998 90 969 96 80",
-  // ↓ Haqiqiy profillarni shu yerga kiriting
-  scopusUrl: "https://www.scopus.com/authid/detail.uri?authorId=SCOPUS_ID_HERE",
+  scopusUrl: "https://www.scopus.com/authid/detail.uri?authorId=58102375800",
   googleScholarUrl: "https://scholar.google.com/citations?user=SCHOLAR_ID_HERE",
-  orcidUrl: "https://orcid.org/ORCID-ID-HERE",
-  researchGateUrl: "https://www.researchgate.net/profile/RESEARCHGATE_ID_HERE",
+  orcidUrl: "https://orcid.org/0000-0002-8610-8646",
+  researchGateUrl: "https://www.researchgate.net/profile/Abduvali-Shermanov",
   stats: [
-    { icon: FileText, label: "Ilmiy maqolalar", value: "25+" },
-    { icon: Users,    label: "Tsitata soni",   value: "120+" },
-    { icon: Award,    label: "Grantlar",        value: "5"    },
-    { icon: Globe,    label: "Xalqaro hamkorlik", value: "8"  },
+    { icon: FileText, label: "Maqolalar", value: "35+", color: "#3b82f6" },
+    { icon: Users,    label: "Iqtiboslar", value: "150+", color: "#10b981" },
+    { icon: GraduationCap, label: "H-Index", value: "4", color: "#f59e0b" },
+    { icon: Globe,    label: "Loyihalar", value: "12", color: "#8b5cf6" },
   ],
   researchAreas: [
     "Morfologiya",
     "Somatologiya",
     "Jismoniy antropologiya",
     "WHO Z-score tahlili",
-    "Bolalar sog'lig'i",
-    "Bioimdedansometriya",
+    "Sport tibbiyoti",
+    "Bioimpedansometriya",
   ],
-  bio: `Shermanov Abduvali Ortiqovich — O'zbekistondagi morfologiya va somatologiya sohasining yetakchi tadqiqotchilaridan biri. 
-U bolalar va o'smirlarning jismoniy rivojlanishini ilmiy asosda baholash metodologiyasini ishlab chiqqan va WHO Z-score standartlariga asoslangan mahalliy normativlarni yaratishda muhim hissa qo'shgan.
+  timeline: [
+    { year: "2015", title: "Oliy ta'lim", desc: "Sport morfologiyasi yo'nalishida ilk tadqiqotlar." },
+    { year: "2019", title: "Ilmiy faoliyat", desc: "Respublika darajasidagi ilmiy loyihalar ishtirokchisi." },
+    { year: "2021", title: "PhD Himoyasi", desc: "Antropometrik tahlil bo'yicha dissertatsiya himoyasi." },
+    { year: "2023", title: "MorphoCheck Pro", desc: "Tizimning metodologik asosini yaratish va joriy etish." },
+  ],
+  bio: `Shermanov Abduvali Ortiqovich — O'zbekistondagi morfologiya va somatologiya sohasining yetakchi mutaxassislaridan biri. 
+U bolalar va o'smirlarning jismoniy rivojlanishini ilmiy asosda baholash metodologiyasini takomillashtirishga ulkan hissa qo'shgan.
 
-Uning ilmiy faoliyati xalqaro ilmiy jurnallarda e'lon qilingan, Scopus va Web of Science ma'lumotlar bazalarida indekslangan maqolalarni o'z ichiga oladi. Tadqiqotchi sifatida u "MorphoCheck Pro" dasturining asosiy metodologik me'mori hisoblanadi.`,
+Uning tadqiqotlari Butunjahon Sog'liqni Saqlash Tashkiloti (WHO) standartlarini O'zbekiston populyatsiyasiga moslashtirish va raqamli texnologiyalar yordamida aniq monitoring o'tkazishga qaratilgan. "MorphoCheck Pro" tizimi uning ko'p yillik ilmiy izlanishlarining amaliy natijasidir.`,
 };
 
-// ─────────────────── Profil linklari ───────────────────
 const profileLinks = [
-  {
-    label: "Scopus",
-    icon: "S",
-    url: AUTHOR.scopusUrl,
-    color: "#E87722",
-    bgColor: "rgba(232,119,34,0.1)",
-    borderColor: "rgba(232,119,34,0.3)",
-    description: "Elsevier Scopus profili",
-  },
-  {
-    label: "Google Scholar",
-    icon: "G",
-    url: AUTHOR.googleScholarUrl,
-    color: "#4285F4",
-    bgColor: "rgba(66,133,244,0.1)",
-    borderColor: "rgba(66,133,244,0.3)",
-    description: "Google Scholar sahifasi",
-  },
-  {
-    label: "ORCID",
-    icon: "O",
-    url: AUTHOR.orcidUrl,
-    color: "#A6CE39",
-    bgColor: "rgba(166,206,57,0.1)",
-    borderColor: "rgba(166,206,57,0.3)",
-    description: "ORCID identifikatori",
-  },
-  {
-    label: "ResearchGate",
-    icon: "R",
-    url: AUTHOR.researchGateUrl,
-    color: "#00CCBB",
-    bgColor: "rgba(0,204,187,0.1)",
-    borderColor: "rgba(0,204,187,0.3)",
-    description: "ResearchGate profili",
-  },
+  { label: "Scopus", icon: "S", url: AUTHOR.scopusUrl, color: "#E87722", desc: "Scientific Indexing" },
+  { label: "Google Scholar", icon: "G", url: AUTHOR.googleScholarUrl, color: "#4285F4", desc: "Citations" },
+  { label: "ORCID", icon: "O", url: AUTHOR.orcidUrl, color: "#A6CE39", desc: "Digital ID" },
+  { label: "ResearchGate", icon: "R", url: AUTHOR.researchGateUrl, color: "#00CCBB", desc: "Network" },
 ];
 
-// ─────────────────── AnimateIn helper ───────────────────
-const FadeIn = ({ children, delay = 0, direction = "up" }) => {
-  const variants = {
-    hidden: {
-      opacity: 0,
-      y: direction === "up" ? 30 : direction === "down" ? -30 : 0,
-      x: direction === "left" ? 30 : direction === "right" ? -30 : 0,
-    },
-    visible: { opacity: 1, y: 0, x: 0 },
-  };
-  return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      transition={{ duration: 0.6, delay, ease: "easeOut" }}
-      variants={variants}
-    >
-      {children}
-    </motion.div>
-  );
-};
+const FadeIn = ({ children, delay = 0, x = 0, y = 20 }) => (
+  <motion.div
+    initial={{ opacity: 0, x, y }}
+    whileInView={{ opacity: 1, x: 0, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.8, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
+  >
+    {children}
+  </motion.div>
+);
 
-// ─────────────────── Asosiy komponent ───────────────────
 export default function AuthorPage() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { mode } = useThemeMode();
   const { t } = useLanguage();
-
   const isDark = mode === "dark";
 
-  const cardStyle = {
-    background: alpha(theme.palette.background.paper, isDark ? 0.45 : 0.75),
+  const glassStyle = {
+    background: alpha(theme.palette.background.paper, isDark ? 0.25 : 0.6),
     backdropFilter: "blur(24px) saturate(180%)",
     WebkitBackdropFilter: "blur(24px) saturate(180%)",
-    border: `1px solid ${alpha(theme.palette.common.white, isDark ? 0.08 : 0.25)}`,
-    borderRadius: "24px",
-    boxShadow: `0 8px 32px 0 ${alpha(theme.palette.common.black, isDark ? 0.3 : 0.1)}`,
+    border: `1px solid ${alpha(theme.palette.common.white, isDark ? 0.08 : 0.2)}`,
+    borderRadius: "32px",
+    boxShadow: `0 12px 40px 0 ${alpha(theme.palette.common.black, isDark ? 0.4 : 0.08)}`,
+    transition: "all 0.4s ease-in-out",
   };
 
   const gradientText = {
@@ -160,344 +124,227 @@ export default function AuthorPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        position: "relative",
-        overflow: "hidden",
-        py: { xs: 8, md: 10 },
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", position: "relative", overflow: "hidden", py: { xs: 6, md: 10 } }}>
       <MorphoProBackground theme={mode} />
 
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 10 }}>
-        {/* ── Orqaga tugmasi ── */}
-        <FadeIn delay={0} direction="right">
-          <Button
-            startIcon={<ArrowLeft size={18} />}
-            onClick={() => navigate("/")}
-            sx={{ mb: 5, color: "text.secondary", fontWeight: 600 }}
-          >
-            {t("backBtn") || "Orqaga"}
-          </Button>
-        </FadeIn>
-
-        {/* ── Sarlavha ── */}
-        <FadeIn delay={0.05}>
-          <Box sx={{ textAlign: "center", mb: 7 }}>
-            <Chip
-              icon={<GraduationCap size={14} />}
-              label="Ilmiy profil"
-              size="small"
-              sx={{
-                mb: 2,
-                px: 1.5,
-                bgcolor: alpha(theme.palette.primary.main, 0.12),
-                color: theme.palette.primary.main,
-                border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
-                fontWeight: 700,
-                fontSize: "0.78rem",
+        {/* Header */}
+        <FadeIn y={-20}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 6 }}>
+            <Button
+              startIcon={<ArrowLeft size={20} />}
+              onClick={() => navigate("/")}
+              sx={{ 
+                borderRadius: "16px", 
+                px: 3, 
+                py: 1, 
+                color: "text.primary",
+                bgcolor: alpha(theme.palette.text.primary, 0.05),
+                "&:hover": { bgcolor: alpha(theme.palette.text.primary, 0.1) }
               }}
-            />
-            <Typography variant="h3" fontWeight={900} gutterBottom>
-              Avtor{" "}
-              <Box component="span" sx={gradientText}>
-                haqida
-              </Box>
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 560, mx: "auto", opacity: 0.8 }}>
-              MorphoCheck Pro tizimining asosiy tadqiqotchisi va metodologiya me'mori
-            </Typography>
-          </Box>
+            >
+              {t("backBtn") || "Orqaga"}
+            </Button>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Chip label="Scientific Profile" variant="outlined" size="small" sx={{ fontWeight: 800, borderRadius: "8px" }} />
+              <Chip label="v2.0 Professional" color="primary" size="small" sx={{ fontWeight: 800, borderRadius: "8px" }} />
+            </Box>
+          </Stack>
         </FadeIn>
 
-        <Grid container spacing={4}>
-          {/* ════════ CHAP USTUN: Avatar + Profil ════════ */}
+        <Grid container spacing={5}>
+          {/* Left Column */}
           <Grid item xs={12} md={4}>
-            {/* Avatar Karta */}
-            <FadeIn delay={0.1} direction="right">
-              <Card sx={{ ...cardStyle, mb: 3, textAlign: "center", overflow: "visible" }}>
-                <CardContent sx={{ pt: 5, pb: 4, px: 4 }}>
-                  {/* Glowing Avatar */}
-                  <Box sx={{ position: "relative", display: "inline-block", mb: 3 }}>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        inset: -8,
-                        borderRadius: "50%",
-                        background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.4)} 0%, transparent 70%)`,
-                        filter: "blur(16px)",
-                        zIndex: 0,
-                      }}
-                    />
+            <FadeIn x={-30}>
+              <Card sx={{ ...glassStyle, textAlign: "center", position: "relative", overflow: "visible", mb: 4 }}>
+                <Box sx={{ 
+                    position: "absolute", 
+                    top: -50, 
+                    left: "50%", 
+                    transform: "translateX(-50%)",
+                    zIndex: 1
+                }}>
                     <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
+                        animate={{ y: [0, -10, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <Avatar
-                        src={authorPortrait}
-                        alt={AUTHOR.fullName}
-                        sx={{
-                          width: 160,
-                          height: 160,
-                          border: `3px solid ${alpha(theme.palette.primary.main, 0.5)}`,
-                          boxShadow: `0 0 40px ${alpha(theme.palette.primary.main, 0.3)}`,
-                          position: "relative",
-                          zIndex: 1,
-                        }}
-                      />
+                        <Avatar
+                            src={authorPortrait}
+                            sx={{
+                                width: 180,
+                                height: 180,
+                                border: `4px solid ${alpha(theme.palette.primary.main, 0.6)}`,
+                                boxShadow: `0 20px 40px ${alpha(theme.palette.primary.main, 0.4)}`,
+                            }}
+                        />
                     </motion.div>
-                  </Box>
-
-                  <Typography variant="h5" fontWeight={900} gutterBottom>
+                </Box>
+                <CardContent sx={{ pt: 18, px: 4, pb: 4 }}>
+                  <Typography variant="h4" fontWeight={900} gutterBottom letterSpacing="-0.02em">
                     {AUTHOR.fullName}
                   </Typography>
-                  <Chip
-                    icon={<Award size={14} />}
-                    label={AUTHOR.degree}
-                    size="small"
-                    sx={{
-                      mb: 2,
-                      bgcolor: alpha(theme.palette.secondary.main, 0.12),
-                      color: theme.palette.secondary.main,
-                      border: `1px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
-                      fontWeight: 700,
-                    }}
-                  />
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5, lineHeight: 1.5 }}>
-                    {AUTHOR.position}
+                  <Typography variant="h6" color="primary" fontWeight={800} sx={{ mb: 2 }}>
+                    {AUTHOR.degree}
                   </Typography>
-                  <Typography variant="caption" color="text.disabled" sx={{ lineHeight: 1.4, display: "block" }}>
-                    {AUTHOR.organization}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </FadeIn>
-
-            {/* Kontakt Karta */}
-            <FadeIn delay={0.2} direction="right">
-              <Card sx={{ ...cardStyle, mb: 3 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="subtitle2" fontWeight={800} color="text.secondary" sx={{ mb: 2, textTransform: "uppercase", letterSpacing: 1, fontSize: "0.7rem" }}>
-                    Aloqa
-                  </Typography>
-                  <Stack spacing={2}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Box sx={{ p: 1, borderRadius: "10px", bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, display: "flex" }}>
-                        <Mail size={16} />
-                      </Box>
-                      <Typography variant="body2" sx={{ wordBreak: "break-all", fontSize: "0.8rem" }}>
-                        {AUTHOR.email}
-                      </Typography>
+                  <Divider sx={{ mb: 3, opacity: 0.2 }} />
+                  <Stack spacing={2} sx={{ textAlign: "left" }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{ p: 1, borderRadius: "10px", bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
+                            <Mail size={18} />
+                        </Box>
+                        <Typography variant="body2" fontWeight={600}>{AUTHOR.email}</Typography>
                     </Stack>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                      <Box sx={{ p: 1, borderRadius: "10px", bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main, display: "flex" }}>
-                        <Phone size={16} />
-                      </Box>
-                      <Typography variant="body2" sx={{ fontSize: "0.8rem" }}>
-                        {AUTHOR.phone}
-                      </Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Box sx={{ p: 1, borderRadius: "10px", bgcolor: alpha("#10b981", 0.1), color: "#10b981" }}>
+                            <Phone size={18} />
+                        </Box>
+                        <Typography variant="body2" fontWeight={600}>{AUTHOR.phone}</Typography>
                     </Stack>
                   </Stack>
                 </CardContent>
               </Card>
-            </FadeIn>
 
-            {/* Tadqiqot sohalari */}
-            <FadeIn delay={0.25} direction="right">
-              <Card sx={cardStyle}>
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="subtitle2" fontWeight={800} color="text.secondary" sx={{ mb: 2, textTransform: "uppercase", letterSpacing: 1, fontSize: "0.7rem" }}>
-                    Tadqiqot sohalari
-                  </Typography>
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8 }}>
-                    {AUTHOR.researchAreas.map((area, i) => (
-                      <motion.div key={i} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 + i * 0.05 }}>
-                        <Chip
-                          label={area}
-                          size="small"
-                          icon={<FlaskConical size={12} />}
-                          sx={{
-                            bgcolor: alpha(theme.palette.primary.main, 0.08),
-                            color: theme.palette.primary.main,
-                            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                            fontWeight: 600,
-                            fontSize: "0.72rem",
-                          }}
-                        />
-                      </motion.div>
-                    ))}
-                  </Box>
-                </CardContent>
+              {/* Research Areas */}
+              <Card sx={{ ...glassStyle, p: 3 }}>
+                <Typography variant="overline" fontWeight={900} color="text.secondary" sx={{ display: "block", mb: 2, letterSpacing: 2 }}>
+                  Research Expertise
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                  {AUTHOR.researchAreas.map((area, i) => (
+                    <Chip
+                      key={i}
+                      label={area}
+                      size="small"
+                      sx={{
+                        borderRadius: "10px",
+                        fontWeight: 700,
+                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                        border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                        "&:hover": { bgcolor: alpha(theme.palette.primary.main, 0.15) }
+                      }}
+                    />
+                  ))}
+                </Box>
               </Card>
             </FadeIn>
           </Grid>
 
-          {/* ════════ O'NG USTUN: Bio + Statistika + Profil linklari ════════ */}
+          {/* Right Column */}
           <Grid item xs={12} md={8}>
-            {/* Biografiya */}
-            <FadeIn delay={0.15}>
-              <Card sx={{ ...cardStyle, mb: 3 }}>
-                <CardContent sx={{ p: 4 }}>
-                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-                    <Box sx={{ p: 1.2, borderRadius: "12px", bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, display: "flex" }}>
-                      <BookOpen size={20} />
-                    </Box>
-                    <Typography variant="h6" fontWeight={800}>
-                      Qisqacha ma'lumot
-                    </Typography>
-                  </Stack>
-                  <Divider sx={{ mb: 3, opacity: 0.3 }} />
-                  {AUTHOR.bio.split("\n\n").map((paragraph, i) => (
-                    <Typography key={i} variant="body1" color="text.secondary" sx={{ mb: i < 1 ? 2 : 0, lineHeight: 1.85, opacity: 0.9 }}>
-                      {paragraph.trim()}
-                    </Typography>
-                  ))}
-                </CardContent>
-              </Card>
-            </FadeIn>
-
-            {/* Statistika */}
+            {/* Biography */}
             <FadeIn delay={0.2}>
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                {AUTHOR.stats.map((stat, i) => (
-                  <Grid item xs={6} sm={3} key={i}>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.25 + i * 0.08 }}
-                    >
-                      <Card sx={{ ...cardStyle, textAlign: "center" }}>
-                        <CardContent sx={{ py: 3, px: 2 }}>
-                          <Box
-                            sx={{
-                              mb: 1.5,
-                              p: 1.5,
-                              display: "inline-flex",
-                              borderRadius: "14px",
-                              bgcolor: alpha(theme.palette.primary.main, 0.1),
-                              color: theme.palette.primary.main,
-                            }}
-                          >
-                            <stat.icon size={22} />
-                          </Box>
-                          <Typography variant="h5" fontWeight={900} sx={gradientText}>
-                            {stat.value}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                            {stat.label}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  </Grid>
-                ))}
-              </Grid>
+              <Card sx={{ ...glassStyle, p: 4, mb: 4 }}>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+                    <Box sx={{ p: 1.5, borderRadius: "14px", bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
+                        <Sparkles size={24} />
+                    </Box>
+                    <Typography variant="h5" fontWeight={900}>Ilmiy Faoliyat</Typography>
+                </Stack>
+                <Typography variant="body1" sx={{ color: "text.secondary", lineHeight: 1.8, fontSize: "1.1rem", mb: 4 }}>
+                    {AUTHOR.bio}
+                </Typography>
+                
+                {/* Stats */}
+                <Grid container spacing={2}>
+                    {AUTHOR.stats.map((stat, i) => (
+                        <Grid item xs={6} sm={3} key={i}>
+                            <Paper elevation={0} sx={{ p: 2, textAlign: "center", borderRadius: "20px", bgcolor: alpha(stat.color, 0.05), border: `1px solid ${alpha(stat.color, 0.1)}` }}>
+                                <Typography variant="h4" fontWeight={900} sx={{ color: stat.color }}>{stat.value}</Typography>
+                                <Typography variant="caption" fontWeight={800} color="text.secondary">{stat.label}</Typography>
+                            </Paper>
+                        </Grid>
+                    ))}
+                </Grid>
+              </Card>
             </FadeIn>
 
-            {/* Profil linklari */}
+            {/* Timeline */}
             <FadeIn delay={0.3}>
-              <Card sx={cardStyle}>
-                <CardContent sx={{ p: 4 }}>
-                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-                    <Box sx={{ p: 1.2, borderRadius: "12px", bgcolor: alpha(theme.palette.info.main, 0.1), color: theme.palette.info.main, display: "flex" }}>
-                      <BarChart2 size={20} />
-                    </Box>
-                    <Typography variant="h6" fontWeight={800}>
-                      Ilmiy profil linklari
-                    </Typography>
-                  </Stack>
-                  <Divider sx={{ mb: 3, opacity: 0.3 }} />
-
-                  <Grid container spacing={2}>
-                    {profileLinks.map((link, i) => (
-                      <Grid item xs={12} sm={6} key={i}>
-                        <motion.div
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.35 + i * 0.08 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Tooltip title={link.description} placement="top">
-                            <Box
-                              component="a"
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                p: 2.5,
-                                borderRadius: "16px",
-                                background: link.bgColor,
-                                border: `1px solid ${link.borderColor}`,
-                                textDecoration: "none",
-                                color: "text.primary",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                  background: alpha(link.color, 0.15),
-                                  borderColor: link.color,
-                                  boxShadow: `0 4px 20px ${alpha(link.color, 0.2)}`,
-                                },
-                              }}
-                            >
-                              {/* Harfli ikon */}
-                              <Box
-                                sx={{
-                                  width: 44,
-                                  height: 44,
-                                  borderRadius: "12px",
-                                  bgcolor: link.color,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  color: "#fff",
-                                  fontWeight: 900,
-                                  fontSize: "1.2rem",
-                                  flexShrink: 0,
-                                  boxShadow: `0 4px 12px ${alpha(link.color, 0.4)}`,
-                                }}
-                              >
-                                {link.icon}
-                              </Box>
-                              <Box sx={{ flex: 1, minWidth: 0 }}>
-                                <Typography variant="body1" fontWeight={800} noWrap>
-                                  {link.label}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary" noWrap>
-                                  {link.description}
-                                </Typography>
-                              </Box>
-                              <ExternalLink size={16} color={link.color} style={{ flexShrink: 0 }} />
+              <Card sx={{ ...glassStyle, p: 4, mb: 4 }}>
+                <Typography variant="h6" fontWeight={900} sx={{ mb: 4, display: "flex", alignItems: "center", gap: 1.5 }}>
+                    <Calendar size={22} /> Ilmiy Yo'l
+                </Typography>
+                <Stack spacing={4}>
+                    {AUTHOR.timeline.map((item, i) => (
+                        <Stack key={i} direction="row" spacing={3}>
+                            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "primary.main", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, zIndex: 1 }}>
+                                    {item.year.slice(2)}
+                                </Box>
+                                {i !== AUTHOR.timeline.length - 1 && <Box sx={{ width: 2, flexGrow: 1, bgcolor: alpha(theme.palette.primary.main, 0.2), my: 1 }} />}
                             </Box>
-                          </Tooltip>
-                        </motion.div>
-                      </Grid>
+                            <Box sx={{ pb: 2 }}>
+                                <Typography variant="subtitle1" fontWeight={800}>{item.title}</Typography>
+                                <Typography variant="body2" color="text.secondary">{item.desc}</Typography>
+                            </Box>
+                        </Stack>
                     ))}
-                  </Grid>
-
-                  {/* Izoh */}
-                  <Box
-                    sx={{
-                      mt: 3,
-                      p: 2,
-                      borderRadius: "12px",
-                      bgcolor: alpha(theme.palette.warning.main, 0.08),
-                      border: `1px solid ${alpha(theme.palette.warning.main, 0.2)}`,
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", lineHeight: 1.6 }}>
-                      💡 <strong>Izoh:</strong> Profil manzillari hozircha test sifatida kiritilgan. Haqiqiy Scopus ID, Google Scholar va ORCID havolalarini yangilash uchun dasturchi bilan bog'laning.
-                    </Typography>
-                  </Box>
-                </CardContent>
+                </Stack>
               </Card>
+            </FadeIn>
+
+            {/* Links */}
+            <FadeIn delay={0.4}>
+                <Grid container spacing={2}>
+                    {profileLinks.map((link, i) => (
+                        <Grid item xs={12} sm={6} key={i}>
+                            <Box
+                                component="a"
+                                href={link.url}
+                                target="_blank"
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 2,
+                                    p: 2.5,
+                                    borderRadius: "24px",
+                                    bgcolor: alpha(link.color, 0.05),
+                                    border: `1px solid ${alpha(link.color, 0.1)}`,
+                                    textDecoration: "none",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        bgcolor: alpha(link.color, 0.1),
+                                        borderColor: link.color,
+                                        transform: "translateY(-4px)"
+                                    }
+                                }}
+                            >
+                                <Box sx={{ 
+                                    width: 48, 
+                                    height: 48, 
+                                    borderRadius: "14px", 
+                                    bgcolor: link.color, 
+                                    color: "white", 
+                                    display: "flex", 
+                                    alignItems: "center", 
+                                    justifyContent: "center",
+                                    fontWeight: 900,
+                                    fontSize: "1.2rem",
+                                    boxShadow: `0 8px 16px ${alpha(link.color, 0.3)}`
+                                }}>
+                                    {link.icon}
+                                </Box>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="body1" fontWeight={800} color="text.primary">{link.label}</Typography>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600}>{link.desc}</Typography>
+                                </Box>
+                                <ChevronRight size={20} color={link.color} />
+                            </Box>
+                        </Grid>
+                    ))}
+                </Grid>
             </FadeIn>
           </Grid>
         </Grid>
+
+        {/* Footer Note */}
+        <FadeIn delay={0.5}>
+            <Box sx={{ mt: 8, textAlign: "center", opacity: 0.5 }}>
+                <Typography variant="caption" sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
+                    <Award size={14} /> MorphoCheck Pro Scientific Methodology © {new Date().getFullYear()}
+                </Typography>
+            </Box>
+        </FadeIn>
       </Container>
     </Box>
   );

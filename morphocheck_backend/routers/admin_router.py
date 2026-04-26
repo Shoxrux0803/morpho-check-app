@@ -2,12 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, Header, Query, File, Uplo
 from models.audit import AuditLog
 from utils.audit_helper import record_audit_log
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, or_, asc, desc, cast, Date
+from sqlalchemy import func, or_, asc, desc, cast, Date, case
 from datetime import datetime, date, timedelta
 from typing import Optional, List
 
 import os
 import logging
+import numpy as np
 from io import BytesIO
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -259,8 +260,9 @@ def delete_user(
     if not user:
         raise HTTPException(404, "User not found")
     
-    user_name = user.name
-    db.delete(user)
+    user.is_deleted = 1
+    user.deleted_at = datetime.utcnow()
+    user.deleted_by_id = current_admin.id
     db.commit()
     
     # Audit Log
@@ -270,7 +272,7 @@ def delete_user(
         action="DELETE",
         target_type="User",
         target_id=user_id,
-        details=f"Foydalanuvchi o'chirildi: {user_name}",
+        details=f"Foydalanuvchi o'chirildi: {user.name}",
         request=request
     )
     
@@ -702,37 +704,63 @@ def stats(
     total_analyses = analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
     total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
     
-    # Additional Stats
+    # Combined Query for Distribution Stats (Optimization)
     today_start = datetime.combine(date.today(), datetime.min.time())
-    today_analyses = analysis_q.filter(PatientAnalysis.created_at >= today_start).count()
+    current_month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
     
-    avg_bmi = analysis_q.with_entities(func.avg(PatientAnalysis.bmi)).scalar() or 0
+    dist_stats = analysis_q.with_entities(
+        func.count(case(((PatientAnalysis.bmi < 18.5), 1))).label("bmi_underweight"),
+        func.count(case(((PatientAnalysis.bmi >= 18.5) & (PatientAnalysis.bmi < 25), 1))).label("bmi_normal"),
+        func.count(case(((PatientAnalysis.bmi >= 25) & (PatientAnalysis.bmi < 30), 1))).label("bmi_overweight"),
+        func.count(case(((PatientAnalysis.bmi >= 30), 1))).label("bmi_obese"),
+        func.count(case(((PatientAnalysis.age <= 6), 1))).label("age_0_6"),
+        func.count(case(((PatientAnalysis.age > 6) & (PatientAnalysis.age <= 12), 1))).label("age_7_12"),
+        func.count(case(((PatientAnalysis.age > 12) & (PatientAnalysis.age <= 18), 1))).label("age_13_18"),
+        func.count(case(((PatientAnalysis.age > 18), 1))).label("age_18_plus"),
+        func.count(case(((PatientAnalysis.created_at >= today_start), 1))).label("today_count"),
+        func.count(case(((PatientAnalysis.created_at >= current_month_start), 1))).label("monthly_count"),
+        func.avg(PatientAnalysis.bmi).label("avg_bmi")
+    ).first()
 
-    
-    # BMI Distribution
-    bmi_dist = {
-        "underweight": analysis_q.filter(PatientAnalysis.bmi < 18.5).count(),
-        "normal": analysis_q.filter(PatientAnalysis.bmi >= 18.5, PatientAnalysis.bmi < 25).count(),
-        "overweight": analysis_q.filter(PatientAnalysis.bmi >= 25, PatientAnalysis.bmi < 30).count(),
-        "obese": analysis_q.filter(PatientAnalysis.bmi >= 30).count(),
-    }
+    if not dist_stats:
+        avg_bmi = 0
+        bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
+        age_groups = [{"name": "0-6", "value": 0}, {"name": "7-12", "value": 0}, {"name": "13-18", "value": 0}, {"name": "18+", "value": 0}]
+        today_analyses = 0
+        monthly_analyses = 0
+    else:
+        avg_bmi = dist_stats.avg_bmi or 0
+        bmi_dist = {
+            "underweight": dist_stats.bmi_underweight or 0,
+            "normal": dist_stats.bmi_normal or 0,
+            "overweight": dist_stats.bmi_overweight or 0,
+            "obese": dist_stats.bmi_obese or 0,
+        }
+        age_groups = [
+            {"name": "0-6", "value": dist_stats.age_0_6 or 0},
+            {"name": "7-12", "value": dist_stats.age_7_12 or 0},
+            {"name": "13-18", "value": dist_stats.age_13_18 or 0},
+            {"name": "18+", "value": dist_stats.age_18_plus or 0},
+        ]
+        today_analyses = dist_stats.today_count or 0
+        monthly_analyses = dist_stats.monthly_count or 0
 
     # Somatotype Average Approximation (for Radar Chart)
-    # We'll use fat_percent for endo, muscle_mass/weight for meso, and height/weight ratio for ecto
-    # Normalized to a 1-7 scale for the radar chart
     avg_fat = analysis_q.with_entities(func.avg(PatientAnalysis.fat_percent)).scalar() or 20
-    avg_muscle = analysis_q.with_entities(func.avg(PatientAnalysis.muscle_mass / PatientAnalysis.weight)).scalar() or 0.4
+    # Use NULLIF to prevent ZeroDivisionError
+    avg_muscle = analysis_q.with_entities(
+        func.avg(PatientAnalysis.muscle_mass / func.nullif(PatientAnalysis.weight, 0))
+    ).scalar() or 0.4
     
     # Ectomorphy approximation using Reciprocal Ponderal Index (RPI) = height / weight^(1/3)
-    # RPI > 40 is roughly 1-7 scale
     rpi_avg = analysis_q.with_entities(
-        func.avg(PatientAnalysis.height / func.pow(PatientAnalysis.weight, 1/3))
+        func.avg(PatientAnalysis.height / func.nullif(func.pow(PatientAnalysis.weight, 1.0/3.0), 0))
     ).scalar() or 40
 
     somato_avg = {
-        "endomorph": min(7, max(1, (avg_fat / 5))),          # 20% fat ~ 4.0
-        "mesomorph": min(7, max(1, (avg_muscle * 10))),      # 40% muscle/weight ~ 4.0
-        "ectomorph": min(7, max(1, (rpi_avg - 36) / 2)),     # RPI 44 ~ 4.0
+        "endomorph": min(7, max(1, (avg_fat / 5))),
+        "mesomorph": min(7, max(1, (avg_muscle * 10))),
+        "ectomorph": min(7, max(1, (rpi_avg - 36) / 2)),
     }
 
     # Gender Distribution
@@ -747,9 +775,7 @@ def stats(
             gender_map["noma'lum"] += int(c)
             continue
         gl = g.lower()
-        # Robust check for male variants
         is_male = gl in ['erkak', 'male', 'boy', 'm', 'male'] or "o'g'il" in gl or "о'ғил" in gl or 'муж' in gl
-        # Robust check for female variants
         is_female = gl in ['ayol', 'female', 'girl', 'f'] or 'qiz' in gl or 'қиз' in gl or 'жен' in gl
         
         if is_male:
@@ -766,15 +792,6 @@ def stats(
         .all()
     )
     somatotype_map = {s or "Noma'lum": int(c) for s, c in somatotype_counts}
-
-    # Age Groups
-    # 0-6 (Maktabgacha), 7-12 (Boshlang'ich), 13-18 (O'smir), 18+ (Katta)
-    age_groups = [
-        {"name": "0-6", "value": analysis_q.filter(PatientAnalysis.age <= 6).count()},
-        {"name": "7-12", "value": analysis_q.filter(PatientAnalysis.age > 6, PatientAnalysis.age <= 12).count()},
-        {"name": "13-18", "value": analysis_q.filter(PatientAnalysis.age > 12, PatientAnalysis.age <= 18).count()},
-        {"name": "18+", "value": analysis_q.filter(PatientAnalysis.age > 18).count()},
-    ]
 
     # Regional Distribution
     regional_counts = (
@@ -801,16 +818,112 @@ def stats(
             for m, c, b in trend_counts
         ][-12:]
         
-        # Calculate monthly average count
         monthly_avg = sum(item["count"] for item in monthly_trend) / len(monthly_trend) if monthly_trend else 0
     except Exception as e:
         logger.error(f"Monthly trend error: {e}")
         monthly_trend = []
         monthly_avg = 0
 
-    # Calculate monthly growth (current month analyses)
-    current_month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
-    monthly_analyses = analysis_q.filter(PatientAnalysis.created_at >= current_month_start).count()
+    # --- 🔬 Advanced Scientific Analysis & Risk Groups ---
+    # Fetch data for calculations (only what's needed)
+    sci_rows = analysis_q.with_entities(
+        PatientAnalysis.age,
+        PatientAnalysis.height,
+        PatientAnalysis.weight,
+        PatientAnalysis.bmi,
+        PatientAnalysis.chest,
+        PatientAnalysis.z_score
+    ).all()
+    
+    # Initialize response fields
+    bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
+    bmi_histogram = []
+    percentile_data = []
+    z_score_dist = []
+    corr_matrix = []
+    
+    if sci_rows:
+        # Robustly extract data as numpy arrays
+        # row objects from with_entities are like named tuples
+        ages = np.array([float(r[0] or 0) for r in sci_rows])
+        heights = np.array([float(r[1] or 0) for r in sci_rows])
+        weights = np.array([float(r[2] or 0) for r in sci_rows])
+        bmis = np.array([float(r[3] or 0) for r in sci_rows])
+        chests = np.array([float(r[4] or 0) for r in sci_rows])
+        z_vals = np.array([float(r[5] or 0) for r in sci_rows])
+        
+        # A. Scientific BMI Distribution (Risk Groups)
+        # Uses age-appropriate criteria: Z-score for children (<19), BMI for adults
+        for i in range(len(sci_rows)):
+            a, z, b = ages[i], z_vals[i], bmis[i]
+            if a < 19:
+                if z < -2: bmi_dist["underweight"] += 1
+                elif z <= 1: bmi_dist["normal"] += 1
+                elif z <= 2: bmi_dist["overweight"] += 1
+                else: bmi_dist["obese"] += 1
+            else:
+                if b < 18.5: bmi_dist["underweight"] += 1
+                elif b < 25: bmi_dist["normal"] += 1
+                elif b < 30: bmi_dist["overweight"] += 1
+                else: bmi_dist["obese"] += 1
+
+        # B. Real Percentiles
+        try:
+            for p in [10, 25, 50, 75, 90]:
+                percentile_data.append({
+                    "percentile": f"P{p}",
+                    "bmi": round(float(np.percentile(bmis, p)), 1),
+                    "height": round(float(np.percentile(heights, p)), 1),
+                    "weight": round(float(np.percentile(weights, p)), 1)
+                })
+        except: pass
+            
+        # C. BMI Histogram (Traditional ranges)
+        hist_ranges = [
+            ("<16", 0, 16), ("16-18.5", 16, 18.5), ("18.5-25", 18.5, 25),
+            ("25-30", 25, 30), ("30-35", 30, 35), ("35-40", 35, 40), (">40", 40, 999)
+        ]
+        for label, low, high in hist_ranges:
+            count = np.sum((bmis >= low) & (bmis < high))
+            bmi_histogram.append({"range": label, "count": int(count)})
+            
+        # D. Correlation Matrix
+        try:
+            matrix_data = np.stack([bmis, ages, heights, weights, chests], axis=0)
+            corr = np.corrcoef(matrix_data)
+            labels = ["BMI", "Yosh", "Bo'y", "Vazn", "Ko'krak"]
+            for i, label in enumerate(labels):
+                row_data = {"param": label}
+                for j, target_label in enumerate(labels):
+                    key = target_label.lower().replace("'", "").replace("o'", "o").replace("u'", "u").replace(" ", "_")
+                    if "krak" in key: key = "ko_krak"
+                    val = corr[i, j]
+                    # Handle NaN values for JSON serialization
+                    row_data[key] = float(val) if not np.isnan(val) else 0.0
+                corr_matrix.append(row_data)
+        except Exception as e:
+            logger.error(f"Correlation matrix error: {e}")
+            pass
+
+        # E. Z-Score Distribution (WHO-standard bins)
+        # Using standard sigma labels, ensuring they are valid UTF-8
+        z_bins = [
+            ("< -2 SD", -999, -2, -2.5),
+            ("-2 SD — -1 SD", -2, -1, -1.5),
+            ("-1 SD — 0 (Norm-)", -1, 0, -0.5),
+            ("0 — +1 SD (Norm+)", 0, 1, 0.5),
+            ("+1 SD — +2 SD", 1, 2, 1.5),
+            ("> +2 SD (Risk)", 2, 999, 2.5)
+        ]
+        total_n = len(z_vals)
+        for label, low, high, mid_z in z_bins:
+            count = np.sum((z_vals >= low) & (z_vals < high))
+            z_score_dist.append({
+                "category": label,
+                "count": int(count),
+                "pct": round(float(count / total_n * 100), 1) if total_n > 0 else 0,
+                "zscore": mid_z
+            })
 
     return {
         "total_users": int(total_users),
@@ -827,6 +940,11 @@ def stats(
         "by_age_group": age_groups,
         "by_region": regional_data,
         "monthly_trend": monthly_trend,
+        # Advanced fields for ScientificAnalysis.js
+        "bmi_histogram": bmi_histogram,
+        "percentile_data": percentile_data,
+        "z_score_distribution": z_score_dist,
+        "correlation_matrix": corr_matrix
     }
 
 

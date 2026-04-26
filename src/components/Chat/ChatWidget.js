@@ -40,6 +40,9 @@ const ChatWidget = () => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  
+  const API_BASE = (process.env.REACT_APP_API_URL || 'http://localhost:8000/api').replace('/api', '');
   
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -195,7 +198,13 @@ const ChatWidget = () => {
   };
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
+    let file = null;
+    if (e.target && e.target.files) {
+      file = e.target.files[0];
+    } else if (e instanceof File) {
+      file = e;
+    }
+    
     if (!file) return;
     setIsUploading(true);
     try {
@@ -206,6 +215,24 @@ const ChatWidget = () => {
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      handleFileUpload(files[0]);
     }
   };
 
@@ -411,8 +438,32 @@ const ChatWidget = () => {
                     exit={{ x: 20, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                     onAnimationComplete={() => scrollToBottom("auto")}
-                    style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+                    style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}
+                    onDragOver={onDragOver}
+                    onDragLeave={onDragLeave}
+                    onDrop={onDrop}
                   >
+                    {isDragOver && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,123,255,0.1)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 100,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        border: '2px dashed #007bff',
+                        margin: '10px',
+                        borderRadius: '16px',
+                        color: '#007bff',
+                        pointerEvents: 'none'
+                      }}>
+                        <i className="bi bi-cloud-arrow-up-fill" style={{ fontSize: '48px' }}></i>
+                        <div style={{ fontWeight: '700', marginTop: '10px' }}>Faylni shu yerga tashlang</div>
+                      </div>
+                    )}
                     <div style={{ flex: 1, overflowY: 'auto', padding: '15px' }}>
                       {messages.map((msg, i) => (
                         <motion.div 
@@ -434,8 +485,69 @@ const ChatWidget = () => {
                             textAlign: 'left'
                           }}>
                             {msg.file_url && (
-                              <div style={{ marginBottom: '8px' }}>
-                                <img src={`http://localhost:8000${msg.file_url}`} alt="file" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                              <div style={{ marginBottom: '8px', maxWidth: '100%' }}>
+                                {isImage(msg.file_url) ? (
+                                  <a href={`${API_BASE}${msg.file_url}`} target="_blank" rel="noreferrer">
+                                    <img 
+                                      src={`${API_BASE}${msg.file_url}`} 
+                                      alt="file" 
+                                      style={{ maxWidth: '100%', borderRadius: '12px', border: isDark ? '1px solid #444' : '1px solid #eee' }} 
+                                    />
+                                  </a>
+                                ) : (
+                                  <div style={{ 
+                                    background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', 
+                                    padding: '12px', 
+                                    borderRadius: '12px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '12px',
+                                    border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)'
+                                  }}>
+                                    <div style={{ 
+                                      width: '40px', 
+                                      height: '40px', 
+                                      borderRadius: '10px', 
+                                      background: msg.sender_id === user.id ? 'rgba(255,255,255,0.2)' : '#007bff', 
+                                      display: 'flex', 
+                                      justifyContent: 'center', 
+                                      alignItems: 'center',
+                                      color: '#fff',
+                                      fontSize: '20px'
+                                    }}>
+                                      <i className={`bi ${getFileIcon(msg.file_url)}`}></i>
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                      <div style={{ 
+                                        fontSize: '13px', 
+                                        fontWeight: '600', 
+                                        whiteSpace: 'nowrap', 
+                                        overflow: 'hidden', 
+                                        textOverflow: 'ellipsis',
+                                        color: msg.sender_id === user.id ? '#fff' : (isDark ? '#eee' : '#333')
+                                      }}>
+                                        {msg.content.replace('Fayl: ', '')}
+                                      </div>
+                                      <a 
+                                        href={`${API_BASE}${msg.file_url}`} 
+                                        download 
+                                        target="_blank" 
+                                        rel="noreferrer"
+                                        style={{ 
+                                          fontSize: '11px', 
+                                          color: msg.sender_id === user.id ? 'rgba(255,255,255,0.8)' : '#007bff', 
+                                          textDecoration: 'none',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '4px',
+                                          marginTop: '2px'
+                                        }}
+                                      >
+                                        <i className="bi bi-download"></i> Yuklab olish
+                                      </a>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
                             {msg.content}
@@ -532,6 +644,28 @@ const formatTime = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+const isImage = (url) => {
+  if (!url) return false;
+  const ext = url.split('.').pop().toLowerCase();
+  return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext);
+};
+
+const getFileIcon = (url) => {
+  if (!url) return 'bi-file-earmark';
+  const ext = url.split('.').pop().toLowerCase();
+  switch (ext) {
+    case 'pdf': return 'bi-file-earmark-pdf-fill';
+    case 'doc':
+    case 'docx': return 'bi-file-earmark-word-fill';
+    case 'xls':
+    case 'xlsx': return 'bi-file-earmark-excel-fill';
+    case 'zip':
+    case 'rar':
+    case '7z': return 'bi-file-earmark-zip-fill';
+    default: return 'bi-file-earmark-fill';
+  }
 };
 
 export default ChatWidget;

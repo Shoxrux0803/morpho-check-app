@@ -99,9 +99,13 @@ export default function MorphoCheckPro() {
         months += 12;
       }
 
+      if (years < 0) {
+        setFormData(prev => ({ ...prev, age: "", ageMonths: 0, ageDays: 0 }));
+        return;
+      }
+
       if (
-        (formData.age !== years || formData.ageMonths !== months || formData.ageDays !== days) &&
-        years >= 0
+        (formData.age !== years || formData.ageMonths !== months || formData.ageDays !== days)
       ) {
         setFormData((prev) => ({
           ...prev,
@@ -113,7 +117,7 @@ export default function MorphoCheckPro() {
     }
   }, [formData.birthDate, formData.examinationDate]);
 
-  const numericFields = ["age", "height", "weight", "chest", "waist", "head"];
+  const numericFields = ["age", "height", "weight", "chest", "waist", "head", "fatherHeight", "motherHeight"];
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const v = numericFields.includes(name) && value !== "" ? Number(value) : value;
@@ -154,6 +158,8 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
+        fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
+        motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || "Noma'lum",
         preschoolInstitution: formData.preschoolInstitution || "Noma'lum",
@@ -223,6 +229,8 @@ export default function MorphoCheckPro() {
       chest: "",
       waist: "",
       head: "",
+      fatherHeight: "",
+      motherHeight: "",
       shoulderLength: "",
       shoulderBreadth: "",
       shoulderCircumference: "",
@@ -268,6 +276,8 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
+        fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
+        motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -328,6 +338,8 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
+        fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
+        motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),

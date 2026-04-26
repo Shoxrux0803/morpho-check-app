@@ -487,8 +487,11 @@ export const AdminApi = {
           queryParams.append(key, value.toString());
         }
       });
+      queryParams.set("show_deleted", "true");
+      if (!queryParams.has("page_size")) queryParams.set("page_size", "50");
+      
       const resp = await fetch(
-        `${API_BASE}${API_PREFIX}/admin/deleted-analyses?${queryParams.toString()}`,
+        `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
         {
           method: "GET",
           headers: {
@@ -747,6 +750,36 @@ export const AdminApi = {
 
       const data = await resp.json();
       return data;
+    },
+
+    deletedList: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/deleted`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+
+    restore: async (id) => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/${id}/restore`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
     },
   },
 

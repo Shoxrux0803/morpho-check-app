@@ -608,7 +608,7 @@ def analyze_and_store_raw(
 
 
 @router.post("/full", response_model=Dict[str, Any], tags=["Tahlil"])
-async def analyze_full(
+def analyze_full(
     data: PatientData,
     request: Request,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
@@ -648,7 +648,7 @@ async def analyze_full(
             "father_height": float(data.father_height) if data.father_height else None,
             "mother_height": float(data.mother_height) if data.mother_height else None
         }
-        ml_predictions = get_ml_predictions(ml_data_for_pred)
+        ml_predictions = get_ml_predictions(ml_data_for_pred, lang=lang)
         
         clean_region, clean_district = _split_region_and_district(data.region, getattr(data, "district", None))
 
@@ -767,7 +767,9 @@ async def analyze_full(
                 "gender": gender_norm,
                 "region": clean_region,
                 "district": clean_district,
-                "address": data.address
+                "address": data.address,
+                "birth_date": data.birth_date,
+                "examination_date": data.examination_date
             },
             "measurements": {
                 "height": data.height,

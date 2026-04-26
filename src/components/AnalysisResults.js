@@ -173,6 +173,13 @@ export default function AnalysisResults({
                 {ageText} {t("yearsOld")}, {genderText}
                 {regionText ? ` | ${regionText}` : ""}
               </Typography>
+              {(patientInfo?.birth_date || patientInfo?.examination_date) && (
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {patientInfo?.birth_date && `${t("birthDateLabel")}: ${new Date(patientInfo.birth_date).toLocaleDateString(lang)}`}
+                  {patientInfo?.birth_date && patientInfo?.examination_date && " | "}
+                  {patientInfo?.examination_date && `${t("examDateLabel")}: ${new Date(patientInfo.examination_date).toLocaleDateString(lang)}`}
+                </Typography>
+              )}
             </Box>
           </Stack>
 
@@ -431,6 +438,25 @@ export default function AnalysisResults({
                     <Typography variant="caption" color="text.secondary">
                       {t("bodyLengthZScore")}: <b>{analysis.indices.z_body_length}</b>
                     </Typography>
+                  </Box>
+                )}
+                {(formData.fatherHeight || formData.motherHeight || patientInfo?.father_height || patientInfo?.mother_height) && (
+                  <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" sx={{ mb: 0.5 }}>
+                      {t("territorialData")} (Parents):
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                      {(formData.fatherHeight || patientInfo?.father_height) && (
+                        <Typography variant="caption" color="text.secondary">
+                          {t("fatherHeightLabel")}: <b>{formData.fatherHeight || patientInfo?.father_height} sm</b>
+                        </Typography>
+                      )}
+                      {(formData.motherHeight || patientInfo?.mother_height) && (
+                        <Typography variant="caption" color="text.secondary">
+                          {t("motherHeightLabel")}: <b>{formData.motherHeight || patientInfo?.mother_height} sm</b>
+                        </Typography>
+                      )}
+                    </Stack>
                   </Box>
                 )}
               </Box>

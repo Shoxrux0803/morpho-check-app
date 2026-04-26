@@ -11,17 +11,20 @@ import {
   IconButton, Button, FormControl, InputLabel, Select, MenuItem, Dialog, 
   DialogTitle, DialogContent, DialogActions, LinearProgress, Alert, useTheme, 
   useMediaQuery, CircularProgress, Table, TableBody, TableCell, TableContainer, 
-  TableHead, TableRow, TablePagination, TextField, InputAdornment, Stack, Avatar
+  TableHead, TableRow, TablePagination, TextField, InputAdornment, Stack, Avatar,
+  Tooltip
 } from "@mui/material";
 import {
   Delete, Download, FilterList, Close, Dashboard as DashboardIcon, 
-  List as ListIcon, Lock, Person, Visibility, VisibilityOff, Assessment
+  List as ListIcon, Lock, Person, Visibility, VisibilityOff, Assessment,
+  BiotechOutlined, Logout, Refresh
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 
 // Modular Components
 import AdminDashboard from "../components/Dashboard/AdminDashboard";
+import AdminScientificAnalysis from "../components/Dashboard/AdminScientificAnalysis";
 import AdminFilters from "../components/Admin/AdminFilters";
 import AdminTable from "../components/Admin/AdminTable";
 import InputForm from "../components/InputForm";
@@ -261,6 +264,7 @@ export default function AdminPage() {
     const { name, value } = e.target;
     const numericFields = [
       "age", "age_months", "age_days", "height", "weight", "chest", "waist", "head",
+      "father_height", "mother_height",
       "shoulder_length", "shoulder_breadth", "shoulder_circumference",
       "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
       "calf_length", "calf_circumference", "foot_length", "body_length",
@@ -305,7 +309,7 @@ export default function AdminPage() {
         toast.success("Ma'lumotlar butunlay o'chirildi");
       } else {
         await AdminApi.analyses.removeMany(Array.from(checked));
-        toast.success("Ma'lumotlar savatga yuborildi");
+        toast.success("Ma'lumotlar savatga yuborildi. Superadmin ularni tiklashi mumkin.");
       }
       setChecked(new Set());
       setDeleteConfirmOpen(false);
@@ -425,7 +429,13 @@ export default function AdminPage() {
 
   const availableTabs = useMemo(() => {
     const allTabs = [
-      { id: 0, label: "Dashboard", icon: <DashboardIcon />, roles: ["admin", "superadmin"], content: <AdminDashboard data={raw} loading={loading} stats={stats} statsLoading={statsLoading} totalCount={totalCount} userName={user?.name} /> },
+      { 
+        id: 0, 
+        label: "Dashboard", 
+        icon: <DashboardIcon />, 
+        roles: ["admin", "superadmin"], 
+        content: <AdminDashboard data={raw} loading={loading} stats={stats} statsLoading={statsLoading} totalCount={totalCount} userName={user?.name} filters={dashFilters} /> 
+      },
       { 
         id: 1, 
         label: "Ma'lumotlar", 
@@ -464,14 +474,7 @@ export default function AdminPage() {
                  <Button variant="outlined" color="error" startIcon={<Delete />} onClick={onDeleteSelected} disabled={!checked.size}>O'chirish ({checked.size})</Button>
                </Box>
             </Box>
-            <DashboardFilters 
-              filters={dashFilters} 
-              onFilterChange={setDashFilters} 
-              onReset={() => setDashFilters({
-                q: "", gender: "", region: "", age_min: 0, age_max: 100, 
-                bmi_min: 10, bmi_max: 50, somatotype: "", date_from: "", date_to: ""
-              })}
-            />
+            
             <Paper sx={{ mt: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
               {loading && <LinearProgress />}
               <AdminTable rows={raw} checked={checked} toggleAll={toggleAll} toggleOne={toggleOne} allChecked={raw.length > 0 && raw.every(r => checked.has(r.id))} setViewRow={setViewRow} onEdit={(r) => setEditRow(r)} formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")} user={user} />
@@ -483,6 +486,14 @@ export default function AdminPage() {
 
       { 
         id: 2, 
+        label: "Ilmiy Tahlil", 
+        icon: <BiotechOutlined />, 
+        roles: ["admin", "superadmin"],
+        content: <AdminScientificAnalysis data={raw} loading={loading} totalCount={totalCount} filters={dashFilters} />
+      },
+
+      { 
+        id: 3, 
         label: "Izlanuvchi ma'lumotlari", 
         icon: <Assessment />, 
         roles: ["superadmin"],
@@ -627,14 +638,30 @@ export default function AdminPage() {
                 <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, color: 'primary.main' }}>MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box></Typography>
                 <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
                     {availableTabs.map((tab) => (
-                      <Tab key={tab.id} icon={tab.icon} iconPosition="start" label={tab.label} value={tab.id} />
+                      <Tab key={tab.id} icon={tab.icon} iconPosition="start" label={tab.label} value={tab.id} sx={{ fontWeight: 700, textTransform: 'none' }} />
                     ))}
                 </Tabs>
+                <Box sx={{ ml: 2 }}>
+                   <Tooltip title="Chiqish"><IconButton onClick={() => setLogoutDialogOpen(true)} color="error" size="small"><Logout /></IconButton></Tooltip>
+                </Box>
             </Toolbar>
         </Container>
       </AppBar>
 
-      <Container maxWidth={false} sx={{ mt: 4, px: { xs: 2, md: 4 } }}>
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        {/* PERSISTENT FILTERS FOR RELEVANT TABS */}
+        {(activeTab === 0 || activeTab === 1 || activeTab === 2) && (
+          <Box mb={4}>
+            <DashboardFilters 
+              filters={dashFilters} 
+              onFilterChange={setDashFilters} 
+              onReset={() => setDashFilters({
+                q: "", gender: "", region: "", age_min: 0, age_max: 100, 
+                bmi_min: 10, bmi_max: 50, somatotype: "", date_from: "", date_to: ""
+              })}
+            />
+          </Box>
+        )}
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
             {renderContent()}
@@ -706,12 +733,12 @@ export default function AdminPage() {
         <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {user.role === "superadmin" ? "Qanday o'chirishni xohlaysiz?" : "Haqiqatan ham o'chirmoqchimisiz?"}
+            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {user.role === "superadmin" ? "Ushbu ma'lumotlarni qanday o'chirishni xohlaysiz?" : "Haqiqatan ham ushbu ma'lumotlarni o'chirib tashlamoqchimisiz?"}
           </Typography>
           {user.role === "superadmin" && (
             <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
               <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Lock fontSize="small" /> Hard delete (butunlay o'chirish) qaytarib bo'lmaydigan amaldir.
+                <Lock fontSize="small" /> <strong>Hard delete</strong> (butunlay o'chirish) qaytarib bo'lmaydigan amaldir. <strong>Soft delete</strong> (savatga yuborish) esa ma'lumotni tiklash imkonini beradi.
               </Typography>
             </Box>
           )}

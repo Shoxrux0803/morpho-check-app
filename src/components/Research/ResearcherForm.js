@@ -4,7 +4,7 @@ import {
   CircularProgress, Paper, MenuItem, Stepper, Step, StepLabel
 } from "@mui/material";
 import {
-  Add, ArrowForward, ArrowBack, Save
+  Add, ArrowForward, ArrowBack, Save, CheckCircle
 } from "@mui/icons-material";
 import { ResearchApi } from "../../services/api";
 import { toast } from "react-hot-toast";
@@ -45,14 +45,17 @@ const ResearcherForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [predictLoading, setPredictLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   
   const emptyForm = {
     full_name: "", school_name: "", settlement: "", birth_place: "", birth_date: "",
     father_nationality: "", mother_nationality: "", living_since: "", enrolled_date: "",
     living_conditions: "", labor_regime: "", past_illnesses: "", children_count: "",
     child_order: "", feeding_type: "", parents_marriage: "", mother_health_status: "",
+    parents_phone: "",
+    father_height: "", mother_height: "",
     examination_date: "",
-    lower_leg_spina_iliaca: "", lower_leg_symphysion: "", tibiale_height: "",
+    lower_leg_total: "", lower_leg_spina_iliaca: "", lower_leg_symphysion: "", lower_leg_length: "", tibiale_height: "",
     pelvic_width: "", thigh_length: "", thigh_circumference: "", calf_length: "",
     calf_circumference: "", foot_length: "", teeth_count: "", menstruation_start: "",
     skull_longitudinal: "", skull_transverse: "", head_circumference: "",
@@ -66,7 +69,7 @@ const ResearcherForm = ({ onSuccess }) => {
     chest_circumference_exhale: "", waist_circumference: "", abdomen_circumference: "",
     upper_segment_length: "", chest_transverse_diameter: "", chest_anteroposterior_diameter: "",
     chest_height: "",
-    arm_length: "", shoulder_length: "", shoulder_width: "", shoulder_circumference_rest: "",
+    arm_length: "", shoulder_length: "", shoulder_width: "", arm_circumference_total: "", shoulder_circumference_rest: "",
     shoulder_circumference_flexed: "", forearm_length: "", hand_length: "", dynamometry: "",
     fat_triceps: "", fat_biceps: "", fat_subscapular: "", fat_iliac: "", fat_popliteal: "",
     gender: ""
@@ -76,7 +79,10 @@ const ResearcherForm = ({ onSuccess }) => {
   const steps = ["Shaxsiy ma'lumotlar", "Barcha o'lchovlar"];
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const numericFields = ["father_height", "mother_height", "children_count", "child_order", "teeth_count"];
+    const v = numericFields.includes(name) && value !== "" ? Number(value) : value;
+    setFormData({ ...formData, [name]: v });
   };
 
   const validateStep1 = () => {
@@ -109,7 +115,7 @@ const ResearcherForm = ({ onSuccess }) => {
 
   const handleAiPredict = async () => {
     const age = calculateAge(formData.birth_date, formData.examination_date);
-    if (!age || !formData.gender) {
+    if (age === null || !formData.gender) {
       toast.error("Iltimos, avval tug'ilgan sana va jinsni kiriting!");
       return;
     }
@@ -150,9 +156,18 @@ const ResearcherForm = ({ onSuccess }) => {
         if (formData[k] !== "") cleanData[k] = formData[k];
       });
       await ResearchApi.create(cleanData);
+      
+      // Trigger success animation
+      setShowSuccess(true);
       toast.success("Ma'lumot muvaffaqiyatli saqlandi");
-      setFormData(emptyForm);
-      onSuccess();
+      
+      // Reset form after delay
+      setTimeout(() => {
+        setFormData(emptyForm);
+        setActiveStep(0);
+        setShowSuccess(false);
+        onSuccess();
+      }, 2000);
     } catch (err) {
       toast.error("Xatolik: " + err.message);
     } finally {
@@ -189,6 +204,58 @@ const ResearcherForm = ({ onSuccess }) => {
       <Typography variant="h5" fontWeight="900" mb={3} textAlign="center">
         Yangi Tadqiqot Yozuvi
       </Typography>
+
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed",
+              top: 0, left: 0, right: 0, bottom: 0,
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(0,0,0,0.3)",
+              backdropFilter: "blur(6px)",
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.5, y: 50, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.5, y: 50, opacity: 0 }}
+              style={{
+                background: "white",
+                padding: "48px",
+                borderRadius: "32px",
+                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+                textAlign: "center",
+                maxWidth: "90%",
+                width: "420px",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1, rotate: 360 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              >
+                <CheckCircle sx={{ fontSize: 80, color: "success.main", mb: 3 }} />
+              </motion.div>
+              <Typography variant="h4" fontWeight={900} color="success.dark" gutterBottom>
+                Saqlandi!
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
+                Ma'lumotlar bazaga muvaffaqiyatli qo'shildi.
+                <br />
+                Yangi yozuvga o'tilmoqda...
+              </Typography>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 5 }}>
         {steps.map((label) => (
@@ -238,6 +305,9 @@ const ResearcherForm = ({ onSuccess }) => {
                   { value: "Qarindosh emas (неродственный)", label: "Qarindosh emas (неродственный)" }
                 ])}</Grid>
                 <Grid item xs={12} sm={6} md={4}>{I("mother_health_status", "Ona sog'ligi", "text")}</Grid>
+                <Grid item xs={12} sm={6} md={4}>{I("parents_phone", "Ota-ona tel. raqami", "text")}</Grid>
+                <Grid item xs={12} sm={6} md={4}>{I("father_height", "Otasi bo'yi (sm)")}</Grid>
+                <Grid item xs={12} sm={6} md={4}>{I("mother_height", "Onasi bo'yi (sm)")}</Grid>
               </Grid>
             </Box>
           ) : (
@@ -259,15 +329,19 @@ const ResearcherForm = ({ onSuccess }) => {
               </Stack>
                   <Grid container spacing={2}>
                     {[
+                      ["lower_leg_total","Pastki oyoq-qo'l"],
                       ["lower_leg_spina_iliaca","Spina iliaca"],["lower_leg_symphysion","Symphysion"],
+                      ["lower_leg_length","Pastki oyoq-qo'l uzunligi"],
                       ["tibiale_height","Tibiale balandligi"],["pelvic_width","Chanoq kengligi"],
                       ["thigh_length","Son uzunligi"],["thigh_circumference","Son aylanasi"],
                       ["calf_length","Boldir uzunligi"],["calf_circumference","Boldir aylanasi"],
                       ["foot_length","Oyoq panja uzunligi"],["teeth_count","Tishlar soni"],
-                      ["menstruation_start","Menstruatsiya", "text"],
                     ].map(([name, label, t]) => (
                       <Grid item xs={12} sm={6} md={4} key={name}>{I(name, label, t || "number")}</Grid>
                     ))}
+                    {formData.gender && (formData.gender.toLowerCase() === "ayol" || formData.gender.toLowerCase() === "girl") && (
+                      <Grid item xs={12} sm={6} md={4}>{I("menstruation_start", "Hayz ko'rishning boshlanishi", "text")}</Grid>
+                    )}
                   </Grid>
                 </Grid>
 
@@ -318,7 +392,8 @@ const ResearcherForm = ({ onSuccess }) => {
                   <Grid container spacing={2}>
                     {[
                       ["arm_length","Qo'l uzunligi"],["shoulder_length","Yelka uzunligi"],
-                      ["shoulder_width","Yelka kengligi"],["shoulder_circumference_rest","Yelka aylanasi (tinch)"],
+                      ["shoulder_width","Yelka kengligi"],["arm_circumference_total","Yelka aylanasi"],
+                      ["shoulder_circumference_rest","Yelka aylanasi (tinch)"],
                       ["shoulder_circumference_flexed","Yelka aylanasi (tarang)"],["forearm_length","Bilak uzunligi"],
                       ["hand_length","Panja uzunligi"],["dynamometry","Dinamometriya"],
                       ["fat_triceps","Triseps yog'i"],["fat_biceps","Biseps yog'i"],

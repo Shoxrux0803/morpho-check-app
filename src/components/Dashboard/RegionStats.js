@@ -57,10 +57,21 @@ const REGIONS = [
   { key: "qoraqalpogiston", name: "Qoraqalpog'iston Respublikasi", aliases: ["qoraqalpogiston", "qoraqalpog'iston", "karakalpakstan", "каракалпакстан"] },
 ];
 
+// Pre-calculate lookup map for O(1) matching
+const REGION_LOOKUP = {};
+REGIONS.forEach((r) => {
+  REGION_LOOKUP[normalizeRegionName(r.key)] = r.key;
+  (r.aliases || []).forEach((a) => {
+    REGION_LOOKUP[normalizeRegionName(a)] = r.key;
+  });
+});
+
 export default function RegionStats({ data, loading }) {
   const theme = useTheme();
 
   const stats = useMemo(() => {
+    if (!data || data.length === 0) return [];
+
     const regionMap = new Map();
     REGIONS.forEach((r) =>
       regionMap.set(r.key, {
@@ -74,16 +85,10 @@ export default function RegionStats({ data, loading }) {
       })
     );
 
-    const matchRegion = (rawName) => {
-      const norm = normalizeRegionName(rawName);
-      for (const r of REGIONS) {
-        if (normalizeRegionName(r.key) === norm || r.aliases.includes(norm)) return r.key;
-      }
-      return null;
-    };
-
     data.forEach((user) => {
-      const matchedKey = matchRegion(user.region || "");
+      const normName = normalizeRegionName(user.region || "");
+      const matchedKey = REGION_LOOKUP[normName];
+      
       if (matchedKey && regionMap.has(matchedKey)) {
         const rStat = regionMap.get(matchedKey);
         rStat.count += 1;
@@ -91,9 +96,12 @@ export default function RegionStats({ data, loading }) {
         rStat.totalWeight += Number(user.weight) || 0;
         rStat.totalHeight += Number(user.height) || 0;
         
-        const gender = String(user.gender).toLowerCase();
-        if (gender.includes("erkak") || gender.includes("male") || gender.includes("o'g'il")) rStat.genders.erkak += 1;
-        else if (gender.includes("ayol") || gender.includes("female") || gender.includes("qiz")) rStat.genders.ayol += 1;
+        const gender = String(user.gender || "").toLowerCase();
+        const isMale = gender.includes("erkak") || gender.includes("male") || gender.includes("o'g'il") || gender.includes("boy");
+        const isFemale = gender.includes("ayol") || gender.includes("female") || gender.includes("qiz") || gender.includes("girl");
+        
+        if (isMale) rStat.genders.erkak += 1;
+        else if (isFemale) rStat.genders.ayol += 1;
       }
     });
 
@@ -101,9 +109,9 @@ export default function RegionStats({ data, loading }) {
       .filter((r) => r.count > 0)
       .map((r) => ({
         ...r,
-        avgAge: r.count > 0 ? (r.totalAge / r.count).toFixed(1) : 0,
-        avgWeight: r.count > 0 ? (r.totalWeight / r.count).toFixed(1) : 0,
-        avgHeight: r.count > 0 ? (r.totalHeight / r.count).toFixed(1) : 0,
+        avgAge: (r.totalAge / r.count).toFixed(1),
+        avgWeight: (r.totalWeight / r.count).toFixed(1),
+        avgHeight: (r.totalHeight / r.count).toFixed(1),
       }))
       .sort((a, b) => b.count - a.count);
   }, [data]);
@@ -116,7 +124,7 @@ export default function RegionStats({ data, loading }) {
 
   return (
     <>
-      <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
         <Box sx={{ mt: 4, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
             <DataUsage color="primary" />
             <Typography variant="h5" fontWeight="800">Hududiy Tahlil</Typography>
@@ -124,7 +132,7 @@ export default function RegionStats({ data, loading }) {
       </Grid>
 
       {/* Top Regions BarChart */}
-      <Grid item xs={12} lg={7}>
+      <Grid size={{ xs: 12, lg: 7 }}>
           <DashboardCard title="Hududlar bo'yicha qamrov" icon={<LocationOn />} loading={loading}>
             <ResponsiveContainer width="100%" height={350}>
               <BarChart data={topRegions} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
@@ -161,7 +169,7 @@ export default function RegionStats({ data, loading }) {
         </Grid>
 
         {/* Detailed Table */}
-        <Grid item xs={12} lg={5}>
+        <Grid size={{ xs: 12, lg: 5 }}>
           <DashboardCard title="Statistik Ma'lumotlar" loading={loading} height={350}>
             <TableContainer component={Paper} elevation={0} sx={{ background: 'transparent', maxHeight: 350, overflow: 'auto' }}>
               <Table size="small" stickyHeader>

@@ -92,7 +92,11 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
                 }}
               >
                 <Typography variant="caption" color="text.secondary">{label}</Typography>
-                <Typography variant="body2" fontWeight={600}>{record[key]}</Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  {key === "gender" 
+                    ? (record[key]?.toLowerCase() === "boy" || record[key]?.toLowerCase() === "erkak" ? "O'g'il bola" : "Qiz bola")
+                    : record[key]}
+                </Typography>
               </Box>
             </Grid>
           ) : null
@@ -156,6 +160,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             ["Oziqlanish turi", "feeding_type"],
             ["Ota-ona qarindoshligi", "parents_marriage"],
             ["Ona sog'ligi", "mother_health_status"],
+            ["Ota-ona tel. raqami", "parents_phone"],
             ["Tekshiruv sanasi", "examination_date"],
           ]}
         />
@@ -163,6 +168,8 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
           title="II. Jismoniy Rivojlanish (Oyoqlar)"
           Icon={Place}
           fields={[
+            ["Pastki oyoq-qo'l", "lower_leg_total"],
+            ["Pastki oyoq-qo'l uzunligi", "lower_leg_length"],
             ["Spina iliaca", "lower_leg_spina_iliaca"],
             ["Symphysion", "lower_leg_symphysion"],
             ["Tibiale balandligi", "tibiale_height"],
@@ -232,6 +239,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             ["Qo'l uzunligi", "arm_length"],
             ["Yelka uzunligi", "shoulder_length"],
             ["Yelka kengligi", "shoulder_width"],
+            ["Yelka aylanasi (jami)", "arm_circumference_total"],
             ["Yelka aylanasi (tinch)", "shoulder_circumference_rest"],
             ["Yelka aylanasi (tarang)", "shoulder_circumference_flexed"],
             ["Bilak uzunligi", "forearm_length"],
@@ -394,7 +402,10 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
               { value: "Uzoq qarindosh (дальнородственный)", label: "Uzoq qarindosh (дальнородственный)" },
               { value: "Qarindosh emas (неродственный)", label: "Qarindosh emas (неродственный)" }
             ]],
-            ["Ona sog'ligi", "mother_health_status", "text"], ["Tekshiruv sanasi", "examination_date", "date"]
+            ["Ona sog'ligi", "mother_health_status", "text"], 
+            ["Ota-ona tel. raqami", "parents_phone", "text"],
+            ["Otasi bo'yi (sm)", "father_height", "number"],
+            ["Onasi bo'yi (sm)", "mother_height", "number"], ["Tekshiruv sanasi", "examination_date", "date"]
           ].map(([label, k, type, options]) => (
             <Grid xs={12} sm={6} md={k === "feeding_type" || k === "parents_marriage" ? 6 : 4} key={k}>
               <F label={label} k={k} type={type} options={options} />
@@ -406,6 +417,8 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         <SectionTitle icon={Place} title="II. Jismoniy Rivojlanish (Oyoqlar)" />
         <Grid container spacing={2} pt={1}>
           {[
+            ["Pastki oyoq-qo'l", "lower_leg_total"], 
+            ["Pastki oyoq-qo'l uzunligi", "lower_leg_length"],
             ["Spina iliaca", "lower_leg_spina_iliaca"], ["Symphysion", "lower_leg_symphysion"],
             ["Tibiale balandligi", "tibiale_height"], ["Chanoq kengligi", "pelvic_width"],
             ["Son uzunligi", "thigh_length"], ["Son aylanasi", "thigh_circumference"],
@@ -473,7 +486,8 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         <Grid container spacing={2} pt={1}>
           {[
             ["Qo'l uzunligi", "arm_length"], ["Yelka uzunligi", "shoulder_length"],
-            ["Yelka kengligi", "shoulder_width"], ["Yelka aylanasi (tinch)", "shoulder_circumference_rest"],
+            ["Yelka kengligi", "shoulder_width"], ["Yelka aylanasi", "arm_circumference_total"],
+            ["Yelka aylanasi (tinch)", "shoulder_circumference_rest"],
             ["Yelka aylanasi (tarang)", "shoulder_circumference_flexed"], ["Bilak uzunligi", "forearm_length"],
             ["Panja uzunligi", "hand_length"], ["Dinamometriya", "dynamometry"],
             ["Triseps yog'i", "fat_triceps"], ["Biseps yog'i", "fat_biceps"],
@@ -1134,7 +1148,7 @@ const ResearcherPage = () => {
           >
             {activeTab === 0 && (
               <Box>
-                <ResearcherForm onSuccess={() => { setActiveTab(1); fetchData(); }} />
+                <ResearcherForm onSuccess={() => { fetchData(); }} />
               </Box>
             )}
 
@@ -1294,12 +1308,12 @@ const ResearcherPage = () => {
         <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {isSuperAdmin && activeTab === 3 ? "Bularni butunlay o'chirib tashlamoqchimisiz?" : "Haqiqatan ham o'chirmoqchimisiz?"}
+            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {isSuperAdmin && activeTab === 3 ? "Ushbu ma'lumotlarni bazadan butunlay o'chirib tashlamoqchimisiz?" : "Haqiqatan ham ushbu ma'lumotlarni o'chirib tashlamoqchimisiz?"}
           </Typography>
           {isSuperAdmin && activeTab === 3 && (
             <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
               <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DeleteForever fontSize="small" /> Bu amalni qaytarib bo'lmaydi!
+                <DeleteForever fontSize="small" /> <strong>Hard delete</strong> (butunlay o'chirish) qaytarib bo'lmaydigan amaldir.
               </Typography>
             </Box>
           )}
@@ -1312,7 +1326,7 @@ const ResearcherPage = () => {
             onClick={() => handleDelete(Array.from(checked), (isSuperAdmin && activeTab === 3) ? "hard" : "soft")} 
             disabled={deleteConfirmLoading}
           >
-            {deleteConfirmLoading ? <CircularProgress size={20} color="inherit" /> : "O'chirish"}
+            {deleteConfirmLoading ? <CircularProgress size={24} color="inherit" /> : (isSuperAdmin && activeTab === 3 ? "Butunlay o'chirish" : "O'chirish")}
           </Button>
         </DialogActions>
       </Dialog>
