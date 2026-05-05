@@ -27,7 +27,7 @@ import AnalyticsOutlinedIcon from "@mui/icons-material/AnalyticsOutlined";
 import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import MonitorWeightOutlinedIcon from "@mui/icons-material/MonitorWeightOutlined";
 import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlined";
-import ShowChartIcon from '@mui/icons-material/ShowChart';
+import ShowChartIcon from "@mui/icons-material/ShowChart";
 import GrowthChart from "./Charts/GrowthChart";
 import PersonOutline from "@mui/icons-material/PersonOutline";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -36,36 +36,24 @@ import { useAuth } from "../contexts/AuthContext";
 import { useGrowthAnalytics } from "../hooks/useGrowthAnalytics";
 import aiService from "../services/aiService";
 
-export default function AnalysisResults({
-  formData,
-  results,
-  generatePDF,
-  onContinue,
-}) {
+export default function AnalysisResults({ formData, results, generatePDF, onContinue }) {
   const { t, lang } = useLanguage();
   const { isAuthenticated } = useAuth();
   const [pdfLang, setPdfLang] = useState(lang);
-  const [chartType, setChartType] = useState('height');
+  const [chartType, setChartType] = useState("height");
   const analytics = useGrowthAnalytics(formData);
   const [aiTips, setAiTips] = useState([]);
   const [tipsLoading, setTipsLoading] = useState(false);
 
-  // 1) Natija yo'q
-  if (!results) {
-    return <Alert severity="info">{t("noResult")}</Alert>;
-  }
-
   // 2) Tuzilmani normallashtirish
-  const root =
-    results?.data?.data ??
-    results?.data ??
-    results?.result ??
-    results;
+  const root = results?.data?.data ?? results?.data ?? results?.result ?? results;
 
   const analysis = root?.analysis ?? null;
   const advices = root?.advices ?? null;
   const measurements = root?.measurements ?? null;
   const patientInfo = root?.patient_info ?? null;
+  const riskFlags = root?.risk_flags ?? root?.growth_standards?.metrics ?? null;
+  const progressTracking = root?.progress_tracking ?? null;
 
   // 3) Kerakli qiymatlar
   const zScore = analysis?.z_score;
@@ -84,22 +72,34 @@ export default function AnalysisResults({
   let bmiChipColor = "default";
   if (bmi != null && !Number.isNaN(Number(bmi))) {
     const v = Number(bmi);
-    if (v < 18.5) { bmiCategory = t("bmi_underweight"); bmiChipColor = "warning"; }
-    else if (v < 25) { bmiCategory = t("bmi_normal"); bmiChipColor = "success"; }
-    else if (v < 30) { bmiCategory = t("bmi_overweight"); bmiChipColor = "warning"; }
-    else { bmiCategory = t("bmi_obese"); bmiChipColor = "error"; }
+    if (v < 18.5) {
+      bmiCategory = t("bmi_underweight");
+      bmiChipColor = "warning";
+    } else if (v < 25) {
+      bmiCategory = t("bmi_normal");
+      bmiChipColor = "success";
+    } else if (v < 30) {
+      bmiCategory = t("bmi_overweight");
+      bmiChipColor = "warning";
+    } else {
+      bmiCategory = t("bmi_obese");
+      bmiChipColor = "error";
+    }
   }
 
-  const zScoreColor = zScore == null ? "default" : Math.abs(Number(zScore)) > 1.5 ? "error" : "success";
+  const zScoreColor =
+    zScore == null ? "default" : Math.abs(Number(zScore)) > 1.5 ? "error" : "success";
   const diffColor = weightDiff == null ? "default" : Number(weightDiff) > 0 ? "error" : "success";
 
-  const fullName = `${patientInfo?.first_name ?? formData.firstName ?? ""} ${patientInfo?.last_name ?? formData.lastName ?? ""}`.trim();
+  const fullName =
+    `${patientInfo?.first_name ?? formData.firstName ?? ""} ${patientInfo?.last_name ?? formData.lastName ?? ""}`.trim();
   const regionText = formData?.region || patientInfo?.region || "";
   const ageText = patientInfo?.age ?? formData?.age ?? "—";
   const genderValue = patientInfo?.gender ?? formData?.gender;
   const age = patientInfo?.age ?? formData?.age;
   const gender = genderValue;
-  const genderText = genderValue === "erkak" ? t("male") : genderValue === "ayol" ? t("female") : (genderValue || "—");
+  const genderText =
+    genderValue === "erkak" ? t("male") : genderValue === "ayol" ? t("female") : genderValue || "—";
 
   const usedHeight = measurements?.height ?? formData.height;
   const usedWeight = measurements?.weight ?? formData.weight;
@@ -107,6 +107,19 @@ export default function AnalysisResults({
   const usedHead = measurements?.head ?? formData.head;
 
   const noAnalysisData = !analysis && !advices;
+
+  const riskColorMap = {
+    green: { main: "#16a34a", bg: "rgba(22, 163, 74, 0.08)", border: "#86efac" },
+    yellow: { main: "#d97706", bg: "rgba(217, 119, 6, 0.1)", border: "#fcd34d" },
+    red: { main: "#dc2626", bg: "rgba(220, 38, 38, 0.08)", border: "#fca5a5" },
+    gray: { main: "#64748b", bg: "rgba(100, 116, 139, 0.08)", border: "#cbd5e1" },
+  };
+
+  const riskEntries = riskFlags
+    ? ["height", "weight", "bmi", "head", "chest"]
+        .map((key) => [key, riskFlags[key]])
+        .filter(([, item]) => item)
+    : [];
 
   // PDF yuklab olish — tanlangan pdfLang bilan
   const handlePdfDownload = () => {
@@ -132,10 +145,10 @@ export default function AnalysisResults({
               age: patientInfo?.age ?? formData?.age,
               gender: patientInfo?.gender ?? formData?.gender,
               bmi: analysis?.bmi,
-              z_score: analysis?.z_score
+              z_score: analysis?.z_score,
             },
             root.ai_predictions,
-            lang
+            lang,
           );
           if (res?.tips && res.tips.length > 0) {
             setAiTips(res.tips);
@@ -150,7 +163,10 @@ export default function AnalysisResults({
     }
   }, [root, lang, aiTips.length]);
 
-
+  // 1) Natija yo'q — moved down after hooks
+  if (!results) {
+    return <Alert severity="info">{t("noResult")}</Alert>;
+  }
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto" }}>
@@ -175,16 +191,18 @@ export default function AnalysisResults({
               </Typography>
               {(patientInfo?.birth_date || patientInfo?.examination_date) && (
                 <Typography variant="caption" color="text.secondary" display="block">
-                  {patientInfo?.birth_date && `${t("birthDateLabel")}: ${new Date(patientInfo.birth_date).toLocaleDateString(lang)}`}
+                  {patientInfo?.birth_date &&
+                    `${t("birthDateLabel")}: ${new Date(patientInfo.birth_date).toLocaleDateString(lang)}`}
                   {patientInfo?.birth_date && patientInfo?.examination_date && " | "}
-                  {patientInfo?.examination_date && `${t("examDateLabel")}: ${new Date(patientInfo.examination_date).toLocaleDateString(lang)}`}
+                  {patientInfo?.examination_date &&
+                    `${t("examDateLabel")}: ${new Date(patientInfo.examination_date).toLocaleDateString(lang)}`}
                 </Typography>
               )}
             </Box>
           </Stack>
 
           <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-            <FormControl size="small" sx={{ minWidth: 100 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 100 } }}>
               <InputLabel>{t("selectPdfLang")}</InputLabel>
               <Select
                 value={pdfLang}
@@ -212,11 +230,14 @@ export default function AnalysisResults({
                 onClick={onContinue}
                 variant="contained"
                 startIcon={<ArrowForwardIcon />}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   px: 3,
                   fontWeight: 700,
-                  background: theme => theme.palette.mode === 'dark' ? 'linear-gradient(90deg, #3f51b5, #00acc1)' : 'linear-gradient(90deg, #1976d2, #00bcd4)'
+                  background: (theme) =>
+                    theme.palette.mode === "dark"
+                      ? "linear-gradient(90deg, #3f51b5, #00acc1)"
+                      : "linear-gradient(90deg, #1976d2, #00bcd4)",
                 }}
               >
                 {t("continueBtn")}
@@ -236,7 +257,11 @@ export default function AnalysisResults({
           <Card elevation={2} sx={{ mb: 3, borderRadius: 2 }}>
             <CardHeader
               avatar={<AnalyticsOutlinedIcon color="success" />}
-              title={<Typography variant="h6" fontWeight={700}>{t("analyzingResults")}</Typography>}
+              title={
+                <Typography variant="h6" fontWeight={700}>
+                  {t("analyzingResults")}
+                </Typography>
+              }
               sx={(theme) => ({
                 background: theme.palette.success.main,
                 color: theme.palette.getContrastText(theme.palette.success.main),
@@ -246,20 +271,41 @@ export default function AnalysisResults({
             <CardContent>
               <Grid container spacing={3}>
                 <Grid xs={12} md={6}>
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: analytics?.bmi ? `4px solid ${analytics.bmi.status.color}` : 'none' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      height: "100%",
+                      borderLeft: analytics?.bmi
+                        ? `4px solid ${analytics.bmi.status.color}`
+                        : "none",
+                    }}
+                  >
                     <Stack spacing={1}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("bmiLabel")}</Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("bmiLabel")}
+                      </Typography>
                       <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography variant="h3" sx={{ lineHeight: 1.1 }}>{showNum(bmi)}</Typography>
+                        <Typography variant="h3" sx={{ lineHeight: 1.1 }}>
+                          {showNum(bmi)}
+                        </Typography>
                         {analytics?.bmi ? (
-                          <Chip label={t("status_" + analytics.bmi.status.code)} sx={{ bgcolor: analytics.bmi.status.color, color: "#fff" }} size="small" />
+                          <Chip
+                            label={t("status_" + analytics.bmi.status.code)}
+                            sx={{ bgcolor: analytics.bmi.status.color, color: "#fff" }}
+                            size="small"
+                          />
                         ) : (
-                          bmiCategory && <Chip label={bmiCategory} color={bmiChipColor} size="small" />
+                          bmiCategory && (
+                            <Chip label={bmiCategory} color={bmiChipColor} size="small" />
+                          )
                         )}
                       </Stack>
                       {analytics?.bmi && (
                         <Typography variant="caption" fontWeight={700} color="text.secondary">
-                          Z-Score: {analytics.bmi.zScore > 0 ? '+' : ''}{analytics.bmi.zScore}
+                          Z-Score: {analytics.bmi.zScore > 0 ? "+" : ""}
+                          {analytics.bmi.zScore}
                         </Typography>
                       )}
                     </Stack>
@@ -269,7 +315,9 @@ export default function AnalysisResults({
                 <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={1}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("somatotypeLabel")}</Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("somatotypeLabel")}
+                      </Typography>
                       <Typography variant="h3" sx={{ lineHeight: 1.1, color: "primary.main" }}>
                         {somatotype ?? "—"}
                       </Typography>
@@ -285,85 +333,338 @@ export default function AnalysisResults({
                 </Grid>
               </Grid>
 
+              {riskEntries.length > 0 && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 2, fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}
+                  >
+                    <InsightsOutlinedIcon color="error" />
+                    Klinik risk flag tizimi
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {riskEntries.map(([key, item]) => {
+                      const palette = riskColorMap[item?.risk?.level] || riskColorMap.gray;
+                      return (
+                        <Grid key={key} xs={12} sm={6} md={key === "bmi" ? 4 : 2}>
+                          <Paper
+                            variant="outlined"
+                            sx={{
+                              p: 2,
+                              height: "100%",
+                              borderRadius: 2,
+                              bgcolor: palette.bg,
+                              borderColor: palette.border,
+                              borderLeft: `5px solid ${palette.main}`,
+                            }}
+                          >
+                            <Stack spacing={1}>
+                              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                                {item.label}
+                              </Typography>
+                              <Typography variant="h6" fontWeight={800}>
+                                {showNum(item.value, 1)}
+                                {item.unit ? ` ${item.unit}` : ""}
+                              </Typography>
+                              <Chip
+                                label={item.risk?.label || "Holat noma'lum"}
+                                size="small"
+                                sx={{ bgcolor: palette.main, color: "#fff", fontWeight: 700 }}
+                              />
+                              <Typography variant="caption" color="text.secondary">
+                                Z: {item.z_score ?? "—"} | P: {item.percentile ?? "—"}
+                              </Typography>
+                              <Typography variant="caption">{item.risk?.message}</Typography>
+                            </Stack>
+                          </Paper>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </Box>
+              )}
+
+              {progressTracking && (
+                <Box sx={{ mt: 4 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 2, fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}
+                  >
+                    <ShowChartIcon color="primary" />
+                    Progress tracking
+                  </Typography>
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: 2,
+                      borderRadius: 2,
+                      bgcolor:
+                        progressTracking.trend_level === "yellow"
+                          ? "rgba(217, 119, 6, 0.08)"
+                          : "rgba(22, 163, 74, 0.06)",
+                    }}
+                  >
+                    {progressTracking.has_history ? (
+                      <Stack spacing={2}>
+                        <Stack
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={1}
+                          alignItems={{ xs: "flex-start", sm: "center" }}
+                          justifyContent="space-between"
+                        >
+                          <Typography variant="body1" fontWeight={700}>
+                            {progressTracking.period_months
+                              ? `${progressTracking.period_months} oy ichidagi o'zgarish`
+                              : "Oldingi o'lchov bilan solishtirish"}
+                          </Typography>
+                          <Chip
+                            label={progressTracking.trend}
+                            color={
+                              progressTracking.trend_level === "yellow" ? "warning" : "success"
+                            }
+                            variant="outlined"
+                          />
+                        </Stack>
+                        <Grid container spacing={2}>
+                          {["height", "weight", "bmi", "head", "chest"].map((key) => {
+                            const change = progressTracking.changes?.[key];
+                            if (!change) return null;
+                            const labels = {
+                              height: t("heightLabel"),
+                              weight: t("weightLabel"),
+                              bmi: t("bmiLabel"),
+                              head: t("headLabel"),
+                              chest: t("chestLabel"),
+                            };
+                            return (
+                              <Grid key={key} xs={6} md={2.4}>
+                                <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {labels[key]}
+                                  </Typography>
+                                  <Typography
+                                    variant="h6"
+                                    fontWeight={800}
+                                    color={Number(change.delta) < 0 ? "error.main" : "success.main"}
+                                  >
+                                    {Number(change.delta) > 0 ? "+" : ""}
+                                    {showNum(change.delta, 1)}
+                                    {change.unit ? ` ${change.unit}` : ""}
+                                  </Typography>
+                                  {change.monthly_delta != null && (
+                                    <Typography variant="caption" color="text.secondary">
+                                      {Number(change.monthly_delta) > 0 ? "+" : ""}
+                                      {change.monthly_delta}/oy
+                                    </Typography>
+                                  )}
+                                </Paper>
+                              </Grid>
+                            );
+                          })}
+                        </Grid>
+                      </Stack>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        {progressTracking.message}
+                      </Typography>
+                    )}
+                  </Paper>
+                </Box>
+              )}
+
               {/* Расширенный научный анализ Z-Score */}
               {analytics && (
                 <Box sx={{ mt: 4 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ mb: 2, fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}
+                  >
                     <InsightsOutlinedIcon color="primary" />
                     {t("whoScientificAnalysis")}
                   </Typography>
                   <Grid container spacing={2}>
                     {analytics.height && (
                       <Grid xs={12} md={4}>
-                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.height.status.color}05` }}>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: `${analytics.height.status.color}05`,
+                          }}
+                        >
                           <Tooltip title={t("hazDesc")} arrow>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              fontWeight={700}
+                              sx={{
+                                cursor: "help",
+                                borderBottom: "1px dashed",
+                                borderColor: "text.disabled",
+                              }}
+                            >
                               {t("heightForAge")}
                             </Typography>
                           </Tooltip>
-                          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                          <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mt={1}
+                          >
                             <Box>
-                              <Typography variant="h5" fontWeight={800}>{analytics.height.zScore > 0 ? '+' : ''}{analytics.height.zScore}</Typography>
-                              <Typography variant="caption" sx={{ color: analytics.height.status.color, fontWeight: 700 }}>
+                              <Typography variant="h5" fontWeight={800}>
+                                {analytics.height.zScore > 0 ? "+" : ""}
+                                {analytics.height.zScore}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{ color: analytics.height.status.color, fontWeight: 700 }}
+                              >
                                 {t("status_" + analytics.height.status.code)}
                               </Typography>
                             </Box>
-                            <Chip label={`${analytics.height.percentile}-p`} size="small" variant="outlined" />
+                            <Chip
+                              label={`${analytics.height.percentile}-p`}
+                              size="small"
+                              variant="outlined"
+                            />
                           </Box>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={Math.min(100, Math.max(0, (analytics.height.zScore + 4) * 12.5))} 
-                            sx={{ mt: 1.5, height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: analytics.height.status.color } }}
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.min(100, Math.max(0, (analytics.height.zScore + 4) * 12.5))}
+                            sx={{
+                              mt: 1.5,
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: "rgba(0,0,0,0.05)",
+                              "& .MuiLinearProgress-bar": {
+                                bgcolor: analytics.height.status.color,
+                              },
+                            }}
                           />
                         </Paper>
                       </Grid>
                     )}
                     {analytics.weight && (
                       <Grid xs={12} md={4}>
-                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.weight.status.color}05` }}>
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: `${analytics.weight.status.color}05`,
+                          }}
+                        >
                           <Tooltip title={t("wazDesc")} arrow>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              fontWeight={700}
+                              sx={{
+                                cursor: "help",
+                                borderBottom: "1px dashed",
+                                borderColor: "text.disabled",
+                              }}
+                            >
                               {t("weightForAge")}
                             </Typography>
                           </Tooltip>
-                          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                          <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mt={1}
+                          >
                             <Box>
-                              <Typography variant="h5" fontWeight={800}>{analytics.weight.zScore > 0 ? '+' : ''}{analytics.weight.zScore}</Typography>
-                              <Typography variant="caption" sx={{ color: analytics.weight.status.color, fontWeight: 700 }}>
+                              <Typography variant="h5" fontWeight={800}>
+                                {analytics.weight.zScore > 0 ? "+" : ""}
+                                {analytics.weight.zScore}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{ color: analytics.weight.status.color, fontWeight: 700 }}
+                              >
                                 {t("status_" + analytics.weight.status.code)}
                               </Typography>
                             </Box>
-                            <Chip label={`${analytics.weight.percentile}-p`} size="small" variant="outlined" />
+                            <Chip
+                              label={`${analytics.weight.percentile}-p`}
+                              size="small"
+                              variant="outlined"
+                            />
                           </Box>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={Math.min(100, Math.max(0, (analytics.weight.zScore + 4) * 12.5))} 
-                            sx={{ mt: 1.5, height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: analytics.weight.status.color } }}
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.min(100, Math.max(0, (analytics.weight.zScore + 4) * 12.5))}
+                            sx={{
+                              mt: 1.5,
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: "rgba(0,0,0,0.05)",
+                              "& .MuiLinearProgress-bar": {
+                                bgcolor: analytics.weight.status.color,
+                              },
+                            }}
                           />
                         </Paper>
                       </Grid>
                     )}
                     {analytics.bmi && (
                       <Grid xs={12} md={4}>
-                        <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.bmi.status.color}05` }}>
+                        <Paper
+                          variant="outlined"
+                          sx={{ p: 2, borderRadius: 2, bgcolor: `${analytics.bmi.status.color}05` }}
+                        >
                           <Tooltip title={t("bazDesc")} arrow>
-                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ cursor: 'help', borderBottom: '1px dashed', borderColor: 'text.disabled' }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              fontWeight={700}
+                              sx={{
+                                cursor: "help",
+                                borderBottom: "1px dashed",
+                                borderColor: "text.disabled",
+                              }}
+                            >
                               {t("bmiForAge")}
                             </Typography>
                           </Tooltip>
-                          <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+                          <Box
+                            display="flex"
+                            justifyContent="space-between"
+                            alignItems="center"
+                            mt={1}
+                          >
                             <Box>
-                              <Typography variant="h5" fontWeight={800}>{analytics.bmi.zScore > 0 ? '+' : ''}{analytics.bmi.zScore}</Typography>
-                              <Typography variant="caption" sx={{ color: analytics.bmi.status.color, fontWeight: 700 }}>
+                              <Typography variant="h5" fontWeight={800}>
+                                {analytics.bmi.zScore > 0 ? "+" : ""}
+                                {analytics.bmi.zScore}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{ color: analytics.bmi.status.color, fontWeight: 700 }}
+                              >
                                 {t("status_" + analytics.bmi.status.code)}
                               </Typography>
                             </Box>
-                            <Chip label={`${analytics.bmi.percentile}-p`} size="small" variant="outlined" />
+                            <Chip
+                              label={`${analytics.bmi.percentile}-p`}
+                              size="small"
+                              variant="outlined"
+                            />
                           </Box>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={Math.min(100, Math.max(0, (analytics.bmi.zScore + 4) * 12.5))} 
-                            sx={{ mt: 1.5, height: 6, borderRadius: 3, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: analytics.bmi.status.color } }}
+                          <LinearProgress
+                            variant="determinate"
+                            value={Math.min(100, Math.max(0, (analytics.bmi.zScore + 4) * 12.5))}
+                            sx={{
+                              mt: 1.5,
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: "rgba(0,0,0,0.05)",
+                              "& .MuiLinearProgress-bar": { bgcolor: analytics.bmi.status.color },
+                            }}
                           />
                         </Paper>
                       </Grid>
@@ -378,7 +679,9 @@ export default function AnalysisResults({
                 <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("idealWeight")}</Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("idealWeight")}
+                      </Typography>
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <MonitorWeightOutlinedIcon />
                         <Typography variant="h4">
@@ -392,16 +695,32 @@ export default function AnalysisResults({
                 <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("weightDiff")}</Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("weightDiff")}
+                      </Typography>
                       <Stack direction="row" alignItems="center" spacing={1}>
                         <InsightsOutlinedIcon
-                          color={diffColor === "error" ? "error" : diffColor === "success" ? "success" : "inherit"}
+                          color={
+                            diffColor === "error"
+                              ? "error"
+                              : diffColor === "success"
+                                ? "success"
+                                : "inherit"
+                          }
                         />
                         <Typography
                           variant="h4"
-                          color={diffColor === "error" ? "error.main" : diffColor === "success" ? "success.main" : "text.primary"}
+                          color={
+                            diffColor === "error"
+                              ? "error.main"
+                              : diffColor === "success"
+                                ? "success.main"
+                                : "text.primary"
+                          }
                         >
-                          {weightDiff == null ? "—" : `${Number(weightDiff) > 0 ? "+" : ""}${showNum(weightDiff)} kg`}
+                          {weightDiff == null
+                            ? "—"
+                            : `${Number(weightDiff) > 0 ? "+" : ""}${showNum(weightDiff)} kg`}
                         </Typography>
                       </Stack>
                     </Stack>
@@ -413,15 +732,21 @@ export default function AnalysisResults({
                 <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("shoulderRatio")}</Typography>
-                      <Typography variant="h4">{shoulderRatio ? `${shoulderRatio}%` : "—"}</Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("shoulderRatio")}
+                      </Typography>
+                      <Typography variant="h4">
+                        {shoulderRatio ? `${shoulderRatio}%` : "—"}
+                      </Typography>
                     </Stack>
                   </Paper>
                 </Grid>
                 <Grid xs={12} md={6}>
                   <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
                     <Stack spacing={0.5}>
-                      <Typography variant="subtitle2" color="text.secondary">{t("thighRatio")}</Typography>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        {t("thighRatio")}
+                      </Typography>
                       <Typography variant="h4">{thighRatio ? `${thighRatio}%` : "—"}</Typography>
                     </Stack>
                   </Paper>
@@ -430,8 +755,12 @@ export default function AnalysisResults({
 
               <Box sx={{ mt: 2 }}>
                 <Typography variant="caption" color="text.secondary">
-                  {t("heightLabel")}: {usedHeight ?? "—"} | {t("bodyLengthLabel")}: {analysis?.indices?.body_length ?? "—"} | {t("weightLabel")}: {usedWeight ?? "—"} | {t("chestLabel")}:{" "}
-                  {usedChest ?? "—"} | {t("headLabel")}: {usedHead ?? "—"} | {t("calfLength")}: {formData.calfLength || "—"} | {t("calfCircumference")}: {formData.calfCircumference || "—"} | {t("footLength")}: {formData.footLength || "—"}
+                  {t("heightLabel")}: {usedHeight ?? "—"} | {t("bodyLengthLabel")}:{" "}
+                  {analysis?.indices?.body_length ?? "—"} | {t("weightLabel")}: {usedWeight ?? "—"}{" "}
+                  | {t("chestLabel")}: {usedChest ?? "—"} | {t("headLabel")}: {usedHead ?? "—"} |{" "}
+                  {t("calfLength")}: {formData.calfLength || "—"} | {t("calfCircumference")}:{" "}
+                  {formData.calfCircumference || "—"} | {t("footLength")}:{" "}
+                  {formData.footLength || "—"}
                 </Typography>
                 {analysis?.indices?.z_body_length != null && (
                   <Box sx={{ mt: 1 }}>
@@ -440,20 +769,31 @@ export default function AnalysisResults({
                     </Typography>
                   </Box>
                 )}
-                {(formData.fatherHeight || formData.motherHeight || patientInfo?.father_height || patientInfo?.mother_height) && (
-                  <Box sx={{ mt: 1.5, pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}>
-                    <Typography variant="caption" color="text.secondary" fontWeight={700} display="block" sx={{ mb: 0.5 }}>
+                {(formData.fatherHeight ||
+                  formData.motherHeight ||
+                  patientInfo?.father_height ||
+                  patientInfo?.mother_height) && (
+                  <Box sx={{ mt: 1.5, pt: 1.5, borderTop: "1px dashed", borderColor: "divider" }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={700}
+                      display="block"
+                      sx={{ mb: 0.5 }}
+                    >
                       {t("territorialData")} (Parents):
                     </Typography>
                     <Stack direction="row" spacing={2}>
                       {(formData.fatherHeight || patientInfo?.father_height) && (
                         <Typography variant="caption" color="text.secondary">
-                          {t("fatherHeightLabel")}: <b>{formData.fatherHeight || patientInfo?.father_height} sm</b>
+                          {t("fatherHeightLabel")}:{" "}
+                          <b>{formData.fatherHeight || patientInfo?.father_height} sm</b>
                         </Typography>
                       )}
                       {(formData.motherHeight || patientInfo?.mother_height) && (
                         <Typography variant="caption" color="text.secondary">
-                          {t("motherHeightLabel")}: <b>{formData.motherHeight || patientInfo?.mother_height} sm</b>
+                          {t("motherHeightLabel")}:{" "}
+                          <b>{formData.motherHeight || patientInfo?.mother_height} sm</b>
                         </Typography>
                       )}
                     </Stack>
@@ -464,33 +804,84 @@ export default function AnalysisResults({
               {/* Detal ko'rsatkichlar (HMAI, MII, ADI) - Faqat ro'yxatdan o'tgan mutaxassislar uchun */}
               {isAuthenticated && (
                 <>
-                  <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 700, color: 'primary.main' }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ mt: 4, mb: 2, fontWeight: 700, color: "primary.main" }}
+                  >
                     {t("detailedIndices")}
                   </Typography>
                   <Grid container spacing={2}>
                     <Grid xs={12} sm={4}>
-                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #3f51b5' }}>
-                        <Typography variant="subtitle2" color="text.secondary">{t("hmai")}</Typography>
-                        <Typography variant="h5" fontWeight={700}>{analysis?.indices?.hmai ?? "—"}</Typography>
-                        <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          height: "100%",
+                          borderLeft: "4px solid #3f51b5",
+                        }}
+                      >
+                        <Typography variant="subtitle2" color="text.secondary">
+                          {t("hmai")}
+                        </Typography>
+                        <Typography variant="h5" fontWeight={700}>
+                          {analysis?.indices?.hmai ?? "—"}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          sx={{ mt: 1, fontStyle: "italic", lineHeight: 1.2 }}
+                        >
                           {analysis?.indices?.hmai_desc ?? "—"}
                         </Typography>
                       </Paper>
                     </Grid>
                     <Grid xs={12} sm={4}>
-                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #4caf50' }}>
-                        <Typography variant="subtitle2" color="text.secondary">{t("mii")}</Typography>
-                        <Typography variant="h5" fontWeight={700}>{analysis?.indices?.mii ?? "—"}</Typography>
-                        <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          height: "100%",
+                          borderLeft: "4px solid #4caf50",
+                        }}
+                      >
+                        <Typography variant="subtitle2" color="text.secondary">
+                          {t("mii")}
+                        </Typography>
+                        <Typography variant="h5" fontWeight={700}>
+                          {analysis?.indices?.mii ?? "—"}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          sx={{ mt: 1, fontStyle: "italic", lineHeight: 1.2 }}
+                        >
                           {analysis?.indices?.mii_desc ?? "—"}
                         </Typography>
                       </Paper>
                     </Grid>
                     <Grid xs={12} sm={4}>
-                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderLeft: '4px solid #ff9800' }}>
-                        <Typography variant="subtitle2" color="text.secondary">{t("adi")}</Typography>
-                        <Typography variant="h5" fontWeight={700}>{analysis?.indices?.adi ?? "—"}</Typography>
-                        <Typography variant="caption" display="block" sx={{ mt: 1, fontStyle: 'italic', lineHeight: 1.2 }}>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          height: "100%",
+                          borderLeft: "4px solid #ff9800",
+                        }}
+                      >
+                        <Typography variant="subtitle2" color="text.secondary">
+                          {t("adi")}
+                        </Typography>
+                        <Typography variant="h5" fontWeight={700}>
+                          {analysis?.indices?.adi ?? "—"}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          sx={{ mt: 1, fontStyle: "italic", lineHeight: 1.2 }}
+                        >
                           {analysis?.indices?.adi_desc ?? "—"}
                         </Typography>
                       </Paper>
@@ -498,20 +889,32 @@ export default function AnalysisResults({
 
                     <Grid xs={6} md={4}>
                       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                        <Typography variant="caption" color="text.secondary" display="block">{t("morphologicalType")}</Typography>
-                        <Typography variant="body2" fontWeight={600}>{analysis?.indices?.morphological_type ?? "—"}</Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {t("morphologicalType")}
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {analysis?.indices?.morphological_type ?? "—"}
+                        </Typography>
                       </Paper>
                     </Grid>
                     <Grid xs={6} md={4}>
                       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                        <Typography variant="caption" color="text.secondary" display="block">{t("biologicalAgeStatus")}</Typography>
-                        <Typography variant="body2" fontWeight={600}>{analysis?.indices?.biological_age_status ?? "—"}</Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {t("biologicalAgeStatus")}
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {analysis?.indices?.biological_age_status ?? "—"}
+                        </Typography>
                       </Paper>
                     </Grid>
                     <Grid xs={12} md={4}>
                       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
-                        <Typography variant="caption" color="text.secondary" display="block">{t("secularTrend")}</Typography>
-                        <Typography variant="body2" fontWeight={600}>{analysis?.indices?.secular_trend ?? "—"}</Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {t("secularTrend")}
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {analysis?.indices?.secular_trend ?? "—"}
+                        </Typography>
                       </Paper>
                     </Grid>
                   </Grid>
@@ -522,27 +925,35 @@ export default function AnalysisResults({
               {age >= 5 && age <= 19 && (
                 <Box sx={{ mt: 4 }}>
                   <Divider sx={{ mb: 3 }}>
-                    <Chip 
-                      icon={<ShowChartIcon />} 
-                      label={t("growthChartsTitle")} 
-                      color="primary" 
-                      variant="outlined" 
+                    <Chip
+                      icon={<ShowChartIcon />}
+                      label={t("growthChartsTitle")}
+                      color="primary"
+                      variant="outlined"
                       sx={{ fontWeight: 700, px: 2 }}
                     />
                   </Divider>
 
-                  <Stack direction="row" spacing={1} sx={{ mb: 2, justifyContent: 'center' }}>
-                    <Button 
-                      variant={chartType === 'height' ? 'contained' : 'outlined'} 
-                      onClick={() => setChartType('height')}
+                  <Stack direction="row" spacing={1} sx={{ mb: 2, justifyContent: "center" }}>
+                    <Button
+                      variant={chartType === "height" ? "contained" : "outlined"}
+                      onClick={() => setChartType("height")}
                       size="small"
                       sx={{ borderRadius: 5 }}
                     >
                       {t("showHeightChart")}
                     </Button>
-                    <Button 
-                      variant={chartType === 'bmi' ? 'contained' : 'outlined'} 
-                      onClick={() => setChartType('bmi')}
+                    <Button
+                      variant={chartType === "weight" ? "contained" : "outlined"}
+                      onClick={() => setChartType("weight")}
+                      size="small"
+                      sx={{ borderRadius: 5 }}
+                    >
+                      Vazn grafigi
+                    </Button>
+                    <Button
+                      variant={chartType === "bmi" ? "contained" : "outlined"}
+                      onClick={() => setChartType("bmi")}
                       size="small"
                       sx={{ borderRadius: 5 }}
                     >
@@ -550,32 +961,49 @@ export default function AnalysisResults({
                     </Button>
                   </Stack>
 
-                  <Paper 
-                    variant="outlined" 
-                    sx={{ 
-                      p: { xs: 1, md: 3 }, 
-                      borderRadius: 4, 
-                      bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)',
-                      borderStyle: 'dashed'
+                  <Paper
+                    variant="outlined"
+                    sx={{
+                      p: { xs: 1, md: 3 },
+                      borderRadius: 4,
+                      bgcolor: (theme) =>
+                        theme.palette.mode === "dark"
+                          ? "rgba(255,255,255,0.02)"
+                          : "rgba(0,0,0,0.03)",
+                      borderStyle: "dashed",
                     }}
                   >
                     <Typography variant="subtitle1" align="center" fontWeight={600} gutterBottom>
-                      {chartType === 'height' ? t("heightForAgeChart") : t("bmiForAgeChart")}
+                      {chartType === "height"
+                        ? t("heightForAgeChart")
+                        : chartType === "weight"
+                          ? "Vazn o'sishi grafigi (Weight-for-age)"
+                          : t("bmiForAgeChart")}
                     </Typography>
-                    
-                    <GrowthChart 
-                      gender={gender} 
-                      age={age} 
-                      type={chartType} 
-                      value={chartType === 'height' ? usedHeight : bmi} 
+
+                    <GrowthChart
+                      gender={gender}
+                      age={age}
+                      type={chartType}
+                      value={
+                        chartType === "height"
+                          ? usedHeight
+                          : chartType === "weight"
+                            ? usedWeight
+                            : bmi
+                      }
                     />
 
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block', px: 2, textAlign: 'center' }}>
-                      {chartType === 'height' ? (
-                        "Ushbu grafik balandlikning yoshga nisbatan me'yorlarini (SDS) ko'rsatadi. Yashil chiziq - median (o'rtacha)."
-                      ) : (
-                        "BMI grafigi tana vazni indeksining yoshga nisbatan o'zgarishini ko'rsatadi."
-                      )}
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ mt: 2, display: "block", px: 2, textAlign: "center" }}
+                    >
+                      {chartType === "height"
+                        ? "Ushbu grafik balandlikning yoshga nisbatan me'yorlarini (SDS) ko'rsatadi. Yashil chiziq - median (o'rtacha)."
+                        : chartType === "weight"
+                          ? "Vazn grafigi WHO bo'y va BMI egri chiziqlaridan chiqarilgan taxminiy norma koridorlarini ko'rsatadi."
+                          : "BMI grafigi tana vazni indeksining yoshga nisbatan o'zgarishini ko'rsatadi."}
                     </Typography>
                   </Paper>
                 </Box>
@@ -585,13 +1013,27 @@ export default function AnalysisResults({
 
           {/* AI Prognostik Tahlil */}
           {root?.ai_predictions && (
-            <Card elevation={2} sx={{ mb: 3, borderRadius: 2, background: theme => theme.palette.mode === 'dark' ? 'linear-gradient(145deg, #1e1e1e, #2d2d2d)' : 'linear-gradient(145deg, #f8f9fa, #ffffff)' }}>
+            <Card
+              elevation={2}
+              sx={{
+                mb: 3,
+                borderRadius: 2,
+                background: (theme) =>
+                  theme.palette.mode === "dark"
+                    ? "linear-gradient(145deg, #1e1e1e, #2d2d2d)"
+                    : "linear-gradient(145deg, #f8f9fa, #ffffff)",
+              }}
+            >
               <CardHeader
                 avatar={<InsightsOutlinedIcon />}
-                title={<Typography variant="h6" fontWeight={700}>{t("aiPrognosticTitle")}</Typography>}
+                title={
+                  <Typography variant="h6" fontWeight={700}>
+                    {t("aiPrognosticTitle")}
+                  </Typography>
+                }
                 sx={{
-                  background: 'linear-gradient(90deg, #6a1b9a, #8e24aa)',
-                  color: '#fff',
+                  background: "linear-gradient(90deg, #6a1b9a, #8e24aa)",
+                  color: "#fff",
                   "& .MuiCardHeader-avatar": { color: "inherit" },
                 }}
               />
@@ -599,10 +1041,30 @@ export default function AnalysisResults({
                 <Grid container spacing={3}>
                   {age < 18 && (
                     <Grid item xs={12} md={4}>
-                      <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, height: "100%", textAlign: "center", borderColor: '#8e24aa', borderWidth: 2, boxShadow: '0 4px 15px rgba(142,36,170,0.1)' }}>
-                        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, textTransform: 'uppercase', letterSpacing: 1 }}>{t("estimatedAdultHeight")}</Typography>
-                        <Typography variant="h2" sx={{ color: '#8e24aa', fontWeight: 800, mb: 1 }}>
-                          {root.ai_predictions.adult_height_prediction} <Typography component="span" variant="h5">sm</Typography>
+                      <Paper
+                        variant="outlined"
+                        sx={{
+                          p: 3,
+                          borderRadius: 3,
+                          height: "100%",
+                          textAlign: "center",
+                          borderColor: "#8e24aa",
+                          borderWidth: 2,
+                          boxShadow: "0 4px 15px rgba(142,36,170,0.1)",
+                        }}
+                      >
+                        <Typography
+                          variant="subtitle2"
+                          color="text.secondary"
+                          sx={{ mb: 1, textTransform: "uppercase", letterSpacing: 1 }}
+                        >
+                          {t("estimatedAdultHeight")}
+                        </Typography>
+                        <Typography variant="h2" sx={{ color: "#8e24aa", fontWeight: 800, mb: 1 }}>
+                          {root.ai_predictions.adult_height_prediction}{" "}
+                          <Typography component="span" variant="h5">
+                            sm
+                          </Typography>
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                           {t("estimatedAdultHeightDesc")}
@@ -613,30 +1075,116 @@ export default function AnalysisResults({
 
                   <Grid item xs={12} md={age < 18 ? 8 : 12}>
                     <Paper variant="outlined" sx={{ p: 3, borderRadius: 3, height: "100%" }}>
-                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>{t("healthRiskTitle")}</Typography>
-                      
+                      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700 }}>
+                        {t("healthRiskTitle")}
+                      </Typography>
+
                       <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2" fontWeight={600}>{t("obesityRisk")}</Typography>
-                          <Typography variant="body2" fontWeight={800} color={root.ai_predictions.risks.obesity_risk > 50 ? 'error.main' : 'text.primary'}>{root.ai_predictions.risks.obesity_risk}%</Typography>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {t("obesityRisk")}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={800}
+                            color={
+                              root.ai_predictions.risks.obesity_risk > 50
+                                ? "error.main"
+                                : "text.primary"
+                            }
+                          >
+                            {root.ai_predictions.risks.obesity_risk}%
+                          </Typography>
                         </Box>
-                        <LinearProgress variant="determinate" value={root.ai_predictions.risks.obesity_risk} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: root.ai_predictions.risks.obesity_risk > 50 ? '#e53935' : (root.ai_predictions.risks.obesity_risk > 25 ? '#ff9800' : '#43a047') } }} />
+                        <LinearProgress
+                          variant="determinate"
+                          value={root.ai_predictions.risks.obesity_risk}
+                          sx={{
+                            height: 8,
+                            borderRadius: 4,
+                            bgcolor: "rgba(0,0,0,0.05)",
+                            "& .MuiLinearProgress-bar": {
+                              bgcolor:
+                                root.ai_predictions.risks.obesity_risk > 50
+                                  ? "#e53935"
+                                  : root.ai_predictions.risks.obesity_risk > 25
+                                    ? "#ff9800"
+                                    : "#43a047",
+                            },
+                          }}
+                        />
                       </Box>
-                      
+
                       <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2" fontWeight={600}>{t("metabolicRisk")}</Typography>
-                          <Typography variant="body2" fontWeight={800} color={root.ai_predictions.risks.metabolic_syndrome_risk > 50 ? 'error.main' : 'text.primary'}>{root.ai_predictions.risks.metabolic_syndrome_risk}%</Typography>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {t("metabolicRisk")}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={800}
+                            color={
+                              root.ai_predictions.risks.metabolic_syndrome_risk > 50
+                                ? "error.main"
+                                : "text.primary"
+                            }
+                          >
+                            {root.ai_predictions.risks.metabolic_syndrome_risk}%
+                          </Typography>
                         </Box>
-                        <LinearProgress variant="determinate" value={root.ai_predictions.risks.metabolic_syndrome_risk} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: root.ai_predictions.risks.metabolic_syndrome_risk > 50 ? '#e53935' : (root.ai_predictions.risks.metabolic_syndrome_risk > 25 ? '#ff9800' : '#43a047') } }} />
+                        <LinearProgress
+                          variant="determinate"
+                          value={root.ai_predictions.risks.metabolic_syndrome_risk}
+                          sx={{
+                            height: 8,
+                            borderRadius: 4,
+                            bgcolor: "rgba(0,0,0,0.05)",
+                            "& .MuiLinearProgress-bar": {
+                              bgcolor:
+                                root.ai_predictions.risks.metabolic_syndrome_risk > 50
+                                  ? "#e53935"
+                                  : root.ai_predictions.risks.metabolic_syndrome_risk > 25
+                                    ? "#ff9800"
+                                    : "#43a047",
+                            },
+                          }}
+                        />
                       </Box>
-                      
+
                       <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2" fontWeight={600}>{t("musculoskeletalRisk")}</Typography>
-                          <Typography variant="body2" fontWeight={800} color={root.ai_predictions.risks.musculoskeletal_risk > 50 ? 'error.main' : 'text.primary'}>{root.ai_predictions.risks.musculoskeletal_risk}%</Typography>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {t("musculoskeletalRisk")}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={800}
+                            color={
+                              root.ai_predictions.risks.musculoskeletal_risk > 50
+                                ? "error.main"
+                                : "text.primary"
+                            }
+                          >
+                            {root.ai_predictions.risks.musculoskeletal_risk}%
+                          </Typography>
                         </Box>
-                        <LinearProgress variant="determinate" value={root.ai_predictions.risks.musculoskeletal_risk} sx={{ height: 8, borderRadius: 4, bgcolor: 'rgba(0,0,0,0.05)', "& .MuiLinearProgress-bar": { bgcolor: root.ai_predictions.risks.musculoskeletal_risk > 50 ? '#e53935' : (root.ai_predictions.risks.musculoskeletal_risk > 25 ? '#ff9800' : '#43a047') } }} />
+                        <LinearProgress
+                          variant="determinate"
+                          value={root.ai_predictions.risks.musculoskeletal_risk}
+                          sx={{
+                            height: 8,
+                            borderRadius: 4,
+                            bgcolor: "rgba(0,0,0,0.05)",
+                            "& .MuiLinearProgress-bar": {
+                              bgcolor:
+                                root.ai_predictions.risks.musculoskeletal_risk > 50
+                                  ? "#e53935"
+                                  : root.ai_predictions.risks.musculoskeletal_risk > 25
+                                    ? "#ff9800"
+                                    : "#43a047",
+                            },
+                          }}
+                        />
                       </Box>
                     </Paper>
                   </Grid>
@@ -647,43 +1195,67 @@ export default function AnalysisResults({
 
           {/* AI Parent Tips */}
           {(tipsLoading || aiTips.length > 0) && (
-            <Card elevation={2} sx={{ mb: 3, borderRadius: 2, border: '1px solid #e0f2f1', overflow: 'hidden' }}>
+            <Card
+              elevation={2}
+              sx={{ mb: 3, borderRadius: 2, border: "1px solid #e0f2f1", overflow: "hidden" }}
+            >
               <CardHeader
-                avatar={<TipsAndUpdatesOutlinedIcon sx={{ color: '#00897b' }} />}
-                title={<Typography variant="h6" fontWeight={700} color="#004d40">{t("parentTipsTitle")}</Typography>}
-                sx={{ bgcolor: '#e0f2f1' }}
+                avatar={<TipsAndUpdatesOutlinedIcon sx={{ color: "#00897b" }} />}
+                title={
+                  <Typography variant="h6" fontWeight={700} color="#004d40">
+                    {t("parentTipsTitle")}
+                  </Typography>
+                }
+                sx={{ bgcolor: "#e0f2f1" }}
               />
               <CardContent>
                 {tipsLoading ? (
-                  <LinearProgress sx={{ my: 2, borderRadius: 1, bgcolor: '#b2dfdb', "& .MuiLinearProgress-bar": { bgcolor: '#00897b' } }} />
+                  <LinearProgress
+                    sx={{
+                      my: 2,
+                      borderRadius: 1,
+                      bgcolor: "#b2dfdb",
+                      "& .MuiLinearProgress-bar": { bgcolor: "#00897b" },
+                    }}
+                  />
                 ) : (
                   <Stack spacing={2}>
                     {aiTips.map((tip, idx) => (
-                      <Box key={idx} sx={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: 2, 
-                        p: 2, 
-                        borderRadius: 3, 
-                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,137,123,0.1)' : '#f1f8f7',
-                        border: '1px solid rgba(0,137,123,0.1)',
-                        transition: 'transform 0.2s',
-                        '&:hover': { transform: 'translateX(8px)' }
-                      }}>
-                         <Box sx={{ 
-                           minWidth: 32, 
-                           height: 32, 
-                           borderRadius: '50%', 
-                           bgcolor: '#00897b', 
-                           color: '#fff', 
-                           display: 'flex', 
-                           alignItems: 'center', 
-                           justifyContent: 'center', 
-                           fontSize: '0.9rem', 
-                           fontWeight: 900,
-                           boxShadow: '0 2px 8px rgba(0,137,123,0.3)'
-                         }}>{idx + 1}</Box>
-                         <Typography variant="body1" fontWeight={600} color="text.primary">{tip}</Typography>
+                      <Box
+                        key={idx}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 2,
+                          p: 2,
+                          borderRadius: 3,
+                          bgcolor: (theme) =>
+                            theme.palette.mode === "dark" ? "rgba(0,137,123,0.1)" : "#f1f8f7",
+                          border: "1px solid rgba(0,137,123,0.1)",
+                          transition: "transform 0.2s",
+                          "&:hover": { transform: "translateX(8px)" },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            minWidth: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            bgcolor: "#00897b",
+                            color: "#fff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.9rem",
+                            fontWeight: 900,
+                            boxShadow: "0 2px 8px rgba(0,137,123,0.3)",
+                          }}
+                        >
+                          {idx + 1}
+                        </Box>
+                        <Typography variant="body1" fontWeight={600} color="text.primary">
+                          {tip}
+                        </Typography>
                       </Box>
                     ))}
                   </Stack>
@@ -696,7 +1268,11 @@ export default function AnalysisResults({
           <Card elevation={2} sx={{ mb: 3, borderRadius: 2 }}>
             <CardHeader
               avatar={<TipsAndUpdatesOutlinedIcon />}
-              title={<Typography variant="h6" fontWeight={700}>{t("advices")}</Typography>}
+              title={
+                <Typography variant="h6" fontWeight={700}>
+                  {t("advices")}
+                </Typography>
+              }
               sx={(theme) => ({
                 background: theme.palette.primary.main,
                 color: theme.palette.getContrastText(theme.palette.primary.main),
@@ -705,8 +1281,12 @@ export default function AnalysisResults({
             />
             <CardContent>
               <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" color="text.secondary">{t("generalAdvice")}</Typography>
-                <Typography variant="body1" sx={{ mt: 0.5 }}>{advices?.general ?? "—"}</Typography>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {t("generalAdvice")}
+                </Typography>
+                <Typography variant="body1" sx={{ mt: 0.5 }}>
+                  {advices?.general ?? "—"}
+                </Typography>
               </Box>
 
               <Grid container spacing={3}>
@@ -718,16 +1298,21 @@ export default function AnalysisResults({
                 ].map(({ key, title }) => (
                   <Grid key={key} item xs={12} md={6}>
                     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
-                      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>{title}</Typography>
+                      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                        {title}
+                      </Typography>
                       <Typography variant="body2">{advices?.[key] ?? "—"}</Typography>
                     </Paper>
                   </Grid>
                 ))}
               </Grid>
-              
 
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 4, alignItems: "center" }}>
-                <FormControl size="small" sx={{ minWidth: 100 }}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                sx={{ mt: 4, alignItems: { xs: "stretch", sm: "center" } }}
+              >
+                <FormControl size="small" sx={{ minWidth: { xs: 80, sm: 100 } }}>
                   <InputLabel>{t("selectPdfLang")}</InputLabel>
                   <Select
                     value={pdfLang}
@@ -749,32 +1334,31 @@ export default function AnalysisResults({
                 >
                   {t("downloadPdf")}
                 </Button>
-
-
               </Stack>
             </CardContent>
           </Card>
 
           {onContinue && (
-            <Box sx={{ mt: 4, mb: 6, display: 'flex', justifyContent: 'center' }}>
-               <Button
+            <Box sx={{ mt: 4, mb: 6, display: "flex", justifyContent: "center" }}>
+              <Button
                 onClick={onContinue}
                 variant="contained"
                 size="large"
                 startIcon={<ArrowForwardIcon />}
-                sx={{ 
+                sx={{
                   borderRadius: 4,
                   px: 8,
                   py: 1.5,
-                  fontSize: '1.1rem',
+                  fontSize: "1.1rem",
                   fontWeight: 800,
-                  boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-                  background: theme => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 100%)`,
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 30px rgba(0,0,0,0.2)',
-                  }
+                  boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+                  background: (theme) =>
+                    `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.info.main} 100%)`,
+                  transition: "transform 0.2s",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.2)",
+                  },
                 }}
               >
                 {t("continueBtn")}
@@ -783,7 +1367,6 @@ export default function AnalysisResults({
           )}
         </>
       )}
-
     </Box>
   );
 }

@@ -303,6 +303,186 @@ def calculate_bmi(data: PatientData, all_settings: Dict[str, Any], lang: str = "
     }
 
 
+def _z_to_percentile(z: Optional[float]) -> Optional[int]:
+    if z is None:
+        return None
+    # Abramowitz-Stegun approximation through math.erf.
+    import math
+    return int(round(0.5 * (1 + math.erf(float(z) / math.sqrt(2))) * 100))
+
+
+def _risk_from_z(z: Optional[float]) -> Dict[str, str]:
+    if z is None:
+        return {
+            "level": "unknown",
+            "color": "gray",
+            "label": "Ma'lumot yetarli emas",
+            "message": "Ko'rsatkichni baholash uchun norma ma'lumoti topilmadi.",
+        }
+
+    abs_z = abs(float(z))
+    if abs_z >= 3:
+        return {
+            "level": "red",
+            "color": "red",
+            "label": "Tezkor shifokor ko'rigi kerak",
+            "message": "Ko'rsatkich me'yordan keskin chetlangan. Pediatr ko'rigi tavsiya etiladi.",
+        }
+    if abs_z >= 2:
+        return {
+            "level": "red",
+            "color": "red",
+            "label": "Shifokor nazorati kerak",
+            "message": "Ko'rsatkich xavf zonasida. Klinik baholash va qayta tekshiruv zarur.",
+        }
+    if abs_z >= 1:
+        return {
+            "level": "yellow",
+            "color": "yellow",
+            "label": "Kuzatuv yetarli",
+            "message": "Ko'rsatkich chegaraviy zonada. Dinamik kuzatuv tavsiya etiladi.",
+        }
+    return {
+        "level": "green",
+        "color": "green",
+        "label": "Normada",
+        "message": "Ko'rsatkich yosh va jinsga mos me'yor diapazonida.",
+    }
+
+
+def build_growth_standards(data: PatientData, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    indices = analysis.get("indices", {}) or {}
+    bmi = analysis.get("bmi")
+    height = float(data.height)
+    weight = float(data.weight)
+    chest = float(data.chest)
+    head = float(data.head)
+
+    # Head/chest standards are practical local screening approximations.
+    head_expected = min(56.0, 46.5 + min(int(data.age), 18) * 0.45)
+    head_sd = 1.8 if int(data.age) < 7 else 2.2
+    chest_expected = height * (0.50 if int(data.age) < 12 else 0.52)
+    chest_sd = max(2.5, chest_expected * 0.08)
+
+    metrics = {
+        "height": {"label": "Bo'y", "value": height, "unit": "sm", "z_score": indices.get("z_h")},
+        "weight": {"label": "Vazn", "value": weight, "unit": "kg", "z_score": indices.get("z_w")},
+        "bmi": {"label": "BMI", "value": bmi, "unit": "", "z_score": indices.get("z_bmi")},
+        "head": {
+            "label": "Bosh aylanasi",
+            "value": head,
+            "unit": "sm",
+            "z_score": round((head - head_expected) / head_sd, 2) if head_sd else None,
+        },
+        "chest": {
+            "label": "Ko'krak aylanasi",
+            "value": chest,
+            "unit": "sm",
+            "z_score": round((chest - chest_expected) / chest_sd, 2) if chest_sd else None,
+        },
+    }
+
+    for metric in metrics.values():
+        metric["percentile"] = _z_to_percentile(metric.get("z_score"))
+        metric["risk"] = _risk_from_z(metric.get("z_score"))
+
+    worst_rank = {"unknown": 0, "green": 1, "yellow": 2, "red": 3}
+    worst = max(metrics.values(), key=lambda item: worst_rank.get(item["risk"]["level"], 0))
+    return {
+        "source": "WHO LMS + mahalliy skrining diapazonlari",
+        "metrics": metrics,
+        "summary": worst["risk"],
+    }
+
+
+def build_progress_tracking(db: Session, rec: PatientAnalysis, full_name: str) -> Dict[str, Any]:
+    query = db.query(PatientAnalysis).filter(
+        PatientAnalysis.id != rec.id,
+        PatientAnalysis.is_deleted == 0,
+        PatientAnalysis.name == full_name,
+    )
+    if rec.birth_date:
+        query = query.filter(PatientAnalysis.birth_date == rec.birth_date)
+    if rec.gender:
+        query = query.filter(PatientAnalysis.gender == rec.gender)
+
+    previous = query.order_by(PatientAnalysis.created_at.desc(), PatientAnalysis.id.desc()).first()
+    if not previous:
+        return {
+            "has_history": False,
+            "message": "Bu bola uchun oldingi o'lchov topilmadi.",
+            "history": [],
+            "changes": {},
+        }
+
+    def _days_between(current: str, old: str) -> Optional[int]:
+        try:
+            c = datetime.date.fromisoformat((current or "")[:10])
+            p = datetime.date.fromisoformat((old or "")[:10])
+            return max((c - p).days, 0)
+        except Exception:
+            return None
+
+    days = _days_between(rec.examination_date, previous.examination_date)
+    months = round(days / 30.44, 1) if days is not None else None
+
+    def _change(field: str, unit: str) -> Dict[str, Any]:
+        current = getattr(rec, field, None)
+        old = getattr(previous, field, None)
+        delta = round(float(current or 0) - float(old or 0), 1)
+        monthly = round(delta / months, 2) if months and months > 0 else None
+        return {"current": current, "previous": old, "delta": delta, "monthly_delta": monthly, "unit": unit}
+
+    changes = {
+        "height": _change("height", "sm"),
+        "weight": _change("weight", "kg"),
+        "bmi": _change("bmi", ""),
+        "head": _change("head", "sm"),
+        "chest": _change("chest", "sm"),
+    }
+
+    height_monthly = changes["height"]["monthly_delta"]
+    if months is not None and height_monthly is not None and months >= 2 and height_monthly < 0.25:
+        trend = "Bo'y o'sishi sekinlashgan, qayta nazorat tavsiya etiladi."
+        trend_level = "yellow"
+    elif changes["weight"]["delta"] < -1:
+        trend = "Vazn kamaygan, ovqatlanish va klinik holatni baholash kerak."
+        trend_level = "yellow"
+    else:
+        trend = "O'sish dinamikasi kuzatuv uchun yetarli ma'lumot beradi."
+        trend_level = "green"
+
+    return {
+        "has_history": True,
+        "previous_id": previous.id,
+        "period_days": days,
+        "period_months": months,
+        "trend": trend,
+        "trend_level": trend_level,
+        "changes": changes,
+        "history": [
+            {
+                "id": previous.id,
+                "date": previous.examination_date,
+                "height": previous.height,
+                "weight": previous.weight,
+                "bmi": previous.bmi,
+                "head": previous.head,
+                "chest": previous.chest,
+            },
+            {
+                "id": rec.id,
+                "date": rec.examination_date,
+                "height": rec.height,
+                "weight": rec.weight,
+                "bmi": rec.bmi,
+                "head": rec.head,
+                "chest": rec.chest,
+            },
+        ],
+    }
+
+
 def _split_region_and_district(region: Optional[str], district: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
     """
     Agar district bo'sh bo'lsa, region "Viloyat, Tuman" ko'rinishida kelgan bo'lishi mumkin.
@@ -728,6 +908,8 @@ def analyze_full(
 
         db.commit()
         db.refresh(rec)
+        growth_standards = build_growth_standards(data, analysis)
+        progress_tracking = build_progress_tracking(db, rec, full_name)
 
         # Audit Log
         record_audit_log(
@@ -779,6 +961,9 @@ def analyze_full(
                 "head": data.head
             },
             "analysis": analysis,
+            "risk_flags": growth_standards["metrics"],
+            "growth_standards": growth_standards,
+            "progress_tracking": progress_tracking,
             "advices": advices,
             "ai_predictions": ml_predictions
         }
