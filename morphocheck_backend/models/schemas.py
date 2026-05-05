@@ -364,6 +364,8 @@ class ResearchRecordOut(ResearchRecordCreate):
     created_by_id: Optional[int] = None
     created_at: datetime.datetime
     is_deleted: Optional[int] = 0
+    deleted_by_id: Optional[int] = None
+    deleted_by_name: Optional[str] = None
     deleted_at: Optional[datetime.datetime] = None
 
     class Config:

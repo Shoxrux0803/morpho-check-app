@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime
@@ -22,6 +22,19 @@ SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 router = APIRouter(tags=["Researcher"])
+
+
+def research_record_to_dict(record: ResearchRecord) -> dict:
+    payload = {
+        column.name: getattr(record, column.name)
+        for column in ResearchRecord.__table__.columns
+    }
+    payload["deleted_by_name"] = (
+        record.deleted_by.name
+        if getattr(record, "deleted_by", None)
+        else None
+    )
+    return payload
 
 
 def get_current_researcher_or_superadmin(
@@ -78,12 +91,14 @@ def list_deleted_research(
     """O'chirilgan yozuvlar ro'yxati — faqat superadmin"""
     if current_user.role != "superadmin":
         raise HTTPException(status_code=403, detail="Faqat superadmin uchun")
-    return (
+    records = (
         db.query(ResearchRecord)
+        .options(joinedload(ResearchRecord.deleted_by))
         .filter(ResearchRecord.is_deleted == 1)
         .order_by(ResearchRecord.deleted_at.desc())
         .all()
     )
+    return [research_record_to_dict(record) for record in records]
 
 
 @router.get("/export/xlsx")

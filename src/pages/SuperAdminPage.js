@@ -17,7 +17,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { AdminApi } from "../services/api";
+import { AdminApi, ResearchApi } from "../services/api";
 import { toast } from "react-hot-toast";
 import { UZB_LOCATIONS } from "../data/uzbLocations";
 import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
@@ -117,12 +117,39 @@ const SuperAdminPage = () => {
 
   const [checked, setChecked] = useState(new Set());
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+  const getDeletedRowKey = (row) => row.__rowKey || `${row.__deletedSource || "analysis"}:${row.id}`;
+  const getDeletedRowCode = (row) => row.id_code || (row.id ? `#${row.id}` : "-");
+  const getDeletedRowPatientName = (row) =>
+    row.full_name || row.name || [row.last_name, row.first_name].filter(Boolean).join(" ") || "-";
+  const getDeletedByName = (row) =>
+    row.deleted_by_name || row.deleted_by?.name || row.deleted_by_email || "Noma'lum";
+  const getDeletedDate = (row) => {
+    if (!row.deleted_at) return "-";
+    const date = new Date(row.deleted_at);
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+  };
+  const getGenderLabel = (gender) => {
+    if (!gender) return "-";
+    const normalized = String(gender).toLowerCase();
+    if (["male", "erkak", "boy"].includes(normalized)) return "Erkak";
+    if (["female", "ayol", "girl"].includes(normalized)) return "Ayol";
+    return gender;
+  };
+  const getDeletedRowBmiText = (row) => {
+    const bmi =
+      row.bmi ??
+      (row.weight && row.chest_standing_height
+        ? (row.weight / Math.pow(row.chest_standing_height / 100, 2)).toFixed(1)
+        : null);
+    if (!bmi) return "-";
+    return row.bmi_status ? `${bmi} (${row.bmi_status})` : String(bmi);
+  };
 
   const toggleAll = useCallback((rows) => {
     const next = new Set(checked);
-    const allChecked = rows.length > 0 && rows.every((r) => checked.has(r.id));
-    if (allChecked) rows.forEach((r) => next.delete(r.id));
-    else rows.forEach((r) => next.add(r.id));
+    const allChecked = rows.length > 0 && rows.every((r) => checked.has(getDeletedRowKey(r)));
+    if (allChecked) rows.forEach((r) => next.delete(getDeletedRowKey(r)));
+    else rows.forEach((r) => next.add(getDeletedRowKey(r)));
     setChecked(next);
   }, [checked]);
 
@@ -137,7 +164,17 @@ const SuperAdminPage = () => {
   const handleBulkRestore = async () => {
     if (checked.size === 0) return;
     try {
-      await AdminApi.analyses.restore(Array.from(checked));
+      const selectedRows = deletedData.filter((row) => checked.has(getDeletedRowKey(row)));
+      const analysisIds = selectedRows
+        .filter((row) => row.__deletedSource !== "research")
+        .map((row) => row.id);
+      const researchIds = selectedRows
+        .filter((row) => row.__deletedSource === "research")
+        .map((row) => row.id);
+
+      if (analysisIds.length) await AdminApi.analyses.restore(analysisIds);
+      for (const id of researchIds) await ResearchApi.restore(id);
+
       toast.success("Ma'lumotlar tiklandi");
       setChecked(new Set());
       fetchDeletedAnalyses();
@@ -220,8 +257,46 @@ const SuperAdminPage = () => {
   const fetchDeletedAnalyses = async () => {
     setDeletedLoading(true);
     try {
-      const data = await AdminApi.analyses.deletedList({ show_deleted: true, page_size: 100 });
-      setDeletedData((data.items || []).filter(i => i.is_deleted));
+      const [analysisResult, researchResult] = await Promise.allSettled([
+        AdminApi.analyses.deletedList({ show_deleted: true, page_size: 100 }),
+        ResearchApi.deletedList(),
+      ]);
+
+      if (analysisResult.status === "rejected") {
+        console.error("Failed to fetch deleted analyses:", analysisResult.reason);
+      }
+      if (researchResult.status === "rejected") {
+        console.error("Failed to fetch deleted research records:", researchResult.reason);
+      }
+
+      const analysisRows =
+        analysisResult.status === "fulfilled"
+          ? (analysisResult.value.items || [])
+              .filter((i) => i.is_deleted)
+              .map((i) => ({
+                ...i,
+                deleted_by_name: getDeletedByName(i),
+                __deletedSource: "analysis",
+                __rowKey: `analysis:${i.id}`,
+              }))
+          : [];
+      const researchRows =
+        researchResult.status === "fulfilled"
+          ? (researchResult.value || [])
+              .filter((i) => i.is_deleted)
+              .map((i) => ({
+                ...i,
+                deleted_by_name: getDeletedByName(i),
+                __deletedSource: "research",
+                __rowKey: `research:${i.id}`,
+              }))
+          : [];
+
+      setDeletedData(
+        [...analysisRows, ...researchRows].sort(
+          (a, b) => new Date(b.deleted_at || 0) - new Date(a.deleted_at || 0),
+        ),
+      );
     } catch (err) {
       console.error("Failed to fetch deleted analyses:", err);
     } finally {
@@ -331,9 +406,19 @@ const SuperAdminPage = () => {
     }
   };
 
-  const handleRestoreAnalysis = async (id) => {
+  const handleRestoreAnalysis = async (rowOrId) => {
+    const row =
+      typeof rowOrId === "object"
+        ? rowOrId
+        : deletedData.find((item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId);
+    if (!row) return;
+
     try {
-      await AdminApi.analyses.restore([id]);
+      if (row.__deletedSource === "research") {
+        await ResearchApi.restore(row.id);
+      } else {
+        await AdminApi.analyses.restore([row.id]);
+      }
       toast.success("Ma'lumot tiklandi");
       fetchDeletedAnalyses();
     } catch (err) {
@@ -352,10 +437,20 @@ const SuperAdminPage = () => {
     }
   };
 
-  const handleHardDeleteAnalysis = async (id) => {
+  const handleHardDeleteAnalysis = async (rowOrId) => {
+    const row =
+      typeof rowOrId === "object"
+        ? rowOrId
+        : deletedData.find((item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId);
+    if (!row) return;
+
     if (window.confirm("DIQQAT! Ushbu ma'lumot bazadan butunlay o'chiriladi. Tiklab bo'lmaydi! Davom etamizmi?")) {
       try {
-        await AdminApi.analyses.hardDelete([id]);
+        if (row.__deletedSource === "research") {
+          await ResearchApi.hardDelete(row.id);
+        } else {
+          await AdminApi.analyses.hardDelete([row.id]);
+        }
         toast.success("Ma'lumot butunlay o'chirildi");
         fetchDeletedAnalyses();
       } catch (err) {
@@ -651,7 +746,7 @@ const SuperAdminPage = () => {
                          <Checkbox 
                            size="small" 
                            indeterminate={checked.size > 0 && checked.size < deletedData.length}
-                           checked={deletedData.length > 0 && deletedData.every(r => checked.has(r.id))}
+                           checked={deletedData.length > 0 && deletedData.every(r => checked.has(getDeletedRowKey(r)))}
                            onChange={() => toggleAll(deletedData)}
                          />
                       </TableCell>
@@ -670,35 +765,35 @@ const SuperAdminPage = () => {
                    ) : (
                      deletedData.map((item) => (
                        <TableRow 
-                         key={item.id} 
+                         key={getDeletedRowKey(item)}
                          hover 
-                         onClick={() => toggleOne(item.id)}
+                         onClick={() => toggleOne(getDeletedRowKey(item))}
                          sx={{ 
                            cursor: 'pointer',
-                           bgcolor: checked.has(item.id) ? "rgba(0,123,255,0.08)" : "inherit"
+                           bgcolor: checked.has(getDeletedRowKey(item)) ? "rgba(0,123,255,0.08)" : "inherit"
                          }}
                        >
-                          <TableCell>
+                          <TableCell onClick={(e) => e.stopPropagation()}>
                              <Checkbox 
                                size="small" 
-                               checked={checked.has(item.id)}
-                               onChange={() => toggleOne(item.id)}
+                               checked={checked.has(getDeletedRowKey(item))}
+                               onChange={() => toggleOne(getDeletedRowKey(item))}
                              />
                           </TableCell>
-                         <TableCell sx={{ fontWeight: "bold" }}>{item.id_code}</TableCell>
-                         <TableCell>{item.last_name} {item.first_name}</TableCell>
+                         <TableCell sx={{ fontWeight: "bold" }}>{getDeletedRowCode(item)}</TableCell>
+                         <TableCell>{getDeletedRowPatientName(item)}</TableCell>
                          <TableCell>
                            <Stack direction="row" spacing={1} alignItems="center">
-                             <Avatar sx={{ width: 24, height: 24, fontSize: 10, bgcolor: "error.main" }}>{(item.deleted_by_name || "?").charAt(0)}</Avatar>
-                             <Typography variant="caption" fontWeight={600}>{item.deleted_by_name || "Noma'lum"}</Typography>
+                             <Avatar sx={{ width: 24, height: 24, fontSize: 10, bgcolor: "error.main" }}>{getDeletedByName(item).charAt(0).toUpperCase()}</Avatar>
+                             <Typography variant="caption" fontWeight={600}>{getDeletedByName(item)}</Typography>
                            </Stack>
                          </TableCell>
-                         <TableCell>{new Date(item.deleted_at).toLocaleString()}</TableCell>
+                         <TableCell>{getDeletedDate(item)}</TableCell>
                          <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                            <Stack direction="row" spacing={1} justifyContent="flex-end">
                              <Tooltip title="Batafsil"><IconButton size="small" color="info" onClick={() => setViewRow(item)}><Visibility /></IconButton></Tooltip>
-                             <Tooltip title="Tiklash"><IconButton size="small" color="success" onClick={() => handleRestoreAnalysis(item.id)}><Refresh /></IconButton></Tooltip>
-                             <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleHardDeleteAnalysis(item.id)}><Delete /></IconButton></Tooltip>
+                             <Tooltip title="Tiklash"><IconButton size="small" color="success" onClick={() => handleRestoreAnalysis(item)}><Refresh /></IconButton></Tooltip>
+                             <Tooltip title="Butunlay o'chirish"><IconButton size="small" color="error" onClick={() => handleHardDeleteAnalysis(item)}><Delete /></IconButton></Tooltip>
                            </Stack>
                          </TableCell>
                        </TableRow>
@@ -1010,7 +1105,17 @@ const SuperAdminPage = () => {
               onClick={async () => {
                 setDeleteConfirmLoading(true);
                 try {
-                  await AdminApi.analyses.hardDelete(Array.from(checked));
+                  const selectedRows = deletedData.filter((row) => checked.has(getDeletedRowKey(row)));
+                  const analysisIds = selectedRows
+                    .filter((row) => row.__deletedSource !== "research")
+                    .map((row) => row.id);
+                  const researchIds = selectedRows
+                    .filter((row) => row.__deletedSource === "research")
+                    .map((row) => row.id);
+
+                  if (analysisIds.length) await AdminApi.analyses.hardDelete(analysisIds);
+                  for (const id of researchIds) await ResearchApi.hardDelete(id);
+
                   toast.success("Ma'lumotlar o'chirildi");
                   setChecked(new Set());
                   setDeleteConfirmOpen(false);
@@ -1038,52 +1143,52 @@ const SuperAdminPage = () => {
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                       <Typography variant="caption" color="text.secondary">ID Kod</Typography>
-                      <Typography variant="body1" fontWeight="bold">{viewRow.id_code}</Typography>
+                      <Typography variant="body1" fontWeight="bold">{getDeletedRowCode(viewRow)}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                       <Typography variant="caption" color="text.secondary">Bemor</Typography>
-                      <Typography variant="body1" fontWeight="bold">{viewRow.last_name} {viewRow.first_name}</Typography>
+                      <Typography variant="body1" fontWeight="bold">{getDeletedRowPatientName(viewRow)}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                       <Typography variant="caption" color="text.secondary">Yoshi / Jinsi</Typography>
-                      <Typography variant="body1">{viewRow.age} yosh / {viewRow.gender === 'male' ? 'Erkak' : 'Ayol'}</Typography>
+                      <Typography variant="body1">{viewRow.age ? `${viewRow.age} yosh` : "-"} / {getGenderLabel(viewRow.gender)}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                       <Typography variant="caption" color="text.secondary">BMI</Typography>
-                      <Typography variant="body1">{viewRow.bmi} ({viewRow.bmi_status})</Typography>
+                      <Typography variant="body1">{getDeletedRowBmiText(viewRow)}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)', borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
                       <Typography variant="caption" color="error.dark">O'chirgan shaxs</Typography>
-                      <Typography variant="body1" fontWeight="bold">{viewRow.deleted_by_name || "Noma'lum"}</Typography>
+                      <Typography variant="body1" fontWeight="bold">{getDeletedByName(viewRow)}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ p: 2, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(211, 47, 47, 0.1)' : 'rgba(211, 47, 47, 0.05)', borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
                       <Typography variant="caption" color="error.dark">O'chirilgan vaqt</Typography>
-                      <Typography variant="body1">{new Date(viewRow.deleted_at).toLocaleString()}</Typography>
+                      <Typography variant="body1">{getDeletedDate(viewRow)}</Typography>
                     </Box>
                   </Grid>
-                  {viewRow.region && (
+                  {(viewRow.region || viewRow.settlement || viewRow.school_name) && (
                     <Grid item xs={12}>
                       <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
-                        <Typography variant="caption" color="text.secondary">Hudud</Typography>
-                        <Typography variant="body1">{viewRow.region}</Typography>
+                        <Typography variant="caption" color="text.secondary">Hudud / muassasa</Typography>
+                        <Typography variant="body1">{[viewRow.region || viewRow.settlement, viewRow.school_name].filter(Boolean).join(" / ")}</Typography>
                       </Box>
                     </Grid>
                   )}
                </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
-              <Button variant="contained" color="success" startIcon={<Refresh />} onClick={() => { handleRestoreAnalysis(viewRow.id); setViewRow(null); }}>Tiklash</Button>
-              <Button variant="outlined" color="error" startIcon={<DeleteForever />} onClick={() => { handleHardDeleteAnalysis(viewRow.id); setViewRow(null); }}>Butunlay o'chirish</Button>
+              <Button variant="contained" color="success" startIcon={<Refresh />} onClick={() => { handleRestoreAnalysis(viewRow); setViewRow(null); }}>Tiklash</Button>
+              <Button variant="outlined" color="error" startIcon={<DeleteForever />} onClick={() => { handleHardDeleteAnalysis(viewRow); setViewRow(null); }}>Butunlay o'chirish</Button>
               <Button onClick={() => setViewRow(null)} color="inherit">Yopish</Button>
             </DialogActions>
           </Dialog>
