@@ -35,7 +35,7 @@ const GlassPaper = ({ children, sx = {} }) => (
         theme.palette.mode === "dark"
           ? "0 8px 32px rgba(0,0,0,0.3)"
           : "0 8px 32px rgba(99, 102, 241, 0.08)",
-      overflow: "hidden",
+      overflow: "auto",
       ...sx,
     }}
   >
@@ -62,7 +62,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
   return (
     <Box sx={{ mb: 4 }}>
       <GlassPaper sx={{ p: { xs: 2, md: 3 } }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" mb={expanded ? 3 : 0}>
+        <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" alignItems={{ xs: "stretch", sm: "center" }} spacing={2} mb={expanded ? 3 : 0}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Box
               sx={{
@@ -86,7 +86,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
             </Box>
           </Stack>
 
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1.5} alignItems="center" justifyContent={{ xs: "space-between", sm: "flex-end" }} flexWrap="wrap" useFlexGap>
             {activeCount > 0 && (
               <Chip 
                 label={`${activeCount} ta filtr faol`} 
@@ -179,7 +179,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                   <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block' }}>
                     YOSH ORALIG'I
                   </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="center">
                     <TextField
                       label="Min"
                       type="number"
@@ -204,7 +204,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                   <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block' }}>
                     BMI ORALIG'I
                   </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="center">
                     <TextField
                       label="Min"
                       type="number"
@@ -275,7 +275,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                   />
                 </Box>
 
-                <Stack direction="row" spacing={1} pt={1}>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1} pt={1}>
                   <Button
                     fullWidth
                     variant="outlined"

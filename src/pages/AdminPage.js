@@ -78,7 +78,7 @@ const GlassPaper = ({ children, sx = {} }) => (
         theme.palette.mode === "dark"
           ? "rgba(255, 255, 255, 0.12)"
           : "rgba(100, 116, 139, 0.12)",
-      overflow: "hidden",
+      overflow: "auto",
       boxShadow: (theme) => 
         theme.palette.mode === "dark"
           ? "0 8px 32px rgba(0,0,0,0.4)"
@@ -89,6 +89,14 @@ const GlassPaper = ({ children, sx = {} }) => (
     {children}
   </Paper>
 );
+
+const horizontalScrollSx = {
+  width: "100%",
+  maxWidth: "100%",
+  minWidth: 0,
+  overflowX: "auto",
+  WebkitOverflowScrolling: "touch",
+};
 
 function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, onDownloadPdf, isPdfDownloading, pdfLang, setPdfLang }) {
   const theme = useTheme();
@@ -443,9 +451,9 @@ export default function AdminPage() {
         roles: ["admin", "superadmin"],
         content: (
           <Box sx={{ py: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Box display="flex" justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} flexDirection={{ xs: "column", md: "row" }} gap={2} mb={3}>
                <Typography variant="h5" fontWeight="bold">Ma'lumotlar Listi</Typography>
-               <Box display="flex" gap={2}>
+               <Box display="flex" gap={1.5} flexWrap="wrap">
                  <Button 
                     variant="outlined" 
                     color="secondary" 
@@ -634,13 +642,15 @@ export default function AdminPage() {
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
       <AppBar position="sticky" elevation={0} sx={{ bgcolor: isDark ? "rgba(23, 26, 33, 0.85)" : "rgba(255, 255, 255, 0.9)", backdropFilter: 'blur(20px)', color: "text.primary", borderBottom: "1px solid", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }}>
         <Container maxWidth="xl">
-            <Toolbar disableGutters>
-                <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, color: 'primary.main' }}>MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box></Typography>
+            <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minWidth: 0, flexWrap: { xs: "wrap", md: "nowrap" } }}>
+                <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, color: 'primary.main', minWidth: { xs: "100%", md: 180 } }}>MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box></Typography>
+                <Box sx={{ flex: "1 1 auto", minWidth: 0, maxWidth: "100%", overflowX: "auto" }}>
                 <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
                     {availableTabs.map((tab) => (
                       <Tab key={tab.id} icon={tab.icon} iconPosition="start" label={tab.label} value={tab.id} sx={{ fontWeight: 700, textTransform: 'none' }} />
                     ))}
                 </Tabs>
+                </Box>
                 <Box sx={{ ml: 2 }}>
                    <Tooltip title="Chiqish"><IconButton onClick={() => setLogoutDialogOpen(true)} color="error" size="small"><Logout /></IconButton></Tooltip>
                 </Box>
@@ -648,7 +658,7 @@ export default function AdminPage() {
         </Container>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ mt: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 4, px: { xs: 1.5, sm: 3 }, maxWidth: "100%" }}>
         {/* PERSISTENT FILTERS FOR RELEVANT TABS */}
         {(activeTab === 0 || activeTab === 1 || activeTab === 2) && (
           <Box mb={4}>
@@ -662,11 +672,15 @@ export default function AdminPage() {
             />
           </Box>
         )}
+        <Box sx={horizontalScrollSx}>
         <AnimatePresence mode="wait">
           <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
+            <Box sx={{ minWidth: { xs: activeTab === 0 || activeTab === 2 ? 720 : 0, md: 0 } }}>
             {renderContent()}
+            </Box>
           </motion.div>
         </AnimatePresence>
+        </Box>
       </Container>
 
       {viewRow && (

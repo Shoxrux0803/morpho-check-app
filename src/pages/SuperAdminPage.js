@@ -41,13 +41,23 @@ const GlassPaper = ({ children, sx = {} }) => (
       border: "1px solid",
       borderColor: (theme) =>
         theme.palette.mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-      overflow: "hidden",
+      overflow: "auto",
       ...sx,
     }}
   >
     {children}
   </Paper>
 );
+
+const scrollableContentSx = {
+  width: "100%",
+  maxWidth: "100%",
+  minWidth: 0,
+  overflowX: "auto",
+  overflowY: "visible",
+  WebkitOverflowScrolling: "touch",
+  pb: 1,
+};
 
 const SuperAdminPage = () => {
   const navigate = useNavigate();
@@ -836,7 +846,7 @@ const SuperAdminPage = () => {
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
-      <Container maxWidth={false} sx={{ py: 4, px: { xs: 2, md: 4 } }}>
+      <Container maxWidth={false} sx={{ py: 4, px: { xs: 1.5, sm: 2, md: 4 }, maxWidth: "100%" }}>
         <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="flex-start">
           {/* Sidebar Tabs */}
           <Box sx={{ 
@@ -887,7 +897,7 @@ const SuperAdminPage = () => {
           </Box>
 
           {/* Main Content Area */}
-          <Box sx={{ flexGrow: 1, minWidth: 0, overflowX: "auto" }}>
+          <Box sx={{ flexGrow: 1, ...scrollableContentSx }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -896,7 +906,9 @@ const SuperAdminPage = () => {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                {renderTabContent()}
+                <Box sx={{ minWidth: { xs: activeTab === 0 || activeTab === 1 ? 720 : 0, md: 0 } }}>
+                  {renderTabContent()}
+                </Box>
               </motion.div>
             </AnimatePresence>
           </Box>

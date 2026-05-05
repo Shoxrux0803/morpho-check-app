@@ -99,3 +99,13 @@ canvas {
   animation: float 3s ease-in-out infinite;
 }
 
+.MuiTableContainer-root {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.MuiTable-root {
+  width: 100%;
+}
+

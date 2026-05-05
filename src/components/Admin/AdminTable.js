@@ -30,8 +30,8 @@ const AdminTable = ({
   const isSuperAdmin = user?.role === "superadmin";
 
   return (
-    <TableContainer>
-      <Table>
+    <TableContainer sx={{ maxWidth: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+      <Table sx={{ minWidth: isSuperAdmin ? 1120 : 900 }}>
         <TableHead>
           <TableRow>
             <TableCell padding="checkbox">
