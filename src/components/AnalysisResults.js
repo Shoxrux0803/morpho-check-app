@@ -28,6 +28,10 @@ import InsightsOutlinedIcon from "@mui/icons-material/InsightsOutlined";
 import MonitorWeightOutlinedIcon from "@mui/icons-material/MonitorWeightOutlined";
 import TipsAndUpdatesOutlinedIcon from "@mui/icons-material/TipsAndUpdatesOutlined";
 import ShowChartIcon from "@mui/icons-material/ShowChart";
+import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined";
+import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
+import RestaurantMenuOutlinedIcon from "@mui/icons-material/RestaurantMenuOutlined";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import GrowthChart from "./Charts/GrowthChart";
 import PersonOutline from "@mui/icons-material/PersonOutline";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -44,6 +48,9 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   const analytics = useGrowthAnalytics(formData);
   const [aiTips, setAiTips] = useState([]);
   const [tipsLoading, setTipsLoading] = useState(false);
+  const [assistantMode, setAssistantMode] = useState(null);
+  const [assistantReplies, setAssistantReplies] = useState({});
+  const [assistantLoading, setAssistantLoading] = useState(false);
 
   // 2) Tuzilmani normallashtirish
   const root = results?.data?.data ?? results?.data ?? results?.result ?? results;
@@ -125,6 +132,83 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   const handlePdfDownload = () => {
     if (typeof generatePDF === "function") {
       generatePDF(pdfLang);
+    }
+  };
+
+  const assistantActions = [
+    {
+      key: "parent",
+      label: "Ota-ona uchun",
+      icon: <PsychologyAltOutlinedIcon />,
+      prompt:
+        "Analiz natijasiga asoslanib, ota-ona uchun oddiy tilda, vahima qilmaydigan 4-5 ta aniq maslahat yozing. Tibbiy terminlarni qisqa tushuntiring.",
+    },
+    {
+      key: "doctor",
+      label: "Klinik izoh",
+      icon: <MedicalServicesOutlinedIcon />,
+      prompt:
+        "Shifokor uchun klinik izoh tayyorlang: asosiy antropometrik topilmalar, BMI/Z-score talqini, xavf omillari va kuzatuv taktikasi. Qisqa, professional formatda yozing.",
+    },
+    {
+      key: "nutrition",
+      label: "Nutrition plan",
+      icon: <RestaurantMenuOutlinedIcon />,
+      prompt:
+        "Bolaning yoshi, jinsi, BMI, Z-score va tavsiyalarga mos 7 kunlik amaliy nutrition plan tuzing. Nonushta, tushlik, kechki ovqat va foydali tamaddi g'oyalarini bering.",
+    },
+    {
+      key: "checkups",
+      label: "Tekshiruvlar",
+      icon: <FactCheckOutlinedIcon />,
+      prompt:
+        "Keyingi tekshiruvlar ro'yxatini tuzing: qaysi mutaxassis, qaysi laborator/instrumental tekshiruv va qachon qayta ko'rik kerakligini prioritet bo'yicha yozing.",
+    },
+  ];
+
+  const buildAssistantContext = () => ({
+    patient: {
+      full_name: fullName,
+      age,
+      gender,
+      region: regionText,
+      height: usedHeight,
+      weight: usedWeight,
+      chest: usedChest,
+      head: usedHead,
+    },
+    analysis,
+    advices,
+    risk_flags: riskFlags,
+    ai_predictions: root?.ai_predictions,
+    progress_tracking: progressTracking,
+  });
+
+  const handleAssistantAction = async (action) => {
+    setAssistantMode(action.key);
+    if (assistantReplies[action.key]) return;
+
+    setAssistantLoading(true);
+    try {
+      const res = await aiService.chat(
+        action.prompt,
+        "analysis_results",
+        [],
+        buildAssistantContext(),
+      );
+      setAssistantReplies((prev) => ({
+        ...prev,
+        [action.key]: res?.reply || "AI javob qaytarmadi. Iltimos, qayta urinib ko'ring.",
+      }));
+    } catch (err) {
+      console.error("AI assistant action error:", err);
+      setAssistantReplies((prev) => ({
+        ...prev,
+        [action.key]:
+          "AI yordamchini chaqirishda xatolik yuz berdi. Internet/API sozlamalarini tekshiring.",
+      }));
+    } finally {
+      setAssistantLoading(false);
     }
   };
 
@@ -1192,6 +1276,67 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
               </CardContent>
             </Card>
           )}
+
+          {/* Analysis-linked AI Assistant */}
+          <Card elevation={2} sx={{ mb: 3, borderRadius: 2, overflow: "hidden" }}>
+            <CardHeader
+              avatar={<PsychologyAltOutlinedIcon sx={{ color: "#5b21b6" }} />}
+              title={
+                <Typography variant="h6" fontWeight={700}>
+                  AI doctor assistant
+                </Typography>
+              }
+              subheader="Analiz natijasiga bog'langan klinik yordamchi"
+              sx={{
+                bgcolor: (theme) =>
+                  theme.palette.mode === "dark" ? "rgba(91,33,182,0.18)" : "#f5f3ff",
+              }}
+            />
+            <CardContent>
+              <Grid container spacing={1.5}>
+                {assistantActions.map((action) => (
+                  <Grid item xs={12} sm={6} md={3} key={action.key}>
+                    <Button
+                      fullWidth
+                      variant={assistantMode === action.key ? "contained" : "outlined"}
+                      startIcon={action.icon}
+                      onClick={() => handleAssistantAction(action)}
+                      disabled={assistantLoading}
+                      sx={{ justifyContent: "flex-start", minHeight: 44, borderRadius: 2 }}
+                    >
+                      {action.label}
+                    </Button>
+                  </Grid>
+                ))}
+              </Grid>
+
+              {(assistantMode || assistantLoading) && (
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    borderRadius: 2,
+                    bgcolor: (theme) =>
+                      theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "#fbfbff",
+                  }}
+                >
+                  {assistantLoading && !assistantReplies[assistantMode] ? (
+                    <Box>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        AI analiz natijasini o'qiyapti...
+                      </Typography>
+                      <LinearProgress />
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" sx={{ whiteSpace: "pre-line", lineHeight: 1.75 }}>
+                      {assistantReplies[assistantMode]}
+                    </Typography>
+                  )}
+                </Paper>
+              )}
+            </CardContent>
+          </Card>
 
           {/* AI Parent Tips */}
           {(tipsLoading || aiTips.length > 0) && (

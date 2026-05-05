@@ -150,12 +150,13 @@ export const AdminApi = {
       }).then(async (r) => {
         const text = await r.text();
         if (!r.ok) {
+          let parsed = null;
           try {
-            const j = JSON.parse(text);
-            throw new Error(j.detail || "Importda xatolik");
-          } catch {
-            throw new Error(text || "Importda xatolik");
-          }
+            parsed = JSON.parse(text);
+          } catch {}
+          const err = new Error(parsed?.detail || parsed?.message || text || "Importda xatolik");
+          err.payload = parsed;
+          throw err;
         }
         return JSON.parse(text);
       });

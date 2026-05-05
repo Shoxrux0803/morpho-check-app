@@ -1406,7 +1406,35 @@ async def import_analyses_xlsx(
 
     imported_count = 0
     updated_count = 0
+    skipped_count = 0
     errors = []
+
+    def safe_cell_value(v):
+        if isinstance(v, (datetime, date)):
+            return v.strftime("%Y-%m-%d")
+        return "" if v is None else str(v)
+
+    def add_import_error(row, field, message, value=None):
+        errors.append({
+            "row": row,
+            "field": field,
+            "message": message,
+            "value": safe_cell_value(value)
+        })
+
+    def is_blank(v):
+        return v is None or str(v).strip() == ""
+
+    def is_number_like(v):
+        if is_blank(v):
+            return False
+        if isinstance(v, (int, float)):
+            return True
+        try:
+            float(str(v).strip().replace(',', '.'))
+            return True
+        except Exception:
+            return False
 
     def format_val(v, default=0.0):
         if v is None or v == "": return default
@@ -1446,9 +1474,58 @@ async def import_analyses_xlsx(
                 if col_idx < len(row_values):
                     data[field] = row_values[col_idx]
             
-            # Mandatory fields check
-            if not data.get("first_name") or not data.get("last_name") or not data.get("height") or not data.get("weight"):
-                errors.append(f"Row {row_idx}: Ism, Familiya, Bo'y va Vazn majburiy.")
+            row_errors = []
+            required_fields = {
+                "first_name": "Ism majburiy.",
+                "last_name": "Familiya majburiy.",
+                "gender": "Jins majburiy.",
+                "age": "Yosh majburiy.",
+                "region": "Viloyat majburiy.",
+                "height": "Bo'y majburiy.",
+                "weight": "Vazn majburiy.",
+                "chest": "Ko'krak qafasi majburiy.",
+                "waist": "Bel aylanasi majburiy.",
+                "head": "Bosh aylanasi majburiy.",
+            }
+            for field, message in required_fields.items():
+                if is_blank(data.get(field)):
+                    row_errors.append((field, message, data.get(field)))
+
+            gender_raw = str(data.get("gender") or "").strip().lower()
+            valid_gender = (
+                gender_raw in ["m", "f"]
+                or "erkak" in gender_raw
+                or "ayol" in gender_raw
+                or "male" in gender_raw
+                or "female" in gender_raw
+            )
+            if gender_raw and not valid_gender:
+                row_errors.append(("gender", "Jins 'erkak' yoki 'ayol' bo'lishi kerak.", data.get("gender")))
+
+            numeric_fields = [
+                "age", "age_months", "age_days", "height", "weight", "chest", "waist", "head",
+                "shoulder_length", "shoulder_breadth", "shoulder_circumference",
+                "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
+                "calf_length", "calf_circumference", "foot_length", "body_length",
+                "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+            ]
+            for field in numeric_fields:
+                if not is_blank(data.get(field)) and not is_number_like(data.get(field)):
+                    row_errors.append((field, "Raqam formatida bo'lishi kerak.", data.get(field)))
+
+            if is_number_like(data.get("age")) and not (0 <= format_int(data.get("age"), -1) <= 19):
+                row_errors.append(("age", "Yosh 0 dan 19 gacha bo'lishi kerak.", data.get("age")))
+
+            if is_number_like(data.get("height")) and not (30 <= format_val(data.get("height"), 0) <= 250):
+                row_errors.append(("height", "Bo'y 30-250 sm oralig'ida bo'lishi kerak.", data.get("height")))
+
+            if is_number_like(data.get("weight")) and not (1 <= format_val(data.get("weight"), 0) <= 250):
+                row_errors.append(("weight", "Vazn 1-250 kg oralig'ida bo'lishi kerak.", data.get("weight")))
+
+            if row_errors:
+                skipped_count += 1
+                for field, message, value in row_errors:
+                    add_import_error(row_idx, field, message, value)
                 continue
 
             # Convert types
@@ -1570,7 +1647,8 @@ async def import_analyses_xlsx(
                 updated_count += 1
 
         except Exception as e:
-            errors.append(f"Row {row_idx}: Xatolik - {str(e)}")
+            skipped_count += 1
+            add_import_error(row_idx, "row", f"Qatorni import qilishda xatolik: {str(e)}")
 
     try:
         db.commit()
@@ -1584,6 +1662,7 @@ async def import_analyses_xlsx(
         "status": "success",
         "imported": imported_count,
         "updated": updated_count,
+        "skipped": skipped_count,
         "errors": errors
     }
 

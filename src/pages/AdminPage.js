@@ -17,7 +17,7 @@ import {
 import {
   Delete, Download, FilterList, Close, Dashboard as DashboardIcon, 
   List as ListIcon, Lock, Person, Visibility, VisibilityOff, Assessment,
-  BiotechOutlined, Logout, Refresh
+  BiotechOutlined, Logout, Refresh, ErrorOutline, CheckCircle
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
@@ -60,6 +60,25 @@ const normalize = (r) => {
     lastName: r.last_name || r.lastName,
     bmi: bmiVal,
     bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
+  };
+};
+
+const normalizeImportError = (err) => {
+  if (typeof err === "string") {
+    const match = err.match(/Row\s+(\d+):\s*(.*)/i);
+    return {
+      row: match ? Number(match[1]) : "-",
+      field: "-",
+      message: match ? match[2] : err,
+      value: "",
+    };
+  }
+
+  return {
+    row: err?.row ?? "-",
+    field: err?.field || "-",
+    message: err?.message || err?.detail || "Noma'lum xatolik",
+    value: err?.value ?? "",
   };
 };
 
@@ -425,7 +444,13 @@ export default function AdminPage() {
     try {
       const res = await AdminApi.analyses.importXlsx(importFile);
       setImportResult(res);
-      toast.success(`Tayyor! ${res.imported} ta yangi, ${res.updated} ta yangilangan`);
+      const errorCount = res?.errors?.length || 0;
+      const skippedCount = res?.skipped || errorCount || 0;
+      toast.success(
+        `Tayyor! ${res.imported} ta yangi, ${res.updated} ta yangilangan${
+          skippedCount ? `, ${skippedCount} ta o'tkazib yuborildi` : ""
+        }`,
+      );
       if (!res.errors || res.errors.length === 0) setImportConfirmOpen(false);
       load();
     } catch (e) {
@@ -791,7 +816,7 @@ export default function AdminPage() {
         <DialogTitle sx={{ fontWeight: 800 }}>Excel-dan Ma'lumotlarni Import Qilish</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-            Ma'lumotlarni ommaviy qo'shish uchun shablonni to'ldiring va shu erga yuklang. Ism, Familiya, Bo'y va Vazn ustunlari to'ldirilishi majburiy.
+            Ma'lumotlarni ommaviy qo'shish uchun shablonni to'ldiring va shu erga yuklang. Ism, Familiya, jins, yosh, viloyat va asosiy o'lchovlar to'ldirilishi majburiy.
           </Typography>
           
           <Box 
@@ -820,12 +845,59 @@ export default function AdminPage() {
             </Typography>
           </Box>
 
-          {importResult && importResult.errors && importResult.errors.length > 0 && (
-            <Box sx={{ mt: 3, p: 2, bgcolor: 'error.lighter', borderRadius: 2, maxHeight: 200, overflow: 'auto' }}>
-              <Typography variant="caption" color="error.main" fontWeight="bold">Xatoliklar topildi ({importResult.errors.length} ta):</Typography>
-              {importResult.errors.map((err, idx) => (
-                <Typography key={idx} variant="caption" display="block" sx={{ color: 'error.dark', mt: 0.5 }}>- {err}</Typography>
-              ))}
+          {importResult && (
+            <Box sx={{ mt: 3 }}>
+              <Alert
+                severity={importResult.errors?.length ? "warning" : "success"}
+                icon={importResult.errors?.length ? <ErrorOutline /> : <CheckCircle />}
+                sx={{ mb: 2, borderRadius: 2 }}
+              >
+                <Typography variant="body2" fontWeight={700}>
+                  Import yakuni: {importResult.imported || 0} yangi, {importResult.updated || 0}{" "}
+                  yangilangan, {importResult.skipped || importResult.errors?.length || 0} xatoli
+                  qator.
+                </Typography>
+              </Alert>
+
+              {importResult.errors && importResult.errors.length > 0 && (
+                <TableContainer
+                  component={Paper}
+                  variant="outlined"
+                  sx={{ maxHeight: 260, borderRadius: 2 }}
+                >
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 800 }}>Qator</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>Ustun</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>Xato</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>Qiymat</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {importResult.errors.map((err, idx) => {
+                        const item = normalizeImportError(err);
+                        return (
+                          <TableRow key={`${item.row}-${item.field}-${idx}`} hover>
+                            <TableCell>{item.row}</TableCell>
+                            <TableCell>{item.field}</TableCell>
+                            <TableCell>
+                              <Typography variant="caption" color="error.main" fontWeight={600}>
+                                {item.message}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="caption" color="text.secondary">
+                                {item.value === "" || item.value == null ? "-" : String(item.value)}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </Box>
           )}
         </DialogContent>
