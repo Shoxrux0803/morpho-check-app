@@ -1,30 +1,50 @@
 // src/components/Dashboard/SuperAdminDashboard.js
 import React, { useMemo } from "react";
 import {
-  Box, Grid, Paper, Typography, CircularProgress, Divider, Tooltip as MuiTooltip,
-  LinearProgress, useTheme, Chip, Stack
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  CircularProgress,
+  Divider,
+  LinearProgress,
+  useTheme,
+  Chip,
+  Stack,
 } from "@mui/material";
 import {
-  PeopleAlt, Assessment, TrendingUp, AdminPanelSettings,
-  Wc, PersonOutline, WomanOutlined, BarChartOutlined,
-  FmdGoodOutlined, MonitorWeightOutlined, FavoriteBorderOutlined, ReportProblemOutlined
+  Assessment,
+  TrendingUp,
+  AdminPanelSettings,
+  FmdGoodOutlined,
+  MonitorWeightOutlined,
+  ReportProblemOutlined,
 } from "@mui/icons-material";
 import {
   ResponsiveContainer,
-  AreaChart, Area,
-  BarChart, Bar,
-  PieChart, Pie, Cell,
-  LineChart, Line,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  XAxis, YAxis, CartesianGrid,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip as ReTooltip,
   Legend,
 } from "recharts";
 
 // ==== PALETTE ====
 const COLORS = {
-  primary: "#6366f1",
-  secondary: "#8b5cf6",
+  primary: "#0f766e",
+  secondary: "#2563eb",
   success: "#10b981",
   warning: "#f59e0b",
   error: "#ef4444",
@@ -33,7 +53,7 @@ const COLORS = {
   rose: "#f43f5e",
 };
 const PIE_COLORS = [COLORS.info, COLORS.rose, COLORS.teal, COLORS.warning];
-const AGE_COLORS = ["#818cf8", "#6366f1", "#4f46e5", "#3730a3", "#312e81"];
+const AGE_COLORS = ["#0f766e", "#2563eb", "#14b8a6", "#f59e0b", "#64748b"];
 
 // ==== HELPERS ====
 const GlassCard = ({ children, sx = {}, gradient }) => {
@@ -44,17 +64,31 @@ const GlassCard = ({ children, sx = {}, gradient }) => {
       elevation={0}
       sx={{
         p: 3,
-        borderRadius: 3,
-        background: gradient
-          ? gradient
-          : isDark
-          ? "rgba(30,30,50,0.7)"
-          : "rgba(255,255,255,0.85)",
-        backdropFilter: "blur(20px)",
+        height: "100%",
+        borderRadius: 2,
+        background: gradient ? gradient : isDark ? "rgba(15,23,42,0.78)" : "rgba(255,255,255,0.96)",
+        backdropFilter: "blur(14px)",
         border: "1px solid",
-        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(99,102,241,0.1)",
+        borderColor: isDark ? "rgba(148,163,184,0.18)" : "rgba(15,118,110,0.14)",
         transition: "transform 0.2s, box-shadow 0.2s",
-        "&:hover": { transform: "translateY(-2px)", boxShadow: "0 12px 40px rgba(99,102,241,0.15)" },
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 16px 44px rgba(15,23,42,0.10)",
+        },
+        overflowX: "auto",
+        "&::-webkit-scrollbar": {
+          height: "6px",
+        },
+        "&::-webkit-scrollbar-track": {
+          background: "transparent",
+        },
+        "&::-webkit-scrollbar-thumb": {
+          background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+          borderRadius: "10px",
+        },
+        "&::-webkit-scrollbar-thumb:hover": {
+          background: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
+        },
         ...sx,
       }}
     >
@@ -65,15 +99,20 @@ const GlassCard = ({ children, sx = {}, gradient }) => {
 
 const KpiCard = ({ label, value, sub, icon, color, trend, loading }) => (
   <GlassCard
-    gradient={`linear-gradient(135deg, ${color}22 0%, ${color}08 100%)`}
-    sx={{ borderLeft: `4px solid ${color}` }}
+    gradient={`linear-gradient(180deg, ${color}12 0%, transparent 68%)`}
+    sx={{ minHeight: 148, borderTop: `3px solid ${color}` }}
   >
     {loading ? (
       <CircularProgress size={28} sx={{ color }} />
     ) : (
       <Box display="flex" justifyContent="space-between" alignItems="flex-start">
         <Box>
-          <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 1, fontSize: "0.7rem" }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            fontWeight={700}
+            sx={{ textTransform: "uppercase", letterSpacing: 1, fontSize: "0.7rem" }}
+          >
             {label}
           </Typography>
           <Typography variant="h4" fontWeight={800} sx={{ color, mt: 0.5, lineHeight: 1 }}>
@@ -118,7 +157,14 @@ const KpiCard = ({ label, value, sub, icon, color, trend, loading }) => (
 
 const SectionTitle = ({ title, subtitle }) => (
   <Box mb={2}>
-    <Typography variant="h6" fontWeight={800} sx={{ background: "linear-gradient(90deg,#6366f1,#8b5cf6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+    <Typography
+      variant="h6"
+      fontWeight={800}
+      sx={{
+        color: "text.primary",
+        letterSpacing: 0,
+      }}
+    >
       {title}
     </Typography>
     {subtitle && (
@@ -148,43 +194,74 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
   const theme = useTheme();
 
   // ----- Derived data -----
-  const genderData = useMemo(() => [
-    { name: "Erkak", value: stats?.by_gender?.erkak || 0 },
-    { name: "Ayol", value: stats?.by_gender?.ayol || 0 },
-    { name: "Noma'lum", value: stats?.by_gender?.["noma'lum"] || 0 },
-  ].filter(d => d.value > 0), [stats]);
+  const genderData = useMemo(
+    () =>
+      [
+        { name: "Erkak", value: stats?.by_gender?.erkak || 0 },
+        { name: "Ayol", value: stats?.by_gender?.ayol || 0 },
+        { name: "Noma'lum", value: stats?.by_gender?.["noma'lum"] || 0 },
+      ].filter((d) => d.value > 0),
+    [stats],
+  );
 
-  const ageGroupData = useMemo(() =>
-    (stats?.by_age_group || []).map((g, i) => ({ ...g, fill: AGE_COLORS[i % AGE_COLORS.length] })),
-    [stats]);
+  const ageGroupData = useMemo(
+    () =>
+      (stats?.by_age_group || []).map((g, i) => ({
+        ...g,
+        fill: AGE_COLORS[i % AGE_COLORS.length],
+      })),
+    [stats],
+  );
 
-  const somatoData = useMemo(() =>
-    Object.entries(stats?.by_somatotype || {}).map(([name, value]) => ({ name, value })),
-    [stats]);
+  const somatoData = useMemo(
+    () => Object.entries(stats?.by_somatotype || {}).map(([name, value]) => ({ name, value })),
+    [stats],
+  );
 
-  const regionData = useMemo(() =>
-    (stats?.by_region || []).slice(0, 10),
-    [stats]);
+  const regionData = useMemo(() => (stats?.by_region || []).slice(0, 10), [stats]);
   const riskRegionRows = useMemo(() => (stats?.top_risk_regions || []).slice(0, 6), [stats]);
 
-  const monthlyTrend = useMemo(() =>
-    (stats?.monthly_trend || []).map(m => ({
-      ...m,
-      avgBmi: m.avg_bmi ? parseFloat(m.avg_bmi).toFixed(1) : null,
-    })),
-    [stats]);
+  const monthlyTrend = useMemo(
+    () =>
+      (stats?.monthly_trend || []).map((m) => ({
+        ...m,
+        avgBmi: m.avg_bmi ? parseFloat(m.avg_bmi).toFixed(1) : null,
+      })),
+    [stats],
+  );
 
   const bmiCategories = useMemo(() => {
-    const total = (stats?.bmi_distribution?.normal || 0)
-      + (stats?.bmi_distribution?.underweight || 0)
-      + (stats?.bmi_distribution?.overweight || 0)
-      + (stats?.bmi_distribution?.obese || 0);
+    const total =
+      (stats?.bmi_distribution?.normal || 0) +
+      (stats?.bmi_distribution?.underweight || 0) +
+      (stats?.bmi_distribution?.overweight || 0) +
+      (stats?.bmi_distribution?.obese || 0);
     if (!total) return [];
     return [
-      { name: "Normal", value: stats.bmi_distribution.normal, pct: Math.round(stats.bmi_distribution.normal / total * 100), color: COLORS.success },
-      { name: "Ortiqcha", value: stats.bmi_distribution.overweight, pct: Math.round(stats.bmi_distribution.overweight / total * 100), color: COLORS.warning },
-      { name: "Semizlik", value: stats.bmi_distribution.obese, pct: Math.round(stats.bmi_distribution.obese / total * 100), color: COLORS.error },
-      { name: "Ozg'in", value: stats.bmi_distribution.underweight, pct: Math.round(stats.bmi_distribution.underweight / total * 100), color: COLORS.info },
+      {
+        name: "Normal",
+        value: stats.bmi_distribution.normal,
+        pct: Math.round((stats.bmi_distribution.normal / total) * 100),
+        color: COLORS.success,
+      },
+      {
+        name: "Ortiqcha",
+        value: stats.bmi_distribution.overweight,
+        pct: Math.round((stats.bmi_distribution.overweight / total) * 100),
+        color: COLORS.warning,
+      },
+      {
+        name: "Semizlik",
+        value: stats.bmi_distribution.obese,
+        pct: Math.round((stats.bmi_distribution.obese / total) * 100),
+        color: COLORS.error,
+      },
+      {
+        name: "Ozg'in",
+        value: stats.bmi_distribution.underweight,
+        pct: Math.round((stats.bmi_distribution.underweight / total) * 100),
+        color: COLORS.info,
+      },
     ];
   }, [stats]);
 
@@ -200,12 +277,12 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
   // Admins per role
   const adminRolePie = useMemo(() => {
-    const superCount = admins.filter(a => a.role === "superadmin").length;
-    const adminCount = admins.filter(a => a.role === "admin").length;
+    const superCount = admins.filter((a) => a.role === "superadmin").length;
+    const adminCount = admins.filter((a) => a.role === "admin").length;
     return [
       { name: "Superadmin", value: superCount },
       { name: "Admin", value: adminCount },
-    ].filter(d => d.value > 0);
+    ].filter((d) => d.value > 0);
   }, [admins]);
 
   if (statsLoading) {
@@ -218,9 +295,52 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
   return (
     <Box>
+      <Box
+        mb={3}
+        p={3}
+        sx={{
+          borderRadius: 2,
+          border: "1px solid",
+          borderColor:
+            theme.palette.mode === "dark" ? "rgba(148,163,184,0.18)" : "rgba(15,118,110,0.16)",
+          background:
+            theme.palette.mode === "dark"
+              ? "linear-gradient(135deg, rgba(15,118,110,0.22), rgba(37,99,235,0.12))"
+              : "linear-gradient(135deg, rgba(15,118,110,0.10), rgba(37,99,235,0.06))",
+        }}
+      >
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          alignItems={{ xs: "flex-start", md: "center" }}
+          justifyContent="space-between"
+          spacing={2}
+        >
+          <Box>
+            <Typography variant="h4" fontWeight={900} sx={{ color: "text.primary" }}>
+              SuperAdmin analitika markazi
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mt={0.5}>
+              Hududlar, adminlar, klinik xavf va oylik dinamika bo'yicha yagona nazorat paneli
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Chip
+              label={`Analizlar: ${stats?.total_analyses?.toLocaleString("uz-UZ") ?? 0}`}
+              sx={{ fontWeight: 800 }}
+            />
+            <Chip label={`Adminlar: ${admins.length}`} color="primary" sx={{ fontWeight: 800 }} />
+            <Chip
+              label={`Bugun: ${stats?.today_analyses ?? 0}`}
+              color="success"
+              sx={{ fontWeight: 800 }}
+            />
+          </Stack>
+        </Stack>
+      </Box>
+
       {/* ===== KPI CARDS ===== */}
       <Grid container spacing={2} mb={4}>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label="Jami Analizlar"
             value={stats?.total_analyses?.toLocaleString("uz-UZ") ?? "0"}
@@ -230,7 +350,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
             trend={stats?.monthly_growth}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label="Bugungi Analizlar"
             value={stats?.today_analyses?.toLocaleString("uz-UZ") ?? "0"}
@@ -239,25 +359,29 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
             color={COLORS.success}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label="Haftalik o'sish"
-            value={stats?.weekly_growth_pct != null ? `${Number(stats.weekly_growth_pct) > 0 ? "+" : ""}${stats.weekly_growth_pct}%` : "0%"}
+            value={
+              stats?.weekly_growth_pct != null
+                ? `${Number(stats.weekly_growth_pct) > 0 ? "+" : ""}${stats.weekly_growth_pct}%`
+                : "0%"
+            }
             sub={`${stats?.weekly_analyses ?? 0} ta shu hafta`}
             icon={<TrendingUp />}
             color={COLORS.info}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label="Jami Adminlar"
             value={admins.length}
-            sub={`${admins.filter(a => a.role === "superadmin").length} super, ${admins.filter(a => a.role === "admin").length} oddiy`}
+            sub={`${admins.filter((a) => a.role === "superadmin").length} super, ${admins.filter((a) => a.role === "admin").length} oddiy`}
             icon={<AdminPanelSettings />}
             color={COLORS.secondary}
           />
         </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label="O'rtacha BMI"
             value={stats?.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : "—"}
@@ -328,8 +452,11 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {/* ROW 1: Wide Chart (Monthly trend) */}
         <Grid size={{ xs: 12 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="📈 Oylik dinamika" subtitle="So'nggi 12 oy davomidagi analizlar soni" />
-            <Box sx={{ height: 350 }}>
+            <SectionTitle
+              title="Oylik dinamika"
+              subtitle="So'nggi 12 oy davomidagi analizlar soni"
+            />
+            <Box sx={{ height: 350, minWidth: { xs: 280, sm: 400, md: 600 } }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={monthlyTrend}>
                   <defs>
@@ -342,15 +469,54 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                       <stop offset="95%" stopColor={COLORS.warning} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(255,255,255,0.05)"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
                   <ReTooltip {...CustomTooltipStyle} />
                   <Legend />
-                  <Area yAxisId="left" type="monotone" dataKey="count" name="Analizlar soni" stroke={COLORS.primary} strokeWidth={2.5} fill="url(#gradCount)" dot={{ r: 3, fill: COLORS.primary }} />
-                  {monthlyTrend.some(d => d.avgBmi) && (
-                    <Area yAxisId="right" type="monotone" dataKey="avgBmi" name="O'rtacha BMI" stroke={COLORS.warning} strokeWidth={2} fill="url(#gradBmi)" strokeDasharray="5 3" dot={false} />
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="count"
+                    name="Analizlar soni"
+                    stroke={COLORS.primary}
+                    strokeWidth={2.5}
+                    fill="url(#gradCount)"
+                    dot={{ r: 3, fill: COLORS.primary }}
+                  />
+                  {monthlyTrend.some((d) => d.avgBmi) && (
+                    <Area
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="avgBmi"
+                      name="O'rtacha BMI"
+                      stroke={COLORS.warning}
+                      strokeWidth={2}
+                      fill="url(#gradBmi)"
+                      strokeDasharray="5 3"
+                      dot={false}
+                    />
                   )}
                 </AreaChart>
               </ResponsiveContainer>
@@ -361,7 +527,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {/* ROW 2: Triple Distribution Charts (Gender, Age, Somatotype) */}
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="⚥ Jinsiy taqsimot" subtitle="Erkak / Ayol nisbati" />
+            <SectionTitle title="Jinsiy taqsimot" subtitle="Erkak / Ayol nisbati" />
             <Box sx={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -387,14 +553,20 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
             <Stack spacing={0.8}>
               {genderData.map((g, i) => {
                 const total = genderData.reduce((s, d) => s + d.value, 0);
-                const pct = total ? Math.round(g.value / total * 100) : 0;
+                const pct = total ? Math.round((g.value / total) * 100) : 0;
                 return (
                   <Box key={i} display="flex" justifyContent="space-between" alignItems="center">
                     <Box display="flex" alignItems="center" gap={1}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: PIE_COLORS[i] }} />
-                      <Typography variant="caption" color="text.secondary" fontWeight={600}>{g.name}</Typography>
+                      <Box
+                        sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: PIE_COLORS[i] }}
+                      />
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        {g.name}
+                      </Typography>
                     </Box>
-                    <Typography variant="caption" fontWeight={800}>{g.value.toLocaleString()} ({pct}%)</Typography>
+                    <Typography variant="caption" fontWeight={800}>
+                      {g.value.toLocaleString()} ({pct}%)
+                    </Typography>
                   </Box>
                 );
               })}
@@ -404,13 +576,26 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="👤 Yosh guruhlari" subtitle="Bemorlar yosh bo'yicha" />
-            <Box sx={{ height: 260 }}>
+            <SectionTitle title="Yosh guruhlari" subtitle="Bemorlar yosh bo'yicha" />
+            <Box sx={{ height: 260, minWidth: { xs: 280, sm: 350, md: 400 } }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ageGroupData} barCategoryGap="30%">
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="rgba(255,255,255,0.05)"
+                  />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
                   <ReTooltip {...CustomTooltipStyle} />
                   <Bar dataKey="value" name="Bemorlar soni" radius={[6, 6, 0, 0]} barSize={28}>
                     {ageGroupData.map((entry, i) => (
@@ -425,15 +610,37 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="🏃 Somatotip taqsimoti" subtitle="Tana tuzilishi klassifikatsiyasi" />
-            <Box sx={{ height: 260 }}>
+            <SectionTitle title="Somatotip taqsimoti" subtitle="Tana tuzilishi klassifikatsiyasi" />
+            <Box sx={{ height: 260, minWidth: { xs: 280, sm: 350, md: 400 } }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart layout="vertical" data={somatoData} barCategoryGap="15%">
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
-                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={90} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    stroke="rgba(255,255,255,0.05)"
+                  />
+                  <XAxis
+                    type="number"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    axisLine={false}
+                    tickLine={false}
+                    width={90}
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  />
                   <ReTooltip {...CustomTooltipStyle} />
-                  <Bar dataKey="value" name="Soni" fill={COLORS.secondary} radius={[0, 6, 6, 0]} barSize={14} />
+                  <Bar
+                    dataKey="value"
+                    name="Soni"
+                    fill={COLORS.secondary}
+                    radius={[0, 6, 6, 0]}
+                    barSize={14}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             </Box>
@@ -444,15 +651,40 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {regionData.length > 0 && (
           <Grid size={{ xs: 12, md: 7 }}>
             <GlassCard>
-              <SectionTitle title="🗺️ Viloyatlar bo'yicha top-10" subtitle="Eng ko'p analiz kiritilgan hududlar" />
-              <Box sx={{ height: 280 }}>
+              <SectionTitle
+                title="Viloyatlar bo'yicha top-10"
+                subtitle="Eng ko'p analiz kiritilgan hududlar"
+              />
+              <Box sx={{ height: 280, minWidth: 500 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={regionData} layout="vertical" barCategoryGap="20%">
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
-                    <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
-                    <YAxis dataKey="region" type="category" width={110} axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#94a3b8" }} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={false}
+                      stroke="rgba(255,255,255,0.05)"
+                    />
+                    <XAxis
+                      type="number"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    />
+                    <YAxis
+                      dataKey="region"
+                      type="category"
+                      width={110}
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    />
                     <ReTooltip {...CustomTooltipStyle} />
-                    <Bar dataKey="count" name="Analizlar" fill={COLORS.teal} radius={[0, 6, 6, 0]} barSize={12} />
+                    <Bar
+                      dataKey="count"
+                      name="Analizlar"
+                      fill={COLORS.teal}
+                      radius={[0, 6, 6, 0]}
+                      barSize={12}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -462,7 +694,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
         <Grid size={{ xs: 12, md: regionData.length > 0 ? 5 : 12 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="⚖️ BMI holati taqsimoti" subtitle="Sog'lik guruhlari bo'yicha" />
+            <SectionTitle title="BMI holati taqsimoti" subtitle="Sog'lik guruhlari bo'yicha" />
             {bmiCategories.length === 0 ? (
               <Typography variant="body2" color="text.secondary" py={4} textAlign="center">
                 Ma'lumot yo'q
@@ -472,8 +704,17 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                 {bmiCategories.map((cat) => (
                   <Box key={cat.name}>
                     <Box display="flex" justifyContent="space-between" mb={0.5}>
-                      <Typography variant="body2" fontWeight={700} color="text.primary" fontSize="0.85rem">{cat.name}</Typography>
-                      <Typography variant="body2" fontWeight={900} sx={{ color: cat.color }}>{cat.pct}%</Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        color="text.primary"
+                        fontSize="0.85rem"
+                      >
+                        {cat.name}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={900} sx={{ color: cat.color }}>
+                        {cat.pct}%
+                      </Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
@@ -485,7 +726,9 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                         "& .MuiLinearProgress-bar": { bgcolor: cat.color, borderRadius: 5 },
                       }}
                     />
-                    <Typography variant="caption" color="text.secondary" fontWeight={500}>{cat.value.toLocaleString()} bemor</Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                      {cat.value.toLocaleString()} bemor
+                    </Typography>
                   </Box>
                 ))}
               </Stack>
@@ -494,17 +737,31 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         </Grid>
 
         {/* ROW 4: Radar + Admin piechart */}
-        {radarData.some(d => parseFloat(d.value) > 0) && (
+        {radarData.some((d) => parseFloat(d.value) > 0) && (
           <Grid size={{ xs: 12, md: 6 }}>
             <GlassCard>
-              <SectionTitle title="🕸️ Somatotip o'rtacha radar" subtitle="Tizim bo'yicha o'rtacha somatometrik ko'rsatkichlar" />
+              <SectionTitle
+                title="Somatotip o'rtacha radar"
+                subtitle="Tizim bo'yicha o'rtacha somatometrik ko'rsatkichlar"
+              />
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
                     <PolarGrid stroke="rgba(255,255,255,0.1)" />
                     <PolarAngleAxis dataKey="metric" tick={{ fill: "#94a3b8", fontSize: 12 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 7]} tick={{ fill: "#64748b", fontSize: 10 }} />
-                    <Radar name="O'rtacha" dataKey="value" stroke={COLORS.primary} fill={COLORS.primary} fillOpacity={0.3} strokeWidth={2} />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 7]}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
+                    />
+                    <Radar
+                      name="O'rtacha"
+                      dataKey="value"
+                      stroke={COLORS.primary}
+                      fill={COLORS.primary}
+                      fillOpacity={0.3}
+                      strokeWidth={2}
+                    />
                     <ReTooltip {...CustomTooltipStyle} />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -515,7 +772,10 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {adminRolePie.length > 0 && (
           <Grid size={{ xs: 12, md: 6 }}>
             <GlassCard>
-              <SectionTitle title="👨‍💼 Adminlar taqsimoti" subtitle="Rollar bo'yicha tizim foydalanuvchilari" />
+              <SectionTitle
+                title="Adminlar taqsimoti"
+                subtitle="Rollar bo'yicha tizim foydalanuvchilari"
+              />
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -545,7 +805,8 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
       {/* Summary Footer */}
       <Box mt={4} py={2} textAlign="center">
         <Typography variant="caption" color="text.secondary">
-          So'nggi yangilanish: {new Date().toLocaleString("uz-UZ")} • MorphoCheck SuperAdmin Analytics Pro
+          So'nggi yangilanish: {new Date().toLocaleString("uz-UZ")} • MorphoCheck SuperAdmin
+          Analytics Pro
         </Typography>
       </Box>
     </Box>
