@@ -1,1 +1,93 @@
-<h1 align="center">\n  🧬 MorphoCheck App\n</h1>\n\n<p align="center">\n  <strong>Advanced Clinical & Anthropometric Analysis Platform</strong>\n</p>\n\n<p align="center">\n  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">\n  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind">\n  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=FastAPI&logoColor=white" alt="FastAPI">\n  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">\n  <img src="https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite">\n</p>\n\n## 📋 Overview\n\n**MorphoCheck** is an all-in-one web application designed for comprehensive medical and anthropometric assessments. It securely processes patient data, accurately calculates complex anthropometric indices (including Z-scores and centile interpretations), and automates the generation of highly detailed clinical reports in both PDF and DOCX formats.\n\n## ✨ Key Features\n\n- **📊 Advanced Anthropometric Analytics:** Complex health and body measurements algorithms, z-score modeling, and normative data matching.\n- **📄 Automated Report Generation:** Generates comprehensive PDF and DOCX clinical reports with built-in data sanitation and precision formatting.\n- **🛡️ Enterprise-Grade Security:** Hardened backend utilizing `slowapi` for rigorous rate-limiting, strict input/password validation, security headers (HSTS, CSP, X-Frame-Options), and safe error handling.\n- **👑 Superadmin Dashboard:** Activity tracking, robust clinical CMS, dynamic visual analytics, and administrative access controls.\n- **⚡ Modern & Responsive UI:** Built utilizing React.js and fully styled with TailwindCSS for a seamless, mobile-responsive user experience.\n\n## 🛠 Technology Stack\n\n### Frontend Architecture\n- **Framework:** React.js (Create React App + craco)\n- **Styling:** TailwindCSS\n- **State Management:** React Hooks\n- **Language:** JavaScript (ES6+)\n\n### Backend Architecture\n- **Framework:** FastAPI (Python)\n- **Database:** SQLite\n- **Document Rendering:** Python packages for PDF and DOCX generation\n- **Security Middleware:** SlowAPI, Custom HTTP Headers, Sanitized Error Handling\n\n---\n\n## 🚀 Getting Started\n\nFollow these instructions to get a local copy of the project up and running for development and testing purposes.\n\n### Prerequisites\n\nYou need the following installed on your system:\n- [Node.js](https://nodejs.org/) (v16+)\n- [Python 3.9+](https://www.python.org/)\n- `npm` or `yarn`\n\n### 1. Clone the repository\n\n```bash\ngit clone https://github.com/Shoxrux0803/morpho-check-app.git\ncd morpho-check-app\n```\n\n### 2. Backend Setup\n\nOpen a terminal and set up the FastAPI server:\n\n```bash\ncd morphocheck_backend\n\n# Create a virtual environment\npython -m venv venv\n\n# Activate the virtual environment\n# On Windows:\nvenv\\Scripts\\activate\n# On macOS/Linux:\n# source venv/bin/activate\n\n# Install the Python dependencies\npip install -r requirements.txt\n\n# Start the development server\nuvicorn main:app --reload\n```\n*The backend API will be running at `http://localhost:8000`.*\n*Check out the Swagger UI documentation at `http://localhost:8000/docs`.*\n\n### 3. Frontend Setup\n\nOpen a new terminal window at the root of the project:\n\n```bash\n# Install frontend NPM dependencies\nnpm install\n\n# Start the React development server\nnpm start\n```\n*The frontend application will boot up at `http://localhost:3000`.*\n\n---\n\n## 📂 Project Structure\n\n```text\nmorpho-check-app/\n├── morphocheck_backend/      # FastAPI Python backend & application logic\n│   ├── main.py               # FastAPI entry point\n│   ├── morphocheck.db        # SQLite Database \n│   └── ...                   \n├── src/                      # React frontend source code\n│   ├── components/           # Reusable UI components & Layouts\n│   ├── pages/                # Core views (AdminPage, MorphoCheckPro, etc.)\n│   └── ...\n├── public/                   # Static assets\n├── package.json              # NPM dependencies & scripts\n├── tailwind.config.js        # TailwindCSS configuration\n└── README.md                 # Project documentation\n```\n\n## 🔒 Security Practices\n\nMorphoCheck takes medical data handling seriously:\n- **Rate-Limiting:** Active brute-force protection using `slowapi`.\n- **XSS & Clickjacking Protection:** Mitigated via advanced Content Security Policies (CSP) and Strict-Transport-Security (HSTS).\n- **Data Sanitization:** Preventing internal stack trace leaks during internal server errors (500).\n\n## 🤝 Contribution\n\n1. Fork the project.\n2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)\n3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)\n4. Push to the Branch (`git push origin feature/AmazingFeature`)\n5. Open a Pull Request.\n\n---\n*Developed and maintained for reliable clinical assessments.*
+# MorphoCheck App
+
+**Advanced Clinical and Anthropometric Analysis Platform**
+
+MorphoCheck is a web application for medical and anthropometric assessment. It processes patient measurements, calculates BMI, Z-score based indicators and body-type metrics, then generates clinical PDF and DOCX reports.
+
+## Key Features
+
+- Advanced anthropometric analytics with BMI, Z-score and normative comparisons.
+- PDF and DOCX report generation for patient records.
+- Admin and superadmin dashboards with filters, visual analytics and activity tracking.
+- Clinical CMS for configurable recommendations and analysis rules.
+- Offline-friendly data entry and synchronization support.
+- Secure FastAPI backend with rate limiting, validation and security headers.
+
+## Technology Stack
+
+### Frontend
+
+- React.js (Create React App + CRACO)
+- Material UI and Tailwind CSS
+- React hooks and local/offline state management
+
+### Backend
+
+- FastAPI
+- SQLAlchemy
+- SQLite by default
+- ReportLab and python-docx for document rendering
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 16+
+- Python 3.9+
+- npm or yarn
+
+### Backend Setup
+
+```bash
+cd morphocheck_backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+The backend runs at `http://localhost:8000`.
+
+### Frontend Setup
+
+```bash
+npm install
+npm start
+```
+
+The frontend runs at `http://localhost:3000`.
+
+## Project Structure
+
+```text
+morpho-check-app/
+|-- morphocheck_backend/      FastAPI backend and application logic
+|   |-- main.py               FastAPI entry point
+|   |-- models/               SQLAlchemy models
+|   |-- routers/              API routers
+|   |-- services/             PDF, DOCX, analysis and clinical services
+|-- src/                      React frontend source code
+|   |-- components/           Reusable UI components
+|   |-- pages/                Main app pages
+|   |-- services/             API clients
+|-- public/                   Static assets
+|-- package.json              Frontend dependencies and scripts
+|-- README.md                 Project documentation
+```
+
+## Security Practices
+
+- Rate limiting with `slowapi`.
+- Strict security headers including HSTS, CSP and X-Frame-Options.
+- Input validation on both client and server.
+- Safe error handling for internal server errors.
+
+## Contribution
+
+1. Fork the project.
+2. Create a feature branch.
+3. Commit your changes.
+4. Push the branch.
+5. Open a pull request.
+
+Developed and maintained for reliable clinical assessments.

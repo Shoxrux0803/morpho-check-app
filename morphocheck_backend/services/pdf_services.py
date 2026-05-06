@@ -6,6 +6,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import inch
 from reportlab.graphics.shapes import Drawing, Line
+from reportlab.graphics.barcode.qr import QrCodeWidget
 from io import BytesIO
 import datetime
 import os
@@ -302,6 +303,16 @@ def create_divider():
     return drawing
 
 
+def create_qr_drawing(value: str, size: int = 82):
+    qr = QrCodeWidget(value)
+    bounds = qr.getBounds()
+    width = bounds[2] - bounds[0]
+    height = bounds[3] - bounds[1]
+    drawing = Drawing(size, size, transform=[size / width, 0, 0, size / height, 0, 0])
+    drawing.add(qr)
+    return drawing
+
+
 def draw_watermark(canvas, doc):
     canvas.saveState()
     if os.path.exists(LOGO_PATH):
@@ -318,6 +329,29 @@ def draw_watermark(canvas, doc):
 def generate_pdf_file(data: dict, lang: str = 'uz'):
     # Til lug'atini olish (topilmasa UZ)
     L = PDF_LABELS.get(lang, PDF_LABELS['uz'])
+    fallback_extra = {
+        "uz": {
+            "doctor_note": "Shifokor izohi:",
+            "qr_title": "Rekordni tekshirish yoki qayta ochish",
+            "qr_hint": "QR kodni skanerlang",
+        },
+        "ru": {
+            "doctor_note": "Заметка врача:",
+            "qr_title": "Проверка или повторное открытие записи",
+            "qr_hint": "Отсканируйте QR-код",
+        },
+        "en": {
+            "doctor_note": "Doctor note:",
+            "qr_title": "Verify or reopen this record",
+            "qr_hint": "Scan the QR code",
+        },
+        "kz": {
+            "doctor_note": "Дәрігер жазбасы:",
+            "qr_title": "Жазбаны тексеру немесе қайта ашу",
+            "qr_hint": "QR кодты сканерлеңіз",
+        },
+    }
+    L = {**L, **fallback_extra.get(lang, fallback_extra["uz"])}
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -403,6 +437,8 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     district = gv('district', 'district', '')
     address = gv('address', 'address', '')
     id_code_val = gv('id_code', 'idCode', '')
+    doctor_note = gv('doctor_note', 'doctorNote', '')
+    record_url = gv('record_url', 'recordUrl', '')
 
     # Sana formatini o'zgartirish (YYYY-MM-DD -> DD.MM.YYYY)
     def format_date_str(d_str):
@@ -455,6 +491,25 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     ]))
     elements.append(personal_table)
     elements.append(Spacer(1, 20))
+
+    if doctor_note:
+        note_table = Table(
+            [[
+                Paragraph(f"<b>{L['doctor_note']}</b>", styles['Normal']),
+                Paragraph(str(doctor_note), styles['Normal']),
+            ]],
+            colWidths=[1.6 * inch, 4.4 * inch],
+        )
+        note_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#fff7ed")),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#fed7aa")),
+            ('PADDING', (0, 0), (-1, -1), 7),
+        ]))
+        elements.append(note_table)
+        elements.append(Spacer(1, 16))
 
     # Tahlil natijalari
     elements.append(Paragraph(L["results_section"], section_title_style))
@@ -745,6 +800,27 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         ('PADDING', (0, 0), (-1, -1), 4),
     ]))
     elements.append(footer_table)
+    if record_url or id_code_val:
+        qr_value = record_url or f"MorphoCheck record: {id_code_val}"
+        qr_table = Table(
+            [[
+                create_qr_drawing(qr_value),
+                Paragraph(
+                    f"<b>{L['qr_title']}</b><br/>{L['qr_hint']}<br/><font size='8'>{qr_value}</font>",
+                    styles['Normal'],
+                ),
+            ]],
+            colWidths=[1.2 * inch, 4.8 * inch],
+        )
+        qr_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#dbeafe")),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#eff6ff")),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(Spacer(1, 10))
+        elements.append(qr_table)
     elements.append(Spacer(1, 25))
 
     # Imzo qismi

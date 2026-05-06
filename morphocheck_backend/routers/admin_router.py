@@ -103,6 +103,7 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "somatotype": getattr(row, "somatotype", None),
         "recommendations": getattr(row, "recommendations", None),
         "ai_recommendations": getattr(row, "ai_recommendations", None),
+        "doctor_note": getattr(row, "doctor_note", None),
     }
     # Agar modelda mavjud bo'lsa: region, yelka, oyoq uzunliklari va hk
     extra_fields = (
@@ -535,7 +536,8 @@ def update_analysis(
             "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
             "calf_length", "calf_circumference", "foot_length", "body_length",
             "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat",
-            "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations"
+            "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations",
+            "doctor_note"
         ]
         
         changes = []
@@ -591,8 +593,17 @@ def update_analysis(
                 acm=rec.acm,
                 visceralFat=rec.visceral_fat
             )
-            analysis = calc_full_bmi(p_data)
-            advices = generate_advices(analysis["bmi"], analysis["weight_diff"], int(rec.age), rec.gender, bio_data=analysis["indices"])
+            all_settings = clinical_service.get_all_settings(db)
+            analysis = calc_full_bmi(p_data, all_settings=all_settings, lang="uz")
+            advices = generate_advices(
+                analysis["bmi"],
+                analysis["weight_diff"],
+                int(rec.age),
+                rec.gender,
+                all_settings,
+                bio_data=analysis["indices"],
+                lang="uz",
+            )
             rec.bmi = float(analysis["bmi"])
             rec.z_score = float(analysis["z_score"])
             rec.somatotype = str(analysis["somatotype"])
@@ -706,6 +717,8 @@ def stats(
     
     # Combined Query for Distribution Stats (Optimization)
     today_start = datetime.combine(date.today(), datetime.min.time())
+    week_start = today_start - timedelta(days=today_start.weekday())
+    prev_week_start = week_start - timedelta(days=7)
     current_month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
     
     dist_stats = analysis_q.with_entities(
@@ -718,6 +731,8 @@ def stats(
         func.count(case(((PatientAnalysis.age > 12) & (PatientAnalysis.age <= 18), 1))).label("age_13_18"),
         func.count(case(((PatientAnalysis.age > 18), 1))).label("age_18_plus"),
         func.count(case(((PatientAnalysis.created_at >= today_start), 1))).label("today_count"),
+        func.count(case(((PatientAnalysis.created_at >= week_start), 1))).label("week_count"),
+        func.count(case(((PatientAnalysis.created_at >= prev_week_start) & (PatientAnalysis.created_at < week_start), 1))).label("prev_week_count"),
         func.count(case(((PatientAnalysis.created_at >= current_month_start), 1))).label("monthly_count"),
         func.avg(PatientAnalysis.bmi).label("avg_bmi")
     ).first()
@@ -727,6 +742,8 @@ def stats(
         bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
         age_groups = [{"name": "0-6", "value": 0}, {"name": "7-12", "value": 0}, {"name": "13-18", "value": 0}, {"name": "18+", "value": 0}]
         today_analyses = 0
+        weekly_analyses = 0
+        previous_week_analyses = 0
         monthly_analyses = 0
     else:
         avg_bmi = dist_stats.avg_bmi or 0
@@ -743,7 +760,14 @@ def stats(
             {"name": "18+", "value": dist_stats.age_18_plus or 0},
         ]
         today_analyses = dist_stats.today_count or 0
+        weekly_analyses = dist_stats.week_count or 0
+        previous_week_analyses = dist_stats.prev_week_count or 0
         monthly_analyses = dist_stats.monthly_count or 0
+
+    if previous_week_analyses:
+        weekly_growth_pct = round(((weekly_analyses - previous_week_analyses) / previous_week_analyses) * 100, 1)
+    else:
+        weekly_growth_pct = 100.0 if weekly_analyses else 0.0
 
     # Somatotype Average Approximation (for Radar Chart)
     avg_fat = analysis_q.with_entities(func.avg(PatientAnalysis.fat_percent)).scalar() or 20
@@ -800,6 +824,41 @@ def stats(
         .all()
     )
     regional_data = [{"region": r or "Noma'lum", "count": int(c)} for r, c in regional_counts]
+    risk_region_counts = (
+        analysis_q.with_entities(
+            PatientAnalysis.region,
+            func.count(PatientAnalysis.id).label("total"),
+            func.count(
+                case(
+                    (
+                        (
+                            (PatientAnalysis.z_score > 2)
+                            | (PatientAnalysis.z_score < -2)
+                            | (PatientAnalysis.bmi >= 30)
+                            | (PatientAnalysis.bmi < 18.5)
+                        ),
+                        1,
+                    )
+                )
+            ).label("risk_count"),
+        )
+        .group_by(PatientAnalysis.region)
+        .all()
+    )
+    top_risk_regions = sorted(
+        [
+            {
+                "region": r or "Noma'lum",
+                "count": int(risk_count or 0),
+                "total": int(total or 0),
+                "risk_rate": round((int(risk_count or 0) / int(total or 1)) * 100, 1),
+            }
+            for r, total, risk_count in risk_region_counts
+            if int(risk_count or 0) > 0
+        ],
+        key=lambda item: (item["count"], item["risk_rate"]),
+        reverse=True,
+    )[:8]
 
     # Monthly Trend (Last 12 months)
     try:
@@ -929,6 +988,9 @@ def stats(
         "total_users": int(total_users),
         "total_analyses": int(total_analyses),
         "today_analyses": int(today_analyses),
+        "weekly_analyses": int(weekly_analyses),
+        "weekly_growth_pct": float(weekly_growth_pct),
+        "top_risk_regions": top_risk_regions,
         "total_revenue": float(total_revenue),
         "avg_bmi": float(avg_bmi),
         "monthly_growth": int(monthly_analyses),

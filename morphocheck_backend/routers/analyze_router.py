@@ -143,6 +143,7 @@ class PatientData(BaseModel):
     body_length: Optional[float] = Field(None, alias="bodyLength")
     
     id_code: Optional[str] = Field(None, alias="idCode")
+    analysis_id: Optional[int] = Field(None, alias="analysisId")
     
     age: int
     age_months: Optional[int] = Field(0, alias="ageMonths")
@@ -165,6 +166,7 @@ class PatientData(BaseModel):
     bone_mass: Optional[float] = Field(None, alias="boneMass")
     acm: Optional[float] = Field(None, alias="acm")
     visceral_fat: Optional[float] = Field(None, alias="visceralFat")
+    doctor_note: Optional[str] = Field(None, alias="doctorNote")
 
     class Config:
         populate_by_name = True  # alias va field nomi ikkalasi ham qabul qilinadi
@@ -885,6 +887,7 @@ def analyze_full(
             bone_mass=data.bone_mass,
             acm=data.acm,
             visceral_fat=data.visceral_fat,
+            doctor_note=(data.doctor_note or "").strip() or None,
             
             recommendations=(
                 f"Specialist: {advices.get('specialist', '')}; "
@@ -951,7 +954,8 @@ def analyze_full(
                 "district": clean_district,
                 "address": data.address,
                 "birth_date": data.birth_date,
-                "examination_date": data.examination_date
+                "examination_date": data.examination_date,
+                "doctor_note": data.doctor_note,
             },
             "measurements": {
                 "height": data.height,

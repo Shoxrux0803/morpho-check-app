@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import {
   PersonAdd, TrendingUp, MonitorWeightOutlined,
-  WcOutlined, DateRangeOutlined, BarChartOutlined
+  WcOutlined, DateRangeOutlined, BarChartOutlined, FmdGoodOutlined, ReportProblemOutlined
 } from "@mui/icons-material";
 import {
   ResponsiveContainer,
@@ -232,6 +232,7 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
 
   const todayKey = new Date().toISOString().split("T")[0];
   const todayCount = data.filter(r => r.createdAt && r.createdAt.startsWith(todayKey)).length;
+  const riskRegionRows = (stats?.top_risk_regions || []).slice(0, 5);
 
   return (
     <Box sx={{ width: '100%', maxWidth: '100%' }}>
@@ -311,9 +312,9 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <KpiCard
-            label="Analitik O'sish"
-            value={stats ? (stats.monthly_growth ? `+${stats.monthly_growth}` : "0") : (localStats.avgAge ? `${localStats.avgAge} yosh` : "—")}
-            sub="Oylik dinamika"
+            label="Haftalik o'sish"
+            value={stats ? (stats.weekly_growth_pct != null ? `${Number(stats.weekly_growth_pct) > 0 ? "+" : ""}${stats.weekly_growth_pct}%` : "0") : (localStats.avgAge ? `${localStats.avgAge} yosh` : "—")}
+            sub={`${stats?.weekly_analyses ?? 0} ta shu hafta`}
             icon={<TrendingUp fontSize="large" />}
             color={COLORS.secondary}
             loading={loading}
@@ -323,6 +324,58 @@ export default function AdminDashboard({ data = [], loading, stats, statsLoading
 
       {/* ===== CHARTS SECTION ===== */}
       <Grid container spacing={4}>
+        {riskRegionRows.length > 0 && (
+          <Grid item xs={12}>
+            <GlassCard>
+              <SectionTitle
+                title="Eng ko'p risk chiqqan regionlar"
+                subtitle="BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar"
+              />
+              <Grid container spacing={2}>
+                {riskRegionRows.map((row) => (
+                  <Grid item xs={12} sm={6} md={4} key={row.region}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        bgcolor: isDark ? "rgba(255,255,255,0.03)" : "rgba(239,68,68,0.04)",
+                      }}
+                    >
+                      <Box display="flex" justifyContent="space-between" gap={2}>
+                        <Box display="flex" gap={1.2} alignItems="center">
+                          <FmdGoodOutlined color="error" fontSize="small" />
+                          <Typography variant="body2" fontWeight={800}>
+                            {row.region}
+                          </Typography>
+                        </Box>
+                        <ReportProblemOutlined sx={{ color: COLORS.error }} fontSize="small" />
+                      </Box>
+                      <Typography variant="h5" fontWeight={900} color="error.main" mt={1}>
+                        {row.count}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.total} tadan {row.risk_rate}% risk
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(row.risk_rate, 100)}
+                        sx={{
+                          mt: 1.2,
+                          height: 8,
+                          borderRadius: 4,
+                          bgcolor: "rgba(239,68,68,0.12)",
+                          "& .MuiLinearProgress-bar": { bgcolor: COLORS.error },
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </GlassCard>
+          </Grid>
+        )}
         {/* ROW 1: Wide Chart (Daily trend) */}
         <Grid item xs={12}>
           <GlassCard>

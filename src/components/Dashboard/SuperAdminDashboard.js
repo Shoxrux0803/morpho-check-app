@@ -7,7 +7,7 @@ import {
 import {
   PeopleAlt, Assessment, TrendingUp, AdminPanelSettings,
   Wc, PersonOutline, WomanOutlined, BarChartOutlined,
-  FmdGoodOutlined, MonitorWeightOutlined, FavoriteBorderOutlined
+  FmdGoodOutlined, MonitorWeightOutlined, FavoriteBorderOutlined, ReportProblemOutlined
 } from "@mui/icons-material";
 import {
   ResponsiveContainer,
@@ -165,6 +165,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
   const regionData = useMemo(() =>
     (stats?.by_region || []).slice(0, 10),
     [stats]);
+  const riskRegionRows = useMemo(() => (stats?.top_risk_regions || []).slice(0, 6), [stats]);
 
   const monthlyTrend = useMemo(() =>
     (stats?.monthly_trend || []).map(m => ({
@@ -240,6 +241,15 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
           <KpiCard
+            label="Haftalik o'sish"
+            value={stats?.weekly_growth_pct != null ? `${Number(stats.weekly_growth_pct) > 0 ? "+" : ""}${stats.weekly_growth_pct}%` : "0%"}
+            sub={`${stats?.weekly_analyses ?? 0} ta shu hafta`}
+            icon={<TrendingUp />}
+            color={COLORS.info}
+          />
+        </Grid>
+        <Grid size={{ xs: 6, md: 3 }}>
+          <KpiCard
             label="Jami Adminlar"
             value={admins.length}
             sub={`${admins.filter(a => a.role === "superadmin").length} super, ${admins.filter(a => a.role === "admin").length} oddiy`}
@@ -260,6 +270,61 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
       {/* ===== CHARTS SECTION ===== */}
       <Grid container spacing={3}>
+        {riskRegionRows.length > 0 && (
+          <Grid size={{ xs: 12 }}>
+            <GlassCard>
+              <SectionTitle
+                title="Eng ko'p risk chiqqan regionlar"
+                subtitle="BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar"
+              />
+              <Grid container spacing={2}>
+                {riskRegionRows.map((row) => (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={row.region}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        bgcolor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.03)"
+                            : "rgba(239,68,68,0.04)",
+                      }}
+                    >
+                      <Box display="flex" justifyContent="space-between" gap={2}>
+                        <Box display="flex" gap={1.2} alignItems="center">
+                          <FmdGoodOutlined color="error" fontSize="small" />
+                          <Typography variant="body2" fontWeight={800}>
+                            {row.region}
+                          </Typography>
+                        </Box>
+                        <ReportProblemOutlined sx={{ color: COLORS.error }} fontSize="small" />
+                      </Box>
+                      <Typography variant="h5" fontWeight={900} color="error.main" mt={1}>
+                        {row.count}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.total} tadan {row.risk_rate}% risk
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(row.risk_rate, 100)}
+                        sx={{
+                          mt: 1.2,
+                          height: 8,
+                          borderRadius: 4,
+                          bgcolor: "rgba(239,68,68,0.12)",
+                          "& .MuiLinearProgress-bar": { bgcolor: COLORS.error },
+                        }}
+                      />
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+            </GlassCard>
+          </Grid>
+        )}
         {/* ROW 1: Wide Chart (Monthly trend) */}
         <Grid size={{ xs: 12 }}>
           <GlassCard sx={{ height: "100%" }}>

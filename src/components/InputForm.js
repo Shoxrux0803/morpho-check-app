@@ -46,6 +46,7 @@ import SelfImprovementIcon from "@mui/icons-material/SelfImprovement";
 import ScienceIcon from "@mui/icons-material/Science";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import NotesIcon from "@mui/icons-material/Notes";
 import aiService from "../services/aiService";
 
 import { MCTextField as Field, MCSelect } from "./ui/MCField";
@@ -384,6 +385,20 @@ export default function InputForm({
                   </Grid>
                   <Grid item xs={12}>
                     <Field fullWidth label={`${t("fullAddressLabel")} (${t("optionalLabel")})`} name="address" value={formData.address} onChange={handleInputChange} placeholder={t("addressPlaceholder")} sx={inputSx} />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field
+                      fullWidth
+                      multiline
+                      minRows={3}
+                      label="Doctor note"
+                      name="doctorNote"
+                      value={formData.doctorNote || ""}
+                      onChange={handleInputChange}
+                      InputProps={adorn(<NotesIcon />)}
+                      sx={inputSx}
+                      placeholder="Shifokor uchun qisqa izoh yoki kuzatuv"
+                    />
                   </Grid>
                 </Grid>
                 

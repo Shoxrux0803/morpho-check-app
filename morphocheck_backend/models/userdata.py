@@ -59,6 +59,7 @@ class PatientAnalysis(Base):
 
     recommendations = Column(Text, nullable=False)
     ai_recommendations = Column(Text, nullable=True)
+    doctor_note = Column(Text, nullable=True)
     
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_by = relationship("User", foreign_keys=[created_by_id])

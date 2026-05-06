@@ -20,6 +20,13 @@ from services.ai_advice_service import generate_parent_tips
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
 
 
+def _frontend_base_url(request: Request) -> str:
+    origin = request.headers.get("origin") or request.headers.get("referer")
+    if origin:
+        return origin.split("/admin", 1)[0].rstrip("/")
+    return str(request.base_url).rstrip("/")
+
+
 class PDFRequest(BaseModel):
     patient_data: dict
     analysis: dict
@@ -36,6 +43,7 @@ class PDFRequest(BaseModel):
     },
 )
 async def generate_pdf_endpoint(
+    request: Request,
     request_data: PatientData,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
     db: Session = Depends(get_db)
@@ -66,9 +74,13 @@ async def generate_pdf_endpoint(
         if not data_dict.get("id_code"):
             clean_region = (data_dict.get("region") or "").strip()
             data_dict["id_code"] = generate_region_based_id(db, clean_region)
+        qr_id = data_dict.get("analysis_id") or data_dict.get("analysisId")
+        if qr_id:
+            data_dict["record_url"] = _frontend_base_url(request) + f"/admin?analysis_id={qr_id}"
 
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
+        data_dict["doctor_note"] = getattr(request_data, "doctor_note", None)
 
         # AI Predictions
         ml_data = {
@@ -218,6 +230,8 @@ async def generate_pdf_by_id_endpoint(
             "address": rec.address or "",
             "id_code": rec.id_code or "",
             "analysis": analysis,
+            "doctor_note": rec.doctor_note or "",
+            "record_url": _frontend_base_url(request) + f"/admin?analysis_id={rec.id}",
         }
 
         # AI Predictions

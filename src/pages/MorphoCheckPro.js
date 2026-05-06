@@ -10,47 +10,58 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { useOfflineSync } from "../providers/OfflineSyncProvider";
 import { toast } from "react-hot-toast";
 
+const FORM_DRAFT_KEY = "morphocheck.analysisFormDraft.v1";
+const emptyFormData = {
+  firstName: "",
+  lastName: "",
+  region: "",
+  district: "",
+  address: "",
+  birthDate: "",
+  examinationDate: "",
+  age: "",
+  ageMonths: 0,
+  ageDays: 0,
+  gender: "erkak",
+  height: "",
+  weight: "",
+  chest: "",
+  waist: "",
+  head: "",
+  shoulderLength: "",
+  shoulderBreadth: "",
+  shoulderCircumference: "",
+  armElbowLength: "",
+  handLength: "",
+  thighLength: "",
+  thighCircumference: "",
+  calfLength: "",
+  calfCircumference: "",
+  footLength: "",
+  totalBodyWater: "",
+  fatPercent: "",
+  fatMass: "",
+  muscleMass: "",
+  boneMass: "",
+  acm: "",
+  visceralFat: "",
+  bodyLength: "",
+  doctorNote: "",
+};
+
+const loadDraft = () => {
+  try {
+    const raw = localStorage.getItem(FORM_DRAFT_KEY);
+    return raw ? { ...emptyFormData, ...JSON.parse(raw) } : emptyFormData;
+  } catch {
+    return emptyFormData;
+  }
+};
+
 export default function MorphoCheckPro() {
   const { lang, t } = useLanguage();
   const { addToQueue, isOnline, editingItem, setEditingItem, updateQueueItem, removeFromQueue } = useOfflineSync();
-  const [formData, setFormData] = useState({
-
-    firstName: "",
-    lastName: "",
-    region: "",
-    district: "",
-    address: "",
-    birthDate: "",
-    examinationDate: "",
-    age: "",
-    ageMonths: 0,
-    ageDays: 0,
-    gender: "erkak",
-    height: "",
-    weight: "",
-    chest: "",
-    waist: "",
-    head: "",
-    shoulderLength: "",
-    shoulderBreadth: "",
-    shoulderCircumference: "",
-    armElbowLength: "",
-    handLength: "",
-    thighLength: "",
-    thighCircumference: "",
-    calfLength: "",
-    calfCircumference: "",
-    footLength: "",
-    // Bioimpedance
-    totalBodyWater: "",
-    fatPercent: "",
-    fatMass: "",
-    muscleMass: "",
-    boneMass: "",
-    acm: "",
-    visceralFat: "",
-    bodyLength: "",
-  });
+  const [formData, setFormData] = useState(loadDraft);
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -64,6 +75,12 @@ export default function MorphoCheckPro() {
       AdminApi.activity.pingFormStart().catch(() => {});
     }
   }, [user]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FORM_DRAFT_KEY, JSON.stringify(formData));
+    } catch {}
+  }, [formData]);
 
   // Load editing item into form
   useEffect(() => {
@@ -182,6 +199,7 @@ export default function MorphoCheckPro() {
         acm: formData.acm !== "" ? Number(formData.acm) : null,
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
+        doctorNote: formData.doctorNote || "",
       };
 
       if (!navigator.onLine) {
@@ -204,7 +222,8 @@ export default function MorphoCheckPro() {
         setEditingItem(null);
         toast.success("Corrected and synced!");
       }
-      
+
+      localStorage.removeItem(FORM_DRAFT_KEY);
       setResults(raw);
       setActiveTab("results");
     } catch (err) {
@@ -249,6 +268,7 @@ export default function MorphoCheckPro() {
       acm: "",
       visceralFat: "",
       bodyLength: "",
+      doctorNote: "",
       // We keep region, district, address, and examinationDate for faster multi-entry
     }));
     setActiveTab("form");
@@ -264,6 +284,7 @@ export default function MorphoCheckPro() {
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
+        analysisId: results?.data?.id,
         region: formData.region || "",
         district: formData.district || "",
         address: formData.address || "",
@@ -300,6 +321,7 @@ export default function MorphoCheckPro() {
         acm: formData.acm !== "" ? Number(formData.acm) : null,
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
+        doctorNote: formData.doctorNote || "",
       };
 
       const blob = await generatePdf(payload, selectedLang);
@@ -362,6 +384,7 @@ export default function MorphoCheckPro() {
         acm: formData.acm !== "" ? Number(formData.acm) : null,
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
+        doctorNote: formData.doctorNote || "",
       };
 
       const blob = await generateDocx(payload, selectedLang);

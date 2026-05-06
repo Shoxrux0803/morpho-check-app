@@ -3,7 +3,7 @@ import { AdminApi } from "../services/AdminApi";
 import { generateDocx, generatePdf, generatePdfById, generateDocxById } from "../services/api";
 import { LANGUAGES } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 // Material UI importlari
 import {
@@ -19,6 +19,7 @@ import {
   List as ListIcon, Lock, Person, Visibility, VisibilityOff, Assessment,
   BiotechOutlined, Logout, Refresh, ErrorOutline, CheckCircle
 } from "@mui/icons-material";
+import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 
@@ -58,6 +59,7 @@ const normalize = (r) => {
     createdAt: r.created_at || r.createdAt,
     firstName: r.first_name || r.firstName,
     lastName: r.last_name || r.lastName,
+    doctorNote: r.doctor_note || r.doctorNote || "",
     bmi: bmiVal,
     bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
   };
@@ -145,7 +147,8 @@ function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, 
 // ===== ASOSIY ADMIN PAGE =====
 export default function AdminPage() {
   const navigate = useNavigate();
-  const { user, login: authLogin, loading: authLoading } = useAuth();
+  const location = useLocation();
+  const { user, login: authLogin, loading: authLoading, logout } = useAuth();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -201,6 +204,7 @@ export default function AdminPage() {
   // Deletion state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   // Load Data - Paginated
   const load = useCallback(async () => {
@@ -253,6 +257,22 @@ export default function AdminPage() {
       fetchDashboardStats();
     }
   }, [activeTab, fetchDashboardStats]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const analysisId = params.get("analysis_id");
+    if (!user || !analysisId || Number.isNaN(Number(analysisId))) return;
+
+    AdminApi.analyses
+      .get(Number(analysisId))
+      .then((row) => {
+        setViewRow(normalize(row));
+        setActiveTab(1);
+      })
+      .catch(() => {
+        toast.error("QR orqali ochilgan rekord topilmadi yoki ruxsat yo'q.");
+      });
+  }, [location.search, user]);
 
 
   const handleLogin = useCallback(async (e) => {
@@ -717,6 +737,9 @@ export default function AdminPage() {
                  <TableRow><TableCell>Sana</TableCell><TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell></TableRow>
                  <TableRow><TableCell>Hudud</TableCell><TableCell>{viewRow.region}</TableCell></TableRow>
                  <TableRow><TableCell>BMI</TableCell><TableCell><strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})</TableCell></TableRow>
+                 {viewRow.doctorNote && (
+                   <TableRow><TableCell>Doctor note</TableCell><TableCell>{viewRow.doctorNote}</TableCell></TableRow>
+                 )}
              </TableBody>
           </Table>
         </CustomModal>
@@ -913,6 +936,14 @@ export default function AdminPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <LogoutConfirmDialog
+        open={logoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+        onConfirm={() => {
+          setLogoutDialogOpen(false);
+          logout();
+        }}
+      />
     </Box>
   );
 }

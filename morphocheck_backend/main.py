@@ -103,6 +103,20 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 def on_startup():
     # Jadval(lar) mavjud bo'lmasa yaratadi + ulanishni tekshiradi
     init_db(lambda: Base.metadata.create_all(bind=engine))
+    ensure_schema_updates()
+
+
+def ensure_schema_updates():
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    if "patient_analysis" not in inspector.get_table_names():
+        return
+
+    existing = {col["name"] for col in inspector.get_columns("patient_analysis")}
+    if "doctor_note" not in existing:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN doctor_note TEXT"))
 
 # ---- Routers (barchasi /api/ ostida) ----
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])
