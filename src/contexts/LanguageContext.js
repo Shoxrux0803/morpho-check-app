@@ -15,7 +15,6 @@ const translations = {
     // Header
     home: "Asosiy",
     homeTooltip: "Asosiy sahifa",
-    analyze: "Tahlil qilish",
     analyzeTooltip: "MorphoCheck Pro",
     adminPanel: "Admin Panel",
     adminPanelTooltip: "Boshqaruv paneli",
@@ -31,7 +30,8 @@ const translations = {
     newEra: "Sog'liqni saqlashning yangi davri",
     heroTitle1: "Raqamli",
     heroTitle2: "antropometriya",
-    heroDesc: "MorphoCheck Pro — bu shunchaki tahlil emas, balki sizning shaxsiy raqamli salomatlik monitoringingizdir. Z-score, somatotip va AI tavsiyalari — barchasi professional formatda.",
+    heroDesc:
+      "MorphoCheck Pro — bu shunchaki tahlil emas, balki sizning shaxsiy raqamli salomatlik monitoringingizdir. Z-score, somatotip va AI tavsiyalari — barchasi professional formatda.",
     enterSystem: "Tizimga kirish",
     details: "Batafsil",
     users: "Foydalanuvchilar",
@@ -40,13 +40,15 @@ const translations = {
     whyMorpho: "Nega aynan MorphoCheck?",
     whyDesc: "Professional tahlil uchun eng ilg'or texnologiyalar kombinatsiyasi.",
     feat1Title: "Xavfsiz va Ishonchli",
-    feat1Desc: "Sizning ma'lumotlaringiz to'liq himoyalangan va xalqaro standartlar asosida tahlil qilinadi.",
+    feat1Desc:
+      "Sizning ma'lumotlaringiz to'liq himoyalangan va xalqaro standartlar asosida tahlil qilinadi.",
     feat2Title: "Dinamik Monitoring",
-    feat2Desc: "Har bir o'lchov natijalarini real vaqt rejimida kuzatib boring va o'zgarishlarni tahlil qiling.",
+    feat2Desc:
+      "Har bir o'lchov natijalarini real vaqt rejimida kuzatib boring va o'zgarishlarni tahlil qiling.",
     feat3Title: "Professional Hisobot",
-    feat3Desc: "PDF, DOCX va Excel formatidagi batafsil hisobotlarni bir necha soniya ichida yuklab oling.",
+    feat3Desc:
+      "PDF, DOCX va Excel formatidagi batafsil hisobotlarni bir necha soniya ichida yuklab oling.",
     allRights: "Barcha huquqlar himoyalangan.",
-    downloadPdf: "PDF yuklab olish",
     downloadDocx: "Word yuklab olish",
     processTitle: "Qanday ishlaydi?",
     step1Title: "Ma'lumotlarni kiritish",
@@ -58,19 +60,23 @@ const translations = {
     trustedBy: "Ishonch bildirgan hamkorlar",
     getStartedNow: "Hoziroq boshlang",
 
-
     // InfoDetail
     backBtn: "Orqaga qaytish",
     infoTitle: "Kelajak Tibbiyoti",
-    infoSubtitle: "Bizning platformamiz antropometrik ma\\'lumotlarni tushunish va zamonaviy texnologiyalar yordamida salomatlikni kuzatishga yordam beradi.",
+    infoSubtitle:
+      "Bizning platformamiz antropometrik ma\\'lumotlarni tushunish va zamonaviy texnologiyalar yordamida salomatlikni kuzatishga yordam beradi.",
     infoFeat1Title: "Z-Score tahlili",
-    infoFeat1Desc: "Butunjahon Sog'liqni Saqlash Tashkiloti (BSST) standartlariga muvofiq bolalar va o'smirlarning jismoniy rivojlanish ko'rsatkichlarini real vaqt rejimida tahlil qilish.",
+    infoFeat1Desc:
+      "Butunjahon Sog'liqni Saqlash Tashkiloti (BSST) standartlariga muvofiq bolalar va o'smirlarning jismoniy rivojlanish ko'rsatkichlarini real vaqt rejimida tahlil qilish.",
     infoFeat2Title: "Xit-Karter somatotipi",
-    infoFeat2Desc: "Tana tuzilishi turini (endomorf, mezomorf, ektomorf) ilmiy asoslangan holda aniqlash va sport yo'nalishlarini tanlash bo'yicha tavsiyalar.",
+    infoFeat2Desc:
+      "Tana tuzilishi turini (endomorf, mezomorf, ektomorf) ilmiy asoslangan holda aniqlash va sport yo'nalishlarini tanlash bo'yicha tavsiyalar.",
     infoFeat3Title: "AI tavsiyalari",
-    infoFeat3Desc: "Sun'iy intellekt yordamida tahlil natijalari asosida har bir foydalanuvchi uchun shaxsiylashtirilgan sog'lom turmush tarzi va ovqatlanish rejalari.",
+    infoFeat3Desc:
+      "Sun'iy intellekt yordamida tahlil natijalari asosida har bir foydalanuvchi uchun shaxsiylashtirilgan sog'lom turmush tarzi va ovqatlanish rejalari.",
     infoFeat4Title: "Professional hisobotlar",
-    infoFeat4Desc: "Xalqaro darajadagi batafsil hisobotlarni PDF, DOCX va Excel formatlarida yuklab olish imkoniyati.",
+    infoFeat4Desc:
+      "Xalqaro darajadagi batafsil hisobotlarni PDF, DOCX va Excel formatlarida yuklab olish imkoniyati.",
     whyUs: "Nega aynan biz?",
     whyList1: "BSST (WHO) standartlariga to'liq muvofiqlik",
     whyList2: "Bolalar va sportchilar uchun maxsus tahlillar",
@@ -110,9 +116,11 @@ const translations = {
     heightForAge: "Bo'y ko'rsatkichi (Height-for-Age Z-score, HAZ)",
     weightForAge: "Vazn ko'rsatkichi (Weight-for-Age Z-score, WAZ)",
     bmiForAge: "BMI ko'rsatkichi (BMI-for-Age Z-score, BAZ)",
-    hazDesc: "Balandlikning yoshga nisbatan og'ishi. Surunkali to'yib ovqatlanmaslikni ko'rsatishi mumkin.",
+    hazDesc:
+      "Balandlikning yoshga nisbatan og'ishi. Surunkali to'yib ovqatlanmaslikni ko'rsatishi mumkin.",
     wazDesc: "Vaznning yoshga nisbatan og'ishi. Umumiy ovqatlanish holatini aks ettiradi.",
-    bazDesc: "Tana vazni indeksining yoshga nisbatan og'ishi. Semizlik yoki o'tkir oriqlikni aniqlaydi.",
+    bazDesc:
+      "Tana vazni indeksining yoshga nisbatan og'ishi. Semizlik yoki o'tkir oriqlikni aniqlaydi.",
     status_normal: "Normal rivojlanish diapazoni",
     status_monitor: "Klinik kuzatuv va nazorat talab etiladi",
     status_risk: "Sog'liq uchun xavf guruhi (SDS > 2)",
@@ -270,7 +278,6 @@ const translations = {
   ru: {
     home: "Главная",
     homeTooltip: "Главная страница",
-    analyze: "Анализ",
     analyzeTooltip: "MorphoCheck Pro",
     adminPanel: "Панель admin",
     adminPanelTooltip: "Панель управления",
@@ -285,7 +292,8 @@ const translations = {
     newEra: "Новая эра здравоохранения",
     heroTitle1: "Цифровая",
     heroTitle2: "антропометрия",
-    heroDesc: "MorphoCheck Pro — это не просто анализ, это ваш персональный цифровой монитор здоровья. Z-score, соматотип и AI-рекомендации — всё в профессиональном формате.",
+    heroDesc:
+      "MorphoCheck Pro — это не просто анализ, это ваш персональный цифровой монитор здоровья. Z-score, соматотип и AI-рекомендации — всё в профессиональном формате.",
     enterSystem: "Войти в систему",
     details: "Подробнее",
     users: "Пользователи",
@@ -300,7 +308,6 @@ const translations = {
     feat3Title: "Профессиональный отчёт",
     feat3Desc: "Скачивайте подробные отчёты в форматах PDF, DOCX и Excel за несколько секунд.",
     allRights: "Все права защищены.",
-    downloadPdf: "Скачать PDF",
     downloadDocx: "Скачать Word",
     processTitle: "Как это работает?",
     step1Title: "Ввод данных",
@@ -312,18 +319,22 @@ const translations = {
     trustedBy: "Нам доверяют",
     getStartedNow: "Начать прямо сейчас",
 
-
     backBtn: "Назад",
     infoTitle: "Медицина будущего",
-    infoSubtitle: "Наша платформа помогает понять антропометрические данные и следить за здоровьем с помощью современных технологий.",
+    infoSubtitle:
+      "Наша платформа помогает понять антропометрические данные и следить за здоровьем с помощью современных технологий.",
     infoFeat1Title: "Z-Score анализ",
-    infoFeat1Desc: "Анализ показателей физического развития детей и подростков в режиме реального времени по стандартам ВОЗ.",
+    infoFeat1Desc:
+      "Анализ показателей физического развития детей и подростков в режиме реального времени по стандартам ВОЗ.",
     infoFeat2Title: "Соматотип Хит-Картера",
-    infoFeat2Desc: "Научно обоснованное определение типа телосложения (эндоморф, мезоморф, эктоморф) и рекомендации по выбору спортивных направлений.",
+    infoFeat2Desc:
+      "Научно обоснованное определение типа телосложения (эндоморф, мезоморф, эктоморф) и рекомендации по выбору спортивных направлений.",
     infoFeat3Title: "AI-рекомендации",
-    infoFeat3Desc: "Персонализированные планы здорового образа жизни и питания для каждого пользователя на основе результатов анализа с помощью ИИ.",
+    infoFeat3Desc:
+      "Персонализированные планы здорового образа жизни и питания для каждого пользователя на основе результатов анализа с помощью ИИ.",
     infoFeat4Title: "Профессиональные отчёты",
-    infoFeat4Desc: "Возможность скачивания подробных отчётов международного уровня в форматах PDF, DOCX и Excel.",
+    infoFeat4Desc:
+      "Возможность скачивания подробных отчётов международного уровня в форматах PDF, DOCX и Excel.",
     whyUs: "Почему именно мы?",
     whyList1: "Полное соответствие стандартам ВОЗ",
     whyList2: "Специальные анализы для детей и спортсменов",
@@ -362,7 +373,8 @@ const translations = {
     heightForAge: "Показатель Рост-к-возрасту (Height-for-Age Z-score, HAZ)",
     weightForAge: "Показатель Вес-к-возрасту (Weight-for-Age Z-score, WAZ)",
     bmiForAge: "Показатель ИМТ-к-возрасту (BMI-for-Age Z-score, BAZ)",
-    hazDesc: "Отклонение роста от нормы для данного возраста. Может указывать на хроническое недоедание (stunting).",
+    hazDesc:
+      "Отклонение роста от нормы для данного возраста. Может указывать на хроническое недоедание (stunting).",
     wazDesc: "Отклонение веса от нормы для данного возраста. Отражает общую картину упитанности.",
     bazDesc: "Отклонение индекса массы тела от нормы. Выявляет ожирение или острое истощение.",
     status_normal: "Нормальный диапазон развития",
@@ -482,7 +494,6 @@ const translations = {
     currentLabel: "текущий",
     errInValues: "Ошибка в данных",
 
-
     footerCopy: "Все права защищены.",
     continueBtn: "Продолжить",
     startNewEntry: "Начать новый ввод",
@@ -514,7 +525,6 @@ const translations = {
   en: {
     home: "Home",
     homeTooltip: "Home page",
-    analyze: "Analyze",
     analyzeTooltip: "MorphoCheck Pro",
     adminPanel: "Admin Panel",
     adminPanelTooltip: "Dashboard",
@@ -529,7 +539,8 @@ const translations = {
     newEra: "A new era of healthcare",
     heroTitle1: "Digital",
     heroTitle2: "anthropometry",
-    heroDesc: "MorphoCheck Pro — is not just analysis — it's your personal digital health monitor. Z-score, somatotype and AI recommendations — all in professional format.",
+    heroDesc:
+      "MorphoCheck Pro — is not just analysis — it's your personal digital health monitor. Z-score, somatotype and AI recommendations — all in professional format.",
     enterSystem: "Get started",
     details: "Learn more",
     users: "Users",
@@ -544,7 +555,6 @@ const translations = {
     feat3Title: "Professional Report",
     feat3Desc: "Download detailed reports in PDF, DOCX and Excel formats in seconds.",
     allRights: "All rights reserved.",
-    downloadPdf: "Download PDF",
     downloadDocx: "Download Word",
     processTitle: "How it works?",
     step1Title: "Data Entry",
@@ -556,16 +566,19 @@ const translations = {
     trustedBy: "Trusted by organizations",
     getStartedNow: "Get started now",
 
-
     backBtn: "Go back",
     infoTitle: "Medicine of the Future",
-    infoSubtitle: "Our platform helps you understand anthropometric data and monitor health using modern technologies.",
+    infoSubtitle:
+      "Our platform helps you understand anthropometric data and monitor health using modern technologies.",
     infoFeat1Title: "Z-Score Analysis",
-    infoFeat1Desc: "Real-time analysis of physical development indicators of children and adolescents according to WHO standards.",
+    infoFeat1Desc:
+      "Real-time analysis of physical development indicators of children and adolescents according to WHO standards.",
     infoFeat2Title: "Heath-Carter Somatotype",
-    infoFeat2Desc: "Scientifically grounded classification of body type (endomorph, mesomorph, ectomorph) and recommendations for sports.",
+    infoFeat2Desc:
+      "Scientifically grounded classification of body type (endomorph, mesomorph, ectomorph) and recommendations for sports.",
     infoFeat3Title: "AI Recommendations",
-    infoFeat3Desc: "Personalized healthy lifestyle and nutrition plans for each user based on analysis results using AI.",
+    infoFeat3Desc:
+      "Personalized healthy lifestyle and nutrition plans for each user based on analysis results using AI.",
     infoFeat4Title: "Professional Reports",
     infoFeat4Desc: "Download detailed international-level reports in PDF, DOCX and Excel formats.",
     whyUs: "Why choose us?",
@@ -606,7 +619,8 @@ const translations = {
     heightForAge: "Height-for-age (HAZ)",
     weightForAge: "Weight-for-age (WAZ)",
     bmiForAge: "BMI-for-age (BAZ)",
-    hazDesc: "Height-for-age Z-score. Reflects linear growth and can indicate chronic malnutrition (stunting).",
+    hazDesc:
+      "Height-for-age Z-score. Reflects linear growth and can indicate chronic malnutrition (stunting).",
     wazDesc: "Weight-for-age Z-score. Reflects body mass in relation to age.",
     bazDesc: "BMI-for-age Z-score. Used to identify thinness, overweight, and obesity.",
     status_normal: "Normal development range",
@@ -724,7 +738,6 @@ const translations = {
     currentLabel: "current",
     errInValues: "Error in values",
 
-
     footerCopy: "All rights reserved.",
     continueBtn: "Continue",
     startNewEntry: "Start new entry",
@@ -756,7 +769,6 @@ const translations = {
   kz: {
     home: "Басты бет",
     homeTooltip: "Басты бет",
-    analyze: "Талдау",
     analyzeTooltip: "MorphoCheck Pro",
     adminPanel: "Админ панель",
     adminPanelTooltip: "Басқару панелі",
@@ -771,7 +783,8 @@ const translations = {
     newEra: "Денсаулық сақтаудың жаңа дәуірі",
     heroTitle1: "Денсаулықты бағалаудағы",
     heroTitle2: "стандартталған тәсіл.",
-    heroDesc: "MorphoCheck Pro — бұл жай талдау ғана емес, сіздің жеке цифрлық денсаулық мониторыңыз. Z-score, соматотип және AI ұсыныстары — барлығы кәсіби форматта.",
+    heroDesc:
+      "MorphoCheck Pro — бұл жай талдау ғана емес, сіздің жеке цифрлық денсаулық мониторыңыз. Z-score, соматотип және AI ұсыныстары — барлығы кәсіби форматта.",
     enterSystem: "Жүйеге кіру",
     details: "Толығырақ",
     users: "Пайдаланушылар",
@@ -784,23 +797,27 @@ const translations = {
     feat2Title: "Динамикалық мониторинг",
     feat2Desc: "Әр өлшем нәтижесін нақты уақытта бақылап, өзгерістерді талдаңыз.",
     feat3Title: "Кәсіби есеп",
-    feat3Desc: "PDF, DOCX және Excel форматтарындағы толық есептерді бірнеше секунд ішінде жүктеп алыңыз.",
+    feat3Desc:
+      "PDF, DOCX және Excel форматтарындағы толық есептерді бірнеше секунд ішінде жүктеп алыңыз.",
     allRights: "Барлық құқықтар қорғалған.",
-    downloadPdf: "PDF жүктеп алу",
     downloadDocx: "Word жүктеп алу",
-
 
     backBtn: "Артқа қайту",
     infoTitle: "Болашақ медицинасы",
-    infoSubtitle: "Біздің платформа антропометриялық деректерді түсінуге және заманауи технологиялар арқылы денсаулықты бақылауға көмектеседі.",
+    infoSubtitle:
+      "Біздің платформа антропометриялық деректерді түсінуге және заманауи технологиялар арқылы денсаулықты бақылауға көмектеседі.",
     infoFeat1Title: "Z-Score талдауы",
-    infoFeat1Desc: "ДДҰ стандарттарына сәйкес балалар мен жасөспірімдердің дене дамуын нақты уақытта талдау.",
+    infoFeat1Desc:
+      "ДДҰ стандарттарына сәйкес балалар мен жасөспірімдердің дене дамуын нақты уақытта талдау.",
     infoFeat2Title: "Хит-Картер соматотипі",
-    infoFeat2Desc: "Дене түрін (эндоморф, мезоморф, эктоморф) ғылыми негізде анықтау және спорт бағытын таңдау бойынша ұсыныстар.",
+    infoFeat2Desc:
+      "Дене түрін (эндоморф, мезоморф, эктоморф) ғылыми негізде анықтау және спорт бағытын таңдау бойынша ұсыныстар.",
     infoFeat3Title: "AI ұсыныстары",
-    infoFeat3Desc: "AI арқылы талдау нәтижелері негізінде әр пайдаланушы үшін жеке сауықтыру және тамақтану жоспарлары.",
+    infoFeat3Desc:
+      "AI арқылы талдау нәтижелері негізінде әр пайдаланушы үшін жеке сауықтыру және тамақтану жоспарлары.",
     infoFeat4Title: "Кәсіби есептер",
-    infoFeat4Desc: "Халықаралық деңгейдегі толық есептерді PDF, DOCX және Excel форматтарында жүктеп алу мүмкіндігі.",
+    infoFeat4Desc:
+      "Халықаралық деңгейдегі толық есептерді PDF, DOCX және Excel форматтарында жүктеп алу мүмкіндігі.",
     whyUs: "Неге дәл біз?",
     whyList1: "ДДҰ стандарттарына толық сәйкестік",
     whyList2: "Балалар мен спортшыларға арнайы талдаулар",
@@ -841,7 +858,8 @@ const translations = {
     bmiForAge: "ДМИ көрсеткіші (BMI-for-Age Z-score, BAZ)",
     hazDesc: "Бойдың жасқа қатысты ауытқуы. Созылмалы тамақтанудың бұзылуын көрсетуі мүмкін.",
     wazDesc: "Салмақтың жасқа қатысты ауытқуы. Жалпы тамақтану жағдайын көрсетеді.",
-    bazDesc: "Дене салмағы индексінің жасқа қатысты ауытқуы. Семіздікті немесе өткір арықтауды анықтайды.",
+    bazDesc:
+      "Дене салмағы индексінің жасқа қатысты ауытқуы. Семіздікті немесе өткір арықтауды анықтайды.",
     status_normal: "Қалыпты даму диапазоны",
     status_monitor: "Клиникалық бақылау және бақылау қажет",
     status_risk: "Денсаулыққа қауіп төндіретін топ (SDS > 2)",
@@ -956,7 +974,6 @@ const translations = {
     days: "күн",
     currentLabel: "қазіргі",
     errInValues: "Мәліметтердегі қателік",
-
 
     footerCopy: "Барлық құқықтар қорғалған.",
     continueBtn: "Жалғастыру",
