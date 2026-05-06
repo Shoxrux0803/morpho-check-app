@@ -316,12 +316,12 @@ def create_qr_drawing(value: str, size: int = 82):
 def draw_watermark(canvas, doc):
     canvas.saveState()
     if os.path.exists(LOGO_PATH):
-        canvas.setFillAlpha(0.06)
+        canvas.setFillAlpha(0.045)
         page_width, page_height = A4
-        img_width = 6.5 * inch
-        img_height = 3.25 * inch
+        img_width = 5.4 * inch
+        img_height = 5.4 * inch
         x = (page_width - img_width) / 2
-        y = (page_height - img_height) / 2
+        y = (page_height - img_height) / 2 - 0.15 * inch
         canvas.drawImage(LOGO_PATH, x, y, width=img_width, height=img_height, mask='auto')
     canvas.restoreState()
 
@@ -374,10 +374,20 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         parent=styles['Title'],
         fontSize=16,
         alignment=1,
-        spaceAfter=25,
+        spaceAfter=14,
         fontName=font_name,
         textColor=colors.HexColor("#2c3e50"),
         borderPadding=10
+    )
+
+    brand_style = ParagraphStyle(
+        'BrandTitle',
+        parent=styles['Normal'],
+        fontSize=18,
+        leading=20,
+        fontName=font_name,
+        textColor=colors.HexColor("#0f4f7f"),
+        spaceAfter=0,
     )
 
     section_title_style = ParagraphStyle(
@@ -403,6 +413,27 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     )
 
     elements = []
+
+    if os.path.exists(LOGO_PATH):
+        logo_image = Image(LOGO_PATH, width=0.72*inch, height=0.72*inch)
+        brand_table = Table(
+            [[
+                logo_image,
+                Paragraph(
+                    "<b>MorphoCheck Pro</b><br/><font size='9' color='#64748b'>Clinical anthropometric analysis</font>",
+                    brand_style,
+                ),
+            ]],
+            colWidths=[0.9*inch, 5.2*inch],
+        )
+        brand_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(brand_table)
 
     # Sarlavha
     elements.append(Paragraph(L["title"], title_style))

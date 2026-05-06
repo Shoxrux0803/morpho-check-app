@@ -38,23 +38,24 @@ import WeatherClock from "./WeatherClock";
 import SyncManager from "./SyncManager";
 import LogoutConfirmDialog from "./LogoutConfirmDialog";
 
-
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
   const { user, logout } = useAuth();
   const { pendingCount, isOnline, setEditingItem } = useOfflineSync();
   const navigate = useNavigate();
-  
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [langAnchorEl, setLangAnchorEl] = useState(null);
   const [langChanging, setLangChanging] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
-
   const handleLangChange = (code) => {
-    if (code === lang) { setLangAnchorEl(null); return; }
+    if (code === lang) {
+      setLangAnchorEl(null);
+      return;
+    }
     setLangChanging(true);
     setTimeout(() => {
       setLang(code);
@@ -95,24 +96,46 @@ export default function Header() {
             textDecoration: "none",
             color: "inherit",
             flexGrow: 1,
-            "&:hover": { opacity: 0.8 },
+            minWidth: 0,
+            "&:hover img": { transform: "scale(1.06)" },
           }}
         >
           <Box
-            component="img"
-            src={logo}
-            alt="MorphoCheck"
             sx={{
-              width: 40,
-              height: 40,
+              width: { xs: 44, sm: 48 },
+              height: { xs: 44, sm: 48 },
               borderRadius: 2,
-              objectFit: "contain",
-              transition: "transform 0.3s ease",
-              "&:hover": { transform: "scale(1.05)" },
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+              background:
+                mode === "dark"
+                  ? "linear-gradient(145deg, rgba(14, 165, 233, 0.20), rgba(34, 197, 94, 0.14))"
+                  : "linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(230, 247, 255, 0.94))",
+              border: "1px solid",
+              borderColor:
+                mode === "dark" ? "rgba(125, 211, 252, 0.24)" : "rgba(14, 116, 144, 0.14)",
+              boxShadow:
+                mode === "dark"
+                  ? "0 10px 26px rgba(0, 0, 0, 0.22)"
+                  : "0 10px 24px rgba(8, 47, 73, 0.10)",
             }}
-          />
+          >
+            <Box
+              component="img"
+              src={logo}
+              alt="MorphoCheck"
+              sx={{
+                width: { xs: 38, sm: 42 },
+                height: { xs: 38, sm: 42 },
+                objectFit: "contain",
+                transition: "transform 0.24s ease",
+                filter: mode === "dark" ? "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22))" : "none",
+              }}
+            />
+          </Box>
           <Box lineHeight={1}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <Box component="span" sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 } }}>
                 MorphoCheck Pro
               </Box>
@@ -128,19 +151,30 @@ export default function Header() {
                       user.role === "superadmin"
                         ? "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
                         : user.role === "researcher"
-                        ? "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)"
-                        : theme.palette.mode === "dark"
-                        ? "rgba(255, 255, 255, 0.1)"
-                        : "rgba(0, 0, 0, 0.05)",
-                    color: (user.role === "superadmin" || user.role === "researcher") ? "#fff" : "text.secondary",
+                          ? "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)"
+                          : theme.palette.mode === "dark"
+                            ? "rgba(255, 255, 255, 0.1)"
+                            : "rgba(0, 0, 0, 0.05)",
+                    color:
+                      user.role === "superadmin" || user.role === "researcher"
+                        ? "#fff"
+                        : "text.secondary",
                     fontWeight: 700,
                     textTransform: "uppercase",
                     letterSpacing: 0.5,
                     display: { xs: "none", lg: "flex" },
                     alignItems: "center",
                     gap: 0.5,
-                    border: (user.role === "superadmin" || user.role === "researcher") ? "none" : "1px solid rgba(0,0,0,0.1)",
-                    boxShadow: user.role === "superadmin" ? "0 2px 8px rgba(255, 215, 0, 0.3)" : (user.role === "researcher" ? "0 2px 8px rgba(0, 123, 255, 0.3)" : "none"),
+                    border:
+                      user.role === "superadmin" || user.role === "researcher"
+                        ? "none"
+                        : "1px solid rgba(0,0,0,0.1)",
+                    boxShadow:
+                      user.role === "superadmin"
+                        ? "0 2px 8px rgba(255, 215, 0, 0.3)"
+                        : user.role === "researcher"
+                          ? "0 2px 8px rgba(0, 123, 255, 0.3)"
+                          : "none",
                   }}
                 >
                   <Box component="span" sx={{ opacity: 0.9 }}>
@@ -150,7 +184,11 @@ export default function Header() {
                     |
                   </Box>
                   <Box component="span">
-                    {user.role === "superadmin" ? t("roleSuperAdmin") : user.role === "researcher" ? "Izlanuvchi" : t("roleAdmin")}
+                    {user.role === "superadmin"
+                      ? t("roleSuperAdmin")
+                      : user.role === "researcher"
+                        ? "Izlanuvchi"
+                        : t("roleAdmin")}
                   </Box>
                 </Box>
               )}
@@ -317,11 +355,12 @@ export default function Header() {
                   animationDelay: `${idx * 40}ms`,
                   "@keyframes fadeSlideIn": {
                     from: { opacity: 0, transform: "translateY(-6px)" },
-                    to:   { opacity: 1, transform: "translateY(0)" },
+                    to: { opacity: 1, transform: "translateY(0)" },
                   },
                   "&:hover": {
                     transform: "translateX(4px)",
-                    backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                    backgroundColor:
+                      mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
                   },
                   "&.Mui-selected": {
                     backgroundColor: "primary.main",
@@ -330,9 +369,7 @@ export default function Header() {
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 28, fontSize: 20 }}>
-                  {l.flag}
-                </ListItemIcon>
+                <ListItemIcon sx={{ minWidth: 28, fontSize: 20 }}>{l.flag}</ListItemIcon>
                 <ListItemText primary={l.label} />
                 {l.code === lang && (
                   <CheckIcon
@@ -341,7 +378,7 @@ export default function Header() {
                       animation: "checkPop 0.25s cubic-bezier(0.175,0.885,0.32,1.275) both",
                       "@keyframes checkPop": {
                         from: { opacity: 0, transform: "scale(0)" },
-                        to:   { opacity: 1, transform: "scale(1)" },
+                        to: { opacity: 1, transform: "scale(1)" },
                       },
                     }}
                   />
@@ -377,7 +414,10 @@ export default function Header() {
               <MenuItem
                 key={v}
                 selected={v === variant}
-                onClick={() => { setVariant(v); setAnchorEl(null); }}
+                onClick={() => {
+                  setVariant(v);
+                  setAnchorEl(null);
+                }}
                 sx={{
                   borderRadius: 1,
                   mx: 1,
@@ -393,12 +433,26 @@ export default function Header() {
                   {v === variant ? (
                     <CheckIcon fontSize="small" sx={{ color: "inherit" }} />
                   ) : (
-                    <Box sx={{ width: 16, height: 16, borderRadius: 1, backgroundColor: "currentColor", opacity: 0.3 }} />
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: 1,
+                        backgroundColor: "currentColor",
+                        opacity: 0.3,
+                      }}
+                    />
                   )}
                 </ListItemIcon>
                 <ListItemText
                   primary={
-                    v === "neo" ? "Neo (Aurora)" : v === "ocean" ? "Ocean" : v === "sunset" ? "Sunset" : "Minimal"
+                    v === "neo"
+                      ? "Neo (Aurora)"
+                      : v === "ocean"
+                        ? "Ocean"
+                        : v === "sunset"
+                          ? "Sunset"
+                          : "Minimal"
                   }
                 />
               </MenuItem>
@@ -422,7 +476,7 @@ export default function Header() {
             </IconButton>
           </Tooltip>
         </Stack>
-        
+
         {/* Sync Manager & Toggle */}
         <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 1 }}>
           {!isOnline && (
@@ -430,19 +484,23 @@ export default function Header() {
               <CloudOffIcon color="error" fontSize="small" />
             </Tooltip>
           )}
-          
+
           <Tooltip title={t("syncQueue") || "Oflayn navbat"}>
             <IconButton color="inherit" onClick={() => setSyncOpen(true)}>
-              <Badge badgeContent={pendingCount} color="error" sx={{ "& .MuiBadge-badge": { fontSize: 10, height: 16, minWidth: 16 } }}>
+              <Badge
+                badgeContent={pendingCount}
+                color="error"
+                sx={{ "& .MuiBadge-badge": { fontSize: 10, height: 16, minWidth: 16 } }}
+              >
                 <SyncIcon className={pendingCount > 0 ? "animate-pulse" : ""} />
               </Badge>
             </IconButton>
           </Tooltip>
         </Stack>
 
-        <SyncManager 
-          open={syncOpen} 
-          onClose={() => setSyncOpen(false)} 
+        <SyncManager
+          open={syncOpen}
+          onClose={() => setSyncOpen(false)}
           onEditItem={(item) => {
             setEditingItem(item);
             setSyncOpen(false);
@@ -460,6 +518,5 @@ export default function Header() {
         />
       </Toolbar>
     </AppBar>
-
   );
 }
