@@ -24,6 +24,7 @@ import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 
 // Components
 import SuperAdminDashboard from "../components/Dashboard/SuperAdminDashboard";
+import SuperAdminRegionalMap from "../components/Dashboard/SuperAdminRegionalMap";
 import ScientificAnalysis from "../components/Dashboard/ScientificAnalysis";
 import ClinicalCMS from "../components/Admin/ClinicalCMS";
 import AdminActivity from "../components/Admin/AdminActivity";
@@ -200,7 +201,7 @@ const SuperAdminPage = () => {
         
         if (isTextInput) return;
 
-        if (checked.size > 0 && activeTab === 3) {
+        if (checked.size > 0 && activeTab === 4) {
            handleBulkHardDelete();
         }
       }
@@ -212,17 +213,17 @@ const SuperAdminPage = () => {
 
   useEffect(() => {
     if (user?.role === "superadmin") {
-      if (activeTab === 0 || activeTab === 1) {
+      if (activeTab === 0 || activeTab === 1 || activeTab === 2) {
         fetchDashboardStats(dashFilters);
         fetchAdmins();
       }
-      if (activeTab === 2) fetchAdmins();
-      if (activeTab === 3) {
+      if (activeTab === 3) fetchAdmins();
+      if (activeTab === 4) {
         fetchDeletedAnalyses();
         fetchDeletedAdmins();
       }
-      if (activeTab === 5) fetchAuditLogs();
-      if (activeTab === 6) fetchBackups();
+      if (activeTab === 6) fetchAuditLogs();
+      if (activeTab === 7) fetchBackups();
     }
   }, [user, activeTab, dashFilters]);
 
@@ -658,6 +659,9 @@ const SuperAdminPage = () => {
         );
 
       case 2:
+        return <SuperAdminRegionalMap stats={stats} statsLoading={statsLoading} admins={admins} />;
+
+      case 3:
         return (
           <Stack spacing={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -726,7 +730,7 @@ const SuperAdminPage = () => {
             </TableContainer>
           </Stack>
         );
-      case 3:
+      case 4:
         return (
           <Stack spacing={3}>
              <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -847,7 +851,7 @@ const SuperAdminPage = () => {
              </TableContainer>
           </Stack>
         );
-      case 4:
+      case 5:
         return (
           <Stack spacing={3}>
             <Typography variant="h4" fontWeight={800}>Xavfsizlik</Typography>
@@ -860,7 +864,7 @@ const SuperAdminPage = () => {
             </GlassPaper>
           </Stack>
         );
-      case 5:
+      case 6:
         return (
           <Stack spacing={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -893,7 +897,7 @@ const SuperAdminPage = () => {
              </TableContainer>
           </Stack>
         );
-      case 6:
+      case 7:
         return (
           <Stack spacing={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -931,8 +935,8 @@ const SuperAdminPage = () => {
              </TableContainer>
           </Stack>
         );
-      case 7: return <ClinicalCMS />;
-      case 8: return <AdminActivity />;
+      case 8: return <ClinicalCMS />;
+      case 9: return <AdminActivity />;
       default: return null;
     }
   };
@@ -976,6 +980,7 @@ const SuperAdminPage = () => {
               >
                 <Tab icon={<Dashboard sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Dashboard" />
                 <Tab icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Ilmiy Tahlil" />
+                <Tab icon={<Place sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Hududiy xarita" />
                 <Tab icon={<People sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Adminlar" />
                 <Tab icon={<RestoreFromTrash sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="O'chirilganlar" />
                 <Tab icon={<Security sx={{ mr: 1.5, fontSize: 20 }} />} iconPosition="start" label="Xavfsizlik" />
