@@ -28,8 +28,10 @@ const SVG_HEIGHT = 760;
 const PIN_COLORS = {
   admin: "#2563eb",
   researcher: "#7c3aed",
-  analysis: "#0f766e",
 };
+
+const PATIENT_BOUNDARY_COLOR = "#16a34a";
+const PATIENT_BOUNDARY_HOVER = "#22c55e";
 
 const LEVEL_META = {
   1: {
@@ -97,6 +99,21 @@ const canonicalRegionName = (value = "") => {
   return aliases[normalized] || normalized;
 };
 
+const locationTokens = (value = "") =>
+  baseName(value)
+    .split(" ")
+    .filter((part) => part && part.length > 1);
+
+const locationMatches = (left = "", right = "") => {
+  const a = baseName(left);
+  const b = baseName(right);
+  if (!a || !b) return false;
+  if (a === b || a.includes(b) || b.includes(a)) return true;
+  const aTokens = locationTokens(a);
+  const bTokens = locationTokens(b);
+  return aTokens.length > 0 && aTokens.every((token) => bTokens.includes(token));
+};
+
 const featureName = (item) =>
   item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "Noma'lum hudud";
 
@@ -112,7 +129,12 @@ const parseMaybeJson = (value) => {
 const formatArea = (value) => {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return "-";
-  return `${Math.round(n / 100).toLocaleString("uz-UZ")} km²`;
+  const km2 = n / 1_000_000;
+  const digits = km2 >= 100 ? 0 : km2 >= 10 ? 1 : 2;
+  return `${km2.toLocaleString("uz-UZ", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })} km²`;
 };
 
 const getBounds = (bbox) => {
@@ -159,6 +181,52 @@ const getCollectionBounds = (geoJson) => {
     Math.max(...boxes.map((bbox) => bbox[2])),
     Math.max(...boxes.map((bbox) => bbox[3])),
   ];
+};
+
+const EARTH_RADIUS_METERS = 6378137;
+
+const ringAreaSquareMeters = (ring = []) => {
+  if (!Array.isArray(ring) || ring.length < 3) return 0;
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  const points = first?.[0] === last?.[0] && first?.[1] === last?.[1] ? ring : [...ring, first];
+  let area = 0;
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const [lon1, lat1] = points[index] || [];
+    const [lon2, lat2] = points[index + 1] || [];
+    if (![lon1, lat1, lon2, lat2].every(Number.isFinite)) continue;
+    area +=
+      (((lon2 - lon1) * Math.PI) / 180) *
+      (2 + Math.sin((lat1 * Math.PI) / 180) + Math.sin((lat2 * Math.PI) / 180));
+  }
+  return (area * EARTH_RADIUS_METERS * EARTH_RADIUS_METERS) / 2;
+};
+
+const polygonAreaSquareMeters = (polygon = []) => {
+  if (!Array.isArray(polygon) || !polygon.length) return 0;
+  const [outerRing, ...holes] = polygon;
+  return (
+    Math.abs(ringAreaSquareMeters(outerRing)) -
+    holes.reduce((sum, ring) => sum + Math.abs(ringAreaSquareMeters(ring)), 0)
+  );
+};
+
+const geometryAreaSquareMeters = (geometry) => {
+  if (!geometry) return 0;
+  if (geometry.type === "Polygon") return polygonAreaSquareMeters(geometry.coordinates);
+  if (geometry.type === "MultiPolygon") {
+    return (geometry.coordinates || []).reduce(
+      (sum, polygon) => sum + polygonAreaSquareMeters(polygon),
+      0,
+    );
+  }
+  if (geometry.type === "GeometryCollection") {
+    return (geometry.geometries || []).reduce(
+      (sum, item) => sum + geometryAreaSquareMeters(item),
+      0,
+    );
+  }
+  return 0;
 };
 
 const bboxArea = (bbox) => {
@@ -239,16 +307,31 @@ const pct = (value, total) => Math.round((value / Math.max(total, 1)) * 100);
 
 const getCenter = (item) => {
   const center = parseMaybeJson(item?.center);
-  const bbox = parseMaybeJson(item?.bbox);
-  if (Array.isArray(center)) return center;
-  if (Array.isArray(bbox)) return [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
+  const bbox =
+    parseMaybeJson(item?.bbox || item?.properties?.bbox) ||
+    getGeometryBounds(item?.geometry || item?.properties?.geometry);
+  if (Array.isArray(center) && center.length >= 2) return center;
+  if (Array.isArray(bbox) && bbox.length === 4)
+    return [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
   return [64.5853, 41.3775];
 };
 
-const jitterPoint = (center, index, distance = 0.12) => {
-  const angle = (index * 137.5 * Math.PI) / 180;
-  const radius = distance * (0.25 + ((index % 7) + 1) / 10);
-  return [center[0] + Math.cos(angle) * radius, center[1] + Math.sin(angle) * radius * 0.65];
+const isUzbekistanLngLat = ([lng, lat] = []) =>
+  Number.isFinite(lng) && Number.isFinite(lat) && lng >= 55 && lng <= 74 && lat >= 37 && lat <= 46;
+
+const normalizeLngLat = (lng, lat) => {
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+  if (isUzbekistanLngLat([lng, lat])) return [lng, lat];
+  if (isUzbekistanLngLat([lat, lng])) return [lat, lng];
+  return null;
+};
+
+const spreadPoint = (center, index, total, distance = 0.16) => {
+  if (total <= 1) return center;
+  const ring = Math.floor(Math.sqrt(index));
+  const angle = (index * 137.508 * Math.PI) / 180;
+  const radius = distance * (0.6 + ring * 0.52 + (index % 3) * 0.12);
+  return [center[0] + Math.cos(angle) * radius, center[1] + Math.sin(angle) * radius * 0.72];
 };
 
 const getRiskColor = (riskRate) => {
@@ -278,6 +361,8 @@ const addBoundaryLayers = (map, level, beforeId, isDark) => {
           meta.selected,
           ["boolean", ["feature-state", "hover"], false],
           meta.hover,
+          ["boolean", ["get", "has_patient_data"], false],
+          PATIENT_BOUNDARY_COLOR,
           meta.color,
         ],
         "fill-opacity": [
@@ -286,6 +371,8 @@ const addBoundaryLayers = (map, level, beforeId, isDark) => {
           level === 3 ? 0.42 : 0.36,
           ["boolean", ["feature-state", "hover"], false],
           0.3,
+          ["boolean", ["get", "has_patient_data"], false],
+          level === 1 ? 0.86 : level === 2 ? 0.58 : 0.46,
           level === 1 ? 0.74 : level === 2 ? 0.18 : 0.12,
         ],
       },
@@ -324,6 +411,31 @@ const clearLayerSelection = (map, featureIdsByLevel, level) => {
       { selected: false, hover: false },
     );
   });
+};
+
+const normalizeListResponse = (value) =>
+  Array.isArray(value?.items)
+    ? value.items
+    : Array.isArray(value?.data)
+      ? value.data
+      : Array.isArray(value)
+        ? value
+        : [];
+
+const loadAllUsers = async () => {
+  const pageSize = 500;
+  const rows = [];
+  for (let page = 1; page <= 100; page += 1) {
+    const value = await AdminApi.users.list({ page, page_size: pageSize, pageSize });
+    const items = normalizeListResponse(value);
+    rows.push(...items);
+    if (items.length < pageSize) break;
+  }
+  const unique = new Map();
+  rows.forEach((row) => {
+    unique.set(row.id || row.email || `${row.name}-${unique.size}`, row);
+  });
+  return [...unique.values()];
 };
 
 const StatPill = ({ label, value, color = "primary.main" }) => (
@@ -471,18 +583,32 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const [selectedPath, setSelectedPath] = useState({ region: null, district: null, mahalla: null });
   const [level3Features, setLevel3Features] = useState([]);
   const [selectedPin, setSelectedPin] = useState(null);
+  const [pinPopupPosition, setPinPopupPosition] = useState(null);
   const [analyses, setAnalyses] = useState([]);
   const [researchRecords, setResearchRecords] = useState([]);
+  const [directoryUsers, setDirectoryUsers] = useState([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [loadingBoundary, setLoadingBoundary] = useState(false);
 
+  const userRows = directoryUsers.length ? directoryUsers : admins;
+
   const allRecords = useMemo(
     () => [
-      ...admins.map((item) => ({ ...item, __type: "admin" })),
-      ...analyses.map((item) => ({ ...item, __type: "analysis" })),
-      ...researchRecords.map((item) => ({ ...item, __type: "researcher" })),
+      ...userRows
+        .filter((item) => item.role !== "superadmin")
+        .map((item) => ({
+          ...item,
+          __source: "user",
+          __type: item.role === "researcher" ? "researcher" : "admin",
+        })),
+      ...analyses.map((item) => ({ ...item, __source: "analysis", __type: "analysis" })),
+      ...researchRecords.map((item) => ({
+        ...item,
+        __source: "research_record",
+        __type: "researcher",
+      })),
     ],
-    [admins, analyses, researchRecords],
+    [analyses, researchRecords, userRows],
   );
 
   useEffect(() => {
@@ -579,41 +705,232 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     };
   }, [regionMetrics, selected, selectedRecords]);
 
+  const selectedAreaSquareMeters = useMemo(() => {
+    if (!selected) return 0;
+    const selectedId = String(
+      selected.boundary_id || `admin-${selected.admin_leve}-${selected.id}`,
+    );
+    const selectedRawId = String(selected.id);
+    const collections = [
+      visibleGeoJson,
+      level1GeoJsonRef.current,
+      ...Object.values(loadedFilesRef.current || {}),
+    ];
+    const matchedFeature = collections
+      .flatMap((collection) => collection?.features || [])
+      .find((feature) => {
+        const props = feature.properties || {};
+        return (
+          String(props.boundary_id || feature.id) === selectedId ||
+          String(props.id) === selectedRawId
+        );
+      });
+    const areaFromGeometry =
+      geometryAreaSquareMeters(selected.geometry) ||
+      geometryAreaSquareMeters(matchedFeature?.geometry);
+    if (areaFromGeometry > 0) return areaFromGeometry;
+    const fallbackArea = Number(
+      selected.total_area || selected.area || matchedFeature?.properties?.area,
+    );
+    return Number.isFinite(fallbackArea) && fallbackArea > 0 ? fallbackArea : 0;
+  }, [selected, visibleGeoJson]);
+
+  const getAnalysisLocationText = useCallback((record) => {
+    return normalizeText(
+      [
+        record.region,
+        record.district,
+        record.address,
+        record.settlement,
+        record.school_name,
+        record.birth_place,
+      ]
+        .filter(Boolean)
+        .join(" "),
+    );
+  }, []);
+
+  const getBoundaryPatientCount = useCallback(
+    (featureOrItem) => {
+      const props = featureOrItem?.properties || featureOrItem || {};
+      const level = Number(props.admin_leve || 1);
+      const id = props.id;
+
+      if (level === 1) {
+        const fromStats =
+          regionMetrics.get(id)?.analyses || regionMetrics.get(Number(id))?.analyses;
+        if (fromStats) return fromStats;
+      }
+
+      const boundaryKey =
+        level === 1 ? canonicalRegionName(featureName(props)) : baseName(featureName(props));
+      const parentDistrict =
+        level === 3
+          ? (boundaryIndex?.levels?.["2"] || []).find(
+              (item) => String(item.id) === String(props.parent_id),
+            )
+          : null;
+      const parentRegion =
+        level === 1
+          ? props
+          : level === 2
+            ? selectedPath.region ||
+              (boundaryIndex?.levels?.["1"] || []).find(
+                (item) => String(item.id) === String(props.parent_id),
+              )
+            : selectedPath.region ||
+              (boundaryIndex?.levels?.["1"] || []).find(
+                (item) => String(item.id) === String(parentDistrict?.parent_id),
+              );
+      const regionKey = parentRegion ? canonicalRegionName(featureName(parentRegion)) : "";
+      const districtKey =
+        level === 2
+          ? baseName(featureName(props))
+          : parentDistrict
+            ? baseName(featureName(parentDistrict))
+            : "";
+
+      return analyses.filter((record) => {
+        const text = getAnalysisLocationText(record);
+        if (level === 1) return text.includes(boundaryKey);
+        if (regionKey && !text.includes(regionKey)) return false;
+        if (level === 2) return text.includes(boundaryKey);
+        if (districtKey && !text.includes(districtKey)) return false;
+        return text.includes(boundaryKey);
+      }).length;
+    },
+    [analyses, boundaryIndex, getAnalysisLocationText, regionMetrics, selectedPath.region],
+  );
+
+  const enrichBoundaryPatientData = useCallback(
+    (geoJson = EMPTY_COLLECTION) => ({
+      ...geoJson,
+      features: (geoJson.features || []).map((feature) => {
+        const patientCount = getBoundaryPatientCount(feature);
+        return {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            patient_count: patientCount,
+            has_patient_data: patientCount > 0,
+          },
+        };
+      }),
+    }),
+    [getBoundaryPatientCount],
+  );
+
+  const enrichedVisibleGeoJson = useMemo(
+    () => enrichBoundaryPatientData(visibleGeoJson),
+    [enrichBoundaryPatientData, visibleGeoJson],
+  );
+
   const pinFeatures = useMemo(() => {
     const counters = {};
-    return allRecords
+    const rows = allRecords
+      .filter((item) => item.__source === "user" && ["admin", "researcher"].includes(item.__type))
       .map((item) => {
-        const region = level1ByName.get(
-          canonicalRegionName(item.region || item.settlement || item.address),
+        const locationText = [
+          item.region,
+          item.district,
+          item.mahalla,
+          item.address,
+          item.settlement,
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const region =
+          level1ByName.get(canonicalRegionName(item.region || item.settlement || item.address)) ||
+          (boundaryIndex?.levels?.["1"] || []).find((feature) =>
+            locationMatches(featureName(feature), locationText),
+          );
+        const districts = (boundaryIndex?.levels?.["2"] || []).filter(
+          (feature) => !region || String(feature.parent_id) === String(region.id),
         );
-        const center = getCenter(region);
-        if (!region) return null;
-        const key = `${region.id}:${item.__type}`;
-        counters[key] = (counters[key] || 0) + 1;
-        const lng = Number(item.longitude ?? item.lon ?? item.lng);
-        const lat = Number(item.latitude ?? item.lat);
-        const coordinates =
-          Number.isFinite(lng) && Number.isFinite(lat)
-            ? [lng, lat]
-            : jitterPoint(center, counters[key]);
+        const district =
+          districts.find((feature) =>
+            locationMatches(featureName(feature), item.district || item.address || locationText),
+          ) ||
+          (boundaryIndex?.levels?.["2"] || []).find((feature) =>
+            locationMatches(featureName(feature), item.district || item.address || locationText),
+          );
+        const mahallaFeature = (level3Features || []).find((feature) => {
+          const props = feature.properties || {};
+          if (district && String(props.parent_id) !== String(district.id)) return false;
+          return locationMatches(featureName(props), item.mahalla || item.address || locationText);
+        });
+        const mahalla = mahallaFeature
+          ? {
+              ...mahallaFeature.properties,
+              bbox: mahallaFeature.bbox || mahallaFeature.properties?.bbox,
+              geometry: mahallaFeature.geometry,
+            }
+          : null;
+        const fallbackBoundary = mahalla || district || region;
+        const fallbackCenter = getCenter(fallbackBoundary);
+        const rawLng = Number(item.longitude ?? item.lon ?? item.lng);
+        const rawLat = Number(item.latitude ?? item.lat);
+        const normalizedCoordinates = normalizeLngLat(rawLng, rawLat);
+        const hasCoordinates = Boolean(normalizedCoordinates);
+        const groupKey = hasCoordinates
+          ? `${normalizedCoordinates[0].toFixed(4)}:${normalizedCoordinates[1].toFixed(4)}:${item.__type}`
+          : `${fallbackBoundary?.boundary_id || fallbackBoundary?.id || "unknown"}:${item.__type}`;
+        return { item, region, fallbackCenter, normalizedCoordinates, hasCoordinates, groupKey };
+      });
+
+    const groupTotals = rows.reduce((acc, row) => {
+      acc[row.groupKey] = (acc[row.groupKey] || 0) + 1;
+      return acc;
+    }, {});
+
+    return rows
+      .map(({ item, region, fallbackCenter, normalizedCoordinates, hasCoordinates, groupKey }) => {
+        counters[groupKey] = (counters[groupKey] || 0) + 1;
+        const groupIndex = counters[groupKey] - 1;
+        const groupTotal = groupTotals[groupKey] || 1;
+        const coordinates = hasCoordinates
+          ? spreadPoint(normalizedCoordinates, groupIndex, groupTotal, 0.035)
+          : spreadPoint(fallbackCenter, groupIndex, groupTotal, 0.22);
+        const avgEntryTime =
+          item.avg_entry_time ??
+          (item.total_entry_time_seconds && item.completed_entries_count
+            ? Math.round(item.total_entry_time_seconds / item.completed_entries_count)
+            : "");
         return {
           type: "Feature",
           geometry: { type: "Point", coordinates },
           properties: {
-            id: `${item.__type}-${item.id || item.email || counters[key]}`,
+            id: `${item.__type}-${item.id || item.email || counters[groupKey]}`,
+            userId: item.__source === "user" ? item.id : null,
             type: item.__type,
             name: item.name || item.full_name || item.id_code || "Noma'lum",
             email: item.email || "",
             phone: item.phone || item.parents_phone || "",
-            region: featureName(region),
+            region: item.region || (region ? featureName(region) : "Hudud kiritilmagan"),
             district: item.district || "",
-            role: item.role || (item.__type === "analysis" ? "izlanuvchi yozuvi" : "researcher"),
+            mahalla: item.mahalla || "",
+            role: item.role || item.__type,
             address: item.address || item.settlement || item.school_name || "",
+            status: item.status || "",
+            lastActiveAt: item.last_active_at || item.lastActiveAt || "",
+            createdAt: item.created_at || item.createdAt || "",
+            statsToday: item.stats_today ?? "",
+            statsMonth: item.stats_month ?? "",
+            totalEntries: item.total_entries ?? item.completed_entries_count ?? "",
+            avgEntryTime,
+            mostActiveHour: item.most_active_hour || "",
+            sourceRegionMatched: Boolean(region),
+            groupIndex: groupIndex + 1,
+            groupTotal,
+            originalLatitude: hasCoordinates ? normalizedCoordinates[1] : "",
+            originalLongitude: hasCoordinates ? normalizedCoordinates[0] : "",
+            latitude: coordinates[1],
+            longitude: coordinates[0],
           },
         };
       })
       .filter(Boolean);
-  }, [allRecords, level1ByName]);
+  }, [allRecords, boundaryIndex, level1ByName, level3Features]);
 
   const pinsGeoJson = useMemo(
     () => ({ type: "FeatureCollection", features: pinFeatures }),
@@ -621,14 +938,14 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   );
 
   const svgMap = useMemo(() => {
-    const features = [...(visibleGeoJson?.features || [])].sort(
+    const features = [...(enrichedVisibleGeoJson?.features || [])].sort(
       (a, b) => bboxArea(b.bbox || b.properties?.bbox) - bboxArea(a.bbox || a.properties?.bbox),
     );
-    const focusedBbox = selected ? getCollectionBounds(visibleGeoJson) : null;
-    const bbox = focusedBbox || countryBbox || getCollectionBounds(visibleGeoJson);
+    const focusedBbox = selected ? getCollectionBounds(enrichedVisibleGeoJson) : null;
+    const bbox = focusedBbox || countryBbox || getCollectionBounds(enrichedVisibleGeoJson);
     const project = createProjector(bbox);
     return { features, project };
-  }, [countryBbox, selected, visibleGeoJson]);
+  }, [countryBbox, enrichedVisibleGeoJson, selected]);
 
   const mapColors = useMemo(
     () => ({
@@ -641,6 +958,8 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       districtHover: isDark ? "#5c84b4" : "#6f92ba",
       mahalla: isDark ? "#8b7651" : "#c7ae78",
       mahallaHover: isDark ? "#a48e65" : "#b49a63",
+      patient: PATIENT_BOUNDARY_COLOR,
+      patientHover: PATIENT_BOUNDARY_HOVER,
       selected: isDark ? "#d86645" : "#d95f4a",
       stroke: isDark ? "rgba(238,243,240,0.76)" : "rgba(255,255,255,0.88)",
     }),
@@ -648,8 +967,9 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   );
 
   const getSvgFill = useCallback(
-    (level, active, hovered) => {
+    (level, active, hovered, patientCount = 0) => {
       if (active) return mapColors.selected;
+      if (patientCount > 0) return hovered ? mapColors.patientHover : mapColors.patient;
       if (level === 1) return hovered ? mapColors.regionHover : mapColors.region;
       if (level === 2) return hovered ? mapColors.districtHover : mapColors.district;
       return hovered ? mapColors.mahallaHover : mapColors.mahalla;
@@ -848,6 +1168,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const resetToCountry = useCallback(() => {
     setSelected(null);
     setSelectedPin(null);
+    setPinPopupPosition(null);
     setSelectedPath({ region: null, district: null, mahalla: null });
     setSvgSelectedId("");
     setSvgHoveredId("");
@@ -868,25 +1189,19 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const loadRows = useCallback(async () => {
     setLoadingRows(true);
     try {
-      const [analysisResult, researchResult] = await Promise.allSettled([
+      const [analysisResult, researchResult, userResult] = await Promise.allSettled([
         AdminApi.analyses.list({ page: 1, page_size: 500, pageSize: 500 }),
         ResearchApi.list({ page: 1, page_size: 500, pageSize: 500 }),
+        loadAllUsers(),
       ]);
       if (analysisResult.status === "fulfilled") {
-        const value = analysisResult.value;
-        setAnalyses(Array.isArray(value?.items) ? value.items : Array.isArray(value) ? value : []);
+        setAnalyses(normalizeListResponse(analysisResult.value));
       }
       if (researchResult.status === "fulfilled") {
-        const value = researchResult.value;
-        setResearchRecords(
-          Array.isArray(value?.items)
-            ? value.items
-            : Array.isArray(value?.data)
-              ? value.data
-              : Array.isArray(value)
-                ? value
-                : [],
-        );
+        setResearchRecords(normalizeListResponse(researchResult.value));
+      }
+      if (userResult.status === "fulfilled") {
+        setDirectoryUsers(normalizeListResponse(userResult.value));
       }
     } catch (error) {
       console.error("Regional map rows error:", error);
@@ -971,7 +1286,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             PIN_COLORS.admin,
             "researcher",
             PIN_COLORS.researcher,
-            PIN_COLORS.analysis,
+            "#2563eb",
           ],
           "circle-opacity": 0.18,
         },
@@ -989,7 +1304,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             PIN_COLORS.admin,
             "researcher",
             PIN_COLORS.researcher,
-            PIN_COLORS.analysis,
+            "#2563eb",
           ],
           "circle-stroke-color": "#ffffff",
           "circle-stroke-width": 1.8,
@@ -1052,6 +1367,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         const props = event.features?.[0]?.properties;
         if (!props) return;
         setSelectedPin(props);
+        setPinPopupPosition({ left: event.point.x, top: event.point.y });
         map.easeTo({
           center: event.features[0].geometry.coordinates,
           zoom: Math.max(map.getZoom(), 10),
@@ -1089,6 +1405,14 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     const source = mapRef.current?.getSource(PIN_SOURCE);
     if (source) source.setData(pinsGeoJson);
   }, [pinsGeoJson]);
+
+  useEffect(() => {
+    const firstFeature = enrichedVisibleGeoJson.features?.[0];
+    const level = Number(firstFeature?.properties?.admin_leve || 0);
+    const sourceId = LEVEL_META[level]?.source;
+    const source = sourceId ? mapRef.current?.getSource(sourceId) : null;
+    if (source) source.setData(enrichedVisibleGeoJson);
+  }, [enrichedVisibleGeoJson]);
 
   const zoomToSelected = () => {
     if (selected) {
@@ -1407,11 +1731,72 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
   const levelLabel = selected ? LEVEL_META[selected.admin_leve]?.label : "O'zbekiston";
 
+  const getPinRoleLabel = (pin) => {
+    if (pin?.type === "admin") return "Administrator";
+    if (pin?.type === "researcher") return "Izlanuvchi";
+    return pin?.role || pin?.type || "-";
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("uz-UZ");
+  };
+
+  const selectedPinDetails = useMemo(() => {
+    if (!selectedPin) return [];
+    const rows = [
+      ["Kimligi", getPinRoleLabel(selectedPin)],
+      ["User ID", selectedPin.userId],
+      ["Rol", selectedPin.role],
+      ["Email", selectedPin.email],
+      ["Telefon", selectedPin.phone],
+      [
+        "Hudud",
+        [selectedPin.region, selectedPin.district, selectedPin.mahalla].filter(Boolean).join(" / "),
+      ],
+      ["Aniq manzil", selectedPin.address],
+      [
+        "Koordinata",
+        [selectedPin.latitude, selectedPin.longitude]
+          .filter((value) => value !== undefined && value !== null && value !== "")
+          .map((value) => Number(value).toFixed(6))
+          .join(", "),
+      ],
+      ["Holat", selectedPin.status],
+      ["Ro'yxatdan o'tgan", formatDateTime(selectedPin.createdAt)],
+      ["Oxirgi faollik", formatDateTime(selectedPin.lastActiveAt)],
+      ["Bugungi yozuvlar", selectedPin.statsToday],
+      ["Oylik yozuvlar", selectedPin.statsMonth],
+      ["Jami yozuvlar", selectedPin.totalEntries],
+      ["O'rtacha vaqt", selectedPin.avgEntryTime ? `${selectedPin.avgEntryTime} s` : ""],
+      ["Eng faol vaqt", selectedPin.mostActiveHour],
+      ["Region mosligi", selectedPin.sourceRegionMatched ? "Mos tushdi" : "Fallback nuqta"],
+    ];
+    return rows.filter(([, value]) => value !== undefined && value !== null && value !== "");
+  }, [selectedPin]);
+
   const handleChat = (pin = selectedPin) => {
+    if (!pin?.userId) {
+      toast.error("Chat faqat admin yoki izlanuvchi user pinlari uchun ochiladi");
+      return;
+    }
     window.dispatchEvent(new CustomEvent("close-ai-chat"));
+    window.dispatchEvent(
+      new CustomEvent("open-main-chat", {
+        detail: {
+          user: {
+            id: Number(pin.userId),
+            name: pin.name,
+            email: pin.email,
+            role: pin.role || pin.type,
+          },
+        },
+      }),
+    );
     toast.success(
       pin?.name
-        ? `${pin.name} bilan aloqa uchun chat oynasini oching`
+        ? `${pin.name} bilan chat ochildi`
         : "Chat oynasi orqali admin yoki izlanuvchiga yozishingiz mumkin",
     );
   };
@@ -1533,6 +1918,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                     const props = feature.properties || {};
                     const level = Number(props.admin_leve || 1);
                     const boundaryId = props.boundary_id || feature.id;
+                    const patientCount = Number(props.patient_count || 0);
                     const active = boundaryId === svgSelectedId;
                     const hovered = boundaryId === svgHoveredId;
                     const path = geometryToPath(feature.geometry, svgMap.project);
@@ -1553,8 +1939,22 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         data-boundary-id={boundaryId}
                         data-level={level}
                         d={path}
-                        fill={getSvgFill(level, active, hovered)}
-                        fillOpacity={level === 1 ? (active ? 0.94 : 0.78) : active ? 0.68 : 0.4}
+                        fill={getSvgFill(level, active, hovered, patientCount)}
+                        fillOpacity={
+                          active
+                            ? level === 1
+                              ? 0.94
+                              : 0.68
+                            : patientCount > 0
+                              ? level === 1
+                                ? 0.88
+                                : level === 2
+                                  ? 0.62
+                                  : 0.5
+                              : level === 1
+                                ? 0.78
+                                : 0.4
+                        }
                         stroke={mapColors.stroke}
                         strokeWidth={active ? (level === 1 ? 2.2 : 1.5) : level === 1 ? 1.15 : 0.85}
                         strokeLinejoin="round"
@@ -1579,7 +1979,13 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                           if (suppressSvgClickRef.current) return;
                           selectBoundary(item, level);
                         }}
-                      />
+                      >
+                        <title>
+                          {patientCount > 0
+                            ? `${featureName(item)}: ${patientCount} ta patient ma'lumoti bor`
+                            : `${featureName(item)}: patient ma'lumoti yo'q`}
+                        </title>
+                      </path>
                     );
                   })}
                 </g>
@@ -1609,6 +2015,73 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                     </text>
                   ))}
                 </g>
+                <g>
+                  {pinFeatures.map((pin, index) => {
+                    const props = pin.properties || {};
+                    const [x, y] = svgMap.project(pin.geometry.coordinates);
+                    const color = PIN_COLORS[props.type] || "#2563eb";
+                    const markerScale = 1 / Math.max(svgViewport.scale || 1, 1);
+                    const dotColor = props.type === "admin" ? "#ffffff" : "#f8fafc";
+                    return (
+                      <g
+                        key={props.id || `pin-${index}`}
+                        transform={`translate(${x} ${y}) scale(${markerScale})`}
+                        role="button"
+                        tabIndex={0}
+                        style={{
+                          cursor: "pointer",
+                          filter: "drop-shadow(0 2px 5px rgba(15,23,42,0.28))",
+                        }}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                          const rect = mapInteractionRef.current?.getBoundingClientRect();
+                          setSelectedPin(props);
+                          setPinPopupPosition(
+                            rect
+                              ? {
+                                  left: event.clientX - rect.left,
+                                  top: event.clientY - rect.top,
+                                }
+                              : null,
+                          );
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          suppressSvgClickRef.current = true;
+                          setSelectedPin(props);
+                          const rect = mapInteractionRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setPinPopupPosition({
+                              left: event.clientX - rect.left,
+                              top: event.clientY - rect.top,
+                            });
+                          }
+                          setTimeout(() => {
+                            suppressSvgClickRef.current = false;
+                          }, 0);
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedPin(props);
+                            setPinPopupPosition({ left: x, top: y });
+                          }
+                        }}
+                      >
+                        <circle cy="-6" r="17" fill={color} opacity="0.14" />
+                        <path
+                          d="M0 18 C0 18 15 5.4 15 -6 C15 -14.3 8.3 -21 0 -21 C-8.3 -21 -15 -14.3 -15 -6 C-15 5.4 0 18 0 18Z"
+                          fill={color}
+                          stroke="#fff"
+                          strokeWidth="2.2"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                        <circle cy="-6" r="5.2" fill={dotColor} opacity="0.96" />
+                        <title>{`${props.name} - ${props.role || props.type}`}</title>
+                      </g>
+                    );
+                  })}
+                </g>
                 <g pointerEvents="none">
                   {svgMap.features.map((feature) => {
                     const props = feature.properties || {};
@@ -1636,6 +2109,93 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                 </g>
               </g>
             </svg>
+            {selectedPin && pinPopupPosition && (
+              <Paper
+                elevation={6}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
+                sx={{
+                  position: "absolute",
+                  left: `min(max(${pinPopupPosition.left}px, 156px), calc(100% - 156px))`,
+                  top: `min(max(${pinPopupPosition.top}px, 16px), calc(100% - 240px))`,
+                  transform: "translate(-50%, 16px)",
+                  zIndex: 6,
+                  width: 280,
+                  maxWidth: "calc(100% - 28px)",
+                  p: 1.4,
+                  borderRadius: 1.5,
+                  border: "1px solid",
+                  borderColor:
+                    selectedPin.type === "researcher"
+                      ? "rgba(124,58,237,0.45)"
+                      : "rgba(37,99,235,0.45)",
+                  bgcolor: isDark ? "rgba(15,23,42,0.96)" : "rgba(255,255,255,0.98)",
+                  boxShadow: isDark
+                    ? "0 18px 44px rgba(0,0,0,0.48)"
+                    : "0 18px 44px rgba(15,23,42,0.18)",
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between" spacing={1}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="subtitle2" fontWeight={900} noWrap>
+                      {selectedPin.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                      {getPinRoleLabel(selectedPin)}
+                    </Typography>
+                  </Box>
+                  <IconButton size="small" onClick={() => setSelectedPin(null)} sx={{ mt: -0.5 }}>
+                    <Close fontSize="small" />
+                  </IconButton>
+                </Stack>
+                <Stack spacing={0.45} mt={1}>
+                  {selectedPin.email && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      Email: {selectedPin.email}
+                    </Typography>
+                  )}
+                  {selectedPin.phone && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ wordBreak: "break-word" }}
+                    >
+                      Tel: {selectedPin.phone}
+                    </Typography>
+                  )}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ wordBreak: "break-word" }}
+                  >
+                    Hudud:{" "}
+                    {[selectedPin.region, selectedPin.district, selectedPin.mahalla]
+                      .filter(Boolean)
+                      .join(" / ") || "Kiritilmagan"}
+                  </Typography>
+                  {selectedPin.groupTotal > 1 && (
+                    <Typography variant="caption" color="text.secondary">
+                      Shu hududdagi pin: {selectedPin.groupIndex}/{selectedPin.groupTotal}
+                    </Typography>
+                  )}
+                </Stack>
+                <Button
+                  fullWidth
+                  size="small"
+                  variant="contained"
+                  startIcon={<ChatBubbleOutline />}
+                  onClick={() => handleChat(selectedPin)}
+                  disabled={!selectedPin.userId}
+                  sx={{ mt: 1.1, borderRadius: 1, textTransform: "none", fontWeight: 850 }}
+                >
+                  Bog'lanish
+                </Button>
+              </Paper>
+            )}
           </Box>
           {loading && (
             <Box
@@ -1722,6 +2282,11 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               />
               <Chip
                 size="small"
+                label="Patient bor"
+                sx={{ bgcolor: mapColors.patient, color: "#fff", fontWeight: 800 }}
+              />
+              <Chip
+                size="small"
                 icon={<LocationOn />}
                 label="Pin"
                 sx={{ bgcolor: "#2563eb", color: "#fff", fontWeight: 800 }}
@@ -1801,7 +2366,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               <StatPill label="Keyingi qatlam" value={childCount} color="#f59e0b" />
               <StatPill
                 label="Maydon"
-                value={formatArea(selected?.total_area)}
+                value={formatArea(selectedAreaSquareMeters)}
                 color="text.primary"
               />
             </Stack>
@@ -1846,38 +2411,44 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               >
                 <Stack direction="row" spacing={1} alignItems="center" mb={1}>
                   <LocationOn sx={{ color: PIN_COLORS[selectedPin.type] || "#2563eb" }} />
-                  <Typography variant="h6" fontWeight={900}>
-                    {selectedPin.name}
-                  </Typography>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="h6" fontWeight={900} noWrap>
+                      {selectedPin.name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                      {getPinRoleLabel(selectedPin)}
+                    </Typography>
+                  </Box>
                 </Stack>
-                <Stack spacing={0.7}>
-                  <Typography variant="body2">
-                    <strong>Rol:</strong> {selectedPin.role || selectedPin.type}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Hudud:</strong>{" "}
-                    {[selectedPin.region, selectedPin.district].filter(Boolean).join(" / ")}
-                  </Typography>
-                  {(selectedPin.email || selectedPin.phone) && (
-                    <Typography variant="body2">
-                      <strong>Aloqa:</strong>{" "}
-                      {[selectedPin.email, selectedPin.phone].filter(Boolean).join(" / ")}
-                    </Typography>
-                  )}
-                  {selectedPin.address && (
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedPin.address}
-                    </Typography>
-                  )}
+                <Stack spacing={0.7} mt={1.25}>
+                  {selectedPinDetails.map(([label, value]) => (
+                    <Box
+                      key={label}
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "112px minmax(0, 1fr)",
+                        gap: 1,
+                        alignItems: "start",
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                        {label}
+                      </Typography>
+                      <Typography variant="body2" fontWeight={700} sx={{ wordBreak: "break-word" }}>
+                        {value}
+                      </Typography>
+                    </Box>
+                  ))}
                 </Stack>
                 <Button
                   fullWidth
                   variant="contained"
                   startIcon={<ChatBubbleOutline />}
                   onClick={() => handleChat(selectedPin)}
+                  disabled={!selectedPin.userId}
                   sx={{ mt: 1.5, borderRadius: 1.5, textTransform: "none", fontWeight: 800 }}
                 >
-                  Chat ochish
+                  Bog'lanish
                 </Button>
               </Box>
             )}
