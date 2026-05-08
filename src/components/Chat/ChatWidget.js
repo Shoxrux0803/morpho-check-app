@@ -101,6 +101,18 @@ const ChatWidget = () => {
   }, []);
 
   useEffect(() => {
+    const handleOpenMainChat = (event) => {
+      const targetUser = event.detail?.user;
+      if (!targetUser?.id) return;
+      setSelectedUser(targetUser);
+      setCurrentView(VIEWS.CHAT);
+      setIsOpen(true);
+    };
+    window.addEventListener('open-main-chat', handleOpenMainChat);
+    return () => window.removeEventListener('open-main-chat', handleOpenMainChat);
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       window.dispatchEvent(new CustomEvent('close-ai-chat'));
     }
