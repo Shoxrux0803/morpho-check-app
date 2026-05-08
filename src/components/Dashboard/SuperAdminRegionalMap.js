@@ -15,13 +15,22 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { ChatBubbleOutline, Close, LocationOn, MyLocation, Public } from "@mui/icons-material";
+import {
+  ChatBubbleOutline,
+  Close,
+  LocationOn,
+  MyLocation,
+  Public,
+  SatelliteAlt,
+} from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { AdminApi, ResearchApi } from "../../services/api";
 
 const BOUNDARY_BASE = "/maps/admin-boundaries";
 const EMPTY_COLLECTION = { type: "FeatureCollection", features: [] };
 const PIN_SOURCE = "regional-pins-source";
+const GOOGLE_SATELLITE_SOURCE = "google-satellite-source";
+const GOOGLE_SATELLITE_LAYER = "google-satellite-layer";
 const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 760;
 
@@ -242,10 +251,15 @@ const createProjector = (bbox, width = 1000, height = 650, padding = 18) => {
   const scale = Math.min((width - padding * 2) / lngSpan, (height - padding * 2) / latSpan);
   const xOffset = (width - lngSpan * scale) / 2;
   const yOffset = (height - latSpan * scale) / 2;
-  return ([lng, lat]) => [
+  const project = ([lng, lat]) => [
     xOffset + (lng - minLng) * scale,
     height - (yOffset + (lat - minLat) * scale),
   ];
+  project.unproject = ([x, y]) => [
+    (x - xOffset) / scale + minLng,
+    (height - y - yOffset) / scale + minLat,
+  ];
+  return project;
 };
 
 const ringToPath = (ring, project) => {
@@ -341,6 +355,31 @@ const getRiskColor = (riskRate) => {
   return "#64748b";
 };
 
+const getBoundaryFillOpacityPaint = (level) => [
+  "case",
+  ["boolean", ["feature-state", "selected"], false],
+  level === 3 ? 0.42 : 0.36,
+  ["boolean", ["feature-state", "hover"], false],
+  0.3,
+  ["boolean", ["get", "has_patient_data"], false],
+  level === 1 ? 0.86 : level === 2 ? 0.58 : 0.46,
+  level === 1 ? 0.74 : level === 2 ? 0.18 : 0.12,
+];
+
+const getBoundaryLineColorPaint = (level, isDark) => [
+  "case",
+  ["boolean", ["feature-state", "selected"], false],
+  LEVEL_META[level].selected,
+  level === 1 ? "#ffffff" : isDark ? "#e2e8f0" : "#0f172a",
+];
+
+const getBoundaryLineWidthPaint = (level) => [
+  "case",
+  ["boolean", ["feature-state", "selected"], false],
+  level === 3 ? 2.2 : 2.8,
+  level === 1 ? 1.25 : level === 2 ? 1.05 : 0.75,
+];
+
 const addBoundaryLayers = (map, level, beforeId, isDark) => {
   const meta = LEVEL_META[level];
   const beforeLayer = beforeId && map.getLayer(beforeId) ? beforeId : undefined;
@@ -365,16 +404,7 @@ const addBoundaryLayers = (map, level, beforeId, isDark) => {
           PATIENT_BOUNDARY_COLOR,
           meta.color,
         ],
-        "fill-opacity": [
-          "case",
-          ["boolean", ["feature-state", "selected"], false],
-          level === 3 ? 0.42 : 0.36,
-          ["boolean", ["feature-state", "hover"], false],
-          0.3,
-          ["boolean", ["get", "has_patient_data"], false],
-          level === 1 ? 0.86 : level === 2 ? 0.58 : 0.46,
-          level === 1 ? 0.74 : level === 2 ? 0.18 : 0.12,
-        ],
+        "fill-opacity": getBoundaryFillOpacityPaint(level),
       },
     },
     beforeLayer,
@@ -385,19 +415,9 @@ const addBoundaryLayers = (map, level, beforeId, isDark) => {
       type: "line",
       source: meta.source,
       paint: {
-        "line-color": [
-          "case",
-          ["boolean", ["feature-state", "selected"], false],
-          meta.selected,
-          level === 1 ? "#ffffff" : isDark ? "#e2e8f0" : "#0f172a",
-        ],
+        "line-color": getBoundaryLineColorPaint(level, isDark),
         "line-opacity": level === 1 ? 0.76 : level === 2 ? 0.64 : 0.5,
-        "line-width": [
-          "case",
-          ["boolean", ["feature-state", "selected"], false],
-          level === 3 ? 2.2 : 2.8,
-          level === 1 ? 1.25 : level === 2 ? 1.05 : 0.75,
-        ],
+        "line-width": getBoundaryLineWidthPaint(level),
       },
     },
     beforeLayer,
@@ -589,6 +609,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const [directoryUsers, setDirectoryUsers] = useState([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [loadingBoundary, setLoadingBoundary] = useState(false);
+  const [satelliteEnabled, setSatelliteEnabled] = useState(false);
 
   const userRows = directoryUsers.length ? directoryUsers : admins;
 
@@ -1250,7 +1271,14 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       attributionControl: false,
       style: {
         version: 8,
-        sources: {},
+        sources: {
+          [GOOGLE_SATELLITE_SOURCE]: {
+            type: "raster",
+            tiles: ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
+            tileSize: 256,
+            attribution: "Imagery Google",
+          },
+        },
         layers: [
           {
             id: "map-background",
@@ -1258,6 +1286,13 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             paint: {
               "background-color": mapColors.background,
             },
+          },
+          {
+            id: GOOGLE_SATELLITE_LAYER,
+            type: "raster",
+            source: GOOGLE_SATELLITE_SOURCE,
+            layout: { visibility: "none" },
+            paint: { "raster-opacity": 0.92 },
           },
         ],
       },
@@ -1407,6 +1442,56 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   }, [pinsGeoJson]);
 
   useEffect(() => {
+    const map = mapRef.current;
+    if (!map?.getLayer(GOOGLE_SATELLITE_LAYER)) return;
+    map.setLayoutProperty(
+      GOOGLE_SATELLITE_LAYER,
+      "visibility",
+      satelliteEnabled ? "visible" : "none",
+    );
+    if (map.getLayer("map-background")) {
+      map.setPaintProperty(
+        "map-background",
+        "background-color",
+        satelliteEnabled ? "#0f172a" : mapColors.background,
+      );
+    }
+    [1, 2, 3].forEach((level) => {
+      const meta = LEVEL_META[level];
+      if (map.getLayer(meta.fill)) {
+        map.setPaintProperty(
+          meta.fill,
+          "fill-opacity",
+          satelliteEnabled ? 0 : getBoundaryFillOpacityPaint(level),
+        );
+      }
+      if (map.getLayer(meta.line)) {
+        map.setPaintProperty(
+          meta.line,
+          "line-color",
+          satelliteEnabled ? "#facc15" : getBoundaryLineColorPaint(level, isDark),
+        );
+        map.setPaintProperty(
+          meta.line,
+          "line-opacity",
+          satelliteEnabled ? 0 : level === 1 ? 0.76 : level === 2 ? 0.64 : 0.5,
+        );
+        map.setPaintProperty(
+          meta.line,
+          "line-width",
+          satelliteEnabled
+            ? level === 1
+              ? 3.8
+              : level === 2
+                ? 3
+                : 2.4
+            : getBoundaryLineWidthPaint(level),
+        );
+      }
+    });
+  }, [isDark, mapColors.background, satelliteEnabled]);
+
+  useEffect(() => {
     const firstFeature = enrichedVisibleGeoJson.features?.[0];
     const level = Number(firstFeature?.properties?.admin_leve || 0);
     const sourceId = LEVEL_META[level]?.source;
@@ -1535,6 +1620,37 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       SVG_HEIGHT / scale,
     ].join(" ");
   }, [svgViewport]);
+
+  const svgLngLatBounds = useMemo(() => {
+    if (!svgMap.project?.unproject) return null;
+    const scale = Math.max(svgViewport.scale || 1, 1);
+    const minSvgX = -svgViewport.x / scale;
+    const minSvgY = -svgViewport.y / scale;
+    const maxSvgX = minSvgX + SVG_WIDTH / scale;
+    const maxSvgY = minSvgY + SVG_HEIGHT / scale;
+    const corners = [
+      svgMap.project.unproject([minSvgX, minSvgY]),
+      svgMap.project.unproject([maxSvgX, minSvgY]),
+      svgMap.project.unproject([maxSvgX, maxSvgY]),
+      svgMap.project.unproject([minSvgX, maxSvgY]),
+    ];
+    const lngs = corners.map(([lng]) => lng);
+    const lats = corners.map(([, lat]) => lat);
+    return [
+      [Math.min(...lngs), Math.min(...lats)],
+      [Math.max(...lngs), Math.max(...lats)],
+    ];
+  }, [svgMap, svgViewport]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!satelliteEnabled || !map || !svgLngLatBounds) return;
+    map.fitBounds(svgLngLatBounds, {
+      animate: false,
+      duration: 0,
+      padding: 0,
+    });
+  }, [satelliteEnabled, svgLngLatBounds]);
 
   useEffect(() => {
     const node = mapInteractionRef.current;
@@ -1801,6 +1917,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     );
   };
 
+  const satelliteBoundaryOpacity = satelliteEnabled ? 0 : 1;
   const loading = !mapReady || loadingBoundary;
   const dataLoading = loadingRows || statsLoading;
 
@@ -1865,7 +1982,13 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         >
           <Box
             ref={mapContainerRef}
-            sx={{ position: "absolute", inset: 0, opacity: 0.01, pointerEvents: "none" }}
+            sx={{
+              position: "absolute",
+              inset: 0,
+              opacity: satelliteEnabled ? 1 : 0.01,
+              pointerEvents: "none",
+              transition: "opacity 180ms ease",
+            }}
           />
           <Box
             ref={mapInteractionRef}
@@ -1877,7 +2000,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               position: "absolute",
               inset: 0,
               zIndex: 1,
-              bgcolor: mapColors.background,
+              bgcolor: satelliteEnabled ? "transparent" : mapColors.background,
               overscrollBehavior: "contain",
               touchAction: "none",
               cursor: panDragRef.current ? "grabbing" : "grab",
@@ -1897,13 +2020,17 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               aria-label="O'zbekiston hududiy xaritasi"
               style={{ shapeRendering: "geometricPrecision" }}
             >
-              <rect width={SVG_WIDTH} height={SVG_HEIGHT} fill={mapColors.background} />
+              <rect
+                width={SVG_WIDTH}
+                height={SVG_HEIGHT}
+                fill={satelliteEnabled ? "transparent" : mapColors.background}
+              />
               <text
                 x={SVG_WIDTH / 2}
                 y={SVG_HEIGHT / 2}
                 textAnchor="middle"
                 fill={mapColors.label}
-                opacity="0.12"
+                opacity={satelliteEnabled ? "0" : "0.12"}
                 fontSize="20"
                 fontWeight="800"
               >
@@ -1941,7 +2068,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         d={path}
                         fill={getSvgFill(level, active, hovered, patientCount)}
                         fillOpacity={
-                          active
+                          (active
                             ? level === 1
                               ? 0.94
                               : 0.68
@@ -1953,10 +2080,24 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                                   : 0.5
                               : level === 1
                                 ? 0.78
-                                : 0.4
+                                : 0.4) * satelliteBoundaryOpacity
                         }
-                        stroke={mapColors.stroke}
-                        strokeWidth={active ? (level === 1 ? 2.2 : 1.5) : level === 1 ? 1.15 : 0.85}
+                        stroke={satelliteEnabled ? "#facc15" : mapColors.stroke}
+                        strokeWidth={
+                          satelliteEnabled
+                            ? level === 1
+                              ? 3.8
+                              : level === 2
+                                ? 3
+                                : 2.4
+                            : active
+                              ? level === 1
+                                ? 2.2
+                                : 1.5
+                              : level === 1
+                                ? 1.15
+                                : 0.85
+                        }
                         strokeLinejoin="round"
                         strokeLinecap="round"
                         vectorEffect="non-scaling-stroke"
@@ -1965,7 +2106,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         style={{
                           cursor: "pointer",
                           transition:
-                            "fill 180ms ease, fill-opacity 180ms ease, stroke-width 180ms ease",
+                            "fill 180ms ease, fill-opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease",
                         }}
                         onMouseEnter={() => {
                           hoveredSvgRef.current = { item, level };
@@ -2027,10 +2168,12 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         key={props.id || `pin-${index}`}
                         transform={`translate(${x} ${y}) scale(${markerScale})`}
                         role="button"
-                        tabIndex={0}
+                        tabIndex={-1}
+                        focusable="false"
                         style={{
                           cursor: "pointer",
                           filter: "drop-shadow(0 2px 5px rgba(15,23,42,0.28))",
+                          outline: "none",
                         }}
                         onPointerDown={(event) => {
                           event.stopPropagation();
@@ -2097,7 +2240,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         d={path}
                         fill="none"
                         stroke={active || hovered ? mapColors.label : mapColors.stroke}
-                        strokeOpacity={active ? 1 : hovered ? 0.92 : 0.78}
+                        strokeOpacity={satelliteEnabled ? 0 : active ? 1 : hovered ? 0.92 : 0.78}
                         strokeWidth={active ? 2.35 : level === 1 ? 1.25 : level === 2 ? 1 : 0.78}
                         strokeLinejoin="round"
                         strokeLinecap="round"
@@ -2197,6 +2340,42 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               </Paper>
             )}
           </Box>
+          <Tooltip
+            title={
+              satelliteEnabled
+                ? "Oddiy hududiy xaritaga qaytish"
+                : "Google satellite kartani yoqish"
+            }
+          >
+            <Button
+              variant={satelliteEnabled ? "contained" : "outlined"}
+              size="small"
+              startIcon={<SatelliteAlt />}
+              onClick={() => setSatelliteEnabled((value) => !value)}
+              sx={{
+                position: "absolute",
+                top: 14,
+                right: { xs: 14, sm: 64 },
+                zIndex: 8,
+                borderRadius: 1.5,
+                textTransform: "none",
+                fontWeight: 900,
+                bgcolor: satelliteEnabled
+                  ? "rgba(15,23,42,0.92)"
+                  : isDark
+                    ? "rgba(15,23,42,0.88)"
+                    : "rgba(255,255,255,0.92)",
+                color: satelliteEnabled ? "#fff" : "text.primary",
+                borderColor: satelliteEnabled ? "rgba(255,255,255,0.36)" : "divider",
+                backdropFilter: "blur(10px)",
+                "&:hover": {
+                  bgcolor: satelliteEnabled ? "rgba(15,23,42,0.98)" : "background.paper",
+                },
+              }}
+            >
+              Satellite
+            </Button>
+          </Tooltip>
           {loading && (
             <Box
               sx={{
