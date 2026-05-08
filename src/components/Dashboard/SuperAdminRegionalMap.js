@@ -83,19 +83,33 @@ const normalizeText = (value = "") =>
     .toLowerCase()
     .replace(/[ʻ‘’`]/g, "'")
     .replace(/вЂ|вЂ™|К»/g, "'")
+    .replace(/[‘’ʻʼ]/g, "'")
     .replace(/\s+/g, " ")
     .trim();
 
+const canonicalDistrictName = (value = "") =>
+  value.replace(/\bsergeli\b/g, "sirgali").replace(/\bsirgali\b/g, "sirgali");
+
+const displayLocationName = (value = "") => {
+  const text = String(value || "");
+  const normalized = baseName(text);
+  if (normalized === "sirgali") return "Sergeli tumani";
+  return text;
+};
+
 const baseName = (value = "") =>
-  normalizeText(value)
-    .replace(" respublikasi", "")
-    .replace(" viloyati", "")
-    .replace(" tumani", "")
-    .replace(" shahri", "")
-    .replace(" mahallasi", "")
-    .replace(" region", "")
-    .replace(" province", "")
-    .trim();
+  canonicalDistrictName(
+    normalizeText(value)
+      .replace(/[']/g, "")
+      .replace(" respublikasi", "")
+      .replace(" viloyati", "")
+      .replace(" tumani", "")
+      .replace(" shahri", "")
+      .replace(" mahallasi", "")
+      .replace(" region", "")
+      .replace(" province", "")
+      .trim(),
+  );
 
 const canonicalRegionName = (value = "") => {
   const normalized = baseName(value);
@@ -124,7 +138,9 @@ const locationMatches = (left = "", right = "") => {
 };
 
 const featureName = (item) =>
-  item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "Noma'lum hudud";
+  displayLocationName(
+    item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "Noma'lum hudud",
+  );
 
 const parseMaybeJson = (value) => {
   if (typeof value !== "string") return value;
@@ -238,27 +254,56 @@ const geometryAreaSquareMeters = (geometry) => {
   return 0;
 };
 
+const WEB_MERCATOR_RADIUS = 6378137;
+const WEB_MERCATOR_MAX_LAT = 85.05112878;
+
+const clampWebMercatorLat = (lat) =>
+  Math.max(-WEB_MERCATOR_MAX_LAT, Math.min(WEB_MERCATOR_MAX_LAT, Number(lat) || 0));
+
+const lngLatToWebMercator = ([lng, lat] = []) => {
+  const safeLng = Number(lng) || 0;
+  const safeLat = clampWebMercatorLat(lat);
+  const x = (safeLng * Math.PI * WEB_MERCATOR_RADIUS) / 180;
+  const y = WEB_MERCATOR_RADIUS * Math.log(Math.tan(Math.PI / 4 + (safeLat * Math.PI) / 360));
+  return [x, y];
+};
+
+const webMercatorToLngLat = ([x, y] = []) => {
+  const lng = ((Number(x) || 0) / WEB_MERCATOR_RADIUS) * (180 / Math.PI);
+  const lat = (Math.atan(Math.exp((Number(y) || 0) / WEB_MERCATOR_RADIUS)) * 360) / Math.PI - 90;
+  return [lng, clampWebMercatorLat(lat)];
+};
+
+const bboxToWebMercator = (bbox) => {
+  bbox = parseMaybeJson(bbox);
+  if (!Array.isArray(bbox) || bbox.length !== 4) return null;
+  const [minX, minY] = lngLatToWebMercator([bbox[0], bbox[1]]);
+  const [maxX, maxY] = lngLatToWebMercator([bbox[2], bbox[3]]);
+  return [Math.min(minX, maxX), Math.min(minY, maxY), Math.max(minX, maxX), Math.max(minY, maxY)];
+};
+
 const bboxArea = (bbox) => {
   bbox = parseMaybeJson(bbox);
   if (!Array.isArray(bbox) || bbox.length !== 4) return Number.MAX_SAFE_INTEGER;
-  return Math.abs((bbox[2] - bbox[0]) * (bbox[3] - bbox[1]));
+  const mercator = bboxToWebMercator(bbox);
+  if (!mercator) return Number.MAX_SAFE_INTEGER;
+  return Math.abs((mercator[2] - mercator[0]) * (mercator[3] - mercator[1]));
 };
 
 const createProjector = (bbox, width = 1000, height = 650, padding = 18) => {
-  const [minLng, minLat, maxLng, maxLat] = bbox || [55.9, 37.1, 73.3, 45.7];
-  const lngSpan = Math.max(maxLng - minLng, 0.0001);
-  const latSpan = Math.max(maxLat - minLat, 0.0001);
-  const scale = Math.min((width - padding * 2) / lngSpan, (height - padding * 2) / latSpan);
-  const xOffset = (width - lngSpan * scale) / 2;
-  const yOffset = (height - latSpan * scale) / 2;
-  const project = ([lng, lat]) => [
-    xOffset + (lng - minLng) * scale,
-    height - (yOffset + (lat - minLat) * scale),
-  ];
-  project.unproject = ([x, y]) => [
-    (x - xOffset) / scale + minLng,
-    (height - y - yOffset) / scale + minLat,
-  ];
+  const [minX, minY, maxX, maxY] =
+    bboxToWebMercator(bbox) || bboxToWebMercator([55.9, 37.1, 73.3, 45.7]);
+  const xSpan = Math.max(maxX - minX, 0.0001);
+  const ySpan = Math.max(maxY - minY, 0.0001);
+  const scale = Math.min((width - padding * 2) / xSpan, (height - padding * 2) / ySpan);
+  const xOffset = (width - xSpan * scale) / 2;
+  const yOffset = (height - ySpan * scale) / 2;
+  const project = ([lng, lat]) => {
+    const [x, y] = lngLatToWebMercator([lng, lat]);
+    return [xOffset + (x - minX) * scale, height - (yOffset + (y - minY) * scale)];
+  };
+  project.unproject = ([x, y]) =>
+    webMercatorToLngLat([(x - xOffset) / scale + minX, (height - y - yOffset) / scale + minY]);
   return project;
 };
 
@@ -757,10 +802,11 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   }, [selected, visibleGeoJson]);
 
   const getAnalysisLocationText = useCallback((record) => {
-    return normalizeText(
+    return baseName(
       [
         record.region,
         record.district,
+        record.mahalla,
         record.address,
         record.settlement,
         record.school_name,
@@ -1276,7 +1322,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             type: "raster",
             tiles: ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
             tileSize: 256,
-            attribution: "Imagery Google",
+            attribution: "Imagery © Google",
           },
         },
         layers: [
@@ -1917,9 +1963,9 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     );
   };
 
-  const satelliteBoundaryOpacity = satelliteEnabled ? 0 : 1;
   const loading = !mapReady || loadingBoundary;
   const dataLoading = loadingRows || statsLoading;
+  const satelliteBoundaryOpacity = satelliteEnabled ? 0 : 1;
 
   return (
     <Box>
@@ -2240,7 +2286,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         d={path}
                         fill="none"
                         stroke={active || hovered ? mapColors.label : mapColors.stroke}
-                        strokeOpacity={satelliteEnabled ? 0 : active ? 1 : hovered ? 0.92 : 0.78}
+                        strokeOpacity={active ? 1 : hovered ? 0.92 : 0.78}
                         strokeWidth={active ? 2.35 : level === 1 ? 1.25 : level === 2 ? 1 : 0.78}
                         strokeLinejoin="round"
                         strokeLinecap="round"

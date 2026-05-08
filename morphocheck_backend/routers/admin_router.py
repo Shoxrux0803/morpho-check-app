@@ -107,7 +107,7 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
     }
     # Agar modelda mavjud bo'lsa: region, yelka, oyoq uzunliklari va hk
     extra_fields = (
-        "region", "district", "address",
+        "region", "district", "mahalla", "address",
         "examination_date", "birth_date", "preschool_institution",
         "shoulder_length", "shoulder_breadth", "shoulder_circumference",
         "arm_elbow_length", "hand_length",
@@ -144,7 +144,7 @@ def list_users(
     page: int = 1,
     page_size: int = 20,
 ):
-    query = db.query(User)
+    query = db.query(User).filter((User.is_deleted == 0) | (User.is_deleted == None))
     if q:
         like = f"%{q}%"
         query = query.filter(or_(User.name.ilike(like), User.email.ilike(like), User.phone.ilike(like)))
@@ -155,6 +155,15 @@ def list_users(
         .all()
     )
     return items
+
+@router.get("/users/deleted", response_model=List[UserOut], dependencies=[Depends(get_current_superadmin)])
+def list_deleted_users(db: Session = Depends(get_db)):
+    return (
+        db.query(User)
+        .filter(User.is_deleted == 1)
+        .order_by(desc(User.deleted_at), desc(User.id))
+        .all()
+    )
 
 @router.post("/users", response_model=UserOut)
 def create_user(
@@ -278,6 +287,35 @@ def delete_user(
     )
     
     return {"status": "deleted"}
+
+@router.post("/users/{user_id}/restore", response_model=UserOut)
+def restore_user(
+    user_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_superadmin)
+):
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    user.is_deleted = 0
+    user.deleted_at = None
+    user.deleted_by_id = None
+    db.commit()
+    db.refresh(user)
+
+    record_audit_log(
+        db=db,
+        user_id=current_admin.id,
+        action="RESTORE",
+        target_type="User",
+        target_id=user_id,
+        details=f"Foydalanuvchi tiklandi: {user.name}",
+        request=request
+    )
+
+    return user
 
 # ---------------- ANALYSES ---------------------
 @router.get("/analyses")
@@ -536,7 +574,7 @@ def update_analysis(
             "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
             "calf_length", "calf_circumference", "foot_length", "body_length",
             "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat",
-            "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations",
+            "mahalla", "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations",
             "doctor_note"
         ]
         
@@ -561,6 +599,7 @@ def update_analysis(
                 lastName=split_name(rec.name)[1],
                 region=rec.region or "",
                 district=rec.district,
+                mahalla=getattr(rec, "mahalla", None),
                 address=rec.address or "",
                 examinationDate=rec.examination_date or "",
                 birthDate=rec.birth_date or "Noma'lum",
@@ -824,23 +863,12 @@ def stats(
         .all()
     )
     regional_data = [{"region": r or "Noma'lum", "count": int(c)} for r, c in regional_counts]
+
     risk_region_counts = (
         analysis_q.with_entities(
             PatientAnalysis.region,
             func.count(PatientAnalysis.id).label("total"),
-            func.count(
-                case(
-                    (
-                        (
-                            (PatientAnalysis.z_score > 2)
-                            | (PatientAnalysis.z_score < -2)
-                            | (PatientAnalysis.bmi >= 30)
-                            | (PatientAnalysis.bmi < 18.5)
-                        ),
-                        1,
-                    )
-                )
-            ).label("risk_count"),
+            func.count(case((((PatientAnalysis.z_score > 2) | (PatientAnalysis.z_score < -2) | (PatientAnalysis.bmi >= 30) | (PatientAnalysis.bmi < 18.5)), 1))).label("risk_count"),
         )
         .group_by(PatientAnalysis.region)
         .all()
@@ -1861,6 +1889,11 @@ def get_admin_activity(
             "email": u.email,
             "role": u.role,
             "region": u.region,
+            "district": getattr(u, "district", None),
+            "mahalla": getattr(u, "mahalla", None),
+            "address": getattr(u, "address", None),
+            "latitude": getattr(u, "latitude", None),
+            "longitude": getattr(u, "longitude", None),
             "status": status,
             "is_typing": is_typing,
             "last_active_at": u.last_active_at,

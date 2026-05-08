@@ -124,7 +124,8 @@ class PatientData(BaseModel):
     last_name: str  = Field(..., alias="lastName")
     region: str
     district: Optional[str] = None
-    address: str
+    mahalla: Optional[str] = None
+    address: Optional[str] = None
     
     examination_date: str = Field(..., alias="examinationDate")
     birth_date: str = Field("Noma'lum", alias="birthDate")
@@ -267,6 +268,7 @@ def calculate_bmi(data: PatientData, all_settings: Dict[str, Any], lang: str = "
         "chest": data.chest,
         "region": data.region,
         "district": data.district,
+        "mahalla": data.mahalla,
         "address": data.address
     }
     
@@ -845,6 +847,7 @@ def analyze_full(
             id_code=id_code,
             region=clean_region,
             district=clean_district,
+            mahalla=(data.mahalla or "").strip() or None,
             address=(data.address or "").strip() or None,
             age=data.age,
             age_months=data.age_months,
@@ -952,6 +955,7 @@ def analyze_full(
                 "gender": gender_norm,
                 "region": clean_region,
                 "district": clean_district,
+                "mahalla": data.mahalla,
                 "address": data.address,
                 "birth_date": data.birth_date,
                 "examination_date": data.examination_date,
@@ -1036,6 +1040,7 @@ def generate_pdf_report_endpoint(
         full_report_data["ai_predictions"] = ai_preds
         full_report_data["advices"] = advices
         full_report_data["ai_parent_tips"] = ai_tips
+        full_report_data["doctor_note"] = data.doctor_note
         
         pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
 
@@ -1098,6 +1103,7 @@ def generate_pdf_by_patient_id(
             bone_mass: float = None
             acm: float = None
             visceral_fat: float = None
+            doctor_note: str = None
 
         mini = _Mini(
             age=rec.age or 0,
@@ -1205,11 +1211,14 @@ def generate_pdf_by_patient_id(
             "preschool_institution": rec.preschool_institution or "",
             "region": rec.region or "",
             "district": rec.district or "",
+            "mahalla": getattr(rec, "mahalla", None) or "",
             "address": rec.address or "",
             "analysis": analysis,
             "advices": advices,
             "ai_parent_tips": ai_tips,
-            "ai_predictions": ai_preds
+            "ai_predictions": ai_preds,
+            "doctor_note": rec.doctor_note or "",
+            "record_url": f"/admin?analysis_id={rec.id}",
         }
 
         pdf_buffer = generate_pdf_file(report_data, lang=lang)

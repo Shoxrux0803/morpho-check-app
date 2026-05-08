@@ -49,25 +49,28 @@ const UserGrowthChart = ({ data, loading }) => {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
-            <XAxis 
-                dataKey="name" 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 12, fill: theme.palette.text.secondary }} 
+            <XAxis
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
             />
-            <YAxis 
-                axisLine={false} 
-                tickLine={false} 
-                tick={{ fontSize: 12, fill: theme.palette.text.secondary }} 
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: theme.palette.text.secondary }}
             />
-            <Tooltip 
-              contentStyle={{ 
-                borderRadius: 12, 
-                boxShadow: theme.palette.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)',
-                border: 'none',
+            <Tooltip
+              contentStyle={{
+                borderRadius: 12,
+                boxShadow:
+                  theme.palette.mode === "dark"
+                    ? "0 4px 12px rgba(0,0,0,0.5)"
+                    : "0 4px 12px rgba(0,0,0,0.1)",
+                border: "none",
                 backgroundColor: theme.palette.background.paper,
-                color: theme.palette.text.primary
-              }} 
+                color: theme.palette.text.primary,
+              }}
               itemStyle={{ color: theme.palette.text.primary }}
             />
             <Area

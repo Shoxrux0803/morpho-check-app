@@ -11,6 +11,7 @@ class PatientAnalysis(Base):
     
     region = Column(String(100), nullable=True, index=True)
     district = Column(String(100), nullable=True, index=True)
+    mahalla = Column(String(150), nullable=True, index=True)
     address = Column(String(255), nullable=True)
     
     examination_date = Column(String(50), nullable=True, index=True)

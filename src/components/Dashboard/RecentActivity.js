@@ -20,10 +20,10 @@ const RecentActivity = ({ data, loading }) => {
     if (!iso) return "-";
     const d = new Date(iso);
     return d.toLocaleString("uz-UZ", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -47,32 +47,45 @@ const RecentActivity = ({ data, loading }) => {
                       <Typography variant="subtitle1" fontWeight="bold" component="span">
                         {item.first_name || item.firstName} {item.last_name || item.lastName}
                       </Typography>
-                      <Chip 
-                        label={item.bmi_status || item.bmiStatus || "Ma'lumot yo'q"} 
-                        size="small" 
+                      <Chip
+                        label={item.bmi_status || item.bmiStatus || "Ma'lumot yo'q"}
+                        size="small"
                         color={
-                            (item.bmi_status || item.bmiStatus || '').toLowerCase().includes('normal') 
-                            ? "success" : "warning"
+                          (item.bmi_status || item.bmiStatus || "").toLowerCase().includes("normal")
+                            ? "success"
+                            : "warning"
                         }
                         variant="outlined"
-                        sx={{ fontSize: '0.7rem' }}
+                        sx={{ fontSize: "0.7rem" }}
                       />
                     </Box>
                   }
                   secondary={
                     <Box component="span" display="block" mt={0.5}>
-                      <Typography variant="body2" color="text.secondary" component="span" display="block">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        component="span"
+                        display="block"
+                      >
                         {item.region || "Viloyat aniqlanmagan"}, {item.age} yosh
                       </Typography>
-                      <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }} component="span">
+                      <Typography
+                        variant="caption"
+                        color="text.disabled"
+                        sx={{ mt: 0.5, display: "block" }}
+                        component="span"
+                      >
                         {formatDate(item.created_at || item.createdAt)}
                       </Typography>
                     </Box>
                   }
-                  secondaryTypographyProps={{ component: 'div' }}
+                  secondaryTypographyProps={{ component: "div" }}
                 />
               </ListItem>
-              {index < recentData.length - 1 && <Divider variant="inset" component="li" sx={{ ml: 7, borderColor: 'divider' }} />}
+              {index < recentData.length - 1 && (
+                <Divider variant="inset" component="li" sx={{ ml: 7, borderColor: "divider" }} />
+              )}
             </React.Fragment>
           ))}
         </List>

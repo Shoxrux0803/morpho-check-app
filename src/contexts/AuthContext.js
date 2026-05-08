@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import api from "../services/api";
 import { set, del } from "idb-keyval";
 
-
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -16,7 +15,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
-
   const login = async (credentials) => {
     try {
       const data = await api.login(credentials);
@@ -28,13 +26,14 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("user_role", profile.role);
         setUser(profile);
         return profile;
-
       }
       throw new Error("Token topilmadi. Backend javobi noto'g'ri formatda.");
     } catch (err) {
       // Network xatosi yoki proxy xatosini aniqroq ko'rsatish
       if (err.message && err.message.includes("Failed to fetch")) {
-        throw new Error("Backend serverga ulanib bo'lmadi. Backend ishlaayotganini tekshiring (port 8000).");
+        throw new Error(
+          "Backend serverga ulanib bo'lmadi. Backend ishlaayotganini tekshiring (port 8000).",
+        );
       }
       throw err;
     }

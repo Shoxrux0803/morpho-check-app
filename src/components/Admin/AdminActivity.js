@@ -51,7 +51,15 @@ const StatusBadge = ({ status, isTyping }) => {
         animate={status === "online" ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : {}}
         transition={{ repeat: Infinity, duration: 2 }}
       />
-      <Typography variant="caption" sx={{ textTransform: "capitalize", fontWeight: "bold", fontSize: '0.7rem', color: colors[status] }}>
+      <Typography
+        variant="caption"
+        sx={{
+          textTransform: "capitalize",
+          fontWeight: "bold",
+          fontSize: "0.7rem",
+          color: colors[status],
+        }}
+      >
         {status} {isTyping && "• kiritmoqda..."}
       </Typography>
     </Box>
@@ -92,8 +100,8 @@ const ActivityCard = ({ admin, isDark }) => {
                   width: 56,
                   height: 56,
                   bgcolor: isResearcher ? "secondary.main" : "primary.main",
-                  boxShadow: isResearcher 
-                    ? "0 4px 12px rgba(156,39,176,0.3)" 
+                  boxShadow: isResearcher
+                    ? "0 4px 12px rgba(156,39,176,0.3)"
                     : "0 4px 12px rgba(0,123,255,0.3)",
                 }}
               >
@@ -104,12 +112,12 @@ const ActivityCard = ({ admin, isDark }) => {
                   {admin.name}
                 </Typography>
                 <Stack direction="row" spacing={1} alignItems="center">
-                  <Chip 
-                    label={isResearcher ? "Izlanuvchi" : "Admin"} 
-                    size="small" 
-                    variant="outlined" 
+                  <Chip
+                    label={isResearcher ? "Izlanuvchi" : "Admin"}
+                    size="small"
+                    variant="outlined"
                     color={isResearcher ? "secondary" : "primary"}
-                    sx={{ height: 18, fontSize: '0.6rem', borderRadius: 1, fontWeight: 'bold' }}
+                    sx={{ height: 18, fontSize: "0.6rem", borderRadius: 1, fontWeight: "bold" }}
                   />
                   <StatusBadge status={admin.status} isTyping={admin.is_typing} />
                 </Stack>
@@ -119,59 +127,85 @@ const ActivityCard = ({ admin, isDark }) => {
               icon={<LocationOn sx={{ fontSize: "0.9rem !important" }} />}
               label={admin.region || "Global"}
               size="small"
-              sx={{ borderRadius: 2, fontWeight: "bold", fontSize: '0.7rem' }}
+              sx={{ borderRadius: 2, fontWeight: "bold", fontSize: "0.7rem" }}
             />
           </Box>
 
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Grid size={{ xs: 6 }}>
-              <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, textAlign: "center", bgcolor: "transparent" }}>
-                <Typography variant="caption" color="text.secondary" display="block">Bugun</Typography>
-                <Typography variant="h5" fontWeight="900" color="primary">{admin.stats_today}</Typography>
+              <Paper
+                variant="outlined"
+                sx={{ p: 1.5, borderRadius: 3, textAlign: "center", bgcolor: "transparent" }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Bugun
+                </Typography>
+                <Typography variant="h5" fontWeight="900" color="primary">
+                  {admin.stats_today}
+                </Typography>
               </Paper>
             </Grid>
             <Grid size={{ xs: 6 }}>
-              <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, textAlign: "center", bgcolor: "transparent" }}>
-                <Typography variant="caption" color="text.secondary" display="block">Shu oy</Typography>
-                <Typography variant="h5" fontWeight="900" color="secondary">{admin.stats_month}</Typography>
+              <Paper
+                variant="outlined"
+                sx={{ p: 1.5, borderRadius: 3, textAlign: "center", bgcolor: "transparent" }}
+              >
+                <Typography variant="caption" color="text.secondary" display="block">
+                  Shu oy
+                </Typography>
+                <Typography variant="h5" fontWeight="900" color="secondary">
+                  {admin.stats_month}
+                </Typography>
               </Paper>
             </Grid>
           </Grid>
 
           <Stack spacing={2} sx={{ mt: 3 }}>
-             <Box>
-                <Box display="flex" justifyContent="space-between" mb={0.5}>
-                    <Box display="flex" alignItems="center" gap={0.5}>
-                        <Speed sx={{ fontSize: 16, color: "text.secondary" }} />
-                        <Typography variant="caption" fontWeight="bold">O'rtacha vaqt</Typography>
-                    </Box>
-                    <Typography variant="caption" fontWeight="bold">{admin.avg_entry_time} sek</Typography>
-                </Box>
-                <LinearProgress 
-                    variant="determinate" 
-                    value={Math.min(100, (60 / (admin.avg_entry_time || 60)) * 50)} 
-                    color={admin.avg_entry_time < 120 ? "success" : "warning"}
-                    sx={{ borderRadius: 1, height: 4 }}
-                />
-             </Box>
-
-             <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box>
+              <Box display="flex" justifyContent="space-between" mb={0.5}>
                 <Box display="flex" alignItems="center" gap={0.5}>
-                    <QueryBuilder sx={{ fontSize: 16, color: "text.secondary" }} />
-                    <Typography variant="caption" color="text.secondary">Eng faol vaqti:</Typography>
-                </Box>
-                <Typography variant="caption" fontWeight="bold">{admin.most_active_hour || "-"}</Typography>
-             </Box>
-
-             <Box display="flex" justifyContent="space-between" alignItems="center">
-                <Box display="flex" alignItems="center" gap={0.5}>
-                    <AccessTime sx={{ fontSize: 16, color: "text.secondary" }} />
-                    <Typography variant="caption" color="text.secondary">Oxirgi faollik:</Typography>
+                  <Speed sx={{ fontSize: 16, color: "text.secondary" }} />
+                  <Typography variant="caption" fontWeight="bold">
+                    O'rtacha vaqt
+                  </Typography>
                 </Box>
                 <Typography variant="caption" fontWeight="bold">
-                   {admin.last_active_at ? new Date(admin.last_active_at).toLocaleTimeString("uz-UZ") : "-"}
+                  {admin.avg_entry_time} sek
                 </Typography>
-             </Box>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={Math.min(100, (60 / (admin.avg_entry_time || 60)) * 50)}
+                color={admin.avg_entry_time < 120 ? "success" : "warning"}
+                sx={{ borderRadius: 1, height: 4 }}
+              />
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <QueryBuilder sx={{ fontSize: 16, color: "text.secondary" }} />
+                <Typography variant="caption" color="text.secondary">
+                  Eng faol vaqti:
+                </Typography>
+              </Box>
+              <Typography variant="caption" fontWeight="bold">
+                {admin.most_active_hour || "-"}
+              </Typography>
+            </Box>
+
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Box display="flex" alignItems="center" gap={0.5}>
+                <AccessTime sx={{ fontSize: 16, color: "text.secondary" }} />
+                <Typography variant="caption" color="text.secondary">
+                  Oxirgi faollik:
+                </Typography>
+              </Box>
+              <Typography variant="caption" fontWeight="bold">
+                {admin.last_active_at
+                  ? new Date(admin.last_active_at).toLocaleTimeString("uz-UZ")
+                  : "-"}
+              </Typography>
+            </Box>
           </Stack>
         </CardContent>
       </Card>
@@ -184,7 +218,7 @@ export default function AdminActivity() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [roleFilter, setRoleFilter] = useState("all");
-  
+
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
@@ -208,62 +242,76 @@ export default function AdminActivity() {
     return () => clearInterval(timer);
   }, [fetchActivity]);
 
-  const filteredData = data.filter(a => {
+  const filteredData = data.filter((a) => {
     if (roleFilter === "all") return true;
     return a.role === roleFilter;
   });
 
-  const onlineCount = data.filter(a => a.status === 'online').length;
+  const onlineCount = data.filter((a) => a.status === "online").length;
 
   return (
     <Box>
-      <Box display="flex" flexDirection={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} mb={4} gap={2}>
+      <Box
+        display="flex"
+        flexDirection={{ xs: "column", md: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", md: "center" }}
+        mb={4}
+        gap={2}
+      >
         <Box>
           <Typography variant="h4" fontWeight="900" color="primary.main" gutterBottom>
             Monitoring Markazi
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Hozirda {onlineCount} ta foydalanuvchi online • Oxirgi yangilanish: {lastUpdated.toLocaleTimeString()}
+            Hozirda {onlineCount} ta foydalanuvchi online • Oxirgi yangilanish:{" "}
+            {lastUpdated.toLocaleTimeString()}
           </Typography>
         </Box>
-        
+
         <Stack direction="row" spacing={2} alignItems="center" width={{ xs: "100%", md: "auto" }}>
-          <ButtonGroup size="small" variant="outlined" sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
-            <Button 
-                onClick={() => setRoleFilter("all")} 
-                variant={roleFilter === "all" ? "contained" : "outlined"}
-                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+          <ButtonGroup
+            size="small"
+            variant="outlined"
+            sx={{ bgcolor: "background.paper", borderRadius: 2 }}
+          >
+            <Button
+              onClick={() => setRoleFilter("all")}
+              variant={roleFilter === "all" ? "contained" : "outlined"}
+              sx={{ textTransform: "none", fontWeight: "bold" }}
             >
-                Barchasi
+              Barchasi
             </Button>
-            <Button 
-                onClick={() => setRoleFilter("admin")} 
-                variant={roleFilter === "admin" ? "contained" : "outlined"}
-                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            <Button
+              onClick={() => setRoleFilter("admin")}
+              variant={roleFilter === "admin" ? "contained" : "outlined"}
+              sx={{ textTransform: "none", fontWeight: "bold" }}
             >
-                Adminlar
+              Adminlar
             </Button>
-            <Button 
-                onClick={() => setRoleFilter("researcher")} 
-                variant={roleFilter === "researcher" ? "contained" : "outlined"}
-                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            <Button
+              onClick={() => setRoleFilter("researcher")}
+              variant={roleFilter === "researcher" ? "contained" : "outlined"}
+              sx={{ textTransform: "none", fontWeight: "bold" }}
             >
-                Izlanuvchilar
+              Izlanuvchilar
             </Button>
           </ButtonGroup>
 
           <Tooltip title="Yangilash">
-              <IconButton 
-                  onClick={() => fetchActivity()} 
-                  disabled={loading}
-                  sx={{ 
-                      bgcolor: 'background.paper', 
-                      boxShadow: 1,
-                      '&:hover': { bgcolor: 'primary.main', color: 'white' }
-                  }}
+            <span>
+              <IconButton
+                onClick={() => fetchActivity()}
+                disabled={loading}
+                sx={{
+                  bgcolor: "background.paper",
+                  boxShadow: 1,
+                  "&:hover": { bgcolor: "primary.main", color: "white" },
+                }}
               >
-                  <Refresh sx={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
+                <Refresh sx={{ animation: loading ? "spin 1s linear infinite" : "none" }} />
               </IconButton>
+            </span>
           </Tooltip>
         </Stack>
       </Box>
@@ -271,7 +319,9 @@ export default function AdminActivity() {
       {loading && data.length === 0 ? (
         <Box py={10} textAlign="center">
           <LinearProgress sx={{ maxWidth: 400, mx: "auto", borderRadius: 2 }} />
-          <Typography sx={{ mt: 2 }} color="text.secondary">Ma'lumotlar yuklanmoqda...</Typography>
+          <Typography sx={{ mt: 2 }} color="text.secondary">
+            Ma'lumotlar yuklanmoqda...
+          </Typography>
         </Box>
       ) : (
         <AnimatePresence mode="popLayout">
@@ -283,19 +333,31 @@ export default function AdminActivity() {
             ))}
             {filteredData.length === 0 && (
               <Grid size={{ xs: 12 }}>
-                <Paper sx={{ p: 10, textAlign: "center", borderRadius: 4, bgcolor: "transparent", border: "1px dashed", borderColor: "divider" }}>
-                   <AccountCircle sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
-                   <Typography color="text.secondary">
-                     {roleFilter === "all" ? "Foydalanuvchilar topilmadi" : 
-                      roleFilter === "admin" ? "Adminlar topilmadi" : "Izlanuvchilar topilmadi"}
-                   </Typography>
+                <Paper
+                  sx={{
+                    p: 10,
+                    textAlign: "center",
+                    borderRadius: 4,
+                    bgcolor: "transparent",
+                    border: "1px dashed",
+                    borderColor: "divider",
+                  }}
+                >
+                  <AccountCircle sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
+                  <Typography color="text.secondary">
+                    {roleFilter === "all"
+                      ? "Foydalanuvchilar topilmadi"
+                      : roleFilter === "admin"
+                        ? "Adminlar topilmadi"
+                        : "Izlanuvchilar topilmadi"}
+                  </Typography>
                 </Paper>
               </Grid>
             )}
           </Grid>
         </AnimatePresence>
       )}
-      
+
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }

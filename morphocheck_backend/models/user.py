@@ -1,6 +1,6 @@
 # morphocheck_backend/models/user.py
 
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Float, Integer, String, DateTime, func
 from .base import Base   # shu papkadan Base ni olish uchun
 
 class User(Base):
@@ -11,6 +11,11 @@ class User(Base):
     email = Column(String(120), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=True)
     region = Column(String(100), nullable=True, index=True)  # Viloyat maydoni
+    district = Column(String(100), nullable=True, index=True)
+    mahalla = Column(String(150), nullable=True, index=True)
+    address = Column(String(255), nullable=True)
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
     phone = Column(String(50), nullable=True)
     role = Column(String(30), default="user", index=True)  # "user" yoki "admin"
     created_at = Column(DateTime, server_default=func.now())

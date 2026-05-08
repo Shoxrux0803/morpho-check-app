@@ -5,9 +5,18 @@
 
 /* ===== Global reset/umumiy stillar ===== */
 html,
-body,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
 #root {
-  height: 100%;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -99,6 +108,57 @@ canvas {
   animation: float 3s ease-in-out infinite;
 }
 
+/* Custom Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.2) transparent;
+}
+
+/* ===== MOBILE RESPONSIVE IMPROVEMENTS ===== */
+
+/* Ensure touch targets are at least 44x44px */
+button,
+a,
+.MuiIconButton-root {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Improve form inputs on mobile */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="date"],
+select,
+textarea {
+  font-size: 16px; /* Prevent zoom on iOS */
+  padding: 12px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Table responsive improvements */
 .MuiTableContainer-root {
   max-width: 100%;
   overflow-x: auto;
@@ -109,3 +169,47 @@ canvas {
   width: 100%;
 }
 
+/* Mobile-specific Container adjustments */
+@media (max-width: 600px) {
+  .MuiContainer-root {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Reduce padding on small screens */
+  .MuiToolbar-root {
+    padding: 8px 12px;
+    min-height: 56px;
+  }
+
+  /* Improve stack spacing on mobile */
+  .MuiStack-root {
+    gap: 8px !important;
+  }
+
+  /* Paper/Card padding on mobile */
+  .MuiPaper-root {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Button full width on mobile forms */
+  .MuiButton-root {
+    min-width: 0;
+  }
+}
+
+/* Typography responsive sizing */
+@media (max-width: 900px) {
+  h1 {
+    font-size: clamp(24px, 6vw, 40px);
+  }
+
+  h2 {
+    font-size: clamp(20px, 5vw, 32px);
+  }
+
+  h3 {
+    font-size: clamp(18px, 4vw, 28px);
+  }
+}

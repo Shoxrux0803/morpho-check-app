@@ -3,7 +3,6 @@
 const API_BASE = process.env.REACT_APP_API_URL || "";
 const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
 
-
 // Token: localStorage ustuvor, bo'lmasa .env dagi
 const getToken = () => {
   let local = localStorage.getItem("ADMIN_TOKEN");
@@ -191,10 +190,10 @@ export const AdminApi = {
         }),
       ),
   },
-  
+
   // ADMIN ACTIVITY
   activity: {
     list: () => call("/admin/activity"),
     pingFormStart: () => call("/admin/activity/ping-form-start", { method: "POST" }),
-  }
+  },
 };

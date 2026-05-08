@@ -24,9 +24,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
           borderRadius: 4,
           p: 1,
           background: (theme) =>
-            theme.palette.mode === "dark"
-              ? "rgba(30, 32, 40, 0.9)"
-              : "rgba(255, 255, 255, 0.9)",
+            theme.palette.mode === "dark" ? "rgba(30, 32, 40, 0.9)" : "rgba(255, 255, 255, 0.9)",
           backdropFilter: "blur(20px)",
           border: (theme) =>
             theme.palette.mode === "dark"
@@ -39,7 +37,10 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
         },
       }}
     >
-      <DialogTitle component="div" sx={{ m: 0, p: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
+      <DialogTitle
+        component="div"
+        sx={{ m: 0, p: 2, display: "flex", alignItems: "center", gap: 1.5 }}
+      >
         <Box
           sx={{
             display: "flex",

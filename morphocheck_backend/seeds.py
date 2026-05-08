@@ -13,7 +13,7 @@ def seed_db():
 
     # Pre-hashed password for 'admin123'
     # Hash generated using passlib.hash.bcrypt.hash("admin123")
-    hashed = "$2b$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNI9RPqh6HC0673.K7S8E9oFmO."
+    hashed = "$2b$12$dYfjhnKDb2SC0d1MsVnsDu5HXkfxhCkm6mvheCHq55Unb5qHJy7em"
 
     try:
         # Check if users table exists and has columns

@@ -105,18 +105,34 @@ def on_startup():
     init_db(lambda: Base.metadata.create_all(bind=engine))
     ensure_schema_updates()
 
-
 def ensure_schema_updates():
+    """Small additive schema fixes for deployments without migrations."""
     from sqlalchemy import inspect, text
 
     inspector = inspect(engine)
-    if "patient_analysis" not in inspector.get_table_names():
-        return
+    table_names = inspector.get_table_names()
 
-    existing = {col["name"] for col in inspector.get_columns("patient_analysis")}
-    if "doctor_note" not in existing:
+    if "patient_analysis" in table_names:
+        existing = {col["name"] for col in inspector.get_columns("patient_analysis")}
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN doctor_note TEXT"))
+            if "doctor_note" not in existing:
+                conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN doctor_note TEXT"))
+            if "mahalla" not in existing:
+                conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN mahalla VARCHAR(150)"))
+
+    if "users" in table_names:
+        user_columns = {
+            "district": "VARCHAR(100)",
+            "mahalla": "VARCHAR(150)",
+            "address": "VARCHAR(255)",
+            "latitude": "FLOAT",
+            "longitude": "FLOAT",
+        }
+        existing = {col["name"] for col in inspector.get_columns("users")}
+        with engine.begin() as conn:
+            for column_name, column_type in user_columns.items():
+                if column_name not in existing:
+                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"))
 
 # ---- Routers (barchasi /api/ ostida) ----
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])

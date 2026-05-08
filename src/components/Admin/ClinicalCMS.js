@@ -83,7 +83,7 @@ const ClinicalCMS = () => {
           };
         }
         return s;
-      })
+      }),
     );
   };
 
@@ -114,8 +114,14 @@ const ClinicalCMS = () => {
   const filteredSettings = settings.filter((s) => s.category === activeCat);
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+    <Box sx={{ p: 1, width: "100%", overflowX: "auto" }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        justifyContent="space-between"
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={2}
+        mb={3}
+      >
         <Typography variant="h5" fontWeight={800}>
           Klinik Kontent Boshqaruvi (CMS)
         </Typography>
@@ -162,9 +168,17 @@ const ClinicalCMS = () => {
       ) : (
         <Stack spacing={2}>
           {filteredSettings.map((s) => (
-            <Accordion key={s.key} sx={{ borderRadius: 2, "&:before": { display: "none" }, boxShadow: 1 }}>
+            <Accordion
+              key={s.key}
+              sx={{ borderRadius: 2, "&:before": { display: "none" }, boxShadow: 1 }}
+            >
               <AccordionSummary expandIcon={<ExpandMore />}>
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ width: "100%" }}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={{ xs: 0.5, sm: 2 }}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  sx={{ width: "100%" }}
+                >
                   <Typography fontWeight={600} sx={{ flexGrow: 1 }}>
                     {s.label}
                   </Typography>
@@ -173,36 +187,40 @@ const ClinicalCMS = () => {
                   </Typography>
                 </Stack>
               </AccordionSummary>
-              <AccordionDetails>
-                <Grid container spacing={3}>
-                  {["uz", "ru", "en", "kz"].map((lang) => (
-                    <Grid item xs={12} md={6} key={lang}>
-                      <TextField
-                        fullWidth
-                        multiline
-                        rows={2}
-                        label={lang.toUpperCase()}
-                        value={s.value_json?.[lang] || ""}
-                        onChange={(e) => handleValueChange(s.key, lang, e.target.value)}
-                        variant="outlined"
-                        size="small"
-                      />
+              <AccordionDetails sx={{ p: { xs: 1.5, sm: 3 } }}>
+                <>
+                  <Box sx={{ width: "100%", overflowX: "auto" }}>
+                    <Grid container spacing={2}>
+                      {["uz", "ru", "en", "kz"].map((lang) => (
+                        <Grid item xs={12} md={6} key={lang}>
+                          <TextField
+                            fullWidth
+                            multiline
+                            rows={2}
+                            label={lang.toUpperCase()}
+                            value={s.value_json?.[lang] || ""}
+                            onChange={(e) => handleValueChange(s.key, lang, e.target.value)}
+                            variant="outlined"
+                            size="small"
+                          />
+                        </Grid>
+                      ))}
                     </Grid>
-                  ))}
-                  <Grid item xs={12}>
-                    <Divider sx={{ my: 1 }} />
-                    <Box display="flex" justifyContent="flex-end">
-                      <Button
-                        variant="contained"
-                        startIcon={saving === s.key ? <CircularProgress size={20} color="inherit" /> : <Save />}
-                        onClick={() => handleSave(s)}
-                        disabled={saving === s.key}
-                      >
-                        Saqlash
-                      </Button>
-                    </Box>
-                  </Grid>
-                </Grid>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Box display="flex" justifyContent="flex-end">
+                    <Button
+                      variant="contained"
+                      startIcon={
+                        saving === s.key ? <CircularProgress size={20} color="inherit" /> : <Save />
+                      }
+                      onClick={() => handleSave(s)}
+                      disabled={saving === s.key}
+                    >
+                      Saqlash
+                    </Button>
+                  </Box>
+                </>
               </AccordionDetails>
             </Accordion>
           ))}

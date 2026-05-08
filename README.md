@@ -2,7 +2,7 @@
 
 **Advanced Clinical and Anthropometric Analysis Platform**
 
-MorphoCheck is a web application for medical and anthropometric assessment. It processes patient measurements, calculates BMI, Z-score based indicators and body-type metrics, then generates clinical PDF and DOCX reports.
+MorphoCheck is a web application for medical and anthropometric assessment. It processes patient measurements, calculates BMI, Z-score based indicators and body-type metrics, then generates clinical PDF/DOCX reports.
 
 ## Key Features
 

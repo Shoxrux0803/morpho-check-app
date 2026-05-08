@@ -16,7 +16,6 @@ export const OfflineSyncProvider = ({ children }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
 
-
   // Request Persistent Storage
   useEffect(() => {
     if (navigator.storage && navigator.storage.persist) {
@@ -62,16 +61,16 @@ export const OfflineSyncProvider = ({ children }) => {
     if (currentQueue.length === 0) return;
 
     // Only sync items that are 'pending' or were previously 'failed' but we want to retry
-    const itemsToSync = currentQueue.filter(item => item.status !== "syncing");
+    const itemsToSync = currentQueue.filter((item) => item.status !== "syncing");
     if (itemsToSync.length === 0) return;
 
     setIsSyncing(true);
     const toastId = toast.loading(`Syncing ${itemsToSync.length} records...`);
 
     const updatedQueue = [...currentQueue];
-    
+
     for (const item of itemsToSync) {
-      const idx = updatedQueue.findIndex(q => q.id === item.id);
+      const idx = updatedQueue.findIndex((q) => q.id === item.id);
       if (idx === -1) continue;
 
       updatedQueue[idx].status = "syncing";
@@ -118,18 +117,18 @@ export const OfflineSyncProvider = ({ children }) => {
       timestamp: new Date().toISOString(),
       status: "pending",
       attempts: 0,
-      lastError: null
+      lastError: null,
     };
     const newQueue = [...currentQueue, newItem];
     await set(QUEUE_KEY, newQueue);
     setQueue(newQueue);
     toast.success("Saved offline. Will sync when online.", { icon: "📥" });
-    
+
     // Try to register background sync if supported
-    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+    if ("serviceWorker" in navigator && "SyncManager" in window) {
       try {
         const registration = await navigator.serviceWorker.ready;
-        await registration.sync.register('sync-records');
+        await registration.sync.register("sync-records");
       } catch (err) {
         console.warn("Background sync registration failed:", err);
       }
@@ -138,14 +137,14 @@ export const OfflineSyncProvider = ({ children }) => {
 
   const removeFromQueue = async (id) => {
     const currentQueue = (await get(QUEUE_KEY)) || [];
-    const newQueue = currentQueue.filter(item => item.id !== id);
+    const newQueue = currentQueue.filter((item) => item.id !== id);
     await set(QUEUE_KEY, newQueue);
     setQueue(newQueue);
   };
 
   const updateQueueItem = async (id, updatedPayload) => {
     const currentQueue = (await get(QUEUE_KEY)) || [];
-    const idx = currentQueue.findIndex(item => item.id === id);
+    const idx = currentQueue.findIndex((item) => item.id === id);
     if (idx !== -1) {
       currentQueue[idx].payload = { ...currentQueue[idx].payload, ...updatedPayload };
       currentQueue[idx].status = "pending";
@@ -156,23 +155,22 @@ export const OfflineSyncProvider = ({ children }) => {
   };
 
   return (
-    <OfflineSyncContext.Provider 
-      value={{ 
-        isOnline, 
-        queue, 
-        pendingCount: queue.length, 
+    <OfflineSyncContext.Provider
+      value={{
+        isOnline,
+        queue,
+        pendingCount: queue.length,
         isSyncing,
         editingItem,
         setEditingItem,
-        addToQueue, 
+        addToQueue,
         removeFromQueue,
 
         updateQueueItem,
-        syncManual: syncItems 
+        syncManual: syncItems,
       }}
     >
       {children}
     </OfflineSyncContext.Provider>
   );
 };
-

@@ -44,7 +44,7 @@ const PointDOFShaderMaterial = {
       
       gl_FragColor = vec4(uColor, opacity * 0.8);
     }
-  `
+  `,
 };
 
 // Custom Shader for Lines
@@ -69,7 +69,7 @@ const LineDOFShaderMaterial = {
       float opacity = max(0.0, 1.0 - focusDist * 0.12);
       gl_FragColor = vec4(uColor, opacity * 0.3); // Lines are more transparent
     }
-  `
+  `,
 };
 
 const DofNetwork = ({ isDark }) => {
@@ -84,14 +84,14 @@ const DofNetwork = ({ isDark }) => {
   const [positions, velocities] = useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
     const vel = new Float32Array(particleCount * 3);
-    
+
     for (let i = 0; i < particleCount; i++) {
       // Spread across screen
       pos[i * 3] = (Math.random() - 0.5) * 20;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 20;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 15;
 
-      vel[i * 3] = (Math.random() - 0.5) * 0.02;     // vx
+      vel[i * 3] = (Math.random() - 0.5) * 0.02; // vx
       vel[i * 3 + 1] = (Math.random() - 0.5) * 0.02; // vy
       vel[i * 3 + 2] = (Math.random() - 0.5) * 0.02; // vz
     }
@@ -112,7 +112,7 @@ const DofNetwork = ({ isDark }) => {
     const time = state.clock.getElapsedTime();
     const posAttr = pointsRef.current.geometry.attributes.position;
     const lineAttr = linesRef.current.geometry.attributes.position;
-    
+
     // Mouse coords in 3D world space (approximate projection on Z=0)
     const mx = (mouse.x * viewport.width) / 2;
     const my = (mouse.y * viewport.height) / 2;
@@ -161,21 +161,21 @@ const DofNetwork = ({ isDark }) => {
     // Build lines between close points
     let vertexCount = 0;
     for (let i = 0; i < particleCount; i++) {
-        for (let j = i + 1; j < particleCount; j++) {
-            const dx = posAttr.array[i * 3] - posAttr.array[j * 3];
-            const dy = posAttr.array[i * 3 + 1] - posAttr.array[j * 3 + 1];
-            const dz = posAttr.array[i * 3 + 2] - posAttr.array[j * 3 + 2];
-            const distSq = dx * dx + dy * dy + dz * dz;
+      for (let j = i + 1; j < particleCount; j++) {
+        const dx = posAttr.array[i * 3] - posAttr.array[j * 3];
+        const dy = posAttr.array[i * 3 + 1] - posAttr.array[j * 3 + 1];
+        const dz = posAttr.array[i * 3 + 2] - posAttr.array[j * 3 + 2];
+        const distSq = dx * dx + dy * dy + dz * dz;
 
-            if (distSq < maxDistance * maxDistance) {
-                lineAttr.array[vertexCount++] = posAttr.array[i * 3];
-                lineAttr.array[vertexCount++] = posAttr.array[i * 3 + 1];
-                lineAttr.array[vertexCount++] = posAttr.array[i * 3 + 2];
-                lineAttr.array[vertexCount++] = posAttr.array[j * 3];
-                lineAttr.array[vertexCount++] = posAttr.array[j * 3 + 1];
-                lineAttr.array[vertexCount++] = posAttr.array[j * 3 + 2];
-            }
+        if (distSq < maxDistance * maxDistance) {
+          lineAttr.array[vertexCount++] = posAttr.array[i * 3];
+          lineAttr.array[vertexCount++] = posAttr.array[i * 3 + 1];
+          lineAttr.array[vertexCount++] = posAttr.array[i * 3 + 2];
+          lineAttr.array[vertexCount++] = posAttr.array[j * 3];
+          lineAttr.array[vertexCount++] = posAttr.array[j * 3 + 1];
+          lineAttr.array[vertexCount++] = posAttr.array[j * 3 + 2];
         }
+      }
     }
 
     linesRef.current.geometry.setDrawRange(0, vertexCount / 3);
@@ -255,13 +255,10 @@ export default function AdvancedMorphoAnimation({ theme }) {
         background: isDark ? "#000000" : "#f1f5f9", // Deep black for max contrast on dark mode
       }}
     >
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
-        gl={{ antialias: true, alpha: true }}
-      >
+      <Canvas camera={{ position: [0, 0, 8], fov: 60 }} gl={{ antialias: true, alpha: true }}>
         <DofNetwork isDark={isDark} />
       </Canvas>
-      
+
       {/* Premium Vignette & Texture */}
       <div
         style={{
@@ -277,7 +274,7 @@ export default function AdvancedMorphoAnimation({ theme }) {
           zIndex: 1,
         }}
       />
-      
+
       {/* Subtle Noise Grain Overlay */}
       <div
         style={{

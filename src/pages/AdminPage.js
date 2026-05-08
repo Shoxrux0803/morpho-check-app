@@ -7,17 +7,60 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 // Material UI importlari
 import {
-  Container, Grid, Typography, Paper, AppBar, Toolbar, Tabs, Tab, Box, 
-  IconButton, Button, FormControl, InputLabel, Select, MenuItem, Dialog, 
-  DialogTitle, DialogContent, DialogActions, LinearProgress, Alert, useTheme, 
-  useMediaQuery, CircularProgress, Table, TableBody, TableCell, TableContainer, 
-  TableHead, TableRow, TablePagination, TextField, InputAdornment, Stack, Avatar,
-  Tooltip
+  Container,
+  Grid,
+  Typography,
+  Paper,
+  AppBar,
+  Toolbar,
+  Tabs,
+  Tab,
+  Box,
+  IconButton,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  LinearProgress,
+  Alert,
+  useTheme,
+  useMediaQuery,
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TablePagination,
+  TextField,
+  InputAdornment,
+  Stack,
+  Avatar,
+  Tooltip,
 } from "@mui/material";
 import {
-  Delete, Download, FilterList, Close, Dashboard as DashboardIcon, 
-  List as ListIcon, Lock, Person, Visibility, VisibilityOff, Assessment,
-  BiotechOutlined, Logout, Refresh, ErrorOutline, CheckCircle
+  Delete,
+  Download,
+  FilterList,
+  Close,
+  Dashboard as DashboardIcon,
+  List as ListIcon,
+  Lock,
+  Person,
+  Visibility,
+  VisibilityOff,
+  Assessment,
+  BiotechOutlined,
+  Logout,
+  Refresh,
+  ErrorOutline,
+  CheckCircle,
 } from "@mui/icons-material";
 import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,7 +74,6 @@ import AdminTable from "../components/Admin/AdminTable";
 import InputForm from "../components/InputForm";
 import ResearcherDataView from "../components/Admin/ResearcherDataView";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
-
 
 /** ===== Helpers ===== */
 const calcBMI = (wKg, hCm) => {
@@ -89,18 +131,30 @@ const GlassPaper = ({ children, sx = {} }) => (
     elevation={0}
     sx={{
       background: (theme) =>
-        theme.palette.mode === "dark"
-          ? "rgba(30, 30, 40, 0.7)"
-          : "rgba(255, 255, 255, 0.7)",
+        theme.palette.mode === "dark" ? "rgba(30, 30, 40, 0.7)" : "rgba(255, 255, 255, 0.7)",
       backdropFilter: "blur(20px)",
       borderRadius: 4,
       border: "1px solid",
       borderColor: (theme) =>
-        theme.palette.mode === "dark"
-          ? "rgba(255, 255, 255, 0.12)"
-          : "rgba(100, 116, 139, 0.12)",
+        theme.palette.mode === "dark" ? "rgba(255, 255, 255, 0.12)" : "rgba(100, 116, 139, 0.12)",
       overflow: "auto",
-      boxShadow: (theme) => 
+      "&::-webkit-scrollbar": {
+        height: "6px",
+        width: "6px",
+      },
+      "&::-webkit-scrollbar-track": {
+        background: "transparent",
+      },
+      "&::-webkit-scrollbar-thumb": {
+        background: (theme) =>
+          theme.palette.mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
+        borderRadius: "10px",
+      },
+      "&::-webkit-scrollbar-thumb:hover": {
+        background: (theme) =>
+          theme.palette.mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
+      },
+      boxShadow: (theme) =>
         theme.palette.mode === "dark"
           ? "0 8px 32px rgba(0,0,0,0.4)"
           : "0 8px 32px rgba(100,116,139,0.1)",
@@ -117,28 +171,93 @@ const horizontalScrollSx = {
   minWidth: 0,
   overflowX: "auto",
   WebkitOverflowScrolling: "touch",
+  "&::-webkit-scrollbar": {
+    height: "8px",
+  },
+  "&::-webkit-scrollbar-track": {
+    background: "transparent",
+  },
+  "&::-webkit-scrollbar-thumb": {
+    background: (theme) =>
+      theme.palette.mode === "dark" ? "rgba(255,255,255,0.14)" : "rgba(99,102,241,0.22)",
+    borderRadius: "10px",
+  },
 };
 
-function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, onDownloadPdf, isPdfDownloading, pdfLang, setPdfLang }) {
+function CustomModal({
+  children,
+  onClose,
+  title,
+  onDownloadDocx,
+  isDownloading,
+  onDownloadPdf,
+  isPdfDownloading,
+  pdfLang,
+  setPdfLang,
+}) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
-    <Dialog open={true} onClose={onClose} fullScreen={fullScreen} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+    <Dialog
+      open={true}
+      onClose={onClose}
+      fullScreen={fullScreen}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{ sx: { borderRadius: 3 } }}
+    >
       <DialogTitle>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6" fontWeight="bold">{title}</Typography>
-          <IconButton onClick={onClose} size="small"><Close /></IconButton>
+          <Typography variant="h6" fontWeight="bold">
+            {title}
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
         </Box>
       </DialogTitle>
       <DialogContent dividers>{children}</DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}>
         <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-          <Button variant="contained" color="secondary" startIcon={isDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />} onClick={onDownloadDocx} disabled={isDownloading || isPdfDownloading} sx={{ borderRadius: 2 }}>Word</Button>
-          <FormControl size="small" sx={{ minWidth: 90 }}><InputLabel>Til</InputLabel><Select value={pdfLang} label="Til" onChange={(e) => setPdfLang(e.target.value)}>{LANGUAGES.map((l) => (<MenuItem key={l.code} value={l.code}>{l.flag} {l.label}</MenuItem>))}</Select></FormControl>
-          <Button variant="contained" color="primary" startIcon={isPdfDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />} onClick={onDownloadPdf} disabled={isDownloading || isPdfDownloading} sx={{ borderRadius: 2 }}>PDF hisobot</Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={
+              isDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />
+            }
+            onClick={onDownloadDocx}
+            disabled={isDownloading || isPdfDownloading}
+            sx={{ borderRadius: 2 }}
+          >
+            Word
+          </Button>
+          <FormControl size="small" sx={{ minWidth: 90 }}>
+            <InputLabel>Til</InputLabel>
+            <Select value={pdfLang} label="Til" onChange={(e) => setPdfLang(e.target.value)}>
+              {LANGUAGES.map((l) => (
+                <MenuItem key={l.code} value={l.code}>
+                  {l.flag} {l.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={
+              isPdfDownloading ? <CircularProgress size={20} color="inherit" /> : <Download />
+            }
+            onClick={onDownloadPdf}
+            disabled={isDownloading || isPdfDownloading}
+            sx={{ borderRadius: 2 }}
+          >
+            PDF hisobot
+          </Button>
         </Box>
-        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>Yopish</Button>
+        <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>
+          Yopish
+        </Button>
       </DialogActions>
     </Dialog>
   );
@@ -148,9 +267,9 @@ function CustomModal({ children, onClose, title, onDownloadDocx, isDownloading, 
 export default function AdminPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, login: authLogin, loading: authLoading, logout } = useAuth();
+  const { user, login: authLogin, loading: authLoading } = useAuth();
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   const [activeTab, setActiveTab] = useState(0);
   const [raw, setRaw] = useState([]);
@@ -158,7 +277,7 @@ export default function AdminPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
-  
+
   // States for downloads
   const [viewRow, setViewRow] = useState(null);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
@@ -204,7 +323,9 @@ export default function AdminPage() {
   // Deletion state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const { logout } = useAuth();
 
   // Load Data - Paginated
   const load = useCallback(async () => {
@@ -234,19 +355,21 @@ export default function AdminPage() {
     }
   }, [user, dashFilters, sort, page, rowsPerPage]);
 
-  const fetchDashboardStats = useCallback(async (filters = dashFilters) => {
-    if (!user) return;
-    setStatsLoading(true);
-    try {
-      const data = await AdminApi.stats(filters);
-      setStats(data);
-    } catch (e) {
-      console.error("Failed to fetch admin stats:", e);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [user, dashFilters]);
-
+  const fetchDashboardStats = useCallback(
+    async (filters = dashFilters) => {
+      if (!user) return;
+      setStatsLoading(true);
+      try {
+        const data = await AdminApi.stats(filters);
+        setStats(data);
+      } catch (e) {
+        console.error("Failed to fetch admin stats:", e);
+      } finally {
+        setStatsLoading(false);
+      }
+    },
+    [user, dashFilters],
+  );
 
   useEffect(() => {
     load();
@@ -274,63 +397,98 @@ export default function AdminPage() {
       });
   }, [location.search, user]);
 
-
-  const handleLogin = useCallback(async (e) => {
-    e.preventDefault();
-    setLoginError("");
-    setLoginInProgress(true);
-    try {
-      const profile = await authLogin(loginForm);
-      if (profile.role !== "admin" && profile.role !== "superadmin") {
-        navigate("/");
+  const handleLogin = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setLoginError("");
+      setLoginInProgress(true);
+      try {
+        const profile = await authLogin(loginForm);
+        if (profile.role !== "admin" && profile.role !== "superadmin") {
+          navigate("/");
+        }
+      } catch (err) {
+        setLoginError(err.message || "Kirishda xatolik yuz berdi");
+      } finally {
+        setLoginInProgress(false);
       }
-    } catch (err) {
-      setLoginError(err.message || "Kirishda xatolik yuz berdi");
-    } finally {
-      setLoginInProgress(false);
-    }
-  }, [authLogin, loginForm, navigate]);
+    },
+    [authLogin, loginForm, navigate],
+  );
 
-  const handleUpdateAnalysis = useCallback(async (e) => {
-    e?.preventDefault();
-    if (!editRow) return;
-    setUpdating(true);
-    try {
-      await AdminApi.analyses.update(editRow.id, editRow);
-      toast.success("Ma'lumot yangilandi");
-      setEditRow(null);
-      load();
-    } catch (err) {
-      toast.error("Xatolik: " + err.message);
-    } finally {
-      setUpdating(false);
-    }
-  }, [editRow, load]);
+  const handleUpdateAnalysis = useCallback(
+    async (e) => {
+      e?.preventDefault();
+      if (!editRow) return;
+      setUpdating(true);
+      try {
+        await AdminApi.analyses.update(editRow.id, editRow);
+        toast.success("Ma'lumot yangilandi");
+        setEditRow(null);
+        load();
+      } catch (err) {
+        toast.error("Xatolik: " + err.message);
+      } finally {
+        setUpdating(false);
+      }
+    },
+    [editRow, load],
+  );
 
   const handleEditInputChange = useCallback((e) => {
     const { name, value } = e.target;
     const numericFields = [
-      "age", "age_months", "age_days", "height", "weight", "chest", "waist", "head",
-      "father_height", "mother_height",
-      "shoulder_length", "shoulder_breadth", "shoulder_circumference",
-      "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
-      "calf_length", "calf_circumference", "foot_length", "body_length",
-      "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+      "age",
+      "age_months",
+      "age_days",
+      "height",
+      "weight",
+      "chest",
+      "waist",
+      "head",
+      "father_height",
+      "mother_height",
+      "shoulder_length",
+      "shoulder_breadth",
+      "shoulder_circumference",
+      "arm_elbow_length",
+      "hand_length",
+      "thigh_length",
+      "thigh_circumference",
+      "calf_length",
+      "calf_circumference",
+      "foot_length",
+      "body_length",
+      "total_body_water",
+      "fat_percent",
+      "fat_mass",
+      "muscle_mass",
+      "bone_mass",
+      "acm",
+      "visceral_fat",
     ];
-    
+
     let v = value;
-    if (numericFields.includes(name) || numericFields.map(f => {
-      const camel = f.split('_').map((x, i) => i === 0 ? x : x.charAt(0).toUpperCase() + x.slice(1)).join('');
-      return camel;
-    }).includes(name)) {
+    if (
+      numericFields.includes(name) ||
+      numericFields
+        .map((f) => {
+          const camel = f
+            .split("_")
+            .map((x, i) => (i === 0 ? x : x.charAt(0).toUpperCase() + x.slice(1)))
+            .join("");
+          return camel;
+        })
+        .includes(name)
+    ) {
       v = value === "" ? "" : Number(value);
     }
-    
-    setEditRow(prev => ({ ...prev, [name]: v }));
+
+    setEditRow((prev) => ({ ...prev, [name]: v }));
   }, []);
 
   const handleBulkUpdateEdit = useCallback((data) => {
-    setEditRow(prev => ({ ...prev, ...data }));
+    setEditRow((prev) => ({ ...prev, ...data }));
   }, []);
 
   const toggleAll = useCallback(() => {
@@ -341,32 +499,38 @@ export default function AdminPage() {
     setChecked(next);
   }, [checked, raw]);
 
-  const toggleOne = useCallback((id) => {
-    const next = new Set(checked);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setChecked(next);
-  }, [checked]);
+  const toggleOne = useCallback(
+    (id) => {
+      const next = new Set(checked);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      setChecked(next);
+    },
+    [checked],
+  );
 
-  const handleDeleteConfirm = useCallback(async (mode) => {
-    setDeleteConfirmLoading(true);
-    try {
-      if (mode === "hard") {
-        await AdminApi.analyses.hardDelete(Array.from(checked));
-        toast.success("Ma'lumotlar butunlay o'chirildi");
-      } else {
-        await AdminApi.analyses.removeMany(Array.from(checked));
-        toast.success("Ma'lumotlar savatga yuborildi. Superadmin ularni tiklashi mumkin.");
+  const handleDeleteConfirm = useCallback(
+    async (mode) => {
+      setDeleteConfirmLoading(true);
+      try {
+        if (mode === "hard") {
+          await AdminApi.analyses.hardDelete(Array.from(checked));
+          toast.success("Ma'lumotlar butunlay o'chirildi");
+        } else {
+          await AdminApi.analyses.removeMany(Array.from(checked));
+          toast.success("Ma'lumotlar savatga yuborildi. Superadmin ularni tiklashi mumkin.");
+        }
+        setChecked(new Set());
+        setDeleteConfirmOpen(false);
+        load();
+      } catch (e) {
+        toast.error("O'chirishda xatolik: " + e.message);
+      } finally {
+        setDeleteConfirmLoading(false);
       }
-      setChecked(new Set());
-      setDeleteConfirmOpen(false);
-      load();
-    } catch (e) {
-      toast.error("O'chirishda xatolik: " + e.message);
-    } finally {
-      setDeleteConfirmLoading(false);
-    }
-  }, [checked, load]);
+    },
+    [checked, load],
+  );
 
   const onDeleteSelected = useCallback(async () => {
     if (!checked.size) return;
@@ -380,8 +544,12 @@ export default function AdminPage() {
         // Don't trigger if user is typing in a text input or textarea
         const el = document.activeElement;
         const tag = el.tagName.toUpperCase();
-        const isTextInput = (tag === "INPUT" && !["checkbox", "radio", "range", "button", "submit"].includes(el.type)) || tag === "TEXTAREA" || el.isContentEditable;
-        
+        const isTextInput =
+          (tag === "INPUT" &&
+            !["checkbox", "radio", "range", "button", "submit"].includes(el.type)) ||
+          tag === "TEXTAREA" ||
+          el.isContentEditable;
+
         if (isTextInput) return;
 
         if (checked.size > 0 && activeTab === 1) {
@@ -400,12 +568,15 @@ export default function AdminPage() {
     try {
       const blob = await generatePdfById(viewRow.id, pdfLang);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `report_${viewRow.idCode}_${pdfLang}.pdf`;
       a.click();
-    } catch (e) { alert("PDF Error: " + e.message); }
-    finally { setDownloadingPdf(false); }
+    } catch (e) {
+      alert("PDF Error: " + e.message);
+    } finally {
+      setDownloadingPdf(false);
+    }
   }, [viewRow, pdfLang]);
 
   const handleDownloadDocx = useCallback(async () => {
@@ -414,25 +585,28 @@ export default function AdminPage() {
     try {
       const blob = await generateDocxById(viewRow.id, pdfLang);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `anketa_${viewRow.idCode}_${pdfLang}.docx`;
       a.click();
-    } catch (e) { alert("Word Error: " + e.message); }
-    finally { setDownloadingDocx(false); }
+    } catch (e) {
+      alert("Word Error: " + e.message);
+    } finally {
+      setDownloadingDocx(false);
+    }
   }, [handleDownloadPdf, viewRow, pdfLang]);
 
   const handleExportXlsx = useCallback(async () => {
     setExportingXlsx(true);
     try {
       const blob = await AdminApi.analyses.exportXlsx({
-        ...dashFilters
+        ...dashFilters,
       });
 
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `analyses_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.download = `analyses_export_${new Date().toISOString().split("T")[0]}.xlsx`;
       a.click();
       toast.success("Excel muvaffaqiyatli yuklandi");
     } catch (e) {
@@ -442,12 +616,11 @@ export default function AdminPage() {
     }
   }, [dashFilters]);
 
-
   const handleDownloadTemplate = useCallback(async () => {
     try {
       const blob = await AdminApi.analyses.exportTemplate();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `morphocheck_template.xlsx`;
       a.click();
@@ -482,82 +655,171 @@ export default function AdminPage() {
 
   const availableTabs = useMemo(() => {
     const allTabs = [
-      { 
-        id: 0, 
-        label: "Dashboard", 
-        icon: <DashboardIcon />, 
-        roles: ["admin", "superadmin"], 
-        content: <AdminDashboard data={raw} loading={loading} stats={stats} statsLoading={statsLoading} totalCount={totalCount} userName={user?.name} filters={dashFilters} /> 
+      {
+        id: 0,
+        label: "Dashboard",
+        icon: <DashboardIcon />,
+        roles: ["admin", "superadmin"],
+        content: (
+          <AdminDashboard
+            data={raw}
+            loading={loading}
+            stats={stats}
+            statsLoading={statsLoading}
+            totalCount={totalCount}
+            userName={user?.name}
+            filters={dashFilters}
+          />
+        ),
       },
-      { 
-        id: 1, 
-        label: "Ma'lumotlar", 
-        icon: <ListIcon />, 
+      {
+        id: 1,
+        label: "Ma'lumotlar",
+        icon: <ListIcon />,
         roles: ["admin", "superadmin"],
         content: (
           <Box sx={{ py: 2 }}>
-            <Box display="flex" justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} flexDirection={{ xs: "column", md: "row" }} gap={2} mb={3}>
-               <Typography variant="h5" fontWeight="bold">Ma'lumotlar Listi</Typography>
-               <Box display="flex" gap={1.5} flexWrap="wrap">
-                 <Button 
-                    variant="outlined" 
-                    color="secondary" 
-                    onClick={handleDownloadTemplate}
-                    startIcon={<Download />}
-                  >
-                    Shablon
-                  </Button>
-                 <Button 
-                    variant="outlined" 
-                    color="success" 
-                    onClick={() => setImportConfirmOpen(true)}
-                    startIcon={importingXlsx ? <CircularProgress size={20} /> : <Visibility />}
-                  >
-                    Import
-                  </Button>
-                 <Button 
-                    variant="outlined" 
-                    color="primary" 
-                    startIcon={exportingXlsx ? <CircularProgress size={20} /> : <Download />} 
-                    onClick={handleExportXlsx}
-                    disabled={exportingXlsx}
-                  >
-                    Eksport
-                  </Button>
-                 <Button variant="outlined" color="error" startIcon={<Delete />} onClick={onDeleteSelected} disabled={!checked.size}>O'chirish ({checked.size})</Button>
-               </Box>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", md: "center" }}
+              flexDirection={{ xs: "column", md: "row" }}
+              gap={2}
+              mb={3}
+            >
+              <Typography variant="h5" fontWeight="bold">
+                Ma'lumotlar Listi
+              </Typography>
+              <Box display="flex" gap={1.5} flexWrap="wrap">
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleDownloadTemplate}
+                  startIcon={<Download />}
+                >
+                  Shablon
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="success"
+                  onClick={() => setImportConfirmOpen(true)}
+                  startIcon={importingXlsx ? <CircularProgress size={20} /> : <Visibility />}
+                >
+                  Import
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  startIcon={exportingXlsx ? <CircularProgress size={20} /> : <Download />}
+                  onClick={handleExportXlsx}
+                  disabled={exportingXlsx}
+                >
+                  Eksport
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<Delete />}
+                  onClick={onDeleteSelected}
+                  disabled={!checked.size}
+                >
+                  O'chirish ({checked.size})
+                </Button>
+              </Box>
             </Box>
-            
-            <Paper sx={{ mt: 3, borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+
+            <Paper
+              sx={{
+                mt: 3,
+                borderRadius: 3,
+                overflow: "hidden",
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
               {loading && <LinearProgress />}
-              <AdminTable rows={raw} checked={checked} toggleAll={toggleAll} toggleOne={toggleOne} allChecked={raw.length > 0 && raw.every(r => checked.has(r.id))} setViewRow={setViewRow} onEdit={(r) => setEditRow(r)} formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")} user={user} />
-              <TablePagination component="div" count={totalCount} rowsPerPage={rowsPerPage} page={page} onPageChange={(e, p) => setPage(p)} onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }} />
+              <AdminTable
+                rows={raw}
+                checked={checked}
+                toggleAll={toggleAll}
+                toggleOne={toggleOne}
+                allChecked={raw.length > 0 && raw.every((r) => checked.has(r.id))}
+                setViewRow={setViewRow}
+                onEdit={(r) => setEditRow(r)}
+                formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")}
+                user={user}
+              />
+              <TablePagination
+                component="div"
+                count={totalCount}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={(e, p) => setPage(p)}
+                onRowsPerPageChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value, 10));
+                  setPage(0);
+                }}
+              />
             </Paper>
           </Box>
-        )
+        ),
       },
 
-      { 
-        id: 2, 
-        label: "Ilmiy Tahlil", 
-        icon: <BiotechOutlined />, 
+      {
+        id: 2,
+        label: "Ilmiy Tahlil",
+        icon: <BiotechOutlined />,
         roles: ["admin", "superadmin"],
-        content: <AdminScientificAnalysis data={raw} loading={loading} totalCount={totalCount} filters={dashFilters} />
+        content: (
+          <AdminScientificAnalysis
+            data={raw}
+            loading={loading}
+            totalCount={totalCount}
+            filters={dashFilters}
+          />
+        ),
       },
 
-      { 
-        id: 3, 
-        label: "Izlanuvchi ma'lumotlari", 
-        icon: <Assessment />, 
+      {
+        id: 3,
+        label: "Izlanuvchi ma'lumotlari",
+        icon: <Assessment />,
         roles: ["superadmin"],
-        content: <ResearcherDataView isSuperAdmin={user?.role === 'superadmin'} />
+        content: <ResearcherDataView isSuperAdmin={user?.role === "superadmin"} />,
       },
     ];
-    return allTabs.filter(tab => tab.roles.includes(user?.role));
-  }, [user, raw, loading, stats, statsLoading, totalCount, handleDownloadTemplate, setImportConfirmOpen, importingXlsx, exportingXlsx, handleExportXlsx, onDeleteSelected, checked, dashFilters, setDashFilters, toggleAll, toggleOne, setViewRow, rowsPerPage, page, setPage, setRowsPerPage]);
+    return allTabs.filter((tab) => tab.roles.includes(user?.role));
+  }, [
+    user,
+    raw,
+    loading,
+    stats,
+    statsLoading,
+    totalCount,
+    handleDownloadTemplate,
+    setImportConfirmOpen,
+    importingXlsx,
+    exportingXlsx,
+    handleExportXlsx,
+    onDeleteSelected,
+    checked,
+    dashFilters,
+    setDashFilters,
+    toggleAll,
+    toggleOne,
+    setViewRow,
+    rowsPerPage,
+    page,
+    setPage,
+    setRowsPerPage,
+  ]);
 
-
-  if (authLoading) return <Box display="flex" justifyContent="center" py={10}><CircularProgress /></Box>;
+  if (authLoading)
+    return (
+      <Box display="flex" justifyContent="center" py={10}>
+        <CircularProgress />
+      </Box>
+    );
 
   // LOGIN SCREEN
   if (!user) {
@@ -670,36 +932,80 @@ export default function AdminPage() {
   if (user.role !== "admin" && user.role !== "superadmin") {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
-        <Typography variant="h5" textAlign="center">Ruxsat berilmagan</Typography>
-        <Button fullWidth variant="contained" onClick={() => navigate("/")} sx={{ mt: 2 }}>Bosh sahifa</Button>
+        <Typography variant="h5" textAlign="center">
+          Ruxsat berilmagan
+        </Typography>
+        <Button fullWidth variant="contained" onClick={() => navigate("/")} sx={{ mt: 2 }}>
+          Bosh sahifa
+        </Button>
       </Container>
     );
   }
 
-
-
   const renderContent = () => {
-    const currentTab = availableTabs.find(t => t.id === activeTab) || availableTabs[0];
+    const currentTab = availableTabs.find((t) => t.id === activeTab) || availableTabs[0];
     return currentTab?.content || null;
   };
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
-      <AppBar position="sticky" elevation={0} sx={{ bgcolor: isDark ? "rgba(23, 26, 33, 0.85)" : "rgba(255, 255, 255, 0.9)", backdropFilter: 'blur(20px)', color: "text.primary", borderBottom: "1px solid", borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)" }}>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: isDark ? "rgba(23, 26, 33, 0.85)" : "rgba(255, 255, 255, 0.9)",
+          backdropFilter: "blur(20px)",
+          color: "text.primary",
+          borderBottom: "1px solid",
+          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+        }}
+      >
         <Container maxWidth="xl">
-            <Toolbar disableGutters sx={{ gap: { xs: 1, md: 2 }, minWidth: 0, flexWrap: { xs: "wrap", md: "nowrap" } }}>
-                <Typography variant="h6" fontWeight="900" sx={{ flexGrow: 1, color: 'primary.main', minWidth: { xs: "100%", md: 180 } }}>MORPHO CHECK <Box component="span" sx={{ color: 'text.primary', fontWeight: 400 }}>PRO</Box></Typography>
-                <Box sx={{ flex: "1 1 auto", minWidth: 0, maxWidth: "100%", overflowX: "auto" }}>
-                <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
-                    {availableTabs.map((tab) => (
-                      <Tab key={tab.id} icon={tab.icon} iconPosition="start" label={tab.label} value={tab.id} sx={{ fontWeight: 700, textTransform: 'none' }} />
-                    ))}
-                </Tabs>
-                </Box>
-                <Box sx={{ ml: 2 }}>
-                   <Tooltip title="Chiqish"><IconButton onClick={() => setLogoutDialogOpen(true)} color="error" size="small"><Logout /></IconButton></Tooltip>
-                </Box>
-            </Toolbar>
+          <Toolbar
+            disableGutters
+            sx={{
+              gap: { xs: 1, md: 2 },
+              minWidth: 0,
+              flexWrap: { xs: "wrap", md: "nowrap" },
+            }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight="900"
+              sx={{ flexGrow: 1, color: "primary.main", minWidth: { xs: "100%", md: 180 } }}
+            >
+              MORPHO CHECK{" "}
+              <Box component="span" sx={{ color: "text.primary", fontWeight: 400 }}>
+                PRO
+              </Box>
+            </Typography>
+            <Box sx={{ flex: "1 1 auto", minWidth: 0, maxWidth: "100%", overflowX: "auto" }}>
+              <Tabs
+                value={activeTab}
+                onChange={(e, v) => setActiveTab(v)}
+                variant="scrollable"
+                scrollButtons="auto"
+              >
+                {availableTabs.map((tab) => (
+                  <Tab
+                    key={tab.id}
+                    icon={tab.icon}
+                    iconPosition="start"
+                    label={tab.label}
+                    value={tab.id}
+                    sx={{ fontWeight: 700, textTransform: "none" }}
+                  />
+                ))}
+              </Tabs>
+            </Box>
+            <Box sx={{ ml: 2 }}>
+              <Tooltip title="Chiqish">
+                <IconButton onClick={() => setLogoutDialogOpen(true)} color="error" size="small">
+                  <Logout />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Toolbar>
         </Container>
       </AppBar>
 
@@ -707,119 +1013,206 @@ export default function AdminPage() {
         {/* PERSISTENT FILTERS FOR RELEVANT TABS */}
         {(activeTab === 0 || activeTab === 1 || activeTab === 2) && (
           <Box mb={4}>
-            <DashboardFilters 
-              filters={dashFilters} 
-              onFilterChange={setDashFilters} 
-              onReset={() => setDashFilters({
-                q: "", gender: "", region: "", age_min: 0, age_max: 100, 
-                bmi_min: 10, bmi_max: 50, somatotype: "", date_from: "", date_to: ""
-              })}
+            <DashboardFilters
+              filters={dashFilters}
+              onFilterChange={setDashFilters}
+              onReset={() =>
+                setDashFilters({
+                  q: "",
+                  gender: "",
+                  region: "",
+                  age_min: 0,
+                  age_max: 100,
+                  bmi_min: 10,
+                  bmi_max: 50,
+                  somatotype: "",
+                  date_from: "",
+                  date_to: "",
+                })
+              }
             />
           </Box>
         )}
         <Box sx={horizontalScrollSx}>
-        <AnimatePresence mode="wait">
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-            <Box sx={{ minWidth: { xs: activeTab === 0 || activeTab === 2 ? 720 : 0, md: 0 } }}>
-            {renderContent()}
-            </Box>
-          </motion.div>
-        </AnimatePresence>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Box sx={{ minWidth: { xs: activeTab === 0 || activeTab === 2 ? 720 : 0, md: 0 } }}>
+                {renderContent()}
+              </Box>
+            </motion.div>
+          </AnimatePresence>
         </Box>
       </Container>
 
       {viewRow && (
-        <CustomModal title="Batafsil ma'lumot" onClose={() => setViewRow(null)} onDownloadDocx={handleDownloadDocx} isDownloading={downloadingDocx} onDownloadPdf={handleDownloadPdf} isPdfDownloading={downloadingPdf} pdfLang={pdfLang} setPdfLang={setPdfLang}>
+        <CustomModal
+          title="Batafsil ma'lumot"
+          onClose={() => setViewRow(null)}
+          onDownloadDocx={handleDownloadDocx}
+          isDownloading={downloadingDocx}
+          onDownloadPdf={handleDownloadPdf}
+          isPdfDownloading={downloadingPdf}
+          pdfLang={pdfLang}
+          setPdfLang={setPdfLang}
+        >
           <Table size="small">
-             <TableBody>
-                 <TableRow><TableCell>ID</TableCell><TableCell><strong>{viewRow.idCode}</strong></TableCell></TableRow>
-                 <TableRow><TableCell>Ism Familiya</TableCell><TableCell>{viewRow.lastName} {viewRow.firstName}</TableCell></TableRow>
-                 <TableRow><TableCell>Sana</TableCell><TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell></TableRow>
-                 <TableRow><TableCell>Hudud</TableCell><TableCell>{viewRow.region}</TableCell></TableRow>
-                 <TableRow><TableCell>BMI</TableCell><TableCell><strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})</TableCell></TableRow>
-                 {viewRow.doctorNote && (
-                   <TableRow><TableCell>Doctor note</TableCell><TableCell>{viewRow.doctorNote}</TableCell></TableRow>
-                 )}
-             </TableBody>
+            <TableBody>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>
+                  <strong>{viewRow.idCode}</strong>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Ism Familiya</TableCell>
+                <TableCell>
+                  {viewRow.lastName} {viewRow.firstName}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Sana</TableCell>
+                <TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Hudud</TableCell>
+                <TableCell>{viewRow.region}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>BMI</TableCell>
+                <TableCell>
+                  <strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})
+                </TableCell>
+              </TableRow>
+              {viewRow.doctorNote && (
+                <TableRow>
+                  <TableCell>Doctor note</TableCell>
+                  <TableCell>{viewRow.doctorNote}</TableCell>
+                </TableRow>
+              )}
+            </TableBody>
           </Table>
         </CustomModal>
       )}
 
       {editRow && (
-        <Dialog 
-          open={true} 
-          onClose={() => setEditRow(null)} 
+        <Dialog
+          open={true}
+          onClose={() => setEditRow(null)}
           maxWidth="lg"
           fullWidth
-          PaperProps={{ 
-            sx: { 
-              borderRadius: 4, 
-              bgcolor: 'background.paper',
-              boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
-              overflow: 'hidden'
-            } 
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+              bgcolor: "background.paper",
+              boxShadow: "0 24px 48px rgba(0,0,0,0.2)",
+              overflow: "hidden",
+            },
           }}
         >
-          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 4, pt: 3, pb: 2 }}>
-            <Typography variant="h5" fontWeight={800}>Ma'lumotni tahrirlash</Typography>
+          <DialogTitle
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              px: 4,
+              pt: 3,
+              pb: 2,
+            }}
+          >
+            <Typography variant="h5" fontWeight={800}>
+              Ma'lumotni tahrirlash
+            </Typography>
             <IconButton onClick={() => setEditRow(null)}>
               <Close />
             </IconButton>
           </DialogTitle>
           <DialogContent sx={{ px: { xs: 2, md: 4 }, py: 0 }}>
-             <InputForm 
-                formData={editRow} 
-                handleInputChange={handleEditInputChange} 
-                onBulkUpdate={handleBulkUpdateEdit}
-                handleSubmit={handleUpdateAnalysis} 
-                loading={updating} 
-                isAdminView={true}
-                submitLabel="Saqlash"
-              />
+            <InputForm
+              formData={editRow}
+              handleInputChange={handleEditInputChange}
+              onBulkUpdate={handleBulkUpdateEdit}
+              handleSubmit={handleUpdateAnalysis}
+              loading={updating}
+              isAdminView={true}
+              submitLabel="Saqlash"
+            />
           </DialogContent>
           <DialogActions sx={{ p: 4, pt: 2 }}>
-             <Button onClick={() => setEditRow(null)} color="inherit" sx={{ mr: 2 }}>Bekor qilish</Button>
-             <Button variant="contained" size="large" onClick={handleUpdateAnalysis} disabled={updating} sx={{ borderRadius: 3, px: 4 }}>
-                {updating ? <CircularProgress size={24} color="inherit" /> : "Saqlash"}
-             </Button>
+            <Button onClick={() => setEditRow(null)} color="inherit" sx={{ mr: 2 }}>
+              Bekor qilish
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={handleUpdateAnalysis}
+              disabled={updating}
+              sx={{ borderRadius: 3, px: 4 }}
+            >
+              {updating ? <CircularProgress size={24} color="inherit" /> : "Saqlash"}
+            </Button>
           </DialogActions>
         </Dialog>
       )}
 
       {/* Delete Confirmation Dialog for Super Admin */}
-      <Dialog 
-        open={deleteConfirmOpen} 
+      <Dialog
+        open={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
         PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
       >
         <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. {user.role === "superadmin" ? "Ushbu ma'lumotlarni qanday o'chirishni xohlaysiz?" : "Haqiqatan ham ushbu ma'lumotlarni o'chirib tashlamoqchimisiz?"}
+            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz.{" "}
+            {user.role === "superadmin"
+              ? "Ushbu ma'lumotlarni qanday o'chirishni xohlaysiz?"
+              : "Haqiqatan ham ushbu ma'lumotlarni o'chirib tashlamoqchimisiz?"}
           </Typography>
           {user.role === "superadmin" && (
-            <Box sx={{ bgcolor: 'error.lighter', p: 2, borderRadius: 2, border: '1px solid', borderColor: 'error.light' }}>
-              <Typography variant="caption" color="error.dark" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Lock fontSize="small" /> <strong>Hard delete</strong> (butunlay o'chirish) qaytarib bo'lmaydigan amaldir. <strong>Soft delete</strong> (savatga yuborish) esa ma'lumotni tiklash imkonini beradi.
+            <Box
+              sx={{
+                bgcolor: "error.lighter",
+                p: 2,
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: "error.light",
+              }}
+            >
+              <Typography
+                variant="caption"
+                color="error.dark"
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+              >
+                <Lock fontSize="small" /> <strong>Hard delete</strong> (butunlay o'chirish) qaytarib
+                bo'lmaydigan amaldir. <strong>Soft delete</strong> (savatga yuborish) esa ma'lumotni
+                tiklash imkonini beradi.
               </Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
-          <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">Bekor qilish</Button>
-          <Button 
-            variant={user.role === "superadmin" ? "outlined" : "contained"} 
-            color="error" 
-            onClick={() => handleDeleteConfirm("soft")} 
+          <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">
+            Bekor qilish
+          </Button>
+          <Button
+            variant={user.role === "superadmin" ? "outlined" : "contained"}
+            color="error"
+            onClick={() => handleDeleteConfirm("soft")}
             disabled={deleteConfirmLoading}
           >
             {user.role === "superadmin" ? "Savatga yuborish" : "O'chirish"}
           </Button>
           {user.role === "superadmin" && (
-            <Button 
-              variant="contained" 
-              color="error" 
-              onClick={() => handleDeleteConfirm("hard")} 
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => handleDeleteConfirm("hard")}
               disabled={deleteConfirmLoading}
             >
               Butunlay o'chirish
@@ -829,8 +1222,8 @@ export default function AdminPage() {
       </Dialog>
 
       {/* Import XLSX Dialog */}
-      <Dialog 
-        open={importConfirmOpen} 
+      <Dialog
+        open={importConfirmOpen}
         onClose={() => !importingXlsx && setImportConfirmOpen(false)}
         maxWidth="sm"
         fullWidth
@@ -838,32 +1231,33 @@ export default function AdminPage() {
       >
         <DialogTitle sx={{ fontWeight: 800 }}>Excel-dan Ma'lumotlarni Import Qilish</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-            Ma'lumotlarni ommaviy qo'shish uchun shablonni to'ldiring va shu erga yuklang. Ism, Familiya, jins, yosh, viloyat va asosiy o'lchovlar to'ldirilishi majburiy.
+          <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
+            Ma'lumotlarni ommaviy qo'shish uchun shablonni to'ldiring va shu erga yuklang. Ism,
+            Familiya, jins, yosh, viloyat va asosiy o'lchovlar to'ldirilishi majburiy.
           </Typography>
-          
-          <Box 
-            sx={{ 
-              mt: 2, 
-              p: 4, 
-              border: '2px dashed', 
-              borderColor: importFile ? 'primary.main' : 'divider',
+
+          <Box
+            sx={{
+              mt: 2,
+              p: 4,
+              border: "2px dashed",
+              borderColor: importFile ? "primary.main" : "divider",
               borderRadius: 3,
-              textAlign: 'center',
-              bgcolor: 'background.default',
-              cursor: 'pointer',
-              '&:hover': { bgcolor: 'action.hover' }
+              textAlign: "center",
+              bgcolor: "background.default",
+              cursor: "pointer",
+              "&:hover": { bgcolor: "action.hover" },
             }}
-            onClick={() => document.getElementById('xlsx-input').click()}
+            onClick={() => document.getElementById("xlsx-input").click()}
           >
-            <input 
-              type="file" 
-              id="xlsx-input" 
-              hidden 
-              accept=".xlsx" 
-              onChange={(e) => setImportFile(e.target.files[0])} 
+            <input
+              type="file"
+              id="xlsx-input"
+              hidden
+              accept=".xlsx"
+              onChange={(e) => setImportFile(e.target.files[0])}
             />
-            <Typography variant="h6" color={importFile ? 'primary.main' : 'text.disabled'}>
+            <Typography variant="h6" color={importFile ? "primary.main" : "text.disabled"}>
               {importFile ? importFile.name : "XLSX faylni tanlang"}
             </Typography>
           </Box>
@@ -925,10 +1319,16 @@ export default function AdminPage() {
           )}
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setImportConfirmOpen(false)} disabled={importingXlsx} color="inherit">Bekor qilish</Button>
-          <Button 
-            variant="contained" 
-            onClick={handleImportXlsx} 
+          <Button
+            onClick={() => setImportConfirmOpen(false)}
+            disabled={importingXlsx}
+            color="inherit"
+          >
+            Bekor qilish
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleImportXlsx}
             disabled={!importFile || importingXlsx}
             startIcon={importingXlsx ? <CircularProgress size={20} color="inherit" /> : null}
           >

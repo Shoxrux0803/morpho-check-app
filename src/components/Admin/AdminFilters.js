@@ -33,24 +33,22 @@ const AdminFilters = ({
   const regions = Object.keys(UZB_LOCATIONS);
 
   const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   return (
-    <Card 
+    <Card
       elevation={0}
-      sx={{ 
-        mb: 3, 
+      sx={{
+        mb: 3,
         borderRadius: 4,
-        background: isDark 
-          ? 'rgba(23, 26, 33, 0.7)' 
-          : 'rgba(255, 255, 255, 0.7)',
-        backdropFilter: 'blur(10px)',
-        border: isDark 
-          ? '1px solid rgba(255, 255, 255, 0.12)' 
-          : '1px solid rgba(100, 116, 139, 0.12)',
-        boxShadow: isDark 
-          ? '0 8px 32px 0 rgba(0, 0, 0, 0.4)' 
-          : '0 8px 32px 0 rgba(100, 116, 139, 0.08)',
+        background: isDark ? "rgba(23, 26, 33, 0.7)" : "rgba(255, 255, 255, 0.7)",
+        backdropFilter: "blur(10px)",
+        border: isDark
+          ? "1px solid rgba(255, 255, 255, 0.12)"
+          : "1px solid rgba(100, 116, 139, 0.12)",
+        boxShadow: isDark
+          ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)"
+          : "0 8px 32px 0 rgba(100, 116, 139, 0.08)",
       }}
     >
       <CardContent>

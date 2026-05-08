@@ -24,8 +24,8 @@ const AdminTable = ({
   setViewRow,
   formatDate,
   user,
-  onRestore,      // Super admin uchun tiklash callback
-  onEdit,         // Tahrirlash callback
+  onRestore, // Super admin uchun tiklash callback
+  onEdit, // Tahrirlash callback
 }) => {
   const isSuperAdmin = user?.role === "superadmin";
 
@@ -63,14 +63,10 @@ const AdminTable = ({
                   hover
                   sx={{
                     // Super admin o'chirilganni ham ko'ra oladi
-                    cursor: (isDeleted && !isSuperAdmin) ? "default" : "pointer",
+                    cursor: isDeleted && !isSuperAdmin ? "default" : "pointer",
                     // O'chirilgan qatorlar: qizil fon
-                    bgcolor: isDeleted
-                      ? "rgba(211, 47, 47, 0.07)"
-                      : "inherit",
-                    "&:hover": isDeleted
-                      ? { bgcolor: "rgba(211, 47, 47, 0.12)" }
-                      : undefined,
+                    bgcolor: isDeleted ? "rgba(211, 47, 47, 0.07)" : "inherit",
+                    "&:hover": isDeleted ? { bgcolor: "rgba(211, 47, 47, 0.12)" } : undefined,
                     // O'chirilgan qatorlar matnini kulrang qilamiz
                     "& td": isDeleted
                       ? { color: "text.disabled", textDecoration: "line-through" }
@@ -126,7 +122,7 @@ const AdminTable = ({
                   <TableCell>
                     {row.region || "-"}
                     <Typography variant="caption" display="block" color="text.secondary">
-                      {row.district} {row.address}
+                      {[row.district, row.mahalla, row.address].filter(Boolean).join(" / ")}
                     </Typography>
                   </TableCell>
 
@@ -217,7 +213,10 @@ const AdminTable = ({
                   )}
 
                   {/* Amallar */}
-                  <TableCell onClick={(e) => e.stopPropagation()} sx={{ textDecoration: "none !important" }}>
+                  <TableCell
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{ textDecoration: "none !important" }}
+                  >
                     <Box display="flex" gap={0.5}>
                       {/* Ko'rish tugmasi: aktiv qatorlar + super admin uchun o'chirilganlar ham */}
                       {(!isDeleted || isSuperAdmin) && (
@@ -234,16 +233,12 @@ const AdminTable = ({
                       {/* Tahrirlash tugmasi: faqat o'chirilmaganlar uchun */}
                       {!isDeleted && onEdit && (
                         <Tooltip title="Tahrirlash">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => onEdit(row)}
-                          >
+                          <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
                             <Edit fontSize="small" />
                           </IconButton>
                         </Tooltip>
                       )}
-                      
+
                       {/* Super admin: o'chirilgan ma'lumotni tiklash */}
                       {isSuperAdmin && isDeleted && onRestore && (
                         <Tooltip title="Tiklash (Restore)">

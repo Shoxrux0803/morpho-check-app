@@ -2,7 +2,6 @@
 
 import os
 import json
-import ast
 import google.generativeai as genai
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -13,21 +12,23 @@ from dotenv import load_dotenv
 from services.ai_advice_service import generate_parent_tips
 
 load_dotenv(override=True)
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=True)
 
 router = APIRouter(tags=["AI Assistant"])
 
 GEMINI_MODELS = [
-    "gemini-3-flash-preview",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-flash-latest",
-    "gemini-pro-latest"
+    "gemini-pro-latest",
 ]
 
 def get_gemini_model(model_name: str):
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        return None
+        raise RuntimeError("GEMINI_API_KEY is missing")
     try:
         genai.configure(api_key=api_key)
         return genai.GenerativeModel(model_name)
@@ -42,7 +43,6 @@ async def generate_with_fallback(contents):
         try:
             print(f"[AI INFO] Attempting generation with {model_name}...")
             model = get_gemini_model(model_name)
-            if not model: continue
             response = model.generate_content(contents)
             if response and getattr(response, "candidates", None) and response.candidates:
                 return response, model_name
@@ -67,18 +67,21 @@ class PredictParamsRequest(BaseModel):
 
 @router.post("/chat")
 async def ai_chat(req: ChatRequest, current_user: User = Depends(get_current_user)):
-    # ... (Chat logic remains similar, but kept concise for overwriting)
     try:
-        from services.ai_advice_service import EXPERT_TIPS_LIBRARY
-        # Simple chat for now or keep existing logic if needed
-        # Overwriting with full logic for consistency
         context_data_str = json.dumps(req.context_data) if req.context_data else "None provided"
         system_prompt = f"You are MorphoAI Assistant. Context: {req.context_page}. Data: {context_data_str}"
         contents = [system_prompt, req.message]
-        response, _ = await generate_with_fallback(contents)
-        return {"reply": response.text}
+        response, model_name = await generate_with_fallback(contents)
+        return {"reply": response.text, "model": model_name}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_text = str(e)
+        print(f"[AI CHAT ERROR] {error_text}")
+        detail = "Gemini xizmatidan javob olib bo'lmadi."
+        if "API_KEY_INVALID" in error_text or "API Key not found" in error_text:
+            detail = "Gemini API kaliti noto'g'ri yoki faol emas. GEMINI_API_KEY ni yangilang."
+        elif "GEMINI_API_KEY is missing" in error_text:
+            detail = "Gemini API kaliti topilmadi. GEMINI_API_KEY ni .env faylga qo'shing."
+        raise HTTPException(status_code=503, detail=detail)
 
 @router.post("/predict-params")
 async def predict_params(req: PredictParamsRequest, current_user: User = Depends(get_current_user)):

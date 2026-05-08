@@ -71,7 +71,7 @@ function ScrollToTop() {
 // Role-based Admin Wrapper (Data Dashboard)
 const AdminWrapper = () => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <PageLoader />;
 
   // Admin login screen for guests
@@ -133,7 +133,7 @@ const ResearcherWrapper = () => {
 function AnimatedRoutes() {
   const location = useLocation();
   const { mode } = useThemeMode();
-  
+
   const publicRoutes = ["/", "/info", "/author"];
   const showBg = publicRoutes.includes(location.pathname);
 
@@ -141,65 +141,53 @@ function AnimatedRoutes() {
     <>
       {showBg && <MorphoProBackground theme={mode} pathname={location.pathname} />}
       <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route
-          path="/"
-          element={
-            <PageTransition>
-              <IntroPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/morphocheck-pro"
-          element={
-            <PageTransition>
-              <MorphoCheckPro />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/info"
-          element={
-            <PageTransition>
-              <InfoDetail />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/author"
-          element={
-            <PageTransition>
-              <AuthorPage />
-            </PageTransition>
-          }
-        />
-        <Route
-          path="/admin"
-          element={<AdminWrapper />}
-        />
-        <Route
-          path="/superadmin"
-          element={<SuperAdminWrapper />}
-        />
-        <Route
-          path="/researcher"
-          element={<ResearcherWrapper />}
-        />
-        <Route
-          path="/morphoadmin"
-          element={<Navigate to="/superadmin" replace />}
-        />
-        <Route
-          path="*"
-          element={
-            <PageTransition>
-              <NotFound />
-            </PageTransition>
-          }
-        />
-      </Routes>
-    </AnimatePresence>
+        <Routes location={location} key={location.pathname}>
+          <Route
+            path="/"
+            element={
+              <PageTransition>
+                <IntroPage />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/morphocheck-pro"
+            element={
+              <PageTransition>
+                <MorphoCheckPro />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/info"
+            element={
+              <PageTransition>
+                <InfoDetail />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/author"
+            element={
+              <PageTransition>
+                <AuthorPage />
+              </PageTransition>
+            }
+          />
+          <Route path="/admin" element={<AdminWrapper />} />
+          <Route path="/superadmin" element={<SuperAdminWrapper />} />
+          <Route path="/researcher" element={<ResearcherWrapper />} />
+          <Route path="/morphoadmin" element={<Navigate to="/superadmin" replace />} />
+          <Route
+            path="*"
+            element={
+              <PageTransition>
+                <NotFound />
+              </PageTransition>
+            }
+          />
+        </Routes>
+      </AnimatePresence>
     </>
   );
 }
@@ -261,8 +249,8 @@ export default function App() {
 
   return (
     <LanguageProvider>
-      <Toaster 
-        position="top-right" 
+      <Toaster
+        position="top-right"
         reverseOrder={false}
         toastOptions={{
           duration: 5000,
@@ -290,27 +278,27 @@ export default function App() {
       <AuthProvider>
         <OfflineSyncProvider>
           <Router basename={BASENAME}>
-          <ScrollToTop />
-          {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
-          <ThemeSync />
+            <ScrollToTop />
+            {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
+            <ThemeSync />
 
-          <div className="App d-flex flex-column min-vh-100">
-            <Header />
+            <div className="App d-flex flex-column min-vh-100">
+              <Header />
 
-            <main className="flex-grow-1">
-              <Suspense fallback={<PageLoader />}>
-                <AnimatedRoutes />
-              </Suspense>
-            </main>
-            
-            <ChatWidget />
-            <AIAssistantWidget />
+              <main className="flex-grow-1">
+                <Suspense fallback={<PageLoader />}>
+                  <AnimatedRoutes />
+                </Suspense>
+              </main>
 
-            <Footer />
-          </div>
-        </Router>
-      </OfflineSyncProvider>
-    </AuthProvider>
-  </LanguageProvider>
-);
+              <ChatWidget />
+              <AIAssistantWidget />
+
+              <Footer />
+            </div>
+          </Router>
+        </OfflineSyncProvider>
+      </AuthProvider>
+    </LanguageProvider>
+  );
 }

@@ -735,12 +735,14 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     preschool  = LP(_val(data, "preschool_institution"))
     region_raw = _val(data, "region").lower()
     district_s = _val(data, "district").lower()
+    mahalla_s = _val(data, "mahalla").lower()
     address_s  = _val(data, "address").lower()
     
     region_val = LP(_val(data, "region"))
     district_val = LP(_val(data, "district"))
+    mahalla_val = LP(_val(data, "mahalla"))
     address_val = LP(_val(data, "address"))
-    full_address = ", ".join(filter(None, [region_val, district_val, address_val]))
+    full_address = ", ".join(filter(None, [region_val, district_val, mahalla_val, address_val]))
 
     # SARLAVHA
     age_val_int = 0
@@ -783,7 +785,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     girl_box = _checkbox(not is_boy)
 
     # Яшаш ҳудуди checkbox
-    combined = f"{region_raw} {district_s} {address_s}"
+    combined = f"{region_raw} {district_s} {mahalla_s} {address_s}"
     is_city     = any(k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город"))
     city_box    = _checkbox(is_city)
     village_box = _checkbox(not is_city)

@@ -62,50 +62,50 @@ function AntigravityParticles({ theme }) {
     const my = (mouse.y * viewport.height) / 2;
 
     for (let i = 0; i < particleCount; i++) {
-        const ix = i * 3;
-        const iy = i * 3 + 1;
-        const iz = i * 3 + 2;
+      const ix = i * 3;
+      const iy = i * 3 + 1;
+      const iz = i * 3 + 2;
 
-        let px = posAttr.array[ix];
-        let py = posAttr.array[iy];
-        let pz = posAttr.array[iz];
+      let px = posAttr.array[ix];
+      let py = posAttr.array[iy];
+      let pz = posAttr.array[iz];
 
-        // Antigravity / Repulsion Logic
-        const dx = px - mx;
-        const dy = py - my;
-        const distSq = dx * dx + dy * dy;
-        const dist = Math.sqrt(distSq);
+      // Antigravity / Repulsion Logic
+      const dx = px - mx;
+      const dy = py - my;
+      const distSq = dx * dx + dy * dy;
+      const dist = Math.sqrt(distSq);
 
-        if (dist < 4) {
-            const force = (4 - dist) / 4;
-            // Push away from mouse
-            velocities[ix] += (dx / dist) * force * 0.15;
-            velocities[iy] += (dy / dist) * force * 0.15;
-            // Add some "anti-gravity" lift
-            velocities[iz] += force * 0.1;
-        }
+      if (dist < 4) {
+        const force = (4 - dist) / 4;
+        // Push away from mouse
+        velocities[ix] += (dx / dist) * force * 0.15;
+        velocities[iy] += (dy / dist) * force * 0.15;
+        // Add some "anti-gravity" lift
+        velocities[iz] += force * 0.1;
+      }
 
-        // Return to initial positions (Elastic Force)
-        const rx = initialPositions[ix] - px;
-        const ry = initialPositions[iy] - py;
-        const rz = initialPositions[iz] - pz;
+      // Return to initial positions (Elastic Force)
+      const rx = initialPositions[ix] - px;
+      const ry = initialPositions[iy] - py;
+      const rz = initialPositions[iz] - pz;
 
-        velocities[ix] += rx * 0.005;
-        velocities[iy] += ry * 0.005;
-        velocities[iz] += rz * 0.005;
+      velocities[ix] += rx * 0.005;
+      velocities[iy] += ry * 0.005;
+      velocities[iz] += rz * 0.005;
 
-        // Friction for smooth movement
-        velocities[ix] *= 0.94;
-        velocities[iy] *= 0.94;
-        velocities[iz] *= 0.94;
+      // Friction for smooth movement
+      velocities[ix] *= 0.94;
+      velocities[iy] *= 0.94;
+      velocities[iz] *= 0.94;
 
-        // Update positions
-        posAttr.array[ix] += velocities[ix];
-        posAttr.array[iy] += velocities[iy];
-        posAttr.array[iz] += velocities[iz];
+      // Update positions
+      posAttr.array[ix] += velocities[ix];
+      posAttr.array[iy] += velocities[iy];
+      posAttr.array[iz] += velocities[iz];
 
-        // Natural Float Drift
-        posAttr.array[iy] += Math.sin(time * 0.3 + initialPositions[ix]) * 0.003;
+      // Natural Float Drift
+      posAttr.array[iy] += Math.sin(time * 0.3 + initialPositions[ix]) * 0.003;
     }
 
     posAttr.needsUpdate = true;
@@ -156,7 +156,7 @@ function AmbientFog({ theme }) {
   const ref = useRef();
   useFrame((state, delta) => {
     if (ref.current) {
-        ref.current.rotation.y += delta * 0.02;
+      ref.current.rotation.y += delta * 0.02;
     }
   });
 
@@ -204,7 +204,11 @@ export default function ParticleBackground({ theme }) {
       <Canvas camera={{ position: [0, 0, 10], fov: 45 }}>
         <ambientLight intensity={0.4} />
         <pointLight position={[10, 10, 10]} intensity={1} color={isDark ? "#00f2ff" : "#3b82f6"} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color={isDark ? "#9333ea" : "#8b5cf6"} />
+        <pointLight
+          position={[-10, -10, -10]}
+          intensity={0.5}
+          color={isDark ? "#9333ea" : "#8b5cf6"}
+        />
 
         <AntigravityParticles theme={theme} />
         <AmbientFog theme={theme} />

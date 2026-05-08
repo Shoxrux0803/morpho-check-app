@@ -15,7 +15,6 @@ import {
 } from "@mui/material";
 import { HeartPulse, Activity, Zap, FileText, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import MorphoProBackground from "../components/MorphoProBackground";
 import { useThemeMode } from "../providers/ThemeProviderMUI";
 import { useLanguage } from "../contexts/LanguageContext";
 import logo from "../assets/morphocheck-logo.png";
@@ -48,9 +47,7 @@ export default function InfoDetail() {
   const whyList = [t("whyList1"), t("whyList2"), t("whyList3"), t("whyList4"), t("whyList5")];
 
   return (
-    <Box sx={{ minHeight: "100vh", position: "relative", overflow: "hidden", py: 10 }}>
-      <MorphoProBackground theme={mode} />
-
+    <Box sx={{ minHeight: "100vh", position: "relative", py: 10 }}>
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 10 }}>
         <motion.div
           initial={{ opacity: 0, x: -20 }}

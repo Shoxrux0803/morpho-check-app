@@ -29,6 +29,7 @@ PDF_LABELS = {
         "institution": "Muassasa:",
         "region": "Viloyat:",
         "district": "Tuman:",
+        "mahalla": "Mahalla:",
         "address": "Manzil:",
         "id_code": "ID kod:",
 
@@ -93,6 +94,7 @@ PDF_LABELS = {
         "institution": "Учреждение:",
         "region": "Область:",
         "district": "Район:",
+        "mahalla": "Махалля:",
         "address": "Адрес:",
         "id_code": "ID код:",
 
@@ -158,6 +160,7 @@ PDF_LABELS = {
         "institution": "Institution:",
         "region": "Region:",
         "district": "District:",
+        "mahalla": "Mahalla:",
         "address": "Address:",
         "id_code": "ID Code:",
 
@@ -223,6 +226,7 @@ PDF_LABELS = {
         "institution": "Мекеме:",
         "region": "Аймақ:",
         "district": "Аудан:",
+        "mahalla": "Махалля:",
         "address": "Мекенжай:",
         "id_code": "ID коды:",
 
@@ -466,6 +470,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     preschool_institution = gv('preschool_institution', 'preschoolInstitution', '')
     region = gv('region', 'region', '')
     district = gv('district', 'district', '')
+    mahalla = gv('mahalla', 'mahalla', '')
     address = gv('address', 'address', '')
     id_code_val = gv('id_code', 'idCode', '')
     doctor_note = gv('doctor_note', 'doctorNote', '')
@@ -505,6 +510,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["institution"], preschool_institution or '-'],
         [L["region"], region or '-'],
         [L["district"], district or '-'],
+        [L["mahalla"], mahalla or '-'],
         [L["address"], address or '-'],
         [L["id_code"], id_code_val or '-'],
     ]
@@ -529,7 +535,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
                 Paragraph(f"<b>{L['doctor_note']}</b>", styles['Normal']),
                 Paragraph(str(doctor_note), styles['Normal']),
             ]],
-            colWidths=[1.6 * inch, 4.4 * inch],
+            colWidths=[1.6*inch, 4.4*inch],
         )
         note_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), font_name),
@@ -841,7 +847,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
                     styles['Normal'],
                 ),
             ]],
-            colWidths=[1.2 * inch, 4.8 * inch],
+            colWidths=[1.2*inch, 4.8*inch],
         )
         qr_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), font_name),

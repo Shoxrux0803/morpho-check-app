@@ -81,7 +81,7 @@
 
 @keyframes mc-modal-in {
   from {
-    transform: translateY(40px) scale(0.85);
+    transform: translateY(20px) scale(0.9);
     opacity: 0;
   }
   to {
@@ -96,8 +96,21 @@
     opacity: 1;
   }
   to {
-    transform: translateY(30px) scale(0.9);
+    transform: translateY(20px) scale(0.95);
     opacity: 0;
+  }
+}
+
+/* Mobile-specific modal adjustments */
+@media (max-width: 480px) {
+  .mc-modal {
+    width: min(90vw, 100vw) !important;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .mc-overlay {
+    padding: 12px;
   }
 }
 

@@ -1,5 +1,13 @@
 import React, { useMemo, useState } from "react";
-import { Typography, Box, useTheme, Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material";
+import {
+  Typography,
+  Box,
+  useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+} from "@mui/material";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { MonitorWeight, Close } from "@mui/icons-material";
 import DashboardCard from "./DashboardCard";
@@ -65,15 +73,18 @@ const BMIDistribution = ({ data, loading }) => {
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>
-        <Tooltip 
-          contentStyle={{ 
-            borderRadius: 12, 
-            boxShadow: theme.palette.mode === 'dark' ? '0 4px 12px rgba(0,0,0,0.5)' : '0 4px 12px rgba(0,0,0,0.1)',
-            border: 'none',
+        <Tooltip
+          contentStyle={{
+            borderRadius: 12,
+            boxShadow:
+              theme.palette.mode === "dark"
+                ? "0 4px 12px rgba(0,0,0,0.5)"
+                : "0 4px 12px rgba(0,0,0,0.1)",
+            border: "none",
             backgroundColor: theme.palette.background.paper,
-            backdropFilter: 'blur(5px)',
-            color: theme.palette.text.primary
-          }} 
+            backdropFilter: "blur(5px)",
+            color: theme.palette.text.primary,
+          }}
           itemStyle={{ color: theme.palette.text.primary }}
         />
         <Legend verticalAlign="bottom" height={36} iconType="circle" />
@@ -83,9 +94,9 @@ const BMIDistribution = ({ data, loading }) => {
 
   return (
     <>
-      <DashboardCard 
-        title="BMI Taqsimoti" 
-        icon={<MonitorWeight />} 
+      <DashboardCard
+        title="BMI Taqsimoti"
+        icon={<MonitorWeight />}
         loading={loading}
         onFullscreen={() => setOpenModal(true)}
       >
@@ -96,24 +107,35 @@ const BMIDistribution = ({ data, loading }) => {
         )}
       </DashboardCard>
 
-      <Dialog 
-        open={openModal} 
+      <Dialog
+        open={openModal}
         onClose={() => setOpenModal(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{ 
-            sx: { 
-                borderRadius: 4,
-                background: theme.palette.mode === 'dark' ? "rgba(23, 26, 33, 0.95)" : "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(20px)",
-                border: theme.palette.mode === 'dark' ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(100,116,139,0.15)",
-                boxShadow: theme.palette.mode === 'dark' ? "0 24px 48px rgba(0,0,0,0.5)" : "0 24px 48px rgba(100,116,139,0.15)",
-            } 
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            background:
+              theme.palette.mode === "dark"
+                ? "rgba(23, 26, 33, 0.95)"
+                : "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(20px)",
+            border:
+              theme.palette.mode === "dark"
+                ? "1px solid rgba(255,255,255,0.12)"
+                : "1px solid rgba(100,116,139,0.15)",
+            boxShadow:
+              theme.palette.mode === "dark"
+                ? "0 24px 48px rgba(0,0,0,0.5)"
+                : "0 24px 48px rgba(100,116,139,0.15)",
+          },
         }}
       >
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <DialogTitle
+          sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        >
           <Box display="flex" alignItems="center">
-            <MonitorWeight sx={{ mr: 1, color: "primary.main" }} /> 
+            <MonitorWeight sx={{ mr: 1, color: "primary.main" }} />
             BMI Taqsimoti batafsil
           </Box>
           <IconButton onClick={() => setOpenModal(false)}>

@@ -1,4 +1,4 @@
-import { LMS_DATA } from './whoLMS';
+import { LMS_DATA } from "./whoLMS";
 
 /**
  * Interpolates LMS values between age points
@@ -27,13 +27,13 @@ const getLMS = (type, gender, ageInMonths) => {
   // Linear interpolation
   const [t1, l1, m1, s1] = lower;
   const [t2, l2, m2, s2] = upper;
-  
+
   const fraction = (ageInMonths - t1) / (t2 - t1);
-  
+
   return {
     l: l1 + fraction * (l2 - l1),
     m: m1 + fraction * (m2 - m1),
-    s: s1 + fraction * (s2 - s1)
+    s: s1 + fraction * (s2 - s1),
   };
 };
 
@@ -76,7 +76,7 @@ function erf(x) {
   const a5 = 1.061405429;
   const p = 0.3275911;
   const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
   return y;
 }
 

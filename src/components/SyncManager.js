@@ -32,19 +32,27 @@ export default function SyncManager({ open, onClose, onEditItem }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "pending": return "warning";
-      case "syncing": return "info";
-      case "failed": return "error";
-      default: return "default";
+      case "pending":
+        return "warning";
+      case "syncing":
+        return "info";
+      case "failed":
+        return "error";
+      default:
+        return "default";
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "pending": return <OffIcon color="warning" />;
-      case "syncing": return <SyncIcon className="animate-spin" color="info" />;
-      case "failed": return <ErrorIcon color="error" />;
-      default: return <CheckIcon />;
+      case "pending":
+        return <OffIcon color="warning" />;
+      case "syncing":
+        return <SyncIcon className="animate-spin" color="info" />;
+      case "failed":
+        return <ErrorIcon color="error" />;
+      default:
+        return <CheckIcon />;
     }
   };
 
@@ -52,9 +60,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
     <Drawer anchor="right" open={open} onClose={onClose}>
       <Box sx={{ width: 350, p: 3 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h6">
-            {t("syncManagerTitle") || "Offline Queue"}
-          </Typography>
+          <Typography variant="h6">{t("syncManagerTitle") || "Offline Queue"}</Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -91,17 +97,15 @@ export default function SyncManager({ open, onClose, onEditItem }) {
                 }}
               >
                 <Box sx={{ display: "flex", width: "100%", alignItems: "center", mb: 1 }}>
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    {getStatusIcon(item.status)}
-                  </ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 40 }}>{getStatusIcon(item.status)}</ListItemIcon>
                   <ListItemText
                     primary={`${item.payload.firstName} ${item.payload.lastName}`}
                     secondary={new Date(item.timestamp).toLocaleString()}
                   />
-                  <Chip 
-                    label={item.status} 
-                    size="small" 
-                    color={getStatusColor(item.status)} 
+                  <Chip
+                    label={item.status}
+                    size="small"
+                    color={getStatusColor(item.status)}
                     variant="outlined"
                   />
                 </Box>

@@ -5,7 +5,6 @@
 export const API_BASE = process.env.REACT_APP_API_URL || "";
 export const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
 
-
 /* -------------------- Yordamchi: xatoni ajratib olish -------------------- */
 async function parseError(resp) {
   try {
@@ -93,12 +92,15 @@ export async function generatePdfById(patientId, lang = "uz") {
 
 // Admin panel uchun: ID bo'yicha DOCX olish
 export async function generateDocxById(patientId, lang = "uz") {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report-docx-by-id/${patientId}?lang=${lang}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/pdf/report-docx-by-id/${patientId}?lang=${lang}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
     },
-  });
+  );
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -106,7 +108,6 @@ export async function generateDocxById(patientId, lang = "uz") {
   }
   return resp.blob();
 }
-
 
 /* -------------------- DOCX -------------------- */
 /**
@@ -122,7 +123,6 @@ export async function generateDocx(payload, lang = "uz") {
     },
     body: JSON.stringify(payload),
   });
-
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -489,7 +489,7 @@ export const AdminApi = {
       });
       queryParams.set("show_deleted", "true");
       if (!queryParams.has("page_size")) queryParams.set("page_size", "50");
-      
+
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
         {
@@ -498,7 +498,7 @@ export const AdminApi = {
             Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -522,7 +522,7 @@ export const AdminApi = {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
           },
-        }
+        },
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -545,7 +545,7 @@ export const AdminApi = {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
           },
-        }
+        },
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -561,10 +561,13 @@ export const AdminApi = {
           queryParams.append(key, value.toString());
         }
       });
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/dataset?${queryParams.toString()}`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/research/export/dataset?${queryParams.toString()}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        },
+      );
       if (!resp.ok) {
         const msg = await parseError(resp);
         throw new Error(msg);
@@ -590,7 +593,7 @@ export const AdminApi = {
             Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!resp.ok) {
@@ -602,10 +605,11 @@ export const AdminApi = {
       return data;
     },
     clear: async (actionFilter = null) => {
-      const url = actionFilter && actionFilter !== "ALL" 
-        ? `${API_BASE}${API_PREFIX}/admin/audit-logs/clear?action=${actionFilter}`
-        : `${API_BASE}${API_PREFIX}/admin/audit-logs/clear`;
-        
+      const url =
+        actionFilter && actionFilter !== "ALL"
+          ? `${API_BASE}${API_PREFIX}/admin/audit-logs/clear?action=${actionFilter}`
+          : `${API_BASE}${API_PREFIX}/admin/audit-logs/clear`;
+
       const resp = await fetch(url, {
         method: "DELETE",
         headers: {
@@ -808,7 +812,6 @@ export const AdminApi = {
     return data;
   },
 
-
   clinical: {
     list: async () => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/settings`, {
@@ -858,7 +861,6 @@ export const AdminApi = {
   },
 };
 
-
 /* -------------------- RESEARCH API -------------------- */
 export const ResearchApi = {
   /** Barcha aktiv yozuvlar (superadmin — hammani, researcher — o'zini) */
@@ -871,7 +873,10 @@ export const ResearchApi = {
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/?${q.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -881,7 +886,10 @@ export const ResearchApi = {
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -893,7 +901,10 @@ export const ResearchApi = {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -905,7 +916,10 @@ export const ResearchApi = {
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -916,7 +930,10 @@ export const ResearchApi = {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -927,7 +944,10 @@ export const ResearchApi = {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -938,7 +958,10 @@ export const ResearchApi = {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
@@ -948,14 +971,20 @@ export const ResearchApi = {
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/deleted/list`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.json();
   },
 
   /** DOCX yuklash */
   downloadDocx: (id, lang = "ru") => {
     const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    window.open(`${API_BASE}${API_PREFIX}/research/${id}/docx?accessToken=${token}&lang=${lang}`, "_blank");
+    window.open(
+      `${API_BASE}${API_PREFIX}/research/${id}/docx?accessToken=${token}&lang=${lang}`,
+      "_blank",
+    );
   },
 
   /** XLSX export */
@@ -968,7 +997,10 @@ export const ResearchApi = {
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/xlsx?${q.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.blob();
   },
 
@@ -982,7 +1014,10 @@ export const ResearchApi = {
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/dataset?${q.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!resp.ok) { const msg = await parseError(resp); throw new Error(msg); }
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
     return resp.blob();
   },
 };

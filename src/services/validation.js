@@ -1,7 +1,7 @@
 export function validateForm(formData) {
   const errors = [];
   if (!formData.firstName || !formData.lastName) errors.push("Ism va familiyani kiriting");
-  if (!formData.region || !formData.address) errors.push("Viloyat va manzilni kiriting");
+  if (!formData.region) errors.push("Viloyatni kiriting");
   if (formData.age < 2 || formData.age > 120) errors.push("Yosh 2-120 oralig'ida bo'lishi kerak");
   if (formData.height < 50 || formData.height > 250)
     errors.push("Bo'y 50-250 sm oralig'ida bo'lishi kerak");

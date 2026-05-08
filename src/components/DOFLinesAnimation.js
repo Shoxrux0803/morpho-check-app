@@ -71,7 +71,7 @@ const ParticleField = ({ isDark }) => {
   const pointsRef = useRef();
   const materialRef = useRef();
   const { mouse } = useThree();
-  
+
   const [scroll, setScroll] = useState(0);
 
   useEffect(() => {
@@ -92,7 +92,7 @@ const ParticleField = ({ isDark }) => {
       new THREE.Color("#38bdf8"), // Sky
       new THREE.Color("#8b5cf6"), // Violet
       new THREE.Color("#c084fc"), // Fuchsia
-      new THREE.Color("#818cf8")  // Indigo light
+      new THREE.Color("#818cf8"), // Indigo light
     ];
 
     const paletteLight = [
@@ -100,7 +100,7 @@ const ParticleField = ({ isDark }) => {
       new THREE.Color("#0ea5e9"), // Sky Blue
       new THREE.Color("#6366f1"), // Indigo variant
       new THREE.Color("#ec4899"), // Pink
-      new THREE.Color("#3b82f6")  // Normal Blue
+      new THREE.Color("#3b82f6"), // Normal Blue
     ];
 
     for (let i = 0; i < count; i++) {
@@ -109,19 +109,19 @@ const ParticleField = ({ isDark }) => {
       const theta = Math.random() * Math.PI * 2;
       const ySpread = (Math.random() - 0.5) * 35;
 
-      positions[i * 3]     = Math.cos(theta) * radius + (Math.random() - 0.5) * 5;
+      positions[i * 3] = Math.cos(theta) * radius + (Math.random() - 0.5) * 5;
       positions[i * 3 + 1] = ySpread;
       positions[i * 3 + 2] = Math.sin(theta) * radius + (Math.random() - 0.5) * 5;
 
       scales[i] = Math.random() * 2.5 + 0.5;
 
       const cd = paletteDark[Math.floor(Math.random() * paletteDark.length)];
-      colorsDark[i * 3]     = cd.r;
+      colorsDark[i * 3] = cd.r;
       colorsDark[i * 3 + 1] = cd.g;
       colorsDark[i * 3 + 2] = cd.b;
 
       const cl = paletteLight[Math.floor(Math.random() * paletteLight.length)];
-      colorsLight[i * 3]     = cl.r;
+      colorsLight[i * 3] = cl.r;
       colorsLight[i * 3 + 1] = cl.g;
       colorsLight[i * 3 + 2] = cl.b;
     }
@@ -141,25 +141,25 @@ const ParticleField = ({ isDark }) => {
   useFrame((state) => {
     if (!materialRef.current) return;
     const now = state.clock.getElapsedTime();
-    
+
     // Interpolation orqali silliq harakat (easing)
     mouseTarget.current.lerp(mouse, 0.05);
 
     materialRef.current.uniforms.uTime.value = now;
     materialRef.current.uniforms.uMouse.value.copy(mouseTarget.current);
-    
+
     // Tema almashinuvi silliq bo'lishi
     const targetTheme = isDark ? 0.0 : 1.0;
     materialRef.current.uniforms.uTheme.value = THREE.MathUtils.lerp(
       materialRef.current.uniforms.uTheme.value,
       targetTheme,
-      0.05
+      0.05,
     );
 
     if (pointsRef.current) {
       // Bulutning sekin aylanib turishi
-      pointsRef.current.rotation.y = now * 0.04 + (mouseTarget.current.x * 0.15);
-      pointsRef.current.rotation.x = (scroll * 0.001) - (mouseTarget.current.y * 0.15);
+      pointsRef.current.rotation.y = now * 0.04 + mouseTarget.current.x * 0.15;
+      pointsRef.current.rotation.x = scroll * 0.001 - mouseTarget.current.y * 0.15;
     }
   });
 
@@ -186,7 +186,7 @@ export default function DOFLinesAnimation({ theme }) {
   const isDark = theme === "dark";
   const bg = isDark ? "#020617" : "#f1f5f9";
   const overlay = isDark ? "rgba(2, 6, 23, 0.85)" : "rgba(241, 245, 249, 0.8)";
-  
+
   return (
     <div
       style={{
@@ -208,7 +208,7 @@ export default function DOFLinesAnimation({ theme }) {
       >
         <ParticleField isDark={isDark} />
       </Canvas>
-      
+
       {/* Vinyetka effekti markazni ochroq, chetlarni qoramtir qiladi */}
       <div
         style={{

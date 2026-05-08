@@ -1,11 +1,19 @@
 import React from "react";
 import { Grid, Card, CardContent, Typography, Box, useTheme, Avatar } from "@mui/material";
-import { People, PersonAdd, TrendingUp, TrendingDown, Analytics, Straighten, DoneAll } from "@mui/icons-material";
+import {
+  People,
+  PersonAdd,
+  TrendingUp,
+  TrendingDown,
+  Analytics,
+  Straighten,
+  DoneAll,
+} from "@mui/icons-material";
 
 const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, normalBMIPercent }) => {
   const theme = useTheme();
 
-  const isDark = theme.palette.mode === 'dark';
+  const isDark = theme.palette.mode === "dark";
 
   const stats = [
     {
@@ -50,28 +58,26 @@ const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, norma
     <Grid container spacing={3} mb={4}>
       {stats.map((stat, index) => (
         <Grid item xs={12} sm={6} md={3} key={index}>
-          <Card 
+          <Card
             elevation={0}
-            sx={{ 
-                height: "100%",
-                borderRadius: 4,
-                background: isDark 
-                    ? 'rgba(23, 26, 33, 0.7)' 
-                    : 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: "blur(10px)",
-                border: isDark 
-                    ? '1px solid rgba(255, 255, 255, 0.08)' 
-                    : '1px solid rgba(255, 255, 255, 0.3)',
-                boxShadow: isDark 
-                    ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)' 
-                    : '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-                transition: "all 0.3s ease",
-                "&:hover": {
-                    transform: "translateY(-5px)",
-                    boxShadow: isDark 
-                        ? '0 12px 40px 0 rgba(0, 0, 0, 0.45)' 
-                        : '0 12px 40px 0 rgba(31, 38, 135, 0.12)',
-                }
+            sx={{
+              height: "100%",
+              borderRadius: 4,
+              background: isDark ? "rgba(23, 26, 33, 0.7)" : "rgba(255, 255, 255, 0.7)",
+              backdropFilter: "blur(10px)",
+              border: isDark
+                ? "1px solid rgba(255, 255, 255, 0.08)"
+                : "1px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: isDark
+                ? "0 8px 32px 0 rgba(0, 0, 0, 0.37)"
+                : "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                transform: "translateY(-5px)",
+                boxShadow: isDark
+                  ? "0 12px 40px 0 rgba(0, 0, 0, 0.45)"
+                  : "0 12px 40px 0 rgba(31, 38, 135, 0.12)",
+              },
             }}
           >
             <CardContent>
@@ -98,16 +104,16 @@ const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, norma
                     </Typography>
                   </Box>
                 </Box>
-                <Avatar 
-                    sx={{ 
-                        bgcolor: stat.bg, 
-                        color: stat.color,
-                        width: 48,
-                        height: 48,
-                        borderRadius: 3
-                    }}
+                <Avatar
+                  sx={{
+                    bgcolor: stat.bg,
+                    color: stat.color,
+                    width: 48,
+                    height: 48,
+                    borderRadius: 3,
+                  }}
                 >
-                    {stat.icon}
+                  {stat.icon}
                 </Avatar>
               </Box>
             </CardContent>

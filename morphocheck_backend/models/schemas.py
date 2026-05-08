@@ -90,6 +90,11 @@ class UserCreate(BaseModel):
     phone: Optional[str] = None
     role: Optional[str] = "user"
     region: Optional[str] = None
+    district: Optional[str] = None
+    mahalla: Optional[str] = None
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     @field_validator("password")
     @classmethod
@@ -154,6 +159,11 @@ class UserUpdate(BaseModel):
     phone: Optional[str] = None
     role: Optional[str] = None
     region: Optional[str] = None
+    district: Optional[str] = None
+    mahalla: Optional[str] = None
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class UserOut(BaseModel):
     id: int
@@ -162,6 +172,14 @@ class UserOut(BaseModel):
     phone: Optional[str] = None
     role: str
     region: Optional[str] = None
+    district: Optional[str] = None
+    mahalla: Optional[str] = None
+    address: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    is_deleted: Optional[int] = 0
+    deleted_at: Optional[datetime.datetime] = None
+    deleted_by_id: Optional[int] = None
     class Config:
         from_attributes = True
 

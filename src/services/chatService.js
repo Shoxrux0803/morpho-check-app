@@ -1,21 +1,21 @@
 // src/services/chatService.js
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 export const chatService = {
-  sendMessage: async (recipientId, content, type = 'direct', replyToId = null, fileUrl = null) => {
-    const payload = { 
-      recipient_id: recipientId, 
-      content, 
+  sendMessage: async (recipientId, content, type = "direct", replyToId = null, fileUrl = null) => {
+    const payload = {
+      recipient_id: recipientId,
+      content,
       message_type: type,
       reply_to_id: replyToId,
-      file_url: fileUrl
+      file_url: fileUrl,
     };
     const response = await axios.post(`${API_BASE_URL}/chat/send`, payload, {
       headers: getAuthHeader(),
@@ -25,20 +25,24 @@ export const chatService = {
 
   uploadFile: async (file) => {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
     const response = await axios.post(`${API_BASE_URL}/chat/upload`, formData, {
       headers: {
         ...getAuthHeader(),
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
     return response.data;
   },
 
   sendTypingStatus: async () => {
-    return await axios.post(`${API_BASE_URL}/chat/typing`, {}, {
-      headers: getAuthHeader(),
-    });
+    return await axios.post(
+      `${API_BASE_URL}/chat/typing`,
+      {},
+      {
+        headers: getAuthHeader(),
+      },
+    );
   },
 
   getTypingStatus: async () => {
@@ -72,23 +76,35 @@ export const chatService = {
   },
 
   markAsRead: async (messageId) => {
-    const response = await axios.post(`${API_BASE_URL}/chat/mark-read/${messageId}`, {}, {
-      headers: getAuthHeader(),
-    });
+    const response = await axios.post(
+      `${API_BASE_URL}/chat/mark-read/${messageId}`,
+      {},
+      {
+        headers: getAuthHeader(),
+      },
+    );
     return response.data;
   },
-  
+
   markAllRead: async () => {
-    const response = await axios.post(`${API_BASE_URL}/chat/mark-all-read`, {}, {
-      headers: getAuthHeader(),
-    });
+    const response = await axios.post(
+      `${API_BASE_URL}/chat/mark-all-read`,
+      {},
+      {
+        headers: getAuthHeader(),
+      },
+    );
     return response.data;
   },
 
   markUserMessagesRead: async (userId) => {
-    const response = await axios.post(`${API_BASE_URL}/chat/mark-read/user/${userId}`, {}, {
-      headers: getAuthHeader(),
-    });
+    const response = await axios.post(
+      `${API_BASE_URL}/chat/mark-read/user/${userId}`,
+      {},
+      {
+        headers: getAuthHeader(),
+      },
+    );
     return response.data;
   },
 
@@ -98,5 +114,5 @@ export const chatService = {
       headers: getAuthHeader(),
     });
     return response.data;
-  }
+  },
 };

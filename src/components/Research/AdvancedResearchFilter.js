@@ -1,13 +1,33 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box, Paper, TextField, Button, Stack, InputAdornment, 
-  Collapse, Grid, MenuItem, Typography, IconButton, 
-  Tooltip, Chip, Divider
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Stack,
+  InputAdornment,
+  Collapse,
+  Grid,
+  MenuItem,
+  Typography,
+  IconButton,
+  Tooltip,
+  Chip,
+  Divider,
 } from "@mui/material";
 import {
-  Search, FilterList, Close, RestartAlt, 
-  ExpandMore, ExpandLess, School, Place, 
-  Person, FitnessCenter, CalendarMonth, Download
+  Search,
+  FilterList,
+  Close,
+  RestartAlt,
+  ExpandMore,
+  ExpandLess,
+  School,
+  Place,
+  Person,
+  FitnessCenter,
+  CalendarMonth,
+  Download,
 } from "@mui/icons-material";
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -22,7 +42,7 @@ const GlassPaper = ({ children, sx = {} }) => (
       borderColor: (theme) =>
         theme.palette.mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(100, 116, 139, 0.12)",
       overflow: "hidden",
-      boxShadow: (theme) => 
+      boxShadow: (theme) =>
         theme.palette.mode === "dark"
           ? "0 8px 32px rgba(0,0,0,0.4)"
           : "0 8px 32px rgba(100,116,139,0.08)",
@@ -39,14 +59,14 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
   // Feeding type options
   const feedingOptions = [
     { value: "Tabiiy (естественном вскармливании)", label: "Tabiiy" },
-    { value: "Sun'iy (искусственном вскармливании)", label: "Sun'iy" }
+    { value: "Sun'iy (искусственном вскармливании)", label: "Sun'iy" },
   ];
 
   // Parents marriage options
   const marriageOptions = [
     { value: "Yaqin qarindosh (близкородственный)", label: "Yaqin qarindosh" },
     { value: "Uzoq qarindosh (дальнородственный)", label: "Uzoq qarindosh" },
-    { value: "Qarindosh emas (неродственный)", label: "Qarindosh emas" }
+    { value: "Qarindosh emas (неродственный)", label: "Qarindosh emas" },
   ];
 
   const handleClear = () => {
@@ -62,7 +82,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
       height_min: "",
       height_max: "",
       date_from: "",
-      date_to: ""
+      date_to: "",
     };
     setFilter(emptyFilter);
     onSearch(emptyFilter);
@@ -101,10 +121,10 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                   <Search sx={{ color: "primary.main" }} />
                 </InputAdornment>
               ),
-              sx: { borderRadius: 3 }
+              sx: { borderRadius: 3 },
             }}
           />
-          
+
           <Button
             variant={expanded ? "contained" : "outlined"}
             startIcon={expanded ? <ExpandLess /> : <FilterList />}
@@ -113,7 +133,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
           >
             Filtrlar
           </Button>
-          
+
           <Button
             variant="contained"
             color="primary"
@@ -138,60 +158,137 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
 
         {/* Advanced Filters Panel */}
         <Collapse in={expanded}>
-          <Box sx={{ mt: 3, pt: 3, borderTop: (theme) => theme.palette.mode === 'dark' ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.06)" }}>
+          <Box
+            sx={{
+              mt: 3,
+              pt: 3,
+              borderTop: (theme) =>
+                theme.palette.mode === "dark"
+                  ? "1px solid rgba(255,255,255,0.08)"
+                  : "1px solid rgba(0,0,0,0.06)",
+            }}
+          >
             <Grid container spacing={3}>
               {/* Demographics Group */}
               <Grid item xs={12} md={4}>
-                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mb: 1, display: "block" }}>
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  sx={{ fontWeight: 700, mb: 1, display: "block" }}
+                >
                   Demografiya
                 </Typography>
                 <Stack spacing={2}>
-                  <TextField 
-                    fullWidth size="small" name="full_name" label="F.I.SH (to'liq)" 
-                    value={filter.full_name || ""} onChange={handleChange}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><Person fontSize="small" /></InputAdornment> }}
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="full_name"
+                    label="F.I.SH (to'liq)"
+                    value={filter.full_name || ""}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person fontSize="small" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
-                  <TextField 
-                    fullWidth size="small" name="school_name" label="Maktab / Bog'cha" 
-                    value={filter.school_name || ""} onChange={handleChange}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><School fontSize="small" /></InputAdornment> }}
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="school_name"
+                    label="Maktab / Bog'cha"
+                    value={filter.school_name || ""}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <School fontSize="small" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
-                  <TextField 
-                    fullWidth size="small" name="settlement" label="Aholi punkti" 
-                    value={filter.settlement || ""} onChange={handleChange}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><Place fontSize="small" /></InputAdornment> }}
+                  <TextField
+                    fullWidth
+                    size="small"
+                    name="settlement"
+                    label="Aholi punkti"
+                    value={filter.settlement || ""}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Place fontSize="small" />
+                        </InputAdornment>
+                      ),
+                    }}
                   />
                 </Stack>
               </Grid>
 
               {/* Attributes Group */}
               <Grid item xs={12} md={4}>
-                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mb: 1, display: "block" }}>
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  sx={{ fontWeight: 700, mb: 1, display: "block" }}
+                >
                   Xususiyatlar
                 </Typography>
                 <Stack spacing={2}>
-                  <TextField 
-                    select fullWidth size="small" name="feeding_type" label="Oziqlanish turi" 
-                    value={filter.feeding_type || ""} onChange={handleChange}
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    name="feeding_type"
+                    label="Oziqlanish turi"
+                    value={filter.feeding_type || ""}
+                    onChange={handleChange}
                   >
                     <MenuItem value="">Barchasi</MenuItem>
-                    {feedingOptions.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
+                    {feedingOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
                   </TextField>
-                  <TextField 
-                    select fullWidth size="small" name="parents_marriage" label="Ota-ona qarindoshligi" 
-                    value={filter.parents_marriage || ""} onChange={handleChange}
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    name="parents_marriage"
+                    label="Ota-ona qarindoshligi"
+                    value={filter.parents_marriage || ""}
+                    onChange={handleChange}
                   >
                     <MenuItem value="">Barchasi</MenuItem>
-                    {marriageOptions.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
+                    {marriageOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
                   </TextField>
                   <Stack direction="row" spacing={1}>
-                    <TextField 
-                      fullWidth size="small" name="date_from" label="Sana (dan)" placeholder="2024-01-01"
-                      value={filter.date_from || ""} onChange={handleChange} InputLabelProps={{ shrink: true }}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="date_from"
+                      label="Sana (dan)"
+                      placeholder="2024-01-01"
+                      value={filter.date_from || ""}
+                      onChange={handleChange}
+                      InputLabelProps={{ shrink: true }}
                     />
-                    <TextField 
-                      fullWidth size="small" name="date_to" label="Sana (gacha)" placeholder="2024-12-31"
-                      value={filter.date_to || ""} onChange={handleChange} InputLabelProps={{ shrink: true }}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="date_to"
+                      label="Sana (gacha)"
+                      placeholder="2024-12-31"
+                      value={filter.date_to || ""}
+                      onChange={handleChange}
+                      InputLabelProps={{ shrink: true }}
                     />
                   </Stack>
                 </Stack>
@@ -199,29 +296,69 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
 
               {/* Biometrics Group */}
               <Grid item xs={12} md={4}>
-                <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700, mb: 1, display: "block" }}>
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  sx={{ fontWeight: 700, mb: 1, display: "block" }}
+                >
                   O'lchovlar
                 </Typography>
                 <Stack spacing={2}>
                   <Box>
-                    <Typography variant="caption" sx={{ mb: 1, display: "block" }}>Vazn oralig'i (kg)</Typography>
+                    <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
+                      Vazn oralig'i (kg)
+                    </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField size="small" name="weight_min" placeholder="Min" value={filter.weight_min || ""} onChange={handleChange} type="number" />
+                      <TextField
+                        size="small"
+                        name="weight_min"
+                        placeholder="Min"
+                        value={filter.weight_min || ""}
+                        onChange={handleChange}
+                        type="number"
+                      />
                       <Typography variant="caption">—</Typography>
-                      <TextField size="small" name="weight_max" placeholder="Max" value={filter.weight_max || ""} onChange={handleChange} type="number" />
+                      <TextField
+                        size="small"
+                        name="weight_max"
+                        placeholder="Max"
+                        value={filter.weight_max || ""}
+                        onChange={handleChange}
+                        type="number"
+                      />
                     </Stack>
                   </Box>
                   <Box>
-                    <Typography variant="caption" sx={{ mb: 1, display: "block" }}>Bo'y oralig'i (sm)</Typography>
+                    <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
+                      Bo'y oralig'i (sm)
+                    </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField size="small" name="height_min" placeholder="Min" value={filter.height_min || ""} onChange={handleChange} type="number" />
+                      <TextField
+                        size="small"
+                        name="height_min"
+                        placeholder="Min"
+                        value={filter.height_min || ""}
+                        onChange={handleChange}
+                        type="number"
+                      />
                       <Typography variant="caption">—</Typography>
-                      <TextField size="small" name="height_max" placeholder="Max" value={filter.height_max || ""} onChange={handleChange} type="number" />
+                      <TextField
+                        size="small"
+                        name="height_max"
+                        placeholder="Max"
+                        value={filter.height_max || ""}
+                        onChange={handleChange}
+                        type="number"
+                      />
                     </Stack>
                   </Box>
-                  <Button 
-                    fullWidth variant="soft" color="error" startIcon={<RestartAlt />} 
-                    onClick={handleClear} sx={{ mt: "auto", py: 1 }}
+                  <Button
+                    fullWidth
+                    variant="soft"
+                    color="error"
+                    startIcon={<RestartAlt />}
+                    onClick={handleClear}
+                    sx={{ mt: "auto", py: 1 }}
                   >
                     Filtrlarni tozalash
                   </Button>
@@ -235,7 +372,10 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
       {/* Active Filter Chips */}
       {activeFilters.length > 0 && (
         <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}>
-          <Typography variant="body2" sx={{ alignSelf: "center", mr: 1, fontWeight: 600, color: "text.secondary" }}>
+          <Typography
+            variant="body2"
+            sx={{ alignSelf: "center", mr: 1, fontWeight: 600, color: "text.secondary" }}
+          >
             Aktiv filtrlar:
           </Typography>
           {activeFilters.map(([key, value]) => {
@@ -244,7 +384,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             if (key === "date_to") label = `Sanagacha: ${value}`;
             if (key === "weight_min") label = `Vazn >= ${value}`;
             if (key === "weight_max") label = `Vazn <= ${value}`;
-            
+
             return (
               <Chip
                 key={key}
@@ -257,7 +397,11 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
               />
             );
           })}
-          <Button size="small" onClick={handleClear} sx={{ textTransform: "none", fontWeight: 600 }}>
+          <Button
+            size="small"
+            onClick={handleClear}
+            sx={{ textTransform: "none", fontWeight: 600 }}
+          >
             Barchasini tozalash
           </Button>
         </Stack>

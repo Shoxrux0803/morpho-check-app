@@ -2,7 +2,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import InputForm from "../components/InputForm";
 import AnalysisResults from "../components/AnalysisResults";
-import { postAnalysis, generatePdf, generateDocx, sendRating as submitRatingApi } from "../services/api";
+import {
+  postAnalysis,
+  generatePdf,
+  generateDocx,
+  sendRating as submitRatingApi,
+} from "../services/api";
 import { AdminApi } from "../services/AdminApi";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -16,6 +21,7 @@ const emptyFormData = {
   lastName: "",
   region: "",
   district: "",
+  mahalla: "",
   address: "",
   birthDate: "",
   examinationDate: "",
@@ -60,7 +66,8 @@ const loadDraft = () => {
 
 export default function MorphoCheckPro() {
   const { lang, t } = useLanguage();
-  const { addToQueue, isOnline, editingItem, setEditingItem, updateQueueItem, removeFromQueue } = useOfflineSync();
+  const { addToQueue, isOnline, editingItem, setEditingItem, updateQueueItem, removeFromQueue } =
+    useOfflineSync();
   const [formData, setFormData] = useState(loadDraft);
 
   const [results, setResults] = useState(null);
@@ -85,9 +92,9 @@ export default function MorphoCheckPro() {
   // Load editing item into form
   useEffect(() => {
     if (editingItem) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        ...editingItem.payload
+        ...editingItem.payload,
       }));
       toast.success(t("fixingOfflineRecord") || "Fixing offline record...", { icon: "🔧" });
       setError("");
@@ -95,12 +102,11 @@ export default function MorphoCheckPro() {
     }
   }, [editingItem, t]);
 
-
   useEffect(() => {
     if (formData.birthDate) {
       const birth = new Date(formData.birthDate);
       const exam = formData.examinationDate ? new Date(formData.examinationDate) : new Date();
-      
+
       let years = exam.getFullYear() - birth.getFullYear();
       let months = exam.getMonth() - birth.getMonth();
       let days = exam.getDate() - birth.getDate();
@@ -117,13 +123,11 @@ export default function MorphoCheckPro() {
       }
 
       if (years < 0) {
-        setFormData(prev => ({ ...prev, age: "", ageMonths: 0, ageDays: 0 }));
+        setFormData((prev) => ({ ...prev, age: "", ageMonths: 0, ageDays: 0 }));
         return;
       }
 
-      if (
-        (formData.age !== years || formData.ageMonths !== months || formData.ageDays !== days)
-      ) {
+      if (formData.age !== years || formData.ageMonths !== months || formData.ageDays !== days) {
         setFormData((prev) => ({
           ...prev,
           age: years,
@@ -134,7 +138,16 @@ export default function MorphoCheckPro() {
     }
   }, [formData.birthDate, formData.examinationDate]);
 
-  const numericFields = ["age", "height", "weight", "chest", "waist", "head", "fatherHeight", "motherHeight"];
+  const numericFields = [
+    "age",
+    "height",
+    "weight",
+    "chest",
+    "waist",
+    "head",
+    "fatherHeight",
+    "motherHeight",
+  ];
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const v = numericFields.includes(name) && value !== "" ? Number(value) : value;
@@ -151,7 +164,7 @@ export default function MorphoCheckPro() {
 
     // Front tekshiruvlar...
     if (!formData.firstName || !formData.lastName) return setError(t("errNameRequired"));
-    if (!formData.region || !formData.address) return setError(t("errRegionRequired"));
+    if (!formData.region) return setError(t("errRegionRequired"));
     if (formData.age < 2 || formData.age > 120) return setError(t("errAge"));
     if (formData.height < 50 || formData.height > 250) return setError(t("errHeight"));
     if (formData.weight < 3 || formData.weight > 300) return setError(t("errWeight"));
@@ -165,6 +178,7 @@ export default function MorphoCheckPro() {
         lastName: formData.lastName,
         region: formData.region || "",
         district: formData.district || "",
+        mahalla: formData.mahalla || "",
         address: formData.address || "",
         age: Number(formData.age),
         ageMonths: Number(formData.ageMonths || 0),
@@ -216,7 +230,7 @@ export default function MorphoCheckPro() {
 
       // If online but we were fixing an item, try to send and then remove from queue
       const raw = await postAnalysis(payload, lang);
-      
+
       if (editingItem) {
         await removeFromQueue(editingItem.id);
         setEditingItem(null);
@@ -269,12 +283,11 @@ export default function MorphoCheckPro() {
       visceralFat: "",
       bodyLength: "",
       doctorNote: "",
-      // We keep region, district, address, and examinationDate for faster multi-entry
+      // We keep region, district, mahalla, address, and examinationDate for faster multi-entry
     }));
     setActiveTab("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
 
   const generatePDF = async (pdfLang) => {
     const selectedLang = pdfLang || lang;
@@ -287,6 +300,7 @@ export default function MorphoCheckPro() {
         analysisId: results?.data?.id,
         region: formData.region || "",
         district: formData.district || "",
+        mahalla: formData.mahalla || "",
         address: formData.address || "",
         age: Number(formData.age),
         ageMonths: Number(formData.ageMonths || 0),
@@ -350,6 +364,7 @@ export default function MorphoCheckPro() {
         lastName: formData.lastName,
         region: formData.region || "",
         district: formData.district || "",
+        mahalla: formData.mahalla || "",
         address: formData.address || "",
         age: Number(formData.age),
         ageMonths: Number(formData.ageMonths || 0),
@@ -402,11 +417,6 @@ export default function MorphoCheckPro() {
       setLoading(false);
     }
   };
-
-
-
-
-
 
   useEffect(() => {
     if (error) {

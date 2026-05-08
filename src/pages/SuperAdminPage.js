@@ -233,6 +233,8 @@ const SuperAdminPage = () => {
         .replace(" tumani", "")
         .replace(" shahri", "")
         .replace(" mahallasi", "")
+        .replace(/[‘’ʻʼ']/g, "")
+        .replace(/\bsergeli\b/g, "sirgali")
         .trim(),
     [],
   );

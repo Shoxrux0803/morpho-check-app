@@ -14,7 +14,11 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
+  Drawer,
+  List,
+  Divider,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
 import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
@@ -50,6 +54,7 @@ export default function Header() {
   const [langChanging, setLangChanging] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleLangChange = (code) => {
     if (code === lang) {
@@ -162,7 +167,7 @@ export default function Header() {
                     fontWeight: 700,
                     textTransform: "uppercase",
                     letterSpacing: 0.5,
-                    display: { xs: "none", lg: "flex" },
+                    display: { xs: "none", md: "flex" },
                     alignItems: "center",
                     gap: 0.5,
                     border:
@@ -202,10 +207,17 @@ export default function Header() {
           </Box>
         </Stack>
 
-        <WeatherClock />
+        <Box sx={{ display: { xs: "none", sm: "block" } }}>
+          <WeatherClock />
+        </Box>
 
-        {/* Nav + Theme + Variant + Lang */}
-        <Stack direction="row" alignItems="center" spacing={0.5}>
+        {/* Desktop Controls (lg+) */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={0.5}
+          sx={{ display: { xs: "none", md: "flex" } }}
+        >
           {/* Navigation Links */}
           <Tooltip title={t("homeTooltip")}>
             <Button
@@ -408,7 +420,14 @@ export default function Header() {
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={() => setAnchorEl(null)}
-            PaperProps={{ sx: { mt: 1, borderRadius: 2, minWidth: 180 } }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                borderRadius: 2,
+                minWidth: { xs: "calc(100vw - 32px)", sm: 180 },
+                maxWidth: "90vw",
+              },
+            }}
           >
             {THEME_VARIANTS.map((v) => (
               <MenuItem
@@ -477,8 +496,13 @@ export default function Header() {
           </Tooltip>
         </Stack>
 
-        {/* Sync Manager & Toggle */}
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ ml: 1 }}>
+        {/* Sync Manager & Toggle - Hidden on mobile, accessible in Drawer */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          sx={{ ml: 1, display: { xs: "none", md: "flex" } }}
+        >
           {!isOnline && (
             <Tooltip title="Oflayn rejim">
               <CloudOffIcon color="error" fontSize="small" />
@@ -497,6 +521,164 @@ export default function Header() {
             </IconButton>
           </Tooltip>
         </Stack>
+
+        {/* Mobile Menu Button (xs to lg) */}
+        <IconButton
+          color="inherit"
+          onClick={() => setDrawerOpen(true)}
+          sx={{ display: { xs: "flex", md: "none" }, ml: 1 }}
+        >
+          <Badge badgeContent={pendingCount} color="error" variant="dot">
+            <MenuIcon />
+          </Badge>
+        </IconButton>
+
+        {/* Mobile Drawer */}
+        <Drawer
+          anchor="right"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          PaperProps={{
+            sx: {
+              width: 280,
+              bgcolor: "background.paper",
+              backgroundImage: "none",
+              p: 2,
+            },
+          }}
+        >
+          <Box
+            sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}
+          >
+            <Typography variant="h6" fontWeight="900">
+              Menu
+            </Typography>
+            <IconButton onClick={() => setDrawerOpen(false)}>
+              <CheckIcon />
+            </IconButton>
+          </Box>
+
+          <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Button
+              component={NavLink}
+              to="/"
+              end
+              sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+              startIcon={<HomeIcon />}
+              onClick={() => setDrawerOpen(false)}
+            >
+              {t("home")}
+            </Button>
+            <Button
+              component={NavLink}
+              to={user?.role === "researcher" ? "/researcher" : "/morphocheck-pro"}
+              sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+              startIcon={<AnalyticsIcon />}
+              onClick={() => setDrawerOpen(false)}
+            >
+              {t("analyze")}
+            </Button>
+            {(user?.role === "admin" || user?.role === "superadmin") && (
+              <Button
+                component={NavLink}
+                to="/admin"
+                sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                startIcon={<AdminPanelSettingsIcon />}
+                onClick={() => setDrawerOpen(false)}
+              >
+                {t("adminPanel")}
+              </Button>
+            )}
+            {user?.role === "superadmin" && (
+              <Button
+                component={NavLink}
+                to="/superadmin"
+                sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                startIcon={<AdminPanelSettingsIcon color="primary" />}
+                onClick={() => setDrawerOpen(false)}
+              >
+                Super Admin
+              </Button>
+            )}
+
+            <Divider sx={{ my: 1 }} />
+
+            <Box sx={{ px: 1, py: 1 }}>
+              <Typography variant="overline" color="text.secondary" fontWeight="900">
+                {t("selectLang")}
+              </Typography>
+              <Stack direction="row" flexWrap="wrap" gap={1} mt={1}>
+                {LANGUAGES.map((l) => (
+                  <Button
+                    key={l.code}
+                    size="small"
+                    variant={lang === l.code ? "contained" : "outlined"}
+                    onClick={() => handleLangChange(l.code)}
+                    sx={{ borderRadius: 2, textTransform: "none", minWidth: 60 }}
+                  >
+                    {l.flag} {l.code.toUpperCase()}
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+
+            <Divider sx={{ my: 1 }} />
+
+            <Box sx={{ px: 1, py: 1 }}>
+              <Typography variant="overline" color="text.secondary" fontWeight="900">
+                {t("themeStyle")}
+              </Typography>
+              <Stack direction="row" flexWrap="wrap" gap={1} mt={1}>
+                {THEME_VARIANTS.map((v) => (
+                  <Button
+                    key={v}
+                    size="small"
+                    variant={variant === v ? "contained" : "outlined"}
+                    onClick={() => setVariant(v)}
+                    sx={{ borderRadius: 2, textTransform: "none", minWidth: 80 }}
+                  >
+                    {v}
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+
+            <Divider sx={{ my: 1 }} />
+
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1, py: 1 }}>
+              <Tooltip title={mode === "dark" ? t("lightTheme") : t("darkTheme")}>
+                <IconButton onClick={toggle} color="inherit">
+                  {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+                </IconButton>
+              </Tooltip>
+              <Typography variant="body2">{mode === "dark" ? "Dark" : "Light"}</Typography>
+            </Stack>
+
+            <Button
+              fullWidth
+              variant="outlined"
+              color="inherit"
+              onClick={() => setSyncOpen(true)}
+              startIcon={<SyncIcon className={pendingCount > 0 ? "animate-pulse" : ""} />}
+              sx={{ mt: 1, borderRadius: 2 }}
+            >
+              Sync ({pendingCount})
+            </Button>
+
+            {user && (
+              <Button
+                fullWidth
+                variant="contained"
+                color="error"
+                onClick={() => setLogoutDialogOpen(true)}
+                startIcon={<LogoutIcon />}
+                sx={{ mt: 2, borderRadius: 2 }}
+              >
+                {t("logout") || "Chiqish"}
+              </Button>
+            )}
+          </List>
+        </Drawer>
 
         <SyncManager
           open={syncOpen}

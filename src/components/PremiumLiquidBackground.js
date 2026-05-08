@@ -75,7 +75,7 @@ const fragmentShader = `
 
 const LiquidMesh = ({ isDark }) => {
   const meshRef = useRef();
-  
+
   // Colors for Light and Dark modes
   // Light: Soft Blues, Pinks, Turquoises
   // Dark: Deep Blues, Purples, Cyans
@@ -95,28 +95,31 @@ const LiquidMesh = ({ isDark }) => {
     }
   }, [isDark]);
 
-  const uniforms = useMemo(() => ({
-    uTime: { value: 0 },
-    uMouse: { value: new THREE.Vector2(0, 0) },
-    uColorA: { value: colors.a },
-    uColorB: { value: colors.b },
-    uColorC: { value: colors.c },
-  }), [colors]);
+  const uniforms = useMemo(
+    () => ({
+      uTime: { value: 0 },
+      uMouse: { value: new THREE.Vector2(0, 0) },
+      uColorA: { value: colors.a },
+      uColorB: { value: colors.b },
+      uColorC: { value: colors.c },
+    }),
+    [colors],
+  );
 
   useFrame((state) => {
     if (!meshRef.current) return;
     meshRef.current.material.uniforms.uTime.value = state.clock.getElapsedTime();
-    
+
     // Lerp mouse for extra smoothness
     meshRef.current.material.uniforms.uMouse.value.x = THREE.MathUtils.lerp(
       meshRef.current.material.uniforms.uMouse.value.x,
       (state.mouse.x + 1) / 2,
-      0.05
+      0.05,
     );
     meshRef.current.material.uniforms.uMouse.value.y = THREE.MathUtils.lerp(
       meshRef.current.material.uniforms.uMouse.value.y,
       (state.mouse.y + 1) / 2,
-      0.05
+      0.05,
     );
   });
 
@@ -147,13 +150,10 @@ export default function PremiumLiquidBackground({ theme }) {
         pointerEvents: "none",
       }}
     >
-      <Canvas
-        camera={{ position: [0, 0, 1] }}
-        gl={{ antialias: true, alpha: false }}
-      >
+      <Canvas camera={{ position: [0, 0, 1] }} gl={{ antialias: true, alpha: false }}>
         <LiquidMesh isDark={isDark} />
       </Canvas>
-      
+
       {/* Overlay for depth and texture */}
       <div
         style={{
@@ -170,7 +170,7 @@ export default function PremiumLiquidBackground({ theme }) {
           zIndex: 1,
         }}
       />
-      
+
       {/* Noise Grain Overlay for premium feel */}
       <div
         style={{

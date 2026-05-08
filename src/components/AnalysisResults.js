@@ -101,6 +101,8 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   const fullName =
     `${patientInfo?.first_name ?? formData.firstName ?? ""} ${patientInfo?.last_name ?? formData.lastName ?? ""}`.trim();
   const regionText = formData?.region || patientInfo?.region || "";
+  const districtText = formData?.district || patientInfo?.district || "";
+  const mahallaText = formData?.mahalla || patientInfo?.mahalla || "";
   const ageText = patientInfo?.age ?? formData?.age ?? "—";
   const genderValue = patientInfo?.gender ?? formData?.gender;
   const age = patientInfo?.age ?? formData?.age;
@@ -172,6 +174,8 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
       age,
       gender,
       region: regionText,
+      district: districtText,
+      mahalla: mahallaText,
       height: usedHeight,
       weight: usedWeight,
       chest: usedChest,
@@ -202,10 +206,13 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
       }));
     } catch (err) {
       console.error("AI assistant action error:", err);
+      const detail =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        "Internet/API sozlamalarini tekshiring.";
       setAssistantReplies((prev) => ({
         ...prev,
-        [action.key]:
-          "AI yordamchini chaqirishda xatolik yuz berdi. Internet/API sozlamalarini tekshiring.",
+        [action.key]: `AI yordamchini chaqirishda xatolik yuz berdi. ${detail}`,
       }));
     } finally {
       setAssistantLoading(false);
@@ -271,7 +278,9 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {ageText} {t("yearsOld")}, {genderText}
-                {regionText ? ` | ${regionText}` : ""}
+                {[regionText, districtText, mahallaText].filter(Boolean).length
+                  ? ` | ${[regionText, districtText, mahallaText].filter(Boolean).join(" / ")}`
+                  : ""}
               </Typography>
               {(patientInfo?.birth_date || patientInfo?.examination_date) && (
                 <Typography variant="caption" color="text.secondary" display="block">
