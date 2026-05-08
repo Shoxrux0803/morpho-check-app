@@ -304,7 +304,6 @@ def generate_pdf_report_endpoint(
         full_report_data["advices"] = advices
         full_report_data["ai_parent_tips"] = ai_tips
         full_report_data["doctor_note"] = data.doctor_note
-
         pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
 
         return StreamingResponse(
