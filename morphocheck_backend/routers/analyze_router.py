@@ -1060,7 +1060,8 @@ def generate_pdf_report_endpoint(
 def generate_pdf_by_patient_id(
     patient_id: int,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin)
 ):
     """
     Admin panel uchun: DB dagi bemor ID si bo'yicha PDF hisobotini qaytaradi.

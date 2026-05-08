@@ -11,7 +11,7 @@ from utils.database import get_db
 from models.userdata import PatientAnalysis
 from sqlalchemy.orm import Session
 from utils.audit_helper import record_audit_log
-from routers.auth_router import get_optional_user
+from routers.auth_router import get_current_admin
 from models.user import User
 from services.ml_service import get_ml_predictions
 from utils.date_utils import calculate_age_precise
@@ -140,7 +140,7 @@ async def generate_pdf_by_id_endpoint(
     request: Request,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_optional_user)
+    current_user: User = Depends(get_current_admin)
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda PDF qaytaradi."""
     from routers.analyze_router import (
@@ -152,6 +152,8 @@ async def generate_pdf_by_id_endpoint(
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q")
 
     try:
         name_parts = (rec.name or "").split(" ", 1)
@@ -306,7 +308,7 @@ async def generate_docx_by_id_endpoint(
     request: Request,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_optional_user)
+    current_user: User = Depends(get_current_admin)
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda DOCX (anketa) qaytaradi."""
     from routers.analyze_router import (
@@ -318,6 +320,8 @@ async def generate_docx_by_id_endpoint(
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q")
 
     try:
         name_parts = (rec.name or "").split(" ", 1)

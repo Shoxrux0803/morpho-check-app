@@ -4,6 +4,7 @@ from typing import Optional
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -50,20 +51,31 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        if request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Content-Security-Policy"] = "default-src 'self' 'unsafe-inline' 'unsafe-eval' http://localhost:*; img-src 'self' data: blob:;"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' data: blob:; "
+            "object-src 'none'; "
+            "base-uri 'self'; "
+            "frame-ancestors 'none'"
+        )
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    print(f"[DEBUG] Incoming request: {request.method} {request.url}")
+    debug = os.getenv("DEBUG", "false").lower() == "true"
+    if debug:
+        print(f"[DEBUG] Incoming request: {request.method} {request.url.path}")
     response = await call_next(request)
-    print(f"[DEBUG] Response status: {response.status_code}")
+    if debug:
+        print(f"[DEBUG] Response status: {response.status_code}")
     return response
 
 # CORS sozlamalari
@@ -80,7 +92,15 @@ else:
         "http://127.0.0.1:8080",
     ]
 
-print(f"[CORS] Ruxsat berilgan originlar: {allow_origins}")
+if "*" in allow_origins:
+    raise RuntimeError("CORS_ORIGINS must not contain '*'. Configure explicit origins.")
+
+allowed_hosts = [
+    h.strip()
+    for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
+    if h.strip()
+]
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
 app.add_middleware(
     CORSMiddleware,

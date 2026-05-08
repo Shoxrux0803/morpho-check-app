@@ -43,6 +43,19 @@ router = APIRouter(tags=["Chat"])
 
 # Typing status storage: {user_id: {"name": str, "timestamp": datetime}}
 typing_statuses: Dict[int, dict] = {}
+ALLOWED_UPLOAD_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx"}
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
+def _validate_chat_file_url(file_url: Optional[str]) -> Optional[str]:
+    if not file_url:
+        return None
+    normalized = file_url.strip().replace("\\", "/")
+    if not normalized.startswith("/uploads/chat/"):
+        raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
+    basename = os.path.basename(normalized)
+    if basename != normalized.rsplit("/", 1)[-1] or not basename:
+        raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
+    return normalized
 
 @router.post("/send", response_model=ChatMessageOut)
 def send_message(
@@ -50,17 +63,35 @@ def send_message(
     current_user: User = Depends(get_current_user), 
     db: Session = Depends(get_db)
 ):
+    msg.content = (msg.content or "").strip()
+    if not msg.content and not msg.file_url:
+        raise HTTPException(status_code=400, detail="Xabar bo'sh bo'lishi mumkin emas")
+    if len(msg.content) > 4000:
+        raise HTTPException(status_code=400, detail="Xabar juda uzun")
+    if msg.message_type not in {"direct", "broadcast"}:
+        raise HTTPException(status_code=400, detail="Noto'g'ri xabar turi")
     if msg.message_type == "broadcast" and current_user.role != "superadmin":
         raise HTTPException(status_code=403, detail="Only Superadmin can send broadcast messages")
     
-    if not msg.recipient_id and current_user.role != "superadmin":
+    if msg.message_type == "broadcast":
+        msg.recipient_id = None
+    elif not msg.recipient_id and current_user.role != "superadmin":
         # Find first superadmin to send message to
         superadmin = db.query(User).filter(User.role == "superadmin").first()
         if superadmin:
             msg.recipient_id = superadmin.id
         else:
             # Fallback if no superadmin found (should not happen normally)
-            pass
+            raise HTTPException(status_code=503, detail="Super admin topilmadi")
+    elif msg.recipient_id:
+        recipient = db.query(User).filter(
+            User.id == msg.recipient_id,
+            (User.is_deleted == 0) | (User.is_deleted == None)
+        ).first()
+        if not recipient:
+            raise HTTPException(status_code=404, detail="Qabul qiluvchi topilmadi")
+        if current_user.role != "superadmin" and recipient.role != "superadmin":
+            raise HTTPException(status_code=403, detail="Faqat super admin bilan yozish mumkin")
 
     new_msg = ChatMessage(
         sender_id=current_user.id,
@@ -68,7 +99,7 @@ def send_message(
         content=msg.content,
         message_type=msg.message_type,
         reply_to_id=msg.reply_to_id,
-        file_url=msg.file_url
+        file_url=_validate_chat_file_url(msg.file_url)
     )
     db.add(new_msg)
     db.commit()
@@ -269,19 +300,27 @@ async def upload_chat_file(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
-    UPLOAD_DIR = "uploads"
+    file_ext = os.path.splitext(file.filename or "")[1].lower()
+    if file_ext not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Bu turdagi faylga ruxsat berilmagan")
+
+    content = await file.read()
+    if len(content) > MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail="Fayl hajmi 10 MB dan oshmasligi kerak")
+    if not content:
+        raise HTTPException(status_code=400, detail="Bo'sh fayl yuklanmaydi")
+
+    UPLOAD_DIR = os.path.join("uploads", "chat")
     if not os.path.exists(UPLOAD_DIR):
         os.makedirs(UPLOAD_DIR)
     
-    file_ext = os.path.splitext(file.filename)[1]
     unique_filename = f"{uuid.uuid4()}{file_ext}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
     
     with open(file_path, "wb") as buffer:
-        content = await file.read()
         buffer.write(content)
         
-    return {"file_url": f"/uploads/{unique_filename}"}
+    return {"file_url": f"/uploads/chat/{unique_filename}"}
 
 @router.post("/typing")
 def update_typing_status(

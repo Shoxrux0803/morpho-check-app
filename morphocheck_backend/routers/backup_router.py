@@ -1,10 +1,9 @@
 import os
-import shutil
 import sqlite3
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import Optional
+import re
 
 from utils.database import get_db
 from models.user import User
@@ -20,12 +19,23 @@ DB_PATH = os.path.join(BASE_DIR, "morphocheck.db")
 # Ensure backups directory exists
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
+BACKUP_FILENAME_RE = re.compile(r"^backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.db$")
+
+def get_safe_backup_path(filename: str) -> str:
+    if not BACKUP_FILENAME_RE.fullmatch(filename):
+        raise HTTPException(status_code=400, detail="Noto'g'ri zaxira fayl nomi")
+    backup_path = os.path.abspath(os.path.join(BACKUP_DIR, filename))
+    backup_root = os.path.abspath(BACKUP_DIR)
+    if os.path.commonpath([backup_root, backup_path]) != backup_root:
+        raise HTTPException(status_code=400, detail="Noto'g'ri zaxira fayl yo'li")
+    return backup_path
+
 @router.get("/")
 def list_backups(current_user: User = Depends(get_current_superadmin)):
     backups = []
     if os.path.exists(BACKUP_DIR):
         for f in os.listdir(BACKUP_DIR):
-            if f.endswith(".db"):
+            if BACKUP_FILENAME_RE.fullmatch(f):
                 path = os.path.join(BACKUP_DIR, f)
                 stat = os.stat(path)
                 backups.append({
@@ -85,7 +95,7 @@ def restore_backup(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_superadmin)
 ):
-    backup_path = os.path.join(BACKUP_DIR, filename)
+    backup_path = get_safe_backup_path(filename)
     if not os.path.exists(backup_path):
         raise HTTPException(status_code=404, detail="Zaxira topilmadi")
         
@@ -103,7 +113,8 @@ def restore_backup(
         elif mode == "merge":
             # Merge: faqat yangi ma'lumotlarni qo'shish, mavjudlariga tegmaslik
             dest = sqlite3.connect(DB_PATH)
-            dest.execute(f"ATTACH DATABASE '{backup_path}' AS backup_db")
+            escaped_backup_path = backup_path.replace("'", "''")
+            dest.execute(f"ATTACH DATABASE '{escaped_backup_path}' AS backup_db")
             
             # Asosiy jadvallar
             tables = [
@@ -149,7 +160,7 @@ def delete_backup(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_superadmin)
 ):
-    backup_path = os.path.join(BACKUP_DIR, filename)
+    backup_path = get_safe_backup_path(filename)
     if not os.path.exists(backup_path):
         raise HTTPException(status_code=404, detail="Zaxira topilmadi")
         

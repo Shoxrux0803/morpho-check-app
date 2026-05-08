@@ -16,6 +16,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
+def _validate_active_user(user: User):
+    if getattr(user, "is_deleted", 0) == 1:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Foydalanuvchi bloklangan yoki o'chirilgan",
+        )
+    return user
+
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -33,6 +41,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
+    _validate_active_user(user)
     
     # Update activity
     from datetime import datetime
@@ -61,7 +70,8 @@ def get_optional_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/api/a
         email: str = payload.get("sub")
         if email:
             user = db.query(User).filter(User.email == email).first()
-            return user
+            if user and getattr(user, "is_deleted", 0) != 1:
+                return user
     except JWTError:
         pass
     return None
@@ -77,13 +87,14 @@ def get_current_superadmin(current_user: User = Depends(get_current_user)):
 @router.post("/register", response_model=UserOut)
 @limiter.limit("5/minute")
 def register(request: Request, user_in: UserRegister, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user_in.email).first()
+    email = user_in.email.strip().lower()
+    existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Ushbu email bilan ro'yxatdan o'tilgan.")
     
     new_user = User(
         name=user_in.name,
-        email=user_in.email,
+        email=email,
         hashed_password=get_password_hash(user_in.password),
         phone=user_in.phone,
         region=user_in.region,
@@ -100,10 +111,11 @@ from sqlalchemy import or_
 @limiter.limit("5/minute")
 def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
     # Login (email) yoki Ism (name) bo'yicha qidirish
+    login_value = user_in.email.strip().lower()
     user = db.query(User).filter(
         or_(
-            User.email == user_in.email,
-            User.name == user_in.email
+            User.email == login_value,
+            User.name == user_in.email.strip()
         )
     ).first()
 
@@ -112,6 +124,7 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
         
     if not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
+    _validate_active_user(user)
     
     access_token = create_access_token(
         data={"sub": user.email, "role": user.role}

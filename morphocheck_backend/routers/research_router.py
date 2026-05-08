@@ -64,6 +64,8 @@ def get_current_researcher_or_superadmin(
     user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    if getattr(user, "is_deleted", 0) == 1:
+        raise HTTPException(status_code=403, detail="Foydalanuvchi bloklangan yoki o'chirilgan")
 
     # 4. Roli bo'yicha tekshirish
     if user.role not in ["researcher", "superadmin"]:
