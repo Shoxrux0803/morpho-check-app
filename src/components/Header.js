@@ -87,8 +87,18 @@ export default function Header() {
 
   const currentLang = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
 
-  return (
-    <AppBar position="sticky" color="transparent" elevation={0}>
+  return [
+    <AppBar
+      key="header"
+      position="fixed"
+      color="transparent"
+      elevation={0}
+      sx={{
+        zIndex: (theme) => theme.zIndex.drawer + 20,
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+      }}
+    >
       <Toolbar sx={{ py: 1 }}>
         {/* Brand */}
         <Stack
@@ -699,6 +709,7 @@ export default function Header() {
           }}
         />
       </Toolbar>
-    </AppBar>
-  );
+    </AppBar>,
+    <Toolbar key="header-spacer" sx={{ py: 1 }} />,
+  ];
 }

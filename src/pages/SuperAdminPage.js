@@ -1497,8 +1497,16 @@ const SuperAdminPage = () => {
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
-      <Container maxWidth={false} sx={{ py: 4, px: { xs: 1.5, sm: 2, md: 4 }, maxWidth: "100%" }}>
-        <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="flex-start">
+      <Container
+        maxWidth={false}
+        sx={{
+          py: 4,
+          pr: { xs: 1.5, sm: 2, md: 4 },
+          pl: { xs: 1.5, sm: 2, md: "356px" },
+          maxWidth: "100%",
+        }}
+      >
+        <Stack direction="column" spacing={3} alignItems="stretch">
           {/* Sidebar Tabs */}
           <Box
             sx={{
@@ -1506,13 +1514,20 @@ const SuperAdminPage = () => {
               minWidth: { md: 300 },
               maxWidth: { md: 300 },
               flexShrink: 0,
-              position: { md: "sticky" },
-              top: 24,
+              position: { md: "fixed" },
+              top: { md: 96 },
+              left: { md: 32 },
+              zIndex: { md: 10 },
+              height: { md: "calc(100vh - 120px)" },
             }}
           >
             <GlassPaper
               sx={{
                 p: 2,
+                display: { md: "flex" },
+                flexDirection: { md: "column" },
+                height: { md: "100%" },
+                overflow: { md: "hidden" },
                 border: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(100,116,139,0.12)",
                 boxShadow: isDark
@@ -1547,6 +1562,14 @@ const SuperAdminPage = () => {
                 value={activeTab}
                 onChange={(e, v) => setActiveTab(v)}
                 sx={{
+                  flex: { md: "1 1 auto" },
+                  minHeight: { md: 0 },
+                  overflow: { md: "hidden" },
+                  "& .MuiTabs-scroller": {
+                    overflowY: { md: "auto !important" },
+                    overflowX: { xs: "auto", md: "hidden" },
+                    pr: { md: 0.5 },
+                  },
                   "& .MuiTabs-indicator": { display: "none" },
                   "& .MuiTab-root": {
                     borderRadius: 2,
@@ -1643,7 +1666,7 @@ const SuperAdminPage = () => {
           </Box>
 
           {/* Main Content Area */}
-          <Box sx={{ flexGrow: 1, ...scrollableContentSx }}>
+          <Box sx={{ ...scrollableContentSx, width: "100%" }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
