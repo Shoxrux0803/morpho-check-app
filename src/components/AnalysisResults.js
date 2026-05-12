@@ -74,6 +74,9 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   const showNum = (n, digits = 2) =>
     n == null || n === "" ? "—" : Number(Number(n).toFixed(digits));
 
+  const cleanAdviceText = (text) =>
+    typeof text === "string" ? text.replace(/^(?:рџ\S*\s*)+/, "").trim() : text;
+
   // BMI kategoriyasi
   let bmiCategory = null;
   let bmiChipColor = "default";
@@ -1439,7 +1442,7 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
                   {t("generalAdvice")}
                 </Typography>
                 <Typography variant="body1" sx={{ mt: 0.5 }}>
-                  {advices?.general ?? "—"}
+                  {cleanAdviceText(advices?.general) || "—"}
                 </Typography>
               </Box>
 
@@ -1455,7 +1458,9 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
                       <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
                         {title}
                       </Typography>
-                      <Typography variant="body2">{advices?.[key] ?? "—"}</Typography>
+                      <Typography variant="body2">
+                        {cleanAdviceText(advices?.[key]) || "—"}
+                      </Typography>
                     </Paper>
                   </Grid>
                 ))}
