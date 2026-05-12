@@ -7,9 +7,15 @@
 
 # testing
 /coverage
+.coverage
+.pytest_cache/
+htmlcov/
+test-results/
 
 # production
 /build
+/dist
+/out
 
 # misc
 .DS_Store
@@ -26,13 +32,22 @@ yarn-error.log*
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Database
 *.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
 !example.db
 
 # Environments
 .env
+.env.*
+!.env.example
+!*.env.example
 
 # Reports and temporary files
 test_output*.docx
@@ -43,6 +58,13 @@ test_report_with_watermark.pdf
 morphocheck_backend/test_output.docx
 morphocheck_backend/test_pdf.pdf
 morphocheck_backend/test_report*.docx
+morphocheck_backend/test_*.py
+morphocheck_backend/*_test.py
+morphocheck_backend/repro_*.py
+morphocheck_backend/v2_repro_debug.py
+morphocheck_backend/verify_*.py
+morphocheck_backend/insert_test_record.py
+morphocheck_backend/insert_comprehensive_test_record.py
 scratch/
 morphocheck_backend/scratch/
 morphocheck_backend/uploads/
