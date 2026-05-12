@@ -497,8 +497,10 @@ def calculate_detailed_indices(
             if val and isinstance(val, dict):
                 text = val.get(l, val.get("uz", key))
                 if kwargs:
-                    try: text = text.format(**kwargs)
-                    except: pass
+                    try:
+                        text = text.format(**kwargs)
+                    except (KeyError, IndexError, ValueError) as exc:
+                        text = f"{text} (format xatosi: {exc})"
                 return text
         
         # Fallback to hardcoded _T

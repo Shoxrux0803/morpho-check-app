@@ -6,42 +6,99 @@ import datetime
 import re
 
 class PatientData(BaseModel):
-    first_name: str
-    last_name: str
-    region: str
-    address: str
-    examination_date: str
-    birth_date: str
-    preschool_institution: str
-    id_code: Optional[str] = None
+    first_name: str = Field(..., alias="firstName", min_length=1, max_length=80)
+    last_name: str = Field(..., alias="lastName", min_length=1, max_length=80)
+    region: str = Field(..., min_length=1, max_length=120)
+    district: Optional[str] = Field(None, max_length=120)
+    address: str = Field(..., min_length=1, max_length=255)
 
-    shoulder_length: float
-    shoulder_breadth: float
-    shoulder_circumference: float
-    arm_elbow_length: float
-    hand_length: float
-    thigh_length: float
-    thigh_circumference: float
-    calf_length: float
-    calf_circumference: float
-    foot_length: float
-    body_length: Optional[float] = Field(None, alias="bodyLength")
-    age: int
-    age_months: Optional[int] = 0
-    age_days: Optional[int] = 0
+    examination_date: str = Field(..., alias="examinationDate")
+    birth_date: str = Field("Noma'lum", alias="birthDate")
+    preschool_institution: str = Field("Noma'lum", alias="preschoolInstitution", max_length=180)
 
-    sitting_height: Optional[float] = None
-    waist_circumference: Optional[float] = None
-    hip_circumference: Optional[float] = None
+    shoulder_length: float = Field(0.0, alias="shoulderLength", ge=0, le=80)
+    shoulder_breadth: float = Field(0.0, alias="shoulderBreadth", ge=0, le=80)
+    shoulder_circumference: float = Field(0.0, alias="shoulderCircumference", ge=0, le=120)
+    arm_elbow_length: float = Field(0.0, alias="armElbowLength", ge=0, le=80)
+    hand_length: float = Field(0.0, alias="handLength", ge=0, le=40)
+    thigh_length: float = Field(0.0, alias="thighLength", ge=0, le=100)
+    thigh_circumference: float = Field(0.0, alias="thighCircumference", ge=0, le=140)
+    calf_length: float = Field(0.0, alias="calfLength", ge=0, le=80)
+    calf_circumference: float = Field(0.0, alias="calfCircumference", ge=0, le=90)
+    foot_length: float = Field(0.0, alias="footLength", ge=0, le=40)
+    body_length: Optional[float] = Field(None, alias="bodyLength", ge=20, le=250)
+    id_code: Optional[str] = Field(None, alias="idCode", max_length=50)
 
-    # Bioimpedance
-    total_body_water: Optional[float] = None
-    fat_percent: Optional[float] = None
-    fat_mass: Optional[float] = None
-    muscle_mass: Optional[float] = None
-    bone_mass: Optional[float] = None
-    acm: Optional[float] = None
-    visceral_fat: Optional[float] = None
+    age: int = Field(..., ge=0, le=120)
+    age_months: Optional[int] = Field(0, alias="ageMonths", ge=0, le=11)
+    age_days: Optional[int] = Field(0, alias="ageDays", ge=0, le=31)
+    gender: str
+    height: float = Field(..., ge=45, le=250)
+    weight: float = Field(..., ge=2, le=300)
+    chest: float = Field(..., ge=25, le=200)
+    waist: float = Field(0.0, ge=0, le=200)
+    head: float = Field(..., ge=25, le=80)
+
+    father_height: Optional[float] = Field(None, alias="fatherHeight", ge=120, le=230)
+    mother_height: Optional[float] = Field(None, alias="motherHeight", ge=120, le=230)
+
+    total_body_water: Optional[float] = Field(None, alias="totalBodyWater", ge=0, le=100)
+    fat_percent: Optional[float] = Field(None, alias="fatPercent", ge=0, le=80)
+    fat_mass: Optional[float] = Field(None, alias="fatMass", ge=0, le=200)
+    muscle_mass: Optional[float] = Field(None, alias="muscleMass", ge=0, le=200)
+    bone_mass: Optional[float] = Field(None, alias="boneMass", ge=0, le=30)
+    acm: Optional[float] = Field(None, alias="acm", ge=0, le=100)
+    visceral_fat: Optional[float] = Field(None, alias="visceralFat", ge=0, le=60)
+    doctor_note: Optional[str] = Field(None, alias="doctorNote", max_length=2000)
+
+    class Config:
+        populate_by_name = True
+        extra = "forbid"
+
+    @field_validator("first_name", "last_name", "region", "district", "address", "preschool_institution", "doctor_note", mode="before")
+    @classmethod
+    def strip_text(cls, v):
+        if v is None:
+            return v
+        if not isinstance(v, str):
+            raise ValueError("Matn maydoni string bo'lishi kerak")
+        cleaned = v.strip()
+        return cleaned or None
+
+    @field_validator("gender")
+    @classmethod
+    def validate_gender(cls, v):
+        value = (v or "").strip().lower()
+        allowed = {"erkak", "ayol", "male", "female", "ogil", "o'g'il", "qiz"}
+        if value not in allowed:
+            raise ValueError("Jins erkak yoki ayol bo'lishi kerak")
+        return value
+
+    @field_validator("examination_date", "birth_date")
+    @classmethod
+    def validate_dates(cls, v, info):
+        value = (v or "").strip()
+        if info.field_name == "birth_date" and value in {"", "Noma'lum", "unknown", "Unknown"}:
+            return "Noma'lum"
+        try:
+            datetime.date.fromisoformat(value[:10])
+        except ValueError as exc:
+            raise ValueError("Sana YYYY-MM-DD formatida bo'lishi kerak") from exc
+        return value
+
+    @model_validator(mode="after")
+    def validate_anthropometry(self):
+        bmi = self.weight / ((self.height / 100) ** 2)
+        if not 8 <= bmi <= 80:
+            raise ValueError("BMI amaliy diapazondan tashqarida")
+        if self.chest < self.height * 0.25 or self.chest > self.height * 1.05:
+            raise ValueError("Ko'krak aylanasi bo'yga nisbatan mos emas")
+        if self.birth_date != "Noma'lum":
+            birth = datetime.date.fromisoformat(self.birth_date[:10])
+            exam = datetime.date.fromisoformat(self.examination_date[:10])
+            if birth > exam:
+                raise ValueError("Tug'ilgan sana ko'rik sanasidan keyin bo'lishi mumkin emas")
+        return self
 
 class AnalysisResult(BaseModel):
     z_score: float
@@ -62,6 +119,27 @@ class FullReportRequest(BaseModel):
     patient_data: PatientData
     analysis: AnalysisResult
     advices: Advices
+
+class RatingRequest(BaseModel):
+    score: int = Field(..., alias="rating", ge=1, le=5)
+    comment: Optional[str] = Field(None, max_length=1000)
+    user_id: Optional[int] = Field(None, ge=1)
+    name: Optional[str] = Field(None, max_length=100)
+    email: Optional[EmailStr] = None
+
+    class Config:
+        populate_by_name = True
+        extra = "forbid"
+
+    @field_validator("comment", "name", mode="before")
+    @classmethod
+    def clean_optional_text(cls, v):
+        if v is None:
+            return v
+        if not isinstance(v, str):
+            raise ValueError("Matn maydoni string bo'lishi kerak")
+        cleaned = v.strip()
+        return cleaned or None
 
 class UserDataCreate(BaseModel):
     full_name: str

@@ -647,7 +647,8 @@ def update_analysis(
             rec.z_score = float(analysis["z_score"])
             rec.somatotype = str(analysis["somatotype"])
             rec.recommendations = f"General: {advices.get('general', '')}; Nutrition: {advices.get('nutrition', '')}"
-        except: pass
+        except Exception as exc:
+            logger.warning("Updated analysis recalculation failed for id=%s: %s", rec.id, exc, exc_info=True)
 
         db.commit()
         db.refresh(rec)
@@ -963,7 +964,8 @@ def stats(
                     "height": round(float(np.percentile(heights, p)), 1),
                     "weight": round(float(np.percentile(weights, p)), 1)
                 })
-        except: pass
+        except Exception as exc:
+            logger.warning("Scientific percentile calculation failed: %s", exc, exc_info=True)
             
         # C. BMI Histogram (Traditional ranges)
         hist_ranges = [
