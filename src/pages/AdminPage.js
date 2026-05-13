@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { AdminApi } from "../services/AdminApi";
 import { generateDocx, generatePdf, generatePdfById, generateDocxById } from "../services/api";
-import { LANGUAGES } from "../contexts/LanguageContext";
+import { LANGUAGES, useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -184,6 +184,13 @@ const horizontalScrollSx = {
   },
 };
 
+const PAGE_LABELS = {
+  uz: { scientificAnalysis: "Ilmiy Tahlil" },
+  ru: { scientificAnalysis: "Научный анализ" },
+  en: { scientificAnalysis: "Scientific Analysis" },
+  kz: { scientificAnalysis: "Ғылыми талдау" },
+};
+
 function CustomModal({
   children,
   onClose,
@@ -268,6 +275,8 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, login: authLogin, loading: authLoading } = useAuth();
+  const { lang } = useLanguage();
+  const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
@@ -767,7 +776,7 @@ export default function AdminPage() {
 
       {
         id: 2,
-        label: "Ilmiy Tahlil",
+        label: pageLabels.scientificAnalysis,
         icon: <BiotechOutlined />,
         roles: ["admin", "superadmin"],
         content: (
@@ -804,6 +813,7 @@ export default function AdminPage() {
     onDeleteSelected,
     checked,
     dashFilters,
+    pageLabels,
     setDashFilters,
     toggleAll,
     toggleOne,

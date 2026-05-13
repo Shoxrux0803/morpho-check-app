@@ -40,6 +40,7 @@ import {
   Tooltip as ReTooltip,
   Legend,
 } from "recharts";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const COLORS = {
   primary: "#0f766e",
@@ -50,6 +51,217 @@ const COLORS = {
   info: "#3b82f6",
   teal: "#14b8a6",
 };
+
+const SCI_TEXT = {
+  uz: {
+    title: "Ilmiy Tahlil",
+    subtitle: "Populyatsion Z-score, persentil, korrelyatsiya va xavf guruhlari tahlili",
+    zDist: "Z-score bo'yicha taqsimot",
+    zDistSub: "BMI normaldan chetlanish analizi (standart og'ish bo'yicha guruhlar)",
+    patientCount: "Bemorlar soni",
+    patients: "Bemorlar",
+    patientsLower: "bemor",
+    normalNote:
+      "Normal distribusiya (Gauss egri chizig'i) bo'yicha: bemorlarning 68% +/-1σ ichida, 95% +/-2σ ichida bo'lishi kutiladi. Tizimingizda: Normal guruhi",
+    percentileTable: "Persentil jadvali",
+    percentileSub: "BMI, bo'y va vazn bo'yicha taqsimot chegaralari",
+    percentile: "Persentil",
+    heightCm: "Bo'y (sm)",
+    weightKg: "Vazn (kg)",
+    percentileNote: "* Ma'lumotlar o'rtacha BMI qiymatiga asoslanib hisoblanadi:",
+    correlationMatrix: "Korrelyatsiya matritsasi",
+    correlationSub: "Ko'rsatkichlar orasidagi bog'liqlik (Pearson r koeffitsienti)",
+    parameter: "Parametr",
+    age: "Yosh",
+    height: "Bo'y",
+    weight: "Vazn",
+    chest: "Ko'krak",
+    strongCorr: "Kuchli bog'liqlik (r > 0.7)",
+    mediumCorr: "O'rta bog'liqlik (0.4-0.7)",
+    weakCorr: "Zaif bog'liqlik (0.2-0.4)",
+    riskGroups: "Xavf guruhlari tahlili",
+    riskGroupsSub: "Sog'liq xavfi bo'yicha bemorlar guruhlari va ulushi",
+    healthy: "Sog'lom (Normal BMI)",
+    overweight: "Ortiqcha vazn",
+    obese: "Semizlik",
+    underweight: "Ozg'inlik",
+    lowRisk: "Past xavf",
+    mediumRisk: "O'rtacha xavf",
+    highRisk: "Yuqori xavf",
+    observeRisk: "Kuzatish kerak",
+    attention: "Diqqat",
+    highRiskNote: "Tizimda {pct}% bemorlar yuqori xavf guruhida. Klinik aralashuv tavsiya etiladi.",
+    trendTitle: "6 oylik trend tahlili",
+    trendSub: "Dinamika, o'sish sur'ati va BMI o'rtacha qiymati",
+    analysesCount: "Analizlar soni",
+    avgBmi: "O'rtacha BMI",
+    average: "O'rtacha",
+    footer: "MorphoCheck ilmiy-statistik tahlil moduli • Barcha ma'lumotlar real vaqt rejimida •",
+    zLess: "< -2σ (Ozg'in)",
+    zMinus2: "-2σ - -1σ",
+    zMinus1: "-1σ - 0 (Norm-)",
+    zZero: "0 - +1σ (Norm+)",
+    zPlus1: "+1σ - +2σ",
+    zGreater: "> +2σ (Semizlik)",
+  },
+  ru: {
+    title: "Научный анализ",
+    subtitle: "Популяционный Z-score, перцентили, корреляции и группы риска",
+    zDist: "Распределение по Z-score",
+    zDistSub: "Анализ отклонения BMI от нормы по группам стандартного отклонения",
+    patientCount: "Количество пациентов",
+    patients: "Пациенты",
+    patientsLower: "пациент",
+    normalNote:
+      "По нормальному распределению ожидается: 68% пациентов в пределах +/-1σ, 95% в пределах +/-2σ. В системе нормальная группа:",
+    percentileTable: "Таблица перцентилей",
+    percentileSub: "Границы распределения по BMI, росту и весу",
+    percentile: "Перцентиль",
+    heightCm: "Рост (см)",
+    weightKg: "Вес (кг)",
+    percentileNote: "* Данные рассчитаны на основе среднего BMI:",
+    correlationMatrix: "Матрица корреляции",
+    correlationSub: "Связь между показателями (коэффициент Pearson r)",
+    parameter: "Параметр",
+    age: "Возраст",
+    height: "Рост",
+    weight: "Вес",
+    chest: "Грудь",
+    strongCorr: "Сильная связь (r > 0.7)",
+    mediumCorr: "Средняя связь (0.4-0.7)",
+    weakCorr: "Слабая связь (0.2-0.4)",
+    riskGroups: "Анализ групп риска",
+    riskGroupsSub: "Группы пациентов и доля по риску для здоровья",
+    healthy: "Здоровые (нормальный BMI)",
+    overweight: "Избыточный вес",
+    obese: "Ожирение",
+    underweight: "Недостаток веса",
+    lowRisk: "Низкий риск",
+    mediumRisk: "Средний риск",
+    highRisk: "Высокий риск",
+    observeRisk: "Требуется наблюдение",
+    attention: "Внимание",
+    highRiskNote:
+      "В системе {pct}% пациентов находятся в группе высокого риска. Рекомендуется клиническое вмешательство.",
+    trendTitle: "Тренд за 6 месяцев",
+    trendSub: "Динамика, темп роста и среднее значение BMI",
+    analysesCount: "Количество анализов",
+    avgBmi: "Средний BMI",
+    average: "Среднее",
+    footer: "Научно-статистический модуль MorphoCheck • Все данные в реальном времени •",
+    zLess: "< -2σ (дефицит веса)",
+    zMinus2: "-2σ - -1σ",
+    zMinus1: "-1σ - 0 (норма-)",
+    zZero: "0 - +1σ (норма+)",
+    zPlus1: "+1σ - +2σ",
+    zGreater: "> +2σ (ожирение)",
+  },
+  en: {
+    title: "Scientific Analysis",
+    subtitle: "Population Z-score, percentile, correlation, and risk group analysis",
+    zDist: "Z-score distribution",
+    zDistSub: "BMI deviation analysis by standard deviation groups",
+    patientCount: "Patient count",
+    patients: "Patients",
+    patientsLower: "patients",
+    normalNote:
+      "Normal distribution expects 68% of patients within +/-1σ and 95% within +/-2σ. In your system, the normal group:",
+    percentileTable: "Percentile table",
+    percentileSub: "Distribution limits by BMI, height, and weight",
+    percentile: "Percentile",
+    heightCm: "Height (cm)",
+    weightKg: "Weight (kg)",
+    percentileNote: "* Data is calculated from the average BMI:",
+    correlationMatrix: "Correlation matrix",
+    correlationSub: "Relationship between indicators (Pearson r coefficient)",
+    parameter: "Parameter",
+    age: "Age",
+    height: "Height",
+    weight: "Weight",
+    chest: "Chest",
+    strongCorr: "Strong correlation (r > 0.7)",
+    mediumCorr: "Moderate correlation (0.4-0.7)",
+    weakCorr: "Weak correlation (0.2-0.4)",
+    riskGroups: "Risk group analysis",
+    riskGroupsSub: "Patient groups and share by health risk",
+    healthy: "Healthy (Normal BMI)",
+    overweight: "Overweight",
+    obese: "Obesity",
+    underweight: "Underweight",
+    lowRisk: "Low risk",
+    mediumRisk: "Medium risk",
+    highRisk: "High risk",
+    observeRisk: "Needs monitoring",
+    attention: "Attention",
+    highRiskNote:
+      "{pct}% of patients are in the high-risk group. Clinical intervention is recommended.",
+    trendTitle: "6-month trend analysis",
+    trendSub: "Dynamics, growth rate, and average BMI",
+    analysesCount: "Analysis count",
+    avgBmi: "Average BMI",
+    average: "Average",
+    footer: "MorphoCheck scientific-statistical analysis module • All data in real time •",
+    zLess: "< -2σ (Underweight)",
+    zMinus2: "-2σ - -1σ",
+    zMinus1: "-1σ - 0 (Norm-)",
+    zZero: "0 - +1σ (Norm+)",
+    zPlus1: "+1σ - +2σ",
+    zGreater: "> +2σ (Obesity)",
+  },
+  kz: {
+    title: "Ғылыми талдау",
+    subtitle: "Популяциялық Z-score, перцентиль, корреляция және қауіп топтарын талдау",
+    zDist: "Z-score бойынша таралу",
+    zDistSub: "BMI нормадан ауытқуын стандартты ауытқу топтары бойынша талдау",
+    patientCount: "Пациенттер саны",
+    patients: "Пациенттер",
+    patientsLower: "пациент",
+    normalNote:
+      "Қалыпты таралу бойынша пациенттердің 68% +/-1σ, 95% +/-2σ ішінде болады деп күтіледі. Жүйедегі қалыпты топ:",
+    percentileTable: "Перцентиль кестесі",
+    percentileSub: "BMI, бой және салмақ бойынша таралу шектері",
+    percentile: "Перцентиль",
+    heightCm: "Бой (см)",
+    weightKg: "Салмақ (кг)",
+    percentileNote: "* Деректер орташа BMI негізінде есептеледі:",
+    correlationMatrix: "Корреляция матрицасы",
+    correlationSub: "Көрсеткіштер арасындағы байланыс (Pearson r коэффициенті)",
+    parameter: "Параметр",
+    age: "Жас",
+    height: "Бой",
+    weight: "Салмақ",
+    chest: "Кеуде",
+    strongCorr: "Күшті байланыс (r > 0.7)",
+    mediumCorr: "Орташа байланыс (0.4-0.7)",
+    weakCorr: "Әлсіз байланыс (0.2-0.4)",
+    riskGroups: "Қауіп топтарын талдау",
+    riskGroupsSub: "Денсаулық қаупі бойынша пациент топтары және үлесі",
+    healthy: "Сау (қалыпты BMI)",
+    overweight: "Артық салмақ",
+    obese: "Семіздік",
+    underweight: "Салмақ тапшылығы",
+    lowRisk: "Төмен қауіп",
+    mediumRisk: "Орташа қауіп",
+    highRisk: "Жоғары қауіп",
+    observeRisk: "Бақылау қажет",
+    attention: "Назар аударыңыз",
+    highRiskNote: "Жүйеде пациенттердің {pct}% жоғары қауіп тобында. Клиникалық араласу ұсынылады.",
+    trendTitle: "6 айлық тренд талдауы",
+    trendSub: "Динамика, өсу қарқыны және орташа BMI мәні",
+    analysesCount: "Талдаулар саны",
+    avgBmi: "Орташа BMI",
+    average: "Орташа",
+    footer: "MorphoCheck ғылыми-статистикалық талдау модулі • Барлық деректер нақты уақытта •",
+    zLess: "< -2σ (салмақ тапшылығы)",
+    zMinus2: "-2σ - -1σ",
+    zMinus1: "-1σ - 0 (норма-)",
+    zZero: "0 - +1σ (норма+)",
+    zPlus1: "+1σ - +2σ",
+    zGreater: "> +2σ (семіздік)",
+  },
+};
+
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();
@@ -166,6 +378,8 @@ const getCorrColor = (val) => {
 
 export default function ScientificAnalysis({ stats, loading }) {
   const theme = useTheme();
+  const { lang } = useLanguage();
+  const s = SCI_TEXT[lang] || SCI_TEXT.uz;
   const isDark = theme.palette.mode === "dark";
   const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
@@ -196,43 +410,43 @@ export default function ScientificAnalysis({ stats, loading }) {
       (bd.normal || 0) + (bd.underweight || 0) + (bd.overweight || 0) + (bd.obese || 0) || 1;
     return [
       {
-        category: "< -2σ (Ozg'in)",
+        category: s.zLess,
         count: bd.underweight || 0,
         pct: (((bd.underweight || 0) / total) * 100).toFixed(1),
         zscore: -2.5,
       },
       {
-        category: "-2σ — -1σ",
+        category: s.zMinus2,
         count: Math.round((bd.normal || 0) * 0.2) || 0,
         pct: "8.0",
         zscore: -1.5,
       },
       {
-        category: "-1σ — 0 (Norm-)",
+        category: s.zMinus1,
         count: Math.round((bd.normal || 0) * 0.35) || 0,
         pct: "21.0",
         zscore: -0.5,
       },
       {
-        category: "0 — +1σ (Norm+)",
+        category: s.zZero,
         count: Math.round((bd.normal || 0) * 0.35) || 0,
         pct: "21.0",
         zscore: 0.5,
       },
       {
-        category: "+1σ — +2σ",
+        category: s.zPlus1,
         count: bd.overweight || 0,
         pct: (((bd.overweight || 0) / total) * 100).toFixed(1),
         zscore: 1.5,
       },
       {
-        category: "> +2σ (Semizlik)",
+        category: s.zGreater,
         count: bd.obese || 0,
         pct: (((bd.obese || 0) / total) * 100).toFixed(1),
         zscore: 2.5,
       },
     ];
-  }, [stats]);
+  }, [stats, s]);
 
   // Korrelyatsiya matritsasi
   const corrMatrix = useMemo(() => {
@@ -241,12 +455,12 @@ export default function ScientificAnalysis({ stats, loading }) {
     }
     return [
       { param: "BMI", bmi: 1.0, yosh: 0.31, boy: -0.18, vazn: 0.78, ko_krak: 0.42 },
-      { param: "Yosh", bmi: 0.31, yosh: 1.0, boy: -0.12, vazn: 0.29, ko_krak: 0.15 },
-      { param: "Bo'y", bmi: -0.18, yosh: -0.12, boy: 1.0, vazn: 0.55, ko_krak: 0.33 },
-      { param: "Vazn", bmi: 0.78, yosh: 0.29, boy: 0.55, vazn: 1.0, ko_krak: 0.61 },
-      { param: "Ko'krak", bmi: 0.42, yosh: 0.15, boy: 0.33, vazn: 0.61, ko_krak: 1.0 },
+      { param: s.age, bmi: 0.31, yosh: 1.0, boy: -0.12, vazn: 0.29, ko_krak: 0.15 },
+      { param: s.height, bmi: -0.18, yosh: -0.12, boy: 1.0, vazn: 0.55, ko_krak: 0.33 },
+      { param: s.weight, bmi: 0.78, yosh: 0.29, boy: 0.55, vazn: 1.0, ko_krak: 0.61 },
+      { param: s.chest, bmi: 0.42, yosh: 0.15, boy: 0.33, vazn: 0.61, ko_krak: 1.0 },
     ];
-  }, [stats]);
+  }, [stats, s]);
 
   // Risk groups
   const riskGroups = useMemo(() => {
@@ -255,35 +469,35 @@ export default function ScientificAnalysis({ stats, loading }) {
       (bd.normal || 0) + (bd.underweight || 0) + (bd.overweight || 0) + (bd.obese || 0) || 1;
     return [
       {
-        name: "Sog'lom (Normal BMI)",
+        name: s.healthy,
         count: bd.normal || 0,
         pct: Math.round(((bd.normal || 0) / total) * 100),
         color: COLORS.success,
-        risk: "Past xavf",
+        risk: s.lowRisk,
       },
       {
-        name: "Ortiqcha vazn",
+        name: s.overweight,
         count: bd.overweight || 0,
         pct: Math.round(((bd.overweight || 0) / total) * 100),
         color: COLORS.warning,
-        risk: "O'rtacha xavf",
+        risk: s.mediumRisk,
       },
       {
-        name: "Semizlik",
+        name: s.obese,
         count: bd.obese || 0,
         pct: Math.round(((bd.obese || 0) / total) * 100),
         color: COLORS.error,
-        risk: "Yuqori xavf",
+        risk: s.highRisk,
       },
       {
-        name: "Ozg'inlik",
+        name: s.underweight,
         count: bd.underweight || 0,
         pct: Math.round(((bd.underweight || 0) / total) * 100),
         color: COLORS.info,
-        risk: "Kuzatish kerak",
+        risk: s.observeRisk,
       },
     ];
-  }, [stats]);
+  }, [stats, s]);
 
   // Trend analysis: 6 oy dinamikasi
   const trendData = useMemo(
@@ -327,10 +541,10 @@ export default function ScientificAnalysis({ stats, loading }) {
           <BiotechOutlined sx={{ fontSize: 32, color: COLORS.primary }} />
           <Box flex={1}>
             <Typography variant="h4" fontWeight={900} sx={{ color: "text.primary" }}>
-              Ilmiy Tahlil
+              {s.title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Populyatsion Z-score, persentil, korrelyatsiya va xavf guruhlari tahlili
+              {s.subtitle}
             </Typography>
           </Box>
           <Chip
@@ -347,8 +561,8 @@ export default function ScientificAnalysis({ stats, loading }) {
           <GlassCard>
             <SectionTitle
               icon={<EqualizerOutlined sx={{ color: COLORS.primary }} />}
-              title="Z-score bo'yicha taqsimot"
-              subtitle="BMI normaldan chetlanish analizi (standart og'ish bo'yicha guruhlar)"
+              title={s.zDist}
+              subtitle={s.zDistSub}
               badge={`n = ${stats?.total_analyses?.toLocaleString() || "0"}`}
             />
             <Box sx={{ height: 280, minWidth: { xs: 280, sm: 400, md: 600 } }}>
@@ -371,10 +585,10 @@ export default function ScientificAnalysis({ stats, loading }) {
                     tick={{ fontSize: 11, fill: "#94a3b8" }}
                   />
                   <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" />
-                  <ReTooltip {...customTooltip} formatter={(val, name) => [val, "Bemorlar soni"]} />
+                  <ReTooltip {...customTooltip} formatter={(val) => [val, s.patientCount]} />
                   <Bar
                     dataKey="count"
-                    name="Bemorlar"
+                    name={s.patients}
                     radius={[6, 6, 0, 0]}
                     shape={<ZScoreBar />}
                   />
@@ -383,9 +597,8 @@ export default function ScientificAnalysis({ stats, loading }) {
             </Box>
             <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
               <Typography variant="caption">
-                Normal distribusiya (Gauss egri chizig'i) bo'yicha: bemorlarning 68% ±1σ ichida, 95%
-                ±2σ ichida bo'lishi kutiladi. Tizimingizda: Normal guruhi{" "}
-                <strong>{stats?.bmi_distribution?.normal || 0}</strong> ta bemor
+                {s.normalNote} <strong>{stats?.bmi_distribution?.normal || 0}</strong>{" "}
+                {s.patientsLower}
               </Typography>
             </Alert>
           </GlassCard>
@@ -394,24 +607,24 @@ export default function ScientificAnalysis({ stats, loading }) {
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.secondary }} />}
-              title="Persentil jadvali"
-              subtitle="BMI, bo'y va vazn bo'yicha taqsimot chegaralari"
+              title={s.percentileTable}
+              subtitle={s.percentileSub}
             />
             <TableContainer component={Paper} elevation={0} sx={{ bgcolor: "transparent" }}>
               <Table size="small" sx={{ minWidth: { xs: 280, sm: 350, md: 400 } }}>
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 800, color: COLORS.primary, fontSize: "0.75rem" }}>
-                      Persentil
+                      {s.percentile}
                     </TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem" }}>
                       BMI
                     </TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem" }}>
-                      Bo'y (sm)
+                      {s.heightCm}
                     </TableCell>
                     <TableCell align="center" sx={{ fontWeight: 700, fontSize: "0.75rem" }}>
-                      Vazn (kg)
+                      {s.weightKg}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -441,8 +654,7 @@ export default function ScientificAnalysis({ stats, loading }) {
               </Table>
             </TableContainer>
             <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 1 }}>
-              * Ma'lumotlar o'rtacha BMI {parseFloat(stats?.avg_bmi || 22).toFixed(1)} ga asoslanib
-              hisoblanadi
+              {s.percentileNote} {parseFloat(stats?.avg_bmi || 22).toFixed(1)}
             </Typography>
           </GlassCard>
         </Grid>
@@ -454,15 +666,17 @@ export default function ScientificAnalysis({ stats, loading }) {
           <GlassCard>
             <SectionTitle
               icon={<AutoGraphOutlined sx={{ color: COLORS.teal }} />}
-              title="Korrelyatsiya matritsasi"
-              subtitle="Ko'rsatkichlar orasidagi bog'liqlik (Pearson r koeffitsienti)"
+              title={s.correlationMatrix}
+              subtitle={s.correlationSub}
             />
             <TableContainer component={Paper} elevation={0} sx={{ bgcolor: "transparent" }}>
               <Table size="small" sx={{ minWidth: { xs: 280, sm: 350, md: 500 } }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 800, fontSize: "0.7rem" }}>Parametr</TableCell>
-                    {["BMI", "Yosh", "Bo'y", "Vazn", "Ko'krak"].map((h) => (
+                    <TableCell sx={{ fontWeight: 800, fontSize: "0.7rem" }}>
+                      {s.parameter}
+                    </TableCell>
+                    {["BMI", s.age, s.height, s.weight, s.chest].map((h) => (
                       <TableCell
                         key={h}
                         align="center"
@@ -502,13 +716,13 @@ export default function ScientificAnalysis({ stats, loading }) {
                 variant="caption"
                 sx={{ bgcolor: `${COLORS.primary}22`, px: 1, borderRadius: 1 }}
               >
-                Kuchli bog'liqlik (r &gt; 0.7)
+                {s.strongCorr}
               </Typography>
               <Typography variant="caption" sx={{ bgcolor: "#10b98122", px: 1, borderRadius: 1 }}>
-                O'rta bog'liqlik (0.4-0.7)
+                {s.mediumCorr}
               </Typography>
               <Typography variant="caption" sx={{ bgcolor: "#f59e0b22", px: 1, borderRadius: 1 }}>
-                Zaif bog'liqlik (0.2-0.4)
+                {s.weakCorr}
               </Typography>
             </Box>
           </GlassCard>
@@ -519,8 +733,8 @@ export default function ScientificAnalysis({ stats, loading }) {
           <GlassCard>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.error }} />}
-              title="Xavf guruhlari tahlili"
-              subtitle="Sog'liq xavfi bo'yicha bemorlar guruhlari va ulushi"
+              title={s.riskGroups}
+              subtitle={s.riskGroupsSub}
             />
             <Stack spacing={2.5} mt={1}>
               {riskGroups.map((group) => (
@@ -555,7 +769,7 @@ export default function ScientificAnalysis({ stats, loading }) {
                     }}
                   />
                   <Typography variant="caption" color="text.secondary" mt={0.3} display="block">
-                    {group.count.toLocaleString()} bemor
+                    {group.count.toLocaleString()} {s.patientsLower}
                   </Typography>
                 </Box>
               ))}
@@ -563,9 +777,11 @@ export default function ScientificAnalysis({ stats, loading }) {
             <Divider sx={{ my: 2 }} />
             <Alert severity="warning" sx={{ borderRadius: 2 }}>
               <Typography variant="caption">
-                <strong>Diqqat:</strong> Tizimda{" "}
-                {riskGroups.find((g) => g.name.includes("Semizlik"))?.pct || 0}% bemorlar yuqori
-                xavf guruhida. Klinik aralashuv tavsiya etiladi.
+                <strong>{s.attention}:</strong>{" "}
+                {s.highRiskNote.replace(
+                  "{pct}",
+                  riskGroups.find((g) => g.name === s.obese)?.pct || 0,
+                )}
               </Typography>
             </Alert>
           </GlassCard>
@@ -579,8 +795,8 @@ export default function ScientificAnalysis({ stats, loading }) {
             <GlassCard>
               <SectionTitle
                 icon={<AutoGraphOutlined sx={{ color: COLORS.warning }} />}
-                title="6 oylik trend tahlili"
-                subtitle="Dinamika, o'sish sur'ati va BMI o'rtacha qiymate"
+                title={s.trendTitle}
+                subtitle={s.trendSub}
                 badge="TREND"
               />
               <Box sx={{ height: 280, minWidth: { xs: 280, sm: 400, md: 700 } }}>
@@ -616,7 +832,7 @@ export default function ScientificAnalysis({ stats, loading }) {
                       yAxisId="left"
                       type="monotone"
                       dataKey="count"
-                      name="Analizlar soni"
+                      name={s.analysesCount}
                       fill={`${COLORS.primary}33`}
                       stroke={COLORS.primary}
                       strokeWidth={2}
@@ -626,7 +842,7 @@ export default function ScientificAnalysis({ stats, loading }) {
                         yAxisId="right"
                         type="monotone"
                         dataKey="avg_bmi"
-                        name="O'rtacha BMI"
+                        name={s.avgBmi}
                         stroke={COLORS.warning}
                         strokeWidth={2.5}
                         dot={{ r: 4, fill: COLORS.warning }}
@@ -638,7 +854,7 @@ export default function ScientificAnalysis({ stats, loading }) {
                       y={stats?.monthly_avg}
                       stroke={COLORS.success}
                       strokeDasharray="4 4"
-                      label={{ value: "O'rtacha", fill: COLORS.success, fontSize: 11 }}
+                      label={{ value: s.average, fill: COLORS.success, fontSize: 11 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -651,8 +867,7 @@ export default function ScientificAnalysis({ stats, loading }) {
       {/* Footer */}
       <Box py={2} textAlign="center" mt={2}>
         <Typography variant="caption" color="text.secondary">
-          MorphoCheck ilmiy-statistik tahlil moduli • Barcha ma'lumotlar real vaqt rejimida •{" "}
-          {new Date().toLocaleDateString("uz-UZ")}
+          {s.footer} {new Date().toLocaleDateString(localeByLang[lang] || "uz-UZ")}
         </Typography>
       </Box>
     </Box>

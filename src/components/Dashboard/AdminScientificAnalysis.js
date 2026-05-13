@@ -37,6 +37,7 @@ import {
   Cell,
   ReferenceLine,
 } from "recharts";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const COLORS = {
   primary: "#0f766e",
@@ -47,6 +48,175 @@ const COLORS = {
   info: "#3b82f6",
   teal: "#14b8a6",
 };
+
+const ADMIN_SCI_TEXT = {
+  uz: {
+    emptyTitle: "Ilmiy tahlil uchun ma'lumot yo'q",
+    emptySub: "Bemorlarni ro'yxatdan o'tkazing",
+    title: "Ilmiy-Antropometrik Tahlil",
+    subtitle: "Murakkab statistik modellar va korrelyatsion tahlil natijalari",
+    filtered: "Filtrlangan",
+    bmiHistogram: "BMI Gistogrammasi",
+    bmiHistogramSub: "Bemorlarning BMI qiymatlari bo'yicha statistik taqsimoti",
+    patients: "Bemorlar",
+    patientCount: "Bemorlar soni",
+    zScoreAnalysis: "Z-score (SD) Analizi",
+    zScoreAnalysisSub: "Populyatsiya normalidan chetlanish ko'rsatkichi",
+    percentiles: "Statistik Persentillar",
+    percentilesSub: "Guruh ichidagi o'lchovlar kvantillari",
+    percentile: "Persentil",
+    height: "Bo'y",
+    weight: "Vazn",
+    chest: "Ko'krak",
+    age: "Yosh",
+    cm: " sm",
+    kg: " kg",
+    yearUnit: " yil",
+    p50Note: "* P50 ko'rsatkichi guruh uchun mediana hisoblanadi.",
+    riskGroups: "Sog'liq Xavfi Guruhlari",
+    riskGroupsSub: "BMI asosida klinik xavf darajasini baholash",
+    normal: "Normal",
+    overweight: "Ortiqcha vazn",
+    obese: "Semizlik",
+    underweight: "Ozg'inlik",
+    lowRisk: "Past xavf",
+    mediumRisk: "O'rta xavf",
+    highRisk: "Yuqori xavf",
+    observe: "Kuzatuv",
+    patientsLower: "ta bemor",
+    ageBmiTitle: "Yosh — BMI Korrelyatsiyasi",
+    ageBmiSub: "Yosh o'tishi bilan tana vazni indeksi o'zgarishi",
+    heightChestTitle: "Bo'y — Ko'krak qafasi",
+    heightChestSub: "Antropometrik o'lchovlar o'rtasidagi bog'liqlik",
+    measurements: "O'lchovlar",
+    footerSuffix: "ta ma'lumot tahlili",
+  },
+  ru: {
+    emptyTitle: "Нет данных для научного анализа",
+    emptySub: "Зарегистрируйте пациентов",
+    title: "Научно-антропометрический анализ",
+    subtitle: "Результаты сложных статистических моделей и корреляционного анализа",
+    filtered: "Отфильтровано",
+    bmiHistogram: "Гистограмма BMI",
+    bmiHistogramSub: "Статистическое распределение BMI пациентов",
+    patients: "Пациенты",
+    patientCount: "Количество пациентов",
+    zScoreAnalysis: "Z-score (SD) анализ",
+    zScoreAnalysisSub: "Показатель отклонения от нормы популяции",
+    percentiles: "Статистические перцентили",
+    percentilesSub: "Квантили измерений внутри группы",
+    percentile: "Перцентиль",
+    height: "Рост",
+    weight: "Вес",
+    chest: "Грудь",
+    age: "Возраст",
+    cm: " см",
+    kg: " кг",
+    yearUnit: " лет",
+    p50Note: "* P50 является медианой для группы.",
+    riskGroups: "Группы риска для здоровья",
+    riskGroupsSub: "Оценка клинического риска на основе BMI",
+    normal: "Норма",
+    overweight: "Избыточный вес",
+    obese: "Ожирение",
+    underweight: "Недостаток веса",
+    lowRisk: "Низкий риск",
+    mediumRisk: "Средний риск",
+    highRisk: "Высокий риск",
+    observe: "Наблюдение",
+    patientsLower: "пациентов",
+    ageBmiTitle: "Корреляция возраст — BMI",
+    ageBmiSub: "Изменение индекса массы тела с возрастом",
+    heightChestTitle: "Рост — грудная клетка",
+    heightChestSub: "Связь между антропометрическими измерениями",
+    measurements: "Измерения",
+    footerSuffix: "записей проанализировано",
+  },
+  en: {
+    emptyTitle: "No data for scientific analysis",
+    emptySub: "Register patients first",
+    title: "Scientific Anthropometric Analysis",
+    subtitle: "Results of advanced statistical models and correlation analysis",
+    filtered: "Filtered",
+    bmiHistogram: "BMI Histogram",
+    bmiHistogramSub: "Statistical distribution of patient BMI values",
+    patients: "Patients",
+    patientCount: "Patient count",
+    zScoreAnalysis: "Z-score (SD) Analysis",
+    zScoreAnalysisSub: "Deviation from the population norm",
+    percentiles: "Statistical Percentiles",
+    percentilesSub: "Measurement quantiles within the group",
+    percentile: "Percentile",
+    height: "Height",
+    weight: "Weight",
+    chest: "Chest",
+    age: "Age",
+    cm: " cm",
+    kg: " kg",
+    yearUnit: " years",
+    p50Note: "* P50 is the median for the group.",
+    riskGroups: "Health Risk Groups",
+    riskGroupsSub: "Clinical risk assessment based on BMI",
+    normal: "Normal",
+    overweight: "Overweight",
+    obese: "Obesity",
+    underweight: "Underweight",
+    lowRisk: "Low risk",
+    mediumRisk: "Medium risk",
+    highRisk: "High risk",
+    observe: "Monitoring",
+    patientsLower: "patients",
+    ageBmiTitle: "Age — BMI Correlation",
+    ageBmiSub: "Changes in body mass index with age",
+    heightChestTitle: "Height — Chest",
+    heightChestSub: "Relationship between anthropometric measurements",
+    measurements: "Measurements",
+    footerSuffix: "records analyzed",
+  },
+  kz: {
+    emptyTitle: "Ғылыми талдау үшін дерек жоқ",
+    emptySub: "Пациенттерді тіркеңіз",
+    title: "Ғылыми-антропометриялық талдау",
+    subtitle: "Күрделі статистикалық модельдер және корреляциялық талдау нәтижелері",
+    filtered: "Сүзілген",
+    bmiHistogram: "BMI гистограммасы",
+    bmiHistogramSub: "Пациенттердің BMI мәндері бойынша статистикалық таралу",
+    patients: "Пациенттер",
+    patientCount: "Пациенттер саны",
+    zScoreAnalysis: "Z-score (SD) талдауы",
+    zScoreAnalysisSub: "Популяция нормасынан ауытқу көрсеткіші",
+    percentiles: "Статистикалық перцентильдер",
+    percentilesSub: "Топ ішіндегі өлшемдер квантильдері",
+    percentile: "Перцентиль",
+    height: "Бой",
+    weight: "Салмақ",
+    chest: "Кеуде",
+    age: "Жас",
+    cm: " см",
+    kg: " кг",
+    yearUnit: " жас",
+    p50Note: "* P50 көрсеткіші топ үшін медиана болып саналады.",
+    riskGroups: "Денсаулық қаупі топтары",
+    riskGroupsSub: "BMI негізінде клиникалық қауіп деңгейін бағалау",
+    normal: "Қалыпты",
+    overweight: "Артық салмақ",
+    obese: "Семіздік",
+    underweight: "Салмақ тапшылығы",
+    lowRisk: "Төмен қауіп",
+    mediumRisk: "Орташа қауіп",
+    highRisk: "Жоғары қауіп",
+    observe: "Бақылау",
+    patientsLower: "пациент",
+    ageBmiTitle: "Жас — BMI корреляциясы",
+    ageBmiSub: "Жас ұлғайған сайын дене салмағы индексінің өзгеруі",
+    heightChestTitle: "Бой — кеуде қуысы",
+    heightChestSub: "Антропометриялық өлшемдер арасындағы байланыс",
+    measurements: "Өлшемдер",
+    footerSuffix: "дерек талданды",
+  },
+};
+
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();
@@ -133,6 +303,8 @@ const getTooltipStyle = (isDark) => ({
 
 export default function AdminScientificAnalysis({ data = [], loading, totalCount = 0, filters }) {
   const theme = useTheme();
+  const { lang } = useLanguage();
+  const s = ADMIN_SCI_TEXT[lang] || ADMIN_SCI_TEXT.uz;
   const isDark = theme.palette.mode === "dark";
   const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
@@ -176,35 +348,35 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
     const underweight = bmiVals.filter((v) => v < 18.5).length;
     return [
       {
-        name: "Normal",
+        name: s.normal,
         count: normal,
         pct: Math.round((normal / n) * 100),
         color: COLORS.success,
-        desc: "Past xavf",
+        desc: s.lowRisk,
       },
       {
-        name: "Ortiqcha vazn",
+        name: s.overweight,
         count: overweight,
         pct: Math.round((overweight / n) * 100),
         color: COLORS.warning,
-        desc: "O'rta xavf",
+        desc: s.mediumRisk,
       },
       {
-        name: "Semizlik",
+        name: s.obese,
         count: obese,
         pct: Math.round((obese / n) * 100),
         color: COLORS.error,
-        desc: "Yuqori xavf",
+        desc: s.highRisk,
       },
       {
-        name: "Ozg'inlik",
+        name: s.underweight,
         count: underweight,
         pct: Math.round((underweight / n) * 100),
         color: COLORS.info,
-        desc: "Kuzatuv",
+        desc: s.observe,
       },
     ];
-  }, [data]);
+  }, [data, s]);
 
   // ---- Persentil table ----
   const percentileTable = useMemo(() => {
@@ -293,10 +465,10 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
       <Box p={4} textAlign="center">
         <BiotechOutlined sx={{ fontSize: 64, color: "text.secondary", mb: 2 }} />
         <Typography variant="h6" color="text.secondary">
-          Ilmiy tahlil uchun ma'lumot yo'q
+          {s.emptyTitle}
         </Typography>
         <Typography variant="body2" color="text.secondary" mt={1}>
-          Bemorlarni ro'yxatdan o'tkazing
+          {s.emptySub}
         </Typography>
       </Box>
     );
@@ -324,17 +496,17 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
               fontWeight={900}
               sx={{ color: "text.primary", lineHeight: 1.2 }}
             >
-              Ilmiy-Antropometrik Tahlil
+              {s.title}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Murakkab statistik modellar va korrelyatsion tahlil natijalari
+              {s.subtitle}
             </Typography>
           </Box>
           <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
             {filters &&
               Object.values(filters).some(
                 (v) => v !== "" && v !== 0 && v !== 100 && v !== 10 && v !== 50,
-              ) && <Chip label="Filtrlangan" color="info" size="small" sx={{ fontWeight: 800 }} />}
+              ) && <Chip label={s.filtered} color="info" size="small" sx={{ fontWeight: 800 }} />}
             <Chip
               label="PRO ANALYTICS"
               size="small"
@@ -350,8 +522,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard>
             <SectionTitle
               icon={<EqualizerOutlined sx={{ color: COLORS.primary }} />}
-              title="BMI Gistogrammasi"
-              subtitle="Bemorlarning BMI qiymatlari bo'yicha statistik taqsimoti"
+              title={s.bmiHistogram}
+              subtitle={s.bmiHistogramSub}
               badge={`n=${data.length}`}
             />
             <Box sx={{ height: 270 }}>
@@ -376,7 +548,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   />
                   <ReferenceLine x="18.5-22" stroke={COLORS.success} strokeDasharray="4 4" />
                   <ReTooltip {...customTooltip} />
-                  <Bar dataKey="count" name="Bemorlar" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="count" name={s.patients} radius={[6, 6, 0, 0]}>
                     {bmiHistogram.map((entry, i) => {
                       const isNormal = entry.range === "18.5-22" || entry.range === "22-25";
                       const isRisk = entry.range === ">35" || entry.range === "<16";
@@ -398,8 +570,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.secondary }} />}
-              title="Z-score (SD) Analizi"
-              subtitle="Populyatsiya normalidan chetlanish ko'rsatkichi"
+              title={s.zScoreAnalysis}
+              subtitle={s.zScoreAnalysisSub}
             />
             <Box sx={{ height: 270 }}>
               <ResponsiveContainer width="100%" height="100%">
@@ -422,7 +594,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                     allowDecimals={false}
                   />
                   <ReTooltip {...customTooltip} />
-                  <Bar dataKey="count" name="Bemorlar soni" radius={[6, 6, 0, 0]}>
+                  <Bar dataKey="count" name={s.patientCount} radius={[6, 6, 0, 0]}>
                     {zScoreData.map((entry, i) => (
                       <Cell key={i} fill={entry.fill} />
                     ))}
@@ -440,14 +612,14 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle
               icon={<AutoGraphOutlined sx={{ color: COLORS.teal }} />}
-              title="Statistik Persentillar"
-              subtitle="Guruh ichidagi o'lchovlar kvantillari"
+              title={s.percentiles}
+              subtitle={s.percentilesSub}
             />
             <TableContainer>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    {["Persentil", "BMI", "Bo'y", "Vazn"].map((h) => (
+                    {[s.percentile, "BMI", s.height, s.weight].map((h) => (
                       <TableCell
                         key={h}
                         sx={{
@@ -481,8 +653,14 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                       <TableCell sx={{ fontWeight: 700, color: "text.primary" }}>
                         {row.bmi}
                       </TableCell>
-                      <TableCell sx={{ color: "text.secondary" }}>{row.height} sm</TableCell>
-                      <TableCell sx={{ color: "text.secondary" }}>{row.weight} kg</TableCell>
+                      <TableCell sx={{ color: "text.secondary" }}>
+                        {row.height}
+                        {s.cm}
+                      </TableCell>
+                      <TableCell sx={{ color: "text.secondary" }}>
+                        {row.weight}
+                        {s.kg}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -499,7 +677,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
               }}
             >
               <Typography variant="caption" color="text.secondary" sx={{ fontStyle: "italic" }}>
-                * P50 ko'rsatkichi guruh uchun mediana hisoblanadi.
+                {s.p50Note}
               </Typography>
             </Box>
           </GlassCard>
@@ -509,8 +687,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard sx={{ height: "100%" }}>
             <SectionTitle
               icon={<ScienceOutlined sx={{ color: COLORS.error }} />}
-              title="Sog'liq Xavfi Guruhlari"
-              subtitle="BMI asosida klinik xavf darajasini baholash"
+              title={s.riskGroups}
+              subtitle={s.riskGroupsSub}
             />
             <Stack spacing={3} mt={1}>
               {riskGroups.map((g) => (
@@ -521,7 +699,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                         {g.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {g.count} ta bemor
+                        {g.count} {s.patientsLower}
                       </Typography>
                     </Box>
                     <Box textAlign="right">
@@ -568,8 +746,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard>
             <SectionTitle
               icon={<AutoGraphOutlined sx={{ color: COLORS.warning }} />}
-              title="Yosh — BMI Korrelyatsiyasi"
-              subtitle="Yosh o'tishi bilan tana vazni indeksi o'zgarishi"
+              title={s.ageBmiTitle}
+              subtitle={s.ageBmiSub}
               badge="CORRELATION"
             />
             <Box sx={{ height: 300 }}>
@@ -579,8 +757,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   <XAxis
                     type="number"
                     dataKey="age"
-                    name="Yosh"
-                    unit=" yil"
+                    name={s.age}
+                    unit={s.yearUnit}
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 11, fill: "#94a3b8" }}
@@ -598,7 +776,12 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   <ReferenceLine y={18.5} stroke={COLORS.success} strokeDasharray="4 4" />
                   <ReferenceLine y={25} stroke={COLORS.warning} strokeDasharray="4 4" />
                   <ReTooltip {...customTooltip} cursor={{ strokeDasharray: "3 3" }} />
-                  <Scatter name="Bemorlar" data={scatterData} fill={COLORS.primary} opacity={0.6} />
+                  <Scatter
+                    name={s.patients}
+                    data={scatterData}
+                    fill={COLORS.primary}
+                    opacity={0.6}
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </Box>
@@ -609,8 +792,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           <GlassCard>
             <SectionTitle
               icon={<BiotechOutlined sx={{ color: COLORS.info }} />}
-              title="Bo'y — Ko'krak qafasi"
-              subtitle="Antropometrik o'lchovlar o'rtasidagi bog'liqlik"
+              title={s.heightChestTitle}
+              subtitle={s.heightChestSub}
               badge="MORPHOLOGY"
             />
             <Box sx={{ height: 300 }}>
@@ -620,8 +803,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   <XAxis
                     type="number"
                     dataKey="height"
-                    name="Bo'y"
-                    unit=" sm"
+                    name={s.height}
+                    unit={s.cm}
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 11, fill: "#94a3b8" }}
@@ -630,8 +813,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   <YAxis
                     type="number"
                     dataKey="chest"
-                    name="Ko'krak"
-                    unit=" sm"
+                    name={s.chest}
+                    unit={s.cm}
                     axisLine={false}
                     tickLine={false}
                     tick={{ fontSize: 11, fill: "#94a3b8" }}
@@ -639,7 +822,7 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
                   />
                   <ReTooltip {...customTooltip} cursor={{ strokeDasharray: "3 3" }} />
                   <Scatter
-                    name="O'lchovlar"
+                    name={s.measurements}
                     data={heightChestData}
                     fill={COLORS.teal}
                     opacity={0.6}
@@ -658,8 +841,8 @@ export default function AdminScientificAnalysis({ data = [], loading, totalCount
           color="text.secondary"
           sx={{ letterSpacing: 1, fontWeight: 600 }}
         >
-          MORPHOCHECK SCIENTIFIC ENGINE v2.0 • {totalCount} ta ma'lumot tahlili •{" "}
-          {new Date().toLocaleDateString("uz-UZ")}
+          MORPHOCHECK SCIENTIFIC ENGINE v2.0 • {totalCount} {s.footerSuffix} •{" "}
+          {new Date().toLocaleDateString(localeByLang[lang] || "uz-UZ")}
         </Typography>
       </Box>
     </Box>

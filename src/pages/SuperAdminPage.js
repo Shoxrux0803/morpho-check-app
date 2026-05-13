@@ -86,6 +86,13 @@ import ClinicalCMS from "../components/Admin/ClinicalCMS";
 import AdminActivity from "../components/Admin/AdminActivity";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
 
+const PAGE_LABELS = {
+  uz: { scientificAnalysis: "Ilmiy Tahlil" },
+  ru: { scientificAnalysis: "Научный анализ" },
+  en: { scientificAnalysis: "Scientific Analysis" },
+  kz: { scientificAnalysis: "Ғылыми талдау" },
+};
+
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -147,7 +154,8 @@ const SuperAdminPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
   const { user, login: authLogin, logout, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
+  const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const [activeTab, setActiveTab] = useState(0);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -1601,7 +1609,7 @@ const SuperAdminPage = () => {
                 <Tab
                   icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Ilmiy Tahlil"
+                  label={pageLabels.scientificAnalysis}
                 />
                 <Tab
                   icon={<Place sx={{ mr: 1.5, fontSize: 20 }} />}
@@ -1666,7 +1674,12 @@ const SuperAdminPage = () => {
           </Box>
 
           {/* Main Content Area */}
-          <Box sx={{ ...scrollableContentSx, width: "100%" }}>
+          <Box
+            sx={{
+              ...scrollableContentSx,
+              width: "100%",
+            }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
