@@ -129,6 +129,22 @@ const ResearcherWrapper = () => {
   return <Navigate to="/admin" replace />;
 };
 
+const HomeWrapper = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return <PageLoader />;
+
+  if (user?.role === "researcher") {
+    return <Navigate to="/researcher" replace />;
+  }
+
+  return (
+    <PageTransition>
+      <IntroPage />
+    </PageTransition>
+  );
+};
+
 // Animated Routes komponenti
 function AnimatedRoutes() {
   const location = useLocation();
@@ -142,14 +158,7 @@ function AnimatedRoutes() {
       {showBg && <MorphoProBackground theme={mode} pathname={location.pathname} />}
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route
-            path="/"
-            element={
-              <PageTransition>
-                <IntroPage />
-              </PageTransition>
-            }
-          />
+          <Route path="/" element={<HomeWrapper />} />
           <Route
             path="/morphocheck-pro"
             element={

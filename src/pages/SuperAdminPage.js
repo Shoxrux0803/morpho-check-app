@@ -647,7 +647,9 @@ const SuperAdminPage = () => {
     setLoginInProgress(true);
     try {
       const profile = await authLogin(loginForm);
-      if (profile.role !== "superadmin" && profile.role !== "admin") {
+      if (profile.role === "researcher") {
+        navigate("/researcher", { replace: true });
+      } else if (profile.role !== "superadmin" && profile.role !== "admin") {
         navigate("/");
       }
     } catch (err) {

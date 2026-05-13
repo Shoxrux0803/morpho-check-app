@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link as RouterLink, NavLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import {
   AppBar,
@@ -48,6 +48,7 @@ export default function Header() {
   const { user, logout } = useAuth();
   const { pendingCount, isOnline, setEditingItem } = useOfflineSync();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [langAnchorEl, setLangAnchorEl] = useState(null);
@@ -85,6 +86,15 @@ export default function Header() {
     },
   };
 
+  const isResearcherHome = user?.role === "researcher" && location.pathname === "/researcher";
+  const homePath = user?.role === "researcher" ? "/researcher" : "/";
+
+  const activeNavSx = {
+    fontWeight: 700,
+    color: "primary.main",
+    backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+  };
+
   const currentLang = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
 
   return [
@@ -106,7 +116,7 @@ export default function Header() {
           alignItems="center"
           spacing={1.25}
           component={RouterLink}
-          to="/"
+          to={homePath}
           sx={{
             textDecoration: "none",
             color: "inherit",
@@ -232,9 +242,9 @@ export default function Header() {
           <Tooltip title={t("homeTooltip")}>
             <Button
               component={NavLink}
-              to="/"
+              to={homePath}
               end
-              sx={navButtonSx}
+              sx={{ ...navButtonSx, ...(isResearcherHome ? activeNavSx : {}) }}
               startIcon={<HomeIcon fontSize="small" />}
             >
               <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
@@ -243,18 +253,20 @@ export default function Header() {
             </Button>
           </Tooltip>
 
-          <Tooltip title={t("analyzeTooltip")}>
-            <Button
-              component={NavLink}
-              to={user?.role === "researcher" ? "/researcher" : "/morphocheck-pro"}
-              sx={navButtonSx}
-              startIcon={<AnalyticsIcon fontSize="small" />}
-            >
-              <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
-                {t("analyze")}
-              </Box>
-            </Button>
-          </Tooltip>
+          {user?.role !== "researcher" && (
+            <Tooltip title={t("analyzeTooltip")}>
+              <Button
+                component={NavLink}
+                to="/morphocheck-pro"
+                sx={navButtonSx}
+                startIcon={<AnalyticsIcon fontSize="small" />}
+              >
+                <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                  {t("analyze")}
+                </Box>
+              </Button>
+            </Tooltip>
+          )}
 
           {(user?.role === "admin" || user?.role === "superadmin") && (
             <Tooltip title={t("adminPanelTooltip")}>
@@ -571,23 +583,30 @@ export default function Header() {
           <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Button
               component={NavLink}
-              to="/"
+              to={homePath}
               end
-              sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+              sx={{
+                ...navButtonSx,
+                justifyContent: "flex-start",
+                py: 1.5,
+                ...(isResearcherHome ? activeNavSx : {}),
+              }}
               startIcon={<HomeIcon />}
               onClick={() => setDrawerOpen(false)}
             >
               {t("home")}
             </Button>
-            <Button
-              component={NavLink}
-              to={user?.role === "researcher" ? "/researcher" : "/morphocheck-pro"}
-              sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
-              startIcon={<AnalyticsIcon />}
-              onClick={() => setDrawerOpen(false)}
-            >
-              {t("analyze")}
-            </Button>
+            {user?.role !== "researcher" && (
+              <Button
+                component={NavLink}
+                to="/morphocheck-pro"
+                sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                startIcon={<AnalyticsIcon />}
+                onClick={() => setDrawerOpen(false)}
+              >
+                {t("analyze")}
+              </Button>
+            )}
             {(user?.role === "admin" || user?.role === "superadmin") && (
               <Button
                 component={NavLink}

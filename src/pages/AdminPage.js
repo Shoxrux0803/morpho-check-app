@@ -413,7 +413,9 @@ export default function AdminPage() {
       setLoginInProgress(true);
       try {
         const profile = await authLogin(loginForm);
-        if (profile.role !== "admin" && profile.role !== "superadmin") {
+        if (profile.role === "researcher") {
+          navigate("/researcher", { replace: true });
+        } else if (profile.role !== "admin" && profile.role !== "superadmin") {
           navigate("/");
         }
       } catch (err) {
