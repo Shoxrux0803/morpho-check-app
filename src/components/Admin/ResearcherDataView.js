@@ -88,15 +88,40 @@ const SectionTitle = ({ icon: Icon, title }) => (
 );
 
 const RESEARCH_METRICS = [
-  { key: "chest_standing_height", label: "Bo'y (tik)", unit: "sm" },
-  { key: "weight", label: "Vazn", unit: "kg" },
-  { key: "bmi", label: "BMI", unit: "kg/m2" },
-  { key: "chest_circumference_pause", label: "Ko'krak aylanasi", unit: "sm" },
-  { key: "waist_circumference", label: "Bel aylanasi", unit: "sm" },
-  { key: "head_circumference", label: "Bosh aylanasi", unit: "sm" },
-  { key: "thigh_circumference", label: "Son aylanasi", unit: "sm" },
-  { key: "calf_circumference", label: "Boldir aylanasi", unit: "sm" },
-  { key: "dynamometry", label: "Dinamometriya", unit: "kg" },
+  { key: "chest_standing_height", labelKey: "standingHeight", label: "Bo'y (tik)", unit: "sm" },
+  { key: "weight", labelKey: "weight", label: "Vazn", unit: "kg" },
+  { key: "bmi", labelKey: "bmi", label: "BMI", unit: "kg/m2" },
+  {
+    key: "chest_circumference_pause",
+    labelKey: "chestPause",
+    label: "Ko'krak aylanasi",
+    unit: "sm",
+  },
+  {
+    key: "waist_circumference",
+    labelKey: "waistCircumference",
+    label: "Bel aylanasi",
+    unit: "sm",
+  },
+  {
+    key: "head_circumference",
+    labelKey: "headCircumference",
+    label: "Bosh aylanasi",
+    unit: "sm",
+  },
+  {
+    key: "thigh_circumference",
+    labelKey: "thighCircumference",
+    label: "Son aylanasi",
+    unit: "sm",
+  },
+  {
+    key: "calf_circumference",
+    labelKey: "calfCircumference",
+    label: "Boldir aylanasi",
+    unit: "sm",
+  },
+  { key: "dynamometry", labelKey: "dynamometry", label: "Dinamometriya", unit: "kg" },
 ];
 
 const ANALYSIS_METRICS = RESEARCH_METRICS.slice(0, 6);
@@ -467,12 +492,21 @@ const StatCard = ({ label, value, sub }) => (
   </Paper>
 );
 
-const ResearchStatisticsPanel = ({ rows }) => {
+export const ResearchStatisticsPanel = ({ rows }) => {
+  const { lang } = useLanguage();
+  const t = (key) => researcherT(lang, key);
   const stats = useMemo(() => buildResearchStats(rows), [rows]);
   const mainMetric = stats.descriptive.find((item) => item.key === "bmi");
   const regressionChip = getSignificanceChip(stats.regression.p);
   const anovaChip = getSignificanceChip(stats.region.p);
   const maxZ = Math.max(...stats.zScore.map((item) => item.count), 1);
+  const metricLabel = (metric) => t(metric.labelKey) || metric.label;
+  const regressionEquation = Number.isFinite(stats.regression.intercept)
+    ? `${t("weightShort")} = ${formatNumber(stats.regression.intercept)} + ${formatNumber(
+        stats.regression.slope,
+        3,
+      )} x ${t("heightShort")}`
+    : t("notEnoughData");
 
   return (
     <GlassPaper sx={{ p: 2.5 }}>
@@ -482,22 +516,17 @@ const ResearchStatisticsPanel = ({ rows }) => {
             <Box display="flex" alignItems="center" gap={1}>
               <Science color="primary" />
               <Typography variant="h6" fontWeight={900}>
-                Avtomatik statistik tahlil
+                {t("autoStatsTitle")}
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary">
-              Natijalar joriy filtrlangan jadval bo'yicha real vaqt rejimida hisoblanadi.
+              {t("autoStatsSubtitle")}
             </Typography>
           </Box>
           <Chip label={`N = ${stats.count}`} color="primary" sx={{ fontWeight: 800 }} />
         </Box>
 
-        {stats.count < 3 && (
-          <Alert severity="info">
-            Ishonchli statistik testlar uchun kamida 3 ta yozuv kerak. Yozuvlar ko'payganda p-value,
-            effect size, ANOVA va regressiya avtomatik to'liq chiqadi.
-          </Alert>
-        )}
+        {stats.count < 3 && <Alert severity="info">{t("autoStatsMinimum")}</Alert>}
 
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6} md={3}>
@@ -508,14 +537,14 @@ const ResearchStatisticsPanel = ({ rows }) => {
                   ? `${formatNumber(mainMetric.mean)} +/- ${formatNumber(mainMetric.sd)}`
                   : "—"
               }
-              sub="BMI bo'yicha"
+              sub={t("byBmi")}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               label="Median"
               value={mainMetric?.n ? formatNumber(mainMetric.median) : "—"}
-              sub="50-percentile"
+              sub={t("percentile50")}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -526,7 +555,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
                   ? `${formatNumber(mainMetric.min)} - ${formatNumber(mainMetric.max)}`
                   : "—"
               }
-              sub="BMI diapazoni"
+              sub={t("bmiRange")}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -535,7 +564,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
               value={
                 Number.isFinite(stats.regression.r2) ? formatNumber(stats.regression.r2, 3) : "—"
               }
-              sub="Vazn ~ Bo'y"
+              sub={t("weightHeightRelation")}
             />
           </Grid>
         </Grid>
@@ -544,14 +573,14 @@ const ResearchStatisticsPanel = ({ rows }) => {
           <Box display="flex" alignItems="center" gap={1} mb={1.5}>
             <Science color="primary" fontSize="small" />
             <Typography variant="subtitle1" fontWeight={800}>
-              Descriptive statistics
+              {t("descriptiveStats")}
             </Typography>
           </Box>
           <TableContainer sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Ko'rsatkich</TableCell>
+                  <TableCell>{t("indicator")}</TableCell>
                   <TableCell align="right">N</TableCell>
                   <TableCell align="right">Mean +/- SD</TableCell>
                   <TableCell align="right">Median</TableCell>
@@ -564,7 +593,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
                   <TableRow key={item.key}>
                     <TableCell>
                       <Typography variant="body2" fontWeight={700}>
-                        {item.label}
+                        {metricLabel(item)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {item.unit}
@@ -597,7 +626,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
               sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 2 }}
             >
               <Typography variant="subtitle2" fontWeight={800} mb={1}>
-                Z-score distribution (BMI)
+                {t("zScoreDistribution")}
               </Typography>
               <Stack spacing={1.25}>
                 {stats.zScore.map((item) => (
@@ -625,12 +654,12 @@ const ResearchStatisticsPanel = ({ rows }) => {
             >
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="subtitle2" fontWeight={800}>
-                  Regression analysis
+                  {t("regressionAnalysis")}
                 </Typography>
                 <Chip size="small" label={regressionChip.label} color={regressionChip.color} />
               </Box>
               <Typography variant="body2" fontWeight={700}>
-                {stats.regression.equation || "Yetarli ma'lumot yo'q"}
+                {regressionEquation}
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" mt={1}>
                 r = {formatNumber(stats.regression.r, 3)}; R2 ={" "}
@@ -646,12 +675,12 @@ const ResearchStatisticsPanel = ({ rows }) => {
             >
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="subtitle2" fontWeight={800}>
-                  ANOVA: regional difference
+                  {t("anovaRegionalDifference")}
                 </Typography>
                 <Chip size="small" label={anovaChip.label} color={anovaChip.color} />
               </Box>
               <Typography variant="body2" fontWeight={700}>
-                BMI hududlar bo'yicha
+                {t("bmiByRegion")}
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" mt={1}>
                 F({stats.region.dfBetween || 0}, {stats.region.dfWithin || 0}) ={" "}
@@ -667,16 +696,16 @@ const ResearchStatisticsPanel = ({ rows }) => {
             <Box display="flex" alignItems="center" gap={1} mb={1.5}>
               <FitnessCenter color="primary" fontSize="small" />
               <Typography variant="subtitle1" fontWeight={800}>
-                Sex difference
+                {t("sexDifference")}
               </Typography>
             </Box>
             <TableContainer sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Ko'rsatkich</TableCell>
-                    <TableCell align="right">O'g'il/Erkak</TableCell>
-                    <TableCell align="right">Qiz/Ayol</TableCell>
+                    <TableCell>{t("indicator")}</TableCell>
+                    <TableCell align="right">{t("maleGroup")}</TableCell>
+                    <TableCell align="right">{t("femaleGroup")}</TableCell>
                     <TableCell align="right">p-value</TableCell>
                     <TableCell align="right">Effect size</TableCell>
                   </TableRow>
@@ -684,7 +713,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
                 <TableBody>
                   {stats.gender.map((item) => (
                     <TableRow key={item.key}>
-                      <TableCell>{item.label}</TableCell>
+                      <TableCell>{metricLabel(item)}</TableCell>
                       <TableCell align="right">
                         {item.maleN >= 2
                           ? `${formatNumber(item.maleMean)} (n=${item.maleN})`
@@ -706,13 +735,13 @@ const ResearchStatisticsPanel = ({ rows }) => {
 
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle1" fontWeight={800} mb={1.5}>
-              Regional difference
+              {t("regionalDifference")}
             </Typography>
             <TableContainer sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Hudud</TableCell>
+                    <TableCell>{t("region")}</TableCell>
                     <TableCell align="right">N</TableCell>
                     <TableCell align="right">BMI mean +/- SD</TableCell>
                   </TableRow>
@@ -731,7 +760,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={3} align="center">
-                        Yetarli hududiy guruh yo'q
+                        {t("notEnoughRegionalGroups")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -743,7 +772,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
 
         <Box>
           <Typography variant="subtitle1" fontWeight={800} mb={1.5}>
-            Correlation matrix (Pearson r)
+            {t("correlationMatrix")}
           </Typography>
           <TableContainer sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2 }}>
             <Table size="small">
@@ -752,7 +781,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
                   <TableCell />
                   {ANALYSIS_METRICS.map((metric) => (
                     <TableCell key={metric.key} align="center" sx={{ fontWeight: 800 }}>
-                      {metric.label}
+                      {metricLabel(metric)}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -760,7 +789,7 @@ const ResearchStatisticsPanel = ({ rows }) => {
               <TableBody>
                 {stats.correlation.map((row) => (
                   <TableRow key={row.key}>
-                    <TableCell sx={{ fontWeight: 800 }}>{row.label}</TableCell>
+                    <TableCell sx={{ fontWeight: 800 }}>{metricLabel(row)}</TableCell>
                     {row.values.map((value, index) => (
                       <TableCell
                         key={`${row.key}-${ANALYSIS_METRICS[index].key}`}

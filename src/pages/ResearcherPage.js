@@ -72,6 +72,7 @@ import CloudUpload from "@mui/icons-material/CloudUpload";
 import ResearcherForm from "../components/Research/ResearcherForm";
 import { toast } from "react-hot-toast";
 import AdvancedResearchFilter from "../components/Research/AdvancedResearchFilter";
+import { ResearchStatisticsPanel } from "../components/Admin/ResearcherDataView";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -1782,6 +1783,9 @@ const ResearcherPage = () => {
                       fetchData(empty);
                     }}
                   />
+                  <Box sx={{ mt: 3 }}>
+                    <ResearchStatisticsPanel rows={data} />
+                  </Box>
                   <ResearchAnalytics data={data} isDark={isDark} />
                 </Box>
               )}
