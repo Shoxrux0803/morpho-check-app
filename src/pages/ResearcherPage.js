@@ -1633,10 +1633,39 @@ const ResearcherPage = () => {
                 {TABS.map((tab, i) => (
                   <Tab
                     key={i}
-                    icon={tab.icon}
-                    iconPosition="start"
-                    label={tab.label}
-                    sx={{ gap: 1 }}
+                    label={
+                      <Stack
+                        component="span"
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="center"
+                        spacing={1}
+                        sx={{ minWidth: 0 }}
+                      >
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-flex",
+                            color: activeTab === i ? "primary.main" : "text.secondary",
+                          }}
+                        >
+                          {tab.icon}
+                        </Box>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          fontWeight={800}
+                          sx={{
+                            display: "inline",
+                            color: activeTab === i ? "primary.main" : "text.primary",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {tab.label}
+                        </Typography>
+                      </Stack>
+                    }
+                    aria-label={tab.label}
                   />
                 ))}
               </Tabs>
