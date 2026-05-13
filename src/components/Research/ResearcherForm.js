@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import {
   Box,
   Grid,
@@ -13,16 +13,18 @@ import {
   Step,
   StepLabel,
 } from "@mui/material";
-import { Add, ArrowForward, ArrowBack, Save, CheckCircle } from "@mui/icons-material";
+import { ArrowForward, ArrowBack, Save, CheckCircle } from "@mui/icons-material";
 import { ResearchApi } from "../../services/api";
 import { toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import aiService from "../../services/aiService";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { researcherT } from "../../utils/researcherI18n";
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    Utility Component: GlassPaper
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -46,10 +48,12 @@ const GlassPaper = ({ children, sx = {} }) => (
   </Paper>
 );
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    MAIN COMPONENT: ResearcherForm
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const ResearcherForm = ({ onSuccess }) => {
+  const { lang } = useLanguage();
+  const tr = (key) => researcherT(lang, key);
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [predictLoading, setPredictLoading] = useState(false);
@@ -139,7 +143,7 @@ const ResearcherForm = ({ onSuccess }) => {
   };
   const [formData, setFormData] = useState(emptyForm);
 
-  const steps = ["Shaxsiy ma'lumotlar", "Barcha o'lchovlar"];
+  const steps = [tr("stepPersonal"), tr("stepMeasurements")];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -156,7 +160,7 @@ const ResearcherForm = ({ onSuccess }) => {
 
   const validateStep1 = () => {
     if (!formData.full_name) {
-      toast.error("F.I.SH kiritilishi shart");
+      toast.error(tr("requiredFullName"));
       return false;
     }
     return true;
@@ -185,7 +189,7 @@ const ResearcherForm = ({ onSuccess }) => {
   const handleAiPredict = async () => {
     const age = calculateAge(formData.birth_date, formData.examination_date);
     if (age === null || !formData.gender) {
-      toast.error("Iltimos, avval tug'ilgan sana va jinsni kiriting!");
+      toast.error(tr("enterBirthAndGender"));
       return;
     }
 
@@ -194,10 +198,10 @@ const ResearcherForm = ({ onSuccess }) => {
       const res = await aiService.predictParams(age, formData.gender, "research");
       if (res.params) {
         setFormData((prev) => ({ ...prev, ...res.params }));
-        toast.success("Gemini: Normativ ko'rsatkichlar yuklandi!", { icon: "🤖" });
+        toast.success(tr("aiLoaded"), { icon: "AI" });
       }
     } catch (err) {
-      toast.error("AI tahlilda xatolik yuz berdi");
+      toast.error(tr("aiError"));
     } finally {
       setPredictLoading(false);
     }
@@ -208,12 +212,12 @@ const ResearcherForm = ({ onSuccess }) => {
 
   const genderOptions = isAdult
     ? [
-        { value: "erkak", label: "Erkak (Мужчина)" },
-        { value: "ayol", label: "Ayol (Женщина)" },
+        { value: "erkak", label: tr("male") },
+        { value: "ayol", label: tr("female") },
       ]
     : [
-        { value: "Boy", label: "O'g'il bola (Мальчик)" },
-        { value: "Girl", label: "Qiz bola (Девочка)" },
+        { value: "Boy", label: tr("boy") },
+        { value: "Girl", label: tr("girl") },
       ];
 
   const handleSubmit = async (e) => {
@@ -228,7 +232,7 @@ const ResearcherForm = ({ onSuccess }) => {
 
       // Trigger success animation
       setShowSuccess(true);
-      toast.success("Ma'lumot muvaffaqiyatli saqlandi");
+      toast.success(tr("savedToast"));
 
       // Reset form after delay
       setTimeout(() => {
@@ -238,7 +242,7 @@ const ResearcherForm = ({ onSuccess }) => {
         onSuccess();
       }, 2000);
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error(`${tr("error")}: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -285,7 +289,7 @@ const ResearcherForm = ({ onSuccess }) => {
   return (
     <GlassPaper sx={{ p: { xs: 2, md: 4 } }}>
       <Typography variant="h5" fontWeight="900" mb={3} textAlign="center">
-        Yangi Tadqiqot Yozuvi
+        {tr("newResearchRecord")}
       </Typography>
 
       <AnimatePresence>
@@ -331,12 +335,12 @@ const ResearcherForm = ({ onSuccess }) => {
                 <CheckCircle sx={{ fontSize: 80, color: "success.main", mb: 3 }} />
               </motion.div>
               <Typography variant="h4" fontWeight={900} color="success.dark" gutterBottom>
-                Saqlandi!
+                {tr("saved")}
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ opacity: 0.8 }}>
-                Ma'lumotlar bazaga muvaffaqiyatli qo'shildi.
+                {tr("savedDesc")}
                 <br />
-                Yangi yozuvga o'tilmoqda...
+                {tr("movingToNew")}
               </Typography>
             </motion.div>
           </motion.div>
@@ -363,95 +367,95 @@ const ResearcherForm = ({ onSuccess }) => {
         >
           {activeStep === 0 ? (
             <Box>
-              {SL("I. Pasport / Umumiy Ma'lumotlar")}
+              {SL(tr("sectionPassport"))}
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("full_name", "F.I.SH", "text")}
+                  {I("full_name", tr("fullName"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("school_name", "Maktab/Bog'cha", "text")}
+                  {I("school_name", tr("schoolKindergarten"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("settlement", "Aholi punkti", "text")}
+                  {I("settlement", tr("settlement"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("birth_place", "Tug'ilgan joyi", "text")}
+                  {I("birth_place", tr("birthPlace"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("birth_date", "Tug'ilgan sana", "date")}
+                  {I("birth_date", tr("birthDate"), "date")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("examination_date", "Tekshiruv sanasi", "date")}
+                  {I("examination_date", tr("examDate"), "date")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("gender", "Jinsi (Пол)", "select", genderOptions)}
+                  {I("gender", tr("gender"), "select", genderOptions)}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("father_nationality", "Ota millati", "text")}
+                  {I("father_nationality", tr("fatherNationality"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("mother_nationality", "Ona millati", "text")}
+                  {I("mother_nationality", tr("motherNationality"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("living_since", "Yashashni boshlagan", "text")}
+                  {I("living_since", tr("livingSince"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("enrolled_date", "Muassasaga qabul", "text")}
+                  {I("enrolled_date", tr("enrolledDate"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("living_conditions", "Maishiy sharoit", "text")}
+                  {I("living_conditions", tr("livingConditions"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("labor_regime", "Mehnat rejimi", "text")}
+                  {I("labor_regime", tr("laborRegime"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("past_illnesses", "O'tkir kasalliklar", "text")}
+                  {I("past_illnesses", tr("pastIllnesses"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("children_count", "Farzandlar soni")}
+                  {I("children_count", tr("childrenCount"))}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("child_order", "Nechanchi farzand")}
+                  {I("child_order", tr("childOrder"))}
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
-                  {I("feeding_type", "Oziqlanish turi", "select", [
+                  {I("feeding_type", tr("feedingType"), "select", [
                     {
-                      value: "Tabiiy (естественном вскармливании)",
-                      label: "Tabiiy (естественном вскармливании)",
+                      value: tr("natural"),
+                      label: tr("natural"),
                     },
                     {
-                      value: "Sun'iy (искусственном вскармливании)",
-                      label: "Sun'iy (искусственном вскармливании)",
+                      value: tr("artificial"),
+                      label: tr("artificial"),
                     },
                   ])}
                 </Grid>
                 <Grid item xs={12} sm={6} md={6}>
-                  {I("parents_marriage", "Ota-ona qarindoshligi", "select", [
+                  {I("parents_marriage", tr("parentsMarriage"), "select", [
                     {
-                      value: "Yaqin qarindosh (близкородственный)",
-                      label: "Yaqin qarindosh (близкородственный)",
+                      value: tr("closeRelative"),
+                      label: tr("closeRelative"),
                     },
                     {
-                      value: "Uzoq qarindosh (дальнородственный)",
-                      label: "Uzoq qarindosh (дальнородственный)",
+                      value: tr("distantRelative"),
+                      label: tr("distantRelative"),
                     },
                     {
-                      value: "Qarindosh emas (неродственный)",
-                      label: "Qarindosh emas (неродственный)",
+                      value: tr("notRelative"),
+                      label: tr("notRelative"),
                     },
                   ])}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("mother_health_status", "Ona sog'ligi", "text")}
+                  {I("mother_health_status", tr("motherHealth"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("parents_phone", "Ota-ona tel. raqami", "text")}
+                  {I("parents_phone", tr("parentsPhone"), "text")}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("father_height", "Otasi bo'yi (sm)")}
+                  {I("father_height", tr("fatherHeight"))}
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
-                  {I("mother_height", "Onasi bo'yi (sm)")}
+                  {I("mother_height", tr("motherHeight"))}
                 </Grid>
               </Grid>
             </Box>
@@ -465,7 +469,7 @@ const ResearcherForm = ({ onSuccess }) => {
                     justifyContent="space-between"
                     sx={{ mt: 2, mb: 1.5 }}
                   >
-                    {SL("II. Jismoniy Rivojlanish (Oyoqlar)")}
+                    {SL(tr("sectionLegs"))}
                     <Button
                       variant="outlined"
                       size="small"
@@ -481,18 +485,18 @@ const ResearcherForm = ({ onSuccess }) => {
                   </Stack>
                   <Grid container spacing={2}>
                     {[
-                      ["lower_leg_total", "Pastki oyoq-qo'l"],
+                      ["lower_leg_total", tr("lowerLegTotal")],
                       ["lower_leg_spina_iliaca", "Spina iliaca"],
                       ["lower_leg_symphysion", "Symphysion"],
-                      ["lower_leg_length", "Pastki oyoq-qo'l uzunligi"],
-                      ["tibiale_height", "Tibiale balandligi"],
-                      ["pelvic_width", "Chanoq kengligi"],
-                      ["thigh_length", "Son uzunligi"],
-                      ["thigh_circumference", "Son aylanasi"],
-                      ["calf_length", "Boldir uzunligi"],
-                      ["calf_circumference", "Boldir aylanasi"],
-                      ["foot_length", "Oyoq panja uzunligi"],
-                      ["teeth_count", "Tishlar soni"],
+                      ["lower_leg_length", tr("lowerLegLength")],
+                      ["tibiale_height", tr("tibialeHeight")],
+                      ["pelvic_width", tr("pelvicWidth")],
+                      ["thigh_length", tr("thighLength")],
+                      ["thigh_circumference", tr("thighCircumference")],
+                      ["calf_length", tr("calfLength")],
+                      ["calf_circumference", tr("calfCircumference")],
+                      ["foot_length", tr("footLength")],
+                      ["teeth_count", tr("teethCount")],
                     ].map(([name, label, t]) => (
                       <Grid item xs={12} sm={6} md={4} key={name}>
                         {I(name, label, t || "number")}
@@ -502,23 +506,23 @@ const ResearcherForm = ({ onSuccess }) => {
                       (formData.gender.toLowerCase() === "ayol" ||
                         formData.gender.toLowerCase() === "girl") && (
                         <Grid item xs={12} sm={6} md={4}>
-                          {I("menstruation_start", "Hayz ko'rishning boshlanishi", "text")}
+                          {I("menstruation_start", tr("menstruationStart"), "text")}
                         </Grid>
                       )}
                   </Grid>
                 </Grid>
 
                 <Grid item xs={12}>
-                  {SL("III. Bosh suyagi va shakli")}
+                  {SL(tr("sectionSkull"))}
                   <Grid container spacing={2}>
                     {[
-                      ["skull_longitudinal", "Uzunasiga diametr"],
-                      ["skull_transverse", "Ko'ndalang diametr"],
-                      ["head_circumference", "Bosh aylanasi"],
-                      ["forehead_transverse", "Peshona ko'ndalang"],
-                      ["skull_height", "Bosh balandligi"],
-                      ["skull_base_length", "Asos uzunligi"],
-                      ["skull_base_width", "Asos kengligi"],
+                      ["skull_longitudinal", tr("skullLongitudinal")],
+                      ["skull_transverse", tr("skullTransverse")],
+                      ["head_circumference", tr("headCircumference")],
+                      ["forehead_transverse", tr("foreheadTransverse")],
+                      ["skull_height", tr("skullHeight")],
+                      ["skull_base_length", tr("skullBaseLength")],
+                      ["skull_base_width", tr("skullBaseWidth")],
                     ].map(([n, l]) => (
                       <Grid item xs={12} sm={6} md={4} key={n}>
                         {I(n, l)}
@@ -528,19 +532,19 @@ const ResearcherForm = ({ onSuccess }) => {
                 </Grid>
 
                 <Grid item xs={12}>
-                  {SL("IV. Yuz o'lchamlari")}
+                  {SL(tr("sectionFace"))}
                   <Grid container spacing={2}>
                     {[
-                      ["face_bizygomatic", "Yanoq diametri"],
-                      ["face_bigonial", "Pastki jag' diametri"],
-                      ["face_morphological_height", "Morfologik balandlik"],
-                      ["face_physiognomic_height", "Fizionomik balandlik"],
-                      ["nose_height", "Burun balandligi"],
-                      ["nose_width", "Burun kengligi"],
-                      ["outer_canthal_width", "Tashqi ko'z kengligi"],
-                      ["inner_canthal_width", "Ichki ko'z kengligi"],
-                      ["lips_mucosa_height", "Lab qalinligi"],
-                      ["mouth_width", "Og'iz kengligi"],
+                      ["face_bizygomatic", tr("faceBizygomatic")],
+                      ["face_bigonial", tr("faceBigonial")],
+                      ["face_morphological_height", tr("faceMorphologicalHeight")],
+                      ["face_physiognomic_height", tr("facePhysiognomicHeight")],
+                      ["nose_height", tr("noseHeight")],
+                      ["nose_width", tr("noseWidth")],
+                      ["outer_canthal_width", tr("outerCanthalWidth")],
+                      ["inner_canthal_width", tr("innerCanthalWidth")],
+                      ["lips_mucosa_height", tr("lipsMucosaHeight")],
+                      ["mouth_width", tr("mouthWidth")],
                     ].map(([n, l]) => (
                       <Grid item xs={12} sm={6} md={4} key={n}>
                         {I(n, l)}
@@ -550,23 +554,23 @@ const ResearcherForm = ({ onSuccess }) => {
                 </Grid>
 
                 <Grid item xs={12}>
-                  {SL("V. Ko'krak qafasi va gavda")}
+                  {SL(tr("sectionChest"))}
                   <Grid container spacing={2}>
                     {[
-                      ["chest_standing_height", "Bo'y (tik)"],
-                      ["chest_sitting_height", "Bo'y (o'tirgan)"],
-                      ["weight", "Vazn (kg)"],
-                      ["trunk_length", "Tana uzunligi"],
-                      ["torso_length", "Korpus uzunligi"],
-                      ["chest_circumference_pause", "Ko'krak aylanasi (pauza)"],
-                      ["chest_circumference_inhale", "Nafas olganda"],
-                      ["chest_circumference_exhale", "Nafas chiqarganda"],
-                      ["waist_circumference", "Bel aylanasi"],
-                      ["abdomen_circumference", "Qorin aylanasi"],
-                      ["upper_segment_length", "Yuqori segment"],
-                      ["chest_transverse_diameter", "Ko'ndalang diametr"],
-                      ["chest_anteroposterior_diameter", "Old-orqa diametr"],
-                      ["chest_height", "Ko'krak balandligi"],
+                      ["chest_standing_height", tr("standingHeight")],
+                      ["chest_sitting_height", tr("sittingHeight")],
+                      ["weight", tr("weight")],
+                      ["trunk_length", tr("trunkLength")],
+                      ["torso_length", tr("torsoLength")],
+                      ["chest_circumference_pause", tr("chestPause")],
+                      ["chest_circumference_inhale", tr("chestInhale")],
+                      ["chest_circumference_exhale", tr("chestExhale")],
+                      ["waist_circumference", tr("waistCircumference")],
+                      ["abdomen_circumference", tr("abdomenCircumference")],
+                      ["upper_segment_length", tr("upperSegmentLength")],
+                      ["chest_transverse_diameter", tr("chestTransverseDiameter")],
+                      ["chest_anteroposterior_diameter", tr("chestAnteroposteriorDiameter")],
+                      ["chest_height", tr("chestHeight")],
                     ].map(([n, l]) => (
                       <Grid item xs={12} sm={6} md={4} key={n}>
                         {I(n, l)}
@@ -576,23 +580,23 @@ const ResearcherForm = ({ onSuccess }) => {
                 </Grid>
 
                 <Grid item xs={12}>
-                  {SL("VI. Qo'l va Yog' qatlami")}
+                  {SL(tr("sectionArmFat"))}
                   <Grid container spacing={2}>
                     {[
-                      ["arm_length", "Qo'l uzunligi"],
-                      ["shoulder_length", "Yelka uzunligi"],
-                      ["shoulder_width", "Yelka kengligi"],
-                      ["arm_circumference_total", "Yelka aylanasi"],
-                      ["shoulder_circumference_rest", "Yelka aylanasi (tinch)"],
-                      ["shoulder_circumference_flexed", "Yelka aylanasi (tarang)"],
-                      ["forearm_length", "Bilak uzunligi"],
-                      ["hand_length", "Panja uzunligi"],
-                      ["dynamometry", "Dinamometriya"],
-                      ["fat_triceps", "Triseps yog'i"],
-                      ["fat_biceps", "Biseps yog'i"],
-                      ["fat_subscapular", "Kurak osti yog'i"],
-                      ["fat_iliac", "Yonbosh yog'i"],
-                      ["fat_popliteal", "Tizza orqa yog'i"],
+                      ["arm_length", tr("armLength")],
+                      ["shoulder_length", tr("shoulderLength")],
+                      ["shoulder_width", tr("shoulderWidth")],
+                      ["arm_circumference_total", tr("armCircumferenceTotal")],
+                      ["shoulder_circumference_rest", tr("shoulderCircumferenceRest")],
+                      ["shoulder_circumference_flexed", tr("shoulderCircumferenceFlexed")],
+                      ["forearm_length", tr("forearmLength")],
+                      ["hand_length", tr("handLength")],
+                      ["dynamometry", tr("dynamometry")],
+                      ["fat_triceps", tr("fatTriceps")],
+                      ["fat_biceps", tr("fatBiceps")],
+                      ["fat_subscapular", tr("fatSubscapular")],
+                      ["fat_iliac", tr("fatIliac")],
+                      ["fat_popliteal", tr("fatPopliteal")],
                     ].map(([n, l]) => (
                       <Grid item xs={12} sm={6} md={4} key={n}>
                         {I(n, l)}
@@ -614,7 +618,7 @@ const ResearcherForm = ({ onSuccess }) => {
           variant="outlined"
           sx={{ px: 4, borderRadius: 2 }}
         >
-          Orqaga
+          {tr("back")}
         </Button>
         {activeStep === 0 ? (
           <Button
@@ -623,7 +627,7 @@ const ResearcherForm = ({ onSuccess }) => {
             endIcon={<ArrowForward />}
             sx={{ px: 4, borderRadius: 2 }}
           >
-            Keyingi
+            {tr("next")}
           </Button>
         ) : (
           <Button
@@ -634,7 +638,7 @@ const ResearcherForm = ({ onSuccess }) => {
             startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Save />}
             sx={{ px: 5, borderRadius: 2 }}
           >
-            Saqlash
+            {tr("save")}
           </Button>
         )}
       </Box>

@@ -53,6 +53,7 @@ import { ResearchApi } from "../../services/api";
 import { toast } from "react-hot-toast";
 import { useLanguage } from "../../contexts/LanguageContext";
 import AdvancedResearchFilter from "../Research/AdvancedResearchFilter";
+import { researcherT } from "../../utils/researcherI18n";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -787,7 +788,8 @@ const ResearchStatisticsPanel = ({ rows }) => {
    MAIN COMPONENT
 ════════════════════════════════════════════════════ */
 const ResearcherDataView = ({ isSuperAdmin = true }) => {
-  const { t } = useLanguage();
+  const { lang } = useLanguage();
+  const t = (key) => researcherT(lang, key);
   const [data, setData] = useState([]);
   const [deletedData, setDeletedData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -975,15 +977,17 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
               </IconButton>
             </TableCell>
             <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>F.I.SH</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Maktab / Bog'cha</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Tekshiruv</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Bo'y / Vazn</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{t("fullName")}</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{t("schoolKindergarten")}</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{t("exam")}</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{t("heightWeight")}</TableCell>
             {isDeletedView && (
-              <TableCell sx={{ fontWeight: 700, color: "error.main" }}>O'chirilgan</TableCell>
+              <TableCell sx={{ fontWeight: 700, color: "error.main" }}>
+                {t("deletedDate")}
+              </TableCell>
             )}
             <TableCell sx={{ fontWeight: 700 }} align="right">
-              Amallar
+              {t("actions")}
             </TableCell>
           </TableRow>
         </TableHead>
@@ -1001,7 +1005,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                 align="center"
                 sx={{ py: 6, color: "text.secondary" }}
               >
-                Ma'lumot topilmadi
+                {t("noData")}
               </TableCell>
             </TableRow>
           ) : (
@@ -1179,7 +1183,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" fontWeight={900}>
-          Izlanuvchi Ma'lumotlari
+          {t("researcherDataTitle")}
         </Typography>
         <Stack direction="row" spacing={2}>
           {checked.size > 0 && (
@@ -1213,7 +1217,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             startIcon={<Refresh />}
             onClick={() => (activeTab === 0 ? fetchData() : fetchDeletedData())}
           >
-            Yangilash
+            {t("refresh")}
           </Button>
         </Stack>
       </Box>
@@ -1223,10 +1227,10 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
         onChange={(_, v) => setActiveTab(v)}
         sx={{ mb: 2, borderBottom: "1px solid rgba(0,0,0,0.1)" }}
       >
-        <Tab label="Aktiv yozuvlar" sx={{ textTransform: "none", fontWeight: 600 }} />
+        <Tab label={t("dataList")} sx={{ textTransform: "none", fontWeight: 600 }} />
         {isSuperAdmin && (
           <Tab
-            label="O'chirilganlar"
+            label={t("deleted")}
             icon={<RestoreFromTrash />}
             iconPosition="start"
             sx={{ textTransform: "none", fontWeight: 600 }}

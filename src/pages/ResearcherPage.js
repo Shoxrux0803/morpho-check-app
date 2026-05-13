@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box,
   Container,
@@ -91,10 +91,12 @@ import {
 } from "recharts";
 import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
+import { useLanguage } from "../contexts/LanguageContext";
+import { researcherT } from "../utils/researcherI18n";
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    Utility Components
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -156,9 +158,9 @@ const SectionTitle = ({ icon: Icon, title }) => (
   </Box>
 );
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    DETAIL MODAL
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) => {
   if (!record) return null;
 
@@ -404,10 +406,12 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
   );
 };
 
-/* ════════════════════════════════════════════════════
-   EDIT MODAL — simplified (key fields only)
-════════════════════════════════════════════════════ */
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+   EDIT MODAL вЂ” simplified (key fields only)
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const EditModal = ({ record, open, onClose, onSaved }) => {
+  const { lang } = useLanguage();
+  const tr = (key) => researcherT(lang, key);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
 
@@ -422,11 +426,11 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
     try {
       const { id, created_at, created_by_id, is_deleted, deleted_at, ...payload } = form;
       await ResearchApi.update(id, payload);
-      toast.success("Ma'lumot yangilandi");
+      toast.success(tr("savedToast"));
       onSaved();
       onClose();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error(`${tr("error")}: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -478,23 +482,23 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
       }}
     >
       <DialogTitle sx={{ fontWeight: 800 }}>
-        Yozuvni tahrirlash
+        {tr("edit")}
         <IconButton onClick={onClose} sx={{ position: "absolute", right: 12, top: 12 }}>
           <Close />
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
         {/* Section I: Demographic */}
-        <SectionTitle icon={Person} title="I. Pasport / Umumiy Ma'lumotlar" />
+        <SectionTitle icon={Person} title={tr("sectionPassport")} />
         <Grid container spacing={2} pt={1}>
           {[
-            ["F.I.SH", "full_name", "text"],
-            ["Maktab / Bog'cha", "school_name", "text"],
-            ["Aholi punkti", "settlement", "text"],
-            ["Tug'ilgan joyi", "birth_place", "text"],
-            ["Tug'ilgan sana", "birth_date", "date"],
+            [tr("fullName"), "full_name", "text"],
+            [tr("schoolKindergarten"), "school_name", "text"],
+            [tr("settlement"), "settlement", "text"],
+            [tr("birthPlace"), "birth_place", "text"],
+            [tr("birthDate"), "birth_date", "date"],
             [
-              "Jinsi (Пол)",
+              tr("gender"),
               "gender",
               "select",
               (() => {
@@ -512,36 +516,36 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
                 const age = calculateAge(form.birth_date, form.examination_date);
                 return age !== null && age >= 18
                   ? [
-                      { value: "erkak", label: "Erkak (Мужчина)" },
-                      { value: "ayol", label: "Ayol (Женщина)" },
+                      { value: "erkak", label: tr("male") },
+                      { value: "ayol", label: tr("female") },
                     ]
                   : [
-                      { value: "Boy", label: "O'g'il bola (Мальчик)" },
-                      { value: "Girl", label: "Qiz bola (Девочка)" },
+                      { value: "Boy", label: tr("boy") },
+                      { value: "Girl", label: tr("girl") },
                     ];
               })(),
             ],
-            ["Ota millati", "father_nationality", "text"],
-            ["Ona millati", "mother_nationality", "text"],
-            ["Yashashni boshlagan", "living_since", "text"],
-            ["Muassasaga qabul", "enrolled_date", "text"],
-            ["Maishiy sharoit", "living_conditions", "text"],
-            ["Mehnat rejimi", "labor_regime", "text"],
-            ["O'tkir kasalliklar", "past_illnesses", "text"],
-            ["Farzandlar soni", "children_count", "number"],
-            ["Nechanchi farzand", "child_order", "number"],
+            [tr("fatherNationality"), "father_nationality", "text"],
+            [tr("motherNationality"), "mother_nationality", "text"],
+            [tr("livingSince"), "living_since", "text"],
+            [tr("enrolledDate"), "enrolled_date", "text"],
+            [tr("livingConditions"), "living_conditions", "text"],
+            [tr("laborRegime"), "labor_regime", "text"],
+            [tr("pastIllnesses"), "past_illnesses", "text"],
+            [tr("childrenCount"), "children_count", "number"],
+            [tr("childOrder"), "child_order", "number"],
             [
-              "Oziqlanish turi",
+              tr("feedingType"),
               "feeding_type",
               "select",
               [
                 {
-                  value: "Tabiiy (естественном вскармливании)",
-                  label: "Tabiiy (естественном вскармливании)",
+                  value: tr("natural"),
+                  label: tr("natural"),
                 },
                 {
-                  value: "Sun'iy (искусственном вскармливании)",
-                  label: "Sun'iy (искусственном вскармливании)",
+                  value: tr("artificial"),
+                  label: tr("artificial"),
                 },
               ],
             ],
@@ -551,16 +555,16 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
               "select",
               [
                 {
-                  value: "Yaqin qarindosh (близкородственный)",
-                  label: "Yaqin qarindosh (близкородственный)",
+                  value: "Yaqin qarindosh (Р±Р»РёР·РєРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
+                  label: "Yaqin qarindosh (Р±Р»РёР·РєРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
                 },
                 {
-                  value: "Uzoq qarindosh (дальнородственный)",
-                  label: "Uzoq qarindosh (дальнородственный)",
+                  value: "Uzoq qarindosh (РґР°Р»СЊРЅРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
+                  label: "Uzoq qarindosh (РґР°Р»СЊРЅРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
                 },
                 {
-                  value: "Qarindosh emas (неродственный)",
-                  label: "Qarindosh emas (неродственный)",
+                  value: "Qarindosh emas (РЅРµСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
+                  label: "Qarindosh emas (РЅРµСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
                 },
               ],
             ],
@@ -704,9 +708,9 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
   );
 };
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    RECORDS TABLE  (shared between tabs)
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const RecordsTable = ({
   rows,
   loading,
@@ -718,6 +722,7 @@ const RecordsTable = ({
   toggleAll,
   toggleOne,
   showDeleted = false,
+  tr = (key) => key,
 }) => (
   <TableContainer component={GlassPaper}>
     <Table size="small">
@@ -738,15 +743,15 @@ const RecordsTable = ({
             </IconButton>
           </TableCell>
           <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
-          <TableCell sx={{ fontWeight: 700 }}>F.I.SH</TableCell>
-          <TableCell sx={{ fontWeight: 700 }}>Maktab / Bog'cha</TableCell>
-          <TableCell sx={{ fontWeight: 700 }}>Tekshiruv</TableCell>
-          {!showDeleted && <TableCell sx={{ fontWeight: 700 }}>Bo'y / Vazn</TableCell>}
+          <TableCell sx={{ fontWeight: 700 }}>{tr("fullName")}</TableCell>
+          <TableCell sx={{ fontWeight: 700 }}>{tr("schoolKindergarten")}</TableCell>
+          <TableCell sx={{ fontWeight: 700 }}>{tr("exam")}</TableCell>
+          {!showDeleted && <TableCell sx={{ fontWeight: 700 }}>{tr("heightWeight")}</TableCell>}
           {showDeleted && (
-            <TableCell sx={{ fontWeight: 700, color: "error.main" }}>O'chirilgan sana</TableCell>
+            <TableCell sx={{ fontWeight: 700, color: "error.main" }}>{tr("deletedDate")}</TableCell>
           )}
           <TableCell sx={{ fontWeight: 700 }} align="right">
-            Amallar
+            {tr("actions")}
           </TableCell>
         </TableRow>
       </TableHead>
@@ -760,7 +765,7 @@ const RecordsTable = ({
         ) : rows.length === 0 ? (
           <TableRow>
             <TableCell colSpan={8} align="center" sx={{ py: 6, color: "text.secondary" }}>
-              Ma'lumot topilmadi
+              {tr("noData")}
             </TableCell>
           </TableRow>
         ) : (
@@ -809,19 +814,19 @@ const RecordsTable = ({
                     {(row.full_name || "?").charAt(0).toUpperCase()}
                   </Avatar>
                   <Typography variant="body2" fontWeight={600}>
-                    {row.full_name || "—"}
+                    {row.full_name || "вЂ”"}
                   </Typography>
                 </Stack>
               </TableCell>
               <TableCell>
-                <Typography variant="body2">{row.school_name || "—"}</Typography>
+                <Typography variant="body2">{row.school_name || "вЂ”"}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {row.settlement || ""}
                 </Typography>
               </TableCell>
               <TableCell>
                 <Chip
-                  label={row.examination_date || "—"}
+                  label={row.examination_date || "вЂ”"}
                   size="small"
                   variant="outlined"
                   sx={{ fontSize: 11 }}
@@ -830,33 +835,33 @@ const RecordsTable = ({
               {!showDeleted && (
                 <TableCell>
                   <Typography variant="caption" color="text.secondary">
-                    {row.chest_standing_height ? `${row.chest_standing_height} sm` : "—"} /
-                    {row.weight ? ` ${row.weight} kg` : " —"}
+                    {row.chest_standing_height ? `${row.chest_standing_height} sm` : "вЂ”"} /
+                    {row.weight ? ` ${row.weight} kg` : " вЂ”"}
                   </Typography>
                 </TableCell>
               )}
               {showDeleted && (
                 <TableCell>
                   <Typography variant="caption" color="error">
-                    {row.deleted_at ? new Date(row.deleted_at).toLocaleDateString("uz-UZ") : "—"}
+                    {row.deleted_at ? new Date(row.deleted_at).toLocaleDateString("uz-UZ") : "вЂ”"}
                   </Typography>
                 </TableCell>
               )}
               <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                 <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                  <Tooltip title="Batafsil">
+                  <Tooltip title={tr("viewDetails")}>
                     <IconButton size="small" color="info" onClick={() => onView(row)}>
                       <Visibility fontSize="small" />
                     </IconButton>
                   </Tooltip>
                   {!showDeleted && (
                     <>
-                      <Tooltip title="Tahrirlash">
+                      <Tooltip title={tr("edit")}>
                         <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
                           <Edit fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Soft o'chirish">
+                      <Tooltip title={tr("softDelete")}>
                         <IconButton
                           size="small"
                           color="warning"
@@ -866,7 +871,7 @@ const RecordsTable = ({
                         </IconButton>
                       </Tooltip>
                       {isSuperAdmin && (
-                        <Tooltip title="Butunlay o'chirish">
+                        <Tooltip title={tr("hardDelete")}>
                           <IconButton
                             size="small"
                             color="error"
@@ -888,9 +893,9 @@ const RecordsTable = ({
   </TableContainer>
 );
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    FILTER BAR
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -970,9 +975,9 @@ const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
   );
 };
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    RESEARCH ANALYTICS (Professional Dashboard)
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const ResearchAnalytics = ({ data, isDark }) => {
   const [timeRange, setTimeRange] = useState("all"); // "all" or "30d"
 
@@ -994,7 +999,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         g === "male" ||
         g === "erkak" ||
         g.includes("o'g'il") ||
-        g.includes("о'ғил")
+        g.includes("Рѕ'Т“РёР»")
       );
     }).length;
     const girls = filteredData.filter((r) => {
@@ -1005,7 +1010,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         g === "female" ||
         g === "ayol" ||
         g.includes("qiz") ||
-        g.includes("қиз")
+        g.includes("Т›РёР·")
       );
     }).length;
 
@@ -1079,7 +1084,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
   return (
     <Stack spacing={4}>
-      {/* ── Analytics Header ── */}
+      {/* в”Ђв”Ђ Analytics Header в”Ђв”Ђ */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Typography variant="h4" fontWeight={900}>
@@ -1091,7 +1096,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         </Box>
       </Box>
 
-      {/* ── Key Metrics Cards ── */}
+      {/* в”Ђв”Ђ Key Metrics Cards в”Ђв”Ђ */}
       <Grid container spacing={3}>
         {[
           { label: "Jami yozuvlar", value: stats.total, icon: <People />, color: "#007bff" },
@@ -1135,7 +1140,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         ))}
       </Grid>
 
-      {/* ── Charts Section ── */}
+      {/* в”Ђв”Ђ Charts Section в”Ђв”Ђ */}
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
           <GlassPaper sx={{ p: 3, height: "100%" }}>
@@ -1328,12 +1333,14 @@ const ResearchAnalytics = ({ data, isDark }) => {
   );
 };
 
-/* ════════════════════════════════════════════════════
+/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    MAIN PAGE
-════════════════════════════════════════════════════ */
+в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
 const ResearcherPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const { lang } = useLanguage();
+  const tr = useCallback((key) => researcherT(lang, key), [lang]);
   const { user, logout } = useAuth();
   const isSuperAdmin = user?.role === "superadmin";
 
@@ -1415,12 +1422,12 @@ const ResearcherPage = () => {
         setData(result);
       } catch (err) {
         console.error(err);
-        toast.error("Ma'lumotlar yuklanmadi");
+        toast.error(tr("loadError"));
       } finally {
         setLoading(false);
       }
     },
-    [filter],
+    [filter, tr],
   );
 
   const fetchDeleted = useCallback(async () => {
@@ -1455,7 +1462,7 @@ const ResearcherPage = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error("Eksport xatosi: " + err.message);
+      toast.error(`${tr("exportError")}: ${err.message}`);
     }
   };
 
@@ -1467,13 +1474,13 @@ const ResearcherPage = () => {
     try {
       if (type === "hard") {
         for (const id of ids) await ResearchApi.hardDelete(id);
-        toast.success(ids.length > 1 ? "Ma'lumotlar butunlay o'chirildi" : "Butunlay o'chirildi");
+        toast.success(ids.length > 1 ? tr("hardDeletedMany") : tr("hardDeletedOne"));
       } else if (type === "restore") {
         for (const id of ids) await ResearchApi.restore(id);
-        toast.success(ids.length > 1 ? "Ma'lumotlar tiklandi" : "Tiklandi");
+        toast.success(ids.length > 1 ? tr("restoredMany") : tr("restoredOne"));
       } else {
         for (const id of ids) await ResearchApi.softDelete(id);
-        toast.success(ids.length > 1 ? "Ma'lumotlar savatga yuborildi" : "O'chirildi");
+        toast.success(ids.length > 1 ? tr("movedTrashMany") : tr("movedTrashOne"));
       }
 
       setChecked(new Set());
@@ -1481,25 +1488,25 @@ const ResearcherPage = () => {
       fetchData();
       if (isSuperAdmin) fetchDeleted();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error(`${tr("error")}: ${err.message}`);
     } finally {
       setDeleteConfirmLoading(false);
     }
   };
 
   const TABS = [
-    { label: "Yangi qo'shish", icon: <Add />, color: "#007bff" },
-    { label: "Ma'lumotlar ro'yxati", icon: <Dashboard />, color: "#00c853" },
-    { label: "Analitika", icon: <Assessment />, color: "#673ab7" },
-    ...(isSuperAdmin ? [{ label: "O'chirilganlar", icon: <Delete />, color: "#f44336" }] : []),
+    { label: tr("addNew"), icon: <Add />, color: "#007bff" },
+    { label: tr("dataList"), icon: <Dashboard />, color: "#00c853" },
+    { label: tr("analytics"), icon: <Assessment />, color: "#673ab7" },
+    ...(isSuperAdmin ? [{ label: tr("deleted"), icon: <Delete />, color: "#f44336" }] : []),
   ];
 
   const Stats = () => (
     <Grid container spacing={2} mb={3}>
       {[
-        { label: "Jami yozuvlar", value: data.length, color: "#007bff", icon: <Analytics /> },
+        { label: tr("totalRecords"), value: data.length, color: "#007bff", icon: <Analytics /> },
         {
-          label: "Oxirgi 30 kun",
+          label: tr("last30Days"),
           value: data.filter((r) => {
             const d = new Date(r.created_at);
             return Date.now() - d.getTime() < 30 * 86400000;
@@ -1510,7 +1517,7 @@ const ResearcherPage = () => {
         ...(isSuperAdmin
           ? [
               {
-                label: "O'chirilganlar",
+                label: tr("deletedRecords"),
                 value: deletedData.length,
                 color: "#f44336",
                 icon: <DeleteForever />,
@@ -1551,7 +1558,7 @@ const ResearcherPage = () => {
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
       <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
-        {/* ── Page Header ── */}
+        {/* в”Ђв”Ђ Page Header в”Ђв”Ђ */}
         <GlassPaper
           sx={{
             p: { xs: 2, md: 3 },
@@ -1582,7 +1589,7 @@ const ResearcherPage = () => {
                     {user?.name}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    {isSuperAdmin ? "Super Admin" : "Tadqiqotchi"}
+                    {isSuperAdmin ? tr("roleSuperAdmin") : tr("roleResearcher")}
                   </Typography>
                 </Box>
               </Stack>
@@ -1592,6 +1599,9 @@ const ResearcherPage = () => {
               <Tabs
                 value={activeTab}
                 onChange={(_, v) => setActiveTab(v)}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 centered={false}
                 sx={{
                   minHeight: 40,
@@ -1605,8 +1615,10 @@ const ResearcherPage = () => {
                     fontWeight: 700,
                     fontSize: { xs: 0.8, sm: 0.95, md: 1 },
                     minHeight: 48,
-                    minWidth: { xs: 80, sm: 100, md: 120 },
+                    minWidth: { xs: 132, sm: 150, md: 170 },
+                    flexShrink: 0,
                     px: { xs: 1, sm: 2 },
+                    whiteSpace: "nowrap",
                     transition: "all 0.2s ease",
                     "&.Mui-selected": {
                       color: "primary.main",
@@ -1632,7 +1644,7 @@ const ResearcherPage = () => {
           </Grid>
         </GlassPaper>
 
-        {/* ── Main Content Area ── */}
+        {/* в”Ђв”Ђ Main Content Area в”Ђв”Ђ */}
         <Box sx={{ minHeight: "70vh" }}>
           <AnimatePresence mode="wait">
             <motion.div
@@ -1657,10 +1669,10 @@ const ResearcherPage = () => {
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
                       <Typography variant="h4" fontWeight={900}>
-                        Ma'lumotlar bazasi
+                        {tr("database")}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Jami yig'ilgan tadqiqot natijalari
+                        {tr("databaseSubtitle")}
                       </Typography>
                     </Box>
                     <Box display="flex" gap={2}>
@@ -1672,11 +1684,11 @@ const ResearcherPage = () => {
                         disabled={checked.size === 0}
                         sx={{ borderRadius: 2 }}
                       >
-                        O'chirish ({checked.size})
+                        {tr("delete")} ({checked.size})
                       </Button>
                       <Chip
                         icon={<Visibility sx={{ color: "inherit !important" }} />}
-                        label={`${data.length} ta yozuv`}
+                        label={`${data.length} ${tr("records")}`}
                         color="primary"
                         sx={{ fontWeight: 800, py: 2, px: 2, borderRadius: 2, height: 40 }}
                       />
@@ -1709,6 +1721,7 @@ const ResearcherPage = () => {
                       }
                     }}
                     isSuperAdmin={isSuperAdmin}
+                    tr={tr}
                   />
                 </Stack>
               )}
@@ -1749,10 +1762,10 @@ const ResearcherPage = () => {
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
                       <Typography variant="h4" fontWeight={900}>
-                        Arxiv
+                        {tr("deleted")}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        O'chirilgan ma'lumotlarni tiklash yoki tozalash
+                        {tr("restoreOrClean")}
                       </Typography>
                     </Box>
                     <Button
@@ -1762,7 +1775,7 @@ const ResearcherPage = () => {
                       color="warning"
                       sx={{ borderRadius: 2 }}
                     >
-                      Yangilash
+                      {tr("refresh")}
                     </Button>
                   </Box>
                   <Alert
@@ -1787,6 +1800,7 @@ const ResearcherPage = () => {
                     onDelete={handleDelete}
                     isSuperAdmin={isSuperAdmin}
                     showDeleted
+                    tr={tr}
                   />
                   {checked.size > 0 && (
                     <Box sx={{ mt: 2, display: "flex", gap: 2 }}>
@@ -1796,7 +1810,7 @@ const ResearcherPage = () => {
                         startIcon={<Refresh />}
                         onClick={() => handleDelete(Array.from(checked), "restore")}
                       >
-                        Tiklash ({checked.size})
+                        {tr("restore")} ({checked.size})
                       </Button>
                       <Button
                         variant="contained"
@@ -1804,7 +1818,7 @@ const ResearcherPage = () => {
                         startIcon={<DeleteForever />}
                         onClick={() => setDeleteConfirmOpen(true)}
                       >
-                        Butunlay o'chirish ({checked.size})
+                        {tr("hardDelete")} ({checked.size})
                       </Button>
                     </Box>
                   )}
@@ -1813,7 +1827,7 @@ const ResearcherPage = () => {
             </motion.div>
           </AnimatePresence>
         </Box>
-        {/* ── Modals ── */}
+        {/* в”Ђв”Ђ Modals в”Ђв”Ђ */}
         <DetailModal
           record={detailRecord}
           open={!!detailRecord}
@@ -1851,13 +1865,11 @@ const ResearcherPage = () => {
           onClose={() => setDeleteConfirmOpen(false)}
           PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
         >
-          <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>{tr("delete")}</DialogTitle>
           <DialogContent>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz.{" "}
-              {isSuperAdmin && activeTab === 3
-                ? "Ushbu ma'lumotlarni bazadan butunlay o'chirib tashlamoqchimisiz?"
-                : "Haqiqatan ham ushbu ma'lumotlarni o'chirib tashlamoqchimisiz?"}
+              {tr("selectedRecordsPrefix")}: <strong>{checked.size}</strong>.{" "}
+              {isSuperAdmin && activeTab === 3 ? tr("confirmHardDelete") : tr("confirmSoftDelete")}
             </Typography>
             {isSuperAdmin && activeTab === 3 && (
               <Box
@@ -1882,7 +1894,7 @@ const ResearcherPage = () => {
           </DialogContent>
           <DialogActions sx={{ p: 2, gap: 1 }}>
             <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">
-              Bekor qilish
+              {tr("cancel")}
             </Button>
             <Button
               variant="contained"
@@ -1895,9 +1907,9 @@ const ResearcherPage = () => {
               {deleteConfirmLoading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : isSuperAdmin && activeTab === 3 ? (
-                "Butunlay o'chirish"
+                tr("hardDeletedOne")
               ) : (
-                "O'chirish"
+                tr("delete")
               )}
             </Button>
           </DialogActions>
