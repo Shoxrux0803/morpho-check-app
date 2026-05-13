@@ -31,6 +31,7 @@ const EMPTY_COLLECTION = { type: "FeatureCollection", features: [] };
 const PIN_SOURCE = "regional-pins-source";
 const GOOGLE_SATELLITE_SOURCE = "google-satellite-source";
 const GOOGLE_SATELLITE_LAYER = "google-satellite-layer";
+const SATELLITE_MAX_ZOOM = 21;
 const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 760;
 
@@ -1313,7 +1314,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       center: [64.5853, 41.3775],
       zoom: 4.65,
       minZoom: 4,
-      maxZoom: 15,
+      maxZoom: SATELLITE_MAX_ZOOM,
       attributionControl: false,
       style: {
         version: 8,
@@ -1322,6 +1323,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             type: "raster",
             tiles: ["https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"],
             tileSize: 256,
+            maxzoom: SATELLITE_MAX_ZOOM,
             attribution: "Imagery © Google",
           },
         },
@@ -1508,7 +1510,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         map.setPaintProperty(
           meta.fill,
           "fill-opacity",
-          satelliteEnabled ? 0 : getBoundaryFillOpacityPaint(level),
+          satelliteEnabled ? 0.08 : getBoundaryFillOpacityPaint(level),
         );
       }
       if (map.getLayer(meta.line)) {
@@ -1520,7 +1522,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         map.setPaintProperty(
           meta.line,
           "line-opacity",
-          satelliteEnabled ? 0 : level === 1 ? 0.76 : level === 2 ? 0.64 : 0.5,
+          satelliteEnabled ? 0.92 : level === 1 ? 0.76 : level === 2 ? 0.64 : 0.5,
         );
         map.setPaintProperty(
           meta.line,
@@ -2032,7 +2034,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               position: "absolute",
               inset: 0,
               opacity: satelliteEnabled ? 1 : 0.01,
-              pointerEvents: "none",
+              pointerEvents: satelliteEnabled ? "auto" : "none",
               transition: "opacity 180ms ease",
             }}
           />
@@ -2046,6 +2048,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               position: "absolute",
               inset: 0,
               zIndex: 1,
+              pointerEvents: satelliteEnabled ? "none" : "auto",
               bgcolor: satelliteEnabled ? "transparent" : mapColors.background,
               overscrollBehavior: "contain",
               touchAction: "none",
@@ -2064,7 +2067,11 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               preserveAspectRatio="xMidYMid slice"
               role="img"
               aria-label="O'zbekiston hududiy xaritasi"
-              style={{ shapeRendering: "geometricPrecision" }}
+              style={{
+                opacity: satelliteEnabled ? 0 : 1,
+                shapeRendering: "geometricPrecision",
+                transition: "opacity 160ms ease",
+              }}
             >
               <rect
                 width={SVG_WIDTH}
@@ -2304,6 +2311,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                 onPointerDown={(event) => event.stopPropagation()}
                 onClick={(event) => event.stopPropagation()}
                 sx={{
+                  pointerEvents: "auto",
                   position: "absolute",
                   left: `min(max(${pinPopupPosition.left}px, 156px), calc(100% - 156px))`,
                   top: `min(max(${pinPopupPosition.top}px, 16px), calc(100% - 240px))`,
