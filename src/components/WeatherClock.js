@@ -74,8 +74,7 @@ export default function WeatherClock() {
         (position) => {
           fetchWeatherAndLocation(position.coords.latitude, position.coords.longitude);
         },
-        (error) => {
-          console.warn("Geolocation denied or error, fallback to IP.");
+        () => {
           fetchFallback();
         },
         { timeout: 5000 },

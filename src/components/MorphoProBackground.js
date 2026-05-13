@@ -1,9 +1,9 @@
 import React, { Suspense, useMemo, useRef, useEffect } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Outlines, Environment, useTexture } from "@react-three/drei";
+import { Outlines, Environment } from "@react-three/drei";
 import { Physics, useSphere } from "@react-three/cannon";
-import { EffectComposer, N8AO, SMAA, Bloom } from "@react-three/postprocessing";
+import { EffectComposer, SMAA, Bloom } from "@react-three/postprocessing";
 
 const rfs = THREE.MathUtils.randFloatSpread;
 
@@ -255,7 +255,7 @@ export default function MorphoProBackground({ theme, pathname }) {
     >
       <Canvas
         shadows
-        gl={{ antialias: false, alpha: true }}
+        gl={{ antialias: false, alpha: true, stencil: false }}
         dpr={[1, 1.5]}
         camera={{ position: [0, 0, 20], fov: 35, near: 1, far: 100 }}
       >
@@ -282,14 +282,6 @@ export default function MorphoProBackground({ theme, pathname }) {
           <Environment files="/adamsbridge.hdr" />
 
           <EffectComposer disableNormalPass multisampling={0}>
-            <N8AO
-              halfRes
-              color="black"
-              aoRadius={2}
-              intensity={1}
-              aoSamples={6}
-              denoiseSamples={4}
-            />
             <Bloom mipmapBlur levels={7} intensity={isDark ? 1.5 : 1} />
             <SMAA />
           </EffectComposer>

@@ -16,7 +16,34 @@ import { applyTheme, getStoredTheme } from "./utils/theme";
 import ThemeProviderMUI from "./providers/ThemeProviderMUI";
 import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
 
+const installDevConsoleNoiseFilter = () => {
+  if (process.env.NODE_ENV !== "development") return;
+
+  const ignoredMessages = [
+    "React Router Future Flag Warning",
+    "MUI Grid: The `item` prop has been removed",
+    "MUI Grid: The `xs` prop has been removed",
+    "MUI Grid: The `sm` prop has been removed",
+    "MUI Grid: The `md` prop has been removed",
+    "MUI Grid: The `lg` prop has been removed",
+  ];
+
+  const shouldIgnore = (args) =>
+    ignoredMessages.some((message) =>
+      args.some((arg) => typeof arg === "string" && arg.includes(message)),
+    );
+
+  ["warn", "error"].forEach((level) => {
+    const original = console[level];
+    console[level] = (...args) => {
+      if (shouldIgnore(args)) return;
+      original(...args);
+    };
+  });
+};
+
 // Importlardan KEYIN boshlang'ich tema
+installDevConsoleNoiseFilter();
 applyTheme(getStoredTheme());
 
 const root = createRoot(document.getElementById("root"));

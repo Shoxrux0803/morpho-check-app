@@ -22,8 +22,6 @@ export const OfflineSyncProvider = ({ children }) => {
       navigator.storage.persist().then((persistent) => {
         if (persistent) {
           console.log("Storage will not be cleared except by explicit user action.");
-        } else {
-          console.warn("Storage may be cleared under storage pressure.");
         }
       });
     }

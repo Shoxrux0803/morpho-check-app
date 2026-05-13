@@ -286,7 +286,13 @@ export default function App() {
       />
       <AuthProvider>
         <OfflineSyncProvider>
-          <Router basename={BASENAME}>
+          <Router
+            basename={BASENAME}
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
             <ScrollToTop />
             {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
             <ThemeSync />
