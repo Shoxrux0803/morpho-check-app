@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime
@@ -32,6 +33,16 @@ def research_record_to_dict(record: ResearchRecord) -> dict:
     payload["deleted_by_name"] = (
         record.deleted_by.name
         if getattr(record, "deleted_by", None)
+        else None
+    )
+    payload["created_by_name"] = (
+        record.created_by.name
+        if getattr(record, "created_by", None)
+        else None
+    )
+    payload["created_by_email"] = (
+        record.created_by.email
+        if getattr(record, "created_by", None)
         else None
     )
     return payload
@@ -95,7 +106,7 @@ def list_deleted_research(
         raise HTTPException(status_code=403, detail="Faqat superadmin uchun")
     records = (
         db.query(ResearchRecord)
-        .options(joinedload(ResearchRecord.deleted_by))
+        .options(joinedload(ResearchRecord.deleted_by), joinedload(ResearchRecord.created_by))
         .filter(ResearchRecord.is_deleted == 1)
         .order_by(ResearchRecord.deleted_at.desc())
         .all()
@@ -110,7 +121,11 @@ def export_research_xlsx(
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
     """XLSX Export - Advanced version with styling and Cyrillic headers"""
-    query = db.query(ResearchRecord).filter(ResearchRecord.is_deleted == 0)
+    query = (
+        db.query(ResearchRecord)
+        .options(joinedload(ResearchRecord.created_by))
+        .filter(ResearchRecord.is_deleted == 0)
+    )
     if current_user.role == "researcher":
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
     elif researcher_id:
@@ -217,6 +232,10 @@ def export_research_xlsx(
         ("Тизза ости ёғ (мм)", "fat_popliteal"),
     ]
 
+    if current_user.role == "superadmin":
+        headers_map.insert(2, ("Kiritgan izlanuvchi", "created_by_name"))
+        headers_map.insert(3, ("Kiritgan email", "created_by_email"))
+
     # Style definitions
     header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True)
@@ -236,7 +255,12 @@ def export_research_xlsx(
     # Writing data
     for row_num, record in enumerate(records, 2):
         for col_num, (_, field_name) in enumerate(headers_map, 1):
-            val = getattr(record, field_name)
+            if field_name == "created_by_name":
+                val = record.created_by.name if record.created_by else None
+            elif field_name == "created_by_email":
+                val = record.created_by.email if record.created_by else None
+            else:
+                val = getattr(record, field_name)
             
             # Special formatting
             if field_name == "created_at":
@@ -306,7 +330,11 @@ def list_research_records(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
-    query = db.query(ResearchRecord).filter(ResearchRecord.is_deleted == 0)
+    query = (
+        db.query(ResearchRecord)
+        .options(joinedload(ResearchRecord.created_by))
+        .filter(ResearchRecord.is_deleted == 0)
+    )
 
     if current_user.role == "researcher":
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
@@ -355,7 +383,24 @@ def list_research_records(
         query = query.filter(ResearchRecord.examination_date <= date_to)
 
     if gender:
-        query = query.filter(ResearchRecord.gender == gender)
+        gender_norm = gender.strip().lower()
+        if gender_norm in ["erkak", "male", "boy", "o'g'il", "ogil"]:
+            query = query.filter(
+                (ResearchRecord.gender.ilike("%erkak%")) |
+                (ResearchRecord.gender.ilike("%male%")) |
+                (ResearchRecord.gender.ilike("%boy%")) |
+                (ResearchRecord.gender.ilike("%o'g%")) |
+                (ResearchRecord.gender.ilike("%og%"))
+            )
+        elif gender_norm in ["ayol", "female", "girl", "qiz"]:
+            query = query.filter(
+                (ResearchRecord.gender.ilike("%ayol%")) |
+                (ResearchRecord.gender.ilike("%female%")) |
+                (ResearchRecord.gender.ilike("%girl%")) |
+                (ResearchRecord.gender.ilike("%qiz%"))
+            )
+        else:
+            query = query.filter(func.lower(ResearchRecord.gender) == gender_norm)
 
     records = query.order_by(ResearchRecord.id.desc()).all()
 
@@ -378,9 +423,9 @@ def list_research_records(
                 # If date format is invalid, include in list only if no age filter applied
                 if age_min is None and age_max is None:
                     filtered.append(r)
-        return filtered
+        return [research_record_to_dict(record) for record in filtered]
 
-    return records
+    return [research_record_to_dict(record) for record in records]
 
 
 @router.get("/export/dataset")
@@ -518,7 +563,7 @@ def get_research_record(
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
     if current_user.role == "researcher" and record.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
-    return record
+    return research_record_to_dict(record)
 
 
 @router.put("/{record_id}", response_model=ResearchRecordOut)

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -10,24 +10,18 @@ import {
   Grid,
   MenuItem,
   Typography,
-  IconButton,
-  Tooltip,
   Chip,
-  Divider,
 } from "@mui/material";
 import {
   Search,
   FilterList,
-  Close,
   RestartAlt,
-  ExpandMore,
   ExpandLess,
   School,
   Place,
   Person,
-  FitnessCenter,
-  CalendarMonth,
   Download,
+  Wc,
 } from "@mui/icons-material";
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -77,6 +71,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
       settlement: "",
       feeding_type: "",
       parents_marriage: "",
+      gender: "",
       weight_min: "",
       weight_max: "",
       height_min: "",
@@ -194,6 +189,26 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       ),
                     }}
                   />
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    name="gender"
+                    label="Jinsi"
+                    value={filter.gender || ""}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Wc fontSize="small" />
+                        </InputAdornment>
+                      ),
+                    }}
+                  >
+                    <MenuItem value="">Barchasi</MenuItem>
+                    <MenuItem value="erkak">Erkak / O'g'il bola</MenuItem>
+                    <MenuItem value="ayol">Ayol / Qiz bola</MenuItem>
+                  </TextField>
                   <TextField
                     fullWidth
                     size="small"
@@ -384,6 +399,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             if (key === "date_to") label = `Sanagacha: ${value}`;
             if (key === "weight_min") label = `Vazn >= ${value}`;
             if (key === "weight_max") label = `Vazn <= ${value}`;
+            if (key === "gender") label = `Jinsi: ${value === "erkak" ? "Erkak" : "Ayol"}`;
 
             return (
               <Chip

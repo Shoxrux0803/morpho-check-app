@@ -832,6 +832,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     settlement: "",
     feeding_type: "",
     parents_marriage: "",
+    gender: "",
     weight_min: "",
     weight_max: "",
     height_min: "",
@@ -957,7 +958,18 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const handleEditSave = async () => {
     setSaving(true);
     try {
-      const { id, created_at, created_by_id, is_deleted, deleted_at, ...payload } = editForm;
+      const {
+        id,
+        created_at,
+        created_by_id,
+        created_by_name,
+        created_by_email,
+        is_deleted,
+        deleted_by_id,
+        deleted_by_name,
+        deleted_at,
+        ...payload
+      } = editForm;
       await ResearchApi.update(id, payload);
       toast.success("Ma'lumot yangilandi");
       setEditRecord(null);
@@ -989,9 +1001,14 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   };
 
   /* ── Table Components ── */
+  const getCreatorName = (row) =>
+    row.created_by_name ||
+    row.created_by_email ||
+    (row.created_by_id ? `ID: ${row.created_by_id}` : "—");
+
   const renderTable = (rows, isLoading, isDeletedView = false) => (
     <TableContainer component={GlassPaper}>
-      <Table size="small">
+      <Table size="small" sx={{ minWidth: isSuperAdmin ? 980 : 760 }}>
         <TableHead
           sx={{ background: isDeletedView ? "rgba(244,67,54,0.06)" : "rgba(0,123,255,0.06)" }}
         >
@@ -1010,6 +1027,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             <TableCell sx={{ fontWeight: 700 }}>{t("schoolKindergarten")}</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>{t("exam")}</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>{t("heightWeight")}</TableCell>
+            {isSuperAdmin && <TableCell sx={{ fontWeight: 700 }}>Kiritgan izlanuvchi</TableCell>}
             {isDeletedView && (
               <TableCell sx={{ fontWeight: 700, color: "error.main" }}>
                 {t("deletedDate")}
@@ -1023,14 +1041,18 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={isDeletedView ? 7 : 6} align="center" sx={{ py: 6 }}>
+              <TableCell
+                colSpan={isDeletedView ? (isSuperAdmin ? 8 : 7) : isSuperAdmin ? 7 : 6}
+                align="center"
+                sx={{ py: 6 }}
+              >
                 <CircularProgress />
               </TableCell>
             </TableRow>
           ) : rows.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={isDeletedView ? 7 : 6}
+                colSpan={isDeletedView ? (isSuperAdmin ? 8 : 7) : isSuperAdmin ? 7 : 6}
                 align="center"
                 sx={{ py: 6, color: "text.secondary" }}
               >
@@ -1107,6 +1129,18 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                     {row.weight ? ` ${row.weight} kg` : " —"}
                   </Typography>
                 </TableCell>
+                {isSuperAdmin && (
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={700}>
+                      {getCreatorName(row)}
+                    </Typography>
+                    {row.created_by_email && row.created_by_email !== row.created_by_name && (
+                      <Typography variant="caption" color="text.secondary">
+                        {row.created_by_email}
+                      </Typography>
+                    )}
+                  </TableCell>
+                )}
                 {isDeletedView && (
                   <TableCell>
                     <Typography variant="caption" color="error">
@@ -1705,6 +1739,13 @@ const DetailModal = ({
             ["Aholi punkti", "settlement"],
             ["Tug'ilgan joyi", "birth_place"],
             ["Tug'ilgan sana", "birth_date"],
+            ["Jinsi", "gender"],
+            ...(isSuperAdmin
+              ? [
+                  ["Kiritgan shaxs", "created_by_name"],
+                  ["Kiritgan email", "created_by_email"],
+                ]
+              : []),
             ["Ota millati", "father_nationality"],
             ["Ona millati", "mother_nationality"],
             ["Yashashni boshlagan", "living_since"],
