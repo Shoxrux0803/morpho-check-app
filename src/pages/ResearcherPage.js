@@ -94,6 +94,7 @@ import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
 import { useLanguage } from "../contexts/LanguageContext";
 import { researcherT } from "../utils/researcherI18n";
+import { pageT } from "../utils/pageI18n";
 import { useLocation, useNavigate } from "react-router-dom";
 
 /* ════════════════════════════════════════════════════
@@ -1343,6 +1344,7 @@ const ResearcherPage = () => {
   const isDark = theme.palette.mode === "dark";
   const { lang } = useLanguage();
   const tr = useCallback((key) => researcherT(lang, key), [lang]);
+  const pt = useCallback((key, fallback) => pageT(lang, key, fallback), [lang]);
   const { user, logout } = useAuth();
   const isSuperAdmin = user?.role === "superadmin";
   const location = useLocation();
@@ -1516,9 +1518,9 @@ const ResearcherPage = () => {
   };
 
   const TABS = [
-    { label: "Asosiy", icon: <Dashboard />, color: "#007bff" },
-    { label: "Tahlil qilish", icon: <Add />, color: "#00c853" },
-    { label: "Izlanuvchi panel", icon: <Assessment />, color: "#673ab7" },
+    { label: pt("homeTab"), icon: <Dashboard />, color: "#007bff" },
+    { label: pt("analyzeTab"), icon: <Add />, color: "#00c853" },
+    { label: pt("researcherPanelTab"), icon: <Assessment />, color: "#673ab7" },
     ...(isSuperAdmin ? [{ label: tr("deleted"), icon: <Delete />, color: "#f44336" }] : []),
   ];
 
@@ -1583,33 +1585,43 @@ const ResearcherPage = () => {
     }).length;
 
     const reportMetrics = [
-      { label: "Jami yozuv", value: data.length, helper: "Tadqiqot bazasi", color: "#0891b2" },
-      { label: "30 kun", value: recentCount, helper: "Yangi kiritilgan", color: "#16a34a" },
-      { label: "Hisobot", value: "DOCX", helper: "Eksport tayyor", color: "#ca8a04" },
+      {
+        label: tr("totalRecords"),
+        value: data.length,
+        helper: pt("researchBase"),
+        color: "#0891b2",
+      },
+      { label: "30 kun", value: recentCount, helper: pt("newlyEntered"), color: "#16a34a" },
+      {
+        label: pt("featureReportsTitle"),
+        value: "DOCX",
+        helper: pt("exportReady"),
+        color: "#ca8a04",
+      },
     ];
 
     const featureCards = [
       {
-        title: "Tahlil qilish",
-        text: "Yangi bola yoki o'smir bo'yicha pasport ma'lumotlari va antropometrik o'lchovlarni kiriting.",
+        title: pt("analyzeTab"),
+        text: pt("featureAnalyzeText"),
         icon: <Science />,
         color: "#0891b2",
       },
       {
-        title: "Izlanuvchi panel",
-        text: "Kiritilgan yozuvlarni ko'ring, qidiring, filtrlash va tahrirlash jarayonini boshqaring.",
+        title: pt("researcherPanelTab"),
+        text: pt("featurePanelText"),
         icon: <People />,
         color: "#16a34a",
       },
       {
-        title: "Statistik tahlil",
-        text: "Bo'y, vazn, BMI, jins, hudud va yosh bo'yicha umumiy ko'rsatkichlar avtomatik jamlanadi.",
+        title: pt("featureStatsTitle"),
+        text: pt("featureStatsText"),
         icon: <TrendingUp />,
         color: "#2563eb",
       },
       {
-        title: "Hisobotlar",
-        text: "Yig'ilgan ma'lumotlarni DOCX yoki Excel formatida ilmiy hisobotlar uchun tayyorlang.",
+        title: pt("featureReportsTitle"),
+        text: pt("featureReportsText"),
         icon: <Description />,
         color: "#ca8a04",
       },
@@ -1642,7 +1654,7 @@ const ResearcherPage = () => {
                 }}
               >
                 <CheckCircle fontSize="small" />
-                Izlanuvchi uchun raqamli antropometriya
+                {pt("researcherHeroBadge", "Izlanuvchi uchun raqamli antropometriya")}
               </Box>
 
               <Typography
@@ -1656,7 +1668,7 @@ const ResearcherPage = () => {
                   color: "text.primary",
                 }}
               >
-                Raqamli
+                {pt("researcherHeroTitle1", "Raqamli")}
                 <Box
                   component="span"
                   sx={{
@@ -1669,7 +1681,7 @@ const ResearcherPage = () => {
                   }}
                 >
                   {" "}
-                  tadqiqot oynasi
+                  {pt("researcherHeroTitle2", "tadqiqot oynasi")}
                 </Box>
               </Typography>
 
@@ -1678,9 +1690,10 @@ const ResearcherPage = () => {
                 color="text.secondary"
                 sx={{ maxWidth: 760, lineHeight: 1.7, fontWeight: 500 }}
               >
-                Izlanuvchi uchun asosiy sahifa ma'lumot kiritish, klinik-antropometrik yozuvlarni
-                tartiblash, statistik ko'rsatkichlarni ko'rish va hisobotlarni tayyorlash jarayonini
-                bitta yo'nalishda birlashtiradi.
+                {pt(
+                  "researcherHeroDesc",
+                  "Izlanuvchi uchun asosiy sahifa ma'lumot kiritish, klinik-antropometrik yozuvlarni tartiblash, statistik ko'rsatkichlarni ko'rish va hisobotlarni tayyorlash jarayonini bitta yo'nalishda birlashtiradi.",
+                )}
               </Typography>
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 4 }}>
@@ -1698,7 +1711,7 @@ const ResearcherPage = () => {
                     boxShadow: "0 18px 38px rgba(8, 145, 178, 0.24)",
                   }}
                 >
-                  Tahlil qilish
+                  {pt("analyzeTab")}
                 </Button>
                 <Button
                   variant="outlined"
@@ -1714,7 +1727,7 @@ const ResearcherPage = () => {
                     bgcolor: isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.68)",
                   }}
                 >
-                  Izlanuvchi panel
+                  {pt("researcherPanelTab")}
                 </Button>
               </Stack>
             </motion.div>
@@ -1742,10 +1755,10 @@ const ResearcherPage = () => {
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
                   <Box>
                     <Typography variant="overline" color="primary.main" fontWeight={900}>
-                      Jonli hisobot
+                      {pt("liveReport")}
                     </Typography>
                     <Typography variant="h5" fontWeight={950}>
-                      Tadqiqot holati
+                      {pt("researchStatus")}
                     </Typography>
                   </Box>
                   <Box
@@ -1814,10 +1827,10 @@ const ResearcherPage = () => {
                     </Box>
                     <Box>
                       <Typography variant="subtitle1" fontWeight={900}>
-                        Ma'lumotlar tayyor
+                        {pt("dataReady")}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Panel orqali yozuvlarni filtrlash, ko'rish va eksport qilish mumkin.
+                        {pt("dataReadyDesc")}
                       </Typography>
                     </Box>
                   </Stack>
@@ -2022,10 +2035,10 @@ const ResearcherPage = () => {
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
                       <Typography variant="h4" fontWeight={900}>
-                        Izlanuvchi panel
+                        {pt("researcherPanelTab")}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Ma'lumotlar bazasi, filtrlar va statistik tahlillar
+                        {tr("databaseSubtitle")}
                       </Typography>
                     </Box>
                     <Box display="flex" gap={2}>
@@ -2139,7 +2152,7 @@ const ResearcherPage = () => {
                       bgcolor: "rgba(2, 136, 209, 0.05)",
                     }}
                   >
-                    Savatchadagi yozuvlar 30 kundan keyin avtomatik o'chirilishi mumkin.
+                    {pt("trashInfo")}
                   </Alert>
                   <RecordsTable
                     rows={deletedData}

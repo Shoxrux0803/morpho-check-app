@@ -71,6 +71,7 @@ import {
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
+import { pageT } from "../utils/pageI18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminApi, ResearchApi } from "../services/api";
 import { toast } from "react-hot-toast";
@@ -155,6 +156,7 @@ const SuperAdminPage = () => {
   const { user, login: authLogin, logout, loading: authLoading } = useAuth();
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
+  const pt = useCallback((key) => pageT(lang, key), [lang]);
   const [activeTab, setActiveTab] = useState(0);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -185,6 +187,9 @@ const SuperAdminPage = () => {
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
+  const adminMahallaValue = adminForm.mahalla || "";
+  const hasSelectedAdminMahallaOption =
+    !adminMahallaValue || mahallaOptions.some((mahalla) => mahalla.label === adminMahallaValue);
 
   // Deleted Data State
   const [deletedData, setDeletedData] = useState([]);
@@ -652,7 +657,7 @@ const SuperAdminPage = () => {
         navigate("/");
       }
     } catch (err) {
-      setLoginError(err.message || "Kirishda xatolik yuz berdi");
+      setLoginError(err.message || pt("errorPrefix"));
     } finally {
       setLoginInProgress(false);
     }
@@ -662,16 +667,16 @@ const SuperAdminPage = () => {
     // Validation
     if (adminForm.password) {
       if (adminForm.password !== adminForm.confirmPassword) {
-        toast.error("Parollar mos kelmadi!");
+        toast.error(pt("passwordsNoMatch"));
         return;
       }
       if (adminForm.password.length < 6) {
-        toast.error("Parol kamida 6 ta belgidan iborat bo'lishi kerak!");
+        toast.error(`${pt("password")} 6+`);
         return;
       }
     } else if (!currentAdmin) {
       // New admin must have a password
-      toast.error("Parol kiritish majburiy!");
+      toast.error(pt("password"));
       return;
     }
 
@@ -701,12 +706,12 @@ const SuperAdminPage = () => {
         if (!payload.password) delete payload.password;
 
         await AdminApi.users.update(currentAdmin.id, payload);
-        toast.success("Admin muvaffaqiyatli yangilandi");
+        toast.success(pt("updated"));
       } else {
         // UserCreate needs password_confirm
         payload.password_confirm = confirmPassword;
         await AdminApi.users.create(payload);
-        toast.success("Yangi admin muvaffaqiyatli qo'shildi");
+        toast.success(pt("newAdmin"));
       }
       setAdminDialogOpen(false);
       fetchAdmins();
@@ -790,7 +795,7 @@ const SuperAdminPage = () => {
     setBackupLoading(true);
     try {
       await AdminApi.backup.create();
-      toast.success("Zaxira nusxasi yaratildi");
+      toast.success(pt("createBackup"));
       fetchBackups();
     } catch (err) {
       toast.error("Xatolik: " + err.message);
@@ -818,7 +823,7 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteBackup = async (filename) => {
-    if (window.confirm(`Zaxira faylini (${filename}) o'chirmoqchimisiz?`)) {
+    if (window.confirm(`${pt("delete")}: ${filename}?`)) {
       try {
         await AdminApi.backup.delete(filename);
         toast.success("Fayl o'chirildi");
@@ -883,7 +888,7 @@ const SuperAdminPage = () => {
                 Super Admin
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Tizimni boshqarish uchun hisobingizga kiring
+                {pt("superLoginSubtitle")}
               </Typography>
             </Box>
 
@@ -897,7 +902,7 @@ const SuperAdminPage = () => {
               <Stack spacing={3}>
                 <TextField
                   fullWidth
-                  label="Email yoki Login"
+                  label={pt("emailOrLogin")}
                   variant="outlined"
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
@@ -911,7 +916,7 @@ const SuperAdminPage = () => {
                 />
                 <TextField
                   fullWidth
-                  label="Parol"
+                  label={pt("password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   value={loginForm.password}
@@ -946,7 +951,7 @@ const SuperAdminPage = () => {
                     textTransform: "none",
                   }}
                 >
-                  {loginInProgress ? <CircularProgress size={24} color="inherit" /> : "Kirish"}
+                  {loginInProgress ? <CircularProgress size={24} color="inherit" /> : pt("login")}
                 </Button>
               </Stack>
             </Box>
@@ -1020,7 +1025,7 @@ const SuperAdminPage = () => {
               gap={2}
             >
               <Typography variant="h4" fontWeight={800}>
-                Adminlar Boshqaruvi
+                {pt("adminManagement")}
               </Typography>
               <Button
                 variant="contained"
@@ -1046,7 +1051,7 @@ const SuperAdminPage = () => {
                 }}
                 sx={{ borderRadius: 2 }}
               >
-                Yangi Admin
+                {pt("newAdmin")}
               </Button>
             </Box>
 
@@ -1054,12 +1059,12 @@ const SuperAdminPage = () => {
               <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}>
                 <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Ism</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("name")}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Rol</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Telefon</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("role")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("phone")}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      Amallar
+                      {pt("actions")}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -1129,7 +1134,7 @@ const SuperAdminPage = () => {
           <Stack spacing={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h4" fontWeight={800}>
-                O'chirilgan ma'lumotlar
+                {pt("deletedData")}
               </Typography>
               {checked.size > 0 && (
                 <Stack direction="row" spacing={2}>
@@ -1139,7 +1144,7 @@ const SuperAdminPage = () => {
                     startIcon={<Refresh />}
                     onClick={handleBulkRestore}
                   >
-                    Tiklash ({checked.size})
+                    {pt("restore")} ({checked.size})
                   </Button>
                   <Button
                     variant="contained"
@@ -1147,7 +1152,7 @@ const SuperAdminPage = () => {
                     startIcon={<DeleteForever />}
                     onClick={handleBulkHardDelete}
                   >
-                    Butunlay o'chirish ({checked.size})
+                    {pt("hardDelete")} ({checked.size})
                   </Button>
                 </Stack>
               )}
@@ -1168,11 +1173,11 @@ const SuperAdminPage = () => {
                       />
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>ID Kod</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Bemor</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Kim o'chirdi</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>O'chirilgan sana</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("patient")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("deletedBy")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("deletedAt")}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      Amallar
+                      {pt("actions")}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -1186,7 +1191,7 @@ const SuperAdminPage = () => {
                   ) : deletedData.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                        Bo'sh
+                        {pt("empty")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -1226,7 +1231,7 @@ const SuperAdminPage = () => {
                         <TableCell>{getDeletedDate(item)}</TableCell>
                         <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                           <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Tooltip title="Batafsil">
+                            <Tooltip title={pt("detailsTitle")}>
                               <IconButton
                                 size="small"
                                 color="info"
@@ -1235,7 +1240,7 @@ const SuperAdminPage = () => {
                                 <Visibility />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Tiklash">
+                            <Tooltip title={pt("restore")}>
                               <IconButton
                                 size="small"
                                 color="success"
@@ -1244,7 +1249,7 @@ const SuperAdminPage = () => {
                                 <Refresh />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Butunlay o'chirish">
+                            <Tooltip title={pt("hardDelete")}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -1263,18 +1268,18 @@ const SuperAdminPage = () => {
             </TableContainer>
 
             <Typography variant="h5" fontWeight={700} sx={{ mt: 4, mb: 2 }}>
-              O'chirilgan Adminlar / Izlanuvchilar
+              {pt("deletedAdminsResearchers")}
             </Typography>
             <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
               <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Ism</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("name")}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Rol</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>O'chirilgan sana</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("role")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("deletedAt")}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      Amallar
+                      {pt("actions")}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -1288,7 +1293,7 @@ const SuperAdminPage = () => {
                   ) : deletedAdmins.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                        Bo'sh
+                        {pt("empty")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -1312,7 +1317,7 @@ const SuperAdminPage = () => {
                           {item.deleted_at ? new Date(item.deleted_at).toLocaleString() : "-"}
                         </TableCell>
                         <TableCell align="right">
-                          <Tooltip title="Tiklash">
+                          <Tooltip title={pt("restore")}>
                             <IconButton
                               size="small"
                               color="success"
@@ -1334,17 +1339,17 @@ const SuperAdminPage = () => {
         return (
           <Stack spacing={3}>
             <Typography variant="h4" fontWeight={800}>
-              Xavfsizlik
+              {pt("security")}
             </Typography>
             <GlassPaper sx={{ p: { xs: 2, md: 4 }, maxWidth: 600, width: "100%" }}>
               <Typography variant="h6" gutterBottom>
-                Parolni o'zgartirish
+                {pt("changePassword")}
               </Typography>
-              <TextField fullWidth label="Mavjud parol" type="password" margin="normal" />
-              <TextField fullWidth label="Yangi parol" type="password" margin="normal" />
+              <TextField fullWidth label={pt("currentPassword")} type="password" margin="normal" />
+              <TextField fullWidth label={pt("newPassword")} type="password" margin="normal" />
               <TextField
                 fullWidth
-                label="Yangi parolni tasdiqlang"
+                label={pt("confirmNewPassword")}
                 type="password"
                 margin="normal"
               />
@@ -1352,7 +1357,7 @@ const SuperAdminPage = () => {
                 variant="contained"
                 sx={{ mt: 3, borderRadius: 2, width: { xs: "100%", sm: "auto" } }}
               >
-                Yangilash
+                {pt("update")}
               </Button>
             </GlassPaper>
           </Stack>
@@ -1368,7 +1373,7 @@ const SuperAdminPage = () => {
               gap={2}
             >
               <Typography variant="h4" fontWeight={800}>
-                Tizim Jurnali (Audit)
+                {pt("auditLog")}
               </Typography>
               <Button
                 startIcon={<Delete />}
@@ -1376,17 +1381,17 @@ const SuperAdminPage = () => {
                 variant="outlined"
                 onClick={handleClearAudit}
               >
-                Tozalash
+                {pt("clear")}
               </Button>
             </Box>
             <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
               <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 700, lg: 850 } }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Vaqt</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Foydalanuvchi</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Amal</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Ob'ekt</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("time")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("user")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("action")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("object")}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1426,7 +1431,7 @@ const SuperAdminPage = () => {
               gap={2}
             >
               <Typography variant="h4" fontWeight={800}>
-                Zaxira Nusxalari (Backup)
+                {pt("backupsTitle")}
               </Typography>
               <Button
                 startIcon={<CloudUpload />}
@@ -1434,18 +1439,18 @@ const SuperAdminPage = () => {
                 onClick={handleCreateBackup}
                 disabled={backupLoading}
               >
-                Yangi nusxa yaratish
+                {pt("createBackup")}
               </Button>
             </Box>
             <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
               <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 700 } }}>
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Fayl nomi</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Hajmi</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Vaqti</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("filename")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("size")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt("time")}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      Amallar
+                      {pt("actions")}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -1467,7 +1472,7 @@ const SuperAdminPage = () => {
                         <TableCell>{new Date(b.created_at).toLocaleString()}</TableCell>
                         <TableCell align="right">
                           <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Tooltip title="Tiklash">
+                            <Tooltip title={pt("restore")}>
                               <IconButton
                                 color="primary"
                                 onClick={() => handleRestoreBackup(b.filename)}
@@ -1475,7 +1480,7 @@ const SuperAdminPage = () => {
                                 <Refresh />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="O'chirish">
+                            <Tooltip title={pt("delete")}>
                               <IconButton
                                 color="error"
                                 onClick={() => handleDeleteBackup(b.filename)}
@@ -1560,7 +1565,7 @@ const SuperAdminPage = () => {
                   {user.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Super Administrator
+                  {pt("adminManagement")}
                 </Typography>
               </Box>
 
@@ -1605,7 +1610,7 @@ const SuperAdminPage = () => {
                 <Tab
                   icon={<Dashboard sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Dashboard"
+                  label={pt("dashboard")}
                 />
                 <Tab
                   icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
@@ -1615,42 +1620,42 @@ const SuperAdminPage = () => {
                 <Tab
                   icon={<Place sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Hududiy xarita"
+                  label={pt("regionalMap")}
                 />
                 <Tab
                   icon={<People sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Adminlar"
+                  label={pt("admins")}
                 />
                 <Tab
                   icon={<RestoreFromTrash sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="O'chirilganlar"
+                  label={pt("deleted")}
                 />
                 <Tab
                   icon={<Security sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Xavfsizlik"
+                  label={pt("security")}
                 />
                 <Tab
                   icon={<History sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Audit Jurnali"
+                  label={pt("auditLog")}
                 />
                 <Tab
                   icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Backup"
+                  label={pt("backup")}
                 />
                 <Tab
                   icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Klinik CMS"
+                  label={pt("clinicalCms")}
                 />
                 <Tab
                   icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Top chart"
+                  label={pt("topChart")}
                 />
               </Tabs>
 
@@ -1668,7 +1673,7 @@ const SuperAdminPage = () => {
                   onClick={() => setLogoutDialogOpen(true)}
                   sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}
                 >
-                  Chiqish
+                  {pt("logout")}
                 </Button>
               </Box>
             </GlassPaper>
@@ -1711,12 +1716,12 @@ const SuperAdminPage = () => {
           fullWidth
         >
           <DialogTitle sx={{ fontWeight: 800 }}>
-            {currentAdmin ? "Adminni tahrirlash" : "Yangi Admin qo'shish"}
+            {currentAdmin ? pt("adminEdit") : pt("addAdmin")}
           </DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField
-                label="F.I.SH"
+                label={pt("fullName")}
                 fullWidth
                 value={adminForm.name}
                 onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
@@ -1729,7 +1734,7 @@ const SuperAdminPage = () => {
               />
 
               <TextField
-                label={currentAdmin ? "Yangi parol (ixtiyoriy)" : "Parol"}
+                label={currentAdmin ? `${pt("newPassword")} (${pt("optional")})` : pt("password")}
                 type={showAdminPassword ? "text" : "password"}
                 fullWidth
                 value={adminForm.password}
@@ -1749,7 +1754,7 @@ const SuperAdminPage = () => {
               />
 
               <TextField
-                label="Parolni tasdiqlash"
+                label={pt("confirmPassword")}
                 type={showAdminPassword ? "text" : "password"}
                 fullWidth
                 value={adminForm.confirmPassword}
@@ -1761,7 +1766,7 @@ const SuperAdminPage = () => {
                 helperText={
                   adminForm.password !== adminForm.confirmPassword &&
                   adminForm.confirmPassword !== ""
-                    ? "Parollar mos kelmadi"
+                    ? pt("passwordsNoMatch")
                     : ""
                 }
                 InputProps={{
@@ -1779,10 +1784,10 @@ const SuperAdminPage = () => {
               />
 
               <FormControl fullWidth>
-                <InputLabel>Rol</InputLabel>
+                <InputLabel>{pt("role")}</InputLabel>
                 <Select
                   value={adminForm.role}
-                  label="Rol"
+                  label={pt("role")}
                   onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
                 >
                   <MenuItem value="admin">Administrator</MenuItem>
@@ -1791,16 +1796,16 @@ const SuperAdminPage = () => {
                 </Select>
               </FormControl>
               <TextField
-                label="Telefon"
+                label={pt("phone")}
                 fullWidth
                 value={adminForm.phone || ""}
                 onChange={(e) => setAdminForm({ ...adminForm, phone: e.target.value })}
               />
               <FormControl fullWidth>
-                <InputLabel>Viloyat</InputLabel>
+                <InputLabel>{pt("region")}</InputLabel>
                 <Select
                   value={adminForm.region || ""}
-                  label="Viloyat"
+                  label={pt("region")}
                   onChange={(e) =>
                     setAdminForm({
                       ...adminForm,
@@ -1810,7 +1815,7 @@ const SuperAdminPage = () => {
                     })
                   }
                 >
-                  <MenuItem value="">Barchasi (Global)</MenuItem>
+                  <MenuItem value="">{pt("allGlobal")}</MenuItem>
                   {Object.keys(UZB_LOCATIONS).map((r) => (
                     <MenuItem key={r} value={r}>
                       {r}
@@ -1819,15 +1824,15 @@ const SuperAdminPage = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth disabled={!adminForm.region}>
-                <InputLabel>Tuman/Shahar</InputLabel>
+                <InputLabel>{pt("districtCity")}</InputLabel>
                 <Select
                   value={adminForm.district || ""}
-                  label="Tuman/Shahar"
+                  label={pt("districtCity")}
                   onChange={(e) =>
                     setAdminForm({ ...adminForm, district: e.target.value, mahalla: "" })
                   }
                 >
-                  {!adminForm.region && <MenuItem value="">Avval viloyat tanlang</MenuItem>}
+                  {!adminForm.region && <MenuItem value="">{pt("chooseRegionFirst")}</MenuItem>}
                   {(UZB_LOCATIONS[adminForm.region] || []).map((district) => (
                     <MenuItem key={district} value={district}>
                       {district}
@@ -1836,17 +1841,18 @@ const SuperAdminPage = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth disabled={!adminForm.district || mahallaLoading}>
-                <InputLabel>Mahalla</InputLabel>
+                <InputLabel>{pt("mahalla")}</InputLabel>
                 <Select
-                  value={adminForm.mahalla || ""}
-                  label="Mahalla"
+                  value={adminMahallaValue}
+                  label={pt("mahalla")}
                   onChange={(e) => setAdminForm({ ...adminForm, mahalla: e.target.value })}
                 >
-                  {mahallaLoading && <MenuItem value="">Mahallalar yuklanmoqda...</MenuItem>}
+                  {mahallaLoading && <MenuItem value="">{pt("mahallasLoading")}</MenuItem>}
                   {!mahallaLoading && mahallaOptions.length === 0 && (
-                    <MenuItem value="">
-                      Mahalla qatlamlari topilmadi yoki tuman mos kelmadi
-                    </MenuItem>
+                    <MenuItem value="">{pt("mahallaNotFound")}</MenuItem>
+                  )}
+                  {!hasSelectedAdminMahallaOption && (
+                    <MenuItem value={adminMahallaValue}>{adminMahallaValue}</MenuItem>
                   )}
                   {mahallaOptions.map((mahalla) => (
                     <MenuItem key={mahalla.boundary_id || mahalla.id} value={mahalla.label}>
@@ -1856,7 +1862,7 @@ const SuperAdminPage = () => {
                 </Select>
               </FormControl>
               <TextField
-                label="Aniq manzil"
+                label={pt("address")}
                 fullWidth
                 value={adminForm.address || ""}
                 onChange={(e) => setAdminForm({ ...adminForm, address: e.target.value })}
@@ -1885,7 +1891,7 @@ const SuperAdminPage = () => {
                   disabled={!adminForm.region}
                   sx={{ borderRadius: 1.5, textTransform: "none", fontWeight: 800 }}
                 >
-                  Hudud markaziga pin
+                  {pt("pinRegionCenter")}
                 </Button>
                 <Button
                   variant="contained"
@@ -1893,15 +1899,15 @@ const SuperAdminPage = () => {
                   onClick={useCurrentLocationForAdmin}
                   sx={{ borderRadius: 1.5, textTransform: "none", fontWeight: 800 }}
                 >
-                  Joriy lokatsiyani olish
+                  {pt("getCurrentLocation")}
                 </Button>
               </Stack>
             </Stack>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setAdminDialogOpen(false)}>Bekor qilish</Button>
+            <Button onClick={() => setAdminDialogOpen(false)}>{pt("cancel")}</Button>
             <Button variant="contained" onClick={handleAdminAction}>
-              Saqlash
+              {pt("save")}
             </Button>
           </DialogActions>
         </Dialog>
@@ -1920,11 +1926,10 @@ const SuperAdminPage = () => {
           onClose={() => setDeleteConfirmOpen(false)}
           PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
         >
-          <DialogTitle sx={{ fontWeight: 800 }}>Butunlay o'chirish</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>{pt("hardDelete")}</DialogTitle>
           <DialogContent>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz. Bularni bazadan butunlay
-              o'chirib tashlamoqchimisiz?
+              {pt("selectedPermanentDelete").replace("{count}", checked.size)}
             </Typography>
             <Box
               sx={{
@@ -1943,13 +1948,13 @@ const SuperAdminPage = () => {
                 color="error.dark"
                 sx={{ display: "flex", alignItems: "center", gap: 1 }}
               >
-                <DeleteForever fontSize="small" /> DIQQAT: Bu amalni qaytarib bo'lmaydi!
+                <DeleteForever fontSize="small" /> {pt("irreversibleWarning")}
               </Typography>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, gap: 1 }}>
             <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">
-              Bekor qilish
+              {pt("cancel")}
             </Button>
             <Button
               variant="contained"
@@ -1985,7 +1990,7 @@ const SuperAdminPage = () => {
               {deleteConfirmLoading ? (
                 <CircularProgress size={20} color="inherit" />
               ) : (
-                "Ha, butunlay o'chirilsin"
+                pt("yesHardDelete")
               )}
             </Button>
           </DialogActions>
@@ -2002,7 +2007,7 @@ const SuperAdminPage = () => {
             <DialogTitle>
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Typography variant="h6" fontWeight="bold">
-                  O'chirilgan ma'lumot tafsiloti
+                  {pt("deletedDetails")}
                 </Typography>
                 <IconButton onClick={() => setViewRow(null)} size="small">
                   <Close />
@@ -2024,7 +2029,7 @@ const SuperAdminPage = () => {
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">
-                      Bemor
+                      {pt("patient")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
                       {getDeletedRowPatientName(viewRow)}
@@ -2034,7 +2039,7 @@ const SuperAdminPage = () => {
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">
-                      Yoshi / Jinsi
+                      {pt("ageGender")}
                     </Typography>
                     <Typography variant="body1">
                       {viewRow.age ? `${viewRow.age} yosh` : "-"} / {getGenderLabel(viewRow.gender)}
@@ -2063,7 +2068,7 @@ const SuperAdminPage = () => {
                     }}
                   >
                     <Typography variant="caption" color="error.dark">
-                      O'chirgan shaxs
+                      {pt("deletedBy")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
                       {getDeletedByName(viewRow)}
@@ -2084,7 +2089,7 @@ const SuperAdminPage = () => {
                     }}
                   >
                     <Typography variant="caption" color="error.dark">
-                      O'chirilgan vaqt
+                      {pt("deletedAt")}
                     </Typography>
                     <Typography variant="body1">{getDeletedDate(viewRow)}</Typography>
                   </Box>
@@ -2093,7 +2098,7 @@ const SuperAdminPage = () => {
                   <Grid item xs={12}>
                     <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
                       <Typography variant="caption" color="text.secondary">
-                        Hudud / muassasa
+                        {pt("locationInstitution")}
                       </Typography>
                       <Typography variant="body1">
                         {[viewRow.region || viewRow.settlement, viewRow.school_name]
@@ -2115,7 +2120,7 @@ const SuperAdminPage = () => {
                   setViewRow(null);
                 }}
               >
-                Tiklash
+                {pt("restore")}
               </Button>
               <Button
                 variant="outlined"
@@ -2126,10 +2131,10 @@ const SuperAdminPage = () => {
                   setViewRow(null);
                 }}
               >
-                Butunlay o'chirish
+                {pt("hardDelete")}
               </Button>
               <Button onClick={() => setViewRow(null)} color="inherit">
-                Yopish
+                {pt("close")}
               </Button>
             </DialogActions>
           </Dialog>

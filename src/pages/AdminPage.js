@@ -63,6 +63,7 @@ import {
   CheckCircle,
 } from "@mui/icons-material";
 import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
+import { pageT } from "../utils/pageI18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 
@@ -204,6 +205,8 @@ function CustomModal({
 }) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const { lang } = useLanguage();
+  const pt = useCallback((key) => pageT(lang, key), [lang]);
 
   return (
     <Dialog
@@ -237,11 +240,15 @@ function CustomModal({
             disabled={isDownloading || isPdfDownloading}
             sx={{ borderRadius: 2 }}
           >
-            Word
+            {pt("downloadWord")}
           </Button>
           <FormControl size="small" sx={{ minWidth: 90 }}>
-            <InputLabel>Til</InputLabel>
-            <Select value={pdfLang} label="Til" onChange={(e) => setPdfLang(e.target.value)}>
+            <InputLabel>{pt("pdfLang")}</InputLabel>
+            <Select
+              value={pdfLang}
+              label={pt("pdfLang")}
+              onChange={(e) => setPdfLang(e.target.value)}
+            >
               {LANGUAGES.map((l) => (
                 <MenuItem key={l.code} value={l.code}>
                   {l.flag} {l.label}
@@ -259,11 +266,11 @@ function CustomModal({
             disabled={isDownloading || isPdfDownloading}
             sx={{ borderRadius: 2 }}
           >
-            PDF hisobot
+            {pt("downloadPdf")}
           </Button>
         </Box>
         <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>
-          Yopish
+          {pt("close")}
         </Button>
       </DialogActions>
     </Dialog>
@@ -277,6 +284,7 @@ export default function AdminPage() {
   const { user, login: authLogin, loading: authLoading } = useAuth();
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
+  const pt = useCallback((key) => pageT(lang, key), [lang]);
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
@@ -402,9 +410,9 @@ export default function AdminPage() {
         setActiveTab(1);
       })
       .catch(() => {
-        toast.error("QR orqali ochilgan rekord topilmadi yoki ruxsat yo'q.");
+        toast.error(pt("recordNotFound"));
       });
-  }, [location.search, user]);
+  }, [location.search, pt, user]);
 
   const handleLogin = useCallback(
     async (e) => {
@@ -419,12 +427,12 @@ export default function AdminPage() {
           navigate("/");
         }
       } catch (err) {
-        setLoginError(err.message || "Kirishda xatolik yuz berdi");
+        setLoginError(err.message || pt("errorPrefix"));
       } finally {
         setLoginInProgress(false);
       }
     },
-    [authLogin, loginForm, navigate],
+    [authLogin, loginForm, navigate, pt],
   );
 
   const handleUpdateAnalysis = useCallback(
@@ -434,16 +442,16 @@ export default function AdminPage() {
       setUpdating(true);
       try {
         await AdminApi.analyses.update(editRow.id, editRow);
-        toast.success("Ma'lumot yangilandi");
+        toast.success(pt("updated"));
         setEditRow(null);
         load();
       } catch (err) {
-        toast.error("Xatolik: " + err.message);
+        toast.error(`${pt("errorPrefix")} ${err.message}`);
       } finally {
         setUpdating(false);
       }
     },
-    [editRow, load],
+    [editRow, load, pt],
   );
 
   const handleEditInputChange = useCallback((e) => {
@@ -526,21 +534,21 @@ export default function AdminPage() {
       try {
         if (mode === "hard") {
           await AdminApi.analyses.hardDelete(Array.from(checked));
-          toast.success("Ma'lumotlar butunlay o'chirildi");
+          toast.success(pt("hardDeleted"));
         } else {
           await AdminApi.analyses.removeMany(Array.from(checked));
-          toast.success("Ma'lumotlar savatga yuborildi. Superadmin ularni tiklashi mumkin.");
+          toast.success(pt("movedTrashNotice"));
         }
         setChecked(new Set());
         setDeleteConfirmOpen(false);
         load();
       } catch (e) {
-        toast.error("O'chirishda xatolik: " + e.message);
+        toast.error(`${pt("deleteError")} ${e.message}`);
       } finally {
         setDeleteConfirmLoading(false);
       }
     },
-    [checked, load],
+    [checked, load, pt],
   );
 
   const onDeleteSelected = useCallback(async () => {
@@ -619,13 +627,13 @@ export default function AdminPage() {
       a.href = url;
       a.download = `analyses_export_${new Date().toISOString().split("T")[0]}.xlsx`;
       a.click();
-      toast.success("Excel muvaffaqiyatli yuklandi");
+      toast.success(pt("excelLoaded"));
     } catch (e) {
-      toast.error("Excel yuklashda xatolik: " + e.message);
+      toast.error(`${pt("excelError")} ${e.message}`);
     } finally {
       setExportingXlsx(false);
     }
-  }, [dashFilters]);
+  }, [dashFilters, pt]);
 
   const handleDownloadTemplate = useCallback(async () => {
     try {
@@ -635,11 +643,11 @@ export default function AdminPage() {
       a.href = url;
       a.download = `morphocheck_template.xlsx`;
       a.click();
-      toast.success("Shablon yuklandi");
+      toast.success(pt("templateLoaded"));
     } catch (e) {
-      toast.error("Shablonni yuklashda xatolik: " + e.message);
+      toast.error(`${pt("templateError")} ${e.message}`);
     }
-  }, []);
+  }, [pt]);
 
   const handleImportXlsx = useCallback(async () => {
     if (!importFile) return;
@@ -651,24 +659,24 @@ export default function AdminPage() {
       const errorCount = res?.errors?.length || 0;
       const skippedCount = res?.skipped || errorCount || 0;
       toast.success(
-        `Tayyor! ${res.imported} ta yangi, ${res.updated} ta yangilangan${
-          skippedCount ? `, ${skippedCount} ta o'tkazib yuborildi` : ""
+        `${pt("ready")} ${res.imported} ${pt("newCount")}, ${res.updated} ${pt("updatedCount")}${
+          skippedCount ? `, ${skippedCount} ${pt("skippedCount")}` : ""
         }`,
       );
       if (!res.errors || res.errors.length === 0) setImportConfirmOpen(false);
       load();
     } catch (e) {
-      toast.error("Importda xatolik: " + e.message);
+      toast.error(`${pt("importError")} ${e.message}`);
     } finally {
       setImportingXlsx(false);
     }
-  }, [importFile, load]);
+  }, [importFile, load, pt]);
 
   const availableTabs = useMemo(() => {
     const allTabs = [
       {
         id: 0,
-        label: "Dashboard",
+        label: pt("dashboard"),
         icon: <DashboardIcon />,
         roles: ["admin", "superadmin"],
         content: (
@@ -685,7 +693,7 @@ export default function AdminPage() {
       },
       {
         id: 1,
-        label: "Ma'lumotlar",
+        label: pt("data"),
         icon: <ListIcon />,
         roles: ["admin", "superadmin"],
         content: (
@@ -699,7 +707,7 @@ export default function AdminPage() {
               mb={3}
             >
               <Typography variant="h5" fontWeight="bold">
-                Ma'lumotlar Listi
+                {pt("dataListTitle")}
               </Typography>
               <Box display="flex" gap={1.5} flexWrap="wrap">
                 <Button
@@ -708,7 +716,7 @@ export default function AdminPage() {
                   onClick={handleDownloadTemplate}
                   startIcon={<Download />}
                 >
-                  Shablon
+                  {pt("template")}
                 </Button>
                 <Button
                   variant="outlined"
@@ -716,7 +724,7 @@ export default function AdminPage() {
                   onClick={() => setImportConfirmOpen(true)}
                   startIcon={importingXlsx ? <CircularProgress size={20} /> : <Visibility />}
                 >
-                  Import
+                  {pt("import")}
                 </Button>
                 <Button
                   variant="outlined"
@@ -725,7 +733,7 @@ export default function AdminPage() {
                   onClick={handleExportXlsx}
                   disabled={exportingXlsx}
                 >
-                  Eksport
+                  {pt("export")}
                 </Button>
                 <Button
                   variant="outlined"
@@ -734,7 +742,7 @@ export default function AdminPage() {
                   onClick={onDeleteSelected}
                   disabled={!checked.size}
                 >
-                  O'chirish ({checked.size})
+                  {pt("delete")} ({checked.size})
                 </Button>
               </Box>
             </Box>
@@ -793,7 +801,7 @@ export default function AdminPage() {
 
       {
         id: 3,
-        label: "Izlanuvchi ma'lumotlari",
+        label: pt("researcherData"),
         icon: <Assessment />,
         roles: ["superadmin"],
         content: <ResearcherDataView isSuperAdmin={user?.role === "superadmin"} />,
@@ -813,6 +821,7 @@ export default function AdminPage() {
     exportingXlsx,
     handleExportXlsx,
     onDeleteSelected,
+    pt,
     checked,
     dashFilters,
     pageLabels,
@@ -867,7 +876,7 @@ export default function AdminPage() {
                 Admin Panel
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Tizimga kirish uchun login va parolingizni kiriting
+                {pt("loginSubtitle")}
               </Typography>
             </Box>
 
@@ -881,7 +890,7 @@ export default function AdminPage() {
               <Stack spacing={3}>
                 <TextField
                   fullWidth
-                  label="Email yoki Login"
+                  label={pt("emailOrLogin")}
                   variant="outlined"
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
@@ -895,7 +904,7 @@ export default function AdminPage() {
                 />
                 <TextField
                   fullWidth
-                  label="Parol"
+                  label={pt("password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   value={loginForm.password}
@@ -930,7 +939,7 @@ export default function AdminPage() {
                     textTransform: "none",
                   }}
                 >
-                  {loginInProgress ? <CircularProgress size={24} color="inherit" /> : "Kirish"}
+                  {loginInProgress ? <CircularProgress size={24} color="inherit" /> : pt("login")}
                 </Button>
               </Stack>
             </Box>
@@ -945,10 +954,10 @@ export default function AdminPage() {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Typography variant="h5" textAlign="center">
-          Ruxsat berilmagan
+          {pt("accessDenied")}
         </Typography>
         <Button fullWidth variant="contained" onClick={() => navigate("/")} sx={{ mt: 2 }}>
-          Bosh sahifa
+          {pt("home")}
         </Button>
       </Container>
     );
@@ -1011,7 +1020,7 @@ export default function AdminPage() {
               </Tabs>
             </Box>
             <Box sx={{ ml: 2 }}>
-              <Tooltip title="Chiqish">
+              <Tooltip title={pt("logout")}>
                 <IconButton onClick={() => setLogoutDialogOpen(true)} color="error" size="small">
                   <Logout />
                 </IconButton>
@@ -1064,7 +1073,7 @@ export default function AdminPage() {
 
       {viewRow && (
         <CustomModal
-          title="Batafsil ma'lumot"
+          title={pt("detailsTitle")}
           onClose={() => setViewRow(null)}
           onDownloadDocx={handleDownloadDocx}
           isDownloading={downloadingDocx}
@@ -1082,17 +1091,17 @@ export default function AdminPage() {
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>Ism Familiya</TableCell>
+                <TableCell>{pt("fullName")}</TableCell>
                 <TableCell>
                   {viewRow.lastName} {viewRow.firstName}
                 </TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>Sana</TableCell>
+                <TableCell>{pt("date")}</TableCell>
                 <TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell>Hudud</TableCell>
+                <TableCell>{pt("region")}</TableCell>
                 <TableCell>{viewRow.region}</TableCell>
               </TableRow>
               <TableRow>
@@ -1138,7 +1147,7 @@ export default function AdminPage() {
             }}
           >
             <Typography variant="h5" fontWeight={800}>
-              Ma'lumotni tahrirlash
+              {pt("editData")}
             </Typography>
             <IconButton onClick={() => setEditRow(null)}>
               <Close />
@@ -1152,12 +1161,12 @@ export default function AdminPage() {
               handleSubmit={handleUpdateAnalysis}
               loading={updating}
               isAdminView={true}
-              submitLabel="Saqlash"
+              submitLabel={pt("save")}
             />
           </DialogContent>
           <DialogActions sx={{ p: 4, pt: 2 }}>
             <Button onClick={() => setEditRow(null)} color="inherit" sx={{ mr: 2 }}>
-              Bekor qilish
+              {pt("cancel")}
             </Button>
             <Button
               variant="contained"
@@ -1166,7 +1175,7 @@ export default function AdminPage() {
               disabled={updating}
               sx={{ borderRadius: 3, px: 4 }}
             >
-              {updating ? <CircularProgress size={24} color="inherit" /> : "Saqlash"}
+              {updating ? <CircularProgress size={24} color="inherit" /> : pt("save")}
             </Button>
           </DialogActions>
         </Dialog>
@@ -1178,13 +1187,11 @@ export default function AdminPage() {
         onClose={() => setDeleteConfirmOpen(false)}
         PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
       >
-        <DialogTitle sx={{ fontWeight: 800 }}>O'chirishni tasdiqlang</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800 }}>{pt("confirmDelete")}</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
             Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz.{" "}
-            {user.role === "superadmin"
-              ? "Ushbu ma'lumotlarni qanday o'chirishni xohlaysiz?"
-              : "Haqiqatan ham ushbu ma'lumotlarni o'chirib tashlamoqchimisiz?"}
+            {user.role === "superadmin" ? pt("deleteHow") : pt("deleteSure")}
           </Typography>
           {user.role === "superadmin" && (
             <Box
@@ -1201,16 +1208,14 @@ export default function AdminPage() {
                 color="error.dark"
                 sx={{ display: "flex", alignItems: "center", gap: 1 }}
               >
-                <Lock fontSize="small" /> <strong>Hard delete</strong> (butunlay o'chirish) qaytarib
-                bo'lmaydigan amaldir. <strong>Soft delete</strong> (savatga yuborish) esa ma'lumotni
-                tiklash imkonini beradi.
+                <Lock fontSize="small" /> {pt("hardDeleteNote")}
               </Typography>
             </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1 }}>
           <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">
-            Bekor qilish
+            {pt("cancel")}
           </Button>
           <Button
             variant={user.role === "superadmin" ? "outlined" : "contained"}
@@ -1218,7 +1223,7 @@ export default function AdminPage() {
             onClick={() => handleDeleteConfirm("soft")}
             disabled={deleteConfirmLoading}
           >
-            {user.role === "superadmin" ? "Savatga yuborish" : "O'chirish"}
+            {user.role === "superadmin" ? pt("moveTrash") : pt("delete")}
           </Button>
           {user.role === "superadmin" && (
             <Button
@@ -1227,7 +1232,7 @@ export default function AdminPage() {
               onClick={() => handleDeleteConfirm("hard")}
               disabled={deleteConfirmLoading}
             >
-              Butunlay o'chirish
+              {pt("hardDelete")}
             </Button>
           )}
         </DialogActions>
@@ -1241,11 +1246,10 @@ export default function AdminPage() {
         fullWidth
         PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
       >
-        <DialogTitle sx={{ fontWeight: 800 }}>Excel-dan Ma'lumotlarni Import Qilish</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 800 }}>{pt("importTitle")}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2, color: "text.secondary" }}>
-            Ma'lumotlarni ommaviy qo'shish uchun shablonni to'ldiring va shu erga yuklang. Ism,
-            Familiya, jins, yosh, viloyat va asosiy o'lchovlar to'ldirilishi majburiy.
+            {pt("importHelp")}
           </Typography>
 
           <Box
@@ -1270,7 +1274,7 @@ export default function AdminPage() {
               onChange={(e) => setImportFile(e.target.files[0])}
             />
             <Typography variant="h6" color={importFile ? "primary.main" : "text.disabled"}>
-              {importFile ? importFile.name : "XLSX faylni tanlang"}
+              {importFile ? importFile.name : pt("chooseXlsx")}
             </Typography>
           </Box>
 
@@ -1282,9 +1286,9 @@ export default function AdminPage() {
                 sx={{ mb: 2, borderRadius: 2 }}
               >
                 <Typography variant="body2" fontWeight={700}>
-                  Import yakuni: {importResult.imported || 0} yangi, {importResult.updated || 0}{" "}
-                  yangilangan, {importResult.skipped || importResult.errors?.length || 0} xatoli
-                  qator.
+                  {pt("importSummary")} {importResult.imported || 0} {pt("newCount")},{" "}
+                  {importResult.updated || 0} {pt("updatedCount")},{" "}
+                  {importResult.skipped || importResult.errors?.length || 0} {pt("error")}.
                 </Typography>
               </Alert>
 
@@ -1297,10 +1301,10 @@ export default function AdminPage() {
                   <Table size="small" stickyHeader>
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 800 }}>Qator</TableCell>
-                        <TableCell sx={{ fontWeight: 800 }}>Ustun</TableCell>
-                        <TableCell sx={{ fontWeight: 800 }}>Xato</TableCell>
-                        <TableCell sx={{ fontWeight: 800 }}>Qiymat</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>{pt("row")}</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>{pt("column")}</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>{pt("error")}</TableCell>
+                        <TableCell sx={{ fontWeight: 800 }}>{pt("value")}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -1336,7 +1340,7 @@ export default function AdminPage() {
             disabled={importingXlsx}
             color="inherit"
           >
-            Bekor qilish
+            {pt("cancel")}
           </Button>
           <Button
             variant="contained"
@@ -1344,7 +1348,7 @@ export default function AdminPage() {
             disabled={!importFile || importingXlsx}
             startIcon={importingXlsx ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            Yuklash va Import
+            {pt("uploadImport")}
           </Button>
         </DialogActions>
       </Dialog>
