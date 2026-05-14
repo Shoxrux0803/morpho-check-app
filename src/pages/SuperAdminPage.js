@@ -54,7 +54,6 @@ import {
   History,
   Storage,
   RestoreFromTrash,
-  Assignment,
   AutoGraph,
   SettingsSuggest,
   Refresh,
@@ -1649,9 +1648,9 @@ const SuperAdminPage = () => {
                   label="Klinik CMS"
                 />
                 <Tab
-                  icon={<Assignment sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label="Monitoring"
+                  label="Top chart"
                 />
               </Tabs>
 

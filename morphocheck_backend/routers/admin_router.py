@@ -1833,6 +1833,7 @@ def get_admin_activity(
     
     now = datetime.utcnow()
     today_start = datetime.combine(date.today(), datetime.min.time())
+    week_start = today_start - timedelta(days=date.today().weekday())
     month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
     
     result = []
@@ -1861,18 +1862,42 @@ def get_admin_activity(
 
         stats_today = db.query(func.count(model_class.id)).filter(
             model_class.created_by_id == u.id,
-            model_class.created_at >= today_start
+            model_class.created_at >= today_start,
+            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+        ).scalar() or 0
+
+        stats_week = db.query(func.count(model_class.id)).filter(
+            model_class.created_by_id == u.id,
+            model_class.created_at >= week_start,
+            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
         ).scalar() or 0
         
         stats_month = db.query(func.count(model_class.id)).filter(
             model_class.created_by_id == u.id,
-            model_class.created_at >= month_start
+            model_class.created_at >= month_start,
+            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+        ).scalar() or 0
+
+        total_entries = db.query(func.count(model_class.id)).filter(
+            model_class.created_by_id == u.id,
+            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
         ).scalar() or 0
         
         # Avg time
         avg_time = 0
         if u.completed_entries_count and u.completed_entries_count > 0:
-            avg_time = round(u.total_entry_time_seconds / u.completed_entries_count, 1)
+            avg_time = round((u.total_entry_time_seconds or 0) / u.completed_entries_count, 1)
+        elif total_entries > 1:
+            first_entry_at = db.query(func.min(model_class.created_at)).filter(
+                model_class.created_by_id == u.id,
+                (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+            ).scalar()
+            last_entry_at = db.query(func.max(model_class.created_at)).filter(
+                model_class.created_by_id == u.id,
+                (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+            ).scalar()
+            if first_entry_at and last_entry_at and last_entry_at > first_entry_at:
+                avg_time = round((last_entry_at - first_entry_at).total_seconds() / (total_entries - 1), 1)
             
         # Most active hour
         most_active_hour = None
@@ -1882,7 +1907,8 @@ def get_admin_activity(
                 func.strftime('%H', model_class.created_at).label("hour"),
                 func.count(model_class.id).label("count")
             ).filter(
-                model_class.created_by_id == u.id
+                model_class.created_by_id == u.id,
+                (model_class.is_deleted == 0) | (model_class.is_deleted == None)
             ).group_by("hour").order_by(desc("count")).first()
             
             if hour_query:
@@ -1905,10 +1931,12 @@ def get_admin_activity(
             "is_typing": is_typing,
             "last_active_at": u.last_active_at,
             "stats_today": stats_today,
+            "stats_week": stats_week,
             "stats_month": stats_month,
             "avg_entry_time": avg_time,
+            "avg_entry_minutes": round(avg_time / 60, 1) if avg_time else 0,
             "most_active_hour": most_active_hour,
-            "total_entries": u.completed_entries_count or 0
+            "total_entries": total_entries
         })
         
     return {"items": result}
