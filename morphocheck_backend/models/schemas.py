@@ -114,6 +114,7 @@ class Advices(BaseModel):
     nutrition: str
     activity: str
     checkups: str
+    sport: Optional[str] = None
 
 class FullReportRequest(BaseModel):
     patient_data: PatientData

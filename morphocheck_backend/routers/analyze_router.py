@@ -155,6 +155,7 @@ def analyze_full(
             doctor_note=(data.doctor_note or "").strip() or None,
 
             recommendations=(
+                f"Sport: {advices.get('sport', '')}; "
                 f"Specialist: {advices.get('specialist', '')}; "
                 f"Checkups: {advices.get('checkups', '')}"
             ),

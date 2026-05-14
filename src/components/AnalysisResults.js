@@ -32,6 +32,7 @@ import PsychologyAltOutlinedIcon from "@mui/icons-material/PsychologyAltOutlined
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 import RestaurantMenuOutlinedIcon from "@mui/icons-material/RestaurantMenuOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
+import SportsSoccerOutlinedIcon from "@mui/icons-material/SportsSoccerOutlined";
 import GrowthChart from "./Charts/GrowthChart";
 import PersonOutline from "@mui/icons-material/PersonOutline";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -1448,16 +1449,20 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
 
               <Grid container spacing={3}>
                 {[
+                  { key: "sport", title: t("sportAdvice"), icon: <SportsSoccerOutlinedIcon /> },
                   { key: "specialist", title: t("specialist") },
                   { key: "nutrition", title: t("nutrition") },
                   { key: "activity", title: t("activity") },
                   { key: "checkups", title: t("checkups") },
-                ].map(({ key, title }) => (
+                ].map(({ key, title, icon }) => (
                   <Grid key={key} item xs={12} md={6}>
                     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%" }}>
-                      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
-                        {title}
-                      </Typography>
+                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                        {icon}
+                        <Typography variant="subtitle1" fontWeight={600}>
+                          {title}
+                        </Typography>
+                      </Stack>
                       <Typography variant="body2">
                         {cleanAdviceText(advices?.[key]) || "—"}
                       </Typography>

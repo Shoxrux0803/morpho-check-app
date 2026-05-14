@@ -592,6 +592,194 @@ def _ai(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
     return key
 
 
+_SPORT_I18N = {
+    "uz": {
+        "sports": {
+            "swimming": "suzish",
+            "athletics": "yengil atletika",
+            "gymnastics": "gimnastika",
+            "football": "futbol",
+            "wrestling": "kurash",
+            "basketball": "basketbol",
+            "cycling": "velosport",
+        },
+        "balanced": "tana ko'rsatkichlari muvozanatli",
+        "tall": "bo'y ko'rsatkichi yuqoriroq",
+        "compact": "ixcham va chaqqon tana tuzilishi",
+        "lean": "yengil vazn va nisbatan nozik tana tuzilishi",
+        "high_bmi": "vazn/BMI yuqoriroq bo'lgani uchun bo'g'imlarga yengilroq yuklama ma'qul",
+        "strong": "kuch va tayanch-mushak imkoniyatlari yaxshi rivojlanishi mumkin",
+        "harmony": "morfologik uyg'unlik yaxshi",
+        "endurance": "moslashuv ko'rsatkichlari chidamlilik mashqlariga mos",
+        "template": (
+            "Sportga yo'naltirish (taxminiy): {primary}. Qo'shimcha yo'nalishlar: {secondary}. "
+            "Sabab: {reasons}. Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin."
+        ),
+    },
+    "ru": {
+        "sports": {
+            "swimming": "плавание",
+            "athletics": "легкая атлетика",
+            "gymnastics": "гимнастика",
+            "football": "футбол",
+            "wrestling": "борьба",
+            "basketball": "баскетбол",
+            "cycling": "велоспорт",
+        },
+        "balanced": "показатели телосложения сбалансированы",
+        "tall": "показатель роста относительно выше",
+        "compact": "компактное и подвижное телосложение",
+        "lean": "меньший вес и более сухое телосложение",
+        "high_bmi": "вес/BMI выше, поэтому предпочтительна меньшая нагрузка на суставы",
+        "strong": "силовые и опорно-мышечные возможности могут развиваться хорошо",
+        "harmony": "морфологическая гармония хорошая",
+        "endurance": "адаптационные показатели подходят для выносливости",
+        "template": (
+            "Спортивная ориентация (примерно): {primary}. Дополнительные направления: {secondary}. "
+            "Причина: {reasons}. Окончательный выбор должен учитывать интерес ребенка, оценку тренера и разрешение врача."
+        ),
+    },
+    "en": {
+        "sports": {
+            "swimming": "swimming",
+            "athletics": "athletics",
+            "gymnastics": "gymnastics",
+            "football": "football",
+            "wrestling": "wrestling",
+            "basketball": "basketball",
+            "cycling": "cycling",
+        },
+        "balanced": "body indicators are balanced",
+        "tall": "height indicator is relatively high",
+        "compact": "compact and agile body build",
+        "lean": "lighter weight and leaner body build",
+        "high_bmi": "weight/BMI is higher, so lower joint-load activity is preferable",
+        "strong": "strength and musculoskeletal capacity may develop well",
+        "harmony": "morphological harmony is good",
+        "endurance": "adaptation indicators fit endurance training",
+        "template": (
+            "Sports orientation (approximate): {primary}. Additional options: {secondary}. "
+            "Reason: {reasons}. Final choice should consider the child's interest, coach assessment, and physician clearance."
+        ),
+    },
+    "kz": {
+        "sports": {
+            "swimming": "жүзу",
+            "athletics": "жеңіл атлетика",
+            "gymnastics": "гимнастика",
+            "football": "футбол",
+            "wrestling": "күрес",
+            "basketball": "баскетбол",
+            "cycling": "велоспорт",
+        },
+        "balanced": "дене көрсеткіштері үйлесімді",
+        "tall": "бой көрсеткіші салыстырмалы жоғары",
+        "compact": "ықшам және ширақ дене бітімі",
+        "lean": "салмағы жеңілдеу және дене бітімі нәзіктеу",
+        "high_bmi": "салмақ/BMI жоғарырақ, сондықтан буынға түсетін жүктемесі аз бағыт қолайлы",
+        "strong": "күш және тірек-қимыл мүмкіндіктері жақсы дамуы мүмкін",
+        "harmony": "морфологиялық үйлесім жақсы",
+        "endurance": "бейімделу көрсеткіштері төзімділік жаттығуларына сай",
+        "template": (
+            "Спортқа бағыттау (шамамен): {primary}. Қосымша бағыттар: {secondary}. "
+            "Себебі: {reasons}. Соңғы таңдауда баланың қызығушылығы, жаттықтырушы бағасы және дәрігер рұқсаты ескерілсін."
+        ),
+    },
+}
+
+
+def _sport_text(lang: str) -> Dict[str, Any]:
+    return _SPORT_I18N.get(lang, _SPORT_I18N["uz"])
+
+
+def _build_sport_recommendation(
+    bmi: float,
+    bmi_range: Dict[str, float],
+    bio_data: Optional[dict],
+    lang: str,
+) -> str:
+    txt = _sport_text(lang)
+    sport_names = txt["sports"]
+    scores = {
+        "swimming": 1.0,
+        "athletics": 1.0,
+        "gymnastics": 1.0,
+        "football": 1.0,
+        "wrestling": 1.0,
+        "basketball": 1.0,
+        "cycling": 1.0,
+    }
+    reasons = [txt["balanced"]]
+
+    z_h = 0.0
+    mii = 0.0
+    hmai = 0.0
+    morph_key = ""
+    if isinstance(bio_data, dict):
+        z_h = float(bio_data.get("z_h") or 0)
+        mii = float(bio_data.get("mii") or 0)
+        hmai = float(bio_data.get("hmai") or 0)
+        morph_key = str(bio_data.get("morphological_type_key") or "").lower()
+
+    if z_h >= 1.0:
+        scores["basketball"] += 3
+        scores["athletics"] += 1
+        reasons.append(txt["tall"])
+    elif z_h <= -0.7:
+        scores["gymnastics"] += 2
+        scores["football"] += 1
+        reasons.append(txt["compact"])
+
+    if bmi < bmi_range["min"]:
+        scores["gymnastics"] += 2
+        scores["athletics"] += 1
+        scores["swimming"] += 1
+        reasons.append(txt["lean"])
+    elif bmi > bmi_range["max"]:
+        scores["swimming"] += 3
+        scores["cycling"] += 2
+        scores["football"] += 1
+        reasons.append(txt["high_bmi"])
+
+    if "asten" in morph_key or "ecto" in morph_key:
+        scores["gymnastics"] += 2
+        scores["athletics"] += 2
+        scores["swimming"] += 1
+    elif "giper" in morph_key or "endo" in morph_key:
+        scores["wrestling"] += 3
+        scores["swimming"] += 2
+        scores["cycling"] += 1
+        reasons.append(txt["strong"])
+    elif "norm" in morph_key or "mezo" in morph_key:
+        scores["football"] += 2
+        scores["athletics"] += 2
+        scores["wrestling"] += 1
+        reasons.append(txt["harmony"])
+
+    if mii >= 0.8:
+        scores["football"] += 1
+        scores["gymnastics"] += 1
+        scores["wrestling"] += 1
+    if hmai > 0.3:
+        scores["athletics"] += 1
+        scores["cycling"] += 1
+        reasons.append(txt["endurance"])
+
+    ranked = sorted(scores, key=lambda key: (-scores[key], key))
+    primary = sport_names[ranked[0]]
+    secondary = ", ".join(sport_names[key] for key in ranked[1:3])
+    unique_reasons = []
+    for reason in reasons:
+        if reason not in unique_reasons:
+            unique_reasons.append(reason)
+
+    return txt["template"].format(
+        primary=primary,
+        secondary=secondary,
+        reasons=", ".join(unique_reasons[:3]),
+    )
+
+
 # Kalit so'zlar til bo'yicha (bio_data advice larini guruhlash uchun)
 _KW = {
     "nutrition": {
@@ -630,6 +818,7 @@ def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, all_
         "nutrition":  _ai("default_nutrition",   lang, all_settings),
         "activity":   _ai("default_activity",    lang, all_settings),
         "checkups":   _ai("default_checkups",    lang, all_settings),
+        "sport":      _build_sport_recommendation(bmi, bmi_range, bio_data, lang),
     }
 
     # 1. BMI based advice

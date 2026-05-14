@@ -78,6 +78,7 @@ PDF_LABELS = {
         "unit_month": "oy",
         "unit_day": "kun",
         "ai_parent_tips_title": "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR",
+        "adv_sport": "Sportga yo'naltirish",
         "adv_specialist": "👨‍⚕️ Mutaxassis",
         "adv_nutrition": "🍎 Ovqatlanish",
         "adv_activity": "🏃 Faollik",
@@ -143,6 +144,7 @@ PDF_LABELS = {
         "unit_month": "мес",
         "unit_day": "дн",
         "ai_parent_tips_title": "MORPHOAI: КРАТКИЕ СОВЕТЫ ДЛЯ РОДИТЕЛЕЙ",
+        "adv_sport": "Спортивная ориентация",
         "adv_specialist": "👨‍⚕️ Специалист",
         "adv_nutrition": "🍎 Питание",
         "adv_activity": "🏃 Активность",
@@ -209,6 +211,7 @@ PDF_LABELS = {
         "unit_month": "months",
         "unit_day": "days",
         "ai_parent_tips_title": "MORPHOAI: SHORT TIPS FOR PARENTS",
+        "adv_sport": "Sports orientation",
         "adv_specialist": "👨‍⚕️ Specialist",
         "adv_nutrition": "🍎 Nutrition",
         "adv_activity": "🏃 Activity",
@@ -275,6 +278,7 @@ PDF_LABELS = {
         "unit_month": "ай",
         "unit_day": "күн",
         "ai_parent_tips_title": "MORPHOAI: АТА-АНАЛАРҒА АРНАЛҒАН ҚЫСҚА КЕҢЕСТЕР",
+        "adv_sport": "Спортқа бағыттау",
         "adv_specialist": "👨‍⚕️ Маман",
         "adv_nutrition": "🍎 Тамақтану",
         "adv_activity": "🏃 Белсенділік",
@@ -756,6 +760,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     advices_dict = data.get('advices', {}) if isinstance(data, dict) else getattr(data, 'advices', {})
     if advices_dict:
         advice_categories = [
+            ("sport", L.get("adv_sport", "Sports orientation")),
             ("specialist", L.get("adv_specialist", "Specialist")),
             ("nutrition", L.get("adv_nutrition", "Nutrition")),
             ("activity", L.get("adv_activity", "Activity")),

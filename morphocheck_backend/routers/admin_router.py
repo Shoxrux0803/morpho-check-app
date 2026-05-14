@@ -646,7 +646,11 @@ def update_analysis(
             rec.bmi = float(analysis["bmi"])
             rec.z_score = float(analysis["z_score"])
             rec.somatotype = str(analysis["somatotype"])
-            rec.recommendations = f"General: {advices.get('general', '')}; Nutrition: {advices.get('nutrition', '')}"
+            rec.recommendations = (
+                f"General: {advices.get('general', '')}; "
+                f"Nutrition: {advices.get('nutrition', '')}; "
+                f"Sport: {advices.get('sport', '')}"
+            )
         except Exception as exc:
             logger.warning("Updated analysis recalculation failed for id=%s: %s", rec.id, exc, exc_info=True)
 
@@ -1727,6 +1731,7 @@ async def import_analyses_xlsx(
             rec.recommendations = (
                 f"General: {advices.get('general', '')}; "
                 f"Nutrition: {advices.get('nutrition', '')}; "
+                f"Sport: {advices.get('sport', '')}; "
                 f"Activity: {advices.get('activity', '')}; "
                 f"Specialist: {advices.get('specialist', '')}; "
                 f"Checkups: {advices.get('checkups', '')}"
