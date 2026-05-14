@@ -1,6 +1,102 @@
 /* ================== Global ease ================== */
 :root {
   --mc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --mc-spring-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ================== Subtle product motion ================== */
+.mc-surface-reveal {
+  animation: mc-surface-reveal 0.58s var(--mc-spring-ease) both;
+  animation-delay: var(--mc-delay, 0ms);
+}
+
+.mc-ambient-sheen {
+  isolation: isolate;
+}
+
+.mc-ambient-sheen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 42%,
+    rgba(255, 255, 255, 0.24) 50%,
+    rgba(255, 255, 255, 0.08) 58%,
+    transparent 100%
+  );
+  opacity: 0;
+  transform: translateX(-48%);
+  transition:
+    opacity 0.24s ease,
+    transform 0.74s var(--mc-ease);
+}
+
+.mc-ambient-sheen:hover::before {
+  opacity: 1;
+  transform: translateX(48%);
+}
+
+.mc-ambient-sheen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mc-soft-pop {
+  animation: mc-soft-pop 0.48s var(--mc-spring-ease) both;
+  animation-delay: var(--mc-delay, 0ms);
+}
+
+.mc-header-glow {
+  transition:
+    box-shadow 0.28s ease,
+    border-color 0.28s ease,
+    background-color 0.28s ease;
+}
+
+.mc-header-glow:hover {
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+.mc-breathe {
+  animation: mc-breathe 4.5s ease-in-out infinite;
+}
+
+@keyframes mc-surface-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes mc-soft-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes mc-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.035);
+  }
 }
 
 /* ================== OVERLAY (BLUR EFFEKT) ================== */
@@ -143,9 +239,16 @@
 /* ===== Reduce Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   .mc-overlay,
-  .mc-modal {
+  .mc-modal,
+  .mc-surface-reveal,
+  .mc-soft-pop,
+  .mc-breathe {
     animation: none !important;
     backdrop-filter: none !important;
+  }
+
+  .mc-ambient-sheen::before {
+    display: none;
   }
 }
 

@@ -264,9 +264,13 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   }
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto" }}>
+    <Box className="mc-surface-reveal" sx={{ maxWidth: 1200, mx: "auto" }}>
       {/* Profil sarlavhasi + PDF */}
-      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+      <Paper
+        className="mc-ambient-sheen"
+        elevation={1}
+        sx={{ p: 3, mb: 3, position: "relative", overflow: "hidden" }}
+      >
         <Stack
           direction="row"
           alignItems="center"
@@ -351,7 +355,11 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
       ) : (
         <>
           {/* Tahlil natijalari */}
-          <Card elevation={2} sx={{ mb: 3, borderRadius: 2 }}>
+          <Card
+            className="mc-surface-reveal mc-ambient-sheen"
+            elevation={2}
+            sx={{ mb: 3, borderRadius: 2, position: "relative", overflow: "hidden" }}
+          >
             <CardHeader
               avatar={<AnalyticsOutlinedIcon color="success" />}
               title={
@@ -1111,10 +1119,14 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
           {/* AI Prognostik Tahlil */}
           {root?.ai_predictions && (
             <Card
+              className="mc-surface-reveal mc-ambient-sheen"
               elevation={2}
               sx={{
+                "--mc-delay": "90ms",
                 mb: 3,
                 borderRadius: 2,
+                position: "relative",
+                overflow: "hidden",
                 background: (theme) =>
                   theme.palette.mode === "dark"
                     ? "linear-gradient(145deg, #1e1e1e, #2d2d2d)"
@@ -1291,7 +1303,11 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
           )}
 
           {/* Analysis-linked AI Assistant */}
-          <Card elevation={2} sx={{ mb: 3, borderRadius: 2, overflow: "hidden" }}>
+          <Card
+            className="mc-surface-reveal"
+            elevation={2}
+            sx={{ "--mc-delay": "120ms", mb: 3, borderRadius: 2, overflow: "hidden" }}
+          >
             <CardHeader
               avatar={<PsychologyAltOutlinedIcon sx={{ color: "#5b21b6" }} />}
               title={
@@ -1354,8 +1370,15 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
           {/* AI Parent Tips */}
           {(tipsLoading || aiTips.length > 0) && (
             <Card
+              className="mc-surface-reveal"
               elevation={2}
-              sx={{ mb: 3, borderRadius: 2, border: "1px solid #e0f2f1", overflow: "hidden" }}
+              sx={{
+                "--mc-delay": "150ms",
+                mb: 3,
+                borderRadius: 2,
+                border: "1px solid #e0f2f1",
+                overflow: "hidden",
+              }}
             >
               <CardHeader
                 avatar={<TipsAndUpdatesOutlinedIcon sx={{ color: "#00897b" }} />}
@@ -1423,7 +1446,11 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
           )}
 
           {/* Tavsiyalar */}
-          <Card elevation={2} sx={{ mb: 3, borderRadius: 2 }}>
+          <Card
+            className="mc-surface-reveal"
+            elevation={2}
+            sx={{ "--mc-delay": "180ms", mb: 3, borderRadius: 2 }}
+          >
             <CardHeader
               avatar={<TipsAndUpdatesOutlinedIcon />}
               title={

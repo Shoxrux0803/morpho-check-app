@@ -496,6 +496,7 @@ export default function InputForm({
             >
               {/* ===== 1. Shaxsiy ma'lumotlar ===== */}
               <Paper
+                className="mc-surface-reveal"
                 elevation={0}
                 sx={{ p: { xs: 2.5, md: 4 }, mb: 3, border: "1px solid", borderColor: "divider" }}
               >
@@ -775,6 +776,7 @@ export default function InputForm({
             >
               {/* ===== 2. O'lchovlar ===== */}
               <Paper
+                className="mc-surface-reveal"
                 elevation={0}
                 sx={{ p: { xs: 2.5, md: 4 }, mb: 3, border: "1px solid", borderColor: "divider" }}
               >
@@ -1154,6 +1156,7 @@ export default function InputForm({
             >
               {/* ===== 4. Bioimpedans tahlili ===== */}
               <Paper
+                className="mc-surface-reveal"
                 elevation={0}
                 sx={{ p: { xs: 2.5, md: 4 }, mb: 3, border: "1px solid", borderColor: "divider" }}
               >

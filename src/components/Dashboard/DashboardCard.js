@@ -24,6 +24,7 @@ const DashboardCard = ({
 
   return (
     <Card
+      className="mc-surface-reveal mc-ambient-sheen"
       elevation={0}
       sx={{
         height: "100%",
@@ -38,9 +39,11 @@ const DashboardCard = ({
         boxShadow: isDark
           ? "0 8px 32px 0 rgba(0, 0, 0, 0.4)"
           : "0 8px 32px 0 rgba(100, 116, 139, 0.08)",
-        transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+        transition:
+          "transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease",
         "&:hover": {
-          transform: "translateY(-4px)",
+          transform: "translateY(-5px) scale(1.006)",
+          borderColor: isDark ? "rgba(125, 211, 252, 0.2)" : "rgba(14, 116, 144, 0.18)",
           boxShadow: isDark
             ? "0 12px 40px 0 rgba(0, 0, 0, 0.45)"
             : "0 12px 40px 0 rgba(31, 38, 135, 0.12)",

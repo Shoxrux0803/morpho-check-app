@@ -120,6 +120,7 @@ export default function Header() {
   return (
     <>
       <AppBar
+        className="mc-header-glow"
         position="fixed"
         color="transparent"
         elevation={0}
@@ -167,6 +168,7 @@ export default function Header() {
               }}
             >
               <Box
+                className="mc-breathe"
                 component="img"
                 src={logo}
                 alt="MorphoCheck"

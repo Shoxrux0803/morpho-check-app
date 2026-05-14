@@ -59,10 +59,14 @@ const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, norma
       {stats.map((stat, index) => (
         <Grid item xs={12} sm={6} md={3} key={index}>
           <Card
+            className="mc-surface-reveal mc-ambient-sheen"
             elevation={0}
             sx={{
+              "--mc-delay": `${index * 70}ms`,
               height: "100%",
               borderRadius: 4,
+              position: "relative",
+              overflow: "hidden",
               background: isDark ? "rgba(23, 26, 33, 0.7)" : "rgba(255, 255, 255, 0.7)",
               backdropFilter: "blur(10px)",
               border: isDark
@@ -71,9 +75,11 @@ const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, norma
               boxShadow: isDark
                 ? "0 8px 32px 0 rgba(0, 0, 0, 0.37)"
                 : "0 8px 32px 0 rgba(31, 38, 135, 0.07)",
-              transition: "all 0.3s ease",
+              transition:
+                "transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease",
               "&:hover": {
-                transform: "translateY(-5px)",
+                transform: "translateY(-6px) scale(1.01)",
+                borderColor: `${stat.color}55`,
                 boxShadow: isDark
                   ? "0 12px 40px 0 rgba(0, 0, 0, 0.45)"
                   : "0 12px 40px 0 rgba(31, 38, 135, 0.12)",
@@ -105,7 +111,9 @@ const StatsCards = ({ totalUsers, todayUsers, activeUsers, avgAge, avgBMI, norma
                   </Box>
                 </Box>
                 <Avatar
+                  className="mc-soft-pop"
                   sx={{
+                    "--mc-delay": `${index * 90 + 120}ms`,
                     bgcolor: stat.bg,
                     color: stat.color,
                     width: 48,
