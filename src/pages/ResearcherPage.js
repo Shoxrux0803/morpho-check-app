@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Box,
   Container,
@@ -94,10 +94,11 @@ import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
 import { useLanguage } from "../contexts/LanguageContext";
 import { researcherT } from "../utils/researcherI18n";
+import { useLocation, useNavigate } from "react-router-dom";
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+/* ════════════════════════════════════════════════════
    Utility Components
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+════════════════════════════════════════════════════ */
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -159,9 +160,9 @@ const SectionTitle = ({ icon: Icon, title }) => (
   </Box>
 );
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+/* ════════════════════════════════════════════════════
    DETAIL MODAL
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+════════════════════════════════════════════════════ */
 const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) => {
   if (!record) return null;
 
@@ -407,9 +408,9 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
   );
 };
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
-   EDIT MODAL вЂ” simplified (key fields only)
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+/* ════════════════════════════════════════════════════
+   EDIT MODAL — simplified (key fields only)
+════════════════════════════════════════════════════ */
 const EditModal = ({ record, open, onClose, onSaved }) => {
   const { lang } = useLanguage();
   const tr = (key) => researcherT(lang, key);
@@ -556,16 +557,16 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
               "select",
               [
                 {
-                  value: "Yaqin qarindosh (Р±Р»РёР·РєРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
-                  label: "Yaqin qarindosh (Р±Р»РёР·РєРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
+                  value: "Yaqin qarindosh (близкородственный)",
+                  label: "Yaqin qarindosh (близкородственный)",
                 },
                 {
-                  value: "Uzoq qarindosh (РґР°Р»СЊРЅРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
-                  label: "Uzoq qarindosh (РґР°Р»СЊРЅРѕСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
+                  value: "Uzoq qarindosh (дальнородственный)",
+                  label: "Uzoq qarindosh (дальнородственный)",
                 },
                 {
-                  value: "Qarindosh emas (РЅРµСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
-                  label: "Qarindosh emas (РЅРµСЂРѕРґСЃС‚РІРµРЅРЅС‹Р№)",
+                  value: "Qarindosh emas (неродственный)",
+                  label: "Qarindosh emas (неродственный)",
                 },
               ],
             ],
@@ -709,9 +710,9 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
   );
 };
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+/* ════════════════════════════════════════════════════
    RECORDS TABLE  (shared between tabs)
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+════════════════════════════════════════════════════ */
 const RecordsTable = ({
   rows,
   loading,
@@ -815,19 +816,19 @@ const RecordsTable = ({
                     {(row.full_name || "?").charAt(0).toUpperCase()}
                   </Avatar>
                   <Typography variant="body2" fontWeight={600}>
-                    {row.full_name || "вЂ”"}
+                    {row.full_name || "—"}
                   </Typography>
                 </Stack>
               </TableCell>
               <TableCell>
-                <Typography variant="body2">{row.school_name || "вЂ”"}</Typography>
+                <Typography variant="body2">{row.school_name || "—"}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {row.settlement || ""}
                 </Typography>
               </TableCell>
               <TableCell>
                 <Chip
-                  label={row.examination_date || "вЂ”"}
+                  label={row.examination_date || "—"}
                   size="small"
                   variant="outlined"
                   sx={{ fontSize: 11 }}
@@ -836,15 +837,15 @@ const RecordsTable = ({
               {!showDeleted && (
                 <TableCell>
                   <Typography variant="caption" color="text.secondary">
-                    {row.chest_standing_height ? `${row.chest_standing_height} sm` : "вЂ”"} /
-                    {row.weight ? ` ${row.weight} kg` : " вЂ”"}
+                    {row.chest_standing_height ? `${row.chest_standing_height} sm` : "—"} /
+                    {row.weight ? ` ${row.weight} kg` : " —"}
                   </Typography>
                 </TableCell>
               )}
               {showDeleted && (
                 <TableCell>
                   <Typography variant="caption" color="error">
-                    {row.deleted_at ? new Date(row.deleted_at).toLocaleDateString("uz-UZ") : "вЂ”"}
+                    {row.deleted_at ? new Date(row.deleted_at).toLocaleDateString("uz-UZ") : "—"}
                   </Typography>
                 </TableCell>
               )}
@@ -894,9 +895,9 @@ const RecordsTable = ({
   </TableContainer>
 );
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+/* ════════════════════════════════════════════════════
    FILTER BAR
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+════════════════════════════════════════════════════ */
 const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -976,9 +977,9 @@ const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
   );
 };
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+/* ════════════════════════════════════════════════════
    RESEARCH ANALYTICS (Professional Dashboard)
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+════════════════════════════════════════════════════ */
 const ResearchAnalytics = ({ data, isDark }) => {
   const [timeRange, setTimeRange] = useState("all"); // "all" or "30d"
 
@@ -1000,7 +1001,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         g === "male" ||
         g === "erkak" ||
         g.includes("o'g'il") ||
-        g.includes("Рѕ'Т“РёР»")
+        g.includes("о'ғил")
       );
     }).length;
     const girls = filteredData.filter((r) => {
@@ -1011,7 +1012,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         g === "female" ||
         g === "ayol" ||
         g.includes("qiz") ||
-        g.includes("Т›РёР·")
+        g.includes("қиз")
       );
     }).length;
 
@@ -1085,7 +1086,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
   return (
     <Stack spacing={4}>
-      {/* в”Ђв”Ђ Analytics Header в”Ђв”Ђ */}
+      {/* ── Analytics Header ── */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Typography variant="h4" fontWeight={900}>
@@ -1097,7 +1098,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         </Box>
       </Box>
 
-      {/* в”Ђв”Ђ Key Metrics Cards в”Ђв”Ђ */}
+      {/* ── Key Metrics Cards ── */}
       <Grid container spacing={3}>
         {[
           { label: "Jami yozuvlar", value: stats.total, icon: <People />, color: "#007bff" },
@@ -1141,7 +1142,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         ))}
       </Grid>
 
-      {/* в”Ђв”Ђ Charts Section в”Ђв”Ђ */}
+      {/* ── Charts Section ── */}
       <Grid container spacing={3}>
         <Grid xs={12} md={4}>
           <GlassPaper sx={{ p: 3, height: "100%" }}>
@@ -1334,9 +1335,9 @@ const ResearchAnalytics = ({ data, isDark }) => {
   );
 };
 
-/* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
+/* ════════════════════════════════════════════════════
    MAIN PAGE
-в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ */
+════════════════════════════════════════════════════ */
 const ResearcherPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -1344,8 +1345,10 @@ const ResearcherPage = () => {
   const tr = useCallback((key) => researcherT(lang, key), [lang]);
   const { user, logout } = useAuth();
   const isSuperAdmin = user?.role === "superadmin";
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState(0); // 0 = Yangi qo'shish
+  const [activeTab, setActiveTab] = useState(0); // 0 = Asosiy
   const [data, setData] = useState([]);
   const [deletedData, setDeletedData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1372,6 +1375,23 @@ const ResearcherPage = () => {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+  const sectionToTab = useMemo(
+    () => ({
+      home: 0,
+      analyze: 1,
+      panel: 2,
+      deleted: 3,
+    }),
+    [],
+  );
+  const showLocalResearcherNav = false;
+
+  useEffect(() => {
+    const section = new URLSearchParams(location.search).get("section") || "home";
+    const nextTab = sectionToTab[section] ?? 0;
+    setActiveTab(!isSuperAdmin && nextTab === 3 ? 0 : nextTab);
+    setChecked(new Set());
+  }, [isSuperAdmin, location.search, sectionToTab]);
 
   const toggleAll = useCallback(() => {
     const rows = activeTab === 3 ? deletedData : data;
@@ -1406,7 +1426,7 @@ const ResearcherPage = () => {
 
         if (isTextInput) return;
 
-        if (checked.size > 0 && (activeTab === 1 || activeTab === 3)) {
+        if (checked.size > 0 && (activeTab === 2 || activeTab === 3)) {
           setDeleteConfirmOpen(true);
         }
       }
@@ -1445,7 +1465,7 @@ const ResearcherPage = () => {
   }, [isSuperAdmin]);
 
   useEffect(() => {
-    if (activeTab === 1 || activeTab === 2) fetchData();
+    if (activeTab === 0 || activeTab === 2) fetchData();
     if (activeTab === 3 && isSuperAdmin) fetchDeleted();
   }, [activeTab, fetchData, fetchDeleted, isSuperAdmin]);
 
@@ -1496,9 +1516,9 @@ const ResearcherPage = () => {
   };
 
   const TABS = [
-    { label: tr("addNew"), icon: <Add />, color: "#007bff" },
-    { label: tr("dataList"), icon: <Dashboard />, color: "#00c853" },
-    { label: tr("analytics"), icon: <Assessment />, color: "#673ab7" },
+    { label: "Asosiy", icon: <Dashboard />, color: "#007bff" },
+    { label: "Tahlil qilish", icon: <Add />, color: "#00c853" },
+    { label: "Izlanuvchi panel", icon: <Assessment />, color: "#673ab7" },
     ...(isSuperAdmin ? [{ label: tr("deleted"), icon: <Delete />, color: "#f44336" }] : []),
   ];
 
@@ -1556,125 +1576,426 @@ const ResearcherPage = () => {
     </Grid>
   );
 
-  return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
-      <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
-        {/* в”Ђв”Ђ Page Header в”Ђв”Ђ */}
-        <GlassPaper
-          sx={{
-            p: { xs: 2, md: 3 },
-            mb: 4,
-            position: "sticky",
-            top: 12,
-            zIndex: 10,
-            overflow: "visible",
-          }}
-        >
-          <Grid container alignItems="center" spacing={2}>
-            <Grid xs={12} md={4}>
-              <Stack direction="row" spacing={2} alignItems="center">
-                <Avatar
+  const ResearcherHome = () => {
+    const recentCount = data.filter((r) => {
+      const d = new Date(r.created_at);
+      return Date.now() - d.getTime() < 30 * 86400000;
+    }).length;
+
+    const reportMetrics = [
+      { label: "Jami yozuv", value: data.length, helper: "Tadqiqot bazasi", color: "#0891b2" },
+      { label: "30 kun", value: recentCount, helper: "Yangi kiritilgan", color: "#16a34a" },
+      { label: "Hisobot", value: "DOCX", helper: "Eksport tayyor", color: "#ca8a04" },
+    ];
+
+    const featureCards = [
+      {
+        title: "Tahlil qilish",
+        text: "Yangi bola yoki o'smir bo'yicha pasport ma'lumotlari va antropometrik o'lchovlarni kiriting.",
+        icon: <Science />,
+        color: "#0891b2",
+      },
+      {
+        title: "Izlanuvchi panel",
+        text: "Kiritilgan yozuvlarni ko'ring, qidiring, filtrlash va tahrirlash jarayonini boshqaring.",
+        icon: <People />,
+        color: "#16a34a",
+      },
+      {
+        title: "Statistik tahlil",
+        text: "Bo'y, vazn, BMI, jins, hudud va yosh bo'yicha umumiy ko'rsatkichlar avtomatik jamlanadi.",
+        icon: <TrendingUp />,
+        color: "#2563eb",
+      },
+      {
+        title: "Hisobotlar",
+        text: "Yig'ilgan ma'lumotlarni DOCX yoki Excel formatida ilmiy hisobotlar uchun tayyorlang.",
+        icon: <Description />,
+        color: "#ca8a04",
+      },
+    ];
+
+    return (
+      <Box sx={{ minHeight: { xs: "auto", md: "calc(100vh - 120px)" }, position: "relative" }}>
+        <Grid container spacing={{ xs: 4, md: 7 }} alignItems="center">
+          <Grid xs={12} md={6} lg={7}>
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+            >
+              <Box
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 1,
+                  px: 2,
+                  py: 0.9,
+                  mb: 3,
+                  borderRadius: 999,
+                  color: "primary.main",
+                  bgcolor: isDark ? "rgba(45, 212, 191, 0.10)" : "rgba(8, 145, 178, 0.09)",
+                  border: "1px solid",
+                  borderColor: isDark ? "rgba(94, 234, 212, 0.22)" : "rgba(8, 145, 178, 0.18)",
+                  fontWeight: 800,
+                  fontSize: 13,
+                }}
+              >
+                <CheckCircle fontSize="small" />
+                Izlanuvchi uchun raqamli antropometriya
+              </Box>
+
+              <Typography
+                variant="h1"
+                sx={{
+                  fontSize: { xs: "2.55rem", sm: "3.75rem", md: "5.1rem", lg: "5.8rem" },
+                  fontWeight: 950,
+                  lineHeight: 1.02,
+                  letterSpacing: 0,
+                  mb: 3,
+                  color: "text.primary",
+                }}
+              >
+                Raqamli
+                <Box
+                  component="span"
                   sx={{
-                    width: 50,
-                    height: 50,
-                    background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
-                    fontSize: 20,
-                    fontWeight: 900,
-                    boxShadow: "0 4px 12px rgba(0,123,255,0.3)",
+                    display: { xs: "inline", sm: "block" },
+                    background:
+                      "linear-gradient(90deg, #0f766e 0%, #0891b2 32%, #2563eb 64%, #ca8a04 100%)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
                   }}
                 >
-                  {user?.name?.charAt(0).toUpperCase() || "I"}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6" fontWeight={800} noWrap sx={{ lineHeight: 1.2 }}>
-                    {user?.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    {isSuperAdmin ? tr("roleSuperAdmin") : tr("roleResearcher")}
-                  </Typography>
+                  {" "}
+                  tadqiqot oynasi
                 </Box>
-              </Stack>
-            </Grid>
+              </Typography>
 
-            <Grid xs={12} md={8}>
-              <Tabs
-                value={activeTab}
-                onChange={(_, v) => setActiveTab(v)}
-                variant="scrollable"
-                scrollButtons="auto"
-                allowScrollButtonsMobile
-                centered={false}
-                sx={{
-                  minHeight: 40,
-                  "& .MuiTabs-indicator": {
-                    height: 4,
-                    borderRadius: "4px 4px 0 0",
-                    bgcolor: "primary.main",
-                  },
-                  "& .MuiTab-root": {
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                sx={{ maxWidth: 760, lineHeight: 1.7, fontWeight: 500 }}
+              >
+                Izlanuvchi uchun asosiy sahifa ma'lumot kiritish, klinik-antropometrik yozuvlarni
+                tartiblash, statistik ko'rsatkichlarni ko'rish va hisobotlarni tayyorlash jarayonini
+                bitta yo'nalishda birlashtiradi.
+              </Typography>
+
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 4 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<Science />}
+                  onClick={() => navigate("/researcher?section=analyze")}
+                  sx={{
+                    borderRadius: 3,
+                    px: 3.5,
+                    py: 1.6,
+                    fontWeight: 900,
                     textTransform: "none",
-                    fontWeight: 700,
-                    fontSize: { xs: 0.8, sm: 0.95, md: 1 },
-                    minHeight: 48,
-                    minWidth: { xs: 132, sm: 150, md: 170 },
-                    flexShrink: 0,
-                    px: { xs: 1, sm: 2 },
-                    whiteSpace: "nowrap",
-                    transition: "all 0.2s ease",
-                    "&.Mui-selected": {
-                      color: "primary.main",
-                    },
-                    "&:hover": {
-                      color: "primary.light",
-                      bgcolor: "rgba(0,123,255,0.04)",
-                    },
+                    boxShadow: "0 18px 38px rgba(8, 145, 178, 0.24)",
+                  }}
+                >
+                  Tahlil qilish
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<Assessment />}
+                  onClick={() => navigate("/researcher?section=panel")}
+                  sx={{
+                    borderRadius: 3,
+                    px: 3.5,
+                    py: 1.6,
+                    fontWeight: 900,
+                    textTransform: "none",
+                    bgcolor: isDark ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.68)",
+                  }}
+                >
+                  Izlanuvchi panel
+                </Button>
+              </Stack>
+            </motion.div>
+          </Grid>
+
+          <Grid xs={12} md={6} lg={5}>
+            <motion.div
+              initial={{ opacity: 0, y: 34, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.75, ease: "easeOut", delay: 0.1 }}
+            >
+              <GlassPaper
+                sx={{
+                  p: { xs: 2.5, md: 3 },
+                  borderRadius: 5,
+                  overflow: "hidden",
+                  background: isDark
+                    ? "linear-gradient(145deg, rgba(15,23,42,0.78), rgba(8,47,73,0.52))"
+                    : "linear-gradient(145deg, rgba(255,255,255,0.88), rgba(240,249,255,0.74))",
+                  boxShadow: isDark
+                    ? "0 28px 80px rgba(0,0,0,0.36)"
+                    : "0 28px 80px rgba(15,23,42,0.12)",
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
+                  <Box>
+                    <Typography variant="overline" color="primary.main" fontWeight={900}>
+                      Jonli hisobot
+                    </Typography>
+                    <Typography variant="h5" fontWeight={950}>
+                      Tadqiqot holati
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 54,
+                      height: 54,
+                      borderRadius: 3,
+                      display: "grid",
+                      placeItems: "center",
+                      color: "#0891b2",
+                      bgcolor: "rgba(8,145,178,0.12)",
+                    }}
+                  >
+                    <Analytics />
+                  </Box>
+                </Stack>
+
+                <Grid container spacing={1.5}>
+                  {reportMetrics.map((metric) => (
+                    <Grid xs={12} sm={4} key={metric.label}>
+                      <Box
+                        sx={{
+                          p: 1.6,
+                          borderRadius: 3,
+                          bgcolor: isDark ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.72)",
+                          border: "1px solid",
+                          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(8,47,73,0.08)",
+                        }}
+                      >
+                        <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                          {metric.label}
+                        </Typography>
+                        <Typography variant="h4" fontWeight={950} sx={{ color: metric.color }}>
+                          {metric.value}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {metric.helper}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+
+                <Box
+                  sx={{
+                    mt: 2.5,
+                    p: 2.2,
+                    borderRadius: 3,
+                    bgcolor: isDark ? "rgba(15,118,110,0.10)" : "rgba(15,118,110,0.06)",
+                    border: "1px solid rgba(15,118,110,0.16)",
+                  }}
+                >
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 2.5,
+                        display: "grid",
+                        placeItems: "center",
+                        color: "#16a34a",
+                        bgcolor: "rgba(22,163,74,0.12)",
+                      }}
+                    >
+                      <CheckCircle />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={900}>
+                        Ma'lumotlar tayyor
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Panel orqali yozuvlarni filtrlash, ko'rish va eksport qilish mumkin.
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </GlassPaper>
+            </motion.div>
+          </Grid>
+        </Grid>
+
+        <Grid container spacing={2.5} sx={{ mt: { xs: 5, md: 7 } }}>
+          {featureCards.map((card) => (
+            <Grid xs={12} sm={6} md={3} key={card.title}>
+              <GlassPaper
+                sx={{
+                  p: 2.5,
+                  height: "100%",
+                  borderRadius: 3,
+                  background: isDark ? "rgba(15,23,42,0.70)" : "rgba(255,255,255,0.86)",
+                  transition: "transform 0.24s ease, box-shadow 0.24s ease",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: isDark
+                      ? "0 18px 48px rgba(0,0,0,0.34)"
+                      : "0 18px 48px rgba(15,23,42,0.10)",
                   },
                 }}
               >
-                {TABS.map((tab, i) => (
-                  <Tab
-                    key={i}
-                    label={
-                      <Stack
-                        component="span"
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="center"
-                        spacing={1}
-                        sx={{ minWidth: 0 }}
-                      >
-                        <Box
-                          component="span"
-                          sx={{
-                            display: "inline-flex",
-                            color: activeTab === i ? "primary.main" : "text.secondary",
-                          }}
-                        >
-                          {tab.icon}
-                        </Box>
-                        <Typography
-                          component="span"
-                          variant="body2"
-                          fontWeight={800}
-                          sx={{
-                            display: "inline",
-                            color: activeTab === i ? "primary.main" : "text.primary",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {tab.label}
-                        </Typography>
-                      </Stack>
-                    }
-                    aria-label={tab.label}
-                  />
-                ))}
-              </Tabs>
+                <Box
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    mb: 2,
+                    borderRadius: 2.5,
+                    display: "grid",
+                    placeItems: "center",
+                    color: card.color,
+                    bgcolor: `${card.color}16`,
+                  }}
+                >
+                  {card.icon}
+                </Box>
+                <Typography variant="h6" fontWeight={950} sx={{ mb: 1 }}>
+                  {card.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.65 }}>
+                  {card.text}
+                </Typography>
+              </GlassPaper>
             </Grid>
-          </Grid>
-        </GlassPaper>
+          ))}
+        </Grid>
+      </Box>
+    );
+  };
 
-        {/* в”Ђв”Ђ Main Content Area в”Ђв”Ђ */}
+  return (
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
+      <Container maxWidth={false} sx={{ py: 3, px: { xs: 2, md: 4 } }}>
+        {showLocalResearcherNav && (
+          <>
+            {/* ── Page Header ── */}
+            <GlassPaper
+              sx={{
+                p: { xs: 2, md: 3 },
+                mb: 4,
+                position: "sticky",
+                top: 12,
+                zIndex: 10,
+                overflow: "visible",
+              }}
+            >
+              <Grid container alignItems="center" spacing={2}>
+                <Grid xs={12} md={4}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar
+                      sx={{
+                        width: 50,
+                        height: 50,
+                        background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
+                        fontSize: 20,
+                        fontWeight: 900,
+                        boxShadow: "0 4px 12px rgba(0,123,255,0.3)",
+                      }}
+                    >
+                      {user?.name?.charAt(0).toUpperCase() || "I"}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6" fontWeight={800} noWrap sx={{ lineHeight: 1.2 }}>
+                        {user?.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                        {isSuperAdmin ? tr("roleSuperAdmin") : tr("roleResearcher")}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+
+                <Grid xs={12} md={8}>
+                  <Tabs
+                    value={activeTab}
+                    onChange={(_, v) => setActiveTab(v)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    allowScrollButtonsMobile
+                    centered={false}
+                    sx={{
+                      minHeight: 40,
+                      "& .MuiTabs-indicator": {
+                        height: 4,
+                        borderRadius: "4px 4px 0 0",
+                        bgcolor: "primary.main",
+                      },
+                      "& .MuiTab-root": {
+                        textTransform: "none",
+                        fontWeight: 700,
+                        fontSize: { xs: 0.8, sm: 0.95, md: 1 },
+                        minHeight: 48,
+                        minWidth: { xs: 132, sm: 150, md: 170 },
+                        flexShrink: 0,
+                        px: { xs: 1, sm: 2 },
+                        whiteSpace: "nowrap",
+                        transition: "all 0.2s ease",
+                        "&.Mui-selected": {
+                          color: "primary.main",
+                        },
+                        "&:hover": {
+                          color: "primary.light",
+                          bgcolor: "rgba(0,123,255,0.04)",
+                        },
+                      },
+                    }}
+                  >
+                    {TABS.map((tab, i) => (
+                      <Tab
+                        key={i}
+                        label={
+                          <Stack
+                            component="span"
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="center"
+                            spacing={1}
+                            sx={{ minWidth: 0 }}
+                          >
+                            <Box
+                              component="span"
+                              sx={{
+                                display: "inline-flex",
+                                color: activeTab === i ? "primary.main" : "text.secondary",
+                              }}
+                            >
+                              {tab.icon}
+                            </Box>
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              fontWeight={800}
+                              sx={{
+                                display: "inline",
+                                color: activeTab === i ? "primary.main" : "text.primary",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {tab.label}
+                            </Typography>
+                          </Stack>
+                        }
+                        aria-label={tab.label}
+                      />
+                    ))}
+                  </Tabs>
+                </Grid>
+              </Grid>
+            </GlassPaper>
+          </>
+        )}
+
+        {/* ── Main Content Area ── */}
         <Box sx={{ minHeight: "70vh" }}>
           <AnimatePresence mode="wait">
             <motion.div
@@ -1684,7 +2005,9 @@ const ResearcherPage = () => {
               exit={{ opacity: 0, scale: 1.01, y: -10 }}
               transition={{ duration: 0.3 }}
             >
-              {activeTab === 0 && (
+              {activeTab === 0 && <ResearcherHome />}
+
+              {activeTab === 1 && (
                 <Box>
                   <ResearcherForm
                     onSuccess={() => {
@@ -1694,15 +2017,15 @@ const ResearcherPage = () => {
                 </Box>
               )}
 
-              {activeTab === 1 && (
+              {activeTab === 2 && (
                 <Stack spacing={3}>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
                       <Typography variant="h4" fontWeight={900}>
-                        {tr("database")}
+                        Izlanuvchi panel
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {tr("databaseSubtitle")}
+                        Ma'lumotlar bazasi, filtrlar va statistik tahlillar
                       </Typography>
                     </Box>
                     <Box display="flex" gap={2}>
@@ -1753,11 +2076,7 @@ const ResearcherPage = () => {
                     isSuperAdmin={isSuperAdmin}
                     tr={tr}
                   />
-                </Stack>
-              )}
 
-              {activeTab === 2 && (
-                <Box>
                   <DashboardFilters
                     filters={filter}
                     onFilterChange={(newFilters) => {
@@ -1787,7 +2106,7 @@ const ResearcherPage = () => {
                     <ResearchStatisticsPanel rows={data} />
                   </Box>
                   <ResearchAnalytics data={data} isDark={isDark} />
-                </Box>
+                </Stack>
               )}
 
               {activeTab === 3 && isSuperAdmin && (
@@ -1860,7 +2179,7 @@ const ResearcherPage = () => {
             </motion.div>
           </AnimatePresence>
         </Box>
-        {/* в”Ђв”Ђ Modals в”Ђв”Ђ */}
+        {/* ── Modals ── */}
         <DetailModal
           record={detailRecord}
           open={!!detailRecord}
