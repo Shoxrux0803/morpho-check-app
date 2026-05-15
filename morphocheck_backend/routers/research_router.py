@@ -10,6 +10,7 @@ from models.schemas import ResearchRecordCreate, ResearchRecordOut
 from utils.database import get_db
 from routers.auth_router import get_current_user
 from services.research_docx import generate_researcher_docx
+from services.research_summary_docx import generate_research_summary_docx
 import pandas as pd
 import io
 import urllib.parse
@@ -46,6 +47,84 @@ def research_record_to_dict(record: ResearchRecord) -> dict:
         else None
     )
     return payload
+
+
+def apply_research_filters(
+    query,
+    current_user: User,
+    search: Optional[str] = None,
+    full_name: Optional[str] = None,
+    school_name: Optional[str] = None,
+    settlement: Optional[str] = None,
+    feeding_type: Optional[str] = None,
+    parents_marriage: Optional[str] = None,
+    weight_min: Optional[float] = None,
+    weight_max: Optional[float] = None,
+    height_min: Optional[float] = None,
+    height_max: Optional[float] = None,
+    researcher_id: Optional[int] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    gender: Optional[str] = None,
+):
+    if current_user.role == "researcher":
+        query = query.filter(ResearchRecord.created_by_id == current_user.id)
+    elif researcher_id:
+        query = query.filter(ResearchRecord.created_by_id == researcher_id)
+
+    if search:
+        like = f"%{search}%"
+        query = query.filter(
+            ResearchRecord.full_name.ilike(like) |
+            ResearchRecord.school_name.ilike(like) |
+            ResearchRecord.settlement.ilike(like)
+        )
+    if full_name:
+        query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
+    if school_name:
+        query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
+    if settlement:
+        s = settlement.strip()
+        query = query.filter(
+            (ResearchRecord.settlement.ilike(f"%{s}%")) |
+            (ResearchRecord.birth_place.ilike(f"%{s}%"))
+        )
+    if feeding_type:
+        query = query.filter(ResearchRecord.feeding_type == feeding_type)
+    if parents_marriage:
+        query = query.filter(ResearchRecord.parents_marriage == parents_marriage)
+    if weight_min is not None:
+        query = query.filter(ResearchRecord.weight >= weight_min)
+    if weight_max is not None:
+        query = query.filter(ResearchRecord.weight <= weight_max)
+    if height_min is not None:
+        query = query.filter(ResearchRecord.chest_standing_height >= height_min)
+    if height_max is not None:
+        query = query.filter(ResearchRecord.chest_standing_height <= height_max)
+    if date_from:
+        query = query.filter(ResearchRecord.examination_date >= date_from)
+    if date_to:
+        query = query.filter(ResearchRecord.examination_date <= date_to)
+    if gender:
+        gender_norm = gender.strip().lower()
+        if gender_norm in ["erkak", "male", "boy", "o'g'il", "ogil"]:
+            query = query.filter(
+                (ResearchRecord.gender.ilike("%erkak%")) |
+                (ResearchRecord.gender.ilike("%male%")) |
+                (ResearchRecord.gender.ilike("%boy%")) |
+                (ResearchRecord.gender.ilike("%o'g%")) |
+                (ResearchRecord.gender.ilike("%og%"))
+            )
+        elif gender_norm in ["ayol", "female", "girl", "qiz"]:
+            query = query.filter(
+                (ResearchRecord.gender.ilike("%ayol%")) |
+                (ResearchRecord.gender.ilike("%female%")) |
+                (ResearchRecord.gender.ilike("%girl%")) |
+                (ResearchRecord.gender.ilike("%qiz%"))
+            )
+        else:
+            query = query.filter(func.lower(ResearchRecord.gender) == gender_norm)
+    return query
 
 
 def get_current_researcher_or_superadmin(
@@ -530,6 +609,114 @@ def export_dataset_for_analysis(
 # ═══════════════════════════════════════════════
 #  CREATE
 # ═══════════════════════════════════════════════
+@router.get("/export/summary-docx")
+def export_research_summary_docx(
+    search: Optional[str] = Query(None),
+    full_name: Optional[str] = Query(None),
+    school_name: Optional[str] = Query(None),
+    settlement: Optional[str] = Query(None),
+    feeding_type: Optional[str] = Query(None),
+    parents_marriage: Optional[str] = Query(None),
+    weight_min: Optional[float] = Query(None),
+    weight_max: Optional[float] = Query(None),
+    height_min: Optional[float] = Query(None),
+    height_max: Optional[float] = Query(None),
+    researcher_id: Optional[int] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    gender: Optional[str] = Query(None),
+    age_min: Optional[int] = Query(None),
+    age_max: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_researcher_or_superadmin)
+):
+    query = (
+        db.query(ResearchRecord)
+        .options(joinedload(ResearchRecord.created_by))
+        .filter(ResearchRecord.is_deleted == 0)
+    )
+    query = apply_research_filters(
+        query,
+        current_user,
+        search=search,
+        full_name=full_name,
+        school_name=school_name,
+        settlement=settlement,
+        feeding_type=feeding_type,
+        parents_marriage=parents_marriage,
+        weight_min=weight_min,
+        weight_max=weight_max,
+        height_min=height_min,
+        height_max=height_max,
+        researcher_id=researcher_id,
+        date_from=date_from,
+        date_to=date_to,
+        gender=gender,
+    )
+    records = query.order_by(ResearchRecord.id.desc()).all()
+
+    if age_min is not None or age_max is not None:
+        filtered_records = []
+        for record in records:
+            try:
+                if not record.birth_date:
+                    continue
+                b_date = datetime.strptime(record.birth_date, "%Y-%m-%d")
+                e_date_str = record.examination_date if record.examination_date else datetime.now().strftime("%Y-%m-%d")
+                e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
+                age = (e_date - b_date).days / 365.25
+                if age_min is not None and age < age_min:
+                    continue
+                if age_max is not None and age > age_max:
+                    continue
+                filtered_records.append(record)
+            except Exception:
+                continue
+        records = filtered_records
+
+    if not records:
+        raise HTTPException(status_code=404, detail="Filterga mos ma'lumotlar topilmadi")
+
+    researcher = None
+    if researcher_id:
+        researcher = db.get(User, researcher_id)
+    elif current_user.role == "researcher":
+        researcher = current_user
+
+    filters = {
+        "search": search,
+        "full_name": full_name,
+        "school_name": school_name,
+        "settlement": settlement,
+        "feeding_type": feeding_type,
+        "parents_marriage": parents_marriage,
+        "weight_min": weight_min,
+        "weight_max": weight_max,
+        "height_min": height_min,
+        "height_max": height_max,
+        "researcher_id": researcher_id,
+        "date_from": date_from,
+        "date_to": date_to,
+        "gender": gender,
+        "age_min": age_min,
+        "age_max": age_max,
+    }
+    buf = generate_research_summary_docx(
+        records,
+        current_user=current_user,
+        researcher=researcher,
+        filters=filters,
+    )
+    encoded_filename = urllib.parse.quote(
+        f"research_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+    )
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
+    )
+
+
 @router.post("/", response_model=ResearchRecordOut)
 def create_research_record(
     payload: ResearchRecordCreate,

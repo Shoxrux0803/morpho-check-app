@@ -1020,6 +1020,26 @@ export const ResearchApi = {
     }
     return resp.blob();
   },
+
+  /** Scientific summary DOCX export */
+  exportSummaryDocx: async (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+    });
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/export/summary-docx?${q.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+    return resp.blob();
+  },
 };
 
 // API service object - ESLint xatosini bartaraf qilish uchun

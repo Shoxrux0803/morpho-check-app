@@ -996,6 +996,22 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     }
   };
 
+  const handleExportSummaryDocx = async () => {
+    try {
+      const blob = await ResearchApi.exportSummaryDocx(filter);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `research_summary_${new Date().toISOString().slice(0, 10)}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Xatolik: " + err.message);
+    }
+  };
+
   const handleDownloadDocx = (id, lang = "ru") => {
     ResearchApi.downloadDocx(id, lang);
   };
@@ -1274,6 +1290,14 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             onClick={handleExportXlsx}
           >
             XLSX
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<Description />}
+            onClick={handleExportSummaryDocx}
+          >
+            DOCX report
           </Button>
           <Button
             variant="outlined"

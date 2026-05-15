@@ -1300,37 +1300,63 @@ const ResearchAnalytics = ({ data, isDark }) => {
           Tadqiqot Hisoboti
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={4}>
-          Barcha to'plangan ma'lumotlarni tahliliy formatda (.xlsx) yuklab oling
+          Barcha to'plangan ma'lumotlarni tahliliy formatda yuklab oling
         </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={async () => {
-            try {
-              const blob = await ResearchApi.exportDataset({});
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `full_analysis_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              toast.success("Yuklab olish yakunlandi");
-            } catch (err) {
-              toast.error("Xatolik: " + err.message);
-            }
-          }}
-          startIcon={<Download />}
-          sx={{
-            borderRadius: 3,
-            px: 8,
-            py: 2,
-            fontWeight: 800,
-            background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
-          }}
-        >
-          To'liq bazani eksport qilish
-        </Button>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
+          <Button
+            variant="contained"
+            size="large"
+            onClick={async () => {
+              try {
+                const blob = await ResearchApi.exportDataset({});
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `full_analysis_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                toast.success("Yuklab olish yakunlandi");
+              } catch (err) {
+                toast.error("Xatolik: " + err.message);
+              }
+            }}
+            startIcon={<Download />}
+            sx={{
+              borderRadius: 3,
+              px: 5,
+              py: 2,
+              fontWeight: 800,
+              background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
+            }}
+          >
+            XLSX dataset
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={async () => {
+              try {
+                const blob = await ResearchApi.exportSummaryDocx({});
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `scientific_summary_${new Date().toISOString().slice(0, 10)}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                toast.success("DOCX hisobot tayyor");
+              } catch (err) {
+                toast.error("Xatolik: " + err.message);
+              }
+            }}
+            startIcon={<Description />}
+            sx={{ borderRadius: 3, px: 5, py: 2, fontWeight: 800 }}
+          >
+            Ilmiy DOCX report
+          </Button>
+        </Stack>
       </GlassPaper>
     </Stack>
   );
@@ -1484,6 +1510,23 @@ const ResearcherPage = () => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(`${tr("exportError")}: ${err.message}`);
+    }
+  };
+
+  const handleExportSummaryDocx = async () => {
+    try {
+      const blob = await ResearchApi.exportSummaryDocx(filter);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `scientific_summary_${new Date().toISOString().slice(0, 10)}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("DOCX hisobot tayyor");
     } catch (err) {
       toast.error(`${tr("exportError")}: ${err.message}`);
     }
@@ -2142,6 +2185,15 @@ const ResearcherPage = () => {
                       )}
                     </Box>
                     <Box display="flex" gap={2}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        startIcon={<Description />}
+                        onClick={handleExportSummaryDocx}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        DOCX report
+                      </Button>
                       <Button
                         variant="outlined"
                         color="error"
