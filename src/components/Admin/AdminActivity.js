@@ -144,73 +144,87 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
         }}
       >
         <CardContent sx={{ p: 3 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-            <Box display="flex" gap={2} alignItems="center">
-              <Avatar
-                sx={{
-                  width: 56,
-                  height: 56,
-                  bgcolor: isBest ? "#f59e0b" : isResearcher ? "secondary.main" : "primary.main",
-                  background: isBest
-                    ? "linear-gradient(135deg, #fef3c7 0%, #f59e0b 55%, #92400e 100%)"
-                    : undefined,
-                  color: isBest ? "#111827" : undefined,
-                  boxShadow: isBest
-                    ? "0 0 0 4px rgba(255,255,255,0.28), 0 0 24px rgba(245,158,11,0.75)"
-                    : isResearcher
-                      ? "0 4px 12px rgba(156,39,176,0.3)"
-                      : "0 4px 12px rgba(0,123,255,0.3)",
-                  animation: isBest ? "goldTrophyPulse 1.8s ease-in-out infinite" : "none",
-                }}
+          <Box display="flex" gap={2} alignItems="flex-start" mb={2}>
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                bgcolor: isBest ? "#f59e0b" : isResearcher ? "secondary.main" : "primary.main",
+                background: isBest
+                  ? "linear-gradient(135deg, #fef3c7 0%, #f59e0b 55%, #92400e 100%)"
+                  : undefined,
+                color: isBest ? "#111827" : undefined,
+                boxShadow: isBest
+                  ? "0 0 0 4px rgba(255,255,255,0.28), 0 0 24px rgba(245,158,11,0.75)"
+                  : isResearcher
+                    ? "0 4px 12px rgba(156,39,176,0.3)"
+                    : "0 4px 12px rgba(0,123,255,0.3)",
+                animation: isBest ? "goldTrophyPulse 1.8s ease-in-out infinite" : "none",
+              }}
+            >
+              {isBest ? (
+                <EmojiEvents />
+              ) : isResearcher ? (
+                <Science />
+              ) : (
+                admin.name?.[0].toUpperCase() || "A"
+              )}
+            </Avatar>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mb: 0.5, flexWrap: "wrap", rowGap: 0.5 }}
               >
-                {isBest ? (
-                  <EmojiEvents />
-                ) : isResearcher ? (
-                  <Science />
-                ) : (
-                  admin.name?.[0].toUpperCase() || "A"
-                )}
-              </Avatar>
-              <Box>
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                  <Typography variant="h6" fontWeight="800" sx={{ lineHeight: 1.2 }}>
-                    #{rank} {admin.name}
-                  </Typography>
-                  {isBest && (
-                    <Chip
-                      label="Eng yaxshi"
-                      size="small"
-                      sx={{
-                        height: 20,
-                        borderRadius: 1,
-                        fontSize: "0.65rem",
-                        fontWeight: 900,
-                        bgcolor: "#111827",
-                        color: "#fde68a",
-                        border: "1px solid rgba(253,230,138,0.7)",
-                        boxShadow: "0 0 16px rgba(245,158,11,0.45)",
-                      }}
-                    />
-                  )}
-                </Stack>
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6" fontWeight="800" sx={{ lineHeight: 1.2, minWidth: 0 }}>
+                  #{rank} {admin.name}
+                </Typography>
+                {isBest && (
                   <Chip
-                    label={isResearcher ? "Izlanuvchi" : "Admin"}
+                    label="Eng yaxshi"
                     size="small"
-                    variant="outlined"
-                    color={isResearcher ? "secondary" : "primary"}
-                    sx={{ height: 18, fontSize: "0.6rem", borderRadius: 1, fontWeight: "bold" }}
+                    sx={{
+                      height: 20,
+                      borderRadius: 1,
+                      fontSize: "0.65rem",
+                      fontWeight: 900,
+                      bgcolor: "#111827",
+                      color: "#fde68a",
+                      border: "1px solid rgba(253,230,138,0.7)",
+                      boxShadow: "0 0 16px rgba(245,158,11,0.45)",
+                    }}
                   />
-                  <StatusBadge status={admin.status} isTyping={admin.is_typing} />
-                </Stack>
-              </Box>
+                )}
+              </Stack>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip
+                  label={isResearcher ? "Izlanuvchi" : "Admin"}
+                  size="small"
+                  variant="outlined"
+                  color={isResearcher ? "secondary" : "primary"}
+                  sx={{ height: 18, fontSize: "0.6rem", borderRadius: 1, fontWeight: "bold" }}
+                />
+                <StatusBadge status={admin.status} isTyping={admin.is_typing} />
+              </Stack>
+              <Stack direction="row" sx={{ mt: 1 }}>
+                <Chip
+                  icon={<LocationOn sx={{ fontSize: "0.9rem !important" }} />}
+                  label={admin.region || "Global"}
+                  size="small"
+                  sx={{
+                    maxWidth: "100%",
+                    borderRadius: 2,
+                    fontWeight: "bold",
+                    fontSize: "0.7rem",
+                    "& .MuiChip-label": {
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    },
+                  }}
+                />
+              </Stack>
             </Box>
-            <Chip
-              icon={<LocationOn sx={{ fontSize: "0.9rem !important" }} />}
-              label={admin.region || "Global"}
-              size="small"
-              sx={{ borderRadius: 2, fontWeight: "bold", fontSize: "0.7rem" }}
-            />
           </Box>
 
           <Grid container spacing={2} sx={{ mt: 1 }}>
