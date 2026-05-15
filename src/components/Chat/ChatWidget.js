@@ -290,8 +290,8 @@ const ChatWidget = () => {
       className="chat-widget-wrapper"
       style={{
         position: "fixed",
-        bottom: isMobile ? "20px" : "30px",
-        left: isMobile ? "20px" : "auto",
+        bottom: isMobile ? "12px" : "30px",
+        left: isMobile ? "12px" : "auto",
         right: isMobile ? "auto" : "30px",
         zIndex: 1000,
       }}
@@ -302,12 +302,12 @@ const ChatWidget = () => {
             key="chat-window"
             layoutId="chat-box"
             initial={{ opacity: 0, scale: 0.5, borderRadius: "50%" }}
-            animate={{ opacity: 1, scale: 1, borderRadius: "24px" }}
+            animate={{ opacity: 1, scale: 1, borderRadius: isMobile ? "18px" : "24px" }}
             exit={{ opacity: 0, scale: 0.5, borderRadius: "50%" }}
             style={{
-              width: isMobile ? "100vw" : "400px",
-              height: isMobile ? "100vh" : "650px",
-              maxHeight: isMobile ? "100vh" : "90vh",
+              width: isMobile ? "calc(100vw - 24px)" : "400px",
+              height: isMobile ? "calc(100dvh - 88px)" : "650px",
+              maxHeight: isMobile ? "calc(100dvh - 88px)" : "90vh",
               background: isDark ? "#1e1e1e" : "#ffffff",
               backdropFilter: "blur(20px)",
               boxShadow: isDark ? "0 20px 40px rgba(0,0,0,0.4)" : "0 20px 40px rgba(0,0,0,0.15)",
@@ -320,7 +320,7 @@ const ChatWidget = () => {
               transformOrigin: isMobile ? "bottom left" : "bottom right",
               left: isMobile ? 0 : "auto",
               right: isMobile ? "auto" : 0,
-              borderRadius: isMobile ? "0" : "24px",
+              borderRadius: isMobile ? "18px" : "24px",
             }}
           >
             {/* Header */}

@@ -240,7 +240,7 @@ const AIAssistantWidget = () => {
     <Box
       sx={{
         position: "fixed",
-        bottom: { xs: 90, md: 30 },
+        bottom: { xs: 92, md: 30 },
         left: { xs: 16, md: "auto" },
         right: { xs: "auto", md: 110 },
         zIndex: 1000,
@@ -276,25 +276,25 @@ const AIAssistantWidget = () => {
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
             style={{
-              position: "absolute",
-              bottom: 80,
-              left: isMobile ? 0 : "auto",
-              right: isMobile ? "auto" : 0,
-              width: isMobile ? "100vw" : "420px",
-              maxWidth: isMobile ? "100vw" : "90vw",
-              borderRadius: isMobile ? "0" : "24px",
+              position: isMobile ? "fixed" : "absolute",
+              bottom: isMobile ? 16 : 80,
+              left: isMobile ? 12 : "auto",
+              right: isMobile ? 12 : 0,
+              width: isMobile ? "calc(100vw - 24px)" : "420px",
+              maxWidth: isMobile ? "calc(100vw - 24px)" : "90vw",
+              borderRadius: isMobile ? "18px" : "24px",
               marginLeft: isMobile ? 0 : "auto",
             }}
           >
             <Paper
               elevation={24}
               sx={{
-                borderRadius: isMobile ? "0" : "24px",
+                borderRadius: isMobile ? "18px" : "24px",
                 overflow: "hidden",
                 display: "flex",
                 flexDirection: "column",
-                height: isMobile ? "100vh" : "600px",
-                maxHeight: isMobile ? "100vh" : "90vh",
+                height: isMobile ? "calc(100dvh - 92px)" : "600px",
+                maxHeight: isMobile ? "calc(100dvh - 92px)" : "90vh",
                 background: isDark ? "rgba(30, 30, 30, 0.95)" : "rgba(255, 255, 255, 0.95)",
                 backdropFilter: "blur(12px)",
                 border: isDark
