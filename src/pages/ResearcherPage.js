@@ -1634,6 +1634,18 @@ const ResearcherPage = () => {
         color: "#0891b2",
       },
       {
+        label: "Tadqiqot turi",
+        value: user?.research_type,
+        icon: <Assessment fontSize="small" />,
+        color: "#2563eb",
+      },
+      {
+        label: "Tadqiqot hududi",
+        value: user?.research_area,
+        icon: <Place fontSize="small" />,
+        color: "#ca8a04",
+      },
+      {
         label: "Ilmiy rahbar",
         value: user?.scientific_supervisor,
         icon: <Person fontSize="small" />,
@@ -2106,6 +2118,18 @@ const ResearcherPage = () => {
                             Ilmiy ish mavzusi:{" "}
                             <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
                               {user?.research_topic || "Kiritilmagan"}
+                            </Box>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                            Tadqiqot turi:{" "}
+                            <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
+                              {user?.research_type || "Kiritilmagan"}
+                            </Box>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                            Tadqiqot hududi:{" "}
+                            <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
+                              {user?.research_area || "Kiritilmagan"}
                             </Box>
                           </Typography>
                           <Typography variant="caption" color="text.secondary" fontWeight={800}>

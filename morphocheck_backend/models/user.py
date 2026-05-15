@@ -18,6 +18,8 @@ class User(Base):
     longitude = Column(Float, nullable=True)
     phone = Column(String(50), nullable=True)
     research_topic = Column(String(500), nullable=True)
+    research_type = Column(String(100), nullable=True)
+    research_area = Column(String(255), nullable=True)
     scientific_supervisor = Column(String(200), nullable=True)
     role = Column(String(30), default="user", index=True)  # "user" yoki "admin"
     created_at = Column(DateTime, server_default=func.now())

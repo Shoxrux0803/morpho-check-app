@@ -149,6 +149,8 @@ def ensure_schema_updates():
             "latitude": "FLOAT",
             "longitude": "FLOAT",
             "research_topic": "VARCHAR(500)",
+            "research_type": "VARCHAR(100)",
+            "research_area": "VARCHAR(255)",
             "scientific_supervisor": "VARCHAR(200)",
         }
         existing = {col["name"] for col in inspector.get_columns("users")}

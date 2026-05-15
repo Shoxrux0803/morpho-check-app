@@ -175,6 +175,8 @@ class UserCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     research_topic: Optional[str] = Field(None, max_length=500)
+    research_type: Optional[str] = Field(None, max_length=100)
+    research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
 
     @field_validator("password")
@@ -246,6 +248,8 @@ class UserUpdate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     research_topic: Optional[str] = Field(None, max_length=500)
+    research_type: Optional[str] = Field(None, max_length=100)
+    research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
 
 class UserOut(BaseModel):
@@ -261,6 +265,8 @@ class UserOut(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     research_topic: Optional[str] = None
+    research_type: Optional[str] = None
+    research_area: Optional[str] = None
     scientific_supervisor: Optional[str] = None
     is_deleted: Optional[int] = 0
     deleted_at: Optional[datetime.datetime] = None

@@ -93,6 +93,8 @@ const PAGE_LABELS = {
   kz: { scientificAnalysis: "Ғылыми талдау" },
 };
 
+const RESEARCH_TYPE_OPTIONS = ["PhD", "DSc", "Magistrlik", "Grant loyihasi"];
+
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -189,6 +191,8 @@ const SuperAdminPage = () => {
     latitude: "",
     longitude: "",
     research_topic: "",
+    research_type: "",
+    research_area: "",
     scientific_supervisor: "",
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
@@ -691,10 +695,12 @@ const SuperAdminPage = () => {
 
     try {
       const { confirmPassword, ...payload } = adminForm;
-      ["research_topic", "scientific_supervisor"].forEach((key) => {
-        if (payload[key]) payload[key] = payload[key].trim();
-        if (payload[key] === "") payload[key] = null;
-      });
+      ["research_topic", "research_type", "research_area", "scientific_supervisor"].forEach(
+        (key) => {
+          if (payload[key]) payload[key] = payload[key].trim();
+          if (payload[key] === "") payload[key] = null;
+        },
+      );
       const latMissing =
         payload.latitude === "" || payload.latitude === null || payload.latitude === undefined;
       const lngMissing =
@@ -1060,6 +1066,8 @@ const SuperAdminPage = () => {
                     latitude: "",
                     longitude: "",
                     research_topic: "",
+                    research_type: "",
+                    research_area: "",
                     scientific_supervisor: "",
                   });
                   setShowAdminPassword(false);
@@ -1836,6 +1844,46 @@ const SuperAdminPage = () => {
                       setAdminForm({ ...adminForm, scientific_supervisor: e.target.value })
                     }
                   />
+                  <FormControl fullWidth>
+                    <InputLabel>Tadqiqot turi</InputLabel>
+                    <Select
+                      value={adminForm.research_type || ""}
+                      label="Tadqiqot turi"
+                      onChange={(e) =>
+                        setAdminForm({ ...adminForm, research_type: e.target.value })
+                      }
+                    >
+                      <MenuItem value="">Tanlanmagan</MenuItem>
+                      {RESEARCH_TYPE_OPTIONS.map((type) => (
+                        <MenuItem key={type} value={type}>
+                          {type}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl fullWidth>
+                    <InputLabel>Tadqiqot hududi</InputLabel>
+                    <Select
+                      value={adminForm.research_area || ""}
+                      label="Tadqiqot hududi"
+                      onChange={(e) =>
+                        setAdminForm({ ...adminForm, research_area: e.target.value })
+                      }
+                    >
+                      <MenuItem value="">Tanlanmagan</MenuItem>
+                      {adminForm.research_area &&
+                        !Object.keys(UZB_LOCATIONS).includes(adminForm.research_area) && (
+                          <MenuItem value={adminForm.research_area}>
+                            {adminForm.research_area}
+                          </MenuItem>
+                        )}
+                      {Object.keys(UZB_LOCATIONS).map((region) => (
+                        <MenuItem key={region} value={region}>
+                          {region}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 </Stack>
               )}
               <TextField
