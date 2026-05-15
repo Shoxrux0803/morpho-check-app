@@ -1,11 +1,11 @@
-import React, { Suspense, useMemo, useRef, useEffect } from "react";
+import React, { Suspense, useMemo, useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Outlines, Environment } from "@react-three/drei";
+import { Outlines } from "@react-three/drei";
 import { Physics, useSphere } from "@react-three/cannon";
-import { EffectComposer, SMAA, Bloom } from "@react-three/postprocessing";
 
 const rfs = THREE.MathUtils.randFloatSpread;
+const CLUMP_COUNT = 24;
 
 function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Vector3() }) {
   // Generate a dynamic "M" texture that changes based on theme
@@ -28,7 +28,7 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
     ctx.fillText("M", 256, 280);
 
     const tex = new THREE.CanvasTexture(canvas);
-    tex.anisotropy = 16;
+    tex.anisotropy = 4;
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
     return tex;
@@ -49,7 +49,7 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
     baubleMaterial.envMapIntensity = isDark ? 0.05 : 1.0;
   }, [isDark, baubleMaterial]);
 
-  const sphereGeometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
+  const sphereGeometry = useMemo(() => new THREE.SphereGeometry(1, 20, 20), []);
 
   const [ref, api] = useSphere(() => ({
     args: [1],
@@ -66,7 +66,7 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
   useEffect(() => {
     if (pathname) {
       const timer = setTimeout(() => {
-        for (let i = 0; i < 35; i++) {
+        for (let i = 0; i < CLUMP_COUNT; i++) {
           // Slightly fewer spheres for better performance
           api
             .at(i)
@@ -82,7 +82,7 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
 
   useFrame((state) => {
     // Apply center force only to active (non-sleeping) bodies to save CPU
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < CLUMP_COUNT; i++) {
       ref.current.getMatrixAt(i, mat);
       vec.setFromMatrixPosition(mat);
       if (vec.length() > 0.1) {
@@ -94,9 +94,7 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
   return (
     <instancedMesh
       ref={ref}
-      castShadow
-      receiveShadow
-      args={[sphereGeometry, baubleMaterial, 35]}
+      args={[sphereGeometry, baubleMaterial, CLUMP_COUNT]}
       material-map={mTexture}
     >
       <Outlines thickness={0.0} color={isDark ? "white" : "black"} />
@@ -166,7 +164,7 @@ void main() {
 
 function BackgroundAtmosphere({ isDark }) {
   const pointsRef = useRef();
-  const count = 1000;
+  const count = 450;
 
   // Create geometry once to prevent remounting
   const geometry = useMemo(() => {
@@ -223,9 +221,27 @@ function BackgroundAtmosphere({ isDark }) {
   );
 }
 
+function WebGLContextGuard({ onContextLost }) {
+  const gl = useThree((state) => state.gl);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+    const handleContextLost = (event) => {
+      event.preventDefault();
+      onContextLost();
+    };
+
+    canvas.addEventListener("webglcontextlost", handleContextLost, false);
+    return () => canvas.removeEventListener("webglcontextlost", handleContextLost, false);
+  }, [gl, onContextLost]);
+
+  return null;
+}
+
 export default function MorphoProBackground({ theme, pathname }) {
   const isDark = theme === "dark";
   const bg = isDark ? "#020617" : "#dfdfdf";
+  const [contextLost, setContextLost] = useState(false);
 
   const mouseGlobal = useRef(new THREE.Vector2(0, 0));
 
@@ -253,40 +269,28 @@ export default function MorphoProBackground({ theme, pathname }) {
         transition: "background 1s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
     >
-      <Canvas
-        shadows
-        gl={{ antialias: false, alpha: true, stencil: false }}
-        dpr={[1, 1.5]}
-        camera={{ position: [0, 0, 20], fov: 35, near: 1, far: 100 }}
-      >
-        <Suspense fallback={null}>
-          <ProCamera mouseGlobal={mouseGlobal} />
+      {!contextLost && (
+        <Canvas
+          gl={{ antialias: false, alpha: true, stencil: false, powerPreference: "low-power" }}
+          dpr={1}
+          camera={{ position: [0, 0, 20], fov: 35, near: 1, far: 100 }}
+        >
+          <Suspense fallback={null}>
+            <WebGLContextGuard onContextLost={() => setContextLost(true)} />
+            <ProCamera mouseGlobal={mouseGlobal} />
 
-          <ambientLight intensity={0.5} />
-          <spotLight
-            intensity={1}
-            angle={0.2}
-            penumbra={1}
-            position={[30, 30, 30]}
-            castShadow
-            shadow-mapSize={[512, 512]}
-          />
+            <ambientLight intensity={0.5} />
+            <spotLight intensity={1} angle={0.2} penumbra={1} position={[30, 30, 30]} />
 
-          <BackgroundAtmosphere isDark={isDark} />
+            <BackgroundAtmosphere isDark={isDark} />
 
-          <Physics gravity={[0, 2, 0]} iterations={5} allowSleep>
-            <Pointer mouseGlobal={mouseGlobal} isDark={isDark} />
-            <Clump isDark={isDark} pathname={pathname} />
-          </Physics>
-
-          <Environment files="/adamsbridge.hdr" />
-
-          <EffectComposer disableNormalPass multisampling={0}>
-            <Bloom mipmapBlur levels={7} intensity={isDark ? 1.5 : 1} />
-            <SMAA />
-          </EffectComposer>
-        </Suspense>
-      </Canvas>
+            <Physics gravity={[0, 2, 0]} iterations={4} allowSleep>
+              <Pointer mouseGlobal={mouseGlobal} isDark={isDark} />
+              <Clump isDark={isDark} pathname={pathname} />
+            </Physics>
+          </Suspense>
+        </Canvas>
+      )}
       {/* Premium Pro Overlays & Glassmorphism Blur */}
       <div
         style={{

@@ -27,9 +27,9 @@ import {
   AccountCircle,
   Science,
   EmojiEvents,
-  TrendingUp,
   CalendarMonth,
 } from "@mui/icons-material";
+import TrendingUp from "@mui/icons-material/TrendingUp";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 
@@ -78,6 +78,11 @@ const formatAvgMinutes = (seconds = 0) => {
 
 const getScore = (admin) =>
   (admin.stats_today || 0) * 3 + (admin.stats_week || 0) * 2 + (admin.stats_month || 0);
+
+const getActivityKey = (admin, index) => {
+  const id = admin.id || admin.user_id || admin.email || admin.name;
+  return id ? `activity-${id}` : `activity-${admin.role || "user"}-${index}`;
+};
 
 const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
   const isResearcher = admin.role === "researcher";
@@ -456,6 +461,7 @@ export default function AdminActivity() {
         <AnimatePresence mode="popLayout">
           {bestUser && (
             <Paper
+              key="best-user-summary"
               elevation={0}
               sx={{
                 mb: 3,
@@ -523,9 +529,9 @@ export default function AdminActivity() {
               </Stack>
             </Paper>
           )}
-          <Grid container spacing={3}>
+          <Grid key="activity-grid" container spacing={3}>
             {filteredData.map((admin, index) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={admin.id}>
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={getActivityKey(admin, index)}>
                 <ActivityCard
                   admin={admin}
                   isDark={isDark}

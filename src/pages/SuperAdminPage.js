@@ -149,6 +149,12 @@ const scrollableContentSx = {
   },
 };
 
+const blurActiveElement = () => {
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+};
+
 const SuperAdminPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -397,6 +403,7 @@ const SuperAdminPage = () => {
 
   const handleBulkHardDelete = useCallback(async () => {
     if (checked.size === 0) return;
+    blurActiveElement();
     setDeleteConfirmOpen(true);
   }, [checked.size]);
 
@@ -1037,6 +1044,7 @@ const SuperAdminPage = () => {
                 variant="contained"
                 startIcon={<Add />}
                 onClick={() => {
+                  blurActiveElement();
                   setCurrentAdmin(null);
                   setAdminForm({
                     name: "",
@@ -1111,6 +1119,7 @@ const SuperAdminPage = () => {
                             <IconButton
                               size="small"
                               onClick={() => {
+                                blurActiveElement();
                                 setCurrentAdmin(admin);
                                 setAdminForm({ ...admin, password: "", confirmPassword: "" });
                                 setShowAdminPassword(false);
@@ -1243,7 +1252,10 @@ const SuperAdminPage = () => {
                               <IconButton
                                 size="small"
                                 color="info"
-                                onClick={() => setViewRow(item)}
+                                onClick={() => {
+                                  blurActiveElement();
+                                  setViewRow(item);
+                                }}
                               >
                                 <Visibility />
                               </IconButton>
@@ -1678,7 +1690,10 @@ const SuperAdminPage = () => {
                   fullWidth
                   color="error"
                   startIcon={<Logout />}
-                  onClick={() => setLogoutDialogOpen(true)}
+                  onClick={() => {
+                    blurActiveElement();
+                    setLogoutDialogOpen(true);
+                  }}
                   sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}
                 >
                   {pt("logout")}

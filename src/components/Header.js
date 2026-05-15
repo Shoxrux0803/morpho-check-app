@@ -42,6 +42,12 @@ import WeatherClock from "./WeatherClock";
 import SyncManager from "./SyncManager";
 import LogoutConfirmDialog from "./LogoutConfirmDialog";
 
+const blurActiveElement = () => {
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+};
+
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
@@ -56,6 +62,23 @@ export default function Header() {
   const [syncOpen, setSyncOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const openLogoutDialog = () => {
+    blurActiveElement();
+    setDrawerOpen(false);
+    setLogoutDialogOpen(true);
+  };
+
+  const openSyncManager = () => {
+    blurActiveElement();
+    setDrawerOpen(false);
+    setSyncOpen(true);
+  };
+
+  const openDrawer = () => {
+    blurActiveElement();
+    setDrawerOpen(true);
+  };
 
   const handleLangChange = (code) => {
     if (code === lang) {
@@ -345,7 +368,7 @@ export default function Header() {
             {user && (
               <Tooltip title="Chiqish">
                 <IconButton
-                  onClick={() => setLogoutDialogOpen(true)}
+                  onClick={openLogoutDialog}
                   sx={{
                     color: "error.main",
                     ml: 0.5,
@@ -579,7 +602,7 @@ export default function Header() {
             )}
 
             <Tooltip title={t("syncQueue") || "Oflayn navbat"}>
-              <IconButton color="inherit" onClick={() => setSyncOpen(true)}>
+              <IconButton color="inherit" onClick={openSyncManager}>
                 <Badge
                   badgeContent={pendingCount}
                   color="error"
@@ -594,7 +617,7 @@ export default function Header() {
           {/* Mobile Menu Button (xs to lg) */}
           <IconButton
             color="inherit"
-            onClick={() => setDrawerOpen(true)}
+            onClick={openDrawer}
             sx={{ display: { xs: "flex", md: "none" }, ml: 1 }}
           >
             <Badge badgeContent={pendingCount} color="error" variant="dot">
@@ -756,7 +779,7 @@ export default function Header() {
                 fullWidth
                 variant="outlined"
                 color="inherit"
-                onClick={() => setSyncOpen(true)}
+                onClick={openSyncManager}
                 startIcon={<SyncIcon className={pendingCount > 0 ? "animate-pulse" : ""} />}
                 sx={{ mt: 1, borderRadius: 2 }}
               >
@@ -768,7 +791,7 @@ export default function Header() {
                   fullWidth
                   variant="contained"
                   color="error"
-                  onClick={() => setLogoutDialogOpen(true)}
+                  onClick={openLogoutDialog}
                   startIcon={<LogoutIcon />}
                   sx={{ mt: 2, borderRadius: 2 }}
                 >
