@@ -1626,6 +1626,20 @@ const ResearcherPage = () => {
         color: "#ca8a04",
       },
     ];
+    const researcherProfileItems = [
+      {
+        label: "Ilmiy ish mavzusi",
+        value: user?.research_topic,
+        icon: <Science fontSize="small" />,
+        color: "#0891b2",
+      },
+      {
+        label: "Ilmiy rahbar",
+        value: user?.scientific_supervisor,
+        icon: <Person fontSize="small" />,
+        color: "#16a34a",
+      },
+    ];
 
     return (
       <Box sx={{ minHeight: { xs: "auto", md: "calc(100vh - 120px)" }, position: "relative" }}>
@@ -1695,6 +1709,48 @@ const ResearcherPage = () => {
                   "Izlanuvchi uchun asosiy sahifa ma'lumot kiritish, klinik-antropometrik yozuvlarni tartiblash, statistik ko'rsatkichlarni ko'rish va hisobotlarni tayyorlash jarayonini bitta yo'nalishda birlashtiradi.",
                 )}
               </Typography>
+
+              {!isSuperAdmin && (
+                <Grid container spacing={2} sx={{ mt: 3, maxWidth: 780 }}>
+                  {researcherProfileItems.map((item) => (
+                    <Grid xs={12} sm={6} key={item.label}>
+                      <Box
+                        sx={{
+                          height: "100%",
+                          p: 2,
+                          borderRadius: 3,
+                          bgcolor: isDark ? "rgba(255,255,255,0.045)" : "rgba(255,255,255,0.72)",
+                          border: "1px solid",
+                          borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(8,47,73,0.08)",
+                        }}
+                      >
+                        <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 1 }}>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 2,
+                              display: "grid",
+                              placeItems: "center",
+                              color: item.color,
+                              bgcolor: `${item.color}18`,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {item.icon}
+                          </Box>
+                          <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                            {item.label}
+                          </Typography>
+                        </Stack>
+                        <Typography variant="body1" fontWeight={850} sx={{ lineHeight: 1.45 }}>
+                          {item.value || "Kiritilmagan"}
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
 
               <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mt: 4 }}>
                 <Button
@@ -2040,6 +2096,26 @@ const ResearcherPage = () => {
                       <Typography variant="body2" color="text.secondary">
                         {tr("databaseSubtitle")}
                       </Typography>
+                      {!isSuperAdmin && (
+                        <Stack
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={{ xs: 0.5, sm: 2 }}
+                          sx={{ mt: 1 }}
+                        >
+                          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                            Ilmiy ish mavzusi:{" "}
+                            <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
+                              {user?.research_topic || "Kiritilmagan"}
+                            </Box>
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" fontWeight={800}>
+                            Ilmiy rahbar:{" "}
+                            <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
+                              {user?.scientific_supervisor || "Kiritilmagan"}
+                            </Box>
+                          </Typography>
+                        </Stack>
+                      )}
                     </Box>
                     <Box display="flex" gap={2}>
                       <Button

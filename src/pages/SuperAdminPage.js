@@ -182,6 +182,8 @@ const SuperAdminPage = () => {
     address: "",
     latitude: "",
     longitude: "",
+    research_topic: "",
+    scientific_supervisor: "",
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
@@ -682,6 +684,10 @@ const SuperAdminPage = () => {
 
     try {
       const { confirmPassword, ...payload } = adminForm;
+      ["research_topic", "scientific_supervisor"].forEach((key) => {
+        if (payload[key]) payload[key] = payload[key].trim();
+        if (payload[key] === "") payload[key] = null;
+      });
       const latMissing =
         payload.latitude === "" || payload.latitude === null || payload.latitude === undefined;
       const lngMissing =
@@ -1045,6 +1051,8 @@ const SuperAdminPage = () => {
                     address: "",
                     latitude: "",
                     longitude: "",
+                    research_topic: "",
+                    scientific_supervisor: "",
                   });
                   setShowAdminPassword(false);
                   setAdminDialogOpen(true);
@@ -1795,6 +1803,26 @@ const SuperAdminPage = () => {
                   <MenuItem value="researcher">Izlanuvchi</MenuItem>
                 </Select>
               </FormControl>
+              {adminForm.role === "researcher" && (
+                <Stack spacing={2}>
+                  <TextField
+                    label="Ilmiy ish mavzusi"
+                    fullWidth
+                    multiline
+                    minRows={2}
+                    value={adminForm.research_topic || ""}
+                    onChange={(e) => setAdminForm({ ...adminForm, research_topic: e.target.value })}
+                  />
+                  <TextField
+                    label="Ilmiy rahbar ism familiyasi"
+                    fullWidth
+                    value={adminForm.scientific_supervisor || ""}
+                    onChange={(e) =>
+                      setAdminForm({ ...adminForm, scientific_supervisor: e.target.value })
+                    }
+                  />
+                </Stack>
+              )}
               <TextField
                 label={pt("phone")}
                 fullWidth

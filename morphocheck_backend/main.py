@@ -148,6 +148,8 @@ def ensure_schema_updates():
             "address": "VARCHAR(255)",
             "latitude": "FLOAT",
             "longitude": "FLOAT",
+            "research_topic": "VARCHAR(500)",
+            "scientific_supervisor": "VARCHAR(200)",
         }
         existing = {col["name"] for col in inspector.get_columns("users")}
         with engine.begin() as conn:
