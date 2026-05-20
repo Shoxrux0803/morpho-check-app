@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Grid,
@@ -77,9 +77,6 @@ const ResearcherForm = ({ onSuccess }) => {
     feeding_type: "",
     parents_marriage: "",
     mother_health_status: "",
-    parents_phone: "",
-    father_height: "",
-    mother_height: "",
     examination_date: "",
     lower_leg_total: "",
     lower_leg_spina_iliaca: "",
@@ -147,13 +144,7 @@ const ResearcherForm = ({ onSuccess }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const numericFields = [
-      "father_height",
-      "mother_height",
-      "children_count",
-      "child_order",
-      "teeth_count",
-    ];
+    const numericFields = ["children_count", "child_order", "teeth_count"];
     const v = numericFields.includes(name) && value !== "" ? Number(value) : value;
     setFormData({ ...formData, [name]: v });
   };
@@ -447,15 +438,6 @@ const ResearcherForm = ({ onSuccess }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   {I("mother_health_status", tr("motherHealth"), "text")}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  {I("parents_phone", tr("parentsPhone"), "text")}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  {I("father_height", tr("fatherHeight"))}
-                </Grid>
-                <Grid item xs={12} sm={6} md={4}>
-                  {I("mother_height", tr("motherHeight"))}
                 </Grid>
               </Grid>
             </Box>

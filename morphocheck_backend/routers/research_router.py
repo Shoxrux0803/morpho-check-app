@@ -25,13 +25,104 @@ ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 router = APIRouter(tags=["Researcher"])
 
-RESEARCH_EXPORT_FIELD_ORDER = [
-    "created_at", "id", "full_name", "school_name", "settlement", "birth_place", "birth_date",
+RESEARCH_IMPORT_FIELDS = [
+    "full_name", "school_name", "settlement", "birth_place", "birth_date", "gender",
     "father_nationality", "mother_nationality", "living_since", "enrolled_date",
     "living_conditions", "labor_regime", "past_illnesses", "children_count", "child_order",
     "feeding_type", "parents_marriage", "mother_health_status", "examination_date",
-    "father_height", "mother_height", "lower_leg_spina_iliaca", "lower_leg_symphysion",
-    "tibiale_height", "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
+    "lower_leg_total",
+    "lower_leg_spina_iliaca", "lower_leg_symphysion", "lower_leg_length", "tibiale_height",
+    "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
+    "calf_circumference", "foot_length", "teeth_count", "menstruation_start",
+    "skull_longitudinal", "skull_transverse", "head_circumference", "forehead_transverse",
+    "skull_height", "skull_base_length", "skull_base_width", "face_bizygomatic",
+    "face_bigonial", "face_morphological_height", "face_physiognomic_height", "nose_height",
+    "nose_width", "outer_canthal_width", "inner_canthal_width", "lips_mucosa_height",
+    "mouth_width", "chest_standing_height", "chest_sitting_height", "weight",
+    "trunk_length", "torso_length", "chest_circumference_pause",
+    "chest_circumference_inhale", "chest_circumference_exhale", "waist_circumference",
+    "abdomen_circumference", "upper_segment_length", "chest_transverse_diameter",
+    "chest_anteroposterior_diameter", "chest_height", "arm_length", "shoulder_length",
+    "shoulder_width", "arm_circumference_total", "shoulder_circumference_rest",
+    "shoulder_circumference_flexed", "forearm_length", "hand_length", "dynamometry",
+    "fat_triceps", "fat_biceps", "fat_subscapular", "fat_iliac", "fat_popliteal",
+]
+
+RESEARCH_IMPORT_ALIASES = {
+    "fish": "full_name",
+    "f.i.sh": "full_name",
+    "f i sh": "full_name",
+    "fio": "full_name",
+    "ism familiya": "full_name",
+    "full name": "full_name",
+    "maktab": "school_name",
+    "maktab muassasa": "school_name",
+    "school": "school_name",
+    "aholi punkti": "settlement",
+    "yashash joyi": "settlement",
+    "settlement": "settlement",
+    "tugilgan joy": "birth_place",
+    "tugilgan joyi": "birth_place",
+    "tug ilgan joy": "birth_place",
+    "tug ilgan joyi": "birth_place",
+    "birth place": "birth_place",
+    "tugilgan sana": "birth_date",
+    "tugilgan sanasi": "birth_date",
+    "tug ilgan sana": "birth_date",
+    "tug ilgan sanasi": "birth_date",
+    "birth date": "birth_date",
+    "jinsi": "gender",
+    "jins": "gender",
+    "pol": "gender",
+    "gender": "gender",
+    "sex": "gender",
+    "oziqlanish turi": "feeding_type",
+    "ovqatlanish turi": "feeding_type",
+    "oziqlanish": "feeding_type",
+    "ovqatlanish": "feeding_type",
+    "feeding type": "feeding_type",
+    "nutrition type": "feeding_type",
+    "ota ona qarindoshligi": "parents_marriage",
+    "ota ona nikohi": "parents_marriage",
+    "ota onaning qarindoshligi": "parents_marriage",
+    "ota onasi qarindoshligi": "parents_marriage",
+    "parents marriage": "parents_marriage",
+    "parents kinship": "parents_marriage",
+    "consanguinity": "parents_marriage",
+    "pastki oyoq qol": "lower_leg_total",
+    "pastki oyoq qul": "lower_leg_total",
+    "pastki oyoq qo l": "lower_leg_total",
+    "pastki oyoq": "lower_leg_total",
+    "lower leg total": "lower_leg_total",
+    "pastki oyoq qol uzunligi": "lower_leg_length",
+    "pastki oyoq qul uzunligi": "lower_leg_length",
+    "pastki oyoq qo l uzunligi": "lower_leg_length",
+    "pastki oyoq uzunligi": "lower_leg_length",
+    "lower leg length": "lower_leg_length",
+    "tekshiruv sanasi": "examination_date",
+    "examination date": "examination_date",
+    "vazn": "weight",
+    "weight": "weight",
+    "boy": "chest_standing_height",
+    "bo'y": "chest_standing_height",
+    "bo yi": "chest_standing_height",
+    "bo yi tik": "chest_standing_height",
+    "boyi tik": "chest_standing_height",
+    "standing height": "chest_standing_height",
+    "height": "chest_standing_height",
+    "bo yi otirgan": "chest_sitting_height",
+    "boyi otirgan": "chest_sitting_height",
+    "sitting height": "chest_sitting_height",
+    "ona sog ligi": "mother_health_status",
+}
+
+RESEARCH_EXPORT_FIELD_ORDER = [
+    "created_at", "id", "full_name", "school_name", "settlement", "birth_place", "birth_date",
+    "gender", "father_nationality", "mother_nationality", "living_since", "enrolled_date",
+    "living_conditions", "labor_regime", "past_illnesses", "children_count", "child_order",
+    "feeding_type", "parents_marriage", "mother_health_status", "examination_date",
+    "lower_leg_total", "lower_leg_spina_iliaca", "lower_leg_symphysion",
+    "lower_leg_length", "tibiale_height", "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
     "calf_circumference", "foot_length", "teeth_count", "menstruation_start",
     "skull_longitudinal", "skull_transverse", "head_circumference", "forehead_transverse",
     "skull_height", "skull_base_length", "skull_base_width", "face_bizygomatic",
@@ -46,9 +137,6 @@ RESEARCH_EXPORT_FIELD_ORDER = [
     "hand_length", "dynamometry", "fat_triceps", "fat_biceps", "fat_subscapular",
     "fat_iliac", "fat_popliteal",
 ]
-
-RESEARCH_IMPORT_FIELDS = [field for field in RESEARCH_EXPORT_FIELD_ORDER if field not in {"created_at", "id"}]
-
 RESEARCH_EXPORT_HEADERS = [
     "Сана", "ID", "Ф.И.Ш.", "Мактаб/Муассаса", "Аҳоли пункти", "Туғилган жойи",
     "Туғилган санаси", "Отасининг миллати", "Онасининг миллати", "Қачондан бери яшайди",
@@ -78,13 +166,64 @@ RESEARCH_EXPORT_HEADERS = [
 ]
 
 INTEGER_IMPORT_FIELDS = {"children_count", "child_order", "teeth_count"}
-TEXT_IMPORT_FIELDS = {
-    "full_name", "school_name", "settlement", "birth_place", "birth_date",
-    "father_nationality", "mother_nationality", "living_since", "enrolled_date",
-    "living_conditions", "labor_regime", "past_illnesses", "feeding_type",
-    "parents_marriage", "mother_health_status", "examination_date", "menstruation_start",
+FLOAT_IMPORT_FIELDS = {
+    field for field in RESEARCH_IMPORT_FIELDS
+    if field not in INTEGER_IMPORT_FIELDS and field not in {
+        "full_name", "school_name", "settlement", "birth_place", "birth_date", "gender",
+        "father_nationality", "mother_nationality", "living_since", "enrolled_date",
+        "living_conditions", "labor_regime", "past_illnesses", "feeding_type",
+        "parents_marriage", "mother_health_status", "examination_date",
+        "menstruation_start",
+    }
 }
-FLOAT_IMPORT_FIELDS = set(RESEARCH_IMPORT_FIELDS) - INTEGER_IMPORT_FIELDS - TEXT_IMPORT_FIELDS
+
+RESEARCH_TEMPLATE_LABELS = {
+    "full_name": "F.I.SH",
+    "school_name": "Maktab / muassasa",
+    "settlement": "Aholi punkti",
+    "birth_place": "Tug'ilgan joy",
+    "birth_date": "Tug'ilgan sana (YYYY-MM-DD)",
+    "gender": "Jinsi",
+    "father_nationality": "Ota millati",
+    "mother_nationality": "Ona millati",
+    "children_count": "Bolalar soni",
+    "child_order": "Nechanchi farzand",
+    "feeding_type": "Oziqlanish turi",
+    "parents_marriage": "Ota-ona nikohi",
+    "mother_health_status": "Ona sog'ligi",
+    "examination_date": "Tekshiruv sanasi (YYYY-MM-DD)",
+    "lower_leg_total": "Pastki oyoq-qo'l (sm)",
+    "lower_leg_length": "Pastki oyoq-qo'l uzunligi (sm)",
+    "chest_standing_height": "Bo'yi tik (sm)",
+    "chest_sitting_height": "Bo'yi o'tirgan (sm)",
+    "weight": "Vazn (kg)",
+    "head_circumference": "Bosh aylanasi (sm)",
+    "waist_circumference": "Bel aylanasi (sm)",
+}
+
+RESEARCH_TEMPLATE_EXAMPLE = {
+    "full_name": "Aliyev Ali Valiyevich",
+    "school_name": "12-maktab",
+    "settlement": "Toshkent",
+    "birth_place": "Toshkent",
+    "birth_date": "2015-04-18",
+    "gender": "Boy",
+    "father_nationality": "O'zbek",
+    "mother_nationality": "O'zbek",
+    "children_count": 3,
+    "child_order": 1,
+    "feeding_type": "Tabiiy",
+    "parents_marriage": "Qarindosh emas",
+    "mother_health_status": "Sog'lom",
+    "examination_date": datetime.now().strftime("%Y-%m-%d"),
+    "lower_leg_total": 64.5,
+    "lower_leg_length": 37.2,
+    "chest_standing_height": 125.5,
+    "chest_sitting_height": 68.2,
+    "weight": 26.4,
+    "head_circumference": 52.1,
+    "waist_circumference": 58.0,
+}
 
 
 def research_record_to_dict(record: ResearchRecord) -> dict:
@@ -92,11 +231,6 @@ def research_record_to_dict(record: ResearchRecord) -> dict:
         column.name: getattr(record, column.name)
         for column in ResearchRecord.__table__.columns
     }
-    payload["deleted_by_name"] = (
-        record.deleted_by.name
-        if getattr(record, "deleted_by", None)
-        else None
-    )
     payload["created_by_name"] = (
         record.created_by.name
         if getattr(record, "created_by", None)
@@ -107,7 +241,25 @@ def research_record_to_dict(record: ResearchRecord) -> dict:
         if getattr(record, "created_by", None)
         else None
     )
+    payload["deleted_by_name"] = (
+        record.deleted_by.name
+        if getattr(record, "deleted_by", None)
+        else None
+    )
     return payload
+
+
+def format_research_gender_for_xlsx(value) -> str:
+    gender = str(value or "").strip().lower()
+    if gender in {"boy", "o'g'il", "ogil", "o'g'il bola", "ogil bola"}:
+        return "Ўғил бола"
+    if gender in {"girl", "qiz", "qiz bola"}:
+        return "Қиз бола"
+    if gender in {"erkak", "male"}:
+        return "Эркак"
+    if gender in {"ayol", "female"}:
+        return "Аёл"
+    return lat2cyr(str(value)) if value else "-"
 
 
 def apply_research_filters(
@@ -246,7 +398,7 @@ def list_deleted_research(
         raise HTTPException(status_code=403, detail="Faqat superadmin uchun")
     records = (
         db.query(ResearchRecord)
-        .options(joinedload(ResearchRecord.deleted_by), joinedload(ResearchRecord.created_by))
+        .options(joinedload(ResearchRecord.deleted_by))
         .filter(ResearchRecord.is_deleted == 1)
         .order_by(ResearchRecord.deleted_at.desc())
         .all()
@@ -256,7 +408,22 @@ def list_deleted_research(
 
 @router.get("/export/xlsx")
 def export_research_xlsx(
+    search: Optional[str] = Query(None),
+    full_name: Optional[str] = Query(None),
+    school_name: Optional[str] = Query(None),
+    settlement: Optional[str] = Query(None),
+    feeding_type: Optional[str] = Query(None),
+    parents_marriage: Optional[str] = Query(None),
+    weight_min: Optional[float] = Query(None),
+    weight_max: Optional[float] = Query(None),
+    height_min: Optional[float] = Query(None),
+    height_max: Optional[float] = Query(None),
     researcher_id: Optional[int] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    gender: Optional[str] = Query(None),
+    age_min: Optional[int] = Query(None),
+    age_max: Optional[int] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
@@ -266,12 +433,44 @@ def export_research_xlsx(
         .options(joinedload(ResearchRecord.created_by))
         .filter(ResearchRecord.is_deleted == 0)
     )
-    if current_user.role == "researcher":
-        query = query.filter(ResearchRecord.created_by_id == current_user.id)
-    elif researcher_id:
-        query = query.filter(ResearchRecord.created_by_id == researcher_id)
+    query = apply_research_filters(
+        query,
+        current_user,
+        search=search,
+        full_name=full_name,
+        school_name=school_name,
+        settlement=settlement,
+        feeding_type=feeding_type,
+        parents_marriage=parents_marriage,
+        weight_min=weight_min,
+        weight_max=weight_max,
+        height_min=height_min,
+        height_max=height_max,
+        researcher_id=researcher_id,
+        date_from=date_from,
+        date_to=date_to,
+        gender=gender,
+    )
 
-    records = query.all()
+    records = query.order_by(ResearchRecord.id.desc()).all()
+    if age_min is not None or age_max is not None:
+        filtered_records = []
+        for record in records:
+            try:
+                if not record.birth_date:
+                    continue
+                b_date = datetime.strptime(record.birth_date, "%Y-%m-%d")
+                e_date_str = record.examination_date if record.examination_date else datetime.now().strftime("%Y-%m-%d")
+                e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
+                age = (e_date - b_date).days / 365.25
+                if age_min is not None and age < age_min:
+                    continue
+                if age_max is not None and age > age_max:
+                    continue
+                filtered_records.append(record)
+            except Exception:
+                continue
+        records = filtered_records
     if not records:
         raise HTTPException(status_code=404, detail="Ma'lumotlar mavjud emas")
 
@@ -288,6 +487,7 @@ def export_research_xlsx(
         ("Аҳоли пункти", "settlement"),
         ("Туғилган жойи", "birth_place"),
         ("Туғилган санаси", "birth_date"),
+        ("Jinsi", "gender"),
         ("Отасининг миллати", "father_nationality"),
         ("Онасининг миллати", "mother_nationality"),
         ("Қачондан бери яшайди", "living_since"),
@@ -301,12 +501,12 @@ def export_research_xlsx(
         ("Ота-она никоҳи", "parents_marriage"),
         ("Она соғлиғи", "mother_health_status"),
         ("Текширув санаси", "examination_date"),
-        ("Отасининг бўйи (см)", "father_height"),
-        ("Онасининг бўйи (см)", "mother_height"),
         
         # I Показатели физического развития
+        ("Pastki oyoq-qo'l (sm)", "lower_leg_total"),
         ("Олд юқори ёнбош ўсимтасидан (см)", "lower_leg_spina_iliaca"),
         ("Қовуқ устидан (см)", "lower_leg_symphysion"),
+        ("Pastki oyoq-qo'l uzunligi (sm)", "lower_leg_length"),
         ("Болдир баландлиги (см)", "tibiale_height"),
         ("Чанноқ кенглиги (см)", "pelvic_width"),
         ("Сон узунлиги (см)", "thigh_length"),
@@ -407,6 +607,8 @@ def export_research_xlsx(
                 display_val = val.strftime("%Y-%m-%d %H:%M") if val else "-"
             elif field_name == "id":
                 display_val = val # ID o'zgarmasin
+            elif field_name == "gender":
+                display_val = format_research_gender_for_xlsx(val)
             elif isinstance(val, str):
                 display_val = lat2cyr(val) if val else "-"
             elif val is None:
@@ -449,40 +651,32 @@ def export_research_xlsx(
 # ═══════════════════════════════════════════════
 #  LIST  (superadmin hammani, researcher o'zini)
 # ═══════════════════════════════════════════════
-def clean_import_value(value):
-    if value is None:
-        return None
-    if isinstance(value, str):
-        stripped = value.strip()
-        if stripped in {"", "-", "—", "N/A", "n/a", "null", "None"}:
-            return None
-        return stripped
-    if isinstance(value, datetime):
-        return value.strftime("%Y-%m-%d")
-    return value
-
-
-def coerce_import_value(field: str, value):
-    value = clean_import_value(value)
-    if value is None:
-        return None
-    if field in INTEGER_IMPORT_FIELDS:
-        try:
-            return int(float(str(value).replace(",", ".")))
-        except (TypeError, ValueError):
-            raise ValueError(f"{field} butun son bo'lishi kerak")
-    if field in FLOAT_IMPORT_FIELDS:
-        try:
-            return float(str(value).replace(",", "."))
-        except (TypeError, ValueError):
-            raise ValueError(f"{field} raqam bo'lishi kerak")
-    return str(value).strip()
-
-
-def build_import_column_map(headers):
-    field_set = set(RESEARCH_IMPORT_FIELDS)
+    label_aliases = {
+        normalize_import_header(label): field
+        for field, label in RESEARCH_TEMPLATE_LABELS.items()
+        if field in field_set
+    }
     mapped = {}
-    normalized_headers = [str(header or "").strip().lower() for header in headers]
+    known_count = 0
+    for index, header in enumerate(headers):
+        raw = str(header or "").strip()
+        normalized = normalize_import_header(raw)
+        direct = raw if raw in field_set else normalized.replace(" ", "_")
+        field = None
+        if direct in field_set:
+            field = direct
+        elif normalized in RESEARCH_IMPORT_ALIASES:
+            field = RESEARCH_IMPORT_ALIASES[normalized]
+        elif normalized in label_aliases:
+            field = label_aliases[normalized]
+        if field:
+            mapped[index] = field
+            known_count += 1
+
+    if known_count and known_count >= max(3, len([h for h in headers if h]) // 3):
+        return mapped
+
+    normalized_headers = [normalize_import_header(header) for header in headers]
     has_superadmin_owner_columns = (
         len(normalized_headers) > 3
         and "kiritgan" in normalized_headers[2]
@@ -512,22 +706,15 @@ def download_research_import_template(
     wb = Workbook()
     ws = wb.active
     ws.title = "Research Data"
-
-    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True)
-    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-    center_align = Alignment(horizontal='center', vertical='center')
-    left_align = Alignment(horizontal='left', vertical='center')
-
-    for col_num, header_text in enumerate(RESEARCH_EXPORT_HEADERS, 1):
-        cell = ws.cell(row=1, column=col_num, value=header_text)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = center_align
-        cell.border = border
+    for col_num, header_text in enumerate(template_headers, 1):
+        header = ws.cell(row=1, column=col_num, value=header_text)
+        header.fill = header_fill
+        header.font = header_font
+        header.alignment = center_align
+        header.border = border
 
     for row_num in range(2, 102):
-        for col_num in range(1, len(RESEARCH_EXPORT_HEADERS) + 1):
+        for col_num in range(1, len(template_headers) + 1):
             cell = ws.cell(row=row_num, column=col_num, value=None)
             cell.alignment = left_align
             cell.border = border
@@ -544,13 +731,15 @@ def download_research_import_template(
         ws.column_dimensions[column].width = min(50, max_length + 2)
 
     ws.freeze_panes = "A2"
+
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
+    filename = "research_import_template.xlsx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=research_import_template.xlsx"},
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -561,32 +750,9 @@ async def import_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
-    filename = (file.filename or "").lower()
-    if not filename.endswith(".xlsx"):
-        raise HTTPException(status_code=400, detail="Faqat .xlsx fayl yuklang")
+    if not column_map:
+        raise HTTPException(status_code=400, detail="Import uchun mos ustunlar topilmadi")
 
-    target_user = current_user
-    if current_user.role == "superadmin" and researcher_id:
-        target_user = db.get(User, researcher_id)
-        if not target_user or target_user.role != "researcher":
-            raise HTTPException(status_code=400, detail="Izlanuvchi topilmadi")
-
-    content = await file.read()
-    if not content:
-        raise HTTPException(status_code=400, detail="Fayl bo'sh")
-
-    try:
-        workbook = load_workbook(io.BytesIO(content), data_only=True, read_only=True)
-        sheet = workbook.active
-    except Exception:
-        raise HTTPException(status_code=400, detail="XLSX faylni o'qib bo'lmadi")
-
-    rows = sheet.iter_rows(values_only=True)
-    headers = next(rows, None)
-    if not headers:
-        raise HTTPException(status_code=400, detail="XLSX faylda header qatori topilmadi")
-
-    column_map = build_import_column_map(headers)
     skipped = 0
     errors = []
     records = []
@@ -611,6 +777,9 @@ async def import_research_xlsx(
 
         if not payload:
             skipped += 1
+            continue
+        if not payload.get("full_name"):
+            errors.append({"row": row_number, "errors": ["F.I.SH ustuni to'ldirilishi kerak"]})
             continue
         if row_errors:
             errors.append({"row": row_number, "errors": row_errors})
@@ -778,7 +947,11 @@ def export_dataset_for_analysis(
     - Machine-readable headers.
     - Age calculation.
     """
-    query = db.query(ResearchRecord).filter(ResearchRecord.is_deleted == 0)
+    query = (
+        db.query(ResearchRecord)
+        .options(joinedload(ResearchRecord.created_by))
+        .filter(ResearchRecord.is_deleted == 0)
+    )
     if current_user.role == "researcher":
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
     elif researcher_id:
@@ -837,8 +1010,6 @@ def export_dataset_for_analysis(
             "head_circ": r.head_circumference,
             "waist_circ": r.waist_circumference,
             "chest_circ": r.chest_circumference_pause,
-            "father_height": r.father_height,
-            "mother_height": r.mother_height,
             "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else None
         })
 

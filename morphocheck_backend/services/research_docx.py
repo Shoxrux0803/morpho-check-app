@@ -184,7 +184,7 @@ LABELS = {
         "feeding_b": "б) искусственном вскармливании", "marriage_a": "Брак родственность: а) близкородственный",
         "marriage_b": "б) дальнородственный", "mother_health": "Со слов матери (здорова или)",
         "measure_results": "Результаты измерения", "date_col": "Дата", "indicator": "Показатель",
-        "gender": "Пол ребенка", "parents_phone": "Тел. родителей",
+        "gender": "Пол ребенка",
         "cat_phys": "I. Показатели физического развития", "lower_leg": "1. Нижняя конечность",
         "lower_leg_len": "Длина нижней конечности", 
         "spina": "а. Точка верхней передней оси подвздошной кости",
@@ -227,7 +227,7 @@ LABELS = {
         "feeding_b": "b) sun'iy emizishda", "marriage_a": "Nikoh qarindoshligi: a) yaqin qarindosh",
         "marriage_b": "b) uzoq qarindosh", "mother_health": "Onasining so'zlariga ko'ra (sog'lom yoki)",
         "measure_results": "O'lchov natijalari", "date_col": "Sana", "indicator": "Ko'rsatkich",
-        "gender": "Bolaning jinsi", "parents_phone": "Ota-onaning tel. raqami",
+        "gender": "Bolaning jinsi",
         "cat_phys": "I. Jismoniy rivojlanish ko'rsatkichlari", "lower_leg": "1. Pastki oyoq-qo'l",
         "lower_leg_len": "Pastki oyoq-qo'l uzunligi", 
         "spina": "a. Yonbosh suyagining yuqori oldingi o'simtasi nuqtasi",
@@ -319,7 +319,6 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     add_demo(left_cell, L["birth_place"], T(data.get("birth_place")))
     add_demo(left_cell, L["birth_date"], _format_date(data.get("birth_date")))
     add_demo(left_cell, L["gender"], T(data.get("gender")))
-    add_demo(left_cell, L["parents_phone"], data.get("parents_phone"))
     nat_p = left_cell.add_paragraph()
     nat_p.paragraph_format.space_after = Pt(0); nat_p.paragraph_format.line_spacing = 1.0
     r1 = nat_p.add_run(L["father_nat"]+": "); r1.bold = True; r1.font.size = Pt(8.5); r1.font.name = "Times New Roman"

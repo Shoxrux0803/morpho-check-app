@@ -25,13 +25,8 @@ import {
   DialogActions,
   Divider,
   Chip,
-  InputAdornment,
   Grid,
   Alert,
-  Collapse,
-  Stepper,
-  Step,
-  StepLabel,
   MenuItem,
   useTheme,
 } from "@mui/material";
@@ -40,30 +35,22 @@ import {
   Download,
   Add,
   Dashboard,
-  Logout,
   Edit,
   Delete,
   DeleteForever,
-  Search,
-  FilterList,
   Close,
   Visibility,
   InfoOutlined,
   Person,
   Place,
-  School,
   Science,
   FitnessCenter,
   Refresh,
-  ArrowForward,
-  ArrowBack,
-  Save,
   Analytics,
   CheckCircle,
   Assessment,
   TrendingUp,
   People,
-  Public,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -138,18 +125,6 @@ const GlassPaper = ({ children, sx = {} }) => (
     {children}
   </Paper>
 );
-
-const InfoRow = ({ label, value, color }) =>
-  value ? (
-    <Box>
-      <Typography variant="caption" color="text.secondary" display="block">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600} color={color}>
-        {value ?? "-"}
-      </Typography>
-    </Box>
-  ) : null;
 
 const SectionTitle = ({ icon: Icon, title }) => (
   <Box display="flex" alignItems="center" gap={1} mb={2} mt={3}>
@@ -264,7 +239,6 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             ["Oziqlanish turi", "feeding_type"],
             ["Ota-ona qarindoshligi", "parents_marriage"],
             ["Ona sog'ligi", "mother_health_status"],
-            ["Ota-ona tel. raqami", "parents_phone"],
             ["Tekshiruv sanasi", "examination_date"],
           ]}
         />
@@ -572,9 +546,6 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
               ],
             ],
             ["Ona sog'ligi", "mother_health_status", "text"],
-            ["Ota-ona tel. raqami", "parents_phone", "text"],
-            ["Otasi bo'yi (sm)", "father_height", "number"],
-            ["Onasi bo'yi (sm)", "mother_height", "number"],
             ["Tekshiruv sanasi", "examination_date", "date"],
           ].map(([label, k, type, options]) => (
             <Grid
@@ -899,90 +870,11 @@ const RecordsTable = ({
 /* ════════════════════════════════════════════════════
    FILTER BAR
 ════════════════════════════════════════════════════ */
-const FilterBar = ({ filter, setFilter, onSearch, onExport }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <GlassPaper sx={{ p: 2 }}>
-      <Stack direction="row" spacing={2} alignItems="center">
-        <TextField
-          size="small"
-          placeholder="Ism, maktab, shahar bo'yicha qidirish..."
-          value={filter.search}
-          onChange={(e) => setFilter((f) => ({ ...f, search: e.target.value }))}
-          onKeyDown={(e) => e.key === "Enter" && onSearch()}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search sx={{ fontSize: 18 }} />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ flex: 1, minWidth: { xs: 200, sm: 280, md: 400 }, maxWidth: 400 }}
-        />
-        <Button
-          startIcon={<FilterList />}
-          variant="outlined"
-          size="small"
-          onClick={() => setOpen(!open)}
-        >
-          Filter
-        </Button>
-        <Button startIcon={<Search />} variant="contained" size="small" onClick={onSearch}>
-          Qidirish
-        </Button>
-        <Box flex={1} />
-        <Button
-          startIcon={<Download />}
-          color="success"
-          variant="outlined"
-          size="small"
-          onClick={onExport}
-        >
-          XLSX
-        </Button>
-      </Stack>
-      <Collapse in={open}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={2}>
-          <TextField
-            size="small"
-            label="Dan (sana)"
-            type="text"
-            placeholder="2024-01-01"
-            value={filter.date_from || ""}
-            onChange={(e) => setFilter((f) => ({ ...f, date_from: e.target.value }))}
-            InputLabelProps={{ shrink: true }}
-          />
-          <TextField
-            size="small"
-            label="Gacha (sana)"
-            type="text"
-            placeholder="2024-12-31"
-            value={filter.date_to || ""}
-            onChange={(e) => setFilter((f) => ({ ...f, date_to: e.target.value }))}
-            InputLabelProps={{ shrink: true }}
-          />
-          <Button
-            variant="text"
-            size="small"
-            color="inherit"
-            onClick={() => {
-              setFilter({ search: "", date_from: "", date_to: "" });
-              onSearch();
-            }}
-          >
-            Tozalash
-          </Button>
-        </Stack>
-      </Collapse>
-    </GlassPaper>
-  );
-};
-
 /* ════════════════════════════════════════════════════
    RESEARCH ANALYTICS (Professional Dashboard)
 ════════════════════════════════════════════════════ */
 const ResearchAnalytics = ({ data, isDark }) => {
-  const [timeRange, setTimeRange] = useState("all"); // "all" or "30d"
+  const [timeRange] = useState("all"); // "all" or "30d"
 
   // 1. Data Aggregation
   const stats = useMemo(() => {
@@ -2232,6 +2124,15 @@ const ResearcherPage = () => {
                         onChange={handleImportXlsx}
                       />
                       <Button
+                        variant="contained"
+                        color="secondary"
+                        startIcon={<Description />}
+                        onClick={handleExportSummaryDocx}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        DOCX report
+                      </Button>
+                      <Button
                         variant="outlined"
                         startIcon={<Description />}
                         onClick={handleDownloadImportTemplate}
@@ -2248,15 +2149,6 @@ const ResearcherPage = () => {
                         sx={{ borderRadius: 2 }}
                       >
                         Import XLSX
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        startIcon={<Description />}
-                        onClick={handleExportSummaryDocx}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        DOCX report
                       </Button>
                       <Button
                         variant="outlined"
