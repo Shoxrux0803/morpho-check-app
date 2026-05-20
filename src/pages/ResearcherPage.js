@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Box,
   Container,
@@ -1403,6 +1403,8 @@ const ResearcherPage = () => {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = useRef(null);
   const sectionToTab = useMemo(
     () => ({
       home: 0,
@@ -1529,6 +1531,43 @@ const ResearcherPage = () => {
       toast.success("DOCX hisobot tayyor");
     } catch (err) {
       toast.error(`${tr("exportError")}: ${err.message}`);
+    }
+  };
+
+  const handleDownloadImportTemplate = async () => {
+    try {
+      const blob = await ResearchApi.downloadImportTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "research_import_template.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error(`Shablonni yuklashda xatolik: ${err.message}`);
+    }
+  };
+
+  const handleImportXlsx = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const result = await ResearchApi.importXlsx(file);
+      toast.success(
+        `${result.imported || 0} ta yozuv import qilindi${
+          result.skipped ? `, ${result.skipped} ta bo'sh satr o'tkazib yuborildi` : ""
+        }`,
+      );
+      fetchData();
+    } catch (err) {
+      toast.error(`Import xatoligi: ${err.message}`);
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -2184,7 +2223,32 @@ const ResearcherPage = () => {
                         </Stack>
                       )}
                     </Box>
-                    <Box display="flex" gap={2}>
+                    <Box display="flex" gap={2} flexWrap="wrap">
+                      <input
+                        ref={importInputRef}
+                        type="file"
+                        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        hidden
+                        onChange={handleImportXlsx}
+                      />
+                      <Button
+                        variant="outlined"
+                        startIcon={<Description />}
+                        onClick={handleDownloadImportTemplate}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Shablon
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="success"
+                        startIcon={importing ? <CircularProgress size={18} /> : <CloudUpload />}
+                        onClick={() => importInputRef.current?.click()}
+                        disabled={importing}
+                        sx={{ borderRadius: 2 }}
+                      >
+                        Import XLSX
+                      </Button>
                       <Button
                         variant="contained"
                         color="secondary"

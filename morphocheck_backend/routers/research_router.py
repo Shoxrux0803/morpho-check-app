@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from fastapi.responses import StreamingResponse
@@ -16,7 +16,7 @@ import io
 import urllib.parse
 from jose import JWTError, jwt
 import os
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from utils.translit import lat2cyr
 
@@ -24,6 +24,67 @@ SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
 router = APIRouter(tags=["Researcher"])
+
+RESEARCH_EXPORT_FIELD_ORDER = [
+    "created_at", "id", "full_name", "school_name", "settlement", "birth_place", "birth_date",
+    "father_nationality", "mother_nationality", "living_since", "enrolled_date",
+    "living_conditions", "labor_regime", "past_illnesses", "children_count", "child_order",
+    "feeding_type", "parents_marriage", "mother_health_status", "examination_date",
+    "father_height", "mother_height", "lower_leg_spina_iliaca", "lower_leg_symphysion",
+    "tibiale_height", "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
+    "calf_circumference", "foot_length", "teeth_count", "menstruation_start",
+    "skull_longitudinal", "skull_transverse", "head_circumference", "forehead_transverse",
+    "skull_height", "skull_base_length", "skull_base_width", "face_bizygomatic",
+    "face_bigonial", "face_morphological_height", "face_physiognomic_height", "nose_height",
+    "nose_width", "outer_canthal_width", "inner_canthal_width", "lips_mucosa_height",
+    "mouth_width", "chest_standing_height", "chest_sitting_height", "weight", "trunk_length",
+    "torso_length", "chest_circumference_pause", "chest_circumference_inhale",
+    "chest_circumference_exhale", "waist_circumference", "abdomen_circumference",
+    "upper_segment_length", "chest_transverse_diameter", "chest_anteroposterior_diameter",
+    "chest_height", "arm_length", "shoulder_length", "shoulder_width",
+    "shoulder_circumference_rest", "shoulder_circumference_flexed", "forearm_length",
+    "hand_length", "dynamometry", "fat_triceps", "fat_biceps", "fat_subscapular",
+    "fat_iliac", "fat_popliteal",
+]
+
+RESEARCH_IMPORT_FIELDS = [field for field in RESEARCH_EXPORT_FIELD_ORDER if field not in {"created_at", "id"}]
+
+RESEARCH_EXPORT_HEADERS = [
+    "Сана", "ID", "Ф.И.Ш.", "Мактаб/Муассаса", "Аҳоли пункти", "Туғилган жойи",
+    "Туғилган санаси", "Отасининг миллати", "Онасининг миллати", "Қачондан бери яшайди",
+    "Рўйхатга олинган сана", "Яшаш шароити", "Меҳнат режими", "Ўтказилган касалликлар",
+    "Болалар сони", "Бола нечанчи", "Озиқланиш тури", "Ота-она никоҳи", "Она соғлиғи",
+    "Текширув санаси", "Отасининг бўйи (см)", "Онасининг бўйи (см)",
+    "Олд юқори ёнбош ўсимтасидан (см)", "Қовуқ устидан (см)", "Болдир баландлиги (см)",
+    "Чанноқ кенглиги (см)", "Сон узунлиги (см)", "Сон айланаси (см)",
+    "Болдир узунлиги (см)", "Болдир айланаси (см)", "Оёқ кафти узунлиги (см)",
+    "Тишлар сони", "Ҳайз бошланиши", "Бош суяги бўйлама (см)",
+    "Бош суяги кўндаланг (см)", "Бош айланаси (см)", "Пешона кўндаланг (см)",
+    "Бош суяги баландлиги (см)", "Бош суяги асоси узунлиги (см)",
+    "Бош суяги асоси кенглиги (см)", "Юз кенглиги (cm)", "Пастки жағ кенглиги (cm)",
+    "Юз морфологик баландлиги (cm)", "Юз физиогномик баландлиги (cm)",
+    "Бурун баландлиги (cm)", "Бурун кенглиги (cm)", "Кўз ташқи бурчаклари (cm)",
+    "Кўз ички бурчаклари (cm)", "Лаблар шиллиқ қавати (cm)", "Оғиз кенглиги (cm)",
+    "Бўйи (тик) (см)", "Бўйи (ўтирган) (см)", "Вазн (кг)", "Гавда узунлиги (см)",
+    "Тана узунлиги (см)", "Кўкрак айланаси (пауза) (см)",
+    "Кўкрак айланаси (нафас) (см)", "Кўкрак айланаси (чиқариш) (см)",
+    "Бел айланаси (см)", "Қорин айланаси (см)", "Юқори сегмент узунлиги (см)",
+    "Кўкрак кўндаланг (см)", "Кўкрак олд-орқа (см)", "Кўкрак баландлиги (см)",
+    "Қўл узунлиги (см)", "Елка узунлиги (см)", "Елка кенглиги (см)",
+    "Елка айланаси (тинч) (см)", "Елка айланаси (букилган) (см)",
+    "Билак узунлиги (см)", "Қўл кафти узунлиги (см)", "Динамометрия (кг)",
+    "Трицепс ёғ (мм)", "Бицепс ёғ (мм)", "Курак ости ёғ (мм)", "Ёнбош ёғ (мм)",
+    "Тизза ости ёғ (мм)",
+]
+
+INTEGER_IMPORT_FIELDS = {"children_count", "child_order", "teeth_count"}
+TEXT_IMPORT_FIELDS = {
+    "full_name", "school_name", "settlement", "birth_place", "birth_date",
+    "father_nationality", "mother_nationality", "living_since", "enrolled_date",
+    "living_conditions", "labor_regime", "past_illnesses", "feeding_type",
+    "parents_marriage", "mother_health_status", "examination_date", "menstruation_start",
+}
+FLOAT_IMPORT_FIELDS = set(RESEARCH_IMPORT_FIELDS) - INTEGER_IMPORT_FIELDS - TEXT_IMPORT_FIELDS
 
 
 def research_record_to_dict(record: ResearchRecord) -> dict:
@@ -388,6 +449,200 @@ def export_research_xlsx(
 # ═══════════════════════════════════════════════
 #  LIST  (superadmin hammani, researcher o'zini)
 # ═══════════════════════════════════════════════
+def clean_import_value(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped in {"", "-", "—", "N/A", "n/a", "null", "None"}:
+            return None
+        return stripped
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d")
+    return value
+
+
+def coerce_import_value(field: str, value):
+    value = clean_import_value(value)
+    if value is None:
+        return None
+    if field in INTEGER_IMPORT_FIELDS:
+        try:
+            return int(float(str(value).replace(",", ".")))
+        except (TypeError, ValueError):
+            raise ValueError(f"{field} butun son bo'lishi kerak")
+    if field in FLOAT_IMPORT_FIELDS:
+        try:
+            return float(str(value).replace(",", "."))
+        except (TypeError, ValueError):
+            raise ValueError(f"{field} raqam bo'lishi kerak")
+    return str(value).strip()
+
+
+def build_import_column_map(headers):
+    field_set = set(RESEARCH_IMPORT_FIELDS)
+    mapped = {}
+    normalized_headers = [str(header or "").strip().lower() for header in headers]
+    has_superadmin_owner_columns = (
+        len(normalized_headers) > 3
+        and "kiritgan" in normalized_headers[2]
+        and "email" in normalized_headers[3]
+    )
+    export_order = RESEARCH_EXPORT_FIELD_ORDER
+    if has_superadmin_owner_columns:
+        export_order = [
+            "created_at",
+            "id",
+            "created_by_name",
+            "created_by_email",
+            *RESEARCH_EXPORT_FIELD_ORDER[2:],
+        ]
+
+    for index, field in enumerate(export_order[:len(headers)]):
+        if field in field_set:
+            mapped[index] = field
+    return mapped
+
+
+@router.get("/import/template")
+def download_research_import_template(
+    current_user: User = Depends(get_current_researcher_or_superadmin),
+):
+    """Research XLSX import uchun export ko'rinishidagi shablon."""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Research Data"
+
+    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    center_align = Alignment(horizontal='center', vertical='center')
+    left_align = Alignment(horizontal='left', vertical='center')
+
+    for col_num, header_text in enumerate(RESEARCH_EXPORT_HEADERS, 1):
+        cell = ws.cell(row=1, column=col_num, value=header_text)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center_align
+        cell.border = border
+
+    for row_num in range(2, 102):
+        for col_num in range(1, len(RESEARCH_EXPORT_HEADERS) + 1):
+            cell = ws.cell(row=row_num, column=col_num, value=None)
+            cell.alignment = left_align
+            cell.border = border
+
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value or "")) > max_length:
+                    max_length = len(str(cell.value or ""))
+            except:
+                pass
+        ws.column_dimensions[column].width = min(50, max_length + 2)
+
+    ws.freeze_panes = "A2"
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=research_import_template.xlsx"},
+    )
+
+
+@router.post("/import/xlsx")
+async def import_research_xlsx(
+    file: UploadFile = File(...),
+    researcher_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_researcher_or_superadmin),
+):
+    filename = (file.filename or "").lower()
+    if not filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Faqat .xlsx fayl yuklang")
+
+    target_user = current_user
+    if current_user.role == "superadmin" and researcher_id:
+        target_user = db.get(User, researcher_id)
+        if not target_user or target_user.role != "researcher":
+            raise HTTPException(status_code=400, detail="Izlanuvchi topilmadi")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Fayl bo'sh")
+
+    try:
+        workbook = load_workbook(io.BytesIO(content), data_only=True, read_only=True)
+        sheet = workbook.active
+    except Exception:
+        raise HTTPException(status_code=400, detail="XLSX faylni o'qib bo'lmadi")
+
+    rows = sheet.iter_rows(values_only=True)
+    headers = next(rows, None)
+    if not headers:
+        raise HTTPException(status_code=400, detail="XLSX faylda header qatori topilmadi")
+
+    column_map = build_import_column_map(headers)
+    skipped = 0
+    errors = []
+    records = []
+
+    for row_number, row in enumerate(rows, start=2):
+        if not row or all(clean_import_value(value) is None for value in row):
+            skipped += 1
+            continue
+
+        payload = {}
+        row_errors = []
+        for index, field in column_map.items():
+            if index >= len(row):
+                continue
+            try:
+                value = coerce_import_value(field, row[index])
+            except ValueError as exc:
+                row_errors.append(str(exc))
+                continue
+            if value is not None:
+                payload[field] = value
+
+        if not payload:
+            skipped += 1
+            continue
+        if row_errors:
+            errors.append({"row": row_number, "errors": row_errors})
+            continue
+
+        record = ResearchRecord(**payload)
+        record.created_by_id = target_user.id
+        records.append(record)
+
+    if errors:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Importda xatolik bor. Iltimos, ko'rsatilgan satrlarni tekshiring.",
+                "errors": errors[:50],
+            },
+        )
+
+    if not records:
+        raise HTTPException(status_code=400, detail="Import qilish uchun ma'lumot topilmadi")
+
+    try:
+        db.add_all(records)
+        target_user.completed_entries_count = (target_user.completed_entries_count or 0) + len(records)
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Import saqlanmadi: {exc}")
+
+    return {"status": "ok", "imported": len(records), "skipped": skipped}
+
+
 @router.get("/", response_model=List[ResearchRecordOut])
 def list_research_records(
     search: Optional[str] = Query(None),

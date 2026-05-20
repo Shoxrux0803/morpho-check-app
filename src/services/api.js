@@ -1004,6 +1004,40 @@ export const ResearchApi = {
     return resp.blob();
   },
 
+  /** XLSX import */
+  importXlsx: async (file, params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+    });
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/import/xlsx?${q.toString()}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+    return resp.json();
+  },
+
+  /** XLSX import template */
+  downloadImportTemplate: async () => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/import/template`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+    return resp.blob();
+  },
+
   /** Dataset export for statistics */
   exportDataset: async (params = {}) => {
     const q = new URLSearchParams();
