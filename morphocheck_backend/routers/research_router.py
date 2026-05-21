@@ -15,6 +15,7 @@ from services.indices_service import calculate_detailed_indices
 import pandas as pd
 import io
 import urllib.parse
+import calendar
 from jose import JWTError, jwt
 import os
 from openpyxl import Workbook, load_workbook
@@ -337,6 +338,20 @@ RESEARCH_INDEX_EXPORT_LABELS = {
     },
 }
 
+RESEARCH_CHILD_AGE_EXPORT_LABELS = {
+    "uz": "Текширув санасидаги ёши",
+    "ru": "Возраст на дату обследования",
+    "en": "Age at examination",
+    "kz": "Тексеру күніндегі жасы",
+}
+
+RESEARCH_CHILD_AGE_UNITS = {
+    "uz": ("ёш", "ой", "кун"),
+    "ru": ("г.", "мес.", "дн."),
+    "en": ("years", "months", "days"),
+    "kz": ("жас", "ай", "күн"),
+}
+
 RESEARCH_INDEX_VALUE_LABELS = {
     "corridor": {
         "uz": {
@@ -412,6 +427,10 @@ def get_research_index_value_label(group: str, key: str, lang: str):
     return lang_values.get(key, key)
 
 
+def get_research_child_age_export_header(lang: str):
+    return RESEARCH_CHILD_AGE_EXPORT_LABELS.get(lang, RESEARCH_CHILD_AGE_EXPORT_LABELS["uz"])
+
+
 def _parse_research_date(value):
     if not value:
         return None
@@ -426,13 +445,50 @@ def _parse_research_date(value):
     return None
 
 
-def _calculate_research_age(record: ResearchRecord) -> Optional[int]:
+def _calculate_research_age_parts(record: ResearchRecord):
     birth_date = _parse_research_date(record.birth_date)
     if not birth_date:
         return None
-    exam_date = _parse_research_date(record.examination_date) or datetime.now()
-    age_years = int((exam_date - birth_date).days / 365.25)
-    return max(0, age_years)
+    exam_date = _parse_research_date(record.examination_date)
+    if not exam_date:
+        return None
+    if exam_date < birth_date:
+        return None
+
+    years = exam_date.year - birth_date.year
+    months = exam_date.month - birth_date.month
+    days = exam_date.day - birth_date.day
+
+    if days < 0:
+        months -= 1
+        prev_month = exam_date.month - 1 or 12
+        prev_year = exam_date.year if exam_date.month > 1 else exam_date.year - 1
+        days += calendar.monthrange(prev_year, prev_month)[1]
+
+    if months < 0:
+        years -= 1
+        months += 12
+
+    return years, months, days
+
+
+def format_research_child_age(record: ResearchRecord, lang: str = "uz"):
+    parts = _calculate_research_age_parts(record)
+    if not parts:
+        return None
+    years, months, days = parts
+    year_unit, month_unit, day_unit = RESEARCH_CHILD_AGE_UNITS.get(
+        normalize_export_lang(lang),
+        RESEARCH_CHILD_AGE_UNITS["uz"],
+    )
+    return f"{years} {year_unit} {months} {month_unit} {days} {day_unit}"
+
+
+def _calculate_research_age(record: ResearchRecord) -> Optional[int]:
+    parts = _calculate_research_age_parts(record)
+    if not parts:
+        return None
+    return parts[0]
 
 
 def build_research_index_export_values(record: ResearchRecord, lang: str = "uz") -> dict:
@@ -702,6 +758,7 @@ def export_research_xlsx(
         ("Аҳоли пункти", "settlement"),
         ("Туғилган жойи", "birth_place"),
         ("Туғилган санаси", "birth_date"),
+        (get_research_child_age_export_header(export_lang), "child_age"),
         ("Jinsi", "gender"),
         ("Отасининг миллати", "father_nationality"),
         ("Онасининг миллати", "mother_nationality"),
@@ -817,6 +874,8 @@ def export_research_xlsx(
                 val = record.created_by.name if record.created_by else None
             elif field_name == "created_by_email":
                 val = record.created_by.email if record.created_by else None
+            elif field_name == "child_age":
+                val = format_research_child_age(record, export_lang)
             elif field_name in index_values:
                 val = index_values[field_name]
             else:
@@ -829,6 +888,8 @@ def export_research_xlsx(
                 display_val = val # ID o'zgarmasin
             elif field_name == "gender":
                 display_val = format_research_gender_for_xlsx(val)
+            elif field_name == "child_age" or field_name in index_values:
+                display_val = val if val is not None else "-"
             elif isinstance(val, str):
                 display_val = lat2cyr(val) if val else "-"
             elif val is None:
