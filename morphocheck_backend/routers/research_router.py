@@ -151,10 +151,10 @@ RESEARCH_EXPORT_HEADERS = [
     "Тишлар сони", "Ҳайз бошланиши", "Бош суяги бўйлама (см)",
     "Бош суяги кўндаланг (см)", "Бош айланаси (см)", "Пешона кўндаланг (см)",
     "Бош суяги баландлиги (см)", "Бош суяги асоси узунлиги (см)",
-    "Бош суяги асоси кенглиги (см)", "Юз кенглиги (cm)", "Пастки жағ кенглиги (cm)",
-    "Юз морфологик баландлиги (cm)", "Юз физиогномик баландлиги (cm)",
-    "Бурун баландлиги (cm)", "Бурун кенглиги (cm)", "Кўз ташқи бурчаклари (cm)",
-    "Кўз ички бурчаклари (cm)", "Лаблар шиллиқ қавати (cm)", "Оғиз кенглиги (cm)",
+    "Бош суяги асоси кенглиги (см)", "Юз кенглиги (см)", "Пастки жағ кенглиги (см)",
+    "Юз морфологик баландлиги (см)", "Юз физиогномик баландлиги (см)",
+    "Бурун баландлиги (см)", "Бурун кенглиги (см)", "Кўз ташқи бурчаклари (см)",
+    "Кўз ички бурчаклари (см)", "Лаблар шиллиқ қавати (см)", "Оғиз кенглиги (см)",
     "Бўйи (тик) (см)", "Бўйи (ўтирган) (см)", "Вазн (кг)", "Гавда узунлиги (см)",
     "Тана узунлиги (см)", "Кўкрак айланаси (пауза) (см)",
     "Кўкрак айланаси (нафас) (см)", "Кўкрак айланаси (чиқариш) (см)",
@@ -759,7 +759,7 @@ def export_research_xlsx(
         ("Туғилган жойи", "birth_place"),
         ("Туғилган санаси", "birth_date"),
         (get_research_child_age_export_header(export_lang), "child_age"),
-        ("Jinsi", "gender"),
+        ("Жинси", "gender"),
         ("Отасининг миллати", "father_nationality"),
         ("Онасининг миллати", "mother_nationality"),
         ("Қачондан бери яшайди", "living_since"),
@@ -775,10 +775,10 @@ def export_research_xlsx(
         ("Текширув санаси", "examination_date"),
         
         # I Показатели физического развития
-        ("Pastki oyoq-qo'l (sm)", "lower_leg_total"),
+        ("Пастки оёқ-қўл (см)", "lower_leg_total"),
         ("Олд юқори ёнбош ўсимтасидан (см)", "lower_leg_spina_iliaca"),
         ("Қовуқ устидан (см)", "lower_leg_symphysion"),
-        ("Pastki oyoq-qo'l uzunligi (sm)", "lower_leg_length"),
+        ("Пастки оёқ-қўл узунлиги (см)", "lower_leg_length"),
         ("Болдир баландлиги (см)", "tibiale_height"),
         ("Чанноқ кенглиги (см)", "pelvic_width"),
         ("Сон узунлиги (см)", "thigh_length"),
@@ -799,16 +799,16 @@ def export_research_xlsx(
         ("Бош суяги асоси кенглиги (см)", "skull_base_width"),
 
         # Лицо
-        ("Юз кенглиги (cm)", "face_bizygomatic"),
-        ("Пастки жағ кенглиги (cm)", "face_bigonial"),
-        ("Юз морфологик баландлиги (cm)", "face_morphological_height"),
-        ("Юз физиогномик баландлиги (cm)", "face_physiognomic_height"),
-        ("Бурун баландлиги (cm)", "nose_height"),
-        ("Бурун кенглиги (cm)", "nose_width"),
-        ("Кўз ташқи бурчаклари (cm)", "outer_canthal_width"),
-        ("Кўз ички бурчаклари (cm)", "inner_canthal_width"),
-        ("Лаблар шиллиқ қавати (cm)", "lips_mucosa_height"),
-        ("Оғиз кенглиги (cm)", "mouth_width"),
+        ("Юз кенглиги (см)", "face_bizygomatic"),
+        ("Пастки жағ кенглиги (см)", "face_bigonial"),
+        ("Юз морфологик баландлиги (см)", "face_morphological_height"),
+        ("Юз физиогномик баландлиги (см)", "face_physiognomic_height"),
+        ("Бурун баландлиги (см)", "nose_height"),
+        ("Бурун кенглиги (см)", "nose_width"),
+        ("Кўз ташқи бурчаклари (см)", "outer_canthal_width"),
+        ("Кўз ички бурчаклари (см)", "inner_canthal_width"),
+        ("Лаблар шиллиқ қавати (см)", "lips_mucosa_height"),
+        ("Оғиз кенглиги (см)", "mouth_width"),
 
         # Грудь
         ("Бўйи (тик) (см)", "chest_standing_height"),
@@ -845,8 +845,8 @@ def export_research_xlsx(
     ]
 
     if current_user.role == "superadmin":
-        headers_map.insert(2, ("Kiritgan izlanuvchi", "created_by_name"))
-        headers_map.insert(3, ("Kiritgan email", "created_by_email"))
+        headers_map.insert(2, ("Киритган изланувчи", "created_by_name"))
+        headers_map.insert(3, ("Киритган email", "created_by_email"))
 
     headers_map.extend(get_research_index_export_headers(export_lang))
 
@@ -888,6 +888,8 @@ def export_research_xlsx(
                 display_val = val # ID o'zgarmasin
             elif field_name == "gender":
                 display_val = format_research_gender_for_xlsx(val)
+            elif field_name == "created_by_email":
+                display_val = val if val else "-"
             elif field_name == "child_age" or field_name in index_values:
                 display_val = val if val is not None else "-"
             elif isinstance(val, str):
