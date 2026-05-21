@@ -989,7 +989,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
   const handleExportXlsx = async () => {
     try {
-      const blob = await ResearchApi.exportXlsx();
+      const blob = await ResearchApi.exportXlsx({ lang });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

@@ -1395,7 +1395,7 @@ const ResearcherPage = () => {
 
   const handleExport = async () => {
     try {
-      const blob = await ResearchApi.exportXlsx(filter);
+      const blob = await ResearchApi.exportXlsx({ ...filter, lang });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

@@ -11,6 +11,7 @@ from utils.database import get_db
 from routers.auth_router import get_current_user
 from services.research_docx import generate_researcher_docx
 from services.research_summary_docx import generate_research_summary_docx
+from services.indices_service import calculate_detailed_indices
 import pandas as pd
 import io
 import urllib.parse
@@ -262,6 +263,218 @@ def format_research_gender_for_xlsx(value) -> str:
     return lat2cyr(str(value)) if value else "-"
 
 
+RESEARCH_INDEX_EXPORT_FIELDS = [
+    "tvi",
+    "z_h",
+    "z_w",
+    "z_bmi",
+    "z_body_length",
+    "centile",
+    "corridor",
+    "morphological_type",
+    "hmai",
+    "mii",
+    "adi",
+    "mcri",
+]
+
+RESEARCH_INDEX_EXPORT_LABELS = {
+    "uz": {
+        "tvi": "ТВИ",
+        "z_h": "Бўй-ёш z-score",
+        "z_w": "Вазн-ёш z-score",
+        "z_bmi": "ТВИ-ёш z-score",
+        "z_body_length": "Тана узунлиги z-score",
+        "centile": "Сентил интервали",
+        "corridor": "Соғломлик йўлаги",
+        "morphological_type": "Соматотип",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
+    "ru": {
+        "tvi": "ИМТ",
+        "z_h": "Рост-возраст z-score",
+        "z_w": "Вес-возраст z-score",
+        "z_bmi": "ИМТ-возраст z-score",
+        "z_body_length": "Длина тела z-score",
+        "centile": "Центильный интервал",
+        "corridor": "Коридор здоровья",
+        "morphological_type": "Соматотип",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
+    "en": {
+        "tvi": "BMI",
+        "z_h": "Height-for-age z-score",
+        "z_w": "Weight-for-age z-score",
+        "z_bmi": "BMI-for-age z-score",
+        "z_body_length": "Body length z-score",
+        "centile": "Centile interval",
+        "corridor": "Health corridor",
+        "morphological_type": "Somatotype",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
+    "kz": {
+        "tvi": "ДСИ",
+        "z_h": "Бой-жас z-score",
+        "z_w": "Салмақ-жас z-score",
+        "z_bmi": "ДСИ-жас z-score",
+        "z_body_length": "Дене ұзындығы z-score",
+        "centile": "Центильдік интервал",
+        "corridor": "Денсаулық дәлізі",
+        "morphological_type": "Соматотип",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
+}
+
+RESEARCH_INDEX_VALUE_LABELS = {
+    "corridor": {
+        "uz": {
+            "< 3": "Жуда кам вазн (<3-сентил)",
+            "3 - 15": "Кам вазн (3-15-сентил)",
+            "15 - 85": "Меъёр (15-85-сентил)",
+            "85 - 97": "Ортиқча вазн (85-97-сентил)",
+            "> 97": "Семизлик (>97-сентил)",
+        },
+        "ru": {
+            "< 3": "Крайний дефицит массы (<3-центиль)",
+            "3 - 15": "Дефицит массы (3-15-центиль)",
+            "15 - 85": "Норма (15-85-центиль)",
+            "85 - 97": "Избыточная масса (85-97-центиль)",
+            "> 97": "Ожирение (>97-центиль)",
+        },
+        "en": {
+            "< 3": "Severe underweight (<3rd centile)",
+            "3 - 15": "Underweight (3rd-15th centile)",
+            "15 - 85": "Normal (15th-85th centile)",
+            "85 - 97": "Overweight (85th-97th centile)",
+            "> 97": "Obesity (>97th centile)",
+        },
+        "kz": {
+            "< 3": "Салмақтың өте төмендігі (<3-центиль)",
+            "3 - 15": "Салмақ тапшылығы (3-15-центиль)",
+            "15 - 85": "Норма (15-85-центиль)",
+            "85 - 97": "Артық салмақ (85-97-центиль)",
+            "> 97": "Семіздік (>97-центиль)",
+        },
+    },
+    "morphological_type": {
+        "uz": {
+            "astenik": "Астеник",
+            "normostenik": "Нормостеник",
+            "giperstenik": "Гиперстеник",
+        },
+        "ru": {
+            "astenik": "Астенический",
+            "normostenik": "Нормостенический",
+            "giperstenik": "Гиперстенический",
+        },
+        "en": {
+            "astenik": "Asthenic",
+            "normostenik": "Normosthenic",
+            "giperstenik": "Hypersthenic",
+        },
+        "kz": {
+            "astenik": "Астеник",
+            "normostenik": "Нормостеник",
+            "giperstenik": "Гиперстеник",
+        },
+    },
+}
+
+
+def get_research_index_export_headers(lang: str):
+    labels = RESEARCH_INDEX_EXPORT_LABELS.get(lang, RESEARCH_INDEX_EXPORT_LABELS["uz"])
+    return [
+        (labels.get(field, RESEARCH_INDEX_EXPORT_LABELS["uz"].get(field, field)), field)
+        for field in RESEARCH_INDEX_EXPORT_FIELDS
+    ]
+
+
+def normalize_export_lang(lang: Optional[str]) -> str:
+    value = (lang or "uz").strip().lower()
+    return value if value in RESEARCH_INDEX_EXPORT_LABELS else "uz"
+
+
+def get_research_index_value_label(group: str, key: str, lang: str):
+    values = RESEARCH_INDEX_VALUE_LABELS.get(group, {})
+    lang_values = values.get(lang, values.get("uz", {}))
+    return lang_values.get(key, key)
+
+
+def _parse_research_date(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    text = str(value).strip()
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(text[:10], fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _calculate_research_age(record: ResearchRecord) -> Optional[int]:
+    birth_date = _parse_research_date(record.birth_date)
+    if not birth_date:
+        return None
+    exam_date = _parse_research_date(record.examination_date) or datetime.now()
+    age_years = int((exam_date - birth_date).days / 365.25)
+    return max(0, age_years)
+
+
+def build_research_index_export_values(record: ResearchRecord, lang: str = "uz") -> dict:
+    height = float(record.chest_standing_height or 0)
+    weight = float(record.weight or 0)
+    age = _calculate_research_age(record)
+    if age is None or height <= 0 or weight <= 0:
+        return {field: None for field in RESEARCH_INDEX_EXPORT_FIELDS}
+
+    tvi = round(weight / ((height / 100) ** 2), 2)
+    manual_data = {
+        "body_length": record.torso_length,
+        "chest": record.chest_circumference_pause,
+        "region": record.settlement or record.birth_place,
+    }
+    detailed = calculate_detailed_indices(
+        age,
+        record.gender or "",
+        height,
+        weight,
+        tvi,
+        manual_data,
+        lang=normalize_export_lang(lang),
+    )
+    centile = detailed.get("centile")
+    morph_type_key = detailed.get("morphological_type_key")
+    return {
+        "tvi": tvi,
+        "z_h": detailed.get("z_h"),
+        "z_w": detailed.get("z_w"),
+        "z_bmi": detailed.get("z_bmi"),
+        "z_body_length": detailed.get("z_body_length"),
+        "centile": centile,
+        "corridor": get_research_index_value_label("corridor", centile, normalize_export_lang(lang)),
+        "morphological_type": get_research_index_value_label("morphological_type", morph_type_key, normalize_export_lang(lang)),
+        "hmai": detailed.get("hmai"),
+        "mii": detailed.get("mii"),
+        "adi": detailed.get("adi"),
+        "mcri": detailed.get("mcri"),
+    }
+
+
 def apply_research_filters(
     query,
     current_user: User,
@@ -424,10 +637,12 @@ def export_research_xlsx(
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
     age_max: Optional[int] = Query(None),
+    lang: Optional[str] = Query("uz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
     """XLSX Export - Advanced version with styling and Cyrillic headers"""
+    export_lang = normalize_export_lang(lang)
     query = (
         db.query(ResearchRecord)
         .options(joinedload(ResearchRecord.created_by))
@@ -576,6 +791,8 @@ def export_research_xlsx(
         headers_map.insert(2, ("Kiritgan izlanuvchi", "created_by_name"))
         headers_map.insert(3, ("Kiritgan email", "created_by_email"))
 
+    headers_map.extend(get_research_index_export_headers(export_lang))
+
     # Style definitions
     header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True)
@@ -594,11 +811,14 @@ def export_research_xlsx(
 
     # Writing data
     for row_num, record in enumerate(records, 2):
+        index_values = build_research_index_export_values(record, export_lang)
         for col_num, (_, field_name) in enumerate(headers_map, 1):
             if field_name == "created_by_name":
                 val = record.created_by.name if record.created_by else None
             elif field_name == "created_by_email":
                 val = record.created_by.email if record.created_by else None
+            elif field_name in index_values:
+                val = index_values[field_name]
             else:
                 val = getattr(record, field_name)
             
