@@ -62,7 +62,6 @@ import {
   FilterList,
   Search,
   DeleteForever,
-  Science,
   FitnessCenter,
   Place,
   Close,
@@ -84,7 +83,6 @@ import SuperAdminRegionalMap from "../components/Dashboard/SuperAdminRegionalMap
 import ScientificAnalysis from "../components/Dashboard/ScientificAnalysis";
 import ClinicalCMS from "../components/Admin/ClinicalCMS";
 import AdminActivity from "../components/Admin/AdminActivity";
-import ResearcherDataView from "../components/Admin/ResearcherDataView";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
 
 const PAGE_LABELS = {
@@ -1531,8 +1529,6 @@ const SuperAdminPage = () => {
         return <ClinicalCMS />;
       case 9:
         return <AdminActivity />;
-      case 10:
-        return <ResearcherDataView />;
       default:
         return null;
     }
@@ -1687,11 +1683,6 @@ const SuperAdminPage = () => {
                   icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
                   label={pt("topChart")}
-                />
-                <Tab
-                  icon={<Science sx={{ mr: 1.5, fontSize: 20 }} />}
-                  iconPosition="start"
-                  label="Izlanuvchilar bazasi"
                 />
               </Tabs>
 
