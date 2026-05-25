@@ -484,13 +484,6 @@ const ResearcherForm = ({ onSuccess }) => {
                         {I(name, label, t || "number")}
                       </Grid>
                     ))}
-                    {formData.gender &&
-                      (formData.gender.toLowerCase() === "ayol" ||
-                        formData.gender.toLowerCase() === "girl") && (
-                        <Grid item xs={12} sm={6} md={4}>
-                          {I("menstruation_start", tr("menstruationStart"), "text")}
-                        </Grid>
-                      )}
                   </Grid>
                 </Grid>
 

@@ -575,7 +575,6 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
             ["Boldir aylanasi", "calf_circumference"],
             ["Oyoq panja uzunligi", "foot_length"],
             ["Tishlar soni", "teeth_count"],
-            ["Menstruatsiya", "menstruation_start", "text"],
           ].map(([label, k, type]) => (
             <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type={type || "number"} />
