@@ -31,7 +31,7 @@ const translations = {
     heroTitle1: "Raqamli",
     heroTitle2: "antropometriya",
     heroDesc:
-      "MorphoCheck Pro — bu shunchaki tahlil emas, balki sizning shaxsiy raqamli salomatlik monitoringingizdir. Z-score, somatotip va AI tavsiyalari — barchasi professional formatda.",
+      "MorphoCheck Pro — bu shunchaki tahlil emas, balki sizning shaxsiy raqamli salomatlik monitoringingizdir. Z-score, somatotip va SI (sun'iy idrok) tavsiyalari — barchasi professional formatda.",
     enterSystem: "Tizimga kirish",
     details: "Batafsil",
     users: "Foydalanuvchilar",
