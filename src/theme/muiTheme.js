@@ -7,18 +7,18 @@ export const THEME_VARIANTS = ["neo", "ocean", "sunset", "minimal"];
 const getVariantColors = (isDark, variant = "neo") => {
   const variants = {
     neo: {
-      primary: isDark ? "#8E7CFF" : "#6C5CE7",
-      secondary: isDark ? "#1DE9B6" : "#00D1B2",
-      bgDefault: isDark ? "#08090d" : "#f7f7fb",
-      bgPaper: isDark ? "#12141c" : "#ffffff",
-      success: isDark ? "#00D1B2" : "#00B894",
-      warning: isDark ? "#FDCB6E" : "#F39C12",
-      error: isDark ? "#E84393" : "#E74C3C",
-      info: isDark ? "#74B9FF" : "#3498DB",
+      primary: isDark ? "#5eead4" : "#0f766e",
+      secondary: isDark ? "#60a5fa" : "#2563eb",
+      bgDefault: isDark ? "#08111f" : "#f6faf9",
+      bgPaper: isDark ? "#101827" : "#ffffff",
+      success: isDark ? "#34d399" : "#10b981",
+      warning: isDark ? "#fbbf24" : "#d97706",
+      error: isDark ? "#f87171" : "#dc2626",
+      info: isDark ? "#60a5fa" : "#2563eb",
       auraLight:
-        "radial-gradient(40rem 40rem at 10% -10%, #e9e4ff, transparent), radial-gradient(30rem 30rem at 90% -20%, #d6fff5, transparent)",
+        "radial-gradient(42rem 42rem at 8% -12%, rgba(15,118,110,0.13), transparent 62%), radial-gradient(34rem 34rem at 92% -18%, rgba(37,99,235,0.10), transparent 58%)",
       auraDark:
-        "radial-gradient(50rem 50rem at 0% 0%, rgba(142,124,255,0.08), transparent), radial-gradient(40rem 40rem at 100% 100%, rgba(29,233,182,0.05), transparent)",
+        "radial-gradient(50rem 50rem at 0% 0%, rgba(15,118,110,0.16), transparent 62%), radial-gradient(40rem 40rem at 100% 100%, rgba(37,99,235,0.10), transparent 58%)",
     },
     ocean: {
       primary: isDark ? "#64ffda" : "#0077b6",

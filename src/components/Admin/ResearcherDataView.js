@@ -1072,7 +1072,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       <TableContainer component={GlassPaper}>
         <Table size="small" sx={{ minWidth: isSuperAdmin ? 980 : 760 }}>
           <TableHead
-            sx={{ background: isDeletedView ? "rgba(244,67,54,0.06)" : "rgba(0,123,255,0.06)" }}
+            sx={{ background: isDeletedView ? "rgba(244,67,54,0.06)" : "rgba(15,118,110,0.06)" }}
           >
             <TableRow>
               <TableCell sx={{ width: 40, p: 1 }}>
@@ -1124,8 +1124,8 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                   hover
                   sx={{
                     cursor: "pointer",
-                    "&:hover": { background: "rgba(0,123,255,0.04)" },
-                    bgcolor: checked.has(row.id) ? "rgba(0,123,255,0.08)" : "inherit",
+                    "&:hover": { background: "rgba(15,118,110,0.04)" },
+                    bgcolor: checked.has(row.id) ? "rgba(15,118,110,0.08)" : "inherit",
                   }}
                   onClick={() => setDetailRecord(row)}
                 >
@@ -1811,8 +1811,8 @@ const DetailModal = ({
                 sx={{
                   p: 1.5,
                   borderRadius: 2,
-                  background: "rgba(0,123,255,0.04)",
-                  border: "1px solid rgba(0,123,255,0.08)",
+                  background: "rgba(15,118,110,0.04)",
+                  border: "1px solid rgba(15,118,110,0.08)",
                 }}
               >
                 <Typography variant="caption" color="text.secondary">

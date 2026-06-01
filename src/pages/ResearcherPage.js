@@ -153,8 +153,8 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
                 sx={{
                   p: 1.5,
                   borderRadius: 2,
-                  background: "rgba(0,123,255,0.04)",
-                  border: "1px solid rgba(0,123,255,0.08)",
+                  background: "rgba(15,118,110,0.04)",
+                  border: "1px solid rgba(15,118,110,0.08)",
                 }}
               >
                 <Typography variant="caption" color="text.secondary">
@@ -702,7 +702,7 @@ const RecordsTable = ({
       <TableHead
         sx={{
           background: (theme) =>
-            theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,123,255,0.05)",
+            theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(15,118,110,0.05)",
         }}
       >
         <TableRow>
@@ -748,8 +748,8 @@ const RecordsTable = ({
               hover
               sx={{
                 cursor: "pointer",
-                "&:hover": { background: "rgba(0,123,255,0.04)" },
-                bgcolor: checked?.has(row.id) ? "rgba(0,123,255,0.08)" : "inherit",
+                "&:hover": { background: "rgba(15,118,110,0.04)" },
+                bgcolor: checked?.has(row.id) ? "rgba(15,118,110,0.08)" : "inherit",
               }}
               onClick={() => onView(row)}
             >
@@ -931,7 +931,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
     // Gender Data
     const genderData = [
-      { name: "O'g'il bolalar", value: boys, color: "#007bff" },
+      { name: "O'g'il bolalar", value: boys, color: "#2563eb" },
       { name: "Qiz bolalar", value: girls, color: "#f50057" },
       { name: "Noma'lum", value: total - boys - girls, color: "#9e9e9e" },
     ].filter((g) => g.value > 0);
@@ -993,7 +993,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
       {/* ── Key Metrics Cards ── */}
       <Grid container spacing={3}>
         {[
-          { label: "Jami yozuvlar", value: stats.total, icon: <People />, color: "#007bff" },
+          { label: "Jami yozuvlar", value: stats.total, icon: <People />, color: "#0f766e" },
           { label: "O'g'il bolalar", value: stats.boys, icon: <TrendingUp />, color: "#0ea5e9" },
           { label: "Qiz bolalar", value: stats.girls, icon: <TrendingUp />, color: "#ec4899" },
           { label: "O'rtacha BMI", value: stats.avgBmi, icon: <Assessment />, color: "#10b981" },
@@ -1083,7 +1083,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
                   tickLine={false}
                 />
                 <RechartsTooltip cursor={{ fill: "transparent" }} />
-                <Bar dataKey="value" fill="#007bff" radius={[0, 4, 4, 0]} barSize={25} />
+                <Bar dataKey="value" fill="#0f766e" radius={[0, 4, 4, 0]} barSize={25} />
               </BarChart>
             </ResponsiveContainer>
           </GlassPaper>
@@ -1098,8 +1098,8 @@ const ResearchAnalytics = ({ data, isDark }) => {
               <AreaChart data={stats.timelineData}>
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#007bff" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#007bff" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#0f766e" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#0f766e" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
@@ -1122,7 +1122,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
                 <Area
                   type="monotone"
                   dataKey="count"
-                  stroke="#007bff"
+                  stroke="#0f766e"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorCount)"
@@ -1144,7 +1144,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
                 <YAxis
                   yAxisId="left"
                   orientation="left"
-                  stroke="#007bff"
+                  stroke="#0f766e"
                   label={{ value: "Vazn (kg)", angle: -90, position: "insideLeft" }}
                 />
                 <YAxis
@@ -1158,7 +1158,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
                 <Bar
                   yAxisId="left"
                   dataKey="vazn"
-                  fill="#007bff"
+                  fill="#0f766e"
                   radius={[4, 4, 0, 0]}
                   opacity={0.6}
                   name="O'rtacha vazn (kg)"
@@ -1183,8 +1183,8 @@ const ResearchAnalytics = ({ data, isDark }) => {
           p: 4,
           textAlign: "center",
           background: isDark
-            ? "linear-gradient(135deg, rgba(0,123,255,0.15) 0%, rgba(0,123,255,0) 100%)"
-            : "linear-gradient(135deg, rgba(0,123,255,0.05) 0%, rgba(255,255,255,0.5) 100%)",
+            ? "linear-gradient(135deg, rgba(15,118,110,0.15) 0%, rgba(37,99,235,0.02) 100%)"
+            : "linear-gradient(135deg, rgba(15,118,110,0.06) 0%, rgba(255,255,255,0.62) 100%)",
         }}
       >
         <Typography variant="h5" fontWeight={900} mb={1}>
@@ -1218,7 +1218,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
               px: 5,
               py: 2,
               fontWeight: 800,
-              background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
+              background: "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
             }}
           >
             XLSX dataset
@@ -1491,7 +1491,7 @@ const ResearcherPage = () => {
   };
 
   const TABS = [
-    { label: pt("homeTab"), icon: <Dashboard />, color: "#007bff" },
+    { label: pt("homeTab"), icon: <Dashboard />, color: "#0f766e" },
     { label: pt("analyzeTab"), icon: <Add />, color: "#00c853" },
     { label: pt("researcherPanelTab"), icon: <Assessment />, color: "#673ab7" },
     ...(isSuperAdmin ? [{ label: tr("deleted"), icon: <Delete />, color: "#f44336" }] : []),
@@ -1500,7 +1500,7 @@ const ResearcherPage = () => {
   const Stats = () => (
     <Grid container spacing={2} mb={3}>
       {[
-        { label: tr("totalRecords"), value: data.length, color: "#007bff", icon: <Analytics /> },
+        { label: tr("totalRecords"), value: data.length, color: "#0f766e", icon: <Analytics /> },
         {
           label: tr("last30Days"),
           value: data.filter((r) => {
@@ -1672,8 +1672,7 @@ const ResearcherPage = () => {
                   component="span"
                   sx={{
                     display: { xs: "inline", sm: "block" },
-                    background:
-                      "linear-gradient(90deg, #0f766e 0%, #0891b2 32%, #2563eb 64%, #ca8a04 100%)",
+                    background: "linear-gradient(90deg, #0f766e 0%, #0891b2 45%, #2563eb 100%)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
@@ -1950,10 +1949,10 @@ const ResearcherPage = () => {
                       sx={{
                         width: 50,
                         height: 50,
-                        background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
+                        background: "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
                         fontSize: 20,
                         fontWeight: 900,
-                        boxShadow: "0 4px 12px rgba(0,123,255,0.3)",
+                        boxShadow: "0 4px 12px rgba(15,118,110,0.24)",
                       }}
                     >
                       {user?.name?.charAt(0).toUpperCase() || "I"}
@@ -1999,7 +1998,7 @@ const ResearcherPage = () => {
                         },
                         "&:hover": {
                           color: "primary.light",
-                          bgcolor: "rgba(0,123,255,0.04)",
+                          bgcolor: "rgba(15,118,110,0.04)",
                         },
                       },
                     }}

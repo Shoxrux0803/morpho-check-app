@@ -237,7 +237,7 @@ const PageLoader = () => (
         width: "50px",
         height: "50px",
         border: "3px solid #f3f3f3",
-        borderTop: "3px solid #007bff",
+        borderTop: "3px solid #0f766e",
         borderRadius: "50%",
         marginBottom: "1rem",
       }}

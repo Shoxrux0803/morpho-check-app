@@ -158,7 +158,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
                   ? "0 0 0 4px rgba(255,255,255,0.28), 0 0 24px rgba(245,158,11,0.75)"
                   : isResearcher
                     ? "0 4px 12px rgba(156,39,176,0.3)"
-                    : "0 4px 12px rgba(0,123,255,0.3)",
+                    : "0 4px 12px rgba(15,118,110,0.24)",
                 animation: isBest ? "goldTrophyPulse 1.8s ease-in-out infinite" : "none",
               }}
             >

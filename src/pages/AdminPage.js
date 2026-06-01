@@ -861,11 +861,11 @@ export default function AdminPage() {
                 width: 80,
                 height: 80,
                 borderRadius: "50%",
-                background: "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)",
+                background: "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                boxShadow: "0 8px 32px rgba(0, 123, 255, 0.3)",
+                boxShadow: "0 8px 32px rgba(15, 118, 110, 0.24)",
               }}
             >
               <Lock sx={{ color: "white", fontSize: 40 }} />
@@ -933,7 +933,7 @@ export default function AdminPage() {
                   sx={{
                     py: 1.5,
                     borderRadius: 2,
-                    boxShadow: "0 8px 16px rgba(0, 123, 255, 0.25)",
+                    boxShadow: "0 8px 16px rgba(15, 118, 110, 0.22)",
                     fontSize: "1rem",
                     fontWeight: 700,
                     textTransform: "none",

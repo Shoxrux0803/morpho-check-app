@@ -330,7 +330,7 @@ const ChatWidget = () => {
                 background:
                   currentView === VIEWS.BROADCAST
                     ? "linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)"
-                    : "linear-gradient(135deg, #007bff 0%, #0056b3 100%)",
+                    : "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
                 color: "#fff",
                 display: "flex",
                 justifyContent: "space-between",
@@ -525,7 +525,7 @@ const ChatWidget = () => {
                                 width: "48px",
                                 height: "48px",
                                 borderRadius: "50%",
-                                background: "#007bff",
+                                background: "#0f766e",
                                 display: "flex",
                                 justifyContent: "center",
                                 alignItems: "center",
@@ -602,7 +602,7 @@ const ChatWidget = () => {
                                 }}
                               >
                                 {conv.is_last_message_mine && (
-                                  <span style={{ color: "#007bff", marginRight: "4px" }}>Siz:</span>
+                                  <span style={{ color: "#0f766e", marginRight: "4px" }}>Siz:</span>
                                 )}
                                 {conv.last_message}
                               </div>
@@ -640,17 +640,17 @@ const ChatWidget = () => {
                           left: 0,
                           right: 0,
                           bottom: 0,
-                          background: "rgba(0,123,255,0.1)",
+                          background: "rgba(15,118,110,0.1)",
                           backdropFilter: "blur(4px)",
                           zIndex: 100,
                           display: "flex",
                           flexDirection: "column",
                           justifyContent: "center",
                           alignItems: "center",
-                          border: "2px dashed #007bff",
+                          border: "2px dashed #0f766e",
                           margin: "10px",
                           borderRadius: "16px",
-                          color: "#007bff",
+                          color: "#0f766e",
                           pointerEvents: "none",
                         }}
                       >
@@ -683,7 +683,7 @@ const ChatWidget = () => {
                                 msg.sender_id === user.id
                                   ? currentView === VIEWS.BROADCAST
                                     ? "#ff9500"
-                                    : "#007bff"
+                                    : "#0f766e"
                                   : isDark
                                     ? "#333"
                                     : "#fff",
@@ -737,7 +737,7 @@ const ChatWidget = () => {
                                         background:
                                           msg.sender_id === user.id
                                             ? "rgba(255,255,255,0.2)"
-                                            : "#007bff",
+                                            : "#0f766e",
                                         display: "flex",
                                         justifyContent: "center",
                                         alignItems: "center",
@@ -775,7 +775,7 @@ const ChatWidget = () => {
                                           color:
                                             msg.sender_id === user.id
                                               ? "rgba(255,255,255,0.8)"
-                                              : "#007bff",
+                                              : "#0f766e",
                                           textDecoration: "none",
                                           display: "flex",
                                           alignItems: "center",
@@ -866,7 +866,7 @@ const ChatWidget = () => {
                             width: "40px",
                             height: "40px",
                             borderRadius: "50%",
-                            background: currentView === VIEWS.BROADCAST ? "#ff9500" : "#007bff",
+                            background: currentView === VIEWS.BROADCAST ? "#ff9500" : "#0f766e",
                             color: "#fff",
                             border: "none",
                             display: "flex",
@@ -875,7 +875,7 @@ const ChatWidget = () => {
                             boxShadow:
                               currentView === VIEWS.BROADCAST
                                 ? "0 4px 10px rgba(255,149,0,0.3)"
-                                : "0 4px 10px rgba(0,123,255,0.3)",
+                                : "0 4px 10px rgba(15,118,110,0.24)",
                           }}
                         >
                           <i className="bi bi-send-fill"></i>
@@ -896,10 +896,10 @@ const ChatWidget = () => {
               width: "65px",
               height: "65px",
               borderRadius: "50%",
-              background: "linear-gradient(135deg, #007bff 0%, #0056b3 100%)",
+              background: "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
               color: "#fff",
               border: "none",
-              boxShadow: "0 5px 15px rgba(0,123,255,0.3)",
+              boxShadow: "0 5px 15px rgba(15,118,110,0.24)",
               cursor: "pointer",
               display: "flex",
               justifyContent: "center",

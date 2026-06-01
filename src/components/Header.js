@@ -179,8 +179,8 @@ export default function Header() {
                 flexShrink: 0,
                 background:
                   mode === "dark"
-                    ? "linear-gradient(145deg, rgba(14, 165, 233, 0.20), rgba(34, 197, 94, 0.14))"
-                    : "linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(230, 247, 255, 0.94))",
+                    ? "linear-gradient(145deg, rgba(15, 118, 110, 0.22), rgba(37, 99, 235, 0.14))"
+                    : "linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 250, 0.94))",
                 border: "1px solid",
                 borderColor:
                   mode === "dark" ? "rgba(125, 211, 252, 0.24)" : "rgba(14, 116, 144, 0.14)",
@@ -219,9 +219,9 @@ export default function Header() {
                       borderRadius: 1.5,
                       background: (theme) =>
                         user.role === "superadmin"
-                          ? "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+                          ? "linear-gradient(135deg, #0f172a 0%, #0f766e 100%)"
                           : user.role === "researcher"
-                            ? "linear-gradient(135deg, #007bff 0%, #00d4ff 100%)"
+                            ? "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)"
                             : theme.palette.mode === "dark"
                               ? "rgba(255, 255, 255, 0.1)"
                               : "rgba(0, 0, 0, 0.05)",
@@ -241,9 +241,9 @@ export default function Header() {
                           : "1px solid rgba(0,0,0,0.1)",
                       boxShadow:
                         user.role === "superadmin"
-                          ? "0 2px 8px rgba(255, 215, 0, 0.3)"
+                          ? "0 2px 8px rgba(15, 23, 42, 0.24)"
                           : user.role === "researcher"
-                            ? "0 2px 8px rgba(0, 123, 255, 0.3)"
+                            ? "0 2px 8px rgba(15, 118, 110, 0.24)"
                             : "none",
                     }}
                   >
