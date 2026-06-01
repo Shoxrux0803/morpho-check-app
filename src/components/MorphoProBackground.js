@@ -238,8 +238,304 @@ function WebGLContextGuard({ onContextLost }) {
   return null;
 }
 
-export default function MorphoProBackground({ theme, pathname }) {
-  const isDark = theme === "dark";
+function SoftMeshGridBackground({ isDark }) {
+  const base = isDark
+    ? "linear-gradient(135deg, #020617 0%, #07111f 46%, #0b1726 100%)"
+    : "linear-gradient(135deg, #f8fbff 0%, #eef8fb 45%, #f7fbf8 100%)";
+
+  const gridColor = isDark ? "rgba(148, 163, 184, 0.13)" : "rgba(15, 118, 110, 0.12)";
+  const gridAccent = isDark ? "rgba(34, 211, 238, 0.08)" : "rgba(37, 99, 235, 0.06)";
+
+  return (
+    <>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: base,
+          transition: "background 800ms cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: isDark
+            ? "radial-gradient(circle at 12% 18%, rgba(45, 212, 191, 0.30), transparent 31%), radial-gradient(circle at 84% 10%, rgba(59, 130, 246, 0.26), transparent 30%), radial-gradient(circle at 72% 78%, rgba(34, 197, 94, 0.20), transparent 34%), radial-gradient(circle at 38% 64%, rgba(125, 211, 252, 0.14), transparent 28%)"
+            : "radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.28), transparent 31%), radial-gradient(circle at 84% 10%, rgba(20, 184, 166, 0.24), transparent 30%), radial-gradient(circle at 72% 78%, rgba(34, 197, 94, 0.20), transparent 34%), radial-gradient(circle at 38% 64%, rgba(59, 130, 246, 0.12), transparent 28%)",
+          backgroundSize: "125% 125%",
+          filter: "blur(16px)",
+          transform: "scale(1.1)",
+          animation: "morphoMeshPulse 9s ease-in-out infinite alternate",
+          opacity: isDark ? 0.92 : 1,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px), linear-gradient(${gridAccent} 1px, transparent 1px), linear-gradient(90deg, ${gridAccent} 1px, transparent 1px)`,
+          backgroundSize: "48px 48px, 48px 48px, 192px 192px, 192px 192px",
+          maskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.38) 42%, transparent 92%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.38) 42%, transparent 92%)",
+          opacity: isDark ? 0.58 : 0.68,
+          animation: "morphoGridPan 14s linear infinite",
+        }}
+      />
+      <WaveDotField isDark={isDark} />
+      <div
+        style={{
+          position: "absolute",
+          inset: "-20%",
+          background:
+            "linear-gradient(115deg, transparent 18%, rgba(255,255,255,0.10) 34%, rgba(255,255,255,0.20) 42%, rgba(255,255,255,0.08) 50%, transparent 66%)",
+          mixBlendMode: isDark ? "screen" : "soft-light",
+          opacity: isDark ? 0.42 : 0.5,
+          transform: "translateX(-34%) rotate(0.001deg)",
+          animation: "morphoLightSweep 7s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: isDark
+            ? "linear-gradient(180deg, rgba(2, 6, 23, 0.06) 0%, rgba(2, 6, 23, 0.56) 100%)"
+            : "linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.72) 100%)",
+        }}
+      />
+      <style>
+        {`
+          @keyframes morphoMeshPulse {
+            0% {
+              transform: scale(1.1) translate3d(-2.5%, -1.8%, 0);
+              background-position: 0% 35%;
+              opacity: ${isDark ? 0.76 : 0.82};
+            }
+            50% {
+              transform: scale(1.16) translate3d(2.5%, 1.5%, 0);
+              background-position: 70% 45%;
+              opacity: 1;
+            }
+            100% {
+              transform: scale(1.12) translate3d(0.5%, 2.2%, 0);
+              background-position: 100% 75%;
+              opacity: ${isDark ? 0.88 : 0.94};
+            }
+          }
+
+          @keyframes morphoGridPan {
+            from { background-position: 0 0, 0 0, 0 0, 0 0; }
+            to { background-position: 48px 48px, 48px 48px, 192px 192px, 192px 192px; }
+          }
+
+          @keyframes morphoLightSweep {
+            0%, 24% { transform: translateX(-42%) rotate(0.001deg); opacity: 0; }
+            45% { opacity: ${isDark ? 0.42 : 0.5}; }
+            72%, 100% { transform: translateX(42%) rotate(0.001deg); opacity: 0; }
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            * {
+              animation-duration: 1ms !important;
+              animation-iteration-count: 1 !important;
+            }
+          }
+        `}
+      </style>
+    </>
+  );
+}
+
+function WaveDotField({ isDark }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d", { alpha: true });
+
+    if (!canvas || !ctx) return undefined;
+
+    const pointer = { x: 0, y: 0 };
+    const camera = { x: 0, y: 70, z: 122 };
+    const separation = 185;
+    const amountX = window.innerWidth < 760 ? 52 : 92;
+    const amountY = window.innerWidth < 760 ? 48 : 78;
+    const palette = isDark
+      ? {
+          dot: [103, 232, 249],
+          accent: [45, 212, 191],
+          line: [59, 130, 246],
+        }
+      : {
+          dot: [14, 116, 144],
+          accent: [20, 184, 166],
+          line: [37, 99, 235],
+        };
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let frameId;
+    let count = 0;
+
+    const resize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const handlePointerMove = (event) => {
+      pointer.x += ((event.clientX - width / 2) / width - pointer.x) * 0.35;
+      pointer.y += ((event.clientY - height / 2) / height - pointer.y) * 0.35;
+    };
+
+    const project = (x, y, z) => {
+      const tilt = -1.12 + pointer.y * 0.045;
+      const yaw = pointer.x * 0.08;
+      const cosTilt = Math.cos(tilt);
+      const sinTilt = Math.sin(tilt);
+      const cosYaw = Math.cos(yaw);
+      const sinYaw = Math.sin(yaw);
+
+      const yawX = x * cosYaw - z * sinYaw;
+      const yawZ = x * sinYaw + z * cosYaw;
+      const tiltY = y * cosTilt - yawZ * sinTilt;
+      const tiltZ = y * sinTilt + yawZ * cosTilt;
+      const depth = tiltZ + 5200;
+      const scale = 980 / depth;
+
+      return {
+        x: width / 2 + yawX * scale,
+        y: height * 0.56 + (tiltY - camera.y) * scale,
+        scale,
+        depth,
+      };
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, width, height);
+
+      const points = [];
+      let index = 0;
+
+      for (let ix = 0; ix < amountX; ix += 1) {
+        points[ix] = [];
+
+        for (let iy = 0; iy < amountY; iy += 1) {
+          const x = (ix - (amountX - 1) / 2) * separation;
+          const z = (iy - (amountY - 1) / 2) * separation;
+          const waveY =
+            Math.sin((ix + count) * 0.3) * 50 +
+            Math.sin((iy + count) * 0.5) * 50 +
+            Math.sin((ix + iy + count) * 0.16) * 24;
+          const pulse =
+            (Math.sin((ix + count) * 0.3) + 1) * 3.1 + (Math.sin((iy + count) * 0.5) + 1) * 3.1;
+          const projected = project(x, waveY, z);
+          const depthFade = Math.max(0, Math.min(1, 1 - (projected.depth - 3700) / 3600));
+          const verticalFade = Math.max(
+            0,
+            Math.min(1, (projected.y - height * 0.25) / (height * 0.3)),
+          );
+          const edgeFade = Math.max(
+            0,
+            Math.min(
+              1,
+              Math.min(projected.x / (width * 0.16), (width - projected.x) / (width * 0.16)),
+            ),
+          );
+          const horizonFade = Math.max(
+            0.16,
+            Math.min(1, (projected.y - height * 0.32) / (height * 0.28)),
+          );
+          const alpha = depthFade * verticalFade * edgeFade * horizonFade * (isDark ? 0.68 : 0.5);
+          const radius = Math.max(0.42, pulse * projected.scale * 2.05);
+
+          points[ix][iy] = { ...projected, alpha, radius };
+
+          if (
+            projected.x > -width * 0.18 &&
+            projected.x < width * 1.18 &&
+            projected.y > -30 &&
+            projected.y < height + 30
+          ) {
+            const color = index % 5 === 0 ? palette.accent : palette.dot;
+            ctx.fillStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(projected.x, projected.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
+          index += 1;
+        }
+      }
+
+      ctx.lineWidth = 0.7;
+
+      for (let ix = 0; ix < amountX; ix += 1) {
+        for (let iy = 0; iy < amountY; iy += 1) {
+          const point = points[ix][iy];
+          const right = points[ix + 1]?.[iy];
+          const down = points[ix]?.[iy + 1];
+
+          for (const next of [right, down]) {
+            if (!next) continue;
+
+            const alpha = Math.min(point.alpha, next.alpha) * (isDark ? 0.07 : 0.045);
+            ctx.strokeStyle = `rgba(${palette.line[0]}, ${palette.line[1]}, ${palette.line[2]}, ${alpha})`;
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+            ctx.lineTo(next.x, next.y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      count += 0.075;
+      frameId = window.requestAnimationFrame(animate);
+    };
+
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    frameId = window.requestAnimationFrame(animate);
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [isDark]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "absolute",
+        inset: 0,
+        width: "100%",
+        height: "100%",
+        opacity: isDark ? 0.74 : 0.58,
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, transparent 18%, rgba(0,0,0,0.65) 34%, black 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, transparent 18%, rgba(0,0,0,0.65) 34%, black 100%)",
+        maskComposite: "intersect",
+        WebkitMaskComposite: "source-in",
+        mixBlendMode: isDark ? "screen" : "multiply",
+      }}
+    />
+  );
+}
+
+function SphereBackground({ isDark, pathname }) {
   const bg = isDark ? "#020617" : "#dfdfdf";
   const [contextLost, setContextLost] = useState(false);
 
@@ -322,6 +618,31 @@ export default function MorphoProBackground({ theme, pathname }) {
           zIndex: 2,
         }}
       />
+    </div>
+  );
+}
+
+export default function MorphoProBackground({ theme, pathname, variant = "mesh-grid" }) {
+  const isDark = theme === "dark";
+
+  if (variant === "sphere") {
+    return <SphereBackground isDark={isDark} pathname={pathname} />;
+  }
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: -1,
+        pointerEvents: "none",
+        overflow: "hidden",
+      }}
+    >
+      <SoftMeshGridBackground isDark={isDark} />
     </div>
   );
 }
