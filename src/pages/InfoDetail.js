@@ -271,7 +271,7 @@ function SomatoTriangle() {
         {somatoTypes.map((type) => (
           <Box key={type.label}>
             <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
-              <Typography variant="body2" fontWeight={900}>
+              <Typography variant="body2" fontWeight={700}>
                 {type.label}
               </Typography>
               <Typography variant="body2" color="text.secondary" fontWeight={800}>
@@ -405,7 +405,7 @@ function FlowDiagram() {
           >
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
               <CircleDot size={16} color={node.color} />
-              <Typography variant="subtitle2" fontWeight={950}>
+              <Typography variant="subtitle2" fontWeight={800}>
                 {node.title}
               </Typography>
             </Stack>
@@ -452,11 +452,11 @@ function IndexDeepCard({ item, index }) {
             <Box sx={{ minWidth: 0 }}>
               <Typography
                 variant="overline"
-                sx={{ color: item.color, fontWeight: 950, lineHeight: 1 }}
+                sx={{ color: item.color, fontWeight: 800, lineHeight: 1 }}
               >
                 {item.subtitle}
               </Typography>
-              <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.16 }}>
+              <Typography variant="h5" sx={{ fontWeight: 800, lineHeight: 1.16 }}>
                 {item.title}
               </Typography>
             </Box>
@@ -517,7 +517,7 @@ function IndexDeepCard({ item, index }) {
                 size="small"
                 sx={{
                   borderRadius: 1,
-                  fontWeight: 850,
+                  fontWeight: 700,
                   bgcolor: alpha(item.color, 0.1),
                   color: item.color,
                 }}
@@ -565,7 +565,7 @@ export default function InfoDetail() {
             sx={{
               mb: 3,
               color: "text.secondary",
-              fontWeight: 850,
+              fontWeight: 700,
               borderRadius: 1,
             }}
           >
@@ -598,7 +598,7 @@ export default function InfoDetail() {
                     />
                   </Box>
                   <Box>
-                    <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 950 }}>
+                    <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
                       MorphoCheck Pro
                     </Typography>
                     <Typography variant="body2" color="text.secondary" fontWeight={800}>
@@ -611,7 +611,7 @@ export default function InfoDetail() {
                   variant="h1"
                   sx={{
                     maxWidth: 980,
-                    fontWeight: 950,
+                    fontWeight: 800,
                     letterSpacing: 0,
                     lineHeight: 0.98,
                     fontSize: { xs: "2.45rem", sm: "3.5rem", md: "5.2rem" },
@@ -644,10 +644,10 @@ export default function InfoDetail() {
                           <GlassPanel sx={{ p: 2 }} hover={false}>
                             <Stack spacing={1.2}>
                               <Icon size={23} color={item.color} />
-                              <Typography variant="caption" color="text.secondary" fontWeight={850}>
+                              <Typography variant="caption" color="text.secondary" fontWeight={700}>
                                 {item.title}
                               </Typography>
-                              <Typography variant="h6" fontWeight={950} sx={{ color: item.color }}>
+                              <Typography variant="h6" fontWeight={800} sx={{ color: item.color }}>
                                 {item.value}
                               </Typography>
                             </Stack>
@@ -674,11 +674,11 @@ export default function InfoDetail() {
                     <Box>
                       <Typography
                         variant="overline"
-                        sx={{ color: "primary.main", fontWeight: 950 }}
+                        sx={{ color: "primary.main", fontWeight: 800 }}
                       >
                         Composite profile
                       </Typography>
-                      <Typography variant="h4" fontWeight={950}>
+                      <Typography variant="h4" fontWeight={800}>
                         Indekslar paneli
                       </Typography>
                     </Box>
@@ -713,7 +713,7 @@ export default function InfoDetail() {
                 <Box sx={{ p: { xs: 2.5, md: 3 } }}>
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <BarChart3 color="#0ea5e9" />
-                    <Typography variant="h4" fontWeight={950}>
+                    <Typography variant="h4" fontWeight={800}>
                       Z-Score tahlili
                     </Typography>
                   </Stack>
@@ -741,7 +741,7 @@ export default function InfoDetail() {
                 <Box sx={{ p: { xs: 2.5, md: 3 } }}>
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <LineChart color="#16a34a" />
-                    <Typography variant="h4" fontWeight={950}>
+                    <Typography variant="h4" fontWeight={800}>
                       Xit-Karter somatotipi
                     </Typography>
                   </Stack>
@@ -761,10 +761,10 @@ export default function InfoDetail() {
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
             <Microscope color={theme.palette.primary.main} />
             <Box>
-              <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 950 }}>
+              <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
                 Author indices
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 950, lineHeight: 1.05 }}>
+              <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.05 }}>
                 HMAI, MII, ADI va MCRI bo'yicha chuqurlashtirilgan ilmiy blok
               </Typography>
             </Box>
@@ -791,7 +791,7 @@ export default function InfoDetail() {
                 <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <TrendingUp color="#8b5cf6" />
-                    <Typography variant="h4" fontWeight={950}>
+                    <Typography variant="h4" fontWeight={800}>
                       MorphoCheck Risk Score konsepsiyasi
                     </Typography>
                   </Stack>
@@ -824,7 +824,7 @@ export default function InfoDetail() {
                     ].map(([title, desc, color]) => (
                       <Grid item xs={12} sm={6} key={title}>
                         <Box sx={{ p: 1.6, borderRadius: 1, bgcolor: alpha(color, 0.09) }}>
-                          <Typography variant="subtitle2" fontWeight={950} sx={{ color }}>
+                          <Typography variant="subtitle2" fontWeight={800} sx={{ color }}>
                             {title}
                           </Typography>
                           <Typography variant="caption" color="text.secondary" fontWeight={800}>
@@ -851,7 +851,7 @@ export default function InfoDetail() {
                 <Box sx={{ p: { xs: 2.5, md: 3.5 } }}>
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <HeartPulse color="#dc2626" />
-                    <Typography variant="h4" fontWeight={950}>
+                    <Typography variant="h4" fontWeight={800}>
                       Klinik qaror zanjiri
                     </Typography>
                   </Stack>
@@ -873,7 +873,7 @@ export default function InfoDetail() {
                             flexShrink: 0,
                             bgcolor: alpha(theme.palette.primary.main, 0.12),
                             color: "primary.main",
-                            fontWeight: 950,
+                            fontWeight: 800,
                           }}
                         >
                           {index + 1}
@@ -908,10 +908,10 @@ export default function InfoDetail() {
               }}
             >
               <Box>
-                <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 950 }}>
+                <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
                   Ready for analysis
                 </Typography>
-                <Typography variant="h3" sx={{ fontWeight: 950, mb: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
                   Tahlilni amaliy natijaga aylantiring
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 760 }}>
@@ -930,7 +930,7 @@ export default function InfoDetail() {
                   px: 4,
                   py: 1.6,
                   borderRadius: 1,
-                  fontWeight: 950,
+                  fontWeight: 800,
                   boxShadow: `0 18px 36px ${alpha(theme.palette.primary.main, 0.26)}`,
                 }}
               >

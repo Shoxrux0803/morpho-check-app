@@ -266,11 +266,7 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   return (
     <Box className="mc-surface-reveal" sx={{ maxWidth: 1200, mx: "auto" }}>
       {/* Profil sarlavhasi + PDF */}
-      <Paper
-        className="mc-ambient-sheen"
-        elevation={1}
-        sx={{ p: 3, mb: 3, position: "relative", overflow: "hidden" }}
-      >
+      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -355,11 +351,7 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
       ) : (
         <>
           {/* Tahlil natijalari */}
-          <Card
-            className="mc-surface-reveal mc-ambient-sheen"
-            elevation={2}
-            sx={{ mb: 3, borderRadius: 2, position: "relative", overflow: "hidden" }}
-          >
+          <Card className="mc-surface-reveal" elevation={2} sx={{ mb: 3, borderRadius: 2 }}>
             <CardHeader
               avatar={<AnalyticsOutlinedIcon color="success" />}
               title={
@@ -1119,14 +1111,12 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
           {/* AI Prognostik Tahlil */}
           {root?.ai_predictions && (
             <Card
-              className="mc-surface-reveal mc-ambient-sheen"
+              className="mc-surface-reveal"
               elevation={2}
               sx={{
                 "--mc-delay": "90ms",
                 mb: 3,
                 borderRadius: 2,
-                position: "relative",
-                overflow: "hidden",
                 background: (theme) =>
                   theme.palette.mode === "dark"
                     ? "linear-gradient(145deg, #1e1e1e, #2d2d2d)"
@@ -1413,8 +1403,6 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
                           bgcolor: (theme) =>
                             theme.palette.mode === "dark" ? "rgba(0,137,123,0.1)" : "#f1f8f7",
                           border: "1px solid rgba(0,137,123,0.1)",
-                          transition: "transform 0.2s",
-                          "&:hover": { transform: "translateX(8px)" },
                         }}
                       >
                         <Box

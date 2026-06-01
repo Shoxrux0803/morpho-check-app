@@ -232,7 +232,7 @@ export default function AuthorPage() {
                   </motion.div>
                 </Box>
                 <CardContent sx={{ pt: 18, px: 4, pb: 4 }}>
-                  <Typography variant="h4" fontWeight={900} gutterBottom letterSpacing="-0.02em">
+                  <Typography variant="h4" fontWeight={900} gutterBottom letterSpacing={0}>
                     {AUTHOR.fullName}
                   </Typography>
                   <Typography variant="h6" color="primary" fontWeight={800} sx={{ mb: 2 }}>
@@ -320,7 +320,7 @@ export default function AuthorPage() {
                   >
                     <Sparkles size={24} />
                   </Box>
-                  <Typography variant="h5" fontWeight={900}>
+                  <Typography variant="h5" fontWeight={800}>
                     Ilmiy Faoliyat
                   </Typography>
                 </Stack>

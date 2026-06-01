@@ -10,7 +10,8 @@ class PatientData(BaseModel):
     last_name: str = Field(..., alias="lastName", min_length=1, max_length=80)
     region: str = Field(..., min_length=1, max_length=120)
     district: Optional[str] = Field(None, max_length=120)
-    address: str = Field(..., min_length=1, max_length=255)
+    mahalla: Optional[str] = Field(None, max_length=150)
+    address: Optional[str] = Field(None, max_length=255)
 
     examination_date: str = Field(..., alias="examinationDate")
     birth_date: str = Field("Noma'lum", alias="birthDate")
@@ -27,7 +28,9 @@ class PatientData(BaseModel):
     calf_circumference: float = Field(0.0, alias="calfCircumference", ge=0, le=90)
     foot_length: float = Field(0.0, alias="footLength", ge=0, le=40)
     body_length: Optional[float] = Field(None, alias="bodyLength", ge=20, le=250)
+
     id_code: Optional[str] = Field(None, alias="idCode", max_length=50)
+    analysis_id: Optional[int] = Field(None, alias="analysisId", ge=1)
 
     age: int = Field(..., ge=0, le=120)
     age_months: Optional[int] = Field(0, alias="ageMonths", ge=0, le=11)
@@ -55,7 +58,7 @@ class PatientData(BaseModel):
         populate_by_name = True
         extra = "forbid"
 
-    @field_validator("first_name", "last_name", "region", "district", "address", "preschool_institution", "doctor_note", mode="before")
+    @field_validator("first_name", "last_name", "region", "district", "mahalla", "address", "preschool_institution", "doctor_note", mode="before")
     @classmethod
     def strip_text(cls, v):
         if v is None:
@@ -198,6 +201,8 @@ class UserCreate(BaseModel):
     def check_passwords_match(self):
         if self.password and self.password != self.password_confirm:
             raise ValueError("Parollar mos emas")
+        if self.role not in {"user", "admin", "superadmin", "researcher"}:
+            raise ValueError("Noto'g'ri foydalanuvchi roli")
         return self
 
 class UserRegister(BaseModel):
@@ -251,6 +256,28 @@ class UserUpdate(BaseModel):
     research_type: Optional[str] = Field(None, max_length=100)
     research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v):
+        if not v:
+            return v
+        if len(v) < 8:
+            raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
+        if not re.search(r'[A-Z]', v):
+            raise ValueError("Parolda kamida 1 ta katta harf bo'lishi kerak")
+        if not re.search(r'[a-z]', v):
+            raise ValueError("Parolda kamida 1 ta kichik harf bo'lishi kerak")
+        if not re.search(r'[0-9]', v):
+            raise ValueError("Parolda kamida 1 ta raqam bo'lishi kerak")
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v):
+        if v is not None and v not in {"user", "admin", "superadmin", "researcher"}:
+            raise ValueError("Noto'g'ri foydalanuvchi roli")
+        return v
 
 class UserOut(BaseModel):
     id: int

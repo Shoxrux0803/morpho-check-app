@@ -519,7 +519,7 @@ const StatPill = ({ label, value, color = "primary.main" }) => (
     <Typography variant="caption" color="text.secondary" fontWeight={700}>
       {label}
     </Typography>
-    <Typography variant="h6" fontWeight={900} sx={{ color, lineHeight: 1.1 }}>
+    <Typography variant="h6" fontWeight={800} sx={{ color, lineHeight: 1.1 }}>
       {value}
     </Typography>
   </Box>
@@ -535,7 +535,7 @@ const ScientificBarChart = ({ title, subtitle, rows, maxValue }) => (
       bgcolor: "background.paper",
     }}
   >
-    <Typography variant="body2" fontWeight={900}>
+    <Typography variant="body2" fontWeight={700}>
       {title}
     </Typography>
     {subtitle && (
@@ -547,10 +547,10 @@ const ScientificBarChart = ({ title, subtitle, rows, maxValue }) => (
       {rows.map((row) => (
         <Box key={row.label}>
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.35}>
-            <Typography variant="caption" color="text.secondary" fontWeight={850}>
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>
               {row.label}
             </Typography>
-            <Typography variant="caption" fontWeight={900}>
+            <Typography variant="caption" fontWeight={700}>
               {row.value}
             </Typography>
           </Stack>
@@ -586,7 +586,7 @@ const ScientificIndexChart = ({ rows }) => {
         bgcolor: "background.paper",
       }}
     >
-      <Typography variant="body2" fontWeight={900}>
+      <Typography variant="body2" fontWeight={700}>
         Klinik indeks profili
       </Typography>
       <Typography variant="caption" color="text.secondary" fontWeight={700}>
@@ -2334,7 +2334,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               >
                 <Stack direction="row" justifyContent="space-between" spacing={1}>
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="subtitle2" fontWeight={900} noWrap>
+                    <Typography variant="subtitle2" fontWeight={800} noWrap>
                       {selectedPin.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" fontWeight={800}>
@@ -2387,7 +2387,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                   startIcon={<ChatBubbleOutline />}
                   onClick={() => handleChat(selectedPin)}
                   disabled={!selectedPin.userId}
-                  sx={{ mt: 1.1, borderRadius: 1, textTransform: "none", fontWeight: 850 }}
+                  sx={{ mt: 1.1, borderRadius: 1, textTransform: "none", fontWeight: 700 }}
                 >
                   Bog'lanish
                 </Button>
@@ -2471,7 +2471,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               {breadcrumbItems.map((item, index) => (
                 <React.Fragment key={item.label}>
                   {index > 0 && (
-                    <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={700}>
                       /
                     </Typography>
                   )}
@@ -2563,10 +2563,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               spacing={1}
             >
               <Box>
-                <Typography variant="overline" color="text.secondary" fontWeight={900}>
+                <Typography variant="overline" color="text.secondary" fontWeight={800}>
                   {levelLabel}
                 </Typography>
-                <Typography variant="h5" fontWeight={900}>
+                <Typography variant="h5" fontWeight={800}>
                   {selected ? featureName(selected) : "O'zbekiston"}
                 </Typography>
                 {selectedPath.region && (
@@ -2606,7 +2606,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
             <Box mt={2.25}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
-                <Typography variant="body2" fontWeight={900}>
+                <Typography variant="body2" fontWeight={700}>
                   Klinik risk signali
                 </Typography>
                 <Typography
@@ -2645,7 +2645,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                 <Stack direction="row" spacing={1} alignItems="center" mb={1}>
                   <LocationOn sx={{ color: PIN_COLORS[selectedPin.type] || "#2563eb" }} />
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="h6" fontWeight={900} noWrap>
+                    <Typography variant="h6" fontWeight={800} noWrap>
                       {selectedPin.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" fontWeight={800}>
@@ -2664,7 +2664,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         alignItems: "start",
                       }}
                     >
-                      <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
                         {label}
                       </Typography>
                       <Typography variant="body2" fontWeight={700} sx={{ wordBreak: "break-word" }}>
@@ -2688,7 +2688,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
             <Divider sx={{ my: 2.25 }} />
 
-            <Typography variant="h6" fontWeight={900} mb={1.25}>
+            <Typography variant="h6" fontWeight={800} mb={1.25}>
               Ilmiy klinik profil
             </Typography>
             <Stack spacing={1.2}>
@@ -2709,7 +2709,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
             <Divider sx={{ my: 2.25 }} />
 
-            <Typography variant="h6" fontWeight={900} mb={1.25}>
+            <Typography variant="h6" fontWeight={800} mb={1.25}>
               Tahliliy indikatorlar
             </Typography>
             <Box
@@ -2730,10 +2730,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                     bgcolor: isDark ? "rgba(15,23,42,0.74)" : "rgba(248,250,252,0.92)",
                   }}
                 >
-                  <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700}>
                     {card.label}
                   </Typography>
-                  <Typography variant="h5" fontWeight={900} sx={{ color: card.color }}>
+                  <Typography variant="h5" fontWeight={800} sx={{ color: card.color }}>
                     {card.value}
                   </Typography>
                 </Box>
@@ -2741,17 +2741,17 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             </Box>
 
             <Box mt={2.25}>
-              <Typography variant="h6" fontWeight={900} mb={1.25}>
+              <Typography variant="h6" fontWeight={800} mb={1.25}>
                 Faoliyat tarkibi
               </Typography>
               <Stack spacing={1.2}>
                 {chartRows.map((row) => (
                   <Box key={row.label}>
                     <Stack direction="row" justifyContent="space-between" mb={0.5}>
-                      <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700}>
                         {row.label}
                       </Typography>
-                      <Typography variant="caption" fontWeight={900}>
+                      <Typography variant="caption" fontWeight={700}>
                         {row.value}
                       </Typography>
                     </Stack>
@@ -2779,7 +2779,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
             <Divider sx={{ my: 2.25 }} />
 
-            <Typography variant="h6" fontWeight={900} mb={1.25}>
+            <Typography variant="h6" fontWeight={800} mb={1.25}>
               Operatsion tahlil
             </Typography>
             <Stack spacing={1.35}>
@@ -2791,10 +2791,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                 return (
                   <Box key={row.label}>
                     <Stack direction="row" justifyContent="space-between" mb={0.5}>
-                      <Typography variant="body2" color="text.secondary" fontWeight={900}>
+                      <Typography variant="body2" color="text.secondary" fontWeight={700}>
                         {row.label}
                       </Typography>
-                      <Typography variant="body2" fontWeight={900}>
+                      <Typography variant="body2" fontWeight={700}>
                         {percent}%
                       </Typography>
                     </Stack>

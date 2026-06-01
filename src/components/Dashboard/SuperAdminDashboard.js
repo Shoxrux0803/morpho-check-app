@@ -425,7 +425,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                         </Box>
                         <ReportProblemOutlined sx={{ color: COLORS.error }} fontSize="small" />
                       </Box>
-                      <Typography variant="h5" fontWeight={900} color="error.main" mt={1}>
+                      <Typography variant="h5" fontWeight={800} color="error.main" mt={1}>
                         {row.count}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -712,7 +712,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                       >
                         {cat.name}
                       </Typography>
-                      <Typography variant="body2" fontWeight={900} sx={{ color: cat.color }}>
+                      <Typography variant="body2" fontWeight={700} sx={{ color: cat.color }}>
                         {cat.pct}%
                       </Typography>
                     </Box>

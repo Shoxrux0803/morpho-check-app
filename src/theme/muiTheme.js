@@ -127,19 +127,19 @@ export const makeTheme = (mode = "light", variant = "neo") => {
         '"Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif',
       h1: {
         fontWeight: 800,
-        letterSpacing: "-0.02em",
+        letterSpacing: 0,
         fontSize: "2.5rem",
         lineHeight: 1.2,
       },
       h2: {
         fontWeight: 800,
-        letterSpacing: "-0.02em",
+        letterSpacing: 0,
         fontSize: "2rem",
         lineHeight: 1.3,
       },
       h3: {
         fontWeight: 700,
-        letterSpacing: "-0.01em",
+        letterSpacing: 0,
         fontSize: "1.75rem",
         lineHeight: 1.3,
       },

@@ -1187,7 +1187,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
             : "linear-gradient(135deg, rgba(15,118,110,0.06) 0%, rgba(255,255,255,0.62) 100%)",
         }}
       >
-        <Typography variant="h5" fontWeight={900} mb={1}>
+        <Typography variant="h5" fontWeight={800} mb={1}>
           Tadqiqot Hisoboti
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={4}>
@@ -1538,7 +1538,7 @@ const ResearcherPage = () => {
               {icon}
             </Box>
             <Box>
-              <Typography variant="h5" fontWeight={900} sx={{ color }}>
+              <Typography variant="h5" fontWeight={800} sx={{ color }}>
                 {value}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -1660,7 +1660,7 @@ const ResearcherPage = () => {
                 variant="h1"
                 sx={{
                   fontSize: { xs: "2.55rem", sm: "3.75rem", md: "5.1rem", lg: "5.8rem" },
-                  fontWeight: 950,
+                  fontWeight: 800,
                   lineHeight: 1.02,
                   letterSpacing: 0,
                   mb: 3,
@@ -1723,11 +1723,11 @@ const ResearcherPage = () => {
                           >
                             {item.icon}
                           </Box>
-                          <Typography variant="caption" color="text.secondary" fontWeight={900}>
+                          <Typography variant="caption" color="text.secondary" fontWeight={700}>
                             {item.label}
                           </Typography>
                         </Stack>
-                        <Typography variant="body1" fontWeight={850} sx={{ lineHeight: 1.45 }}>
+                        <Typography variant="body1" fontWeight={700} sx={{ lineHeight: 1.45 }}>
                           {item.value || "Kiritilmagan"}
                         </Typography>
                       </Box>
@@ -1794,10 +1794,10 @@ const ResearcherPage = () => {
               >
                 <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2.5}>
                   <Box>
-                    <Typography variant="overline" color="primary.main" fontWeight={900}>
+                    <Typography variant="overline" color="primary.main" fontWeight={800}>
                       {pt("liveReport")}
                     </Typography>
-                    <Typography variant="h5" fontWeight={950}>
+                    <Typography variant="h5" fontWeight={800}>
                       {pt("researchStatus")}
                     </Typography>
                   </Box>
@@ -1831,7 +1831,7 @@ const ResearcherPage = () => {
                         <Typography variant="caption" color="text.secondary" fontWeight={800}>
                           {metric.label}
                         </Typography>
-                        <Typography variant="h4" fontWeight={950} sx={{ color: metric.color }}>
+                        <Typography variant="h4" fontWeight={800} sx={{ color: metric.color }}>
                           {metric.value}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -1866,7 +1866,7 @@ const ResearcherPage = () => {
                       <CheckCircle />
                     </Box>
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={900}>
+                      <Typography variant="subtitle1" fontWeight={800}>
                         {pt("dataReady")}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
@@ -1912,7 +1912,7 @@ const ResearcherPage = () => {
                 >
                   {card.icon}
                 </Box>
-                <Typography variant="h6" fontWeight={950} sx={{ mb: 1 }}>
+                <Typography variant="h6" fontWeight={800} sx={{ mb: 1 }}>
                   {card.title}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.65 }}>

@@ -547,7 +547,7 @@ export default function AdminDashboard({
                         </Box>
                         <ReportProblemOutlined sx={{ color: COLORS.error }} fontSize="small" />
                       </Box>
-                      <Typography variant="h5" fontWeight={900} color="error.main" mt={1}>
+                      <Typography variant="h5" fontWeight={800} color="error.main" mt={1}>
                         {row.count}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
@@ -727,7 +727,7 @@ export default function AdminDashboard({
                       <Typography variant="caption" color="text.secondary">
                         {cat.count} ta
                       </Typography>
-                      <Typography variant="body1" fontWeight={900} sx={{ color: cat.color }}>
+                      <Typography variant="body1" fontWeight={700} sx={{ color: cat.color }}>
                         {cat.pct}%
                       </Typography>
                     </Box>

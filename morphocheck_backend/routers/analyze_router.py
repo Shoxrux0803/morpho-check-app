@@ -1,4 +1,4 @@
-# morphocheck_backend/routers/analyze_router.py
+﻿# morphocheck_backend/routers/analyze_router.py
 import datetime
 import logging
 from typing import Any, Dict, Optional
@@ -30,10 +30,11 @@ from utils.database import get_db
 router = APIRouter(tags=["Tahlil"])
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+# ---------------------------
 
 @router.post("/", tags=["Tahlil"])
 def analyze_and_store_raw(
-    data: Dict[str, Any],
+    data: Dict[str, Any], 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
@@ -81,7 +82,7 @@ def analyze_full(
             bio_data=analysis["indices"],
             lang=lang
         )
-
+        
         # ML Bashoratlari
         from services.ml_service import get_ml_predictions
         ml_data_for_pred = {
@@ -95,14 +96,14 @@ def analyze_full(
             "mother_height": float(data.mother_height) if data.mother_height else None
         }
         ml_predictions = get_ml_predictions(ml_data_for_pred, lang=lang)
-
+        
         clean_region, clean_district = _split_region_and_district(data.region, getattr(data, "district", None))
 
         # 2) DBga saqlash
         id_code = generate_region_based_id(db, clean_region)
-
+        
         full_name = f"{data.first_name} {data.last_name}".strip()
-
+        
         # Bemor tahlilini bazaga saqlash
         rec = PatientAnalysis(
             name=full_name,
@@ -121,10 +122,10 @@ def analyze_full(
             waist=float(data.waist or 0.0),
             hip=0.0,
             head=float(data.head),
-
+            
             father_height=float(data.father_height) if data.father_height else None,
             mother_height=float(data.mother_height) if data.mother_height else None,
-
+            
             examination_date=data.examination_date,
             birth_date=data.birth_date,
             preschool_institution=data.preschool_institution,
@@ -139,11 +140,11 @@ def analyze_full(
             calf_circumference=data.calf_circumference,
             foot_length=data.foot_length,
             body_length=data.body_length,
-
+            
             bmi=float(analysis["bmi"]),
             z_score=float(analysis["z_score"]),
             somatotype=str(analysis["somatotype"]),
-
+            
             # Bioimpedance fields
             total_body_water=data.total_body_water,
             fat_percent=data.fat_percent,
@@ -153,7 +154,7 @@ def analyze_full(
             acm=data.acm,
             visceral_fat=data.visceral_fat,
             doctor_note=(data.doctor_note or "").strip() or None,
-
+            
             recommendations=(
                 f"Sport: {advices.get('sport', '')}; "
                 f"Specialist: {advices.get('specialist', '')}; "
@@ -162,7 +163,7 @@ def analyze_full(
             created_by_id=current_user.id if current_user else None
         )
         db.add(rec)
-
+        
         # Update User Stats for Activity
         if current_user:
             now = datetime.datetime.utcnow()
@@ -204,7 +205,7 @@ def analyze_full(
             lang=lang
         )
 
-        # 3) Frontendga natija РІР‚вЂќ TOP-LEVEL da analysis/advices (api.js kutganidek)
+        # 3) Frontendga natija вЂ” TOP-LEVEL da analysis/advices (api.js kutganidek)
         return {
             "status": "success",
             "id": rec.id,
@@ -247,7 +248,7 @@ def analyze_full(
 
 @router.post("/pdf-report", tags=["PDF Hisobot"])
 def generate_pdf_report_endpoint(
-    data: PatientData,
+    data: PatientData, 
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
     db: Session = Depends(get_db)
 ):
@@ -259,7 +260,7 @@ def generate_pdf_report_endpoint(
         all_settings = clinical_service.get_all_settings(db)
         # 1. Base Analysis
         analysis = calculate_bmi(data, all_settings, lang=lang)
-
+        
         # AI Predictions
         from services.ml_service import get_ml_predictions
         ml_data = {
@@ -297,13 +298,14 @@ def generate_pdf_report_endpoint(
             ml_predictions=ai_preds,
             lang=lang
         )
-
+        
         full_report_data = data.model_dump(by_alias=True)
         full_report_data["analysis"] = analysis
         full_report_data["ai_predictions"] = ai_preds
         full_report_data["advices"] = advices
         full_report_data["ai_parent_tips"] = ai_tips
         full_report_data["doctor_note"] = data.doctor_note
+        
         pdf_buffer = generate_pdf_file(full_report_data, lang=lang)
 
         return StreamingResponse(
@@ -331,6 +333,8 @@ def generate_pdf_by_patient_id(
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q")
 
     try:
         # Ma'lumotlarni olish
@@ -495,3 +499,4 @@ def generate_pdf_by_patient_id(
     except Exception as e:
         logger.error(f"PDF by ID yaratishda xatolik: {str(e)}")
         raise HTTPException(status_code=500, detail=f"PDF yaratishda xatolik: {str(e)}")
+

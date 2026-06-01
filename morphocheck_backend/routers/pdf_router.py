@@ -181,7 +181,8 @@ async def generate_pdf_by_id_endpoint(
         actual_months = m if y is not None else (rec.age_months or 0)
         actual_days = d if y is not None else (rec.age_days or 0)
 
-        detailed = calculate_detailed_indices(actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+        all_settings = clinical_service.get_all_settings(db)
+        detailed = calculate_detailed_indices(actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang, all_settings=all_settings)
 
         ideal_range = get_bmi_range_by_age_and_gender(actual_age, rec.gender or "")
         min_w = round(ideal_range["min"] * h2, 1)
@@ -216,6 +217,16 @@ async def generate_pdf_by_id_endpoint(
             "indices": detailed,
         }
 
+        advices = generate_advices(
+            analysis["bmi"],
+            analysis["weight_diff"],
+            int(actual_age),
+            (rec.gender or "").lower(),
+            all_settings,
+            bio_data=analysis["indices"],
+            lang=lang
+        )
+
 
         report_data = {
             "first_name": first_name,
@@ -233,6 +244,7 @@ async def generate_pdf_by_id_endpoint(
             "address": rec.address or "",
             "id_code": rec.id_code or "",
             "analysis": analysis,
+            "advices": advices,
             "doctor_note": rec.doctor_note or "",
             "record_url": _frontend_base_url(request) + f"/admin?analysis_id={rec.id}",
         }

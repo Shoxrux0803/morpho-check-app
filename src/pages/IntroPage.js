@@ -360,10 +360,10 @@ const UzbekistanSignalMap = ({ activeIndex, theme, mode }) => (
   >
     <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
       <Box>
-        <Typography variant="overline" color="text.secondary" fontWeight={900}>
+        <Typography variant="overline" color="text.secondary" fontWeight={800}>
           Regional signal map
         </Typography>
-        <Typography variant="h5" fontWeight={900}>
+        <Typography variant="h5" fontWeight={800}>
           O'zbekiston bo'yicha monitoring
         </Typography>
       </Box>
@@ -551,10 +551,10 @@ const StickyScrollStory = ({ theme, mode, fadeInUp }) => {
                         <Icon size={22} />
                       </Box>
                       <Box>
-                        <Typography variant="overline" fontWeight={900} sx={{ color: step.color }}>
+                        <Typography variant="overline" fontWeight={800} sx={{ color: step.color }}>
                           {step.eyebrow}
                         </Typography>
-                        <Typography variant="h5" fontWeight={900} gutterBottom>
+                        <Typography variant="h5" fontWeight={800} gutterBottom>
                           {step.title}
                         </Typography>
                         <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
@@ -586,7 +586,7 @@ const StickyScrollStory = ({ theme, mode, fadeInUp }) => {
                         ),
                       }}
                     >
-                      <Typography variant="h5" fontWeight={900} sx={{ color: step.color }}>
+                      <Typography variant="h5" fontWeight={800} sx={{ color: step.color }}>
                         {step.metric}
                       </Typography>
                       <Typography variant="caption" color="text.secondary" fontWeight={800}>
@@ -948,7 +948,7 @@ export default function IntroPage() {
                                     boxShadow: `0 0 14px ${alpha("#16a34a", 0.8)}`,
                                   }}
                                 />
-                                <Typography variant="caption" fontWeight={900}>
+                                <Typography variant="caption" fontWeight={700}>
                                   LIVE
                                 </Typography>
                               </Box>
@@ -1363,7 +1363,7 @@ export default function IntroPage() {
         <Container maxWidth="lg">
           <Box sx={{ textAlign: "center", mb: 12 }}>
             <motion.div {...fadeInUp}>
-              <Typography variant="h2" fontWeight="900" gutterBottom letterSpacing="-0.03em">
+              <Typography variant="h2" fontWeight="900" gutterBottom letterSpacing={0}>
                 {t("whyMorpho")}
               </Typography>
               <Typography
@@ -1430,7 +1430,7 @@ export default function IntroPage() {
       >
         <Container maxWidth="lg">
           <Box sx={{ textAlign: "center", mb: 12 }}>
-            <Typography variant="h2" fontWeight="900" gutterBottom letterSpacing="-0.03em">
+            <Typography variant="h2" fontWeight="900" gutterBottom letterSpacing={0}>
               {t("processTitle")}
             </Typography>
           </Box>

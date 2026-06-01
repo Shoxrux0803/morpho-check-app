@@ -12,6 +12,13 @@ module.exports = {
         axios: path.join(axiosRoot, "dist/esm/axios.js"),
       };
 
+      webpackConfig.module.rules.push({
+        test: /\.m?js$/,
+        resolve: {
+          fullySpecified: false,
+        },
+      });
+
       // Source-map-loader'ni mediapipe fayllaridan istisno qilish
       webpackConfig.module.rules.forEach((rule) => {
         if (rule.loader && rule.loader.includes("source-map-loader")) {

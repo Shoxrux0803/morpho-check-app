@@ -181,6 +181,9 @@ export default function InputForm({
   const region = formData.region || "";
   const district = formData.district || "";
   const districtOptions = region ? UZB_LOCATIONS[region] || [] : [];
+  const mahallaValue = formData.mahalla || "";
+  const hasSelectedMahallaOption =
+    !mahallaValue || mahallaOptions.some((mahalla) => mahalla.label === mahallaValue);
 
   const normalizeLocationName = useCallback((value = "") => {
     const normalized = String(value)
@@ -498,7 +501,12 @@ export default function InputForm({
               <Paper
                 className="mc-surface-reveal"
                 elevation={0}
-                sx={{ p: { xs: 2.5, md: 4 }, mb: 3, border: "1px solid", borderColor: "divider" }}
+                sx={{
+                  p: { xs: 2.5, md: 4 },
+                  mb: 3,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
                   <Box
@@ -700,7 +708,7 @@ export default function InputForm({
                       fullWidth
                       label={t("mahallaLabel") || "Mahalla"}
                       name="mahalla"
-                      value={formData.mahalla || ""}
+                      value={mahallaValue}
                       onChange={handleInputChange}
                       InputProps={adorn(null)}
                       disabled={!district || mahallaLoading}
@@ -713,6 +721,9 @@ export default function InputForm({
                       )}
                       {district && !mahallaLoading && mahallaOptions.length === 0 && (
                         <MenuItem value="">Mahalla ro'yxati topilmadi</MenuItem>
+                      )}
+                      {!hasSelectedMahallaOption && (
+                        <MenuItem value={mahallaValue}>{mahallaValue}</MenuItem>
                       )}
                       {mahallaOptions.map((mahalla) => (
                         <MenuItem key={mahalla.boundary_id || mahalla.id} value={mahalla.label}>
@@ -778,7 +789,12 @@ export default function InputForm({
               <Paper
                 className="mc-surface-reveal"
                 elevation={0}
-                sx={{ p: { xs: 2.5, md: 4 }, mb: 3, border: "1px solid", borderColor: "divider" }}
+                sx={{
+                  p: { xs: 2.5, md: 4 },
+                  mb: 3,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
                   <Box
@@ -1158,7 +1174,12 @@ export default function InputForm({
               <Paper
                 className="mc-surface-reveal"
                 elevation={0}
-                sx={{ p: { xs: 2.5, md: 4 }, mb: 3, border: "1px solid", borderColor: "divider" }}
+                sx={{
+                  p: { xs: 2.5, md: 4 },
+                  mb: 3,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
                   <Box

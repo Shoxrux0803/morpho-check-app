@@ -51,7 +51,7 @@ export default function WeatherClock() {
 
     const fetchFallback = async () => {
       try {
-        const API_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+        const API_URL = process.env.REACT_APP_API_URL || "/api";
         const ipGeo = await fetch(`${API_URL}/utils/geo-ip`);
         if (ipGeo.ok) {
           const data = await ipGeo.json();

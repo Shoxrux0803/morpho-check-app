@@ -529,7 +529,7 @@ export default function AdminActivity() {
                     >
                       Eng yaxshi natija
                     </Typography>
-                    <Typography variant="h5" fontWeight={900}>
+                    <Typography variant="h5" fontWeight={800}>
                       {bestUser.name}
                     </Typography>
                   </Box>

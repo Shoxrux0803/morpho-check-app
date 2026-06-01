@@ -482,7 +482,7 @@ const StatCard = ({ label, value, sub }) => (
     <Typography variant="caption" color="text.secondary">
       {label}
     </Typography>
-    <Typography variant="h6" fontWeight={900} sx={{ mt: 0.5 }}>
+    <Typography variant="h6" fontWeight={800} sx={{ mt: 0.5 }}>
       {value}
     </Typography>
     {sub && (
@@ -516,7 +516,7 @@ export const ResearchStatisticsPanel = ({ rows }) => {
           <Box>
             <Box display="flex" alignItems="center" gap={1}>
               <Science color="primary" />
-              <Typography variant="h6" fontWeight={900}>
+              <Typography variant="h6" fontWeight={800}>
                 {t("autoStatsTitle")}
               </Typography>
             </Box>
