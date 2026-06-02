@@ -19,6 +19,7 @@ import PersonOutline from "@mui/icons-material/PersonOutline";
 import BadgeOutlined from "@mui/icons-material/BadgeOutlined";
 import CalendarMonth from "@mui/icons-material/CalendarMonth";
 import WcIcon from "@mui/icons-material/Wc";
+import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import HeightIcon from "@mui/icons-material/Height";
 import MonitorWeightIcon from "@mui/icons-material/MonitorWeight";
 import StraightenIcon from "@mui/icons-material/Straighten";
@@ -538,7 +539,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid item xs={12} md={12} lg={6}>
                     <Field
                       fullWidth
                       label={`${t("lastNameLabel")} *`}
@@ -612,7 +613,19 @@ export default function InputForm({
                       </MenuItem>
                     </MCSelect>
                   </Grid>
-
+                  <Grid item xs={12} md={6}>
+                    <Field
+                      fullWidth
+                      label={`${t("parentsPhoneLabel")} (${t("optionalLabel")})`}
+                      name="parentsPhone"
+                      type="tel"
+                      value={formData.parentsPhone || ""}
+                      onChange={handleInputChange}
+                      InputProps={adorn(<PhoneOutlinedIcon />)}
+                      sx={inputSx}
+                      placeholder="+998"
+                    />
+                  </Grid>
                   <Grid item xs={12}>
                     <Collapse
                       in={Number(formData.age) > 0 && Number(formData.age) < 18}

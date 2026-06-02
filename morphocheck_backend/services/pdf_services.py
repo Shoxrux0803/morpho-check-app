@@ -481,6 +481,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     mahalla = gv('mahalla', 'mahalla', '')
     address = gv('address', 'address', '')
     id_code_val = gv('id_code', 'idCode', '')
+    parents_phone = gv('parents_phone', 'parentsPhone', '')
     doctor_note = gv('doctor_note', 'doctorNote', '')
     record_url = gv('record_url', 'recordUrl', '')
 
@@ -520,6 +521,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["district"], district or '-'],
         [L["mahalla"], mahalla or '-'],
         [L["address"], address or '-'],
+        [L.get("parents_phone", "Parents' phone:"), parents_phone or '-'],
         [L["id_code"], id_code_val or '-'],
     ]
 

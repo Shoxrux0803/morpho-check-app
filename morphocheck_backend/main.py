@@ -139,6 +139,8 @@ def ensure_schema_updates():
                 conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN doctor_note TEXT"))
             if "mahalla" not in existing:
                 conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN mahalla VARCHAR(150)"))
+            if "parents_phone" not in existing:
+                conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN parents_phone VARCHAR(50)"))
 
     if "users" in table_names:
         user_columns = {

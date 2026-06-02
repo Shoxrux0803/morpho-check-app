@@ -44,6 +44,7 @@ class PatientAnalysis(Base):
 
     father_height = Column(Float, nullable=True)
     mother_height = Column(Float, nullable=True)
+    parents_phone = Column(String(50), nullable=True)
 
     bmi         = Column(Float, nullable=False)
     z_score     = Column(Float, nullable=False)

@@ -104,6 +104,7 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "recommendations": getattr(row, "recommendations", None),
         "ai_recommendations": getattr(row, "ai_recommendations", None),
         "doctor_note": getattr(row, "doctor_note", None),
+        "parents_phone": getattr(row, "parents_phone", None),
     }
     # Agar modelda mavjud bo'lsa: region, yelka, oyoq uzunliklari va hk
     extra_fields = (
@@ -575,7 +576,7 @@ def update_analysis(
             "calf_length", "calf_circumference", "foot_length", "body_length",
             "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat",
             "mahalla", "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations",
-            "doctor_note"
+            "parents_phone", "doctor_note"
         ]
         
         changes = []

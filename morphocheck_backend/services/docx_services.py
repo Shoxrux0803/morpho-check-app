@@ -49,6 +49,7 @@ DOCX_LABELS = {
         "village": "Қишлоқ",
         "institution": "Муассаса (мактаб/боғча)",
         "address": "Яшаш манзили",
+        "parents_phone": "Ота-она телефони",
         "section_2": "II. Асосий антропометрик кўрсаткичлар (ЖССТ стандартлари)",
         "unit": "Ўл.б.",
         "value": "Қийм.",
@@ -134,6 +135,7 @@ DOCX_LABELS = {
         "village": "Село",
         "institution": "Учреждение (школа/сад)",
         "address": "Адрес проживания",
+        "parents_phone": "Телефон родителей",
         "section_2": "II. Основные антропометрические показатели (стандарты ВОЗ)",
         "unit": "Ед.",
         "value": "Знач.",
@@ -217,6 +219,7 @@ DOCX_LABELS = {
         "village": "Village",
         "institution": "Institution (school/nursery)",
         "address": "Residential Address",
+        "parents_phone": "Parents' phone",
         "section_2": "II. Basic Anthropometric Indicators (WHO Standards)",
         "unit": "Unit",
         "value": "Value",
@@ -300,6 +303,7 @@ DOCX_LABELS = {
         "village": "Ауыл",
         "institution": "Мекеме (мектеп/бақша)",
         "address": "Тұрғылықты мекен-жайы",
+        "parents_phone": "Ата-ана телефоны",
         "section_2": "II. Негізгі антропометриялық көрсеткіштер (ДДСҰ стандарттары)",
         "unit": "Өлш.б.",
         "value": "Мән",
@@ -737,6 +741,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     district_s = _val(data, "district").lower()
     mahalla_s = _val(data, "mahalla").lower()
     address_s  = _val(data, "address").lower()
+    parents_phone = _val(data, "parents_phone")
     
     region_val = LP(_val(data, "region"))
     district_val = LP(_val(data, "district"))
@@ -769,7 +774,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # -----------------------------------------------------------------------
     _section_head_paragraph(doc, L("section_1"))
 
-    t1 = doc.add_table(rows=10, cols=3)
+    t1 = doc.add_table(rows=11, cols=3)
     t1.style = "Table Grid"
     _set_table_full_width(t1)
 
@@ -812,6 +817,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         ("7", L("area_type"),                  f"{city_box} {L('city')}    {village_box} {L('village')}"),
         ("8", L("institution"),        LP(preschool)),
         ("9", L("address"),                 full_address),
+        ("10", L("parents_phone"),              parents_phone),
     ]
 
     for i, (num, label, val) in enumerate(rows_i, start=1):

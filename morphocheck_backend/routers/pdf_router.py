@@ -81,6 +81,7 @@ async def generate_pdf_endpoint(
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
         data_dict["doctor_note"] = getattr(request_data, "doctor_note", None)
+        data_dict["parents_phone"] = getattr(request_data, "parents_phone", None)
 
         # AI Predictions
         ml_data = {
@@ -246,6 +247,7 @@ async def generate_pdf_by_id_endpoint(
             "analysis": analysis,
             "advices": advices,
             "doctor_note": rec.doctor_note or "",
+            "parents_phone": rec.parents_phone or "",
             "record_url": _frontend_base_url(request) + f"/admin?analysis_id={rec.id}",
         }
 
@@ -412,6 +414,7 @@ async def generate_docx_by_id_endpoint(
             "address": rec.address or "",
             "id_code": rec.id_code or "",
             "analysis": analysis,
+            "parents_phone": rec.parents_phone or "",
         }
 
         # Barcha qo'shimcha ko'rsatkichlarni report_data'ga o'tkazamiz (DOCX uchun kerak)

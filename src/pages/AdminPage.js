@@ -102,6 +102,7 @@ const normalize = (r) => {
     createdAt: r.created_at || r.createdAt,
     firstName: r.first_name || r.firstName,
     lastName: r.last_name || r.lastName,
+    parentsPhone: r.parents_phone || r.parentsPhone || "",
     doctorNote: r.doctor_note || r.doctorNote || "",
     bmi: bmiVal,
     bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
@@ -1104,6 +1105,12 @@ export default function AdminPage() {
                 <TableCell>{pt("region")}</TableCell>
                 <TableCell>{viewRow.region}</TableCell>
               </TableRow>
+              {viewRow.parentsPhone && (
+                <TableRow>
+                  <TableCell>Ota-ona telefoni</TableCell>
+                  <TableCell>{viewRow.parentsPhone}</TableCell>
+                </TableRow>
+              )}
               <TableRow>
                 <TableCell>BMI</TableCell>
                 <TableCell>

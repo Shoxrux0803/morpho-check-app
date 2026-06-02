@@ -125,6 +125,7 @@ def analyze_full(
             
             father_height=float(data.father_height) if data.father_height else None,
             mother_height=float(data.mother_height) if data.mother_height else None,
+            parents_phone=(data.parents_phone or "").strip() or None,
             
             examination_date=data.examination_date,
             birth_date=data.birth_date,
@@ -224,6 +225,7 @@ def analyze_full(
                 "birth_date": data.birth_date,
                 "examination_date": data.examination_date,
                 "doctor_note": data.doctor_note,
+                "parents_phone": data.parents_phone,
             },
             "measurements": {
                 "height": data.height,
@@ -485,6 +487,7 @@ def generate_pdf_by_patient_id(
             "ai_parent_tips": ai_tips,
             "ai_predictions": ai_preds,
             "doctor_note": rec.doctor_note or "",
+            "parents_phone": rec.parents_phone or "",
             "record_url": f"/admin?analysis_id={rec.id}",
         }
 

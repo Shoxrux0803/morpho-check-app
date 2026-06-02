@@ -44,6 +44,7 @@ class PatientData(BaseModel):
 
     father_height: Optional[float] = Field(None, alias="fatherHeight", ge=120, le=230)
     mother_height: Optional[float] = Field(None, alias="motherHeight", ge=120, le=230)
+    parents_phone: Optional[str] = Field(None, alias="parentsPhone", max_length=50)
 
     total_body_water: Optional[float] = Field(None, alias="totalBodyWater", ge=0, le=100)
     fat_percent: Optional[float] = Field(None, alias="fatPercent", ge=0, le=80)
@@ -58,7 +59,7 @@ class PatientData(BaseModel):
         populate_by_name = True
         extra = "forbid"
 
-    @field_validator("first_name", "last_name", "region", "district", "mahalla", "address", "preschool_institution", "doctor_note", mode="before")
+    @field_validator("first_name", "last_name", "region", "district", "mahalla", "address", "preschool_institution", "parents_phone", "doctor_note", mode="before")
     @classmethod
     def strip_text(cls, v):
         if v is None:
