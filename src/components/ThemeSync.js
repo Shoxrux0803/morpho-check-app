@@ -13,7 +13,11 @@ export default function ThemeSync() {
     const on = mode === "dark";
     html.classList.toggle("dark", on);
     body.classList.toggle("dark", on); // fallback
+    body.classList.toggle("bg-dark", on);
+    body.classList.toggle("bg-light", !on);
     root?.classList.toggle("dark", on); // fallback
+    html.setAttribute("data-theme", mode);
+    html.setAttribute("data-bs-theme", mode);
 
     // ixtiyoriy: mobil status bar
     const meta = document.querySelector('meta[name="theme-color"]');

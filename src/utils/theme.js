@@ -30,6 +30,12 @@ export function applyTheme(theme) {
 
   // 2) Bootstrap 5.3 temani qo‘llash
   root.setAttribute("data-bs-theme", t);
+  root.setAttribute("data-theme", t);
+
+  if (document.body) {
+    document.body.classList.toggle("bg-dark", t === THEMES.DARK);
+    document.body.classList.toggle("bg-light", t === THEMES.LIGHT);
+  }
 
   // 3) klassni qisqa muddatdan keyin olib tashlaymiz
   if (root.classList.contains("theme-transition")) {
