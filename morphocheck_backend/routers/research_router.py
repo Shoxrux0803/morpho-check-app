@@ -31,7 +31,8 @@ RESEARCH_IMPORT_FIELDS = [
     "full_name", "school_name", "settlement", "birth_place", "birth_date", "gender",
     "father_nationality", "mother_nationality", "living_since", "enrolled_date",
     "living_conditions", "labor_regime", "past_illnesses", "children_count", "child_order",
-    "feeding_type", "parents_marriage", "mother_health_status", "examination_date",
+    "feeding_type", "parents_marriage", "mother_health_status", "parents_phone",
+    "examination_date",
     "lower_leg_total",
     "lower_leg_spina_iliaca", "lower_leg_symphysion", "lower_leg_length", "tibiale_height",
     "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
@@ -48,6 +49,7 @@ RESEARCH_IMPORT_FIELDS = [
     "shoulder_width", "arm_circumference_total", "shoulder_circumference_rest",
     "shoulder_circumference_flexed", "forearm_length", "hand_length", "dynamometry",
     "fat_triceps", "fat_biceps", "fat_subscapular", "fat_iliac", "fat_popliteal",
+    "father_height", "mother_height",
 ]
 
 RESEARCH_IMPORT_ALIASES = {
@@ -91,6 +93,15 @@ RESEARCH_IMPORT_ALIASES = {
     "parents marriage": "parents_marriage",
     "parents kinship": "parents_marriage",
     "consanguinity": "parents_marriage",
+    "telefon": "parents_phone",
+    "ota ona telefoni": "parents_phone",
+    "parents phone": "parents_phone",
+    "father height": "father_height",
+    "ota boyi": "father_height",
+    "ota bo'yi": "father_height",
+    "mother height": "mother_height",
+    "ona boyi": "mother_height",
+    "ona bo'yi": "mother_height",
     "pastki oyoq qol": "lower_leg_total",
     "pastki oyoq qul": "lower_leg_total",
     "pastki oyoq qo l": "lower_leg_total",
@@ -174,7 +185,7 @@ FLOAT_IMPORT_FIELDS = {
         "full_name", "school_name", "settlement", "birth_place", "birth_date", "gender",
         "father_nationality", "mother_nationality", "living_since", "enrolled_date",
         "living_conditions", "labor_regime", "past_illnesses", "feeding_type",
-        "parents_marriage", "mother_health_status", "examination_date",
+        "parents_marriage", "mother_health_status", "parents_phone", "examination_date",
         "menstruation_start",
     }
 }
@@ -193,6 +204,7 @@ RESEARCH_TEMPLATE_LABELS = {
     "feeding_type": "Oziqlanish turi",
     "parents_marriage": "Ota-ona nikohi",
     "mother_health_status": "Ona sog'ligi",
+    "parents_phone": "Ota-ona telefoni",
     "examination_date": "Tekshiruv sanasi (YYYY-MM-DD)",
     "lower_leg_total": "Pastki oyoq-qo'l (sm)",
     "lower_leg_length": "Pastki oyoq-qo'l uzunligi (sm)",
@@ -201,6 +213,8 @@ RESEARCH_TEMPLATE_LABELS = {
     "weight": "Vazn (kg)",
     "head_circumference": "Bosh aylanasi (sm)",
     "waist_circumference": "Bel aylanasi (sm)",
+    "father_height": "Ota bo'yi (sm)",
+    "mother_height": "Ona bo'yi (sm)",
 }
 
 RESEARCH_TEMPLATE_EXAMPLE = {
@@ -217,6 +231,7 @@ RESEARCH_TEMPLATE_EXAMPLE = {
     "feeding_type": "Tabiiy",
     "parents_marriage": "Qarindosh emas",
     "mother_health_status": "Sog'lom",
+    "parents_phone": "+998901234567",
     "examination_date": datetime.now().strftime("%Y-%m-%d"),
     "lower_leg_total": 64.5,
     "lower_leg_length": 37.2,
@@ -225,6 +240,8 @@ RESEARCH_TEMPLATE_EXAMPLE = {
     "weight": 26.4,
     "head_circumference": 52.1,
     "waist_circumference": 58.0,
+    "father_height": 172.0,
+    "mother_height": 164.0,
 }
 
 
@@ -931,9 +948,53 @@ def export_research_xlsx(
     )
 
 
-# ═══════════════════════════════════════════════
-#  LIST  (superadmin hammani, researcher o'zini)
-# ═══════════════════════════════════════════════
+def clean_import_value(value):
+    if value is None:
+        return None
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if not cleaned or cleaned in {"-", "—"}:
+            return None
+        return cleaned
+    return value
+
+
+def normalize_import_header(value) -> str:
+    text = str(value or "").strip().lower()
+    text = text.replace("*", " ")
+    for old, new in {
+        "ў": "o", "ӯ": "o", "ғ": "g", "қ": "q", "ҳ": "h",
+        "й": "y", "ё": "yo", "я": "ya", "ю": "yu",
+        "'": " ", "`": " ", "’": " ", "_": " ",
+    }.items():
+        text = text.replace(old, new)
+    keep = []
+    for char in text:
+        keep.append(char if char.isalnum() else " ")
+    return " ".join("".join(keep).split())
+
+
+def coerce_import_value(field: str, value):
+    value = clean_import_value(value)
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.strftime("%Y-%m-%d")
+    if field in INTEGER_IMPORT_FIELDS:
+        try:
+            return int(float(str(value).replace(",", ".")))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{field}: butun son bo'lishi kerak") from exc
+    if field in FLOAT_IMPORT_FIELDS:
+        try:
+            return float(str(value).replace(",", "."))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"{field}: raqam bo'lishi kerak") from exc
+    return str(value).strip()
+
+
+def map_research_import_headers(headers):
+    field_set = set(RESEARCH_IMPORT_FIELDS)
     label_aliases = {
         normalize_import_header(label): field
         for field, label in RESEARCH_TEMPLATE_LABELS.items()
@@ -989,6 +1050,20 @@ def download_research_import_template(
     wb = Workbook()
     ws = wb.active
     ws.title = "Research Data"
+    template_headers = [
+        RESEARCH_TEMPLATE_LABELS.get(field, field)
+        for field in RESEARCH_IMPORT_FIELDS
+    ]
+    template_values = [
+        RESEARCH_TEMPLATE_EXAMPLE.get(field)
+        for field in RESEARCH_IMPORT_FIELDS
+    ]
+    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
+    border = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
+
     for col_num, header_text in enumerate(template_headers, 1):
         header = ws.cell(row=1, column=col_num, value=header_text)
         header.fill = header_fill
@@ -996,9 +1071,14 @@ def download_research_import_template(
         header.alignment = center_align
         header.border = border
 
+    for col_num, value in enumerate(template_values, 1):
+        cell = ws.cell(row=2, column=col_num, value=value)
+        cell.alignment = left_align
+        cell.border = border
+
     for row_num in range(2, 102):
         for col_num in range(1, len(template_headers) + 1):
-            cell = ws.cell(row=row_num, column=col_num, value=None)
+            cell = ws.cell(row=row_num, column=col_num)
             cell.alignment = left_align
             cell.border = border
 
@@ -1033,6 +1113,29 @@ async def import_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="Faqat Excel fayllari (.xlsx, .xls) qabul qilinadi")
+
+    target_user = current_user
+    if researcher_id is not None:
+        if current_user.role != "superadmin":
+            raise HTTPException(status_code=403, detail="Researcherni tanlash faqat superadmin uchun")
+        target_user = db.get(User, researcher_id)
+        if not target_user or target_user.role != "researcher":
+            raise HTTPException(status_code=404, detail="Researcher topilmadi")
+
+    contents = await file.read()
+    try:
+        wb = load_workbook(io.BytesIO(contents), data_only=True)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Excel fayl o'qilmadi: {exc}") from exc
+    ws = wb.active
+    rows = [tuple(cell.value for cell in row) for row in ws.iter_rows()]
+    if not rows:
+        raise HTTPException(status_code=400, detail="Excel faylda ma'lumot topilmadi")
+
+    headers = rows[0]
+    column_map = map_research_import_headers(headers)
     if not column_map:
         raise HTTPException(status_code=400, detail="Import uchun mos ustunlar topilmadi")
 
@@ -1040,7 +1143,7 @@ async def import_research_xlsx(
     errors = []
     records = []
 
-    for row_number, row in enumerate(rows, start=2):
+    for row_number, row in enumerate(rows[1:], start=2):
         if not row or all(clean_import_value(value) is None for value in row):
             skipped += 1
             continue

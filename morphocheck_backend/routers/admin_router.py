@@ -61,6 +61,80 @@ def calc_bmi(weight_kg: Optional[float], height_cm: Optional[float]) -> Optional
     except Exception:
         return None
 
+
+def normalize_analysis_gender(value: Optional[str]) -> str:
+    gender = (value or "").strip().lower()
+    if gender in {"ayol", "female", "f", "qiz", "girl"} or "ayol" in gender or "female" in gender or "qiz" in gender:
+        return "ayol"
+    return "erkak"
+
+
+def safe_iso_date(value: Optional[str], default: str) -> str:
+    text = str(value or "").strip()
+    if not text or text in {"Noma'lum", "unknown", "Unknown"}:
+        return default
+    try:
+        date.fromisoformat(text[:10])
+        return text[:10]
+    except ValueError:
+        return default
+
+
+def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
+    first_name, last_name = split_name(getattr(rec, "name", None))
+    today = datetime.now().strftime("%Y-%m-%d")
+    return PatientData(
+        firstName=first_name or "Noma'lum",
+        lastName=last_name or "-",
+        region=rec.region or "Noma'lum",
+        district=rec.district,
+        mahalla=getattr(rec, "mahalla", None),
+        address=rec.address or "",
+        examinationDate=safe_iso_date(rec.examination_date, today),
+        birthDate=safe_iso_date(rec.birth_date, "Noma'lum"),
+        preschoolInstitution=rec.preschool_institution or "Noma'lum",
+        age=int(rec.age or 0),
+        ageMonths=int(rec.age_months or 0),
+        ageDays=int(rec.age_days or 0),
+        gender=normalize_analysis_gender(rec.gender),
+        height=float(rec.height or 0.0),
+        weight=float(rec.weight or 0.0),
+        chest=float(rec.chest or 0.0),
+        waist=float(rec.waist or 0.0),
+        head=float(rec.head or 0.0),
+        fatherHeight=rec.father_height,
+        motherHeight=rec.mother_height,
+        parentsPhone=rec.parents_phone,
+        shoulderLength=float(rec.shoulder_length or 0.0),
+        shoulderBreadth=float(rec.shoulder_breadth or 0.0),
+        shoulderCircumference=float(rec.shoulder_circumference or 0.0),
+        armElbowLength=float(rec.arm_elbow_length or 0.0),
+        handLength=float(rec.hand_length or 0.0),
+        thighLength=float(rec.thigh_length or 0.0),
+        thighCircumference=float(rec.thigh_circumference or 0.0),
+        calfLength=float(rec.calf_length or 0.0),
+        calfCircumference=float(rec.calf_circumference or 0.0),
+        footLength=float(rec.foot_length or 0.0),
+        bodyLength=rec.body_length,
+        totalBodyWater=rec.total_body_water,
+        fatPercent=rec.fat_percent,
+        fatMass=rec.fat_mass,
+        muscleMass=rec.muscle_mass,
+        boneMass=rec.bone_mass,
+        acm=rec.acm,
+        visceralFat=rec.visceral_fat,
+        doctorNote=rec.doctor_note,
+    )
+
+
+def recalculate_analysis_fields(rec: PatientAnalysis, db: Session, lang: str = "uz") -> dict:
+    all_settings = clinical_service.get_all_settings(db)
+    analysis = calc_full_bmi(build_patient_data_from_analysis(rec), all_settings=all_settings, lang=lang)
+    rec.bmi = float(analysis["bmi"])
+    rec.z_score = float(analysis["z_score"])
+    rec.somatotype = str(analysis["somatotype"])
+    return analysis
+
 def bmi_status_by_age(bmi: Optional[float], age: Optional[int]) -> str:
     if bmi is None or age is None:
         return "-"
@@ -594,47 +668,8 @@ def update_analysis(
 
         # 4. Qayta hisoblash
         try:
-            # Re-calculate using calc_full_bmi (skipped for brevity here but keeping original logic flow)
-            p_data = PatientData(
-                firstName=split_name(rec.name)[0],
-                lastName=split_name(rec.name)[1],
-                region=rec.region or "",
-                district=rec.district,
-                mahalla=getattr(rec, "mahalla", None),
-                address=rec.address or "",
-                examinationDate=rec.examination_date or "",
-                birthDate=rec.birth_date or "Noma'lum",
-                preschoolInstitution=rec.preschool_institution or "Noma'lum",
-                age=int(rec.age or 0),
-                ageMonths=int(rec.age_months or 0),
-                ageDays=int(rec.age_days or 0),
-                gender=rec.gender or "noma'lum",
-                height=float(rec.height or 0.0),
-                weight=float(rec.weight or 0.0),
-                chest=float(rec.chest or 0.0),
-                waist=float(rec.waist or 0.0),
-                head=float(rec.head or 0.0),
-                shoulderLength=float(rec.shoulder_length or 0.0),
-                shoulderBreadth=float(rec.shoulder_breadth or 0.0),
-                shoulderCircumference=float(rec.shoulder_circumference or 0.0),
-                armElbowLength=float(rec.arm_elbow_length or 0.0),
-                handLength=float(rec.hand_length or 0.0),
-                thighLength=float(rec.thigh_length or 0.0),
-                thighCircumference=float(rec.thigh_circumference or 0.0),
-                calfLength=float(rec.calf_length or 0.0),
-                calfCircumference=float(rec.calf_circumference or 0.0),
-                footLength=float(rec.foot_length or 0.0),
-                bodyLength=rec.body_length,
-                totalBodyWater=rec.total_body_water,
-                fatPercent=rec.fat_percent,
-                fatMass=rec.fat_mass,
-                muscleMass=rec.muscle_mass,
-                boneMass=rec.bone_mass,
-                acm=rec.acm,
-                visceralFat=rec.visceral_fat
-            )
             all_settings = clinical_service.get_all_settings(db)
-            analysis = calc_full_bmi(p_data, all_settings=all_settings, lang="uz")
+            analysis = recalculate_analysis_fields(rec, db, lang="uz")
             advices = generate_advices(
                 analysis["bmi"],
                 analysis["weight_diff"],
@@ -644,9 +679,6 @@ def update_analysis(
                 bio_data=analysis["indices"],
                 lang="uz",
             )
-            rec.bmi = float(analysis["bmi"])
-            rec.z_score = float(analysis["z_score"])
-            rec.somatotype = str(analysis["somatotype"])
             rec.recommendations = (
                 f"General: {advices.get('general', '')}; "
                 f"Nutrition: {advices.get('nutrition', '')}; "
@@ -1120,27 +1152,12 @@ def export_analyses_xlsx(
     # Ma'lumotlarni yozish
     row_idx = 2
     for r in rows_db:
-        # Hisob-kitoblar uchun PatientData yaratamiz (Mocking for calculate_bmi)
         try:
-            p_data = PatientData(
-                firstName="", lastName=r.name or "", region=r.region or "", 
-                address=r.address or "", examinationDate="", age=r.age or 0, 
-                gender=r.gender or "noma'lum", height=r.height or 0.0, 
-                weight=r.weight or 0.0, chest=r.chest or 0.0, head=r.head or 0.0,
-                shoulderBreadth=getattr(r, "shoulder_breadth", 0.0) or 0.0,
-                thighCircumference=getattr(r, "thigh_circumference", 0.0) or 0.0,
-                waist=getattr(r, "waist", 0.0) or 0.0,
-                # Bioimpedance fields from DB
-                totalBodyWater=getattr(r, "total_body_water", None),
-                fatPercent=getattr(r, "fat_percent", None),
-                fatMass=getattr(r, "fat_mass", None),
-                muscleMass=getattr(r, "muscle_mass", None),
-                boneMass=getattr(r, "bone_mass", None),
-                acm=getattr(r, "acm", None),
-                visceralFat=getattr(r, "visceral_fat", None),
-                bodyLength=getattr(r, "body_length", None)
+            analysis = calc_full_bmi(
+                build_patient_data_from_analysis(r),
+                all_settings=all_settings,
+                lang="uz",
             )
-            analysis = calc_full_bmi(p_data, all_settings=all_settings, lang="uz")
         except Exception as e:
             logger.error(f"Error calculating analysis for XLSX row (id={r.id}): {e}")
             analysis = {}
@@ -1149,6 +1166,7 @@ def export_analyses_xlsx(
         if "ideal_weight_range" in analysis:
             rng = analysis["ideal_weight_range"]
             vazn_range = f"{rng.get('min', '-')}-{rng.get('max', '-')}"
+        indices = analysis.get("indices", {}) or {}
 
         # Yosh formati
         age_m = getattr(r, "age_months", 0) or 0
@@ -1184,16 +1202,16 @@ def export_analyses_xlsx(
             analysis.get("shoulder_ratio", "-"),
             getattr(r, "thigh_circumference", 0) or 0,
             analysis.get("thigh_ratio", "-"),
-            analysis.get("indices", {}).get("hmai", "-"),
-            analysis.get("indices", {}).get("mii", "-"),
-            analysis.get("indices", {}).get("adi", "-"),
-            analysis.get("indices", {}).get("tbw_percent", "-"),
-            analysis.get("indices", {}).get("fm_percent", "-"),
-            analysis.get("indices", {}).get("fm", "-"),
-            analysis.get("indices", {}).get("muscle_mass", "-"),
-            analysis.get("indices", {}).get("bone_mass", "-"),
-            analysis.get("indices", {}).get("acm_percent", "-"),
-            analysis.get("indices", {}).get("visceral_fat", "-"),
+            indices.get("hmai", "-"),
+            indices.get("mii", "-"),
+            indices.get("adi", "-"),
+            indices.get("tbw_percent", getattr(r, "total_body_water", None) or "-"),
+            indices.get("fm_percent", getattr(r, "fat_percent", None) or "-"),
+            indices.get("fm", getattr(r, "fat_mass", None) or "-"),
+            indices.get("muscle_mass", getattr(r, "muscle_mass", None) or "-"),
+            indices.get("bone_mass", getattr(r, "bone_mass", None) or "-"),
+            indices.get("acm_percent", getattr(r, "acm", None) or "-"),
+            indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
             r.body_length or 0,
         ]
         
@@ -1432,11 +1450,12 @@ def export_template():
     headers = [
         "first_name (Ism) *", "last_name (Familiya) *", "gender (erkak/ayol) *", 
         "age (Yosh) *", "age_months (Yosh oylar)", "age_days (Yosh kunlar)",
-        "region (Viloyat) *", "district (Tuman)", "address (Manzil)",
+        "id_code (ID kod)", "region (Viloyat) *", "district (Tuman)", "mahalla", "address (Manzil)",
         "height (Bo'y, sm) *", "weight (Vazn, kg) *", "chest (Ko'krak qafasi, sm) *",
-        "waist (Bel айланаси, sm) *", "head (Bosh айланаси, sm) *",
+        "waist (Bel aylanasi, sm) *", "hip (Son/dumba aylanasi, sm)", "head (Bosh aylanasi, sm) *",
         "birth_date (Tug'ilgan sana: YYYY-MM-DD)", "examination_date (Sana: YYYY-MM-DD)", 
-        "preschool_institution (Muassasa)",
+        "preschool_institution (Muassasa)", "parents_phone", "father_height", "mother_height",
+        "doctor_note",
         "shoulder_length", "shoulder_breadth", "shoulder_circumference",
         "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
         "calf_length", "calf_circumference", "foot_length", "body_length",
@@ -1455,9 +1474,10 @@ def export_template():
     # Namuna qator
     sample = [
         "Ali", "Valiyev", "erkak", 10, 5, 12,
-        "Toshkent", "Yunusobod", "Amir Temur ko'chasi",
-        140.5, 35.2, 70, 65, 52,
-        "2014-05-10", "2024-05-10", "123-maktab",
+        "MC-001", "Toshkent", "Yunusobod", "Minor", "Amir Temur ko'chasi",
+        140.5, 35.2, 70, 65, 72, 52,
+        "2014-05-10", "2024-05-10", "123-maktab", "+998901234567", 172, 164,
+        "Sog'lom",
         15, 30, 25, 20, 15, 40, 35, 25, 20, 22, 135,
         None, None, None, None, None, None, None
     ]
@@ -1491,14 +1511,15 @@ async def import_analyses_xlsx(
     # Field mapping (header index -> field name)
     field_map = {
         0: "first_name", 1: "last_name", 2: "gender", 3: "age", 4: "age_months", 5: "age_days",
-        6: "region", 7: "district", 8: "address",
-        9: "height", 10: "weight", 11: "chest", 12: "waist", 13: "head",
-        14: "birth_date", 15: "examination_date", 16: "preschool_institution",
-        17: "shoulder_length", 18: "shoulder_breadth", 19: "shoulder_circumference",
-        20: "arm_elbow_length", 21: "hand_length", 22: "thigh_length", 23: "thigh_circumference",
-        24: "calf_length", 25: "calf_circumference", 26: "foot_length", 27: "body_length",
-        28: "total_body_water", 29: "fat_percent", 30: "fat_mass", 31: "muscle_mass", 32: "bone_mass",
-        33: "acm", 34: "visceral_fat"
+        6: "id_code", 7: "region", 8: "district", 9: "mahalla", 10: "address",
+        11: "height", 12: "weight", 13: "chest", 14: "waist", 15: "hip", 16: "head",
+        17: "birth_date", 18: "examination_date", 19: "preschool_institution",
+        20: "parents_phone", 21: "father_height", 22: "mother_height", 23: "doctor_note",
+        24: "shoulder_length", 25: "shoulder_breadth", 26: "shoulder_circumference",
+        27: "arm_elbow_length", 28: "hand_length", 29: "thigh_length", 30: "thigh_circumference",
+        31: "calf_length", 32: "calf_circumference", 33: "foot_length", 34: "body_length",
+        35: "total_body_water", 36: "fat_percent", 37: "fat_mass", 38: "muscle_mass", 39: "bone_mass",
+        40: "acm", 41: "visceral_fat"
     }
 
     imported_count = 0
@@ -1600,7 +1621,8 @@ async def import_analyses_xlsx(
                 row_errors.append(("gender", "Jins 'erkak' yoki 'ayol' bo'lishi kerak.", data.get("gender")))
 
             numeric_fields = [
-                "age", "age_months", "age_days", "height", "weight", "chest", "waist", "head",
+                "age", "age_months", "age_days", "height", "weight", "chest", "waist", "hip", "head",
+                "father_height", "mother_height",
                 "shoulder_length", "shoulder_breadth", "shoulder_circumference",
                 "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
                 "calf_length", "calf_circumference", "foot_length", "body_length",
@@ -1653,18 +1675,24 @@ async def import_analyses_xlsx(
             rec.age = format_int(data.get("age"), 0)
             rec.age_months = format_int(data.get("age_months"), 0)
             rec.age_days = format_int(data.get("age_days"), 0)
+            rec.id_code = str(data.get("id_code") or "").strip() or None
             rec.region = str(data.get("region") or "").strip()
             rec.district = str(data.get("district") or "").strip()
+            rec.mahalla = str(data.get("mahalla") or "").strip()
             rec.address = str(data.get("address") or "").strip()
             rec.height = format_val(data.get("height"), 0.0)
             rec.weight = format_val(data.get("weight"), 0.0)
             rec.chest = format_val(data.get("chest"), 0.0)
             rec.waist = format_val(data.get("waist"), 0.0)
             rec.head = format_val(data.get("head"), 0.0)
-            rec.hip = 0.0 # Mandatory in model but not in template
+            rec.hip = format_val(data.get("hip"), 0.0)
             rec.birth_date = format_date(data.get("birth_date"), "")
             rec.examination_date = format_date(data.get("examination_date"), datetime.now().strftime("%Y-%m-%d"))
             rec.preschool_institution = str(data.get("preschool_institution") or "")
+            rec.parents_phone = str(data.get("parents_phone") or "").strip() or None
+            rec.father_height = format_val(data.get("father_height"), None)
+            rec.mother_height = format_val(data.get("mother_height"), None)
+            rec.doctor_note = str(data.get("doctor_note") or "").strip() or None
             
             # Bio fields
             bio_fields = [
@@ -1678,57 +1706,17 @@ async def import_analyses_xlsx(
                 if val is not None:
                     setattr(rec, bf, format_val(val, 0.0))
 
-            # Trigger Calculation
-            p_data = PatientData(
-                firstName=data["first_name"],
-                lastName=data["last_name"],
-                region=rec.region,
-                district=rec.district,
-                address=rec.address,
-                examinationDate=rec.examination_date,
-                birthDate=rec.birth_date,
-                preschoolInstitution=rec.preschool_institution,
-                age=rec.age,
-                ageMonths=rec.age_months,
-                ageDays=rec.age_days,
-                gender=rec.gender,
-                height=rec.height,
-                weight=rec.weight,
-                chest=rec.chest,
-                waist=rec.waist,
-                head=rec.head,
-                shoulderLength=rec.shoulder_length or 0,
-                shoulderBreadth=rec.shoulder_breadth or 0,
-                shoulderCircumference=rec.shoulder_circumference or 0,
-                armElbowLength=rec.arm_elbow_length or 0,
-                handLength=rec.hand_length or 0,
-                thighLength=rec.thigh_length or 0,
-                thighCircumference=rec.thigh_circumference or 0,
-                calfLength=rec.calf_length or 0,
-                calfCircumference=rec.calf_circumference or 0,
-                footLength=rec.foot_length or 0,
-                bodyLength=rec.body_length,
-                totalBodyWater=rec.total_body_water,
-                fatPercent=rec.fat_percent,
-                fatMass=rec.fat_mass,
-                muscleMass=rec.muscle_mass,
-                boneMass=rec.bone_mass,
-                acm=rec.acm,
-                visceralFat=rec.visceral_fat
-            )
-            
-            analysis = calc_full_bmi(p_data)
+            all_settings = clinical_service.get_all_settings(db)
+            analysis = recalculate_analysis_fields(rec, db, lang="uz")
             advices = generate_advices(
                 analysis["bmi"],
                 analysis["weight_diff"],
                 int(rec.age),
                 rec.gender,
+                all_settings,
                 bio_data=analysis["indices"]
             )
             
-            rec.bmi = float(analysis["bmi"])
-            rec.z_score = float(analysis["z_score"])
-            rec.somatotype = str(analysis["somatotype"])
             rec.recommendations = (
                 f"General: {advices.get('general', '')}; "
                 f"Nutrition: {advices.get('nutrition', '')}; "
