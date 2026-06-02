@@ -2,12 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import InputForm from "../components/InputForm";
 import AnalysisResults from "../components/AnalysisResults";
-import {
-  postAnalysis,
-  generatePdf,
-  generateDocx,
-  sendRating as submitRatingApi,
-} from "../services/api";
+import { postAnalysis, generatePdf, generateDocx } from "../services/api";
 import { AdminApi } from "../services/AdminApi";
 import { useAuth } from "../contexts/AuthContext";
 

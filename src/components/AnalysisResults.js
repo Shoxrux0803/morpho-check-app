@@ -13,7 +13,6 @@ import {
   Alert,
   Button,
   Paper,
-  Rating,
   TextField,
   MenuItem,
   Select,

@@ -23,14 +23,7 @@ def run_migration():
         else:
             print(f"Error renaming table: {e}")
 
-    # 2. Drop ratings table if it exists
-    try:
-        cursor.execute("DROP TABLE IF EXISTS ratings")
-        print("Dropped table ratings (if existed)")
-    except sqlite3.OperationalError as e:
-        print(f"Error dropping ratings: {e}")
-
-    # 3. Create indexes for patient_analysis
+    # 2. Create indexes for patient_analysis
     indexes = [
         ("idx_patient_created_at", "patient_analysis", "created_at"),
         ("idx_patient_name", "patient_analysis", "name"),

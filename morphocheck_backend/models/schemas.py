@@ -124,27 +124,6 @@ class FullReportRequest(BaseModel):
     analysis: AnalysisResult
     advices: Advices
 
-class RatingRequest(BaseModel):
-    score: int = Field(..., alias="rating", ge=1, le=5)
-    comment: Optional[str] = Field(None, max_length=1000)
-    user_id: Optional[int] = Field(None, ge=1)
-    name: Optional[str] = Field(None, max_length=100)
-    email: Optional[EmailStr] = None
-
-    class Config:
-        populate_by_name = True
-        extra = "forbid"
-
-    @field_validator("comment", "name", mode="before")
-    @classmethod
-    def clean_optional_text(cls, v):
-        if v is None:
-            return v
-        if not isinstance(v, str):
-            raise ValueError("Matn maydoni string bo'lishi kerak")
-        cleaned = v.strip()
-        return cleaned or None
-
 class UserDataCreate(BaseModel):
     full_name: str
     age: Optional[int]

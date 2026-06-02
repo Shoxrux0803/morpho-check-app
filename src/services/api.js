@@ -131,60 +131,6 @@ export async function generateDocx(payload, lang = "uz") {
   return resp.blob(); // DOCX blob
 }
 
-/* -------------------- RATING -------------------- */
-function buildRatingPayload(ratingData = {}) {
-  // score/rating -> number | undefined
-  const score =
-    ratingData.score != null
-      ? Number(ratingData.score)
-      : ratingData.rating != null
-        ? Number(ratingData.rating)
-        : undefined;
-
-  // comment/feedback -> string | undefined
-  const comment = (ratingData.comment ?? ratingData.feedback ?? "").toString().trim() || undefined;
-
-  // user_id -> number | undefined (raqam bo'lmasa yubormaymiz)
-  let user_id = ratingData.user_id;
-  if (user_id !== undefined && user_id !== null && user_id !== "") {
-    const n = Number(user_id);
-    user_id = Number.isFinite(n) ? n : undefined;
-  } else {
-    user_id = undefined;
-  }
-
-  const name = (ratingData.name ?? "").toString().trim() || undefined;
-  const email = (ratingData.email ?? "").toString().trim() || undefined;
-
-  return { score, comment, user_id, name, email };
-}
-
-async function _postRating(payload) {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/rating/submit-rating`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!resp.ok) {
-    const msg = await parseError(resp);
-    throw new Error(msg);
-  }
-  // Backenddan { status, message, data } kelsa, FeedbackForm ichida res.message ishlatiladi
-  return resp.json();
-}
-
-export async function sendRating(ratingData) {
-  const payload = buildRatingPayload(ratingData);
-  return _postRating(payload);
-}
-
-// Alias - boshqa joylarda submitRating deb chaqirsangiz ham ishlaydi
-export const submitRating = sendRating;
-
 /* -------------------- AUTH & USER -------------------- */
 export async function login(credentials) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/login`, {
@@ -1083,8 +1029,6 @@ const apiService = {
   generatePdfById,
   generateDocx,
   generateDocxById,
-  sendRating,
-  submitRating,
   login,
   register,
   getUserProfile,
