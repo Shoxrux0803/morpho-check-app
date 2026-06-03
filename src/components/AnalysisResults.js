@@ -463,7 +463,7 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
                                 {item.unit ? ` ${item.unit}` : ""}
                               </Typography>
                               <Chip
-                                label={item.risk?.label || "Holat noma'lum"}
+                                label={item.risk?.label || t("unknown")}
                                 size="small"
                                 sx={{ bgcolor: palette.main, color: "#fff", fontWeight: 700 }}
                               />

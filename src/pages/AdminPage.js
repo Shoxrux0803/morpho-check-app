@@ -109,7 +109,7 @@ const normalize = (r) => {
   };
 };
 
-const normalizeImportError = (err) => {
+const normalizeImportError = (err, unknownError = "Unknown error") => {
   if (typeof err === "string") {
     const match = err.match(/Row\s+(\d+):\s*(.*)/i);
     return {
@@ -123,7 +123,7 @@ const normalizeImportError = (err) => {
   return {
     row: err?.row ?? "-",
     field: err?.field || "-",
-    message: err?.message || err?.detail || "Noma'lum xatolik",
+    message: err?.message || err?.detail || unknownError,
     value: err?.value ?? "",
   };
 };
@@ -1365,7 +1365,7 @@ export default function AdminPage() {
                     </TableHead>
                     <TableBody>
                       {importResult.errors.map((err, idx) => {
-                        const item = normalizeImportError(err);
+                        const item = normalizeImportError(err, pt("unknown"));
                         return (
                           <TableRow key={`${item.row}-${item.field}-${idx}`} hover>
                             <TableCell>{item.row}</TableCell>

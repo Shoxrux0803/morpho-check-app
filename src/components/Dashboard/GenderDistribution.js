@@ -3,9 +3,11 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recha
 import { Box, Typography, useTheme } from "@mui/material";
 import { Wc } from "@mui/icons-material";
 import DashboardCard from "./DashboardCard";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const GenderDistribution = ({ data, loading }) => {
   const theme = useTheme();
+  const { t } = useLanguage();
 
   const genderData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -38,17 +40,17 @@ const GenderDistribution = ({ data, loading }) => {
     });
 
     return [
-      { name: "Erkak", value: male, color: "#0088FE" },
-      { name: "Ayol", value: female, color: "#FF8042" },
+      { name: t("male"), value: male, color: "#0088FE" },
+      { name: t("female"), value: female, color: "#FF8042" },
     ];
-  }, [data]);
+  }, [data, t]);
 
   const total = genderData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <DashboardCard title="Jins Taumoti" icon={<Wc />} loading={loading}>
+    <DashboardCard title={t("genderDistributionTitle")} icon={<Wc />} loading={loading}>
       {total === 0 ? (
-        <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
+        <Typography color="text.secondary">{t("noData")}</Typography>
       ) : (
         <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
           <ResponsiveContainer width="100%" height={300}>
@@ -98,7 +100,7 @@ const GenderDistribution = ({ data, loading }) => {
               {total}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              Jami
+              {t("totalLabel")}
             </Typography>
           </Box>
         </Box>

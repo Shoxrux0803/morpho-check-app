@@ -309,21 +309,6 @@ const storySteps = [
   },
 ];
 
-const mapRegions = [
-  { name: "Nukus", x: 90, y: 112, w: 178, h: 92, color: "#0891b2" },
-  { name: "Xorazm", x: 232, y: 206, w: 90, h: 54, color: "#16a34a" },
-  { name: "Buxoro", x: 336, y: 238, w: 150, h: 86, color: "#ca8a04" },
-  { name: "Navoiy", x: 430, y: 152, w: 168, h: 102, color: "#7c3aed" },
-  { name: "Samarqand", x: 532, y: 292, w: 108, h: 58, color: "#0891b2" },
-  { name: "Qashqadaryo", x: 498, y: 370, w: 122, h: 72, color: "#16a34a" },
-  { name: "Surxondaryo", x: 594, y: 438, w: 92, h: 74, color: "#ca8a04" },
-  { name: "Jizzax", x: 646, y: 252, w: 96, h: 58, color: "#7c3aed" },
-  { name: "Toshkent", x: 746, y: 200, w: 128, h: 62, color: "#0891b2" },
-  { name: "Farg'ona", x: 846, y: 272, w: 92, h: 46, color: "#16a34a" },
-  { name: "Andijon", x: 930, y: 246, w: 72, h: 42, color: "#ca8a04" },
-  { name: "Namangan", x: 884, y: 198, w: 76, h: 40, color: "#7c3aed" },
-];
-
 const ScrollProgress = ({ progress, color }) => (
   <motion.div
     style={{
@@ -342,130 +327,6 @@ const ScrollProgress = ({ progress, color }) => (
     aria-hidden="true"
     className="scroll-progress"
   />
-);
-
-const UzbekistanSignalMap = ({ activeIndex, theme, mode }) => (
-  <Box
-    sx={{
-      position: "relative",
-      minHeight: { xs: 320, md: 520 },
-      borderRadius: "24px",
-      p: { xs: 2, md: 3 },
-      overflow: "hidden",
-      bgcolor: alpha(theme.palette.background.paper, mode === "dark" ? 0.5 : 0.78),
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
-      boxShadow: `0 24px 70px ${alpha(theme.palette.common.black, mode === "dark" ? 0.34 : 0.1)}`,
-      backdropFilter: "blur(22px)",
-    }}
-  >
-    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-      <Box>
-        <Typography variant="overline" color="text.secondary" fontWeight={800}>
-          Regional signal map
-        </Typography>
-        <Typography variant="h5" fontWeight={800}>
-          O'zbekiston bo'yicha monitoring
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          width: 12,
-          height: 12,
-          borderRadius: "50%",
-          bgcolor: storySteps[activeIndex].color,
-          boxShadow: `0 0 0 8px ${alpha(storySteps[activeIndex].color, 0.14)}`,
-        }}
-      />
-    </Stack>
-
-    <Box
-      component="svg"
-      viewBox="0 0 1080 620"
-      sx={{
-        width: "100%",
-        height: { xs: 260, md: 420 },
-        display: "block",
-        color: "text.primary",
-      }}
-      role="img"
-      aria-label="MorphoCheck regional scroll map"
-    >
-      <defs>
-        <filter id="mapGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="9" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-      <path
-        d="M54 164 C142 78 260 90 362 126 C478 166 560 104 682 128 C804 152 892 130 1012 216 C1048 242 1042 316 1002 346 C930 400 798 360 720 422 C642 484 534 540 428 488 C330 440 302 336 202 304 C104 274 18 234 54 164 Z"
-        fill={alpha(theme.palette.primary.main, mode === "dark" ? 0.1 : 0.08)}
-        stroke={alpha(theme.palette.text.primary, 0.18)}
-        strokeWidth="2"
-      />
-      {mapRegions.map((region, index) => {
-        const isActive = index % storySteps.length === activeIndex;
-        return (
-          <motion.g
-            key={region.name}
-            animate={{
-              opacity: isActive ? 1 : 0.48,
-              scale: isActive ? 1.04 : 1,
-            }}
-            transition={{ duration: 0.45 }}
-            style={{ transformOrigin: `${region.x + region.w / 2}px ${region.y + region.h / 2}px` }}
-          >
-            <rect
-              x={region.x}
-              y={region.y}
-              width={region.w}
-              height={region.h}
-              rx="26"
-              fill={alpha(region.color, isActive ? 0.72 : 0.22)}
-              stroke={isActive ? "#fff" : alpha(theme.palette.text.primary, 0.22)}
-              strokeWidth={isActive ? 4 : 1.5}
-              filter={isActive ? "url(#mapGlow)" : undefined}
-            />
-            <text
-              x={region.x + region.w / 2}
-              y={region.y + region.h / 2 + 4}
-              textAnchor="middle"
-              fontSize="18"
-              fontWeight="800"
-              fill={isActive ? "#fff" : theme.palette.text.secondary}
-            >
-              {region.name}
-            </text>
-          </motion.g>
-        );
-      })}
-      {[0, 1, 2, 3].map((item) => (
-        <motion.circle
-          key={item}
-          cx={220 + item * 210}
-          cy={92 + (item % 2) * 34}
-          r="8"
-          fill={storySteps[activeIndex].color}
-          animate={{ opacity: [0.25, 0.9, 0.25], r: [6, 11, 6] }}
-          transition={{ duration: 2.4, repeat: Infinity, delay: item * 0.28 }}
-        />
-      ))}
-    </Box>
-
-    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
-      {storySteps.map((step, index) => (
-        <Box
-          key={step.eyebrow}
-          sx={{
-            flex: 1,
-            height: 8,
-            borderRadius: 4,
-            bgcolor: index <= activeIndex ? step.color : alpha(theme.palette.text.primary, 0.12),
-            transition: "background-color 0.35s ease",
-          }}
-        />
-      ))}
-    </Stack>
-  </Box>
 );
 
 const StickyScrollStory = ({ theme, mode, fadeInUp }) => {
@@ -570,8 +431,7 @@ const StickyScrollStory = ({ theme, mode, fadeInUp }) => {
 
           <Grid item xs={12} md={7}>
             <Box sx={{ position: { md: "sticky" }, top: { md: 96 } }}>
-              <UzbekistanSignalMap activeIndex={activeIndex} theme={theme} mode={mode} />
-              <Grid container spacing={2} sx={{ mt: 2 }}>
+              <Grid container spacing={2}>
                 {storySteps.map((step, index) => (
                   <Grid item xs={6} sm={3} key={step.label}>
                     <Paper
@@ -608,7 +468,7 @@ export default function IntroPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { mode } = useThemeMode();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -696,13 +556,40 @@ export default function IntroPage() {
   const reportMetrics = [
     { label: "HAZ", value: "+0.42", helper: "Height-for-age", color: "#0891b2" },
     { label: "BAZ", value: "-0.18", helper: "BMI-for-age", color: "#16a34a" },
+    { label: "BMI", value: "18.7", helper: "Body mass index", color: "#7c3aed" },
     { label: "SDS", value: "0.96", helper: "Norm interval", color: "#ca8a04" },
+  ];
+
+  const clinicalStatuses = [
+    { label: "Risk", value: "Normal", color: "#16a34a" },
+    { label: "AI Advice", value: "Ready", color: "#0891b2" },
+    { label: "Protocol", value: "OK", color: "#14b8a6" },
   ];
 
   const qualityStats = [
     { label: "Accuracy", val: "99.9%", icon: Activity, color: "#10b981" },
     { label: "Data Points", val: "140+", icon: Fingerprint, color: "#0891b2" },
+    { label: "Reports", val: "32", icon: FileText, color: "#7c3aed" },
   ];
+
+  const dataStreamCodes = [
+    "HAZ:042",
+    "BAZ:018",
+    "BMI:187",
+    "SDS:096",
+    "LMS:OK",
+    "RISK:N",
+    "AI:RDY",
+    "WHO:V2",
+    "Z:CALC",
+    "PCTL:64",
+    "SCAN:98",
+    "SYNC:ON",
+  ];
+  const isLongHeroTitle = lang === "kz" || lang === "ru";
+  const heroTitleFontSize = isLongHeroTitle
+    ? { xs: "2.2rem", sm: "3.05rem", md: "4rem", lg: "4.7rem" }
+    : { xs: "2.45rem", sm: "3.7rem", md: "5.2rem", lg: "6rem" };
 
   return (
     <Box sx={{ minHeight: "100vh", position: "relative" }}>
@@ -715,11 +602,12 @@ export default function IntroPage() {
             sx={{
               minHeight: "100vh",
               display: "flex",
-              alignItems: "center",
-              py: { xs: 10, md: 0 },
+              alignItems: { xs: "flex-start", md: "center" },
+              pt: { xs: 12, sm: 13, md: 14, lg: 15 },
+              pb: { xs: 8, md: 10 },
             }}
           >
-            <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
+            <Grid container spacing={{ xs: 4, md: 6, lg: 8 }} alignItems="center">
               <Grid item xs={12} md={6} lg={7}>
                 <motion.div style={{ opacity, scale, y: yParallax }}>
                   <motion.div
@@ -735,12 +623,13 @@ export default function IntroPage() {
                     <Typography
                       variant="h1"
                       sx={{
-                        fontSize: { xs: "2.45rem", sm: "3.7rem", md: "5.2rem", lg: "6rem" },
+                        fontSize: heroTitleFontSize,
                         fontWeight: 900,
-                        mb: 3,
-                        lineHeight: 1.02,
+                        mb: { xs: 2.5, md: 3 },
+                        lineHeight: isLongHeroTitle ? 1.08 : 1.02,
                         letterSpacing: 0,
                         color: "text.primary",
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {t("heroTitle1")}
@@ -869,6 +758,7 @@ export default function IntroPage() {
                   <Box
                     sx={{
                       position: "relative",
+                      mt: { xs: 1, md: isLongHeroTitle ? 2 : 0 },
                       "&::before": {
                         content: '""',
                         position: "absolute",
@@ -900,7 +790,7 @@ export default function IntroPage() {
                                   lineHeight: 1,
                                 }}
                               >
-                                Clinical dashboard
+                                Clinical scan engine
                               </Typography>
                               <Typography
                                 variant="h4"
@@ -921,7 +811,7 @@ export default function IntroPage() {
                                   color: "text.secondary",
                                 }}
                               >
-                                <Bot size={18} color={theme.palette.primary.main} /> AI ENGINE
+                                <Bot size={18} color={theme.palette.primary.main} /> MORPHOCHECK AI
                                 ACTIVE
                               </Typography>
                             </Box>
@@ -968,20 +858,21 @@ export default function IntroPage() {
                           <Box
                             sx={{
                               minHeight: { xs: 430, sm: 420, md: 390 },
-                              bgcolor: alpha(
-                                theme.palette.text.primary,
-                                mode === "dark" ? 0.03 : 0.018,
-                              ),
-                              borderRadius: "18px",
+                              bgcolor:
+                                mode === "dark"
+                                  ? "rgba(4, 18, 32, 0.72)"
+                                  : "rgba(240, 253, 250, 0.74)",
+                              borderRadius: "22px",
                               position: "relative",
                               overflow: "hidden",
                               display: "grid",
-                              gridTemplateColumns: { xs: "1fr", sm: "1fr 1.25fr" },
+                              gridTemplateColumns: { xs: "1fr", sm: "0.86fr 1.32fr 0.78fr" },
                               alignItems: "stretch",
                               gap: 2,
                               p: { xs: 2, sm: 2.5 },
-                              border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                              backgroundImage: `linear-gradient(${alpha(theme.palette.primary.main, 0.04)} 1px, transparent 1px), linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.035)} 1px, transparent 1px), radial-gradient(circle at 80% 20%, ${alpha("#0891b2", 0.14)}, transparent 38%)`,
+                              border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                              boxShadow: `inset 0 1px 0 ${alpha("#ffffff", 0.1)}, inset 0 -24px 80px ${alpha("#0f766e", 0.12)}`,
+                              backgroundImage: `linear-gradient(${alpha(theme.palette.primary.main, 0.055)} 1px, transparent 1px), linear-gradient(90deg, ${alpha(theme.palette.primary.main, 0.04)} 1px, transparent 1px), radial-gradient(circle at 52% 34%, ${alpha("#14b8a6", 0.24)}, transparent 33%), radial-gradient(circle at 92% 12%, ${alpha("#7c3aed", 0.14)}, transparent 30%), linear-gradient(135deg, ${alpha("#031525", 0.18)}, transparent 46%, ${alpha("#0f766e", 0.08)})`,
                               backgroundSize: "20px 20px",
                             }}
                           >
@@ -1125,20 +1016,72 @@ export default function IntroPage() {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 minHeight: { xs: 260, sm: "auto" },
+                                perspective: 900,
                               }}
                             >
                               <Box
                                 sx={{
                                   position: "absolute",
-                                  inset: { xs: 8, sm: 12 },
+                                  inset: { xs: 0, sm: 4 },
                                   borderRadius: "50%",
-                                  background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.18)} 0%, transparent 62%)`,
-                                  filter: "blur(8px)",
+                                  background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.3)} 0%, transparent 58%)`,
+                                  filter: "blur(14px)",
                                 }}
                               />
+                              <motion.div
+                                animate={{ y: [-3, 3, -3], rotateX: [0, 5, 0] }}
+                                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                                style={{ position: "relative", zIndex: 3 }}
+                              >
+                                <Box
+                                  sx={{
+                                    mb: 1.5,
+                                    mx: "auto",
+                                    width: "fit-content",
+                                    px: 1.5,
+                                    py: 0.9,
+                                    borderRadius: "14px",
+                                    color: mode === "dark" ? "#ecfeff" : "#082f49",
+                                    background:
+                                      mode === "dark"
+                                        ? `linear-gradient(135deg, ${alpha("#ffffff", 0.18)}, ${alpha("#14b8a6", 0.08)} 42%, ${alpha("#7c3aed", 0.15)})`
+                                        : `linear-gradient(135deg, ${alpha("#ffffff", 0.92)}, ${alpha("#ccfbf1", 0.86)} 48%, ${alpha("#dbeafe", 0.86)})`,
+                                    border: `1px solid ${alpha("#ffffff", mode === "dark" ? 0.28 : 0.78)}`,
+                                    boxShadow: `0 18px 40px ${alpha("#020617", 0.22)}, inset 0 1px 0 ${alpha("#ffffff", 0.36)}`,
+                                    transform: "rotateX(10deg)",
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight={900}
+                                    sx={{
+                                      display: "block",
+                                      lineHeight: 1,
+                                      letterSpacing: 0.8,
+                                      textShadow:
+                                        mode === "dark"
+                                          ? "0 1px 12px rgba(45, 212, 191, 0.55)"
+                                          : "0 1px 0 rgba(255, 255, 255, 0.9)",
+                                    }}
+                                  >
+                                    MORPHOCHECK
+                                  </Typography>
+                                  <Typography
+                                    variant="overline"
+                                    fontWeight={900}
+                                    sx={{
+                                      lineHeight: 1,
+                                      letterSpacing: 1.4,
+                                      color: theme.palette.primary.main,
+                                    }}
+                                  >
+                                    PRO
+                                  </Typography>
+                                </Box>
+                              </motion.div>
                               <BodySilhouette
                                 color={theme.palette.primary.main}
-                                size={isMobile ? 128 : 155}
+                                size={isMobile ? 130 : 165}
                               />
                               <motion.div
                                 animate={{ opacity: [0.38, 0.78, 0.38] }}
@@ -1159,6 +1102,97 @@ export default function IntroPage() {
                                 </Typography>
                               </motion.div>
                             </Box>
+
+                            <Stack
+                              spacing={1.35}
+                              sx={{
+                                position: "relative",
+                                zIndex: 2,
+                                justifyContent: "center",
+                                display: { xs: "grid", sm: "flex" },
+                                gridTemplateColumns: { xs: "1fr", sm: "none" },
+                              }}
+                            >
+                              {clinicalStatuses.map((item) => (
+                                <Paper
+                                  key={item.label}
+                                  elevation={0}
+                                  sx={{
+                                    p: 1.35,
+                                    borderRadius: "14px",
+                                    bgcolor: alpha(
+                                      theme.palette.background.paper,
+                                      mode === "dark" ? 0.28 : 0.72,
+                                    ),
+                                    border: `1px solid ${alpha(item.color, 0.2)}`,
+                                    backdropFilter: "blur(16px)",
+                                  }}
+                                >
+                                  <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Box
+                                      sx={{
+                                        width: 9,
+                                        height: 9,
+                                        borderRadius: "50%",
+                                        bgcolor: item.color,
+                                        boxShadow: `0 0 16px ${alpha(item.color, 0.8)}`,
+                                      }}
+                                    />
+                                    <Box sx={{ minWidth: 0 }}>
+                                      <Typography
+                                        variant="caption"
+                                        fontWeight={900}
+                                        color="text.secondary"
+                                        sx={{ display: "block", lineHeight: 1.15 }}
+                                      >
+                                        {item.label}
+                                      </Typography>
+                                      <Typography
+                                        variant="body2"
+                                        fontWeight={900}
+                                        sx={{ color: item.color, lineHeight: 1.25 }}
+                                      >
+                                        {item.value}
+                                      </Typography>
+                                    </Box>
+                                  </Stack>
+                                </Paper>
+                              ))}
+
+                              <Paper
+                                elevation={0}
+                                sx={{
+                                  p: 1.35,
+                                  borderRadius: "14px",
+                                  bgcolor: alpha("#020617", mode === "dark" ? 0.2 : 0.05),
+                                  border: `1px solid ${alpha(theme.palette.primary.main, 0.16)}`,
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  fontWeight={900}
+                                  color="text.secondary"
+                                  sx={{ display: "block", mb: 0.8 }}
+                                >
+                                  Clinical profile
+                                </Typography>
+                                <Stack spacing={0.7}>
+                                  {["Z-score aligned", "BMI percentile", "WHO LMS"].map((label) => (
+                                    <Stack
+                                      key={label}
+                                      direction="row"
+                                      spacing={0.8}
+                                      alignItems="center"
+                                    >
+                                      <CheckCircle2 size={14} color="#16a34a" />
+                                      <Typography variant="caption" fontWeight={800}>
+                                        {label}
+                                      </Typography>
+                                    </Stack>
+                                  ))}
+                                </Stack>
+                              </Paper>
+                            </Stack>
 
                             {/* Technical Overlays (Side bars) */}
                             <Box
@@ -1205,18 +1239,18 @@ export default function IntroPage() {
                                   lineHeight: 1,
                                 }}
                               >
-                                {[...Array(20)].map((_, i) => (
+                                {dataStreamCodes.map((code, i) => (
                                   <motion.span
-                                    key={i}
+                                    key={code}
                                     animate={{ opacity: [0.2, 1, 0.2] }}
                                     transition={{
-                                      duration: 0.5 + Math.random(),
+                                      duration: 0.9 + i * 0.04,
                                       repeat: Infinity,
-                                      delay: Math.random(),
+                                      delay: i * 0.08,
                                     }}
                                     style={{ display: "block" }}
                                   >
-                                    {Math.random().toString(16).slice(2, 8).toUpperCase()}
+                                    {code}
                                   </motion.span>
                                 ))}
                               </Typography>
@@ -1261,8 +1295,8 @@ export default function IntroPage() {
                           </Box>
 
                           <Grid container spacing={2.5}>
-                            {qualityStats.map((stat, idx) => (
-                              <Grid item xs={6} key={stat.label}>
+                            {qualityStats.map((stat) => (
+                              <Grid item xs={12} sm={4} key={stat.label}>
                                 <Paper
                                   elevation={0}
                                   sx={{

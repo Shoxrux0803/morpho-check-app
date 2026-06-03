@@ -925,7 +925,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
     // Settlement Distribution
     const citiesMap = filteredData.reduce((acc, r) => {
-      const city = r.settlement || "Noma'lum";
+      const city = r.settlement || tr("unknown");
       acc[city] = (acc[city] || 0) + 1;
       return acc;
     }, {});
@@ -936,9 +936,9 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
     // Gender Data
     const genderData = [
-      { name: "O'g'il bolalar", value: boys, color: "#2563eb" },
-      { name: "Qiz bolalar", value: girls, color: "#f50057" },
-      { name: "Noma'lum", value: total - boys - girls, color: "#9e9e9e" },
+      { name: tr("boysCount"), value: boys, color: "#2563eb" },
+      { name: tr("girlsCount"), value: girls, color: "#f50057" },
+      { name: tr("unknown"), value: total - boys - girls, color: "#9e9e9e" },
     ].filter((g) => g.value > 0);
 
     // Age distribution metrics (Avg W/H by Age)
@@ -958,7 +958,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 
     const ageData = Object.values(ageMap)
       .map((a) => ({
-        age: `${a.age} yosh`,
+        age: `${a.age} ${tr("ageYearsSuffix")}`,
         vazn: a.weight.length
           ? (a.weight.reduce((v1, v2) => v1 + v2, 0) / a.weight.length).toFixed(1)
           : 0,
@@ -979,7 +979,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
       .sort((a, b) => a.date.localeCompare(b.date));
 
     return { total, boys, girls, avgBmi, genderData, citiesData, ageData, timelineData };
-  }, [data, timeRange]);
+  }, [data, timeRange, tr]);
 
   return (
     <Stack spacing={4}>
@@ -987,10 +987,10 @@ const ResearchAnalytics = ({ data, isDark }) => {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
           <Typography variant="h4" fontWeight={900}>
-            Analitika Markazi
+            {tr("analytics")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Tadqiqot ma'lumotlarinning professional tahlili
+            {tr("autoStatsSubtitle")}
           </Typography>
         </Box>
       </Box>
@@ -998,10 +998,10 @@ const ResearchAnalytics = ({ data, isDark }) => {
       {/* ── Key Metrics Cards ── */}
       <Grid container spacing={3}>
         {[
-          { label: "Jami yozuvlar", value: stats.total, icon: <People />, color: "#0f766e" },
-          { label: "O'g'il bolalar", value: stats.boys, icon: <TrendingUp />, color: "#0ea5e9" },
-          { label: "Qiz bolalar", value: stats.girls, icon: <TrendingUp />, color: "#ec4899" },
-          { label: "O'rtacha BMI", value: stats.avgBmi, icon: <Assessment />, color: "#10b981" },
+          { label: tr("totalRecords"), value: stats.total, icon: <People />, color: "#0f766e" },
+          { label: tr("boysCount"), value: stats.boys, icon: <TrendingUp />, color: "#0ea5e9" },
+          { label: tr("girlsCount"), value: stats.girls, icon: <TrendingUp />, color: "#ec4899" },
+          { label: tr("avgBmi"), value: stats.avgBmi, icon: <Assessment />, color: "#10b981" },
         ].map((card, i) => (
           <Grid xs={12} sm={6} md={3} key={i}>
             <GlassPaper
@@ -1044,7 +1044,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         <Grid xs={12} md={4}>
           <GlassPaper sx={{ p: 3, height: "100%" }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>
-              Jinsi bo'yicha taqsimot
+              {tr("genderDistribution")}
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -1069,7 +1069,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         <Grid xs={12} md={8}>
           <GlassPaper sx={{ p: 3, height: "100%" }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>
-              Top 5 hududlar
+              {tr("topRegions")}
             </Typography>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={stats.citiesData} layout="vertical">
@@ -1097,7 +1097,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         <Grid xs={12}>
           <GlassPaper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>
-              Ma'lumotlar yig'ish dinamikasi
+              {tr("dataCollectionDynamics")}
             </Typography>
             <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={stats.timelineData}>
@@ -1140,7 +1140,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
         <Grid xs={12}>
           <GlassPaper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={800} mb={3}>
-              Yosh bo'yicha antropometrik ko'rsatkichlar (O'rtacha)
+              {tr("ageAnthroIndicators")}
             </Typography>
             <ResponsiveContainer width="100%" height={350}>
               <ComposedChart data={stats.ageData}>
@@ -1150,13 +1150,13 @@ const ResearchAnalytics = ({ data, isDark }) => {
                   yAxisId="left"
                   orientation="left"
                   stroke="#0f766e"
-                  label={{ value: "Vazn (kg)", angle: -90, position: "insideLeft" }}
+                  label={{ value: tr("weight"), angle: -90, position: "insideLeft" }}
                 />
                 <YAxis
                   yAxisId="right"
                   orientation="right"
                   stroke="#f50057"
-                  label={{ value: "Bo'y (sm)", angle: 90, position: "insideRight" }}
+                  label={{ value: tr("standingHeight"), angle: 90, position: "insideRight" }}
                 />
                 <RechartsTooltip />
                 <Legend />
@@ -1166,7 +1166,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
                   fill="#0f766e"
                   radius={[4, 4, 0, 0]}
                   opacity={0.6}
-                  name="O'rtacha vazn (kg)"
+                  name={tr("averageWeightKg")}
                 />
                 <Line
                   yAxisId="right"
@@ -1175,7 +1175,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
                   stroke="#f50057"
                   strokeWidth={4}
                   dot={{ r: 6 }}
-                  name="O'rtacha bo'y (sm)"
+                  name={tr("averageHeightCm")}
                 />
               </ComposedChart>
             </ResponsiveContainer>
@@ -1606,25 +1606,25 @@ const ResearcherPage = () => {
     ];
     const researcherProfileItems = [
       {
-        label: "Ilmiy ish mavzusi",
+        label: pt("researchTopic"),
         value: user?.research_topic,
         icon: <Science fontSize="small" />,
         color: "#0891b2",
       },
       {
-        label: "Tadqiqot turi",
+        label: pt("researchType"),
         value: user?.research_type,
         icon: <Assessment fontSize="small" />,
         color: "#2563eb",
       },
       {
-        label: "Tadqiqot hududi",
+        label: pt("researchArea"),
         value: user?.research_area,
         icon: <Place fontSize="small" />,
         color: "#ca8a04",
       },
       {
-        label: "Ilmiy rahbar",
+        label: pt("scientificSupervisor"),
         value: user?.scientific_supervisor,
         icon: <Person fontSize="small" />,
         color: "#16a34a",
@@ -1684,7 +1684,7 @@ const ResearcherPage = () => {
                   }}
                 >
                   {" "}
-                  {pt("researcherHeroTitle2", "tadqiqot oynasi")}
+                  {pt("researcherHeroTitle2")}
                 </Box>
               </Typography>
 
@@ -1733,7 +1733,7 @@ const ResearcherPage = () => {
                           </Typography>
                         </Stack>
                         <Typography variant="body1" fontWeight={700} sx={{ lineHeight: 1.45 }}>
-                          {item.value || "Kiritilmagan"}
+                          {item.value || pt("notSelected")}
                         </Typography>
                       </Box>
                     </Grid>
@@ -2092,27 +2092,27 @@ const ResearcherPage = () => {
                           sx={{ mt: 1 }}
                         >
                           <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                            Ilmiy ish mavzusi:{" "}
+                            {pt("researchTopic")}:{" "}
                             <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
-                              {user?.research_topic || "Kiritilmagan"}
+                              {user?.research_topic || pt("notSelected")}
                             </Box>
                           </Typography>
                           <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                            Tadqiqot turi:{" "}
+                            {pt("researchType")}:{" "}
                             <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
-                              {user?.research_type || "Kiritilmagan"}
+                              {user?.research_type || pt("notSelected")}
                             </Box>
                           </Typography>
                           <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                            Tadqiqot hududi:{" "}
+                            {pt("researchArea")}:{" "}
                             <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
-                              {user?.research_area || "Kiritilmagan"}
+                              {user?.research_area || pt("notSelected")}
                             </Box>
                           </Typography>
                           <Typography variant="caption" color="text.secondary" fontWeight={800}>
-                            Ilmiy rahbar:{" "}
+                            {pt("scientificSupervisor")}:{" "}
                             <Box component="span" sx={{ color: "text.primary", fontWeight: 900 }}>
-                              {user?.scientific_supervisor || "Kiritilmagan"}
+                              {user?.scientific_supervisor || pt("notSelected")}
                             </Box>
                           </Typography>
                         </Stack>
@@ -2362,8 +2362,7 @@ const ResearcherPage = () => {
                   color="error.dark"
                   sx={{ display: "flex", alignItems: "center", gap: 1 }}
                 >
-                  <DeleteForever fontSize="small" /> <strong>Hard delete</strong> (butunlay
-                  o'chirish) qaytarib bo'lmaydigan amaldir.
+                  <DeleteForever fontSize="small" /> {pt("hardDeleteNote")}
                 </Typography>
               </Box>
             )}

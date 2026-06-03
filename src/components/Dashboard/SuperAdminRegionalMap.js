@@ -101,6 +101,9 @@ const MAP_I18N = {
     regionMatch: "Region mosligi",
     matched: "Mos tushdi",
     fallback: "Fallback nuqta",
+    notSpecified: "Kiritilmagan",
+    regionNotSpecified: "Hudud kiritilmagan",
+    sameAreaPin: "Shu hududdagi pin",
     chatError: "Chat faqat admin yoki izlanuvchi user pinlari uchun ochiladi",
     chatOpened: (name) => `${name} bilan chat ochildi`,
     chatPrompt: "Chat oynasi orqali admin yoki izlanuvchiga yozishingiz mumkin",
@@ -168,6 +171,9 @@ const MAP_I18N = {
     regionMatch: "Совпадение региона",
     matched: "Совпало",
     fallback: "Fallback-точка",
+    notSpecified: "Не указано",
+    regionNotSpecified: "Регион не указан",
+    sameAreaPin: "Пин в этой области",
     chatError: "Чат открывается только для пинов админа или исследователя",
     chatOpened: (name) => `Чат с ${name} открыт`,
     chatPrompt: "Через окно чата можно написать админу или исследователю",
@@ -176,6 +182,76 @@ const MAP_I18N = {
     overweight: "Избыточный вес",
     obese: "Ожирение",
     coverage: "Охват",
+  },
+  en: {
+    country: "Uzbekistan",
+    title: "Regional analytics map",
+    subtitle: "Track analyses, admins, and researchers by region, district, and mahalla.",
+    region: "Region",
+    district: "District",
+    mahalla: "Mahalla",
+    analyticsLoading: "Loading analytics",
+    analyses: "Analysis",
+    admin: "Admin",
+    admins: "Admin",
+    researcher: "Researcher",
+    nextLayer: "Next layer",
+    area: "Area",
+    riskSignal: "Clinical risk signal",
+    scientificProfile: "Scientific clinical profile",
+    clinicalIndexProfile: "Clinical index profile",
+    clinicalIndexSub: "Normalized BMI, Z-score, and risk indicators",
+    bmiDistribution: "BMI distribution",
+    regionSample: (count) => `Regional sample n=${count}`,
+    zBands: "BMI Z-score bands",
+    zBandsSub: "Clinical grouping by WHO LMS",
+    analyticalIndicators: "Analytical indicators",
+    activityStructure: "Activity structure",
+    operationalAnalysis: "Operational analysis",
+    contact: "Contact",
+    satelliteOn: "Turn on Google satellite map",
+    satelliteOff: "Return to the standard regional map",
+    layerLoading: "Loading regional layer",
+    patientExists: "Patient exists",
+    selectedBack: "Return to selected region",
+    coverageIndex: "Coverage index",
+    contactPoints: "Contact points",
+    riskRecords: "Risk records",
+    lowerLayer: "Lower layer",
+    analysesShare: "Analysis share",
+    adminActivity: "Admin activity",
+    researcherBase: "Researcher base",
+    regionalDensity: "Regional density",
+    role: "Identity",
+    userId: "User ID",
+    roleField: "Role",
+    email: "Email",
+    phone: "Phone",
+    location: "Location",
+    address: "Exact address",
+    coordinate: "Coordinate",
+    status: "Status",
+    registered: "Registered",
+    lastActivity: "Last activity",
+    todayEntries: "Today's entries",
+    monthEntries: "Monthly entries",
+    totalEntries: "Total entries",
+    avgTime: "Average time",
+    mostActiveTime: "Most active time",
+    regionMatch: "Region match",
+    matched: "Matched",
+    fallback: "Fallback point",
+    notSpecified: "Not specified",
+    regionNotSpecified: "Region not specified",
+    sameAreaPin: "Pin in this area",
+    chatError: "Chat opens only for admin or researcher user pins",
+    chatOpened: (name) => `Chat with ${name} opened`,
+    chatPrompt: "You can message an admin or researcher through the chat window",
+    underweight: "Underweight",
+    normal: "Normal",
+    overweight: "Overweight",
+    obese: "Obesity",
+    coverage: "Coverage",
   },
 };
 
@@ -279,7 +355,7 @@ const locationMatches = (left = "", right = "") => {
 
 const featureName = (item) =>
   displayLocationName(
-    item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "Noma'lum hudud",
+    item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "Unknown region",
   );
 
 const parseMaybeJson = (value) => {
@@ -1112,10 +1188,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             id: `${item.__type}-${item.id || item.email || counters[groupKey]}`,
             userId: item.__source === "user" ? item.id : null,
             type: item.__type,
-            name: item.name || item.full_name || item.id_code || "Noma'lum",
+            name: item.name || item.full_name || item.id_code || mt.notSpecified,
             email: item.email || "",
             phone: item.phone || item.parents_phone || "",
-            region: item.region || (region ? featureName(region) : "Hudud kiritilmagan"),
+            region: item.region || (region ? featureName(region) : mt.regionNotSpecified),
             district: item.district || "",
             mahalla: item.mahalla || "",
             role: item.role || item.__type,
@@ -1139,7 +1215,14 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         };
       })
       .filter(Boolean);
-  }, [allRecords, boundaryIndex, level1ByName, level3Features]);
+  }, [
+    allRecords,
+    boundaryIndex,
+    level1ByName,
+    level3Features,
+    mt.notSpecified,
+    mt.regionNotSpecified,
+  ]);
 
   const pinsGeoJson = useMemo(
     () => ({ type: "FeatureCollection", features: pinFeatures }),
@@ -2521,11 +2604,11 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                     {mt.location}:{" "}
                     {[selectedPin.region, selectedPin.district, selectedPin.mahalla]
                       .filter(Boolean)
-                      .join(" / ") || "Kiritilmagan"}
+                      .join(" / ") || mt.notSpecified}
                   </Typography>
                   {selectedPin.groupTotal > 1 && (
                     <Typography variant="caption" color="text.secondary">
-                      Shu hududdagi pin: {selectedPin.groupIndex}/{selectedPin.groupTotal}
+                      {mt.sameAreaPin}: {selectedPin.groupIndex}/{selectedPin.groupTotal}
                     </Typography>
                   )}
                 </Stack>

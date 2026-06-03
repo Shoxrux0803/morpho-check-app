@@ -450,7 +450,7 @@ const SuperAdminPage = () => {
   const getDeletedRowPatientName = (row) =>
     row.full_name || row.name || [row.last_name, row.first_name].filter(Boolean).join(" ") || "-";
   const getDeletedByName = (row) =>
-    row.deleted_by_name || row.deleted_by?.name || row.deleted_by_email || "Noma'lum";
+    row.deleted_by_name || row.deleted_by?.name || row.deleted_by_email || pt("unknown");
   const getDeletedDate = (row) => {
     if (!row.deleted_at) return "-";
     const date = new Date(row.deleted_at);

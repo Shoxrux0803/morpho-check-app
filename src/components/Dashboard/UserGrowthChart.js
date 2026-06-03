@@ -11,9 +11,11 @@ import {
 } from "recharts";
 import { TrendingUp } from "@mui/icons-material";
 import DashboardCard from "./DashboardCard";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const UserGrowthChart = ({ data, loading }) => {
   const theme = useTheme();
+  const { lang, t } = useLanguage();
 
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -22,7 +24,7 @@ const UserGrowthChart = ({ data, loading }) => {
     data.forEach((user) => {
       const date = user.created_at || user.createdAt;
       if (date) {
-        const day = new Date(date).toLocaleDateString("uz-UZ", {
+        const day = new Date(date).toLocaleDateString(lang, {
           month: "short",
           day: "numeric",
         });
@@ -33,12 +35,12 @@ const UserGrowthChart = ({ data, loading }) => {
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
       .slice(-10); // Oxirgi 10 kun
-  }, [data]);
+  }, [data, lang]);
 
   return (
-    <DashboardCard title="Foydalanuvchilar O'sishi" icon={<TrendingUp />} loading={loading}>
+    <DashboardCard title={t("userGrowthTitle")} icon={<TrendingUp />} loading={loading}>
       {chartData.length === 0 ? (
-        <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
+        <Typography color="text.secondary">{t("noData")}</Typography>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
@@ -80,7 +82,7 @@ const UserGrowthChart = ({ data, loading }) => {
               strokeWidth={3}
               fillOpacity={1}
               fill="url(#colorValue)"
-              name="Foydalanuvchilar"
+              name={t("usersLabel")}
               animationDuration={1500}
             />
           </AreaChart>

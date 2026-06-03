@@ -8,14 +8,15 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
-  Legend,
 } from "recharts";
-import { Typography, useTheme, Box } from "@mui/material";
+import { Typography, useTheme } from "@mui/material";
 import { AccessibilityNew } from "@mui/icons-material";
 import DashboardCard from "./DashboardCard";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const SomatotypeAnalysis = ({ data, loading }) => {
   const theme = useTheme();
+  const { t } = useLanguage();
 
   const somatotypeData = useMemo(() => {
     if (!data || data.length === 0) return [];
@@ -23,7 +24,7 @@ const SomatotypeAnalysis = ({ data, loading }) => {
     const counts = {};
 
     data.forEach((user) => {
-      const type = (user.somatotype || "Noma'lum").trim();
+      const type = (user.somatotype || t("unknown")).trim();
       if (type) {
         counts[type] = (counts[type] || 0) + 1;
       }
@@ -34,14 +35,14 @@ const SomatotypeAnalysis = ({ data, loading }) => {
       .sort((a, b) => b.value - a.value);
 
     return entries.slice(0, 8); // Top 8 somatotypes
-  }, [data]);
+  }, [data, t]);
 
   const total = somatotypeData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <DashboardCard title="Somatotip Taqsimoti" icon={<AccessibilityNew />} loading={loading}>
+    <DashboardCard title={t("somatotypeLabel")} icon={<AccessibilityNew />} loading={loading}>
       {total === 0 ? (
-        <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
+        <Typography color="text.secondary">{t("noData")}</Typography>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={somatotypeData} margin={{ bottom: 40 }}>

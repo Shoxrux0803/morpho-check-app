@@ -339,10 +339,10 @@ const compareByGender = (rows) =>
     };
   });
 
-const compareByRegion = (rows, metricKey = "bmi") => {
+const compareByRegion = (rows, metricKey = "bmi", unknownLabel = "Unknown") => {
   const groups = rows.reduce((acc, row) => {
     const region =
-      (row.settlement || row.birth_place || "Noma'lum").toString().trim() || "Noma'lum";
+      (row.settlement || row.birth_place || unknownLabel).toString().trim() || unknownLabel;
     const value = getMetricValue(row, metricKey);
     if (Number.isFinite(value)) {
       if (!acc[region]) acc[region] = [];
@@ -424,7 +424,7 @@ const buildRegression = (rows) => {
   };
 };
 
-const buildResearchStats = (rows) => {
+const buildResearchStats = (rows, unknownLabel = "Unknown") => {
   const descriptive = buildDescriptiveStats(rows);
   const bmi = descriptive.find((item) => item.key === "bmi");
   return {
@@ -438,7 +438,7 @@ const buildResearchStats = (rows) => {
         ]
       : [],
     gender: compareByGender(rows),
-    region: compareByRegion(rows),
+    region: compareByRegion(rows, "bmi", unknownLabel),
     correlation: buildCorrelationMatrix(rows),
     regression: buildRegression(rows),
   };
@@ -496,7 +496,8 @@ const StatCard = ({ label, value, sub }) => (
 export const ResearchStatisticsPanel = ({ rows }) => {
   const { lang } = useLanguage();
   const t = (key) => researcherT(lang, key);
-  const stats = useMemo(() => buildResearchStats(rows), [rows]);
+  const unknownLabel = t("unknown");
+  const stats = useMemo(() => buildResearchStats(rows, unknownLabel), [rows, unknownLabel]);
   const mainMetric = stats.descriptive.find((item) => item.key === "bmi");
   const regressionChip = getSignificanceChip(stats.regression.p);
   const anovaChip = getSignificanceChip(stats.region.p);

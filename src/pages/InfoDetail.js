@@ -130,6 +130,370 @@ const clinicalLayers = [
   { icon: FileText, title: "Hisobot", value: "PDF/DOCX/XLSX", color: "#f97316" },
 ];
 
+const infoCopy = {
+  uz: {
+    heroKicker: "Ilmiy antropometriya, somatotip va raqamli risk tahlili",
+    heroTitle: "Morfofunksional tahlilning professional batafsil xaritasi",
+    heroDesc:
+      "Z-Score, Xit-Karter somatotipi, HMAI, MII, ADI va MCRI indekslari bitta konseptual modelga birlashadi: norma, uyg'unlik, moslashuv, nomutanosiblik va metabolik risk alohida emas, tizimli klinik profil sifatida baholanadi.",
+    compositeOverline: "Kompozit profil",
+    compositeTitle: "Indekslar paneli",
+    zScoreTitle: "Z-Score tahlili",
+    zScoreDesc:
+      "Z-score bolani faqat \"normal\" yoki \"normal emas\" deb ajratmaydi. U o'sish trayektoriyasidagi aniq masofani ko'rsatadi, shuning uchun skrining, dinamik monitoring va xavf guruhlarini ajratishda asosiy ilmiy o'lchov bo'lib xizmat qiladi.",
+    zScoreNote:
+      "Z-score bolaning o'lchovi yosh va jins bo'yicha referens populyatsiyadan nechta standart og'ish uzoqlashganini ko'rsatadi. MorphoCheck bo'y, vazn va BMI signalini birgalikda o'qib, ADI va MCRI uchun klinik asos yaratadi.",
+    somatoTitle: "Xit-Karter somatotipi",
+    somatoDesc:
+      "Somatotip endomorfiya, mezomorfiya va ektomorfiya nisbatini ko'rsatadi. MorphoCheck bu uch komponentni tana tarkibi va Z-score bilan solishtirib, fenotipning klinik izohini aniqroq qiladi.",
+    authorOverline: "Muallif indekslari",
+    authorTitle: "HMAI, MII, ADI va MCRI bo'yicha chuqurlashtirilgan ilmiy blok",
+    riskTitle: "MorphoCheck Risk Score konsepsiyasi",
+    riskDesc:
+      "Platforma yakuniy talqinni bitta indeksga qamab qo'ymaydi. MCRI riskni oshiradi, ADI nomutanosiblikni kuchaytiradi, MII va HMAI esa uyg'unlik hamda adaptatsiya himoya omili sifatida qaraladi.",
+    decisionTitle: "Klinik qaror zanjiri",
+    readyOverline: "Tahlilga tayyor",
+    readyTitle: "Tahlilni amaliy natijaga aylantiring",
+    readyDesc:
+      "MorphoCheck Pro ilmiy formulalarni shifokor, tadqiqotchi va administrator uchun o'qilishi oson, eksport qilinadigan va kuzatib boriladigan raqamli hisobotga aylantiradi.",
+    indexCards,
+    clinicalLayers,
+    somatoTypes,
+    flowNodes: [
+      { title: "Antropometriya", desc: "bo'y, vazn, CI", color: "#0ea5e9" },
+      { title: "BIA tarkib", desc: "FM%, MM%", color: "#16a34a" },
+      { title: "Muhit omili", desc: "E, urban, altitude", color: "#8b5cf6" },
+      { title: "Indekslar", desc: "HMAI, MII, ADI, MCRI", color: "#f97316" },
+      { title: "Xulosa", desc: "profil, risk, tavsiya", color: "#dc2626" },
+    ],
+    riskFactors: [
+      ["MCRI yuqori", "risk ortadi", "#dc2626"],
+      ["ADI yuqori", "disgarmoniya ko'payadi", "#f97316"],
+      ["MII yuqori", "uyg'unlik himoya qiladi", "#16a34a"],
+      ["HMAI yuqori", "adaptatsiya kuchli", "#0ea5e9"],
+    ],
+    decisionSteps: [
+      "O'lchovlar validatsiyasi va yosh-jins normasi bilan solishtirish",
+      "Somatotip, tana tarkibi va Z-score kesishmasini aniqlash",
+      "HMAI/MII/ADI/MCRI orqali adaptiv, strukturaviy va risk profilini chiqarish",
+      "Skrining xulosasi, monitoring yo'nalishi va profilaktik tavsiyalarni shakllantirish",
+    ],
+  },
+  ru: {
+    heroKicker: "Научная антропометрия, соматотип и цифровой анализ риска",
+    heroTitle: "Профессиональная подробная карта морфофункционального анализа",
+    heroDesc:
+      "Z-Score, соматотип Хит-Картера, индексы HMAI, MII, ADI и MCRI объединяются в единую концептуальную модель: норма, гармония, адаптация, дисбаланс и метаболический риск оцениваются как системный клинический профиль.",
+    compositeOverline: "Композитный профиль",
+    compositeTitle: "Панель индексов",
+    zScoreTitle: "Анализ Z-Score",
+    zScoreDesc:
+      "Z-score не просто делит ребенка на норму и отклонение. Он показывает точную дистанцию от траектории роста и служит научной основой для скрининга, динамического мониторинга и выделения групп риска.",
+    zScoreNote:
+      "Z-score показывает, на сколько стандартных отклонений показатель ребенка отличается от референсной популяции по возрасту и полу. MorphoCheck совместно читает сигналы роста, веса и BMI, формируя клиническую основу для ADI и MCRI.",
+    somatoTitle: "Соматотип Хит-Картера",
+    somatoDesc:
+      "Соматотип показывает соотношение эндоморфии, мезоморфии и эктоморфии. MorphoCheck сопоставляет эти три компонента с составом тела и Z-score, уточняя клиническую интерпретацию фенотипа.",
+    authorOverline: "Авторские индексы",
+    authorTitle: "Углубленный научный блок по HMAI, MII, ADI и MCRI",
+    riskTitle: "Концепция MorphoCheck Risk Score",
+    riskDesc:
+      "Платформа не сводит итоговую интерпретацию к одному индексу. MCRI усиливает риск, ADI отражает дисбаланс, а MII и HMAI рассматриваются как защитные факторы гармонии и адаптации.",
+    decisionTitle: "Цепочка клинического решения",
+    readyOverline: "Готово к анализу",
+    readyTitle: "Превратите анализ в практический результат",
+    readyDesc:
+      "MorphoCheck Pro превращает научные формулы в понятный, экспортируемый и отслеживаемый цифровой отчет для врача, исследователя и администратора.",
+    indexCards: [
+      {
+        ...indexCards[0],
+        title: "Индекс региональной морфологической адаптации",
+        subtitle: "HMAI (адаптация)",
+        meaning:
+          "Связывает соотношение мышечного и жирового компонентов с BMI и региональным экологическим коэффициентом, показывая уровень морфологической адаптации ребенка к среде.",
+        deep: "Обычный BMI не разделяет состав тела. HMAI объединяет здоровое мышечное преимущество, энергетический резерв и влияние среды в один интегративный показатель.",
+        factors: [
+          "MM% - мышечная масса",
+          "FM% - жировая масса",
+          "BMI - индекс массы тела",
+          "E - региональный фактор",
+        ],
+        zones: ["Низкая адаптация", "Компенсация", "Оптимальная адаптация", "Спортивный фенотип"],
+      },
+      {
+        ...indexCards[1],
+        title: "Индекс морфологической интеграции",
+        subtitle: "MII (интеграция)",
+        meaning:
+          "Оценивает корреляционную согласованность роста, веса, окружности груди, BMI и процента жира, показывая организм как единую биологическую систему.",
+        deep: "MII измеряет системную согласованность вместо изолированных чисел. Высокий MII указывает на согласованное развитие параметров, низкий MII может отражать скрытый дисбаланс.",
+        factors: ["r(h,m) - рост/вес", "r(m,CI) - вес/грудь", "r(BMI,FM%) - индекс/состав"],
+        zones: ["Фрагментация", "Переходная зона", "Гармоничная интеграция", "Высокая системность"],
+      },
+      {
+        ...indexCards[2],
+        title: "Индекс антропометрической дисгармонии",
+        subtitle: "ADI (дисгармония)",
+        meaning:
+          "Объединяет отклонения Z-score по росту, весу и BMI, давая удобную для клинического скрининга оценку морфологической несогласованности.",
+        deep: "Когда Z-score читается отдельно, клинический сигнал дробится. ADI суммирует отклонения и помогает быстрее заметить общий риск.",
+        factors: ["Zh - Z-score роста", "Zw - Z-score веса", "ZBMI - Z-score BMI"],
+        zones: ["Близко к норме", "Легкий дисбаланс", "Средняя дисгармония", "Сильная дисгармония"],
+      },
+      {
+        ...indexCards[3],
+        title: "Комплексный индекс риска MorphoCheck",
+        subtitle: "MCRI (индекс риска)",
+        meaning:
+          "Совместно учитывает BMI, жировую массу и мышечный компонент, помогая прогнозировать адипостатический фенотип и метаболический риск на раннем этапе.",
+        deep: "Высокий BMI не всегда означает одинаковый риск: при высокой мышечной массе клинический смысл один, при высокой жировой массе и низких мышцах риск усиливается.",
+        factors: ["BMIz - стандарт BMI", "FMz - Z-score жира", "MMz - Z-score мышц"],
+        zones: ["Низкий риск", "Наблюдение", "Профилактика", "Высокий риск"],
+      },
+    ],
+    clinicalLayers: [
+      { icon: Activity, title: "Стандарт Z-Score", value: "WHO/ВОЗ", color: "#0ea5e9" },
+      { icon: Dna, title: "Модель Хит-Картера", value: "3 компонента", color: "#16a34a" },
+      { icon: BrainCircuit, title: "AI-интерпретация", value: "Контекстная", color: "#8b5cf6" },
+      { icon: FileText, title: "Отчет", value: "PDF/DOCX/XLSX", color: "#f97316" },
+    ],
+    somatoTypes: [
+      { label: "Эндоморф", value: 72, color: "#f97316" },
+      { label: "Мезоморф", value: 88, color: "#16a34a" },
+      { label: "Эктоморф", value: 54, color: "#0ea5e9" },
+    ],
+    flowNodes: [
+      { title: "Антропометрия", desc: "рост, вес, CI", color: "#0ea5e9" },
+      { title: "Состав BIA", desc: "FM%, MM%", color: "#16a34a" },
+      { title: "Фактор среды", desc: "E, urban, altitude", color: "#8b5cf6" },
+      { title: "Индексы", desc: "HMAI, MII, ADI, MCRI", color: "#f97316" },
+      { title: "Заключение", desc: "профиль, риск, рекомендация", color: "#dc2626" },
+    ],
+    riskFactors: [
+      ["Высокий MCRI", "риск повышается", "#dc2626"],
+      ["Высокий ADI", "дисгармония усиливается", "#f97316"],
+      ["Высокий MII", "гармония защищает", "#16a34a"],
+      ["Высокий HMAI", "адаптация сильная", "#0ea5e9"],
+    ],
+    decisionSteps: [
+      "Валидация измерений и сравнение с возрастно-половыми нормами",
+      "Определение пересечения соматотипа, состава тела и Z-score",
+      "Вывод адаптивного, структурного и риск-профиля через HMAI/MII/ADI/MCRI",
+      "Формирование скринингового вывода, направления мониторинга и профилактических рекомендаций",
+    ],
+  },
+  en: {
+    heroKicker: "Scientific anthropometry, somatotype, and digital risk analysis",
+    heroTitle: "A professional detailed map of morphofunctional analysis",
+    heroDesc:
+      "Z-Score, Heath-Carter somatotype, HMAI, MII, ADI, and MCRI indices are combined into one conceptual model: norm, harmony, adaptation, disharmony, and metabolic risk are evaluated as a system-level clinical profile.",
+    compositeOverline: "Composite profile",
+    compositeTitle: "Index panel",
+    zScoreTitle: "Z-Score analysis",
+    zScoreDesc:
+      "Z-score does more than label a child as normal or abnormal. It shows the exact distance from the growth trajectory, making it a core scientific measure for screening, dynamic monitoring, and risk-group detection.",
+    zScoreNote:
+      "Z-score shows how many standard deviations a child's measurement differs from the age- and sex-specific reference population. MorphoCheck reads height, weight, and BMI signals together to build the clinical basis for ADI and MCRI.",
+    somatoTitle: "Heath-Carter somatotype",
+    somatoDesc:
+      "Somatotype shows the balance of endomorphy, mesomorphy, and ectomorphy. MorphoCheck compares these three components with body composition and Z-score to make the clinical interpretation of phenotype clearer.",
+    authorOverline: "Author indices",
+    authorTitle: "Advanced scientific block for HMAI, MII, ADI, and MCRI",
+    riskTitle: "MorphoCheck Risk Score concept",
+    riskDesc:
+      "The platform does not compress the final interpretation into a single index. MCRI increases risk, ADI strengthens the disharmony signal, while MII and HMAI are treated as protective factors of harmony and adaptation.",
+    decisionTitle: "Clinical decision chain",
+    readyOverline: "Ready for analysis",
+    readyTitle: "Turn analysis into a practical result",
+    readyDesc:
+      "MorphoCheck Pro turns scientific formulas into a readable, exportable, and trackable digital report for physicians, researchers, and administrators.",
+    indexCards: [
+      {
+        ...indexCards[0],
+        title: "Regional Morphological Adaptation Index",
+        subtitle: "HMAI (adaptation)",
+        meaning:
+          "Links the ratio between muscle and fat components with BMI and the regional ecological coefficient, showing how well the child's morphology adapts to the environment.",
+        deep: "Simple BMI does not separate body composition. HMAI combines healthy muscle dominance, energy reserve, and environmental influence into one integrative indicator.",
+        factors: [
+          "MM% - muscle mass",
+          "FM% - fat mass",
+          "BMI - body mass index",
+          "E - regional factor",
+        ],
+        zones: ["Low adaptation", "Compensation", "Optimal adaptation", "Sport phenotype"],
+      },
+      {
+        ...indexCards[1],
+        title: "Morphological Integration Index",
+        subtitle: "MII (integration)",
+        meaning:
+          "Evaluates the correlation harmony among height, weight, chest circumference, BMI, and fat percentage, showing the body as a single biological system.",
+        deep: "MII measures systemic harmony instead of isolated numbers. A high MII shows coordinated development, while a low MII can indicate hidden imbalance.",
+        factors: [
+          "r(h,m) - height/weight",
+          "r(m,CI) - weight/chest",
+          "r(BMI,FM%) - index/composition",
+        ],
+        zones: ["Fragmentation", "Transition zone", "Harmonious integration", "High systemicity"],
+      },
+      {
+        ...indexCards[2],
+        title: "Anthropometric Disharmony Index",
+        subtitle: "ADI (disharmony)",
+        meaning:
+          "Combines Z-score deviations for height, weight, and BMI into a clinically convenient measure of overall morphological imbalance.",
+        deep: "When Z-scores are read separately, the clinical signal becomes fragmented. ADI sums deviations and helps detect total risk faster.",
+        factors: ["Zh - height Z-score", "Zw - weight Z-score", "ZBMI - BMI Z-score"],
+        zones: ["Near normal", "Mild imbalance", "Moderate disharmony", "Severe disharmony"],
+      },
+      {
+        ...indexCards[3],
+        title: "MorphoCheck Complex Risk Index",
+        subtitle: "MCRI (risk index)",
+        meaning:
+          "Combines BMI, fat mass, and muscle component to forecast adipostatic phenotype and metabolic risk at an early stage.",
+        deep: "High BMI does not always mean the same risk: a child with high muscle mass has a different clinical meaning than one with high fat mass and low muscle mass.",
+        factors: ["BMIz - BMI standard", "FMz - fat Z-score", "MMz - muscle Z-score"],
+        zones: ["Low risk", "Monitoring", "Prevention", "High risk"],
+      },
+    ],
+    clinicalLayers: [
+      { icon: Activity, title: "Z-Score standard", value: "WHO", color: "#0ea5e9" },
+      { icon: Dna, title: "Heath-Carter model", value: "3 components", color: "#16a34a" },
+      { icon: BrainCircuit, title: "AI interpretation", value: "Contextual", color: "#8b5cf6" },
+      { icon: FileText, title: "Report", value: "PDF/DOCX/XLSX", color: "#f97316" },
+    ],
+    somatoTypes: [
+      { label: "Endomorph", value: 72, color: "#f97316" },
+      { label: "Mesomorph", value: 88, color: "#16a34a" },
+      { label: "Ectomorph", value: 54, color: "#0ea5e9" },
+    ],
+    flowNodes: [
+      { title: "Anthropometry", desc: "height, weight, CI", color: "#0ea5e9" },
+      { title: "BIA composition", desc: "FM%, MM%", color: "#16a34a" },
+      { title: "Environment factor", desc: "E, urban, altitude", color: "#8b5cf6" },
+      { title: "Indices", desc: "HMAI, MII, ADI, MCRI", color: "#f97316" },
+      { title: "Conclusion", desc: "profile, risk, advice", color: "#dc2626" },
+    ],
+    riskFactors: [
+      ["High MCRI", "risk increases", "#dc2626"],
+      ["High ADI", "disharmony increases", "#f97316"],
+      ["High MII", "harmony is protective", "#16a34a"],
+      ["High HMAI", "adaptation is strong", "#0ea5e9"],
+    ],
+    decisionSteps: [
+      "Validate measurements and compare them with age-sex norms",
+      "Identify the intersection of somatotype, body composition, and Z-score",
+      "Produce adaptive, structural, and risk profiles through HMAI/MII/ADI/MCRI",
+      "Generate screening conclusions, monitoring direction, and preventive recommendations",
+    ],
+  },
+  kz: {
+    heroKicker: "Ғылыми антропометрия, соматотип және цифрлық қауіп талдауы",
+    heroTitle: "Морфофункционалдық талдаудың кәсіби толық картасы",
+    heroDesc:
+      "Z-Score, Хит-Картер соматотипі, HMAI, MII, ADI және MCRI индекстері бір тұжырымдамалық модельге бірігеді: норма, үйлесім, бейімделу, үйлесімсіздік және метаболикалық қауіп жүйелі клиникалық профиль ретінде бағаланады.",
+    compositeOverline: "Композиттік профиль",
+    compositeTitle: "Индекстер панелі",
+    zScoreTitle: "Z-Score талдауы",
+    zScoreDesc:
+      "Z-score баланы тек норма немесе ауытқу деп бөлмейді. Ол өсу траекториясынан нақты қашықтықты көрсетеді, сондықтан скрининг, динамикалық мониторинг және қауіп топтарын анықтауда негізгі ғылыми өлшем болып табылады.",
+    zScoreNote:
+      "Z-score баланың көрсеткіші жас пен жыныс бойынша референстік популяциядан қанша стандартты ауытқуға алыстағанын көрсетеді. MorphoCheck бой, салмақ және BMI сигналдарын бірге оқып, ADI және MCRI үшін клиникалық негіз қалыптастырады.",
+    somatoTitle: "Хит-Картер соматотипі",
+    somatoDesc:
+      "Соматотип эндоморфия, мезоморфия және эктоморфия арақатынасын көрсетеді. MorphoCheck бұл үш компонентті дене құрамы және Z-score көрсеткішімен салыстырып, фенотиптің клиникалық түсіндірмесін нақтылайды.",
+    authorOverline: "Авторлық индекстер",
+    authorTitle: "HMAI, MII, ADI және MCRI бойынша тереңдетілген ғылыми блок",
+    riskTitle: "MorphoCheck Risk Score тұжырымдамасы",
+    riskDesc:
+      "Платформа қорытынды интерпретацияны бір ғана индекске байлап қоймайды. MCRI қауіпті арттырады, ADI үйлесімсіздікті күшейтеді, ал MII және HMAI үйлесім мен бейімделудің қорғаныс факторлары ретінде қаралады.",
+    decisionTitle: "Клиникалық шешім тізбегі",
+    readyOverline: "Талдауға дайын",
+    readyTitle: "Талдауды практикалық нәтижеге айналдырыңыз",
+    readyDesc:
+      "MorphoCheck Pro ғылыми формулаларды дәрігер, зерттеуші және әкімші үшін оқуға жеңіл, экспортталатын және бақылауға болатын цифрлық есепке айналдырады.",
+    indexCards: [
+      {
+        ...indexCards[0],
+        title: "Аймақтық морфологиялық бейімделу индексі",
+        subtitle: "HMAI (бейімделу)",
+        meaning:
+          "Бұлшықет пен май компоненттерінің қатынасын BMI және аймақтық экологиялық коэффициентпен байланыстырып, баланың ортаға морфологиялық бейімделу деңгейін көрсетеді.",
+        deep: "Қарапайым BMI дене құрамын ажыратпайды. HMAI сау бұлшықет басымдығын, энергетикалық қорды және орта әсерін бір интегративті көрсеткішке біріктіреді.",
+        factors: [
+          "MM% - бұлшықет массасы",
+          "FM% - май массасы",
+          "BMI - дене массасы индексі",
+          "E - аймақтық фактор",
+        ],
+        zones: ["Төмен бейімделу", "Компенсация", "Оңтайлы бейімделу", "Спорттық фенотип"],
+      },
+      {
+        ...indexCards[1],
+        title: "Морфологиялық интеграция индексі",
+        subtitle: "MII (интеграция)",
+        meaning:
+          "Бой, салмақ, кеуде шеңбері, BMI және май пайызы арасындағы корреляциялық үйлесімді бағалап, ағзаны біртұтас биологиялық жүйе ретінде көрсетеді.",
+        deep: "MII оқшау сандардың орнына жүйелік үйлесімді өлшейді. Жоғары MII параметрлердің үйлесімді дамуын, төмен MII жасырын дисбалансты көрсетуі мүмкін.",
+        factors: ["r(h,m) - бой/салмақ", "r(m,CI) - салмақ/кеуде", "r(BMI,FM%) - индекс/құрам"],
+        zones: ["Фрагментация", "Өтпелі аймақ", "Үйлесімді интеграция", "Жоғары жүйелілік"],
+      },
+      {
+        ...indexCards[2],
+        title: "Антропометриялық үйлесімсіздік индексі",
+        subtitle: "ADI (үйлесімсіздік)",
+        meaning:
+          "Бой, салмақ және BMI бойынша Z-score ауытқуларын біріктіріп, жалпы морфологиялық үйлесімсіздік деңгейін клиникалық скринингке ыңғайлы түрде береді.",
+        deep: "Z-score жеке оқылғанда клиникалық сигнал бөлшектенеді. ADI ауытқулар қосындысын көрсетіп, жалпы қауіпті тезірек байқауға көмектеседі.",
+        factors: ["Zh - бой Z-score", "Zw - салмақ Z-score", "ZBMI - BMI Z-score"],
+        zones: ["Нормаға жақын", "Жеңіл дисбаланс", "Орташа үйлесімсіздік", "Күшті үйлесімсіздік"],
+      },
+      {
+        ...indexCards[3],
+        title: "MorphoCheck кешенді қауіп индексі",
+        subtitle: "MCRI (қауіп индексі)",
+        meaning:
+          "BMI, май массасы және бұлшықет компонентін бірге есептеп, адипостатикалық фенотип пен метаболикалық қауіпті ерте кезеңде болжауға көмектеседі.",
+        deep: "BMI жоғары болуы әрдайым бірдей қауіп дегенді білдірмейді: бұлшықет массасы жоғары балада клиникалық мән басқа, май массасы жоғары әрі бұлшықет төмен болса қауіп күшейеді.",
+        factors: ["BMIz - BMI стандарты", "FMz - май Z-score", "MMz - бұлшықет Z-score"],
+        zones: ["Төмен қауіп", "Бақылау", "Профилактика", "Жоғары қауіп"],
+      },
+    ],
+    clinicalLayers: [
+      { icon: Activity, title: "Z-Score стандарты", value: "WHO/ДДҰ", color: "#0ea5e9" },
+      { icon: Dna, title: "Хит-Картер моделі", value: "3 компонент", color: "#16a34a" },
+      { icon: BrainCircuit, title: "AI түсіндіру", value: "Контекстік", color: "#8b5cf6" },
+      { icon: FileText, title: "Есеп", value: "PDF/DOCX/XLSX", color: "#f97316" },
+    ],
+    somatoTypes: [
+      { label: "Эндоморф", value: 72, color: "#f97316" },
+      { label: "Мезоморф", value: 88, color: "#16a34a" },
+      { label: "Эктоморф", value: 54, color: "#0ea5e9" },
+    ],
+    flowNodes: [
+      { title: "Антропометрия", desc: "бой, салмақ, CI", color: "#0ea5e9" },
+      { title: "BIA құрамы", desc: "FM%, MM%", color: "#16a34a" },
+      { title: "Орта факторы", desc: "E, urban, altitude", color: "#8b5cf6" },
+      { title: "Индекстер", desc: "HMAI, MII, ADI, MCRI", color: "#f97316" },
+      { title: "Қорытынды", desc: "профиль, қауіп, ұсыныс", color: "#dc2626" },
+    ],
+    riskFactors: [
+      ["MCRI жоғары", "қауіп артады", "#dc2626"],
+      ["ADI жоғары", "үйлесімсіздік күшейеді", "#f97316"],
+      ["MII жоғары", "үйлесім қорғайды", "#16a34a"],
+      ["HMAI жоғары", "бейімделу күшті", "#0ea5e9"],
+    ],
+    decisionSteps: [
+      "Өлшемдерді валидациялау және жас-жыныс нормаларымен салыстыру",
+      "Соматотип, дене құрамы және Z-score қиылысын анықтау",
+      "HMAI/MII/ADI/MCRI арқылы бейімделу, құрылымдық және қауіп профильдерін шығару",
+      "Скрининг қорытындысын, мониторинг бағытын және профилактикалық ұсыныстарды қалыптастыру",
+    ],
+  },
+};
+
 function GlassPanel({ children, sx, hover = true }) {
   const theme = useTheme();
   const { mode } = useThemeMode();
@@ -164,7 +528,7 @@ function GlassPanel({ children, sx, hover = true }) {
   );
 }
 
-function ZScoreScale() {
+function ZScoreScale({ copy }) {
   const theme = useTheme();
 
   return (
@@ -198,16 +562,14 @@ function ZScoreScale() {
         }}
       >
         <Typography variant="body2" color="text.secondary">
-          Z-score bolaning o'lchovi yosh va jins bo'yicha referens populyatsiyadan nechta standart
-          og'ish uzoqlashganini ko'rsatadi. MorphoCheck bo'y, vazn va BMI signalini birgalikda
-          o'qib, ADI va MCRI uchun klinik asos yaratadi.
+          {copy.zScoreNote}
         </Typography>
       </Box>
     </Box>
   );
 }
 
-function SomatoTriangle() {
+function SomatoTriangle({ copy }) {
   const theme = useTheme();
 
   return (
@@ -268,7 +630,7 @@ function SomatoTriangle() {
         ))}
       </Box>
       <Stack spacing={1.4} sx={{ width: "100%" }}>
-        {somatoTypes.map((type) => (
+        {copy.somatoTypes.map((type) => (
           <Box key={type.label}>
             <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.5 }}>
               <Typography variant="body2" fontWeight={700}>
@@ -366,16 +728,10 @@ function IndexRadar() {
   );
 }
 
-function FlowDiagram() {
+function FlowDiagram({ copy }) {
   const theme = useTheme();
   const { mode } = useThemeMode();
-  const nodes = [
-    { title: "Antropometriya", desc: "bo'y, vazn, CI", color: "#0ea5e9" },
-    { title: "BIA tarkib", desc: "FM%, MM%", color: "#16a34a" },
-    { title: "Muhit omili", desc: "E, urban, altitude", color: "#8b5cf6" },
-    { title: "Indekslar", desc: "HMAI, MII, ADI, MCRI", color: "#f97316" },
-    { title: "Xulosa", desc: "profil, risk, tavsiya", color: "#dc2626" },
-  ];
+  const nodes = copy.flowNodes;
 
   return (
     <Grid container spacing={1.5}>
@@ -534,7 +890,8 @@ export default function InfoDetail() {
   const theme = useTheme();
   const navigate = useNavigate();
   const { mode } = useThemeMode();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
+  const copy = infoCopy[lang] || infoCopy.uz;
 
   return (
     <Box
@@ -602,7 +959,7 @@ export default function InfoDetail() {
                       MorphoCheck Pro
                     </Typography>
                     <Typography variant="body2" color="text.secondary" fontWeight={800}>
-                      Ilmiy antropometriya, somatotip va raqamli risk tahlili
+                      {copy.heroKicker}
                     </Typography>
                   </Box>
                 </Stack>
@@ -617,7 +974,7 @@ export default function InfoDetail() {
                     fontSize: { xs: "2.45rem", sm: "3.5rem", md: "5.2rem" },
                   }}
                 >
-                  Morfofunksional tahlilning professional batafsil xaritasi
+                  {copy.heroTitle}
                 </Typography>
 
                 <Typography
@@ -625,13 +982,11 @@ export default function InfoDetail() {
                   color="text.secondary"
                   sx={{ maxWidth: 860, lineHeight: 1.65, fontWeight: 500 }}
                 >
-                  Z-Score, Xit-Karter somatotipi, HMAI, MII, ADI va MCRI indekslari bitta konseptual
-                  modelga birlashadi: norma, uyg'unlik, moslashuv, nomutanosiblik va metabolik risk
-                  alohida emas, tizimli klinik profil sifatida baholanadi.
+                  {copy.heroDesc}
                 </Typography>
 
                 <Grid container spacing={1.5}>
-                  {clinicalLayers.map((item, index) => {
+                  {copy.clinicalLayers.map((item, index) => {
                     const Icon = item.icon;
                     return (
                       <Grid item xs={6} md={3} key={item.title}>
@@ -676,10 +1031,10 @@ export default function InfoDetail() {
                         variant="overline"
                         sx={{ color: "primary.main", fontWeight: 800 }}
                       >
-                        Composite profile
+                        {copy.compositeOverline}
                       </Typography>
                       <Typography variant="h4" fontWeight={800}>
-                        Indekslar paneli
+                        {copy.compositeTitle}
                       </Typography>
                     </Box>
                     <Chip
@@ -693,7 +1048,7 @@ export default function InfoDetail() {
                     />
                   </Stack>
                   <IndexRadar />
-                  <FlowDiagram />
+                  <FlowDiagram copy={copy} />
                 </Box>
               </GlassPanel>
             </motion.div>
@@ -714,16 +1069,13 @@ export default function InfoDetail() {
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <BarChart3 color="#0ea5e9" />
                     <Typography variant="h4" fontWeight={800}>
-                      Z-Score tahlili
+                      {copy.zScoreTitle}
                     </Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Z-score bolani faqat "normal" yoki "normal emas" deb ajratmaydi. U o'sish
-                    trayektoriyasidagi aniq masofani ko'rsatadi, shuning uchun skrining, dinamik
-                    monitoring va xavf guruhlarini ajratishda asosiy ilmiy o'lchov bo'lib xizmat
-                    qiladi.
+                    {copy.zScoreDesc}
                   </Typography>
-                  <ZScoreScale />
+                  <ZScoreScale copy={copy} />
                 </Box>
               </GlassPanel>
             </motion.div>
@@ -742,15 +1094,13 @@ export default function InfoDetail() {
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <LineChart color="#16a34a" />
                     <Typography variant="h4" fontWeight={800}>
-                      Xit-Karter somatotipi
+                      {copy.somatoTitle}
                     </Typography>
                   </Stack>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    Somatotip endomorfiya, mezomorfiya va ektomorfiya nisbatini ko'rsatadi.
-                    MorphoCheck bu uch komponentni tana tarkibi va Z-score bilan solishtirib,
-                    fenotipning klinik izohini aniqroq qiladi.
+                    {copy.somatoDesc}
                   </Typography>
-                  <SomatoTriangle />
+                  <SomatoTriangle copy={copy} />
                 </Box>
               </GlassPanel>
             </motion.div>
@@ -762,16 +1112,16 @@ export default function InfoDetail() {
             <Microscope color={theme.palette.primary.main} />
             <Box>
               <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
-                Author indices
+                {copy.authorOverline}
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 800, lineHeight: 1.05 }}>
-                HMAI, MII, ADI va MCRI bo'yicha chuqurlashtirilgan ilmiy blok
+                {copy.authorTitle}
               </Typography>
             </Box>
           </Stack>
 
           <Grid container spacing={3}>
-            {indexCards.map((item, index) => (
+            {copy.indexCards.map((item, index) => (
               <Grid item xs={12} lg={6} key={item.key}>
                 <IndexDeepCard item={item} index={index} />
               </Grid>
@@ -792,13 +1142,11 @@ export default function InfoDetail() {
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <TrendingUp color="#8b5cf6" />
                     <Typography variant="h4" fontWeight={800}>
-                      MorphoCheck Risk Score konsepsiyasi
+                      {copy.riskTitle}
                     </Typography>
                   </Stack>
                   <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5 }}>
-                    Platforma yakuniy talqinni bitta indeksga qamab qo'ymaydi. MCRI riskni oshiradi,
-                    ADI nomutanosiblikni kuchaytiradi, MII va HMAI esa uyg'unlik hamda adaptatsiya
-                    himoya omili sifatida qaraladi.
+                    {copy.riskDesc}
                   </Typography>
                   <Box
                     sx={{
@@ -816,12 +1164,7 @@ export default function InfoDetail() {
                     MC-Score = w1 x MCRI - w2 x MII - w3 x HMAI + w4 x ADI
                   </Box>
                   <Grid container spacing={1.5} sx={{ mt: 2 }}>
-                    {[
-                      ["MCRI yuqori", "risk ortadi", "#dc2626"],
-                      ["ADI yuqori", "disgarmoniya ko'payadi", "#f97316"],
-                      ["MII yuqori", "uyg'unlik himoya qiladi", "#16a34a"],
-                      ["HMAI yuqori", "adaptatsiya kuchli", "#0ea5e9"],
-                    ].map(([title, desc, color]) => (
+                    {copy.riskFactors.map(([title, desc, color]) => (
                       <Grid item xs={12} sm={6} key={title}>
                         <Box sx={{ p: 1.6, borderRadius: 1, bgcolor: alpha(color, 0.09) }}>
                           <Typography variant="subtitle2" fontWeight={800} sx={{ color }}>
@@ -852,16 +1195,11 @@ export default function InfoDetail() {
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
                     <HeartPulse color="#dc2626" />
                     <Typography variant="h4" fontWeight={800}>
-                      Klinik qaror zanjiri
+                      {copy.decisionTitle}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
-                    {[
-                      "O'lchovlar validatsiyasi va yosh-jins normasi bilan solishtirish",
-                      "Somatotip, tana tarkibi va Z-score kesishmasini aniqlash",
-                      "HMAI/MII/ADI/MCRI orqali adaptiv, strukturaviy va risk profilini chiqarish",
-                      "Skrining xulosasi, monitoring yo'nalishi va profilaktik tavsiyalarni shakllantirish",
-                    ].map((text, index) => (
+                    {copy.decisionSteps.map((text, index) => (
                       <Stack key={text} direction="row" spacing={1.5} alignItems="flex-start">
                         <Box
                           sx={{
@@ -909,15 +1247,13 @@ export default function InfoDetail() {
             >
               <Box>
                 <Typography variant="overline" sx={{ color: "primary.main", fontWeight: 800 }}>
-                  Ready for analysis
+                  {copy.readyOverline}
                 </Typography>
                 <Typography variant="h3" sx={{ fontWeight: 800, mb: 1 }}>
-                  Tahlilni amaliy natijaga aylantiring
+                  {copy.readyTitle}
                 </Typography>
                 <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 760 }}>
-                  MorphoCheck Pro ilmiy formulalarni shifokor, tadqiqotchi va administrator uchun
-                  o'qilishi oson, eksport qilinadigan va kuzatib boriladigan raqamli hisobotga
-                  aylantiradi.
+                  {copy.readyDesc}
                 </Typography>
               </Box>
               <Button
