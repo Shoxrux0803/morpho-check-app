@@ -13,7 +13,39 @@ import {
   Tooltip,
   Box,
 } from "@mui/material";
-import { Visibility, Delete, RestoreFromTrash, Edit } from "@mui/icons-material";
+import { Visibility, RestoreFromTrash, Edit } from "@mui/icons-material";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { pageT } from "../../utils/pageI18n";
+
+const REGION_LABELS_RU = {
+  "toshkent shahri": "г. Ташкент",
+  toshkent: "Ташкентская область",
+  "toshkent viloyati": "Ташкентская область",
+  qoraqalpogiston: "Республика Каракалпакстан",
+  "qoraqalpog'iston": "Республика Каракалпакстан",
+  andijon: "Андижанская область",
+  buxoro: "Бухарская область",
+  fargona: "Ферганская область",
+  "farg'ona": "Ферганская область",
+  jizzax: "Джизакская область",
+  xorazm: "Хорезмская область",
+  namangan: "Наманганская область",
+  navoiy: "Навоийская область",
+  qashqadaryo: "Кашкадарьинская область",
+  samarqand: "Самаркандская область",
+  sirdaryo: "Сырдарьинская область",
+  surxondaryo: "Сурхандарьинская область",
+};
+
+const getRegionLabel = (value, lang) => {
+  if (lang !== "ru") return value || "-";
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/[‘’`ʻʼ]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return REGION_LABELS_RU[key] || value || "-";
+};
 
 const AdminTable = ({
   rows,
@@ -27,7 +59,29 @@ const AdminTable = ({
   onRestore, // Super admin uchun tiklash callback
   onEdit, // Tahrirlash callback
 }) => {
+  const { lang } = useLanguage();
+  const t = (key) => pageT(lang, key);
   const isSuperAdmin = user?.role === "superadmin";
+  const translateGender = (value) => {
+    const normalized = String(value || "").toLowerCase();
+    if (["erkak", "male", "m", "boy"].includes(normalized)) return t("male");
+    if (["ayol", "female", "f", "girl"].includes(normalized)) return t("female");
+    return value || "-";
+  };
+  const translateBmiStatus = (value) => {
+    const normalized = String(value || "").toLowerCase();
+    if (normalized.includes("normal")) return lang === "ru" ? "Норма" : value;
+    if (normalized.includes("semizlik") || normalized.includes("obese")) {
+      return lang === "ru" ? "Ожирение" : value;
+    }
+    if (normalized.includes("ozg") || normalized.includes("underweight")) {
+      return lang === "ru" ? "Недостаточный вес" : value;
+    }
+    if (normalized.includes("ortiqcha") || normalized.includes("overweight")) {
+      return lang === "ru" ? "Избыточный вес" : value;
+    }
+    return value || "-";
+  };
 
   return (
     <TableContainer sx={{ maxWidth: "100%", overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -41,16 +95,16 @@ const AdminTable = ({
                 indeterminate={checked.size > 0 && !allChecked}
               />
             </TableCell>
-            <TableCell>Sana</TableCell>
-            <TableCell>F.I.SH</TableCell>
-            <TableCell>Jins</TableCell>
-            <TableCell>Yosh</TableCell>
-            <TableCell>Manzil</TableCell>
+            <TableCell>{t("date")}</TableCell>
+            <TableCell>{t("fullName")}</TableCell>
+            <TableCell>{t("gender")}</TableCell>
+            <TableCell>{t("age")}</TableCell>
+            <TableCell>{t("addressShort")}</TableCell>
             <TableCell>BMI</TableCell>
-            <TableCell>Holat</TableCell>
+            <TableCell>{t("status")}</TableCell>
             {isSuperAdmin && <TableCell>Admin</TableCell>}
-            {isSuperAdmin && <TableCell>Status</TableCell>}
-            <TableCell>Amallar</TableCell>
+            {isSuperAdmin && <TableCell>{t("status")}</TableCell>}
+            <TableCell>{t("actions")}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -108,19 +162,21 @@ const AdminTable = ({
                     </Typography>
                   </TableCell>
 
-                  <TableCell sx={{ textTransform: "capitalize" }}>{row.gender}</TableCell>
+                  <TableCell sx={{ textTransform: "capitalize" }}>
+                    {translateGender(row.gender)}
+                  </TableCell>
 
                   <TableCell>
-                    {row.age} yil
+                    {row.age} {t("yearShort")}
                     {row.age_months !== undefined && row.age_months !== null && (
                       <Typography variant="caption" display="block" color="text.secondary">
-                        {row.age_months} oy, {row.age_days} kun
+                        {row.age_months} {t("monthShort")}, {row.age_days} {t("dayShort")}
                       </Typography>
                     )}
                   </TableCell>
 
                   <TableCell>
-                    {row.region || "-"}
+                    {getRegionLabel(row.region, lang)}
                     <Typography variant="caption" display="block" color="text.secondary">
                       {[row.district, row.mahalla, row.address].filter(Boolean).join(" / ")}
                     </Typography>
@@ -129,13 +185,13 @@ const AdminTable = ({
                   <TableCell>
                     {row.bmi ?? "-"}
                     <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                      ({row.bmiStatus})
+                      ({translateBmiStatus(row.bmiStatus)})
                     </Typography>
                   </TableCell>
 
                   <TableCell sx={{ textDecoration: "none !important" }}>
                     <Chip
-                      label={row.bmiStatus || "-"}
+                      label={translateBmiStatus(row.bmiStatus)}
                       size="small"
                       color={
                         row.bmiStatus?.startsWith("Semizlik")
@@ -158,7 +214,7 @@ const AdminTable = ({
                         color={isDeleted ? "text.disabled" : "primary"}
                         fontWeight="medium"
                       >
-                        {row.created_by_name || "Noma'lum"}
+                        {row.created_by_name || t("unknown")}
                       </Typography>
                     </TableCell>
                   )}
@@ -171,7 +227,8 @@ const AdminTable = ({
                           title={
                             <Box>
                               <Typography variant="caption" display="block">
-                                🗑️ O'chirgan: <strong>{row.deleted_by_name || "Noma'lum"}</strong>
+                                {t("deletedByShort")}:{" "}
+                                <strong>{row.deleted_by_name || t("unknown")}</strong>
                               </Typography>
                               {row.deleted_at && (
                                 <Typography variant="caption" display="block">
@@ -184,9 +241,8 @@ const AdminTable = ({
                           placement="top"
                         >
                           <Chip
-                            label="O'CHIRILGAN"
+                            label={t("deletedStatus")}
                             size="small"
-                            icon={<span style={{ fontSize: 12, paddingLeft: 4 }}>🗑️</span>}
                             sx={{
                               bgcolor: "error.main",
                               color: "white",
@@ -199,7 +255,7 @@ const AdminTable = ({
                         </Tooltip>
                       ) : (
                         <Chip
-                          label="Aktiv"
+                          label={t("active")}
                           size="small"
                           sx={{
                             bgcolor: "success.light",
@@ -220,7 +276,7 @@ const AdminTable = ({
                     <Box display="flex" gap={0.5}>
                       {/* Ko'rish tugmasi: aktiv qatorlar + super admin uchun o'chirilganlar ham */}
                       {(!isDeleted || isSuperAdmin) && (
-                        <Tooltip title={isDeleted ? "O'chirilgan ma'lumotni ko'rish" : "Batafsil"}>
+                        <Tooltip title={isDeleted ? t("viewDeletedData") : t("detailsTitle")}>
                           <IconButton
                             size="small"
                             sx={isDeleted ? { color: "error.main", opacity: 0.8 } : {}}
@@ -232,7 +288,7 @@ const AdminTable = ({
                       )}
                       {/* Tahrirlash tugmasi: faqat o'chirilmaganlar uchun */}
                       {!isDeleted && onEdit && (
-                        <Tooltip title="Tahrirlash">
+                        <Tooltip title={t("editData")}>
                           <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
                             <Edit fontSize="small" />
                           </IconButton>
@@ -241,7 +297,7 @@ const AdminTable = ({
 
                       {/* Super admin: o'chirilgan ma'lumotni tiklash */}
                       {isSuperAdmin && isDeleted && onRestore && (
-                        <Tooltip title="Tiklash (Restore)">
+                        <Tooltip title={t("restore")}>
                           <IconButton
                             size="small"
                             color="success"
@@ -259,7 +315,7 @@ const AdminTable = ({
           ) : (
             <TableRow>
               <TableCell colSpan={isSuperAdmin ? 11 : 9} align="center" sx={{ py: 3 }}>
-                Ma'lumot topilmadi
+                {t("noData")}
               </TableCell>
             </TableRow>
           )}

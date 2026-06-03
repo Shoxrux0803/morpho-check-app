@@ -40,6 +40,113 @@ import {
   Tooltip as ReTooltip,
   Legend,
 } from "recharts";
+import { useLanguage } from "../../contexts/LanguageContext";
+
+const DASH_I18N = {
+  uz: {
+    title: "SuperAdmin analitika markazi",
+    subtitle: "Hududlar, adminlar, klinik xavf va oylik dinamika bo'yicha yagona nazorat paneli",
+    analyses: "Analizlar",
+    admins: "Adminlar",
+    today: "Bugun",
+    totalAnalyses: "Jami analizlar",
+    allTime: "Barcha vaqt davomida",
+    todayAnalyses: "Bugungi analizlar",
+    enteredToday: "Bugun kiritilgan",
+    weeklyGrowth: "Haftalik o'sish",
+    thisWeek: "ta shu hafta",
+    totalAdmins: "Jami adminlar",
+    simple: "oddiy",
+    avgBmi: "O'rtacha BMI",
+    systemWide: "Tizim bo'yicha",
+    riskRegions: "Eng ko'p risk chiqqan regionlar",
+    riskRegionsSub: "BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar",
+    riskFrom: "tadan",
+    risk: "risk",
+    monthlyDynamics: "Oylik dinamika",
+    monthlyDynamicsSub: "So'nggi 12 oy davomidagi analizlar soni",
+    analysesCount: "Analizlar soni",
+    genderDistribution: "Jinsiy taqsimot",
+    genderDistributionSub: "Erkak / Ayol nisbati",
+    ageGroups: "Yosh guruhlari",
+    ageGroupsSub: "Bemorlar yosh bo'yicha",
+    patientsCount: "Bemorlar soni",
+    somatotypeDistribution: "Somatotip taqsimoti",
+    somatotypeDistributionSub: "Tana tuzilishi klassifikatsiyasi",
+    count: "Soni",
+    topRegions: "Viloyatlar bo'yicha top-10",
+    topRegionsSub: "Eng ko'p analiz kiritilgan hududlar",
+    bmiStatusDistribution: "BMI holati taqsimoti",
+    bmiStatusDistributionSub: "Sog'lik guruhlari bo'yicha",
+    noData: "Ma'lumot yo'q",
+    patient: "bemor",
+    avgRadar: "Somatotip o'rtacha radar",
+    avgRadarSub: "Tizim bo'yicha o'rtacha somatometrik ko'rsatkichlar",
+    average: "O'rtacha",
+    adminsDistribution: "Adminlar taqsimoti",
+    adminsDistributionSub: "Rollar bo'yicha tizim foydalanuvchilari",
+    lastUpdate: "So'nggi yangilanish",
+    male: "Erkak",
+    female: "Ayol",
+    unknown: "Noma'lum",
+    normal: "Normal",
+    overweight: "Ortiqcha",
+    obese: "Semizlik",
+    underweight: "Ozg'in",
+  },
+  ru: {
+    title: "Центр аналитики SuperAdmin",
+    subtitle:
+      "Единая панель контроля по регионам, администраторам, клиническим рискам и месячной динамике",
+    analyses: "Анализы",
+    admins: "Администраторы",
+    today: "Сегодня",
+    totalAnalyses: "Всего анализов",
+    allTime: "За все время",
+    todayAnalyses: "Анализы сегодня",
+    enteredToday: "Внесено сегодня",
+    weeklyGrowth: "Недельный рост",
+    thisWeek: "за эту неделю",
+    totalAdmins: "Всего администраторов",
+    simple: "обычных",
+    avgBmi: "Средний BMI",
+    systemWide: "По системе",
+    riskRegions: "Регионы с наибольшим риском",
+    riskRegionsSub: "Записи, вышедшие за риск-границы BMI или Z-score",
+    riskFrom: "из",
+    risk: "риск",
+    monthlyDynamics: "Месячная динамика",
+    monthlyDynamicsSub: "Количество анализов за последние 12 месяцев",
+    analysesCount: "Количество анализов",
+    genderDistribution: "Распределение по полу",
+    genderDistributionSub: "Соотношение мужчин и женщин",
+    ageGroups: "Возрастные группы",
+    ageGroupsSub: "Пациенты по возрасту",
+    patientsCount: "Количество пациентов",
+    somatotypeDistribution: "Распределение соматотипов",
+    somatotypeDistributionSub: "Классификация телосложения",
+    count: "Количество",
+    topRegions: "Топ-10 по областям",
+    topRegionsSub: "Регионы с наибольшим количеством анализов",
+    bmiStatusDistribution: "Распределение статуса BMI",
+    bmiStatusDistributionSub: "По группам здоровья",
+    noData: "Данных нет",
+    patient: "пациент",
+    avgRadar: "Средний радар соматотипа",
+    avgRadarSub: "Средние соматометрические показатели по системе",
+    average: "Среднее",
+    adminsDistribution: "Распределение администраторов",
+    adminsDistributionSub: "Пользователи системы по ролям",
+    lastUpdate: "Последнее обновление",
+    male: "Мужчины",
+    female: "Женщины",
+    unknown: "Неизвестно",
+    normal: "Норма",
+    overweight: "Избыточный вес",
+    obese: "Ожирение",
+    underweight: "Недостаточный вес",
+  },
+};
 
 // ==== PALETTE ====
 const COLORS = {
@@ -54,6 +161,51 @@ const COLORS = {
 };
 const PIE_COLORS = [COLORS.info, COLORS.rose, COLORS.teal, COLORS.warning];
 const AGE_COLORS = ["#0f766e", "#2563eb", "#14b8a6", "#f59e0b", "#64748b"];
+
+const REGION_LABELS_RU = {
+  "toshkent shahri": "г. Ташкент",
+  toshkent: "Ташкентская область",
+  "toshkent viloyati": "Ташкентская область",
+  qoraqalpogiston: "Республика Каракалпакстан",
+  "qoraqalpog'iston": "Республика Каракалпакстан",
+  "qoraqalpog'iston respublikasi": "Республика Каракалпакстан",
+  andijon: "Андижанская область",
+  "andijon viloyati": "Андижанская область",
+  buxoro: "Бухарская область",
+  "buxoro viloyati": "Бухарская область",
+  fargona: "Ферганская область",
+  "farg'ona": "Ферганская область",
+  "farg'ona viloyati": "Ферганская область",
+  jizzax: "Джизакская область",
+  "jizzax viloyati": "Джизакская область",
+  xorazm: "Хорезмская область",
+  "xorazm viloyati": "Хорезмская область",
+  namangan: "Наманганская область",
+  "namangan viloyati": "Наманганская область",
+  navoiy: "Навоийская область",
+  "navoiy viloyati": "Навоийская область",
+  qashqadaryo: "Кашкадарьинская область",
+  "qashqadaryo viloyati": "Кашкадарьинская область",
+  samarqand: "Самаркандская область",
+  "samarqand viloyati": "Самаркандская область",
+  sirdaryo: "Сырдарьинская область",
+  "sirdaryo viloyati": "Сырдарьинская область",
+  surxondaryo: "Сурхандарьинская область",
+  "surxondaryo viloyati": "Сурхандарьинская область",
+};
+
+const normalizeRegionKey = (value = "") =>
+  String(value)
+    .toLowerCase()
+    .replace(/[‘’`ʻʼ]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getRegionLabel = (value, lang) => {
+  if (lang !== "ru") return value || "-";
+  const key = normalizeRegionKey(value);
+  return REGION_LABELS_RU[key] || value || "-";
+};
 
 // ==== HELPERS ====
 const GlassCard = ({ children, sx = {}, gradient }) => {
@@ -192,16 +344,18 @@ const CustomTooltipStyle = {
 // ==== MAIN COMPONENT ====
 export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }) {
   const theme = useTheme();
+  const { lang } = useLanguage();
+  const tt = DASH_I18N[lang] || DASH_I18N.uz;
 
   // ----- Derived data -----
   const genderData = useMemo(
     () =>
       [
-        { name: "Erkak", value: stats?.by_gender?.erkak || 0 },
-        { name: "Ayol", value: stats?.by_gender?.ayol || 0 },
-        { name: "Noma'lum", value: stats?.by_gender?.["noma'lum"] || 0 },
+        { name: tt.male, value: stats?.by_gender?.erkak || 0 },
+        { name: tt.female, value: stats?.by_gender?.ayol || 0 },
+        { name: tt.unknown, value: stats?.by_gender?.["noma'lum"] || 0 },
       ].filter((d) => d.value > 0),
-    [stats],
+    [stats, tt],
   );
 
   const ageGroupData = useMemo(
@@ -218,8 +372,22 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
     [stats],
   );
 
-  const regionData = useMemo(() => (stats?.by_region || []).slice(0, 10), [stats]);
-  const riskRegionRows = useMemo(() => (stats?.top_risk_regions || []).slice(0, 6), [stats]);
+  const regionData = useMemo(
+    () =>
+      (stats?.by_region || []).slice(0, 10).map((row) => ({
+        ...row,
+        regionLabel: getRegionLabel(row.region, lang),
+      })),
+    [lang, stats],
+  );
+  const riskRegionRows = useMemo(
+    () =>
+      (stats?.top_risk_regions || []).slice(0, 6).map((row) => ({
+        ...row,
+        regionLabel: getRegionLabel(row.region, lang),
+      })),
+    [lang, stats],
+  );
 
   const monthlyTrend = useMemo(
     () =>
@@ -239,31 +407,31 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
     if (!total) return [];
     return [
       {
-        name: "Normal",
+        name: tt.normal,
         value: stats.bmi_distribution.normal,
         pct: Math.round((stats.bmi_distribution.normal / total) * 100),
         color: COLORS.success,
       },
       {
-        name: "Ortiqcha",
+        name: tt.overweight,
         value: stats.bmi_distribution.overweight,
         pct: Math.round((stats.bmi_distribution.overweight / total) * 100),
         color: COLORS.warning,
       },
       {
-        name: "Semizlik",
+        name: tt.obese,
         value: stats.bmi_distribution.obese,
         pct: Math.round((stats.bmi_distribution.obese / total) * 100),
         color: COLORS.error,
       },
       {
-        name: "Ozg'in",
+        name: tt.underweight,
         value: stats.bmi_distribution.underweight,
         pct: Math.round((stats.bmi_distribution.underweight / total) * 100),
         color: COLORS.info,
       },
     ];
-  }, [stats]);
+  }, [stats, tt]);
 
   const radarData = useMemo(() => {
     // Somatotip radar: endomorph/mesomorph/ectomorph average comparisons
@@ -281,9 +449,9 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
     const adminCount = admins.filter((a) => a.role === "admin").length;
     return [
       { name: "Superadmin", value: superCount },
-      { name: "Admin", value: adminCount },
+      { name: tt.admins, value: adminCount },
     ].filter((d) => d.value > 0);
-  }, [admins]);
+  }, [admins, tt]);
 
   if (statsLoading) {
     return (
@@ -317,20 +485,24 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         >
           <Box>
             <Typography variant="h4" fontWeight={900} sx={{ color: "text.primary" }}>
-              SuperAdmin analitika markazi
+              {tt.title}
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={0.5}>
-              Hududlar, adminlar, klinik xavf va oylik dinamika bo'yicha yagona nazorat paneli
+              {tt.subtitle}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip
-              label={`Analizlar: ${stats?.total_analyses?.toLocaleString("uz-UZ") ?? 0}`}
+              label={`${tt.analyses}: ${stats?.total_analyses?.toLocaleString("uz-UZ") ?? 0}`}
               sx={{ fontWeight: 800 }}
             />
-            <Chip label={`Adminlar: ${admins.length}`} color="primary" sx={{ fontWeight: 800 }} />
             <Chip
-              label={`Bugun: ${stats?.today_analyses ?? 0}`}
+              label={`${tt.admins}: ${admins.length}`}
+              color="primary"
+              sx={{ fontWeight: 800 }}
+            />
+            <Chip
+              label={`${tt.today}: ${stats?.today_analyses ?? 0}`}
               color="success"
               sx={{ fontWeight: 800 }}
             />
@@ -342,9 +514,9 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
       <Grid container spacing={2} mb={4}>
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
-            label="Jami Analizlar"
+            label={tt.totalAnalyses}
             value={stats?.total_analyses?.toLocaleString("uz-UZ") ?? "0"}
-            sub="Barcha vaqt davomida"
+            sub={tt.allTime}
             icon={<Assessment />}
             color={COLORS.primary}
             trend={stats?.monthly_growth}
@@ -352,40 +524,40 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
-            label="Bugungi Analizlar"
+            label={tt.todayAnalyses}
             value={stats?.today_analyses?.toLocaleString("uz-UZ") ?? "0"}
-            sub="Bugun kiritilgan"
+            sub={tt.enteredToday}
             icon={<TrendingUp />}
             color={COLORS.success}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
-            label="Haftalik o'sish"
+            label={tt.weeklyGrowth}
             value={
               stats?.weekly_growth_pct != null
                 ? `${Number(stats.weekly_growth_pct) > 0 ? "+" : ""}${stats.weekly_growth_pct}%`
                 : "0%"
             }
-            sub={`${stats?.weekly_analyses ?? 0} ta shu hafta`}
+            sub={`${stats?.weekly_analyses ?? 0} ${tt.thisWeek}`}
             icon={<TrendingUp />}
             color={COLORS.info}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
-            label="Jami Adminlar"
+            label={tt.totalAdmins}
             value={admins.length}
-            sub={`${admins.filter((a) => a.role === "superadmin").length} super, ${admins.filter((a) => a.role === "admin").length} oddiy`}
+            sub={`${admins.filter((a) => a.role === "superadmin").length} super, ${admins.filter((a) => a.role === "admin").length} ${tt.simple}`}
             icon={<AdminPanelSettings />}
             color={COLORS.secondary}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
-            label="O'rtacha BMI"
+            label={tt.avgBmi}
             value={stats?.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : "—"}
-            sub="Tizim bo'yicha"
+            sub={tt.systemWide}
             icon={<MonitorWeightOutlined />}
             color={COLORS.warning}
           />
@@ -397,10 +569,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {riskRegionRows.length > 0 && (
           <Grid size={{ xs: 12 }}>
             <GlassCard>
-              <SectionTitle
-                title="Eng ko'p risk chiqqan regionlar"
-                subtitle="BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar"
-              />
+              <SectionTitle title={tt.riskRegions} subtitle={tt.riskRegionsSub} />
               <Grid container spacing={2}>
                 {riskRegionRows.map((row) => (
                   <Grid size={{ xs: 12, sm: 6, md: 4 }} key={row.region}>
@@ -420,7 +589,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                         <Box display="flex" gap={1.2} alignItems="center">
                           <FmdGoodOutlined color="error" fontSize="small" />
                           <Typography variant="body2" fontWeight={800}>
-                            {row.region}
+                            {row.regionLabel}
                           </Typography>
                         </Box>
                         <ReportProblemOutlined sx={{ color: COLORS.error }} fontSize="small" />
@@ -429,7 +598,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                         {row.count}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {row.total} tadan {row.risk_rate}% risk
+                        {row.total} {tt.riskFrom} {row.risk_rate}% {tt.risk}
                       </Typography>
                       <LinearProgress
                         variant="determinate"
@@ -452,10 +621,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {/* ROW 1: Wide Chart (Monthly trend) */}
         <Grid size={{ xs: 12 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle
-              title="Oylik dinamika"
-              subtitle="So'nggi 12 oy davomidagi analizlar soni"
-            />
+            <SectionTitle title={tt.monthlyDynamics} subtitle={tt.monthlyDynamicsSub} />
             <Box sx={{ height: 350, minWidth: { xs: 280, sm: 400, md: 600 } }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={monthlyTrend}>
@@ -499,7 +665,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                     yAxisId="left"
                     type="monotone"
                     dataKey="count"
-                    name="Analizlar soni"
+                    name={tt.analysesCount}
                     stroke={COLORS.primary}
                     strokeWidth={2.5}
                     fill="url(#gradCount)"
@@ -510,7 +676,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                       yAxisId="right"
                       type="monotone"
                       dataKey="avgBmi"
-                      name="O'rtacha BMI"
+                      name={tt.avgBmi}
                       stroke={COLORS.warning}
                       strokeWidth={2}
                       fill="url(#gradBmi)"
@@ -527,7 +693,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {/* ROW 2: Triple Distribution Charts (Gender, Age, Somatotype) */}
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="Jinsiy taqsimot" subtitle="Erkak / Ayol nisbati" />
+            <SectionTitle title={tt.genderDistribution} subtitle={tt.genderDistributionSub} />
             <Box sx={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -576,7 +742,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="Yosh guruhlari" subtitle="Bemorlar yosh bo'yicha" />
+            <SectionTitle title={tt.ageGroups} subtitle={tt.ageGroupsSub} />
             <Box sx={{ height: 260, minWidth: { xs: 280, sm: 350, md: 400 } }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ageGroupData} barCategoryGap="30%">
@@ -597,7 +763,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                     tick={{ fontSize: 11, fill: "#94a3b8" }}
                   />
                   <ReTooltip {...CustomTooltipStyle} />
-                  <Bar dataKey="value" name="Bemorlar soni" radius={[6, 6, 0, 0]} barSize={28}>
+                  <Bar dataKey="value" name={tt.patientsCount} radius={[6, 6, 0, 0]} barSize={28}>
                     {ageGroupData.map((entry, i) => (
                       <Cell key={i} fill={entry.fill || COLORS.primary} />
                     ))}
@@ -610,7 +776,10 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="Somatotip taqsimoti" subtitle="Tana tuzilishi klassifikatsiyasi" />
+            <SectionTitle
+              title={tt.somatotypeDistribution}
+              subtitle={tt.somatotypeDistributionSub}
+            />
             <Box sx={{ height: 260, minWidth: { xs: 280, sm: 350, md: 400 } }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart layout="vertical" data={somatoData} barCategoryGap="15%">
@@ -636,7 +805,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                   <ReTooltip {...CustomTooltipStyle} />
                   <Bar
                     dataKey="value"
-                    name="Soni"
+                    name={tt.count}
                     fill={COLORS.secondary}
                     radius={[0, 6, 6, 0]}
                     barSize={14}
@@ -651,10 +820,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {regionData.length > 0 && (
           <Grid size={{ xs: 12, md: 7 }}>
             <GlassCard>
-              <SectionTitle
-                title="Viloyatlar bo'yicha top-10"
-                subtitle="Eng ko'p analiz kiritilgan hududlar"
-              />
+              <SectionTitle title={tt.topRegions} subtitle={tt.topRegionsSub} />
               <Box sx={{ height: 280, minWidth: 500 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={regionData} layout="vertical" barCategoryGap="20%">
@@ -670,7 +836,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                       tick={{ fontSize: 11, fill: "#94a3b8" }}
                     />
                     <YAxis
-                      dataKey="region"
+                      dataKey="regionLabel"
                       type="category"
                       width={110}
                       axisLine={false}
@@ -680,7 +846,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                     <ReTooltip {...CustomTooltipStyle} />
                     <Bar
                       dataKey="count"
-                      name="Analizlar"
+                      name={tt.analyses}
                       fill={COLORS.teal}
                       radius={[0, 6, 6, 0]}
                       barSize={12}
@@ -694,10 +860,10 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
 
         <Grid size={{ xs: 12, md: regionData.length > 0 ? 5 : 12 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="BMI holati taqsimoti" subtitle="Sog'lik guruhlari bo'yicha" />
+            <SectionTitle title={tt.bmiStatusDistribution} subtitle={tt.bmiStatusDistributionSub} />
             {bmiCategories.length === 0 ? (
               <Typography variant="body2" color="text.secondary" py={4} textAlign="center">
-                Ma'lumot yo'q
+                {tt.noData}
               </Typography>
             ) : (
               <Stack spacing={2} mt={1}>
@@ -727,7 +893,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                       }}
                     />
                     <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                      {cat.value.toLocaleString()} bemor
+                      {cat.value.toLocaleString()} {tt.patient}
                     </Typography>
                   </Box>
                 ))}
@@ -740,10 +906,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {radarData.some((d) => parseFloat(d.value) > 0) && (
           <Grid size={{ xs: 12, md: 6 }}>
             <GlassCard>
-              <SectionTitle
-                title="Somatotip o'rtacha radar"
-                subtitle="Tizim bo'yicha o'rtacha somatometrik ko'rsatkichlar"
-              />
+              <SectionTitle title={tt.avgRadar} subtitle={tt.avgRadarSub} />
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart data={radarData}>
@@ -755,7 +918,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
                       tick={{ fill: "#64748b", fontSize: 10 }}
                     />
                     <Radar
-                      name="O'rtacha"
+                      name={tt.average}
                       dataKey="value"
                       stroke={COLORS.primary}
                       fill={COLORS.primary}
@@ -772,10 +935,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         {adminRolePie.length > 0 && (
           <Grid size={{ xs: 12, md: 6 }}>
             <GlassCard>
-              <SectionTitle
-                title="Adminlar taqsimoti"
-                subtitle="Rollar bo'yicha tizim foydalanuvchilari"
-              />
+              <SectionTitle title={tt.adminsDistribution} subtitle={tt.adminsDistributionSub} />
               <Box sx={{ height: 280 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -805,8 +965,8 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
       {/* Summary Footer */}
       <Box mt={4} py={2} textAlign="center">
         <Typography variant="caption" color="text.secondary">
-          So'nggi yangilanish: {new Date().toLocaleString("uz-UZ")} • MorphoCheck SuperAdmin
-          Analytics Pro
+          {tt.lastUpdate}: {new Date().toLocaleString("uz-UZ")} • MorphoCheck SuperAdmin Analytics
+          Pro
         </Typography>
       </Box>
     </Box>

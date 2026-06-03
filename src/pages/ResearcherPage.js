@@ -140,6 +140,9 @@ const SectionTitle = ({ icon: Icon, title }) => (
    DETAIL MODAL
 ════════════════════════════════════════════════════ */
 const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) => {
+  const { lang } = useLanguage();
+  const tr = useCallback((key) => researcherT(lang, key), [lang]);
+
   if (!record) return null;
 
   const Section = ({ title, Icon, fields }) => (
@@ -163,8 +166,8 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
                 <Typography variant="body2" fontWeight={600}>
                   {key === "gender"
                     ? record[key]?.toLowerCase() === "boy" || record[key]?.toLowerCase() === "erkak"
-                      ? "O'g'il bola"
-                      : "Qiz bola"
+                      ? tr("boy")
+                      : tr("girl")
                     : record[key]}
                 </Typography>
               </Box>
@@ -203,10 +206,10 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Box>
             <Typography variant="h6" fontWeight={800}>
-              {record.full_name || "Noma'lum"}
+              {record.full_name || tr("unknown")}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              ID: {record.id} | Sana: {record.examination_date || "-"} | Yaratildi:{" "}
+              ID: {record.id} | {tr("date")}: {record.examination_date || "-"} |{" "}
               {new Date(record.created_at).toLocaleDateString("uz-UZ")}
             </Typography>
           </Box>
@@ -218,116 +221,116 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
 
       <DialogContent dividers>
         <Section
-          title="I. Pasport / Umumiy Ma'lumotlar"
+          title={tr("sectionPassport")}
           Icon={Person}
           fields={[
-            ["F.I.SH", "full_name"],
-            ["Maktab / Bog'cha", "school_name"],
-            ["Aholi punkti", "settlement"],
-            ["Tug'ilgan joyi", "birth_place"],
-            ["Tug'ilgan sana", "birth_date"],
-            ["Jinsi", "gender"],
-            ["Ota millati", "father_nationality"],
-            ["Ona millati", "mother_nationality"],
-            ["Yashashni boshlagan", "living_since"],
-            ["Muassasaga qabul", "enrolled_date"],
-            ["Maishiy sharoit", "living_conditions"],
-            ["Mehnat rejimi", "labor_regime"],
-            ["O'tkir kasalliklar", "past_illnesses"],
-            ["Farzandlar soni", "children_count"],
-            ["Nechanchi farzand", "child_order"],
-            ["Oziqlanish turi", "feeding_type"],
-            ["Ota-ona qarindoshligi", "parents_marriage"],
-            ["Ona sog'ligi", "mother_health_status"],
-            ["Tekshiruv sanasi", "examination_date"],
+            [tr("fullName"), "full_name"],
+            [tr("schoolKindergarten"), "school_name"],
+            [tr("settlement"), "settlement"],
+            [tr("birthPlace"), "birth_place"],
+            [tr("birthDate"), "birth_date"],
+            [tr("gender"), "gender"],
+            [tr("fatherNationality"), "father_nationality"],
+            [tr("motherNationality"), "mother_nationality"],
+            [tr("livingSince"), "living_since"],
+            [tr("enrolledDate"), "enrolled_date"],
+            [tr("livingConditions"), "living_conditions"],
+            [tr("laborRegime"), "labor_regime"],
+            [tr("pastIllnesses"), "past_illnesses"],
+            [tr("childrenCount"), "children_count"],
+            [tr("childOrder"), "child_order"],
+            [tr("feedingType"), "feeding_type"],
+            [tr("parentsMarriage"), "parents_marriage"],
+            [tr("motherHealth"), "mother_health_status"],
+            [tr("examDate"), "examination_date"],
           ]}
         />
         <Section
-          title="II. Jismoniy Rivojlanish (Oyoqlar)"
+          title={tr("sectionLegs")}
           Icon={Place}
           fields={[
-            ["Pastki oyoq-qo'l", "lower_leg_total"],
-            ["Pastki oyoq-qo'l uzunligi", "lower_leg_length"],
+            [tr("lowerLegTotal"), "lower_leg_total"],
+            [tr("lowerLegLength"), "lower_leg_length"],
             ["Spina iliaca", "lower_leg_spina_iliaca"],
             ["Symphysion", "lower_leg_symphysion"],
-            ["Tibiale balandligi", "tibiale_height"],
-            ["Chanoq kengligi", "pelvic_width"],
-            ["Son uzunligi", "thigh_length"],
-            ["Son aylanasi", "thigh_circumference"],
-            ["Boldir uzunligi", "calf_length"],
-            ["Boldir aylanasi", "calf_circumference"],
-            ["Oyoq panja uzunligi", "foot_length"],
-            ["Tishlar soni", "teeth_count"],
-            ["Menstruatsiya", "menstruation_start"],
+            [tr("tibialeHeight"), "tibiale_height"],
+            [tr("pelvicWidth"), "pelvic_width"],
+            [tr("thighLength"), "thigh_length"],
+            [tr("thighCircumference"), "thigh_circumference"],
+            [tr("calfLength"), "calf_length"],
+            [tr("calfCircumference"), "calf_circumference"],
+            [tr("footLength"), "foot_length"],
+            [tr("teethCount"), "teeth_count"],
+            [tr("menstruationStart"), "menstruation_start"],
           ]}
         />
         <Section
-          title="III. Bosh suyagi"
+          title={tr("sectionSkull")}
           Icon={Science}
           fields={[
-            ["Uzunasiga diametr", "skull_longitudinal"],
-            ["Ko'ndalang diametr", "skull_transverse"],
-            ["Bosh aylanasi", "head_circumference"],
-            ["Peshona ko'ndalang", "forehead_transverse"],
-            ["Bosh balandligi", "skull_height"],
-            ["Asos uzunligi", "skull_base_length"],
-            ["Asos kengligi", "skull_base_width"],
+            [tr("skullLongitudinal"), "skull_longitudinal"],
+            [tr("skullTransverse"), "skull_transverse"],
+            [tr("headCircumference"), "head_circumference"],
+            [tr("foreheadTransverse"), "forehead_transverse"],
+            [tr("skullHeight"), "skull_height"],
+            [tr("skullBaseLength"), "skull_base_length"],
+            [tr("skullBaseWidth"), "skull_base_width"],
           ]}
         />
         <Section
-          title="IV. Yuz o'lchamlari"
+          title={tr("sectionFace")}
           Icon={Person}
           fields={[
-            ["Yanoq diametri", "face_bizygomatic"],
-            ["Pastki jag' diametri", "face_bigonial"],
-            ["Morfologik balandlik", "face_morphological_height"],
-            ["Fizionomik balandlik", "face_physiognomic_height"],
-            ["Burun balandligi", "nose_height"],
-            ["Burun kengligi", "nose_width"],
-            ["Tashqi ko'z kengligi", "outer_canthal_width"],
-            ["Ichki ko'z kengligi", "inner_canthal_width"],
-            ["Lab qalinligi", "lips_mucosa_height"],
-            ["Og'iz kengligi", "mouth_width"],
+            [tr("faceBizygomatic"), "face_bizygomatic"],
+            [tr("faceBigonial"), "face_bigonial"],
+            [tr("faceMorphologicalHeight"), "face_morphological_height"],
+            [tr("facePhysiognomicHeight"), "face_physiognomic_height"],
+            [tr("noseHeight"), "nose_height"],
+            [tr("noseWidth"), "nose_width"],
+            [tr("outerCanthalWidth"), "outer_canthal_width"],
+            [tr("innerCanthalWidth"), "inner_canthal_width"],
+            [tr("lipsMucosaHeight"), "lips_mucosa_height"],
+            [tr("mouthWidth"), "mouth_width"],
           ]}
         />
         <Section
-          title="V. Ko'krak qafasi va gavda"
+          title={tr("sectionChest")}
           Icon={FitnessCenter}
           fields={[
-            ["Bo'y (tik)", "chest_standing_height"],
-            ["Bo'y (o'tirgan)", "chest_sitting_height"],
-            ["Vazn (kg)", "weight"],
-            ["Tana uzunligi", "trunk_length"],
-            ["Korpus uzunligi", "torso_length"],
-            ["Ko'krak aylanasi (pauza)", "chest_circumference_pause"],
-            ["Nafas olganda", "chest_circumference_inhale"],
-            ["Nafas chiqarganda", "chest_circumference_exhale"],
-            ["Bel aylanasi", "waist_circumference"],
-            ["Qorin aylanasi", "abdomen_circumference"],
-            ["Yuqori segment", "upper_segment_length"],
-            ["Ko'ndalang diametr", "chest_transverse_diameter"],
-            ["Old-orqa diametr", "chest_anteroposterior_diameter"],
-            ["Ko'krak balandligi", "chest_height"],
+            [tr("standingHeight"), "chest_standing_height"],
+            [tr("sittingHeight"), "chest_sitting_height"],
+            [tr("weight"), "weight"],
+            [tr("trunkLength"), "trunk_length"],
+            [tr("torsoLength"), "torso_length"],
+            [tr("chestPause"), "chest_circumference_pause"],
+            [tr("chestInhale"), "chest_circumference_inhale"],
+            [tr("chestExhale"), "chest_circumference_exhale"],
+            [tr("waistCircumference"), "waist_circumference"],
+            [tr("abdomenCircumference"), "abdomen_circumference"],
+            [tr("upperSegmentLength"), "upper_segment_length"],
+            [tr("chestTransverseDiameter"), "chest_transverse_diameter"],
+            [tr("chestAnteroposteriorDiameter"), "chest_anteroposterior_diameter"],
+            [tr("chestHeight"), "chest_height"],
           ]}
         />
         <Section
-          title="VI. Qo'l va Yog' qatlami"
+          title={tr("sectionArmFat")}
           Icon={FitnessCenter}
           fields={[
-            ["Qo'l uzunligi", "arm_length"],
-            ["Yelka uzunligi", "shoulder_length"],
-            ["Yelka kengligi", "shoulder_width"],
-            ["Yelka aylanasi (jami)", "arm_circumference_total"],
-            ["Yelka aylanasi (tinch)", "shoulder_circumference_rest"],
-            ["Yelka aylanasi (tarang)", "shoulder_circumference_flexed"],
-            ["Bilak uzunligi", "forearm_length"],
-            ["Panja uzunligi", "hand_length"],
-            ["Dinamometriya", "dynamometry"],
-            ["Triseps yog'i", "fat_triceps"],
-            ["Biseps yog'i", "fat_biceps"],
-            ["Kurak osti yog'i", "fat_subscapular"],
-            ["Yonbosh yog'i", "fat_iliac"],
-            ["Tizza orqa yog'i", "fat_popliteal"],
+            [tr("armLength"), "arm_length"],
+            [tr("shoulderLength"), "shoulder_length"],
+            [tr("shoulderWidth"), "shoulder_width"],
+            [tr("armCircumferenceTotal"), "arm_circumference_total"],
+            [tr("shoulderCircumferenceRest"), "shoulder_circumference_rest"],
+            [tr("shoulderCircumferenceFlexed"), "shoulder_circumference_flexed"],
+            [tr("forearmLength"), "forearm_length"],
+            [tr("handLength"), "hand_length"],
+            [tr("dynamometry"), "dynamometry"],
+            [tr("fatTriceps"), "fat_triceps"],
+            [tr("fatBiceps"), "fat_biceps"],
+            [tr("fatSubscapular"), "fat_subscapular"],
+            [tr("fatIliac"), "fat_iliac"],
+            [tr("fatPopliteal"), "fat_popliteal"],
           ]}
         />
       </DialogContent>
@@ -355,7 +358,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
         </Stack>
         <Box flex={1} />
         <Button startIcon={<Edit />} variant="contained" onClick={() => onEdit(record)}>
-          Tahrirlash
+          {tr("edit")}
         </Button>
         {isSuperAdmin && (
           <Button
@@ -364,7 +367,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             variant="outlined"
             onClick={() => onDelete(record.id, "hard")}
           >
-            Hard Delete
+            {tr("hardDelete")}
           </Button>
         )}
         <Button
@@ -373,10 +376,10 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
           variant="outlined"
           onClick={() => onDelete(record.id, "soft")}
         >
-          O'chirish
+          {tr("delete")}
         </Button>
         <Button onClick={onClose} variant="text">
-          Yopish
+          {tr("close")}
         </Button>
       </DialogActions>
     </Dialog>
@@ -672,9 +675,9 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         </Grid>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>
-        <Button onClick={onClose}>Bekor qilish</Button>
+        <Button onClick={onClose}>{tr("cancel")}</Button>
         <Button variant="contained" onClick={handleSave} disabled={saving}>
-          {saving ? <CircularProgress size={20} /> : "Saqlash"}
+          {saving ? <CircularProgress size={20} /> : tr("save")}
         </Button>
       </DialogActions>
     </Dialog>
@@ -873,6 +876,8 @@ const RecordsTable = ({
    RESEARCH ANALYTICS (Professional Dashboard)
 ════════════════════════════════════════════════════ */
 const ResearchAnalytics = ({ data, isDark }) => {
+  const { lang } = useLanguage();
+  const tr = useCallback((key) => researcherT(lang, key), [lang]);
   const [timeRange] = useState("all"); // "all" or "30d"
 
   // 1. Data Aggregation
@@ -1188,10 +1193,10 @@ const ResearchAnalytics = ({ data, isDark }) => {
         }}
       >
         <Typography variant="h5" fontWeight={800} mb={1}>
-          Tadqiqot Hisoboti
+          {tr("researchReportTitle")}
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={4}>
-          Barcha to'plangan ma'lumotlarni tahliliy formatda yuklab oling
+          {tr("researchReportSubtitle")}
         </Typography>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2} justifyContent="center">
           <Button
@@ -1207,9 +1212,9 @@ const ResearchAnalytics = ({ data, isDark }) => {
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
-                toast.success("Yuklab olish yakunlandi");
+                toast.success(tr("downloadDone"));
               } catch (err) {
-                toast.error("Xatolik: " + err.message);
+                toast.error(`${tr("error")}: ${err.message}`);
               }
             }}
             startIcon={<Download />}
@@ -1221,7 +1226,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
               background: "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
             }}
           >
-            XLSX dataset
+            {tr("datasetXlsx")}
           </Button>
           <Button
             variant="outlined"
@@ -1237,15 +1242,15 @@ const ResearchAnalytics = ({ data, isDark }) => {
                 a.click();
                 a.remove();
                 window.URL.revokeObjectURL(url);
-                toast.success("DOCX hisobot tayyor");
+                toast.success(tr("docxReady"));
               } catch (err) {
-                toast.error("Xatolik: " + err.message);
+                toast.error(`${tr("error")}: ${err.message}`);
               }
             }}
             startIcon={<Description />}
             sx={{ borderRadius: 3, px: 5, py: 2, fontWeight: 800 }}
           >
-            Ilmiy DOCX report
+            {tr("docxReport")}
           </Button>
         </Stack>
       </GlassPaper>
@@ -1419,7 +1424,7 @@ const ResearcherPage = () => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      toast.success("DOCX hisobot tayyor");
+      toast.success(tr("docxReady"));
     } catch (err) {
       toast.error(`${tr("exportError")}: ${err.message}`);
     }
@@ -1437,7 +1442,7 @@ const ResearcherPage = () => {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      toast.error(`Shablonni yuklashda xatolik: ${err.message}`);
+      toast.error(`${tr("templateError")} ${err.message}`);
     }
   };
 
@@ -2128,7 +2133,7 @@ const ResearcherPage = () => {
                         onClick={handleExportSummaryDocx}
                         sx={{ borderRadius: 2 }}
                       >
-                        DOCX report
+                        {tr("docxReport")}
                       </Button>
                       <Button
                         variant="outlined"
@@ -2136,7 +2141,7 @@ const ResearcherPage = () => {
                         onClick={handleDownloadImportTemplate}
                         sx={{ borderRadius: 2 }}
                       >
-                        Shablon
+                        {tr("template")}
                       </Button>
                       <Button
                         variant="outlined"
@@ -2146,7 +2151,7 @@ const ResearcherPage = () => {
                         disabled={importing}
                         sx={{ borderRadius: 2 }}
                       >
-                        Import XLSX
+                        {tr("importXlsx")}
                       </Button>
                       <Button
                         variant="outlined"

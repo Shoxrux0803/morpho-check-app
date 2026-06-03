@@ -193,6 +193,53 @@ const PAGE_LABELS = {
   kz: { scientificAnalysis: "Ғылыми талдау" },
 };
 
+const REGION_LABELS_RU = {
+  "toshkent shahri": "г. Ташкент",
+  toshkent: "Ташкентская область",
+  "toshkent viloyati": "Ташкентская область",
+  qoraqalpogiston: "Республика Каракалпакстан",
+  "qoraqalpog'iston": "Республика Каракалпакстан",
+  andijon: "Андижанская область",
+  buxoro: "Бухарская область",
+  fargona: "Ферганская область",
+  "farg'ona": "Ферганская область",
+  jizzax: "Джизакская область",
+  xorazm: "Хорезмская область",
+  namangan: "Наманганская область",
+  navoiy: "Навоийская область",
+  qashqadaryo: "Кашкадарьинская область",
+  samarqand: "Самаркандская область",
+  sirdaryo: "Сырдарьинская область",
+  surxondaryo: "Сурхандарьинская область",
+};
+
+const getRegionLabel = (value, lang) => {
+  if (lang !== "ru") return value || "-";
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/[‘’`ʻʼ]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return REGION_LABELS_RU[key] || value || "-";
+};
+
+const getDateLocale = (lang) => {
+  if (lang === "ru") return "ru-RU";
+  if (lang === "kz") return "kk-KZ";
+  if (lang === "en") return "en-US";
+  return "uz-UZ";
+};
+
+const translateBmiStatus = (value, lang) => {
+  if (lang !== "ru") return value || "-";
+  const normalized = String(value || "").toLowerCase();
+  if (normalized.includes("normal")) return "Норма";
+  if (normalized.includes("semizlik") || normalized.includes("obese")) return "Ожирение";
+  if (normalized.includes("ozg") || normalized.includes("underweight")) return "Недостаточный вес";
+  if (normalized.includes("ortiqcha") || normalized.includes("overweight")) return "Избыточный вес";
+  return value || "-";
+};
+
 function CustomModal({
   children,
   onClose,
@@ -593,7 +640,7 @@ export default function AdminPage() {
       a.download = `report_${viewRow.idCode}_${pdfLang}.pdf`;
       a.click();
     } catch (e) {
-      alert("PDF Error: " + e.message);
+      toast.error(`PDF: ${e.message}`);
     } finally {
       setDownloadingPdf(false);
     }
@@ -610,7 +657,7 @@ export default function AdminPage() {
       a.download = `anketa_${viewRow.idCode}_${pdfLang}.docx`;
       a.click();
     } catch (e) {
-      alert("Word Error: " + e.message);
+      toast.error(`Word: ${e.message}`);
     } finally {
       setDownloadingDocx(false);
     }
@@ -874,7 +921,7 @@ export default function AdminPage() {
 
             <Box textAlign="center" mt={4} mb={4}>
               <Typography variant="h4" fontWeight={800} gutterBottom>
-                Admin Panel
+                {pt("adminPanelTitle")}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {pt("loginSubtitle")}
@@ -1099,27 +1146,29 @@ export default function AdminPage() {
               </TableRow>
               <TableRow>
                 <TableCell>{pt("date")}</TableCell>
-                <TableCell>{new Date(viewRow.createdAt).toLocaleString("uz-UZ")}</TableCell>
+                <TableCell>
+                  {new Date(viewRow.createdAt).toLocaleString(getDateLocale(lang))}
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell>{pt("region")}</TableCell>
-                <TableCell>{viewRow.region}</TableCell>
+                <TableCell>{getRegionLabel(viewRow.region, lang)}</TableCell>
               </TableRow>
               {viewRow.parentsPhone && (
                 <TableRow>
-                  <TableCell>Ota-ona telefoni</TableCell>
+                  <TableCell>{pt("parentPhone")}</TableCell>
                   <TableCell>{viewRow.parentsPhone}</TableCell>
                 </TableRow>
               )}
               <TableRow>
                 <TableCell>BMI</TableCell>
                 <TableCell>
-                  <strong>{viewRow.bmi}</strong> ({viewRow.bmiStatus})
+                  <strong>{viewRow.bmi}</strong> ({translateBmiStatus(viewRow.bmiStatus, lang)})
                 </TableCell>
               </TableRow>
               {viewRow.doctorNote && (
                 <TableRow>
-                  <TableCell>Doctor note</TableCell>
+                  <TableCell>{pt("doctorNote")}</TableCell>
                   <TableCell>{viewRow.doctorNote}</TableCell>
                 </TableRow>
               )}
@@ -1197,7 +1246,7 @@ export default function AdminPage() {
         <DialogTitle sx={{ fontWeight: 800 }}>{pt("confirmDelete")}</DialogTitle>
         <DialogContent>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Siz <strong>{checked.size}</strong> ta yozuvni tanladingiz.{" "}
+            {pt("selectedRowsNotice").replace("{count}", checked.size)}{" "}
             {user.role === "superadmin" ? pt("deleteHow") : pt("deleteSure")}
           </Typography>
           {user.role === "superadmin" && (

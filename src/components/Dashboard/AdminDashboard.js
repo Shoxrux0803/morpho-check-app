@@ -37,6 +37,111 @@ import {
   Legend,
 } from "recharts";
 import { motion } from "framer-motion";
+import { useLanguage } from "../../contexts/LanguageContext";
+
+const ADMIN_DASH_I18N = {
+  uz: {
+    welcome: (name) => `Xush kelibsiz, ${name || "Admin"}`,
+    subtitle: "Klinik antropometriya bo'yicha shaxsiy analitika paneli",
+    desc: "Barcha kiritilgan ma'lumotlar tahlili. Filtrlardan foydalanib natijalarni saralashingiz mumkin.",
+    total: "Jami",
+    avgBmi: "O'rtacha BMI",
+    avgAge: "O'rtacha yosh",
+    filtered: "Filtrlangan holatda",
+    scientificInsights: "Ilmiy xulosalar",
+    scientificInsightsSub: "Avtomatik tahlil natijalari",
+    noEnoughData: "Ma'lumotlar yetarli emas...",
+    totalMine: "Jami kiritganlarim",
+    allTime: "Barcha vaqt davomida",
+    todayEntered: "Bugun kiritilganlar",
+    todaySession: "Bugungi seans",
+    groupWide: "Guruh bo'yicha",
+    weeklyGrowth: "Haftalik o'sish",
+    thisWeek: "ta shu hafta",
+    years: "yosh",
+    riskRegions: "Eng ko'p risk chiqqan regionlar",
+    riskRegionsSub: "BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar",
+    from: "tadan",
+    risk: "risk",
+    dailyDynamics: "Kunlik dinamika",
+    dailyDynamicsSub: "So'nggi 14 kunlik kiritilgan analizlar",
+    noResult: "Natija topilmadi",
+    entered: "Kiritilganlar",
+    genderDistribution: "Jins taqsimoti",
+    genderDistributionSub: "Erkak/ayol nisbati",
+    ageGroups: "Yosh guruhlari",
+    ageGroupsSub: "Bemorlar yoshi bo'yicha",
+    patients: "Bemorlar",
+    bmiStatus: "BMI holati",
+    bmiStatusSub: "Sog'liq guruhlari bo'yicha",
+    unit: "ta",
+    footer: "Professional analitika tizimi",
+    male: "Erkak",
+    female: "Ayol",
+    unknown: "Noma'lum",
+    normal: "Normal",
+    overweight: "Ortiqcha",
+    obese: "Semizlik",
+    underweight: "Ozg'in",
+    insightNormal:
+      "Guruhdagi bemorlarning aksariyati (60%+) normal vaznga ega, bu ijobiy ko'rsatkich.",
+    insightRisk: "Diqqat: guruhda ortiqcha vazn va semizlik ulushi yuqori (40%+).",
+    insightBmi: (bmi) =>
+      `O'rtacha BMI (${bmi}) me'yordan biroz yuqori. Profilaktik choralarni kuchaytirish tavsiya etiladi.`,
+    insightGender: (male, female) =>
+      `Kontingent tarkibi: ${male}% erkaklar va ${female}% ayollarni tashkil etadi.`,
+  },
+  ru: {
+    welcome: (name) => `Добро пожаловать, ${name || "Админ"}`,
+    subtitle: "Персональная панель клинической антропометрии",
+    desc: "Анализ всех внесенных данных. Используйте фильтры, чтобы отсортировать результаты.",
+    total: "Всего",
+    avgBmi: "Средний BMI",
+    avgAge: "Средний возраст",
+    filtered: "С учетом фильтров",
+    scientificInsights: "Научные выводы",
+    scientificInsightsSub: "Автоматические результаты анализа",
+    noEnoughData: "Недостаточно данных...",
+    totalMine: "Всего внесено мной",
+    allTime: "За все время",
+    todayEntered: "Внесено сегодня",
+    todaySession: "Сегодняшняя сессия",
+    groupWide: "По группе",
+    weeklyGrowth: "Недельный рост",
+    thisWeek: "за эту неделю",
+    years: "лет",
+    riskRegions: "Регионы с наибольшим риском",
+    riskRegionsSub: "Записи, вышедшие за риск-границы BMI или Z-score",
+    from: "из",
+    risk: "риск",
+    dailyDynamics: "Дневная динамика",
+    dailyDynamicsSub: "Внесенные анализы за последние 14 дней",
+    noResult: "Результатов нет",
+    entered: "Внесенные",
+    genderDistribution: "Распределение по полу",
+    genderDistributionSub: "Соотношение мужчин и женщин",
+    ageGroups: "Возрастные группы",
+    ageGroupsSub: "Пациенты по возрасту",
+    patients: "Пациенты",
+    bmiStatus: "Статус BMI",
+    bmiStatusSub: "По группам здоровья",
+    unit: "шт",
+    footer: "Профессиональная аналитическая система",
+    male: "Мужчины",
+    female: "Женщины",
+    unknown: "Неизвестно",
+    normal: "Норма",
+    overweight: "Избыточный вес",
+    obese: "Ожирение",
+    underweight: "Недостаточный вес",
+    insightNormal:
+      "Большинство пациентов группы (60%+) имеют нормальный вес, это положительный показатель.",
+    insightRisk: "Внимание: в группе высокая доля избыточного веса и ожирения (40%+).",
+    insightBmi: (bmi) =>
+      `Средний BMI (${bmi}) немного выше нормы. Рекомендуется усилить профилактические меры.`,
+    insightGender: (male, female) => `Состав контингента: ${male}% мужчин и ${female}% женщин.`,
+  },
+};
 
 const COLORS = {
   primary: "#0f766e",
@@ -51,6 +156,36 @@ const COLORS = {
 };
 
 const PIE_COLORS = ["#3b82f6", "#f43f5e", "#14b8a6"];
+
+const REGION_LABELS_RU = {
+  "toshkent shahri": "г. Ташкент",
+  toshkent: "Ташкентская область",
+  "toshkent viloyati": "Ташкентская область",
+  qoraqalpogiston: "Республика Каракалпакстан",
+  "qoraqalpog'iston": "Республика Каракалпакстан",
+  andijon: "Андижанская область",
+  buxoro: "Бухарская область",
+  fargona: "Ферганская область",
+  "farg'ona": "Ферганская область",
+  jizzax: "Джизакская область",
+  xorazm: "Хорезмская область",
+  namangan: "Наманганская область",
+  navoiy: "Навоийская область",
+  qashqadaryo: "Кашкадарьинская область",
+  samarqand: "Самаркандская область",
+  sirdaryo: "Сырдарьинская область",
+  surxondaryo: "Сурхандарьинская область",
+};
+
+const getRegionLabel = (value, lang) => {
+  if (lang !== "ru") return value || "-";
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/[‘’`ʻʼ]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return REGION_LABELS_RU[key] || value || "-";
+};
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();
@@ -178,6 +313,8 @@ export default function AdminDashboard({
 }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const { lang } = useLanguage();
+  const t = ADMIN_DASH_I18N[lang] || ADMIN_DASH_I18N.uz;
   const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
   // Derive statistics from loaded data (admin's own data)
@@ -240,25 +377,25 @@ export default function AdminDashboard({
       avgAge,
       bmiCategories: [
         {
-          name: "Normal",
+          name: t.normal,
           pct: Math.round((normal / bmiTotal) * 100),
           count: normal,
           color: COLORS.success,
         },
         {
-          name: "Ortiqcha",
+          name: t.overweight,
           pct: Math.round((overweight / bmiTotal) * 100),
           count: overweight,
           color: COLORS.warning,
         },
         {
-          name: "Semizlik",
+          name: t.obese,
           pct: Math.round((obese / bmiTotal) * 100),
           count: obese,
           color: COLORS.error,
         },
         {
-          name: "Ozg'in",
+          name: t.underweight,
           pct: Math.round((underweight / bmiTotal) * 100),
           count: underweight,
           color: COLORS.info,
@@ -270,24 +407,17 @@ export default function AdminDashboard({
         underweightPct: Math.round((underweight / bmiTotal) * 100),
       },
     };
-  }, [data]);
+  }, [data, t]);
 
   const scientificInsights = useMemo(() => {
     if (!data.length) return null;
     const { stats: s, avgBmi } = localStats;
     const insights = [];
 
-    if (s.normalPct > 60)
-      insights.push(
-        "Guruhdagi bemorlarning aksariyati (60%+) normal vaznga ega, bu ijobiy ko'rsatkich.",
-      );
-    else if (s.riskPct > 40)
-      insights.push("Diqqat: guruhda ortiqcha vazn va semizlik ulushi yuqori (40%+).");
+    if (s.normalPct > 60) insights.push(t.insightNormal);
+    else if (s.riskPct > 40) insights.push(t.insightRisk);
 
-    if (avgBmi > 25)
-      insights.push(
-        `O'rtacha BMI (${avgBmi}) me'yordan biroz yuqori. Profilaktik choralarni kuchaytirish tavsiya etiladi.`,
-      );
+    if (avgBmi > 25) insights.push(t.insightBmi(avgBmi));
 
     const maleCount = stats?.by_gender?.erkak ?? localStats.maleCount;
     const femaleCount = stats?.by_gender?.ayol ?? localStats.femaleCount;
@@ -297,21 +427,19 @@ export default function AdminDashboard({
     const malePct = totalN > 0 ? Math.round((maleCount / totalN) * 100) : 0;
     const femalePct = totalN > 0 ? Math.round((femaleCount / totalN) * 100) : 0;
 
-    insights.push(
-      `Kontingent tarkibi: ${malePct}% erkaklar va ${femalePct}% ayollarni tashkil etadi.`,
-    );
+    insights.push(t.insightGender(malePct, femalePct));
 
     return insights;
-  }, [data, localStats, stats?.by_gender]);
+  }, [data, localStats, stats?.by_gender, t]);
 
   const genderData = useMemo(
     () =>
       [
-        { name: "Erkak", value: stats?.by_gender?.erkak ?? localStats.maleCount },
-        { name: "Ayol", value: stats?.by_gender?.ayol ?? localStats.femaleCount },
-        { name: "Noma'lum", value: stats?.by_gender?.["noma'lum"] ?? localStats.unknownCount },
+        { name: t.male, value: stats?.by_gender?.erkak ?? localStats.maleCount },
+        { name: t.female, value: stats?.by_gender?.ayol ?? localStats.femaleCount },
+        { name: t.unknown, value: stats?.by_gender?.["noma'lum"] ?? localStats.unknownCount },
       ].filter((d) => d.value > 0),
-    [localStats, stats],
+    [localStats, stats, t],
   );
 
   const ageGroupData = useMemo(() => {
@@ -345,7 +473,14 @@ export default function AdminDashboard({
 
   const todayKey = new Date().toISOString().split("T")[0];
   const todayCount = data.filter((r) => r.createdAt && r.createdAt.startsWith(todayKey)).length;
-  const riskRegionRows = (stats?.top_risk_regions || []).slice(0, 5);
+  const riskRegionRows = useMemo(
+    () =>
+      (stats?.top_risk_regions || []).slice(0, 5).map((row) => ({
+        ...row,
+        regionLabel: getRegionLabel(row.region, lang),
+      })),
+    [lang, stats],
+  );
 
   return (
     <Box sx={{ width: "100%", maxWidth: "100%", pb: 2 }}>
@@ -365,31 +500,32 @@ export default function AdminDashboard({
             }}
           >
             <Typography variant="h4" fontWeight={900} sx={{ color: "text.primary", mb: 1 }}>
-              Xush kelibsiz, {userName || "Admin"}
+              {t.welcome(userName)}
             </Typography>
             <Typography variant="h6" color="text.secondary" fontWeight={500}>
-              Klinik antropometriya bo'yicha shaxsiy analitika paneli
+              {t.subtitle}
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={1}>
-              Barcha kiritilgan ma'lumotlar tahlili. Filtrlardan foydalanib natijalarni
-              saralashingiz mumkin.
+              {t.desc}
             </Typography>
             <Divider sx={{ my: 3, borderColor: `${COLORS.primary}22` }} />
             <Stack direction="row" spacing={2} flexWrap="wrap" gap={1.5}>
               <Chip
-                label={`Jami: ${totalCount}`}
+                label={`${t.total}: ${totalCount}`}
                 size="medium"
                 variant="outlined"
                 sx={{ fontWeight: 800, bgcolor: "background.paper" }}
               />
               <Chip
-                label={`O'rtacha BMI: ${stats?.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : localStats.avgBmi}`}
+                label={`${t.avgBmi}: ${
+                  stats?.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : localStats.avgBmi
+                }`}
                 size="medium"
                 color="primary"
                 sx={{ fontWeight: 800 }}
               />
               <Chip
-                label={`O'rtacha yosh: ${localStats.avgAge}`}
+                label={`${t.avgAge}: ${localStats.avgAge}`}
                 size="medium"
                 color="secondary"
                 sx={{ fontWeight: 800 }}
@@ -399,7 +535,7 @@ export default function AdminDashboard({
                   (v) => v !== "" && v !== 0 && v !== 100 && v !== 10 && v !== 50,
                 ) && (
                   <Chip
-                    label="Filtrlangan holatda"
+                    label={t.filtered}
                     color="info"
                     variant="filled"
                     size="medium"
@@ -419,7 +555,7 @@ export default function AdminDashboard({
               justifyContent: "center",
             }}
           >
-            <SectionTitle title="Ilmiy xulosalar" subtitle="Avtomatik tahlil natijalari" />
+            <SectionTitle title={t.scientificInsights} subtitle={t.scientificInsightsSub} />
             <Stack spacing={1.5}>
               {scientificInsights ? (
                 scientificInsights.map((text, i) => (
@@ -447,7 +583,7 @@ export default function AdminDashboard({
                 ))
               ) : (
                 <Typography variant="caption" color="text.secondary">
-                  Ma'lumotlar yetarli emas...
+                  {t.noEnoughData}
                 </Typography>
               )}
             </Stack>
@@ -459,13 +595,13 @@ export default function AdminDashboard({
       <Grid container spacing={2.5} mb={4}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <KpiCard
-            label="Jami kiritganlarim"
+            label={t.totalMine}
             value={
               stats
                 ? (stats.total_analyses?.toLocaleString("uz-UZ") ?? "0")
                 : totalCount.toLocaleString("uz-UZ")
             }
-            sub="Barcha vaqt davomida"
+            sub={t.allTime}
             icon={<PersonAdd fontSize="large" />}
             color={COLORS.primary}
             loading={loading}
@@ -473,9 +609,9 @@ export default function AdminDashboard({
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <KpiCard
-            label="Bugun kiritilganlar"
+            label={t.todayEntered}
             value={stats ? (stats.today_analyses ?? 0) : todayCount}
-            sub="Bugungi seans"
+            sub={t.todaySession}
             icon={<DateRangeOutlined fontSize="large" />}
             color={COLORS.success}
             loading={loading}
@@ -483,7 +619,7 @@ export default function AdminDashboard({
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <KpiCard
-            label="O'rtacha BMI"
+            label={t.avgBmi}
             value={
               stats
                 ? stats.avg_bmi
@@ -491,7 +627,7 @@ export default function AdminDashboard({
                   : "—"
                 : localStats.avgBmi
             }
-            sub="Guruh bo'yicha"
+            sub={t.groupWide}
             icon={<MonitorWeightOutlined fontSize="large" />}
             color={COLORS.warning}
             loading={loading}
@@ -499,17 +635,17 @@ export default function AdminDashboard({
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <KpiCard
-            label="Haftalik o'sish"
+            label={t.weeklyGrowth}
             value={
               stats
                 ? stats.weekly_growth_pct != null
                   ? `${Number(stats.weekly_growth_pct) > 0 ? "+" : ""}${stats.weekly_growth_pct}%`
                   : "0"
                 : localStats.avgAge
-                  ? `${localStats.avgAge} yosh`
+                  ? `${localStats.avgAge} ${t.years}`
                   : "—"
             }
-            sub={`${stats?.weekly_analyses ?? 0} ta shu hafta`}
+            sub={`${stats?.weekly_analyses ?? 0} ${t.thisWeek}`}
             icon={<TrendingUp fontSize="large" />}
             color={COLORS.secondary}
             loading={loading}
@@ -522,10 +658,7 @@ export default function AdminDashboard({
         {riskRegionRows.length > 0 && (
           <Grid size={{ xs: 12 }}>
             <GlassCard>
-              <SectionTitle
-                title="Eng ko'p risk chiqqan regionlar"
-                subtitle="BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar"
-              />
+              <SectionTitle title={t.riskRegions} subtitle={t.riskRegionsSub} />
               <Grid container spacing={2}>
                 {riskRegionRows.map((row) => (
                   <Grid size={{ xs: 12, sm: 6, md: 4 }} key={row.region}>
@@ -542,7 +675,7 @@ export default function AdminDashboard({
                         <Box display="flex" gap={1.2} alignItems="center">
                           <FmdGoodOutlined color="error" fontSize="small" />
                           <Typography variant="body2" fontWeight={800}>
-                            {row.region}
+                            {row.regionLabel}
                           </Typography>
                         </Box>
                         <ReportProblemOutlined sx={{ color: COLORS.error }} fontSize="small" />
@@ -551,7 +684,7 @@ export default function AdminDashboard({
                         {row.count}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {row.total} tadan {row.risk_rate}% risk
+                        {row.total} {t.from} {row.risk_rate}% {t.risk}
                       </Typography>
                       <LinearProgress
                         variant="determinate"
@@ -574,13 +707,10 @@ export default function AdminDashboard({
         {/* ROW 1: Wide Chart (Daily trend) */}
         <Grid size={{ xs: 12 }}>
           <GlassCard>
-            <SectionTitle
-              title="Kunlik dinamika"
-              subtitle="So'nggi 14 kunlik kiritilgan analizlar"
-            />
+            <SectionTitle title={t.dailyDynamics} subtitle={t.dailyDynamicsSub} />
             {dailyTrend.length === 0 ? (
               <Box py={8} textAlign="center">
-                <Typography color="text.secondary">Natija topilmadi</Typography>
+                <Typography color="text.secondary">{t.noResult}</Typography>
               </Box>
             ) : (
               <Box sx={{ height: 350 }}>
@@ -613,7 +743,7 @@ export default function AdminDashboard({
                     <Area
                       type="monotone"
                       dataKey="count"
-                      name="Kiritilganlar"
+                      name={t.entered}
                       stroke={COLORS.primary}
                       strokeWidth={3}
                       fill="url(#adminGrad)"
@@ -629,7 +759,7 @@ export default function AdminDashboard({
         {/* ROW 2: Triple Distribution Charts (Gender, Age, BMI) */}
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="Jins taqsimoti" subtitle="Erkak/ayol nisbati" />
+            <SectionTitle title={t.genderDistribution} subtitle={t.genderDistributionSub} />
             <Box sx={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -678,7 +808,7 @@ export default function AdminDashboard({
 
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="Yosh guruhlari" subtitle="Bemorlar yoshi bo'yicha" />
+            <SectionTitle title={t.ageGroups} subtitle={t.ageGroupsSub} />
             <Box sx={{ height: 300 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={ageGroupData} barCategoryGap="20%">
@@ -702,7 +832,7 @@ export default function AdminDashboard({
                   <ReTooltip {...customTooltip} />
                   <Bar
                     dataKey="value"
-                    name="Bemorlar"
+                    name={t.patients}
                     fill={COLORS.secondary}
                     radius={[8, 8, 0, 0]}
                     barSize={40}
@@ -715,7 +845,7 @@ export default function AdminDashboard({
 
         <Grid size={{ xs: 12, md: 4 }}>
           <GlassCard sx={{ height: "100%" }}>
-            <SectionTitle title="BMI holati" subtitle="Sog'liq guruhlari bo'yicha" />
+            <SectionTitle title={t.bmiStatus} subtitle={t.bmiStatusSub} />
             <Stack spacing={3} mt={2}>
               {localStats.bmiCategories.map((cat) => (
                 <Box key={cat.name}>
@@ -725,7 +855,7 @@ export default function AdminDashboard({
                     </Typography>
                     <Box display="flex" gap={1} alignItems="baseline">
                       <Typography variant="caption" color="text.secondary">
-                        {cat.count} ta
+                        {cat.count} {t.unit}
                       </Typography>
                       <Typography variant="body1" fontWeight={700} sx={{ color: cat.color }}>
                         {cat.pct}%
@@ -751,8 +881,7 @@ export default function AdminDashboard({
 
       <Box mt={6} textAlign="center" pb={4}>
         <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-          MORPHO CHECK PRO • Professional analitika tizimi •{" "}
-          {new Date().toLocaleDateString("uz-UZ")}
+          MORPHO CHECK PRO • {t.footer} • {new Date().toLocaleDateString("uz-UZ")}
         </Typography>
       </Box>
     </Box>

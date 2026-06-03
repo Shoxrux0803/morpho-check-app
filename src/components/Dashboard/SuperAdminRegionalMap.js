@@ -25,6 +25,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { AdminApi, ResearchApi } from "../../services/api";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const BOUNDARY_BASE = "/maps/admin-boundaries";
 const EMPTY_COLLECTION = { type: "FeatureCollection", features: [] };
@@ -38,6 +39,144 @@ const SVG_HEIGHT = 760;
 const PIN_COLORS = {
   admin: "#2563eb",
   researcher: "#7c3aed",
+};
+
+const MAP_I18N = {
+  uz: {
+    country: "O'zbekiston",
+    title: "Hududiy tahlil xaritasi",
+    subtitle:
+      "Viloyat, tuman va mahalla kesimida analizlar, adminlar va izlanuvchilar holatini kuzating.",
+    region: "Viloyat",
+    district: "Tuman",
+    mahalla: "Mahalla",
+    analyticsLoading: "Analitika yuklanmoqda",
+    analyses: "Analiz",
+    admin: "Admin",
+    admins: "Admin",
+    researcher: "Izlanuvchi",
+    nextLayer: "Keyingi qatlam",
+    area: "Maydon",
+    riskSignal: "Klinik risk signali",
+    scientificProfile: "Ilmiy klinik profil",
+    clinicalIndexProfile: "Klinik indeks profili",
+    clinicalIndexSub: "Normalizatsiya qilingan BMI, Z-score va risk ko'rsatkichlari",
+    bmiDistribution: "BMI taqsimoti",
+    regionSample: (count) => `Hudud bo'yicha n=${count}`,
+    zBands: "BMI Z-score bandlari",
+    zBandsSub: "WHO LMS bo'yicha klinik guruhlash",
+    analyticalIndicators: "Tahliliy indikatorlar",
+    activityStructure: "Faoliyat tarkibi",
+    operationalAnalysis: "Operatsion tahlil",
+    contact: "Bog'lanish",
+    satelliteOn: "Google satellite kartani yoqish",
+    satelliteOff: "Oddiy hududiy xaritaga qaytish",
+    layerLoading: "Hududiy qatlam yuklanmoqda",
+    patientExists: "Patient bor",
+    selectedBack: "Tanlangan hududga qaytish",
+    coverageIndex: "Qamrov indeksi",
+    contactPoints: "Aloqa nuqtalari",
+    riskRecords: "Risk yozuvlari",
+    lowerLayer: "Quyi qatlam",
+    analysesShare: "Analiz ulushi",
+    adminActivity: "Admin faolligi",
+    researcherBase: "Izlanuvchi bazasi",
+    regionalDensity: "Hududiy zichlik",
+    role: "Kimligi",
+    userId: "User ID",
+    roleField: "Rol",
+    email: "Email",
+    phone: "Telefon",
+    location: "Hudud",
+    address: "Aniq manzil",
+    coordinate: "Koordinata",
+    status: "Holat",
+    registered: "Ro'yxatdan o'tgan",
+    lastActivity: "Oxirgi faollik",
+    todayEntries: "Bugungi yozuvlar",
+    monthEntries: "Oylik yozuvlar",
+    totalEntries: "Jami yozuvlar",
+    avgTime: "O'rtacha vaqt",
+    mostActiveTime: "Eng faol vaqt",
+    regionMatch: "Region mosligi",
+    matched: "Mos tushdi",
+    fallback: "Fallback nuqta",
+    chatError: "Chat faqat admin yoki izlanuvchi user pinlari uchun ochiladi",
+    chatOpened: (name) => `${name} bilan chat ochildi`,
+    chatPrompt: "Chat oynasi orqali admin yoki izlanuvchiga yozishingiz mumkin",
+    underweight: "Kam vazn",
+    normal: "Norma",
+    overweight: "Ortiqcha",
+    obese: "Semizlik",
+    coverage: "Qamrov",
+  },
+  ru: {
+    country: "Узбекистан",
+    title: "Карта регионального анализа",
+    subtitle: "Отслеживайте анализы, админов и исследователей по областям, районам и махаллям.",
+    region: "Область",
+    district: "Район",
+    mahalla: "Махалля",
+    analyticsLoading: "Аналитика загружается",
+    analyses: "Анализы",
+    admin: "Админ",
+    admins: "Админ",
+    researcher: "Исследователь",
+    nextLayer: "Следующий слой",
+    area: "Площадь",
+    riskSignal: "Клинический сигнал риска",
+    scientificProfile: "Научно-клинический профиль",
+    clinicalIndexProfile: "Профиль клинических индексов",
+    clinicalIndexSub: "Нормализованные показатели BMI, Z-score и риска",
+    bmiDistribution: "Распределение BMI",
+    regionSample: (count) => `По региону n=${count}`,
+    zBands: "Диапазоны BMI Z-score",
+    zBandsSub: "Клиническая группировка по WHO LMS",
+    analyticalIndicators: "Аналитические индикаторы",
+    activityStructure: "Структура активности",
+    operationalAnalysis: "Операционный анализ",
+    contact: "Связаться",
+    satelliteOn: "Включить Google satellite",
+    satelliteOff: "Вернуться к обычной карте",
+    layerLoading: "Региональный слой загружается",
+    patientExists: "Есть пациент",
+    selectedBack: "Вернуться к выбранному региону",
+    coverageIndex: "Индекс охвата",
+    contactPoints: "Точки контакта",
+    riskRecords: "Записи риска",
+    lowerLayer: "Нижний слой",
+    analysesShare: "Доля анализов",
+    adminActivity: "Активность админов",
+    researcherBase: "База исследователей",
+    regionalDensity: "Региональная плотность",
+    role: "Кто",
+    userId: "User ID",
+    roleField: "Роль",
+    email: "Email",
+    phone: "Телефон",
+    location: "Регион",
+    address: "Точный адрес",
+    coordinate: "Координата",
+    status: "Статус",
+    registered: "Дата регистрации",
+    lastActivity: "Последняя активность",
+    todayEntries: "Записи сегодня",
+    monthEntries: "Записи за месяц",
+    totalEntries: "Всего записей",
+    avgTime: "Среднее время",
+    mostActiveTime: "Самое активное время",
+    regionMatch: "Совпадение региона",
+    matched: "Совпало",
+    fallback: "Fallback-точка",
+    chatError: "Чат открывается только для пинов админа или исследователя",
+    chatOpened: (name) => `Чат с ${name} открыт`,
+    chatPrompt: "Через окно чата можно написать админу или исследователю",
+    underweight: "Недостаточный вес",
+    normal: "Норма",
+    overweight: "Избыточный вес",
+    obese: "Ожирение",
+    coverage: "Охват",
+  },
 };
 
 const PATIENT_BOUNDARY_COLOR = "#16a34a";
@@ -570,7 +709,7 @@ const ScientificBarChart = ({ title, subtitle, rows, maxValue }) => (
   </Box>
 );
 
-const ScientificIndexChart = ({ rows }) => {
+const ScientificIndexChart = ({ rows, title, subtitle }) => {
   const points = rows.map((row, index) => {
     const x = 22 + index * (156 / Math.max(rows.length - 1, 1));
     const y = 78 - Math.min(Math.max(row.value, 0), 100) * 0.56;
@@ -587,10 +726,10 @@ const ScientificIndexChart = ({ rows }) => {
       }}
     >
       <Typography variant="body2" fontWeight={700}>
-        Klinik indeks profili
+        {title}
       </Typography>
       <Typography variant="caption" color="text.secondary" fontWeight={700}>
-        Normalizatsiya qilingan BMI, Z-score va risk ko'rsatkichlari
+        {subtitle}
       </Typography>
       <Box component="svg" viewBox="0 0 200 92" sx={{ width: "100%", height: 110, mt: 1 }}>
         {[20, 40, 60, 80].map((tick) => (
@@ -624,6 +763,8 @@ const ScientificIndexChart = ({ rows }) => {
 export default function SuperAdminRegionalMap({ stats, statsLoading, admins = [] }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const { lang } = useLanguage();
+  const mt = MAP_I18N[lang] || MAP_I18N.uz;
   const mapContainerRef = useRef(null);
   const mapInteractionRef = useRef(null);
   const svgRef = useRef(null);
@@ -1744,11 +1885,11 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
   const chartRows = useMemo(
     () => [
-      { label: "Analiz", value: selectedMetric.analyses || 0, color: "#0f766e" },
-      { label: "Admin", value: selectedMetric.admins || 0, color: "#2563eb" },
-      { label: "Izlanuvchi", value: selectedMetric.researchers || 0, color: "#7c3aed" },
+      { label: mt.analyses, value: selectedMetric.analyses || 0, color: "#0f766e" },
+      { label: mt.admin, value: selectedMetric.admins || 0, color: "#2563eb" },
+      { label: mt.researcher, value: selectedMetric.researchers || 0, color: "#7c3aed" },
     ],
-    [selectedMetric],
+    [mt, selectedMetric],
   );
 
   const chartMax = Math.max(...chartRows.map((row) => row.value), 1);
@@ -1772,18 +1913,18 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       .filter((value) => value !== null);
 
     const bmiRows = [
-      { label: "Kam vazn", value: bmiValues.filter((v) => v < 18.5).length, color: "#3b82f6" },
+      { label: mt.underweight, value: bmiValues.filter((v) => v < 18.5).length, color: "#3b82f6" },
       {
-        label: "Norma",
+        label: mt.normal,
         value: bmiValues.filter((v) => v >= 18.5 && v < 25).length,
         color: "#0f766e",
       },
       {
-        label: "Ortiqcha",
+        label: mt.overweight,
         value: bmiValues.filter((v) => v >= 25 && v < 30).length,
         color: "#f59e0b",
       },
-      { label: "Semizlik", value: bmiValues.filter((v) => v >= 30).length, color: "#dc2626" },
+      { label: mt.obese, value: bmiValues.filter((v) => v >= 30).length, color: "#dc2626" },
     ];
     const zRows = [
       { label: "Z < -2", value: zValues.filter((v) => v < -2).length, color: "#3b82f6" },
@@ -1824,20 +1965,20 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
           color: getRiskColor(selectedMetric.riskRate || 0),
         },
         {
-          label: "Qamrov",
-          short: "Qam",
+          label: mt.coverage,
+          short: mt.coverage,
           value: Math.min(pct(clinicalRows.length, Math.max(childCount, 1)), 100),
           color: "#0f766e",
         },
       ],
       sampleCount: clinicalRows.length,
     };
-  }, [childCount, selectedMetric.riskRate, selectedRecords]);
+  }, [childCount, mt, selectedMetric.riskRate, selectedRecords]);
 
   const analyticsCards = useMemo(
     () => [
       {
-        label: "Qamrov indeksi",
+        label: mt.coverageIndex,
         value: `${Math.min(
           Math.round(((selectedRecords.length || 0) / Math.max(childCount, 1)) * 10),
           100,
@@ -1845,61 +1986,66 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         color: "#0f766e",
       },
       {
-        label: "Aloqa nuqtalari",
+        label: mt.contactPoints,
         value: pinFeatures.length,
         color: "#2563eb",
       },
       {
-        label: "Risk yozuvlari",
+        label: mt.riskRecords,
         value: selectedMetric.risk || 0,
         color: getRiskColor(selectedMetric.riskRate || 0),
       },
       {
-        label: "Quyi qatlam",
+        label: mt.lowerLayer,
         value: childCount,
         color: "#f59e0b",
       },
     ],
-    [childCount, pinFeatures.length, selectedMetric, selectedRecords.length],
+    [childCount, mt, pinFeatures.length, selectedMetric, selectedRecords.length],
   );
 
   const analyticalRows = useMemo(
     () => [
       {
-        label: "Analiz ulushi",
+        label: mt.analysesShare,
         value: selectedMetric.analyses || 0,
         total: selectedRecords.length,
         color: "#0f766e",
       },
       {
-        label: "Admin faolligi",
+        label: mt.adminActivity,
         value: selectedMetric.admins || 0,
         total: selectedRecords.length,
         color: "#2563eb",
       },
       {
-        label: "Izlanuvchi bazasi",
+        label: mt.researcherBase,
         value: selectedMetric.researchers || 0,
         total: selectedRecords.length,
         color: "#7c3aed",
       },
       {
-        label: "Hududiy zichlik",
+        label: mt.regionalDensity,
         value: childCount,
         total: selected ? 120 : boundaryIndex?.counts?.["2"] || 206,
         color: "#f59e0b",
       },
     ],
-    [boundaryIndex, childCount, selected, selectedMetric, selectedRecords.length],
+    [boundaryIndex, childCount, mt, selected, selectedMetric, selectedRecords.length],
   );
 
-  const levelLabel = selected ? LEVEL_META[selected.admin_leve]?.label : "O'zbekiston";
+  const levelLabel = selected
+    ? { 1: mt.region, 2: mt.district, 3: mt.mahalla }[selected.admin_leve]
+    : mt.country;
 
-  const getPinRoleLabel = (pin) => {
-    if (pin?.type === "admin") return "Administrator";
-    if (pin?.type === "researcher") return "Izlanuvchi";
-    return pin?.role || pin?.type || "-";
-  };
+  const getPinRoleLabel = useCallback(
+    (pin) => {
+      if (pin?.type === "admin") return mt.admin;
+      if (pin?.type === "researcher") return mt.researcher;
+      return pin?.role || pin?.type || "-";
+    },
+    [mt],
+  );
 
   const formatDateTime = (value) => {
     if (!value) return "";
@@ -1910,39 +2056,39 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const selectedPinDetails = useMemo(() => {
     if (!selectedPin) return [];
     const rows = [
-      ["Kimligi", getPinRoleLabel(selectedPin)],
-      ["User ID", selectedPin.userId],
-      ["Rol", selectedPin.role],
-      ["Email", selectedPin.email],
-      ["Telefon", selectedPin.phone],
+      [mt.role, getPinRoleLabel(selectedPin)],
+      [mt.userId, selectedPin.userId],
+      [mt.roleField, selectedPin.role],
+      [mt.email, selectedPin.email],
+      [mt.phone, selectedPin.phone],
       [
-        "Hudud",
+        mt.location,
         [selectedPin.region, selectedPin.district, selectedPin.mahalla].filter(Boolean).join(" / "),
       ],
-      ["Aniq manzil", selectedPin.address],
+      [mt.address, selectedPin.address],
       [
-        "Koordinata",
+        mt.coordinate,
         [selectedPin.latitude, selectedPin.longitude]
           .filter((value) => value !== undefined && value !== null && value !== "")
           .map((value) => Number(value).toFixed(6))
           .join(", "),
       ],
-      ["Holat", selectedPin.status],
-      ["Ro'yxatdan o'tgan", formatDateTime(selectedPin.createdAt)],
-      ["Oxirgi faollik", formatDateTime(selectedPin.lastActiveAt)],
-      ["Bugungi yozuvlar", selectedPin.statsToday],
-      ["Oylik yozuvlar", selectedPin.statsMonth],
-      ["Jami yozuvlar", selectedPin.totalEntries],
-      ["O'rtacha vaqt", selectedPin.avgEntryTime ? `${selectedPin.avgEntryTime} s` : ""],
-      ["Eng faol vaqt", selectedPin.mostActiveHour],
-      ["Region mosligi", selectedPin.sourceRegionMatched ? "Mos tushdi" : "Fallback nuqta"],
+      [mt.status, selectedPin.status],
+      [mt.registered, formatDateTime(selectedPin.createdAt)],
+      [mt.lastActivity, formatDateTime(selectedPin.lastActiveAt)],
+      [mt.todayEntries, selectedPin.statsToday],
+      [mt.monthEntries, selectedPin.statsMonth],
+      [mt.totalEntries, selectedPin.totalEntries],
+      [mt.avgTime, selectedPin.avgEntryTime ? `${selectedPin.avgEntryTime} s` : ""],
+      [mt.mostActiveTime, selectedPin.mostActiveHour],
+      [mt.regionMatch, selectedPin.sourceRegionMatched ? mt.matched : mt.fallback],
     ];
     return rows.filter(([, value]) => value !== undefined && value !== null && value !== "");
-  }, [selectedPin]);
+  }, [getPinRoleLabel, mt, selectedPin]);
 
   const handleChat = (pin = selectedPin) => {
     if (!pin?.userId) {
-      toast.error("Chat faqat admin yoki izlanuvchi user pinlari uchun ochiladi");
+      toast.error(mt.chatError);
       return;
     }
     window.dispatchEvent(new CustomEvent("close-ai-chat"));
@@ -1958,11 +2104,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         },
       }),
     );
-    toast.success(
-      pin?.name
-        ? `${pin.name} bilan chat ochildi`
-        : "Chat oynasi orqali admin yoki izlanuvchiga yozishingiz mumkin",
-    );
+    toast.success(pin?.name ? mt.chatOpened(pin.name) : mt.chatPrompt);
   };
 
   const loading = !mapReady || loadingBoundary;
@@ -1986,23 +2128,30 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
               <Public color="primary" />
               <Typography variant="h4" fontWeight={900}>
-                Hududiy tahlil xaritasi
+                {mt.title}
               </Typography>
             </Stack>
             <Typography variant="body2" color="text.secondary">
-              Viloyat, tuman va mahalla kesimida analizlar, adminlar va izlanuvchilar holatini
-              kuzating.
+              {mt.subtitle}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <StatPill label="Viloyat" value={boundaryIndex?.counts?.["1"] || 14} color="#0f766e" />
-            <StatPill label="Tuman" value={boundaryIndex?.counts?.["2"] || 206} color="#f59e0b" />
             <StatPill
-              label="Mahalla"
+              label={mt.region}
+              value={boundaryIndex?.counts?.["1"] || 14}
+              color="#0f766e"
+            />
+            <StatPill
+              label={mt.district}
+              value={boundaryIndex?.counts?.["2"] || 206}
+              color="#f59e0b"
+            />
+            <StatPill
+              label={mt.mahalla}
               value={boundaryIndex?.counts?.["3"] || 8991}
               color="#7c3aed"
             />
-            {dataLoading && <Chip label="Analitika yuklanmoqda" sx={{ fontWeight: 800 }} />}
+            {dataLoading && <Chip label={mt.analyticsLoading} sx={{ fontWeight: 800 }} />}
           </Stack>
         </Stack>
       </Box>
@@ -2066,7 +2215,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               height="100%"
               preserveAspectRatio="xMidYMid slice"
               role="img"
-              aria-label="O'zbekiston hududiy xaritasi"
+              aria-label={mt.title}
               style={{
                 opacity: satelliteEnabled ? 0 : 1,
                 shapeRendering: "geometricPrecision",
@@ -2087,7 +2236,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                 fontSize="20"
                 fontWeight="800"
               >
-                UZBEKISTAN
+                {mt.country.toUpperCase()}
               </text>
               <g>
                 <g
@@ -2369,7 +2518,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                     color="text.secondary"
                     sx={{ wordBreak: "break-word" }}
                   >
-                    Hudud:{" "}
+                    {mt.location}:{" "}
                     {[selectedPin.region, selectedPin.district, selectedPin.mahalla]
                       .filter(Boolean)
                       .join(" / ") || "Kiritilmagan"}
@@ -2389,18 +2538,12 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                   disabled={!selectedPin.userId}
                   sx={{ mt: 1.1, borderRadius: 1, textTransform: "none", fontWeight: 700 }}
                 >
-                  Bog'lanish
+                  {mt.contact}
                 </Button>
               </Paper>
             )}
           </Box>
-          <Tooltip
-            title={
-              satelliteEnabled
-                ? "Oddiy hududiy xaritaga qaytish"
-                : "Google satellite kartani yoqish"
-            }
-          >
+          <Tooltip title={satelliteEnabled ? mt.satelliteOff : mt.satelliteOn}>
             <Button
               variant={satelliteEnabled ? "contained" : "outlined"}
               size="small"
@@ -2445,7 +2588,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               <Stack alignItems="center" spacing={1}>
                 <CircularProgress />
                 <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                  Hududiy qatlam yuklanmoqda
+                  {mt.layerLoading}
                 </Typography>
               </Stack>
             </Box>
@@ -2500,22 +2643,22 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" mt={0.75}>
               <Chip
                 size="small"
-                label="Viloyat"
+                label={mt.region}
                 sx={{ bgcolor: mapColors.region, color: "#fff", fontWeight: 800 }}
               />
               <Chip
                 size="small"
-                label="Tuman"
+                label={mt.district}
                 sx={{ bgcolor: mapColors.district, color: "#fff", fontWeight: 800 }}
               />
               <Chip
                 size="small"
-                label="Mahalla"
+                label={mt.mahalla}
                 sx={{ bgcolor: mapColors.mahalla, color: "#fff", fontWeight: 800 }}
               />
               <Chip
                 size="small"
-                label="Patient bor"
+                label={mt.patientExists}
                 sx={{ bgcolor: mapColors.patient, color: "#fff", fontWeight: 800 }}
               />
               <Chip
@@ -2526,7 +2669,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               />
             </Stack>
           </Paper>
-          <Tooltip title="Tanlangan hududga qaytish">
+          <Tooltip title={mt.selectedBack}>
             <IconButton
               onClick={zoomToSelected}
               sx={{
@@ -2567,7 +2710,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                   {levelLabel}
                 </Typography>
                 <Typography variant="h5" fontWeight={800}>
-                  {selected ? featureName(selected) : "O'zbekiston"}
+                  {selected ? featureName(selected) : mt.country}
                 </Typography>
                 {selectedPath.region && (
                   <Typography variant="caption" color="text.secondary">
@@ -2586,19 +2729,19 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             </Stack>
 
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" mt={2}>
-              <StatPill label="Analiz" value={selectedMetric.analyses || 0} color="#0f766e" />
-              <StatPill label="Admin" value={selectedMetric.admins || 0} color="#2563eb" />
+              <StatPill label={mt.analyses} value={selectedMetric.analyses || 0} color="#0f766e" />
+              <StatPill label={mt.admin} value={selectedMetric.admins || 0} color="#2563eb" />
               <StatPill
-                label="Izlanuvchi"
+                label={mt.researcher}
                 value={selectedMetric.researchers || 0}
                 color="#7c3aed"
               />
             </Stack>
 
             <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" mt={1}>
-              <StatPill label="Keyingi qatlam" value={childCount} color="#f59e0b" />
+              <StatPill label={mt.nextLayer} value={childCount} color="#f59e0b" />
               <StatPill
-                label="Maydon"
+                label={mt.area}
                 value={formatArea(selectedAreaSquareMeters)}
                 color="text.primary"
               />
@@ -2607,7 +2750,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             <Box mt={2.25}>
               <Stack direction="row" justifyContent="space-between" alignItems="center" mb={0.75}>
                 <Typography variant="body2" fontWeight={700}>
-                  Klinik risk signali
+                  {mt.riskSignal}
                 </Typography>
                 <Typography
                   variant="body2"
@@ -2681,7 +2824,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                   disabled={!selectedPin.userId}
                   sx={{ mt: 1.5, borderRadius: 1.5, textTransform: "none", fontWeight: 800 }}
                 >
-                  Bog'lanish
+                  {mt.contact}
                 </Button>
               </Box>
             )}
@@ -2689,19 +2832,23 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             <Divider sx={{ my: 2.25 }} />
 
             <Typography variant="h6" fontWeight={800} mb={1.25}>
-              Ilmiy klinik profil
+              {mt.scientificProfile}
             </Typography>
             <Stack spacing={1.2}>
-              <ScientificIndexChart rows={clinicalChartData.indexRows} />
+              <ScientificIndexChart
+                rows={clinicalChartData.indexRows}
+                title={mt.clinicalIndexProfile}
+                subtitle={mt.clinicalIndexSub}
+              />
               <ScientificBarChart
-                title="BMI taqsimoti"
-                subtitle={`Hudud bo'yicha n=${clinicalChartData.sampleCount}`}
+                title={mt.bmiDistribution}
+                subtitle={mt.regionSample(clinicalChartData.sampleCount)}
                 rows={clinicalChartData.bmiRows}
                 maxValue={clinicalChartData.maxBmi}
               />
               <ScientificBarChart
-                title="BMI Z-score bandlari"
-                subtitle="WHO LMS bo'yicha klinik guruhlash"
+                title={mt.zBands}
+                subtitle={mt.zBandsSub}
                 rows={clinicalChartData.zRows}
                 maxValue={clinicalChartData.maxZ}
               />
@@ -2710,7 +2857,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             <Divider sx={{ my: 2.25 }} />
 
             <Typography variant="h6" fontWeight={800} mb={1.25}>
-              Tahliliy indikatorlar
+              {mt.analyticalIndicators}
             </Typography>
             <Box
               sx={{
@@ -2742,7 +2889,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
 
             <Box mt={2.25}>
               <Typography variant="h6" fontWeight={800} mb={1.25}>
-                Faoliyat tarkibi
+                {mt.activityStructure}
               </Typography>
               <Stack spacing={1.2}>
                 {chartRows.map((row) => (
@@ -2780,7 +2927,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             <Divider sx={{ my: 2.25 }} />
 
             <Typography variant="h6" fontWeight={800} mb={1.25}>
-              Operatsion tahlil
+              {mt.operationalAnalysis}
             </Typography>
             <Stack spacing={1.35}>
               {analyticalRows.map((row) => {

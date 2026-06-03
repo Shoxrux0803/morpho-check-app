@@ -60,7 +60,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
     <Drawer anchor="right" open={open} onClose={onClose}>
       <Box sx={{ width: 350, p: 3 }}>
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h6">{t("syncManagerTitle") || "Offline Queue"}</Typography>
+          <Typography variant="h6">{t("syncManagerTitle")}</Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -74,7 +74,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
             disabled={isSyncing || queue.length === 0}
             onClick={syncManual}
           >
-            {isSyncing ? "Syncing..." : "Sync All Now"}
+            {isSyncing ? t("syncing") : t("syncAllNow")}
           </Button>
         </Box>
 
@@ -82,7 +82,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
 
         {queue.length === 0 ? (
           <Box sx={{ py: 4, textAlignment: "center", opacity: 0.6 }}>
-            <Typography align="center">No pending items.</Typography>
+            <Typography align="center">{t("noPendingItems")}</Typography>
           </Box>
         ) : (
           <List>
@@ -112,17 +112,17 @@ export default function SyncManager({ open, onClose, onEditItem }) {
 
                 {item.lastError && (
                   <Typography variant="caption" color="error" sx={{ mb: 1, display: "block" }}>
-                    Error: {item.lastError}
+                    {t("errorPrefix")} {item.lastError}
                   </Typography>
                 )}
 
                 <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", gap: 1 }}>
-                  <Tooltip title="Edit and Fix">
+                  <Tooltip title={t("editAndFix")}>
                     <IconButton size="small" onClick={() => onEditItem(item)}>
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Remove">
+                  <Tooltip title={t("remove")}>
                     <IconButton size="small" color="error" onClick={() => removeFromQueue(item.id)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>

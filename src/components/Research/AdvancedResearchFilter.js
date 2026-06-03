@@ -23,6 +23,8 @@ import {
   Download,
   Wc,
 } from "@mui/icons-material";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { researcherT } from "../../utils/researcherI18n";
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
@@ -48,19 +50,21 @@ const GlassPaper = ({ children, sx = {} }) => (
 );
 
 const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
+  const { lang } = useLanguage();
+  const t = (key) => researcherT(lang, key);
   const [expanded, setExpanded] = useState(false);
 
   // Feeding type options
   const feedingOptions = [
-    { value: "Tabiiy (естественном вскармливании)", label: "Tabiiy" },
-    { value: "Sun'iy (искусственном вскармливании)", label: "Sun'iy" },
+    { value: "Tabiiy (естественном вскармливании)", label: t("natural") },
+    { value: "Sun'iy (искусственном вскармливании)", label: t("artificial") },
   ];
 
   // Parents marriage options
   const marriageOptions = [
-    { value: "Yaqin qarindosh (близкородственный)", label: "Yaqin qarindosh" },
-    { value: "Uzoq qarindosh (дальнородственный)", label: "Uzoq qarindosh" },
-    { value: "Qarindosh emas (неродственный)", label: "Qarindosh emas" },
+    { value: "Yaqin qarindosh (близкородственный)", label: t("closeRelative") },
+    { value: "Uzoq qarindosh (дальнородственный)", label: t("distantRelative") },
+    { value: "Qarindosh emas (неродственный)", label: t("notRelative") },
   ];
 
   const handleClear = () => {
@@ -106,7 +110,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             fullWidth
             size="small"
             name="search"
-            placeholder="F.I.SH, maktab yoki hudud bo'yicha tezkor qidirish..."
+            placeholder={t("quickSearchPlaceholder")}
             value={filter.search || ""}
             onChange={handleChange}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
@@ -126,7 +130,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             onClick={() => setExpanded(!expanded)}
             sx={{ borderRadius: 3, textTransform: "none", minWidth: 140 }}
           >
-            Filtrlar
+            {t("filters")}
           </Button>
 
           <Button
@@ -135,7 +139,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             onClick={() => onSearch()}
             sx={{ borderRadius: 3, px: 3, textTransform: "none" }}
           >
-            Qidirish
+            {t("search")}
           </Button>
 
           {onExport && (
@@ -171,14 +175,14 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                   color="text.secondary"
                   sx={{ fontWeight: 700, mb: 1, display: "block" }}
                 >
-                  Demografiya
+                  {t("demographics")}
                 </Typography>
                 <Stack spacing={2}>
                   <TextField
                     fullWidth
                     size="small"
                     name="full_name"
-                    label="F.I.SH (to'liq)"
+                    label={t("fullNameDetailed")}
                     value={filter.full_name || ""}
                     onChange={handleChange}
                     InputProps={{
@@ -194,7 +198,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="gender"
-                    label="Jinsi"
+                    label={t("gender")}
                     value={filter.gender || ""}
                     onChange={handleChange}
                     InputProps={{
@@ -205,15 +209,15 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       ),
                     }}
                   >
-                    <MenuItem value="">Barchasi</MenuItem>
-                    <MenuItem value="erkak">Erkak / O'g'il bola</MenuItem>
-                    <MenuItem value="ayol">Ayol / Qiz bola</MenuItem>
+                    <MenuItem value="">{t("all")}</MenuItem>
+                    <MenuItem value="erkak">{t("maleChild")}</MenuItem>
+                    <MenuItem value="ayol">{t("femaleChild")}</MenuItem>
                   </TextField>
                   <TextField
                     fullWidth
                     size="small"
                     name="school_name"
-                    label="Maktab / Bog'cha"
+                    label={t("schoolKindergarten")}
                     value={filter.school_name || ""}
                     onChange={handleChange}
                     InputProps={{
@@ -228,7 +232,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="settlement"
-                    label="Aholi punkti"
+                    label={t("settlement")}
                     value={filter.settlement || ""}
                     onChange={handleChange}
                     InputProps={{
@@ -249,7 +253,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                   color="text.secondary"
                   sx={{ fontWeight: 700, mb: 1, display: "block" }}
                 >
-                  Xususiyatlar
+                  {t("attributes")}
                 </Typography>
                 <Stack spacing={2}>
                   <TextField
@@ -257,11 +261,11 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="feeding_type"
-                    label="Oziqlanish turi"
+                    label={t("feedingType")}
                     value={filter.feeding_type || ""}
                     onChange={handleChange}
                   >
-                    <MenuItem value="">Barchasi</MenuItem>
+                    <MenuItem value="">{t("all")}</MenuItem>
                     {feedingOptions.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
                         {opt.label}
@@ -273,11 +277,11 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="parents_marriage"
-                    label="Ota-ona qarindoshligi"
+                    label={t("parentsMarriage")}
                     value={filter.parents_marriage || ""}
                     onChange={handleChange}
                   >
-                    <MenuItem value="">Barchasi</MenuItem>
+                    <MenuItem value="">{t("all")}</MenuItem>
                     {marriageOptions.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
                         {opt.label}
@@ -289,7 +293,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       fullWidth
                       size="small"
                       name="date_from"
-                      label="Sana (dan)"
+                      label={t("dateFrom")}
                       placeholder="2024-01-01"
                       value={filter.date_from || ""}
                       onChange={handleChange}
@@ -299,7 +303,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       fullWidth
                       size="small"
                       name="date_to"
-                      label="Sana (gacha)"
+                      label={t("dateTo")}
                       placeholder="2024-12-31"
                       value={filter.date_to || ""}
                       onChange={handleChange}
@@ -316,12 +320,12 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                   color="text.secondary"
                   sx={{ fontWeight: 700, mb: 1, display: "block" }}
                 >
-                  O'lchovlar
+                  {t("measurements")}
                 </Typography>
                 <Stack spacing={2}>
                   <Box>
                     <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
-                      Vazn oralig'i (kg)
+                      {t("weightRange")}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TextField
@@ -345,7 +349,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                   </Box>
                   <Box>
                     <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
-                      Bo'y oralig'i (sm)
+                      {t("heightRange")}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TextField
@@ -375,7 +379,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     onClick={handleClear}
                     sx={{ mt: "auto", py: 1 }}
                   >
-                    Filtrlarni tozalash
+                    {t("clearFilters")}
                   </Button>
                 </Stack>
               </Grid>
@@ -391,15 +395,16 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             variant="body2"
             sx={{ alignSelf: "center", mr: 1, fontWeight: 600, color: "text.secondary" }}
           >
-            Aktiv filtrlar:
+            {t("activeFilters")}
           </Typography>
           {activeFilters.map(([key, value]) => {
             let label = `${key}: ${value}`;
-            if (key === "date_from") label = `Sanadan: ${value}`;
-            if (key === "date_to") label = `Sanagacha: ${value}`;
-            if (key === "weight_min") label = `Vazn >= ${value}`;
-            if (key === "weight_max") label = `Vazn <= ${value}`;
-            if (key === "gender") label = `Jinsi: ${value === "erkak" ? "Erkak" : "Ayol"}`;
+            if (key === "date_from") label = `${t("fromDate")}: ${value}`;
+            if (key === "date_to") label = `${t("toDate")}: ${value}`;
+            if (key === "weight_min") label = `${t("weightShort")} >= ${value}`;
+            if (key === "weight_max") label = `${t("weightShort")} <= ${value}`;
+            if (key === "gender")
+              label = `${t("gender")}: ${value === "erkak" ? t("male") : t("female")}`;
 
             return (
               <Chip
@@ -418,7 +423,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             onClick={handleClear}
             sx={{ textTransform: "none", fontWeight: 600 }}
           >
-            Barchasini tozalash
+            {t("clearAll")}
           </Button>
         </Stack>
       )}

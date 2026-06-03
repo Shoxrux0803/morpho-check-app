@@ -94,6 +94,217 @@ const PAGE_LABELS = {
 
 const RESEARCH_TYPE_OPTIONS = ["PhD", "DSc", "Magistrlik", "Grant loyihasi"];
 
+const AUDIT_ACTION_LABELS = {
+  ru: {
+    create: "Создание",
+    created: "Создано",
+    update: "Обновление",
+    updated: "Обновлено",
+    delete: "Удаление",
+    deleted: "Удалено",
+    restore: "Восстановление",
+    restored: "Восстановлено",
+    login: "Вход",
+    logout: "Выход",
+    backup: "Резервная копия",
+    clear: "Очистка",
+    hard_delete: "Полное удаление",
+    soft_delete: "Перемещение в корзину",
+    delete_hard: "Полное удаление",
+    delete_soft: "Перемещение в корзину",
+    download: "Скачивание",
+    downloaded: "Скачано",
+    export: "Экспорт",
+    exported: "Экспортировано",
+  },
+};
+
+const AUDIT_TARGET_LABELS_RU = {
+  Analysis: "Анализ",
+  PatientAnalysis: "Анализ пациента",
+  User: "Пользователь",
+  AuditLog: "Журнал аудита",
+  Backup: "Резервная копия",
+  PDF: "PDF-отчет",
+  DOCX: "DOCX-документ",
+};
+
+const AUDIT_JSON_KEY_LABELS_RU = {
+  action: "Действие",
+  target_type: "Тип объекта",
+  target_id: "ID объекта",
+  details: "Описание",
+  user_id: "ID пользователя",
+  user_name: "Пользователь",
+  user_email: "Email пользователя",
+  name: "Имя",
+  role: "Роль",
+  email: "Email",
+  old: "Было",
+  new: "Стало",
+  changes: "Изменения",
+  ids: "ID",
+  count: "Количество",
+};
+
+const AUDIT_DETAIL_PATTERNS_RU = [
+  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Новый анализ создан: $2"],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Новый пользователь создан: $1"],
+  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "Данные пользователя обновлены: $1"],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "Пользователь удален: $1"],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "Пользователь восстановлен: $1"],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "Пользователь вошел в систему: $1"],
+  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 анализ(ов) перемещено в корзину: $2"],
+  [
+    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
+    "$1 анализ(ов) удалено навсегда (ID: $2)",
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
+    "$1 анализ(ов) восстановлено из корзины (ID: $2)",
+  ],
+  [/^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i, "Анализ обновлен: $1. Изменения: $2"],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    "Журнал аудита очищен: все ($1 записей)",
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    "Журнал аудита очищен: $1 ($2 записей)",
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Резервная копия создана: $1"],
+  [
+    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
+    "Резервная копия полностью восстановлена (замена): $1",
+  ],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Резервная копия удалена: $1"],
+  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Отчет пациента (PDF) скачан: $1"],
+  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Анкета пациента (DOCX) скачана: $1"],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_RU = [
+  [/\bYangi\b/gi, "Новый"],
+  [/\bfoydalanuvchi\b/gi, "пользователь"],
+  [/\bFoydalanuvchi\b/g, "Пользователь"],
+  [/\bma'?lumotlari\b/gi, "данные"],
+  [/\bMa'?lumotlar\b/g, "Данные"],
+  [/\bMa'?lumot\b/g, "Данные"],
+  [/\bma'?lumotlar\b/gi, "данные"],
+  [/\bma'?lumot\b/gi, "данные"],
+  [/\btahlil\b/gi, "анализ"],
+  [/\bTahlil\b/g, "Анализ"],
+  [/\bBemor hisoboti\b/g, "Отчет пациента"],
+  [/\bbemor hisoboti\b/gi, "отчет пациента"],
+  [/\bBemor anketasi\b/g, "Анкета пациента"],
+  [/\bbemor anketasi\b/gi, "анкета пациента"],
+  [/\bBemor\b/g, "Пациент"],
+  [/\bbemor\b/gi, "пациент"],
+  [/\bAdmin\b/g, "Админ"],
+  [/\badmin\b/gi, "админ"],
+  [/\bIzlanuvchi\b/g, "Исследователь"],
+  [/\bizlanuvchi\b/gi, "исследователь"],
+  [/\bResearcher\b/g, "Исследователь"],
+  [/\bresearcher\b/gi, "исследователь"],
+  [/\bAnalysis\b/g, "Анализ"],
+  [/\banalysis\b/gi, "анализ"],
+  [/\bUser\b/g, "Пользователь"],
+  [/\buser\b/gi, "пользователь"],
+  [/\byaratildi\b/gi, "создано"],
+  [/\byangilandi\b/gi, "обновлено"],
+  [/\btiklandi\b/gi, "восстановлено"],
+  [/\bo'?chirildi\b/gi, "удалено"],
+  [/\bcreated\b/gi, "создано"],
+  [/\bupdated\b/gi, "обновлено"],
+  [/\bdeleted\b/gi, "удалено"],
+  [/\brestored\b/gi, "восстановлено"],
+  [/\byuklab olindi\b/gi, "скачано"],
+  [/\byuklandi\b/gi, "загружено"],
+  [/\bolindi\b/gi, "получено"],
+  [/\bsavatga yuborildi\b/gi, "перемещено в корзину"],
+  [/\bsavatdan\b/gi, "из корзины"],
+  [/\bbutunlay\b/gi, "навсегда"],
+  [/\bIDlar\b/g, "ID"],
+  [/\bBarchasi\b/g, "Все"],
+  [/\bta yozuv\b/gi, "записей"],
+  [/\bta\b/g, "шт"],
+  [/\bZaxira nusxasi\b/g, "Резервная копия"],
+  [/\bzaxira nusxasi\b/gi, "резервная копия"],
+  [/\bZaxira\b/g, "Резервная копия"],
+  [/\bzaxira\b/gi, "резервная копия"],
+  [/\bfayl\b/gi, "файл"],
+  [/\bO'?zgarishlar\b/gi, "Изменения"],
+  [/\bAlmashtirish\b/gi, "замена"],
+  [/\btizimga kirdi\b/gi, "вошел в систему"],
+];
+
+const AUDIT_DETAIL_CLEANUPS_RU = [
+  [/Новый анализ создано/gi, "Новый анализ создан"],
+  [/Новый Анализ создано/gi, "Новый анализ создан"],
+  [/Анкета пациента \(DOCX\) скачано/gi, "Анкета пациента (DOCX) скачана"],
+  [/Анкета пациента скачано/gi, "Анкета пациента скачана"],
+  [/Отчет пациента \(PDF\) скачано/gi, "Отчет пациента (PDF) скачан"],
+  [/DOCX-отчет скачано/gi, "DOCX-отчет скачан"],
+  [/\s+:/g, ":"],
+];
+
+const formatAuditAction = (action, lang) => {
+  const value = String(action || "-");
+  if (lang !== "ru") return value;
+  const key = value.toLowerCase().trim().replaceAll("-", "_");
+  return AUDIT_ACTION_LABELS.ru[key] || value;
+};
+
+const formatAuditTarget = (targetType, lang) => {
+  if (!targetType) return "";
+  const value = String(targetType);
+  if (lang !== "ru") return value;
+  return AUDIT_TARGET_LABELS_RU[value] || translateAuditTextRu(value);
+};
+
+const formatAuditJsonValue = (value, lang) => {
+  if (value === null || value === undefined || value === "") return "-";
+  if (Array.isArray(value)) return value.map((item) => formatAuditJsonValue(item, lang)).join(", ");
+  if (typeof value === "object") return formatAuditDetails(value, lang);
+  const text = String(value);
+  return lang === "ru" ? translateAuditTextRu(text) : text;
+};
+
+const translateAuditTextRu = (text) => {
+  const patternMatch = AUDIT_DETAIL_PATTERNS_RU.find(([pattern]) => pattern.test(text));
+  if (patternMatch) return text.replace(patternMatch[0], patternMatch[1]);
+  const translated = AUDIT_DETAIL_REPLACEMENTS_RU.reduce(
+    (result, [pattern, to]) => result.replace(pattern, to),
+    text,
+  );
+  return AUDIT_DETAIL_CLEANUPS_RU.reduce(
+    (result, [pattern, to]) => result.replace(pattern, to),
+    translated,
+  );
+};
+
+const formatAuditDetails = (details, lang) => {
+  if (details === null || details === undefined || details === "") return "-";
+  let text = typeof details === "string" ? details : JSON.stringify(details, null, 2);
+
+  try {
+    const parsed = typeof details === "string" ? JSON.parse(details) : details;
+    if (parsed && typeof parsed === "object") {
+      text = Object.entries(parsed)
+        .map(([key, value]) => {
+          const label =
+            lang === "ru" ? AUDIT_JSON_KEY_LABELS_RU[key] || translateAuditTextRu(key) : key;
+          return `${label}: ${formatAuditJsonValue(value, lang)}`;
+        })
+        .join("; ");
+    }
+  } catch {
+    // Plain text audit details are expected too.
+  }
+
+  if (lang !== "ru") return text;
+  return translateAuditTextRu(text);
+};
+
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -394,7 +605,7 @@ const SuperAdminPage = () => {
       if (analysisIds.length) await AdminApi.analyses.restore(analysisIds);
       for (const id of researchIds) await ResearchApi.restore(id);
 
-      toast.success("Ma'lumotlar tiklandi");
+      toast.success(pt("restoredMany"));
       setChecked(new Set());
       fetchDeletedAnalyses();
     } catch (err) {
@@ -519,7 +730,7 @@ const SuperAdminPage = () => {
   const setAdminPinFromBoundary = () => {
     const center = resolveAdminBoundaryCenter();
     if (!center) {
-      toast.error("Tanlangan hudud uchun koordinata topilmadi");
+      toast.error(pt("locationNotFound"));
       return;
     }
     setAdminForm((current) => ({
@@ -527,7 +738,7 @@ const SuperAdminPage = () => {
       longitude: Number(center[0]).toFixed(6),
       latitude: Number(center[1]).toFixed(6),
     }));
-    toast.success("Pin tanlangan hudud markaziga qo'yildi");
+    toast.success(pt("pinSelectedCenter"));
   };
 
   const resolveAdminBoundaryCenter = () => {
@@ -543,7 +754,7 @@ const SuperAdminPage = () => {
 
   const useCurrentLocationForAdmin = () => {
     if (!navigator.geolocation) {
-      toast.error("Brauzer lokatsiyani qo'llab-quvvatlamaydi");
+      toast.error(pt("geolocationUnsupported"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -553,9 +764,9 @@ const SuperAdminPage = () => {
           latitude: position.coords.latitude.toFixed(6),
           longitude: position.coords.longitude.toFixed(6),
         }));
-        toast.success("Aniq lokatsiya olindi");
+        toast.success(pt("currentLocationFetched"));
       },
-      () => toast.error("Lokatsiyani olishga ruxsat berilmadi yoki xatolik yuz berdi"),
+      () => toast.error(pt("geolocationDenied")),
       { enableHighAccuracy: true, timeout: 12000 },
     );
   };
@@ -739,13 +950,13 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteAdmin = async (id) => {
-    if (window.confirm("Haqiqatan ham bu adminni o'chirmoqchimisiz?")) {
+    if (window.confirm(pt("adminDeleteConfirm"))) {
       try {
         const deleteUser = AdminApi.users.delete || AdminApi.users.remove;
         await deleteUser(id);
         fetchAdmins();
         fetchDeletedAdmins();
-        toast.success("Admin o'chirildi");
+        toast.success(pt("adminDeleted"));
       } catch (err) {
         toast.error("Xatolik: " + err.message);
       }
@@ -765,7 +976,7 @@ const SuperAdminPage = () => {
       } else {
         await AdminApi.analyses.restore([row.id]);
       }
-      toast.success("Ma'lumot tiklandi");
+      toast.success(pt("dataRestored"));
       fetchDeletedAnalyses();
     } catch (err) {
       toast.error("Xatolik: " + err.message);
@@ -775,7 +986,7 @@ const SuperAdminPage = () => {
   const handleRestoreAdmin = async (id) => {
     try {
       await AdminApi.users.restore(id);
-      toast.success("Admin muvaffaqiyatli tiklandi");
+      toast.success(pt("adminRestored"));
       fetchDeletedAdmins();
       fetchAdmins();
     } catch (err) {
@@ -790,18 +1001,14 @@ const SuperAdminPage = () => {
         : deletedData.find((item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId);
     if (!row) return;
 
-    if (
-      window.confirm(
-        "DIQQAT! Ushbu ma'lumot bazadan butunlay o'chiriladi. Tiklab bo'lmaydi! Davom etamizmi?",
-      )
-    ) {
+    if (window.confirm(pt("hardDeleteDataConfirm"))) {
       try {
         if (row.__deletedSource === "research") {
           await ResearchApi.hardDelete(row.id);
         } else {
           await AdminApi.analyses.hardDelete([row.id]);
         }
-        toast.success("Ma'lumot butunlay o'chirildi");
+        toast.success(pt("hardDeleted"));
         fetchDeletedAnalyses();
       } catch (err) {
         toast.error("Xatolik: " + err.message);
@@ -823,15 +1030,11 @@ const SuperAdminPage = () => {
   };
 
   const handleRestoreBackup = async (filename) => {
-    if (
-      window.confirm(
-        `DIQQAT! "${filename}" nusxasidan ma'lumotlarni tiklamoqchimisiz? Mavjud ma'lumotlar o'zgarishi mumkin.`,
-      )
-    ) {
+    if (window.confirm(pt("backupRestoreConfirm").replace("{filename}", filename))) {
       setBackupLoading(true);
       try {
         await AdminApi.backup.restore(filename);
-        toast.success("Ma'lumotlar muvaffaqiyatli tiklandi");
+        toast.success(pt("restoredSuccessfully"));
       } catch (err) {
         toast.error("Xatolik: " + err.message);
       } finally {
@@ -844,7 +1047,7 @@ const SuperAdminPage = () => {
     if (window.confirm(`${pt("delete")}: ${filename}?`)) {
       try {
         await AdminApi.backup.delete(filename);
-        toast.success("Fayl o'chirildi");
+        toast.success(pt("fileDeleted"));
         fetchBackups();
       } catch (err) {
         toast.error("Xatolik: " + err.message);
@@ -853,10 +1056,10 @@ const SuperAdminPage = () => {
   };
 
   const handleClearAudit = async () => {
-    if (window.confirm("Barcha jurnallarni tozalamoqchimisiz?")) {
+    if (window.confirm(pt("clearAuditConfirm"))) {
       try {
         await AdminApi.auditLogs.clear();
-        toast.success("Jurnal tozalandi");
+        toast.success(pt("auditCleared"));
         fetchAuditLogs();
       } catch (err) {
         toast.error("Xatolik: " + err.message);
@@ -1436,9 +1639,25 @@ const SuperAdminPage = () => {
                         </TableCell>
                         <TableCell>{log.user_email || "System"}</TableCell>
                         <TableCell>
-                          <Chip label={log.action} size="small" variant="outlined" />
+                          <Chip
+                            label={formatAuditAction(log.action, lang)}
+                            size="small"
+                            variant="outlined"
+                          />
                         </TableCell>
-                        <TableCell sx={{ wordBreak: "break-all" }}>{log.details}</TableCell>
+                        <TableCell sx={{ wordBreak: "break-word" }}>
+                          <Stack spacing={0.25}>
+                            {log.target_type && (
+                              <Typography variant="caption" color="text.secondary">
+                                {formatAuditTarget(log.target_type, lang)}
+                                {log.target_id ? ` #${log.target_id}` : ""}
+                              </Typography>
+                            )}
+                            <Typography variant="body2">
+                              {formatAuditDetails(log.details, lang)}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
                       </TableRow>
                     ))
                   )}
@@ -1822,13 +2041,13 @@ const SuperAdminPage = () => {
                 >
                   <MenuItem value="admin">Administrator</MenuItem>
                   <MenuItem value="superadmin">Super Administrator</MenuItem>
-                  <MenuItem value="researcher">Izlanuvchi</MenuItem>
+                  <MenuItem value="researcher">{pt("researcher")}</MenuItem>
                 </Select>
               </FormControl>
               {adminForm.role === "researcher" && (
                 <Stack spacing={2}>
                   <TextField
-                    label="Ilmiy ish mavzusi"
+                    label={pt("researchTopic")}
                     fullWidth
                     multiline
                     minRows={2}
@@ -1836,7 +2055,7 @@ const SuperAdminPage = () => {
                     onChange={(e) => setAdminForm({ ...adminForm, research_topic: e.target.value })}
                   />
                   <TextField
-                    label="Ilmiy rahbar ism familiyasi"
+                    label={pt("scientificSupervisor")}
                     fullWidth
                     value={adminForm.scientific_supervisor || ""}
                     onChange={(e) =>
@@ -1844,15 +2063,15 @@ const SuperAdminPage = () => {
                     }
                   />
                   <FormControl fullWidth>
-                    <InputLabel>Tadqiqot turi</InputLabel>
+                    <InputLabel>{pt("researchType")}</InputLabel>
                     <Select
                       value={adminForm.research_type || ""}
-                      label="Tadqiqot turi"
+                      label={pt("researchType")}
                       onChange={(e) =>
                         setAdminForm({ ...adminForm, research_type: e.target.value })
                       }
                     >
-                      <MenuItem value="">Tanlanmagan</MenuItem>
+                      <MenuItem value="">{pt("notSelected")}</MenuItem>
                       {RESEARCH_TYPE_OPTIONS.map((type) => (
                         <MenuItem key={type} value={type}>
                           {type}
@@ -1861,15 +2080,15 @@ const SuperAdminPage = () => {
                     </Select>
                   </FormControl>
                   <FormControl fullWidth>
-                    <InputLabel>Tadqiqot hududi</InputLabel>
+                    <InputLabel>{pt("researchArea")}</InputLabel>
                     <Select
                       value={adminForm.research_area || ""}
-                      label="Tadqiqot hududi"
+                      label={pt("researchArea")}
                       onChange={(e) =>
                         setAdminForm({ ...adminForm, research_area: e.target.value })
                       }
                     >
-                      <MenuItem value="">Tanlanmagan</MenuItem>
+                      <MenuItem value="">{pt("notSelected")}</MenuItem>
                       {adminForm.research_area &&
                         !Object.keys(UZB_LOCATIONS).includes(adminForm.research_area) && (
                           <MenuItem value={adminForm.research_area}>
@@ -2065,7 +2284,7 @@ const SuperAdminPage = () => {
                   if (analysisIds.length) await AdminApi.analyses.hardDelete(analysisIds);
                   for (const id of researchIds) await ResearchApi.hardDelete(id);
 
-                  toast.success("Ma'lumotlar o'chirildi");
+                  toast.success(pt("selectedDataDeleted"));
                   setChecked(new Set());
                   setDeleteConfirmOpen(false);
                   fetchDeletedAnalyses();

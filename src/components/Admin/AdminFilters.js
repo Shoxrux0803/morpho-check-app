@@ -13,6 +13,38 @@ import {
 import { Search } from "@mui/icons-material";
 
 import { UZB_LOCATIONS } from "../../data/uzbLocations";
+import { useLanguage } from "../../contexts/LanguageContext";
+import { pageT } from "../../utils/pageI18n";
+
+const REGION_LABELS_RU = {
+  "toshkent shahri": "г. Ташкент",
+  toshkent: "Ташкентская область",
+  "toshkent viloyati": "Ташкентская область",
+  qoraqalpogiston: "Республика Каракалпакстан",
+  "qoraqalpog'iston": "Республика Каракалпакстан",
+  andijon: "Андижанская область",
+  buxoro: "Бухарская область",
+  fargona: "Ферганская область",
+  "farg'ona": "Ферганская область",
+  jizzax: "Джизакская область",
+  xorazm: "Хорезмская область",
+  namangan: "Наманганская область",
+  navoiy: "Навоийская область",
+  qashqadaryo: "Кашкадарьинская область",
+  samarqand: "Самаркандская область",
+  sirdaryo: "Сырдарьинская область",
+  surxondaryo: "Сурхандарьинская область",
+};
+
+const getRegionLabel = (value, lang) => {
+  if (lang !== "ru") return value || "-";
+  const key = String(value || "")
+    .toLowerCase()
+    .replace(/[‘’`ʻʼ]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+  return REGION_LABELS_RU[key] || value || "-";
+};
 
 const AdminFilters = ({
   q,
@@ -31,6 +63,8 @@ const AdminFilters = ({
   setRegion,
 }) => {
   const regions = Object.keys(UZB_LOCATIONS);
+  const { lang } = useLanguage();
+  const t = (key) => pageT(lang, key);
 
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -56,10 +90,10 @@ const AdminFilters = ({
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
-              label="Qidiruv"
+              label={t("search")}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Ism, familiya, jins, yosh..."
+              placeholder={t("searchPatientPlaceholder")}
               InputProps={{
                 startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />,
               }}
@@ -67,12 +101,16 @@ const AdminFilters = ({
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Viloyat</InputLabel>
-              <Select value={region} label="Viloyat" onChange={(e) => setRegion(e.target.value)}>
-                <MenuItem value="">Hammasi</MenuItem>
+              <InputLabel>{t("region")}</InputLabel>
+              <Select
+                value={region}
+                label={t("region")}
+                onChange={(e) => setRegion(e.target.value)}
+              >
+                <MenuItem value="">{t("all")}</MenuItem>
                 {regions.map((r) => (
                   <MenuItem key={r} value={r}>
-                    {r}
+                    {getRegionLabel(r, lang)}
                   </MenuItem>
                 ))}
               </Select>
@@ -80,11 +118,15 @@ const AdminFilters = ({
           </Grid>
           <Grid item xs={12} md={2}>
             <FormControl fullWidth>
-              <InputLabel>Jins</InputLabel>
-              <Select value={gender} label="Jins" onChange={(e) => setGender(e.target.value)}>
-                <MenuItem value="">Hammasi</MenuItem>
-                <MenuItem value="erkak">Erkak</MenuItem>
-                <MenuItem value="ayol">Ayol</MenuItem>
+              <InputLabel>{t("gender")}</InputLabel>
+              <Select
+                value={gender}
+                label={t("gender")}
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <MenuItem value="">{t("all")}</MenuItem>
+                <MenuItem value="erkak">{t("male")}</MenuItem>
+                <MenuItem value="ayol">{t("female")}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -92,7 +134,7 @@ const AdminFilters = ({
             <TextField
               fullWidth
               type="number"
-              label="Yosh (min)"
+              label={t("ageMin")}
               value={ageMin}
               onChange={(e) => setAgeMin(e.target.value)}
             />
@@ -101,7 +143,7 @@ const AdminFilters = ({
             <TextField
               fullWidth
               type="number"
-              label="Yosh (max)"
+              label={t("ageMax")}
               value={ageMax}
               onChange={(e) => setAgeMax(e.target.value)}
             />
@@ -110,7 +152,7 @@ const AdminFilters = ({
             <TextField
               fullWidth
               type="date"
-              label="Sana (dan)"
+              label={t("dateFrom")}
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               InputLabelProps={{ shrink: true }}
@@ -120,7 +162,7 @@ const AdminFilters = ({
             <TextField
               fullWidth
               type="date"
-              label="Sana (gacha)"
+              label={t("dateTo")}
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               InputLabelProps={{ shrink: true }}

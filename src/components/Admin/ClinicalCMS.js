@@ -15,8 +15,6 @@ import {
   AccordionSummary,
   AccordionDetails,
   Divider,
-  IconButton,
-  Tooltip,
 } from "@mui/material";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import Save from "@mui/icons-material/Save";
@@ -27,17 +25,19 @@ import HealthAndSafety from "@mui/icons-material/HealthAndSafety";
 import Category from "@mui/icons-material/Category";
 import { toast } from "react-hot-toast";
 import { AdminApi } from "../../services/api";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const { clinical } = AdminApi;
 
 const CATEGORIES = [
-  { id: "advice", label: "Maslahatlar", icon: <EmojiObjects /> },
-  { id: "bmi_categories", label: "BMI Kategoriyalari", icon: <Category /> },
-  { id: "interpretations", label: "Interpretatsiyalar", icon: <Translate /> },
-  { id: "standards", label: "Klinik Standartlar", icon: <HealthAndSafety /> },
+  { id: "advice", labelKey: "clinicalAdvice", icon: <EmojiObjects /> },
+  { id: "bmi_categories", labelKey: "bmiCategories", icon: <Category /> },
+  { id: "interpretations", labelKey: "interpretations", icon: <Translate /> },
+  { id: "standards", labelKey: "clinicalStandards", icon: <HealthAndSafety /> },
 ];
 
 const ClinicalCMS = () => {
+  const { t } = useLanguage();
   const [settings, setSettings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,11 +51,11 @@ const ClinicalCMS = () => {
       const data = await clinical.list();
       setSettings(data);
     } catch (err) {
-      setError(err.message || "Sozlamalarni yuklashda xatolik");
+      setError(err.message || t("settingsLoadError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadSettings();
@@ -95,9 +95,9 @@ const ClinicalCMS = () => {
         label: setting.label,
         category: setting.category,
       });
-      toast.success(`${setting.label} saqlandi!`);
+      toast.success(`${setting.label} ${t("savedSuffix")}`);
     } catch (err) {
-      toast.error("Saqlashda xatolik: " + err.message);
+      toast.error(`${t("saveError")} ${err.message}`);
     } finally {
       setSaving(null);
     }
@@ -123,7 +123,7 @@ const ClinicalCMS = () => {
         mb={3}
       >
         <Typography variant="h5" fontWeight={800}>
-          Klinik Kontent Boshqaruvi (CMS)
+          {t("clinicalCmsTitle")}
         </Typography>
         <Button
           startIcon={<Refresh />}
@@ -131,7 +131,7 @@ const ClinicalCMS = () => {
           variant="outlined"
           color="info"
         >
-          Keshni Yangilash
+          {t("refreshCache")}
         </Button>
       </Stack>
 
@@ -147,7 +147,7 @@ const ClinicalCMS = () => {
             <Tab
               key={cat.id}
               value={cat.id}
-              label={cat.label}
+              label={t(cat.labelKey)}
               icon={cat.icon}
               iconPosition="start"
             />
@@ -163,7 +163,7 @@ const ClinicalCMS = () => {
 
       {filteredSettings.length === 0 ? (
         <Box textAlign="center" p={4} border="1px dashed grey" borderRadius={2}>
-          <Typography color="text.secondary">Ushbu kategoriyada ma'lumotlar yo'q</Typography>
+          <Typography color="text.secondary">{t("emptyCategory")}</Typography>
         </Box>
       ) : (
         <Stack spacing={2}>
@@ -217,7 +217,7 @@ const ClinicalCMS = () => {
                       onClick={() => handleSave(s)}
                       disabled={saving === s.key}
                     >
-                      Saqlash
+                      {t("save")}
                     </Button>
                   </Box>
                 </>

@@ -38,8 +38,54 @@ import {
 } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 import { UZB_LOCATIONS } from "../../data/uzbLocations";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const SOMATOTYPES = ["Endomorph", "Mesomorph", "Ectomorph", "Central"];
+
+const FILTER_I18N = {
+  uz: {
+    title: "Analitik Filtrlar",
+    subtitle: "Ma'lumotlarni saralash va tahlil qilish",
+    activeFilters: (count) => `${count} ta filtr faol`,
+    demographics: "Demografiya",
+    gender: "JINSI",
+    male: "Erkak",
+    female: "Ayol",
+    all: "Barchasi",
+    region: "HUDUD (VILOYAT)",
+    allRegions: "Hamma hududlar",
+    biometrics: "Biometriya",
+    ageRange: "YOSH ORALIG'I",
+    bmiRange: "BMI ORALIG'I",
+    scientific: "Ilmiy Klassifikatsiya",
+    somatotype: "SOMATOTIP",
+    allTypes: "Barcha tiplar",
+    dateFrom: "SANADAN",
+    clear: "Tozalash",
+    apply: "Qo'llash",
+  },
+  ru: {
+    title: "Аналитические фильтры",
+    subtitle: "Сортировка и анализ данных",
+    activeFilters: (count) => `${count} активн. фильтр(ов)`,
+    demographics: "Демография",
+    gender: "ПОЛ",
+    male: "Мужской",
+    female: "Женский",
+    all: "Все",
+    region: "РЕГИОН (ОБЛАСТЬ)",
+    allRegions: "Все регионы",
+    biometrics: "Биометрия",
+    ageRange: "ВОЗРАСТНОЙ ДИАПАЗОН",
+    bmiRange: "ДИАПАЗОН BMI",
+    scientific: "Научная классификация",
+    somatotype: "СОМАТОТИП",
+    allTypes: "Все типы",
+    dateFrom: "С ДАТЫ",
+    clear: "Очистить",
+    apply: "Применить",
+  },
+};
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
@@ -77,6 +123,8 @@ const GlassPaper = ({ children, sx = {} }) => (
 
 const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
   const [expanded, setExpanded] = useState(false);
+  const { lang } = useLanguage();
+  const t = FILTER_I18N[lang] || FILTER_I18N.uz;
 
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -117,10 +165,10 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
             </Box>
             <Box>
               <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
-                Analitik Filtrlar
+                {t.title}
               </Typography>
               <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                Ma'lumotlarni saralash va tahlil qilish
+                {t.subtitle}
               </Typography>
             </Box>
           </Stack>
@@ -135,7 +183,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
           >
             {activeCount > 0 && (
               <Chip
-                label={`${activeCount} ta filtr faol`}
+                label={t.activeFilters(activeCount)}
                 size="small"
                 color="primary"
                 variant="soft"
@@ -165,7 +213,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                 color="primary"
                 sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
               >
-                <Wc fontSize="small" /> Demografiya
+                <Wc fontSize="small" /> {t.demographics}
               </Typography>
               <Stack spacing={3}>
                 <Box>
@@ -175,7 +223,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     fontWeight={700}
                     sx={{ mb: 1, display: "block" }}
                   >
-                    JINSI
+                    {t.gender}
                   </Typography>
                   <ToggleButtonGroup
                     value={filters.gender}
@@ -198,9 +246,9 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       },
                     }}
                   >
-                    <ToggleButton value="erkak">Erkak</ToggleButton>
-                    <ToggleButton value="ayol">Ayol</ToggleButton>
-                    <ToggleButton value="">Barchasi</ToggleButton>
+                    <ToggleButton value="erkak">{t.male}</ToggleButton>
+                    <ToggleButton value="ayol">{t.female}</ToggleButton>
+                    <ToggleButton value="">{t.all}</ToggleButton>
                   </ToggleButtonGroup>
                 </Box>
 
@@ -211,7 +259,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     fontWeight={700}
                     sx={{ mb: 1, display: "block" }}
                   >
-                    HUDUD (VILOYAT)
+                    {t.region}
                   </Typography>
                   <FormControl fullWidth size="small">
                     <Select
@@ -220,7 +268,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       displayEmpty
                       sx={{ borderRadius: 2 }}
                     >
-                      <MenuItem value="">Hamma hududlar</MenuItem>
+                      <MenuItem value="">{t.allRegions}</MenuItem>
                       {Object.keys(UZB_LOCATIONS).map((loc) => (
                         <MenuItem key={loc} value={loc}>
                           {loc}
@@ -240,7 +288,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                 color="secondary"
                 sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
               >
-                <FitnessCenter fontSize="small" /> Biometriya
+                <FitnessCenter fontSize="small" /> {t.biometrics}
               </Typography>
               <Stack spacing={3}>
                 <Box>
@@ -250,7 +298,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     fontWeight={700}
                     sx={{ mb: 1, display: "block" }}
                   >
-                    YOSH ORALIG'I
+                    {t.ageRange}
                   </Typography>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="center">
                     <TextField
@@ -282,7 +330,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     fontWeight={700}
                     sx={{ mb: 1, display: "block" }}
                   >
-                    BMI ORALIG'I
+                    {t.bmiRange}
                   </Typography>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems="center">
                     <TextField
@@ -319,7 +367,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                 color="success.main"
                 sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}
               >
-                <Science fontSize="small" /> Ilmiy Klassifikatsiya
+                <Science fontSize="small" /> {t.scientific}
               </Typography>
               <Stack spacing={2}>
                 <Box>
@@ -329,7 +377,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     fontWeight={700}
                     sx={{ mb: 1, display: "block" }}
                   >
-                    SOMATOTIP
+                    {t.somatotype}
                   </Typography>
                   <FormControl fullWidth size="small">
                     <Select
@@ -338,7 +386,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       displayEmpty
                       sx={{ borderRadius: 2 }}
                     >
-                      <MenuItem value="">Barcha tiplar</MenuItem>
+                      <MenuItem value="">{t.allTypes}</MenuItem>
                       {SOMATOTYPES.map((type) => (
                         <MenuItem key={type} value={type}>
                           {type}
@@ -355,7 +403,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     fontWeight={700}
                     sx={{ mb: 1, display: "block" }}
                   >
-                    SANADAN
+                    {t.dateFrom}
                   </Typography>
                   <input
                     type="date"
@@ -383,7 +431,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     onClick={onReset}
                     sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
                   >
-                    Tozalash
+                    {t.clear}
                   </Button>
                   <Button
                     fullWidth
@@ -398,7 +446,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       boxShadow: "0 4px 12px rgba(99, 102, 241, 0.2)",
                     }}
                   >
-                    Qo'llash
+                    {t.apply}
                   </Button>
                 </Stack>
               </Stack>

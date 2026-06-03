@@ -11,9 +11,11 @@ import {
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { MonitorWeight, Close } from "@mui/icons-material";
 import DashboardCard from "./DashboardCard";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const BMIDistribution = ({ data, loading }) => {
   const theme = useTheme();
+  const { t } = useLanguage();
   const [openModal, setOpenModal] = useState(false);
 
   const bmiData = useMemo(() => {
@@ -95,13 +97,13 @@ const BMIDistribution = ({ data, loading }) => {
   return (
     <>
       <DashboardCard
-        title="BMI Taqsimoti"
+        title={t("bmiDistribution")}
         icon={<MonitorWeight />}
         loading={loading}
         onFullscreen={() => setOpenModal(true)}
       >
         {total === 0 ? (
-          <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
+          <Typography color="text.secondary">{t("noData")}</Typography>
         ) : (
           renderChart(300)
         )}
@@ -136,7 +138,7 @@ const BMIDistribution = ({ data, loading }) => {
         >
           <Box display="flex" alignItems="center">
             <MonitorWeight sx={{ mr: 1, color: "primary.main" }} />
-            BMI Taqsimoti batafsil
+            {t("bmiDistributionDetails")}
           </Box>
           <IconButton onClick={() => setOpenModal(false)}>
             <Close />
@@ -145,7 +147,7 @@ const BMIDistribution = ({ data, loading }) => {
         <DialogContent dividers sx={{ pb: 4 }}>
           {total === 0 ? (
             <Box display="flex" justifyContent="center" alignItems="center" height={400}>
-              <Typography color="text.secondary">Ma'lumot topilmadi</Typography>
+              <Typography color="text.secondary">{t("noData")}</Typography>
             </Box>
           ) : (
             renderChart(500)

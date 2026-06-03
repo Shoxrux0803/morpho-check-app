@@ -32,8 +32,76 @@ import {
 import TrendingUp from "@mui/icons-material/TrendingUp";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
+import { useLanguage } from "../../contexts/LanguageContext";
 
-const StatusBadge = ({ status, isTyping }) => {
+const ACTIVITY_I18N = {
+  uz: {
+    typing: "• kiritmoqda...",
+    sec: "sek",
+    min: "daq",
+    best: "Eng yaxshi",
+    researcher: "Izlanuvchi",
+    admin: "Admin",
+    today: "Bugun",
+    week: "Hafta",
+    month: "Shu oy",
+    monthShort: "Oy",
+    ratingScore: "Reyting balli",
+    perRecord: "1 ta ma'lumotga:",
+    totalEntered: "Jami kiritgan:",
+    unit: "ta",
+    activeTime: "Eng faol vaqti:",
+    lastActivity: "Oxirgi faollik:",
+    refreshError: "Ma'lumotlarni yangilashda xato!",
+    title: "Top chart",
+    usersOnline: (count) => `Hozirda ${count} ta foydalanuvchi online`,
+    lastUpdate: "Oxirgi yangilanish",
+    all: "Barchasi",
+    admins: "Adminlar",
+    researchers: "Izlanuvchilar",
+    refresh: "Yangilash",
+    loading: "Ma'lumotlar yuklanmoqda...",
+    bestResult: "Eng yaxshi natija",
+    oneRecord: "1 yozuv",
+    noUsers: "Foydalanuvchilar topilmadi",
+    noAdmins: "Adminlar topilmadi",
+    noResearchers: "Izlanuvchilar topilmadi",
+  },
+  ru: {
+    typing: "• вводит...",
+    sec: "сек",
+    min: "мин",
+    best: "Лучший",
+    researcher: "Исследователь",
+    admin: "Админ",
+    today: "Сегодня",
+    week: "Неделя",
+    month: "Этот месяц",
+    monthShort: "Месяц",
+    ratingScore: "Рейтинговый балл",
+    perRecord: "На 1 запись:",
+    totalEntered: "Всего внесено:",
+    unit: "шт",
+    activeTime: "Самое активное время:",
+    lastActivity: "Последняя активность:",
+    refreshError: "Ошибка при обновлении данных!",
+    title: "Топ-чарт",
+    usersOnline: (count) => `Сейчас онлайн: ${count} пользователь(ей)`,
+    lastUpdate: "Последнее обновление",
+    all: "Все",
+    admins: "Админы",
+    researchers: "Исследователи",
+    refresh: "Обновить",
+    loading: "Данные загружаются...",
+    bestResult: "Лучший результат",
+    oneRecord: "1 запись",
+    noUsers: "Пользователи не найдены",
+    noAdmins: "Админы не найдены",
+    noResearchers: "Исследователи не найдены",
+  },
+};
+
+const StatusBadge = ({ status, isTyping, t }) => {
   const colors = {
     online: "#10B981",
     away: "#F59E0B",
@@ -63,17 +131,17 @@ const StatusBadge = ({ status, isTyping }) => {
           color: colors[status],
         }}
       >
-        {status} {isTyping && "• kiritmoqda..."}
+        {status} {isTyping && t.typing}
       </Typography>
     </Box>
   );
 };
 
-const formatAvgMinutes = (seconds = 0) => {
+const formatAvgMinutes = (seconds = 0, t = ACTIVITY_I18N.uz) => {
   if (!seconds) return "-";
   const minutes = seconds / 60;
-  if (minutes < 1) return `${Math.max(1, Math.round(seconds))} sek`;
-  return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} daq`;
+  if (minutes < 1) return `${Math.max(1, Math.round(seconds))} ${t.sec}`;
+  return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} ${t.min}`;
 };
 
 const getScore = (admin) =>
@@ -84,7 +152,7 @@ const getActivityKey = (admin, index) => {
   return id ? `activity-${id}` : `activity-${admin.role || "user"}-${index}`;
 };
 
-const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
+const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t }) => {
   const isResearcher = admin.role === "researcher";
   const score = getScore(admin);
   const progress = maxScore ? Math.round((score / maxScore) * 100) : 0;
@@ -182,7 +250,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
                 </Typography>
                 {isBest && (
                   <Chip
-                    label="Eng yaxshi"
+                    label={t.best}
                     size="small"
                     sx={{
                       height: 20,
@@ -199,13 +267,13 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Chip
-                  label={isResearcher ? "Izlanuvchi" : "Admin"}
+                  label={isResearcher ? t.researcher : t.admin}
                   size="small"
                   variant="outlined"
                   color={isResearcher ? "secondary" : "primary"}
                   sx={{ height: 18, fontSize: "0.6rem", borderRadius: 1, fontWeight: "bold" }}
                 />
-                <StatusBadge status={admin.status} isTyping={admin.is_typing} />
+                <StatusBadge status={admin.status} isTyping={admin.is_typing} t={t} />
               </Stack>
               <Stack direction="row" sx={{ mt: 1 }}>
                 <Chip
@@ -234,7 +302,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
                 sx={{ p: 1.25, borderRadius: 2, textAlign: "center", bgcolor: "transparent" }}
               >
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Bugun
+                  {t.today}
                 </Typography>
                 <Typography variant="h5" fontWeight="900" color="primary">
                   {admin.stats_today}
@@ -247,7 +315,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
                 sx={{ p: 1.25, borderRadius: 2, textAlign: "center", bgcolor: "transparent" }}
               >
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Hafta
+                  {t.week}
                 </Typography>
                 <Typography variant="h5" fontWeight="900" color="success.main">
                   {admin.stats_week || 0}
@@ -260,7 +328,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
                 sx={{ p: 1.25, borderRadius: 2, textAlign: "center", bgcolor: "transparent" }}
               >
                 <Typography variant="caption" color="text.secondary" display="block">
-                  Shu oy
+                  {t.month}
                 </Typography>
                 <Typography variant="h5" fontWeight="900" color="secondary">
                   {admin.stats_month}
@@ -275,7 +343,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
                 <Box display="flex" alignItems="center" gap={0.5}>
                   <TrendingUp sx={{ fontSize: 16, color: "text.secondary" }} />
                   <Typography variant="caption" fontWeight="bold">
-                    Reyting balli
+                    {t.ratingScore}
                   </Typography>
                 </Box>
                 <Typography variant="caption" fontWeight="bold">
@@ -303,11 +371,11 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
               <Box display="flex" alignItems="center" gap={0.5}>
                 <Speed sx={{ fontSize: 16, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  1 ta ma'lumotga:
+                  {t.perRecord}
                 </Typography>
               </Box>
               <Typography variant="caption" fontWeight="bold">
-                {formatAvgMinutes(admin.avg_entry_time)}
+                {formatAvgMinutes(admin.avg_entry_time, t)}
               </Typography>
             </Box>
 
@@ -315,11 +383,11 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
               <Box display="flex" alignItems="center" gap={0.5}>
                 <CalendarMonth sx={{ fontSize: 16, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  Jami kiritgan:
+                  {t.totalEntered}
                 </Typography>
               </Box>
               <Typography variant="caption" fontWeight="bold">
-                {admin.total_entries || 0} ta
+                {admin.total_entries || 0} {t.unit}
               </Typography>
             </Box>
 
@@ -329,7 +397,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
               <Box display="flex" alignItems="center" gap={0.5}>
                 <QueryBuilder sx={{ fontSize: 16, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  Eng faol vaqti:
+                  {t.activeTime}
                 </Typography>
               </Box>
               <Typography variant="caption" fontWeight="bold">
@@ -341,7 +409,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore }) => {
               <Box display="flex" alignItems="center" gap={0.5}>
                 <AccessTime sx={{ fontSize: 16, color: "text.secondary" }} />
                 <Typography variant="caption" color="text.secondary">
-                  Oxirgi faollik:
+                  {t.lastActivity}
                 </Typography>
               </Box>
               <Typography variant="caption" fontWeight="bold">
@@ -365,20 +433,25 @@ export default function AdminActivity() {
 
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const { lang } = useLanguage();
+  const t = ACTIVITY_I18N[lang] || ACTIVITY_I18N.uz;
 
-  const fetchActivity = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
-    try {
-      const res = await AdminApi.activity.list();
-      setData(res.items || []);
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error(err);
-      toast.error("Ma'lumotlarni yangilashda xato!");
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, []);
+  const fetchActivity = useCallback(
+    async (silent = false) => {
+      if (!silent) setLoading(true);
+      try {
+        const res = await AdminApi.activity.list();
+        setData(res.items || []);
+        setLastUpdated(new Date());
+      } catch (err) {
+        console.error(err);
+        toast.error(t.refreshError);
+      } finally {
+        if (!silent) setLoading(false);
+      }
+    },
+    [t],
+  );
 
   useEffect(() => {
     fetchActivity();
@@ -409,11 +482,10 @@ export default function AdminActivity() {
       >
         <Box>
           <Typography variant="h4" fontWeight="900" color="primary.main" gutterBottom>
-            Top chart
+            {t.title}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Hozirda {onlineCount} ta foydalanuvchi online • Oxirgi yangilanish:{" "}
-            {lastUpdated.toLocaleTimeString()}
+            {t.usersOnline(onlineCount)} • {t.lastUpdate}: {lastUpdated.toLocaleTimeString()}
           </Typography>
         </Box>
 
@@ -428,25 +500,25 @@ export default function AdminActivity() {
               variant={roleFilter === "all" ? "contained" : "outlined"}
               sx={{ textTransform: "none", fontWeight: "bold" }}
             >
-              Barchasi
+              {t.all}
             </Button>
             <Button
               onClick={() => setRoleFilter("admin")}
               variant={roleFilter === "admin" ? "contained" : "outlined"}
               sx={{ textTransform: "none", fontWeight: "bold" }}
             >
-              Adminlar
+              {t.admins}
             </Button>
             <Button
               onClick={() => setRoleFilter("researcher")}
               variant={roleFilter === "researcher" ? "contained" : "outlined"}
               sx={{ textTransform: "none", fontWeight: "bold" }}
             >
-              Izlanuvchilar
+              {t.researchers}
             </Button>
           </ButtonGroup>
 
-          <Tooltip title="Yangilash">
+          <Tooltip title={t.refresh}>
             <span>
               <IconButton
                 onClick={() => fetchActivity()}
@@ -468,7 +540,7 @@ export default function AdminActivity() {
         <Box py={10} textAlign="center">
           <LinearProgress sx={{ maxWidth: 400, mx: "auto", borderRadius: 2 }} />
           <Typography sx={{ mt: 2 }} color="text.secondary">
-            Ma'lumotlar yuklanmoqda...
+            {t.loading}
           </Typography>
         </Box>
       ) : (
@@ -527,7 +599,7 @@ export default function AdminActivity() {
                       fontWeight={900}
                       sx={{ color: isDark ? "#fde68a" : "#92400e" }}
                     >
-                      Eng yaxshi natija
+                      {t.bestResult}
                     </Typography>
                     <Typography variant="h5" fontWeight={800}>
                       {bestUser.name}
@@ -535,10 +607,16 @@ export default function AdminActivity() {
                   </Box>
                 </Stack>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip label={`Bugun ${bestUser.stats_today || 0} ta`} color="primary" />
-                  <Chip label={`Hafta ${bestUser.stats_week || 0} ta`} color="success" />
-                  <Chip label={`Oy ${bestUser.stats_month || 0} ta`} color="secondary" />
-                  <Chip label={`1 yozuv ${formatAvgMinutes(bestUser.avg_entry_time)}`} />
+                  <Chip
+                    label={`${t.today} ${bestUser.stats_today || 0} ${t.unit}`}
+                    color="primary"
+                  />
+                  <Chip label={`${t.week} ${bestUser.stats_week || 0} ${t.unit}`} color="success" />
+                  <Chip
+                    label={`${t.monthShort} ${bestUser.stats_month || 0} ${t.unit}`}
+                    color="secondary"
+                  />
+                  <Chip label={`${t.oneRecord} ${formatAvgMinutes(bestUser.avg_entry_time, t)}`} />
                 </Stack>
               </Stack>
             </Paper>
@@ -552,6 +630,7 @@ export default function AdminActivity() {
                   rank={index + 1}
                   isBest={index === 0}
                   maxScore={maxScore}
+                  t={t}
                 />
               </Grid>
             ))}
@@ -570,10 +649,10 @@ export default function AdminActivity() {
                   <AccountCircle sx={{ fontSize: 64, color: "text.disabled", mb: 2 }} />
                   <Typography color="text.secondary">
                     {roleFilter === "all"
-                      ? "Foydalanuvchilar topilmadi"
+                      ? t.noUsers
                       : roleFilter === "admin"
-                        ? "Adminlar topilmadi"
-                        : "Izlanuvchilar topilmadi"}
+                        ? t.noAdmins
+                        : t.noResearchers}
                   </Typography>
                 </Paper>
               </Grid>

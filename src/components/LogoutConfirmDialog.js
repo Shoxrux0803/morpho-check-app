@@ -11,8 +11,11 @@ import {
   Zoom,
 } from "@mui/material";
 import { Logout, Close } from "@mui/icons-material";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
+  const { t } = useLanguage();
+
   return (
     <Dialog
       open={open}
@@ -57,7 +60,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
           <Logout fontSize="small" />
         </Box>
         <Typography variant="h6" fontWeight={800}>
-          Tizimdan chiqish
+          {t("logoutTitle")}
         </Typography>
         <IconButton
           aria-label="close"
@@ -74,7 +77,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 1 }}>
         <Typography variant="body1" color="text.secondary" fontWeight={500}>
-          Chiqishni hohlaysizmi?
+          {t("logoutQuestion")}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1 }}>
@@ -89,7 +92,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
             px: 3,
           }}
         >
-          Yo'q
+          {t("no")}
         </Button>
         <Button
           onClick={onConfirm}
@@ -104,7 +107,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
             boxShadow: "0 4px 12px rgba(211, 47, 47, 0.2)",
           }}
         >
-          Ha
+          {t("yes")}
         </Button>
       </DialogActions>
     </Dialog>
