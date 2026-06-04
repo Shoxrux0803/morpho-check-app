@@ -88,6 +88,13 @@ const SectionTitle = ({ icon: Icon, title }) => (
   </Box>
 );
 
+const getDateLocale = (lang) => {
+  if (lang === "ru") return "ru-RU";
+  if (lang === "kz") return "kk-KZ";
+  if (lang === "en") return "en-US";
+  return "uz-UZ";
+};
+
 const RESEARCH_METRICS = [
   { key: "chest_standing_height", labelKey: "standingHeight", label: "Bo'y (tik)", unit: "sm" },
   { key: "weight", labelKey: "weight", label: "Vazn", unit: "kg" },
@@ -821,6 +828,7 @@ export const ResearchStatisticsPanel = ({ rows }) => {
 const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const { lang } = useLanguage();
   const t = useCallback((key) => researcherT(lang, key), [lang]);
+  const dateLocale = getDateLocale(lang);
   const [data, setData] = useState([]);
   const [deletedData, setDeletedData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1208,7 +1216,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                     <TableCell>
                       <Typography variant="caption" color="error">
                         {row.deleted_at
-                          ? new Date(row.deleted_at).toLocaleDateString("uz-UZ")
+                          ? new Date(row.deleted_at).toLocaleDateString(dateLocale)
                           : "—"}
                       </Typography>
                     </TableCell>
@@ -1288,11 +1296,11 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                           <Description fontSize="small" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="DOCX (UZ)">
+                      <Tooltip title={`DOCX (${lang.toUpperCase()})`}>
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => handleDownloadDocx(row.id, "uz")}
+                          onClick={() => handleDownloadDocx(row.id, lang)}
                         >
                           <Description fontSize="small" />
                         </IconButton>
@@ -1951,11 +1959,11 @@ const DetailModal = ({
           <Button
             size="small"
             startIcon={<Description />}
-            onClick={() => handleDownloadDocx(record.id, "uz")}
+            onClick={() => handleDownloadDocx(record.id, lang)}
             variant="outlined"
             sx={{ borderRadius: 2 }}
           >
-            DOCX (UZ)
+            DOCX ({lang.toUpperCase()})
           </Button>
           <Button
             size="small"

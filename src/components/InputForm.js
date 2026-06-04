@@ -72,7 +72,7 @@ export default function InputForm({
   submitLabel,
   onBulkUpdate,
 }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const { isAuthenticated } = useAuth();
   const btnRef = useRef(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -292,7 +292,7 @@ export default function InputForm({
               label: featureLabel(feature.properties),
             }))
             .filter((item) => item.label)
-            .sort((a, b) => a.label.localeCompare(b.label, "uz")),
+            .sort((a, b) => a.label.localeCompare(b.label, lang === "kz" ? "kk" : lang)),
         );
       })
       .catch((error) => console.warn("Mahalla layer load error:", error))

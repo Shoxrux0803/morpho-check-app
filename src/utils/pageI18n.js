@@ -194,6 +194,10 @@ const dictionaries = {
     male: "Erkak",
     female: "Ayol",
     noData: "Ma'lumot topilmadi",
+    normal: "Normal",
+    overweight: "Ortiqcha vazn",
+    obese: "Semizlik",
+    underweight: "Ozg'in",
   },
   ru: {
     dashboard: "Dashboard",
@@ -388,6 +392,10 @@ const dictionaries = {
     male: "Мужской",
     female: "Женский",
     noData: "Данные не найдены",
+    normal: "Норма",
+    overweight: "Избыточный вес",
+    obese: "Ожирение",
+    underweight: "Недостаточный вес",
   },
   en: {
     dashboard: "Dashboard",
@@ -582,6 +590,10 @@ const dictionaries = {
     male: "Male",
     female: "Female",
     noData: "No data found",
+    normal: "Normal",
+    overweight: "Overweight",
+    obese: "Obesity",
+    underweight: "Underweight",
   },
   kz: {
     dashboard: "Dashboard",
@@ -671,7 +683,7 @@ const dictionaries = {
     time: "Уақыт",
     user: "Пайдаланушы",
     action: "Әрекет",
-    object: "Объект",
+    object: "Нысан",
     clear: "Тазалау",
     backupsTitle: "Сақтық көшірмелер (Backup)",
     createBackup: "Жаңа көшірме жасау",
@@ -776,6 +788,10 @@ const dictionaries = {
     male: "Ер",
     female: "Әйел",
     noData: "Деректер табылмады",
+    normal: "Қалыпты",
+    overweight: "Артық салмақ",
+    obese: "Семіздік",
+    underweight: "Салмақ жетіспеушілігі",
   },
 };
 

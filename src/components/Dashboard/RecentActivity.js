@@ -12,14 +12,51 @@ import {
 } from "@mui/material";
 import { Person, AccessTime } from "@mui/icons-material";
 import DashboardCard from "./DashboardCard";
+import { useLanguage } from "../../contexts/LanguageContext";
+
+const ACTIVITY_TEXT = {
+  uz: {
+    title: "Oxirgi Faollik",
+    empty: "Faollik topilmadi",
+    noData: "Ma'lumot yo'q",
+    unknownRegion: "Viloyat aniqlanmagan",
+    years: "yosh",
+  },
+  ru: {
+    title: "Последняя активность",
+    empty: "Активность не найдена",
+    noData: "Нет данных",
+    unknownRegion: "Регион не указан",
+    years: "лет",
+  },
+  en: {
+    title: "Recent activity",
+    empty: "No activity found",
+    noData: "No data",
+    unknownRegion: "Region not specified",
+    years: "years",
+  },
+  kz: {
+    title: "Соңғы белсенділік",
+    empty: "Белсенділік табылмады",
+    noData: "Дерек жоқ",
+    unknownRegion: "Облыс анықталмаған",
+    years: "жас",
+  },
+};
+
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const RecentActivity = ({ data, loading }) => {
+  const { lang } = useLanguage();
+  const text = ACTIVITY_TEXT[lang] || ACTIVITY_TEXT.uz;
+  const locale = localeByLang[lang] || "uz-UZ";
   const recentData = (data || []).slice(0, 6); // Oxirgi 6 ta faollik
 
   const formatDate = (iso) => {
     if (!iso) return "-";
     const d = new Date(iso);
-    return d.toLocaleString("uz-UZ", {
+    return d.toLocaleString(locale, {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -28,9 +65,9 @@ const RecentActivity = ({ data, loading }) => {
   };
 
   return (
-    <DashboardCard title="Oxirgi Faollik" icon={<AccessTime />} loading={loading} height={400}>
+    <DashboardCard title={text.title} icon={<AccessTime />} loading={loading} height={400}>
       {recentData.length === 0 ? (
-        <Typography color="text.secondary">Faollik topilmadi</Typography>
+        <Typography color="text.secondary">{text.empty}</Typography>
       ) : (
         <List sx={{ width: "100%", p: 0 }}>
           {recentData.map((item, index) => (
@@ -48,7 +85,7 @@ const RecentActivity = ({ data, loading }) => {
                         {item.first_name || item.firstName} {item.last_name || item.lastName}
                       </Typography>
                       <Chip
-                        label={item.bmi_status || item.bmiStatus || "Ma'lumot yo'q"}
+                        label={item.bmi_status || item.bmiStatus || text.noData}
                         size="small"
                         color={
                           (item.bmi_status || item.bmiStatus || "").toLowerCase().includes("normal")
@@ -68,7 +105,7 @@ const RecentActivity = ({ data, loading }) => {
                         component="span"
                         display="block"
                       >
-                        {item.region || "Viloyat aniqlanmagan"}, {item.age} yosh
+                        {item.region || text.unknownRegion}, {item.age} {text.years}
                       </Typography>
                       <Typography
                         variant="caption"

@@ -136,12 +136,20 @@ const SectionTitle = ({ icon: Icon, title }) => (
   </Box>
 );
 
+const getDateLocale = (lang) => {
+  if (lang === "ru") return "ru-RU";
+  if (lang === "kz") return "kk-KZ";
+  if (lang === "en") return "en-US";
+  return "uz-UZ";
+};
+
 /* ════════════════════════════════════════════════════
    DETAIL MODAL
 ════════════════════════════════════════════════════ */
 const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) => {
   const { lang } = useLanguage();
   const tr = useCallback((key) => researcherT(lang, key), [lang]);
+  const dateLocale = getDateLocale(lang);
 
   if (!record) return null;
 
@@ -210,7 +218,7 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             </Typography>
             <Typography variant="caption" color="text.secondary">
               ID: {record.id} | {tr("date")}: {record.examination_date || "-"} |{" "}
-              {new Date(record.created_at).toLocaleDateString("uz-UZ")}
+              {new Date(record.created_at).toLocaleDateString(dateLocale)}
             </Typography>
           </Box>
           <IconButton onClick={onClose}>
@@ -340,11 +348,11 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
           <Button
             size="small"
             startIcon={<Description />}
-            onClick={() => ResearchApi.downloadDocx(record.id, "uz")}
+            onClick={() => ResearchApi.downloadDocx(record.id, lang)}
             variant="outlined"
             sx={{ borderRadius: 2 }}
           >
-            DOCX (UZ)
+            DOCX ({lang.toUpperCase()})
           </Button>
           <Button
             size="small"
@@ -530,26 +538,26 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
               ],
             ],
             [
-              "Ota-ona qarindoshligi",
+              tr("parentsMarriage"),
               "parents_marriage",
               "select",
               [
                 {
-                  value: "Yaqin qarindosh (близкородственный)",
-                  label: "Yaqin qarindosh (близкородственный)",
+                  value: tr("closeRelative"),
+                  label: tr("closeRelative"),
                 },
                 {
-                  value: "Uzoq qarindosh (дальнородственный)",
-                  label: "Uzoq qarindosh (дальнородственный)",
+                  value: tr("distantRelative"),
+                  label: tr("distantRelative"),
                 },
                 {
-                  value: "Qarindosh emas (неродственный)",
-                  label: "Qarindosh emas (неродственный)",
+                  value: tr("notRelative"),
+                  label: tr("notRelative"),
                 },
               ],
             ],
-            ["Ona sog'ligi", "mother_health_status", "text"],
-            ["Tekshiruv sanasi", "examination_date", "date"],
+            [tr("motherHealth"), "mother_health_status", "text"],
+            [tr("examDate"), "examination_date", "date"],
           ].map(([label, k, type, options]) => (
             <Grid
               xs={12}
@@ -563,21 +571,21 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         </Grid>
 
         {/* Section II: Lower Leg */}
-        <SectionTitle icon={Place} title="II. Jismoniy Rivojlanish (Oyoqlar)" />
+        <SectionTitle icon={Place} title={tr("sectionLegs")} />
         <Grid container spacing={2} pt={1}>
           {[
-            ["Pastki oyoq-qo'l", "lower_leg_total"],
-            ["Pastki oyoq-qo'l uzunligi", "lower_leg_length"],
+            [tr("lowerLegTotal"), "lower_leg_total"],
+            [tr("lowerLegLength"), "lower_leg_length"],
             ["Spina iliaca", "lower_leg_spina_iliaca"],
             ["Symphysion", "lower_leg_symphysion"],
-            ["Tibiale balandligi", "tibiale_height"],
-            ["Chanoq kengligi", "pelvic_width"],
-            ["Son uzunligi", "thigh_length"],
-            ["Son aylanasi", "thigh_circumference"],
-            ["Boldir uzunligi", "calf_length"],
-            ["Boldir aylanasi", "calf_circumference"],
-            ["Oyoq panja uzunligi", "foot_length"],
-            ["Tishlar soni", "teeth_count"],
+            [tr("tibialeHeight"), "tibiale_height"],
+            [tr("pelvicWidth"), "pelvic_width"],
+            [tr("thighLength"), "thigh_length"],
+            [tr("thighCircumference"), "thigh_circumference"],
+            [tr("calfLength"), "calf_length"],
+            [tr("calfCircumference"), "calf_circumference"],
+            [tr("footLength"), "foot_length"],
+            [tr("teethCount"), "teeth_count"],
           ].map(([label, k, type]) => (
             <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type={type || "number"} />
@@ -586,16 +594,16 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         </Grid>
 
         {/* Section III: Skull */}
-        <SectionTitle icon={Science} title="III. Bosh suyagi" />
+        <SectionTitle icon={Science} title={tr("sectionSkull")} />
         <Grid container spacing={2} pt={1}>
           {[
-            ["Uzunasiga diametr", "skull_longitudinal"],
-            ["Ko'ndalang diametr", "skull_transverse"],
-            ["Bosh aylanasi", "head_circumference"],
-            ["Peshona ko'ndalang", "forehead_transverse"],
-            ["Bosh balandligi", "skull_height"],
-            ["Asos uzunligi", "skull_base_length"],
-            ["Asos kengligi", "skull_base_width"],
+            [tr("skullLongitudinal"), "skull_longitudinal"],
+            [tr("skullTransverse"), "skull_transverse"],
+            [tr("headCircumference"), "head_circumference"],
+            [tr("foreheadTransverse"), "forehead_transverse"],
+            [tr("skullHeight"), "skull_height"],
+            [tr("skullBaseLength"), "skull_base_length"],
+            [tr("skullBaseWidth"), "skull_base_width"],
           ].map(([label, k]) => (
             <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
@@ -604,19 +612,19 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         </Grid>
 
         {/* Section IV: Face */}
-        <SectionTitle icon={Person} title="IV. Yuz o'lchamlari" />
+        <SectionTitle icon={Person} title={tr("sectionFace")} />
         <Grid container spacing={2} pt={1}>
           {[
-            ["Yanoq diametri", "face_bizygomatic"],
-            ["Pastki jag' diametri", "face_bigonial"],
-            ["Morfologik balandlik", "face_morphological_height"],
-            ["Fizionomik balandlik", "face_physiognomic_height"],
-            ["Burun balandligi", "nose_height"],
-            ["Burun kengligi", "nose_width"],
-            ["Tashqi ko'z kengligi", "outer_canthal_width"],
-            ["Ichki ko'z kengligi", "inner_canthal_width"],
-            ["Lab qalinligi", "lips_mucosa_height"],
-            ["Og'iz kengligi", "mouth_width"],
+            [tr("faceBizygomatic"), "face_bizygomatic"],
+            [tr("faceBigonial"), "face_bigonial"],
+            [tr("faceMorphologicalHeight"), "face_morphological_height"],
+            [tr("facePhysiognomicHeight"), "face_physiognomic_height"],
+            [tr("noseHeight"), "nose_height"],
+            [tr("noseWidth"), "nose_width"],
+            [tr("outerCanthalWidth"), "outer_canthal_width"],
+            [tr("innerCanthalWidth"), "inner_canthal_width"],
+            [tr("lipsMucosaHeight"), "lips_mucosa_height"],
+            [tr("mouthWidth"), "mouth_width"],
           ].map(([label, k]) => (
             <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
@@ -625,23 +633,23 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         </Grid>
 
         {/* Section V: Chest */}
-        <SectionTitle icon={FitnessCenter} title="V. Ko'krak qafasi va gavda" />
+        <SectionTitle icon={FitnessCenter} title={tr("sectionChest")} />
         <Grid container spacing={2} pt={1}>
           {[
-            ["Bo'y (tik)", "chest_standing_height"],
-            ["Bo'y (o'tirgan)", "chest_sitting_height"],
-            ["Vazn (kg)", "weight"],
-            ["Tana uzunligi", "trunk_length"],
-            ["Korpus uzunligi", "torso_length"],
-            ["Ko'krak aylanasi (pauza)", "chest_circumference_pause"],
-            ["Nafas olganda", "chest_circumference_inhale"],
-            ["Nafas chiqarganda", "chest_circumference_exhale"],
-            ["Bel aylanasi", "waist_circumference"],
-            ["Qorin aylanasi", "abdomen_circumference"],
-            ["Yuqori segment", "upper_segment_length"],
-            ["Ko'ndalang diametr", "chest_transverse_diameter"],
-            ["Old-orqa diametr", "chest_anteroposterior_diameter"],
-            ["Ko'krak balandligi", "chest_height"],
+            [tr("standingHeight"), "chest_standing_height"],
+            [tr("sittingHeight"), "chest_sitting_height"],
+            [tr("weight"), "weight"],
+            [tr("trunkLength"), "trunk_length"],
+            [tr("torsoLength"), "torso_length"],
+            [tr("chestPause"), "chest_circumference_pause"],
+            [tr("chestInhale"), "chest_circumference_inhale"],
+            [tr("chestExhale"), "chest_circumference_exhale"],
+            [tr("waistCircumference"), "waist_circumference"],
+            [tr("abdomenCircumference"), "abdomen_circumference"],
+            [tr("upperSegmentLength"), "upper_segment_length"],
+            [tr("chestTransverseDiameter"), "chest_transverse_diameter"],
+            [tr("chestAnteroposteriorDiameter"), "chest_anteroposterior_diameter"],
+            [tr("chestHeight"), "chest_height"],
           ].map(([label, k]) => (
             <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
@@ -650,23 +658,23 @@ const EditModal = ({ record, open, onClose, onSaved }) => {
         </Grid>
 
         {/* Section VI: Arms and Fat */}
-        <SectionTitle icon={FitnessCenter} title="VI. Qo'l va Yog' qatlami" />
+        <SectionTitle icon={FitnessCenter} title={tr("sectionArmFat")} />
         <Grid container spacing={2} pt={1}>
           {[
-            ["Qo'l uzunligi", "arm_length"],
-            ["Yelka uzunligi", "shoulder_length"],
-            ["Yelka kengligi", "shoulder_width"],
-            ["Yelka aylanasi", "arm_circumference_total"],
-            ["Yelka aylanasi (tinch)", "shoulder_circumference_rest"],
-            ["Yelka aylanasi (tarang)", "shoulder_circumference_flexed"],
-            ["Bilak uzunligi", "forearm_length"],
-            ["Panja uzunligi", "hand_length"],
-            ["Dinamometriya", "dynamometry"],
-            ["Triseps yog'i", "fat_triceps"],
-            ["Biseps yog'i", "fat_biceps"],
-            ["Kurak osti yog'i", "fat_subscapular"],
-            ["Yonbosh yog'i", "fat_iliac"],
-            ["Tizza orqa yog'i", "fat_popliteal"],
+            [tr("armLength"), "arm_length"],
+            [tr("shoulderLength"), "shoulder_length"],
+            [tr("shoulderWidth"), "shoulder_width"],
+            [tr("armCircumferenceTotal"), "arm_circumference_total"],
+            [tr("shoulderCircumferenceRest"), "shoulder_circumference_rest"],
+            [tr("shoulderCircumferenceFlexed"), "shoulder_circumference_flexed"],
+            [tr("forearmLength"), "forearm_length"],
+            [tr("handLength"), "hand_length"],
+            [tr("dynamometry"), "dynamometry"],
+            [tr("fatTriceps"), "fat_triceps"],
+            [tr("fatBiceps"), "fat_biceps"],
+            [tr("fatSubscapular"), "fat_subscapular"],
+            [tr("fatIliac"), "fat_iliac"],
+            [tr("fatPopliteal"), "fat_popliteal"],
           ].map(([label, k]) => (
             <Grid xs={12} sm={6} md={4} key={k}>
               <F label={label} k={k} type="number" />
@@ -699,175 +707,184 @@ const RecordsTable = ({
   toggleOne,
   showDeleted = false,
   tr = (key) => key,
-}) => (
-  <TableContainer component={GlassPaper}>
-    <Table size="small">
-      <TableHead
-        sx={{
-          background: (theme) =>
-            theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(15,118,110,0.05)",
-        }}
-      >
-        <TableRow>
-          <TableCell sx={{ width: 40, p: 1 }}>
-            <IconButton size="small" onClick={toggleAll} color="primary">
-              {rows.length > 0 && rows.every((r) => checked?.has(r.id)) ? (
-                <CheckCircle fontSize="small" />
-              ) : (
-                <InfoOutlined fontSize="small" />
-              )}
-            </IconButton>
-          </TableCell>
-          <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
-          <TableCell sx={{ fontWeight: 700 }}>{tr("fullName")}</TableCell>
-          <TableCell sx={{ fontWeight: 700 }}>{tr("schoolKindergarten")}</TableCell>
-          <TableCell sx={{ fontWeight: 700 }}>{tr("exam")}</TableCell>
-          {!showDeleted && <TableCell sx={{ fontWeight: 700 }}>{tr("heightWeight")}</TableCell>}
-          {showDeleted && (
-            <TableCell sx={{ fontWeight: 700, color: "error.main" }}>{tr("deletedDate")}</TableCell>
-          )}
-          <TableCell sx={{ fontWeight: 700 }} align="right">
-            {tr("actions")}
-          </TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {loading ? (
+  lang = "uz",
+}) => {
+  const dateLocale = getDateLocale(lang);
+
+  return (
+    <TableContainer component={GlassPaper}>
+      <Table size="small">
+        <TableHead
+          sx={{
+            background: (theme) =>
+              theme.palette.mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(15,118,110,0.05)",
+          }}
+        >
           <TableRow>
-            <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
-              <CircularProgress />
+            <TableCell sx={{ width: 40, p: 1 }}>
+              <IconButton size="small" onClick={toggleAll} color="primary">
+                {rows.length > 0 && rows.every((r) => checked?.has(r.id)) ? (
+                  <CheckCircle fontSize="small" />
+                ) : (
+                  <InfoOutlined fontSize="small" />
+                )}
+              </IconButton>
+            </TableCell>
+            <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{tr("fullName")}</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{tr("schoolKindergarten")}</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>{tr("exam")}</TableCell>
+            {!showDeleted && <TableCell sx={{ fontWeight: 700 }}>{tr("heightWeight")}</TableCell>}
+            {showDeleted && (
+              <TableCell sx={{ fontWeight: 700, color: "error.main" }}>
+                {tr("deletedDate")}
+              </TableCell>
+            )}
+            <TableCell sx={{ fontWeight: 700 }} align="right">
+              {tr("actions")}
             </TableCell>
           </TableRow>
-        ) : rows.length === 0 ? (
-          <TableRow>
-            <TableCell colSpan={8} align="center" sx={{ py: 6, color: "text.secondary" }}>
-              {tr("noData")}
-            </TableCell>
-          </TableRow>
-        ) : (
-          rows.map((row, idx) => (
-            <TableRow
-              key={row.id}
-              hover
-              sx={{
-                cursor: "pointer",
-                "&:hover": { background: "rgba(15,118,110,0.04)" },
-                bgcolor: checked?.has(row.id) ? "rgba(15,118,110,0.08)" : "inherit",
-              }}
-              onClick={() => onView(row)}
-            >
-              <TableCell
-                sx={{ p: 1 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleOne(row.id);
-                }}
-              >
-                <IconButton size="small" color={checked?.has(row.id) ? "primary" : "default"}>
-                  {checked?.has(row.id) ? (
-                    <CheckCircle fontSize="small" />
-                  ) : (
-                    <Box
-                      sx={{
-                        width: 18,
-                        height: 18,
-                        border: "2px solid",
-                        borderColor: "divider",
-                        borderRadius: "4px",
-                      }}
-                    />
-                  )}
-                </IconButton>
-              </TableCell>
-              <TableCell>
-                <Typography variant="caption" color="text.secondary">
-                  {idx + 1}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Avatar sx={{ width: 30, height: 30, fontSize: 12, bgcolor: "primary.light" }}>
-                    {(row.full_name || "?").charAt(0).toUpperCase()}
-                  </Avatar>
-                  <Typography variant="body2" fontWeight={600}>
-                    {row.full_name || "—"}
-                  </Typography>
-                </Stack>
-              </TableCell>
-              <TableCell>
-                <Typography variant="body2">{row.school_name || "—"}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {row.settlement || ""}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Chip
-                  label={row.examination_date || "—"}
-                  size="small"
-                  variant="outlined"
-                  sx={{ fontSize: 11 }}
-                />
-              </TableCell>
-              {!showDeleted && (
-                <TableCell>
-                  <Typography variant="caption" color="text.secondary">
-                    {row.chest_standing_height ? `${row.chest_standing_height} sm` : "—"} /
-                    {row.weight ? ` ${row.weight} kg` : " —"}
-                  </Typography>
-                </TableCell>
-              )}
-              {showDeleted && (
-                <TableCell>
-                  <Typography variant="caption" color="error">
-                    {row.deleted_at ? new Date(row.deleted_at).toLocaleDateString("uz-UZ") : "—"}
-                  </Typography>
-                </TableCell>
-              )}
-              <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                  <Tooltip title={tr("viewDetails")}>
-                    <IconButton size="small" color="info" onClick={() => onView(row)}>
-                      <Visibility fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  {!showDeleted && (
-                    <>
-                      <Tooltip title={tr("edit")}>
-                        <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
-                          <Edit fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={tr("softDelete")}>
-                        <IconButton
-                          size="small"
-                          color="warning"
-                          onClick={() => onDelete(row.id, "soft")}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      {isSuperAdmin && (
-                        <Tooltip title={tr("hardDelete")}>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => onDelete(row.id, "hard")}
-                          >
-                            <DeleteForever fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </>
-                  )}
-                </Stack>
+        </TableHead>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={8} align="center" sx={{ py: 6 }}>
+                <CircularProgress />
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
-  </TableContainer>
-);
+          ) : rows.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} align="center" sx={{ py: 6, color: "text.secondary" }}>
+                {tr("noData")}
+              </TableCell>
+            </TableRow>
+          ) : (
+            rows.map((row, idx) => (
+              <TableRow
+                key={row.id}
+                hover
+                sx={{
+                  cursor: "pointer",
+                  "&:hover": { background: "rgba(15,118,110,0.04)" },
+                  bgcolor: checked?.has(row.id) ? "rgba(15,118,110,0.08)" : "inherit",
+                }}
+                onClick={() => onView(row)}
+              >
+                <TableCell
+                  sx={{ p: 1 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleOne(row.id);
+                  }}
+                >
+                  <IconButton size="small" color={checked?.has(row.id) ? "primary" : "default"}>
+                    {checked?.has(row.id) ? (
+                      <CheckCircle fontSize="small" />
+                    ) : (
+                      <Box
+                        sx={{
+                          width: 18,
+                          height: 18,
+                          border: "2px solid",
+                          borderColor: "divider",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    )}
+                  </IconButton>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="caption" color="text.secondary">
+                    {idx + 1}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Avatar sx={{ width: 30, height: 30, fontSize: 12, bgcolor: "primary.light" }}>
+                      {(row.full_name || "?").charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Typography variant="body2" fontWeight={600}>
+                      {row.full_name || "—"}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">{row.school_name || "—"}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {row.settlement || ""}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={row.examination_date || "—"}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontSize: 11 }}
+                  />
+                </TableCell>
+                {!showDeleted && (
+                  <TableCell>
+                    <Typography variant="caption" color="text.secondary">
+                      {row.chest_standing_height ? `${row.chest_standing_height} sm` : "—"} /
+                      {row.weight ? ` ${row.weight} kg` : " —"}
+                    </Typography>
+                  </TableCell>
+                )}
+                {showDeleted && (
+                  <TableCell>
+                    <Typography variant="caption" color="error">
+                      {row.deleted_at
+                        ? new Date(row.deleted_at).toLocaleDateString(dateLocale)
+                        : "—"}
+                    </Typography>
+                  </TableCell>
+                )}
+                <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                  <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                    <Tooltip title={tr("viewDetails")}>
+                      <IconButton size="small" color="info" onClick={() => onView(row)}>
+                        <Visibility fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    {!showDeleted && (
+                      <>
+                        <Tooltip title={tr("edit")}>
+                          <IconButton size="small" color="primary" onClick={() => onEdit(row)}>
+                            <Edit fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={tr("softDelete")}>
+                          <IconButton
+                            size="small"
+                            color="warning"
+                            onClick={() => onDelete(row.id, "soft")}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {isSuperAdmin && (
+                          <Tooltip title={tr("hardDelete")}>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => onDelete(row.id, "hard")}
+                            >
+                              <DeleteForever fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </>
+                    )}
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
 
 /* ════════════════════════════════════════════════════
    FILTER BAR
@@ -2199,6 +2216,7 @@ const ResearcherPage = () => {
                     }}
                     isSuperAdmin={isSuperAdmin}
                     tr={tr}
+                    lang={lang}
                   />
 
                   <DashboardFilters
@@ -2277,6 +2295,7 @@ const ResearcherPage = () => {
                     isSuperAdmin={isSuperAdmin}
                     showDeleted
                     tr={tr}
+                    lang={lang}
                   />
                   {checked.size > 0 && (
                     <Box sx={{ mt: 2, display: "flex", gap: 2 }}>

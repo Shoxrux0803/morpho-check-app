@@ -99,6 +99,38 @@ const ACTIVITY_I18N = {
     noAdmins: "Админы не найдены",
     noResearchers: "Исследователи не найдены",
   },
+  kz: {
+    typing: "• енгізіп жатыр...",
+    sec: "сек",
+    min: "мин",
+    best: "Үздік",
+    researcher: "Зерттеуші",
+    admin: "Админ",
+    today: "Бүгін",
+    week: "Апта",
+    month: "Осы ай",
+    monthShort: "Ай",
+    ratingScore: "Рейтинг балы",
+    perRecord: "1 жазбаға:",
+    totalEntered: "Барлығы енгізген:",
+    unit: "дана",
+    activeTime: "Ең белсенді уақыты:",
+    lastActivity: "Соңғы белсенділік:",
+    refreshError: "Деректерді жаңарту қатесі!",
+    title: "Топ chart",
+    usersOnline: (count) => `Қазір ${count} пайдаланушы online`,
+    lastUpdate: "Соңғы жаңарту",
+    all: "Барлығы",
+    admins: "Админдер",
+    researchers: "Зерттеушілер",
+    refresh: "Жаңарту",
+    loading: "Деректер жүктелуде...",
+    bestResult: "Ең жақсы нәтиже",
+    oneRecord: "1 жазба",
+    noUsers: "Пайдаланушылар табылмады",
+    noAdmins: "Админдер табылмады",
+    noResearchers: "Зерттеушілер табылмады",
+  },
 };
 
 const StatusBadge = ({ status, isTyping, t }) => {
@@ -144,6 +176,8 @@ const formatAvgMinutes = (seconds = 0, t = ACTIVITY_I18N.uz) => {
   return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} ${t.min}`;
 };
 
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+
 const getScore = (admin) =>
   (admin.stats_today || 0) * 3 + (admin.stats_week || 0) * 2 + (admin.stats_month || 0);
 
@@ -152,7 +186,7 @@ const getActivityKey = (admin, index) => {
   return id ? `activity-${id}` : `activity-${admin.role || "user"}-${index}`;
 };
 
-const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t }) => {
+const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t, locale }) => {
   const isResearcher = admin.role === "researcher";
   const score = getScore(admin);
   const progress = maxScore ? Math.round((score / maxScore) * 100) : 0;
@@ -414,7 +448,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t }) => {
               </Box>
               <Typography variant="caption" fontWeight="bold">
                 {admin.last_active_at
-                  ? new Date(admin.last_active_at).toLocaleTimeString("uz-UZ")
+                  ? new Date(admin.last_active_at).toLocaleTimeString(locale)
                   : "-"}
               </Typography>
             </Box>
@@ -435,6 +469,7 @@ export default function AdminActivity() {
   const isDark = theme.palette.mode === "dark";
   const { lang } = useLanguage();
   const t = ACTIVITY_I18N[lang] || ACTIVITY_I18N.uz;
+  const locale = localeByLang[lang] || "uz-UZ";
 
   const fetchActivity = useCallback(
     async (silent = false) => {
@@ -631,6 +666,7 @@ export default function AdminActivity() {
                   isBest={index === 0}
                   maxScore={maxScore}
                   t={t}
+                  locale={locale}
                 />
               </Grid>
             ))}

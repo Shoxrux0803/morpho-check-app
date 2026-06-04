@@ -197,6 +197,58 @@ const DASH_I18N = {
     obese: "Obesity",
     underweight: "Underweight",
   },
+  kz: {
+    title: "SuperAdmin аналитика орталығы",
+    subtitle:
+      "Аймақтар, админдер, клиникалық қауіп және айлық динамика бойынша бірыңғай бақылау панелі",
+    analyses: "Талдаулар",
+    admins: "Админдер",
+    today: "Бүгін",
+    totalAnalyses: "Жалпы талдаулар",
+    allTime: "Барлық уақыт бойынша",
+    todayAnalyses: "Бүгінгі талдаулар",
+    enteredToday: "Бүгін енгізілген",
+    weeklyGrowth: "Апталық өсім",
+    thisWeek: "осы аптада",
+    totalAdmins: "Жалпы админдер",
+    simple: "қарапайым",
+    avgBmi: "Орташа BMI",
+    systemWide: "Жүйе бойынша",
+    riskRegions: "Қауіп ең көп шыққан аймақтар",
+    riskRegionsSub: "BMI немесе Z-score қауіп шегінен шыққан жазбалар",
+    riskFrom: "ішінен",
+    risk: "қауіп",
+    monthlyDynamics: "Айлық динамика",
+    monthlyDynamicsSub: "Соңғы 12 айдағы талдаулар саны",
+    analysesCount: "Талдаулар саны",
+    genderDistribution: "Жыныстық таралу",
+    genderDistributionSub: "Ер / әйел арақатынасы",
+    ageGroups: "Жас топтары",
+    ageGroupsSub: "Пациенттер жасы бойынша",
+    patientsCount: "Пациенттер саны",
+    somatotypeDistribution: "Соматотип таралуы",
+    somatotypeDistributionSub: "Дене құрылымы классификациясы",
+    count: "Саны",
+    topRegions: "Облыстар бойынша топ-10",
+    topRegionsSub: "Ең көп талдау енгізілген аймақтар",
+    bmiStatusDistribution: "BMI жағдайы таралуы",
+    bmiStatusDistributionSub: "Денсаулық топтары бойынша",
+    noData: "Дерек жоқ",
+    patient: "пациент",
+    avgRadar: "Соматотиптің орташа радари",
+    avgRadarSub: "Жүйе бойынша орташа соматометриялық көрсеткіштер",
+    average: "Орташа",
+    adminsDistribution: "Админдер таралуы",
+    adminsDistributionSub: "Жүйе пайдаланушылары рөлдер бойынша",
+    lastUpdate: "Соңғы жаңарту",
+    male: "Ерлер",
+    female: "Әйелдер",
+    unknown: "Белгісіз",
+    normal: "Қалыпты",
+    overweight: "Артық салмақ",
+    obese: "Семіздік",
+    underweight: "Салмақ жетіспеушілігі",
+  },
 };
 
 // ==== PALETTE ====
@@ -212,6 +264,7 @@ const COLORS = {
 };
 const PIE_COLORS = [COLORS.info, COLORS.rose, COLORS.teal, COLORS.warning];
 const AGE_COLORS = ["#0f766e", "#2563eb", "#14b8a6", "#f59e0b", "#64748b"];
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",
@@ -397,6 +450,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
   const theme = useTheme();
   const { lang } = useLanguage();
   const tt = DASH_I18N[lang] || DASH_I18N.uz;
+  const locale = localeByLang[lang] || "uz-UZ";
 
   // ----- Derived data -----
   const genderData = useMemo(
@@ -544,7 +598,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
           </Box>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Chip
-              label={`${tt.analyses}: ${stats?.total_analyses?.toLocaleString("uz-UZ") ?? 0}`}
+              label={`${tt.analyses}: ${stats?.total_analyses?.toLocaleString(locale) ?? 0}`}
               sx={{ fontWeight: 800 }}
             />
             <Chip
@@ -566,7 +620,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label={tt.totalAnalyses}
-            value={stats?.total_analyses?.toLocaleString("uz-UZ") ?? "0"}
+            value={stats?.total_analyses?.toLocaleString(locale) ?? "0"}
             sub={tt.allTime}
             icon={<Assessment />}
             color={COLORS.primary}
@@ -576,7 +630,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
         <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
           <KpiCard
             label={tt.todayAnalyses}
-            value={stats?.today_analyses?.toLocaleString("uz-UZ") ?? "0"}
+            value={stats?.today_analyses?.toLocaleString(locale) ?? "0"}
             sub={tt.enteredToday}
             icon={<TrendingUp />}
             color={COLORS.success}
@@ -1016,7 +1070,7 @@ export default function SuperAdminDashboard({ stats, statsLoading, admins = [] }
       {/* Summary Footer */}
       <Box mt={4} py={2} textAlign="center">
         <Typography variant="caption" color="text.secondary">
-          {tt.lastUpdate}: {new Date().toLocaleString("uz-UZ")} • MorphoCheck SuperAdmin Analytics
+          {tt.lastUpdate}: {new Date().toLocaleString(locale)} • MorphoCheck SuperAdmin Analytics
           Pro
         </Typography>
       </Box>

@@ -270,40 +270,40 @@ const BodySilhouette = ({ color, size = 180 }) => (
   </Box>
 );
 
-const storySteps = [
+const createStorySteps = (t) => [
   {
-    eyebrow: "01 / Collect",
-    title: "Ma'lumotlar bir joyga yig'iladi",
-    desc: "Antropometrik o'lchovlar, hudud va yosh guruhlari klinik tahlilga tayyor holatga keladi.",
+    eyebrow: t("storyStep1Eyebrow"),
+    title: t("storyStep1Title"),
+    desc: t("storyStep1Desc"),
     metric: "140+",
-    label: "data signal",
+    label: t("storyStep1Metric"),
     color: "#0891b2",
     icon: Fingerprint,
   },
   {
-    eyebrow: "02 / Analyze",
-    title: "WHO LMS va Z-score avtomatik ishlaydi",
-    desc: "Tizim HAZ, BAZ va SDS ko'rsatkichlarini real vaqt rejimida hisoblab, risk signallarini ajratadi.",
+    eyebrow: t("storyStep2Eyebrow"),
+    title: t("storyStep2Title"),
+    desc: t("storyStep2Desc"),
     metric: "98.4%",
-    label: "analysis sync",
+    label: t("storyStep2Metric"),
     color: "#16a34a",
     icon: Activity,
   },
   {
-    eyebrow: "03 / Map",
-    title: "Hududiy holat scroll bilan jonlanadi",
-    desc: "Xarita qatlami viloyatlar kesimida klinik monitoring signalini ko'rsatadi.",
+    eyebrow: t("storyStep3Eyebrow"),
+    title: t("storyStep3Title"),
+    desc: t("storyStep3Desc"),
     metric: "14",
-    label: "regional layers",
+    label: t("storyStep3Metric"),
     color: "#ca8a04",
     icon: Globe,
   },
   {
-    eyebrow: "04 / Report",
-    title: "Natija hisobotga aylanadi",
-    desc: "Shifokor, admin va researcher uchun tayyor tahliliy ko'rinish va eksport yo'llari ochiladi.",
+    eyebrow: t("storyStep4Eyebrow"),
+    title: t("storyStep4Title"),
+    desc: t("storyStep4Desc"),
     metric: "PDF",
-    label: "ready report",
+    label: t("storyStep4Metric"),
     color: "#7c3aed",
     icon: FileText,
   },
@@ -329,9 +329,10 @@ const ScrollProgress = ({ progress, color }) => (
   />
 );
 
-const StickyScrollStory = ({ theme, mode, fadeInUp }) => {
+const StickyScrollStory = ({ theme, mode, fadeInUp, t }) => {
   const sectionRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const storySteps = createStorySteps(t);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start center", "end center"],
@@ -358,11 +359,10 @@ const StickyScrollStory = ({ theme, mode, fadeInUp }) => {
       <Container maxWidth="lg">
         <motion.div {...fadeInUp}>
           <Typography variant="h2" fontWeight="900" gutterBottom letterSpacing={0}>
-            Klinik tahlildan hududiy monitoringgacha
+            {t("storyTitle")}
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 760, mb: 8 }}>
-            MorphoCheck Pro o'lchovlarni tahlil qiladi, risk signallarini ajratadi va natijani
-            hududlar kesimida tushunarli ko'rinishga olib keladi.
+            {t("storyDesc")}
           </Typography>
         </motion.div>
 
@@ -1451,7 +1451,7 @@ export default function IntroPage() {
         </Container>
       </Box>
 
-      <StickyScrollStory theme={theme} mode={mode} fadeInUp={fadeInUp} />
+      <StickyScrollStory theme={theme} mode={mode} fadeInUp={fadeInUp} t={t} />
 
       {/* Process Section */}
       <Box

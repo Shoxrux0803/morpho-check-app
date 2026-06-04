@@ -85,6 +85,27 @@ const FILTER_I18N = {
     clear: "Очистить",
     apply: "Применить",
   },
+  kz: {
+    title: "Талдамалық сүзгілер",
+    subtitle: "Деректерді сұрыптау және талдау",
+    activeFilters: (count) => `${count} сүзгі белсенді`,
+    demographics: "Демография",
+    gender: "ЖЫНЫСЫ",
+    male: "Ер",
+    female: "Әйел",
+    all: "Барлығы",
+    region: "АЙМАҚ (ОБЛЫС)",
+    allRegions: "Барлық аймақтар",
+    biometrics: "Биометрия",
+    ageRange: "ЖАС АРАЛЫҒЫ",
+    bmiRange: "BMI АРАЛЫҒЫ",
+    scientific: "Ғылыми классификация",
+    somatotype: "СОМАТОТИП",
+    allTypes: "Барлық типтер",
+    dateFrom: "КҮННЕН",
+    clear: "Тазалау",
+    apply: "Қолдану",
+  },
 };
 
 const GlassPaper = ({ children, sx = {} }) => (

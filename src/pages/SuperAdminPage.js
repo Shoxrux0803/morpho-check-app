@@ -95,6 +95,28 @@ const PAGE_LABELS = {
 const RESEARCH_TYPE_OPTIONS = ["PhD", "DSc", "Magistrlik", "Grant loyihasi"];
 
 const AUDIT_ACTION_LABELS = {
+  en: {
+    create: "Create",
+    created: "Created",
+    update: "Update",
+    updated: "Updated",
+    delete: "Delete",
+    deleted: "Deleted",
+    restore: "Restore",
+    restored: "Restored",
+    login: "Login",
+    logout: "Logout",
+    backup: "Backup",
+    clear: "Clear",
+    hard_delete: "Permanent delete",
+    soft_delete: "Move to trash",
+    delete_hard: "Permanent delete",
+    delete_soft: "Move to trash",
+    download: "Download",
+    downloaded: "Downloaded",
+    export: "Export",
+    exported: "Exported",
+  },
   ru: {
     create: "Создание",
     created: "Создано",
@@ -117,6 +139,28 @@ const AUDIT_ACTION_LABELS = {
     export: "Экспорт",
     exported: "Экспортировано",
   },
+  kz: {
+    create: "Құру",
+    created: "Құрылды",
+    update: "Жаңарту",
+    updated: "Жаңартылды",
+    delete: "Жою",
+    deleted: "Жойылды",
+    restore: "Қалпына келтіру",
+    restored: "Қалпына келтірілді",
+    login: "Кіру",
+    logout: "Шығу",
+    backup: "Сақтық көшірме",
+    clear: "Тазалау",
+    hard_delete: "Толық жою",
+    soft_delete: "Себетке жіберу",
+    delete_hard: "Толық жою",
+    delete_soft: "Себетке жіберу",
+    download: "Жүктеп алу",
+    downloaded: "Жүктелді",
+    export: "Экспорт",
+    exported: "Экспортталды",
+  },
 };
 
 const AUDIT_TARGET_LABELS_RU = {
@@ -127,6 +171,26 @@ const AUDIT_TARGET_LABELS_RU = {
   Backup: "Резервная копия",
   PDF: "PDF-отчет",
   DOCX: "DOCX-документ",
+};
+
+const AUDIT_TARGET_LABELS_EN = {
+  Analysis: "Analysis",
+  PatientAnalysis: "Patient analysis",
+  User: "User",
+  AuditLog: "Audit log",
+  Backup: "Backup",
+  PDF: "PDF report",
+  DOCX: "DOCX document",
+};
+
+const AUDIT_TARGET_LABELS_KZ = {
+  Analysis: "Талдау",
+  PatientAnalysis: "Пациент талдауы",
+  User: "Пайдаланушы",
+  AuditLog: "Аудит журналы",
+  Backup: "Сақтық көшірме",
+  PDF: "PDF есеп",
+  DOCX: "DOCX құжат",
 };
 
 const AUDIT_JSON_KEY_LABELS_RU = {
@@ -145,6 +209,42 @@ const AUDIT_JSON_KEY_LABELS_RU = {
   changes: "Изменения",
   ids: "ID",
   count: "Количество",
+};
+
+const AUDIT_JSON_KEY_LABELS_EN = {
+  action: "Action",
+  target_type: "Object type",
+  target_id: "Object ID",
+  details: "Details",
+  user_id: "User ID",
+  user_name: "User",
+  user_email: "User email",
+  name: "Name",
+  role: "Role",
+  email: "Email",
+  old: "Old",
+  new: "New",
+  changes: "Changes",
+  ids: "ID",
+  count: "Count",
+};
+
+const AUDIT_JSON_KEY_LABELS_KZ = {
+  action: "Әрекет",
+  target_type: "Объект түрі",
+  target_id: "Объект ID",
+  details: "Сипаттама",
+  user_id: "Пайдаланушы ID",
+  user_name: "Пайдаланушы",
+  user_email: "Пайдаланушы email",
+  name: "Аты",
+  role: "Рөл",
+  email: "Email",
+  old: "Бұрын",
+  new: "Кейін",
+  changes: "Өзгерістер",
+  ids: "ID",
+  count: "Саны",
 };
 
 const AUDIT_DETAIL_PATTERNS_RU = [
@@ -247,18 +347,215 @@ const AUDIT_DETAIL_CLEANUPS_RU = [
   [/\s+:/g, ":"],
 ];
 
+const AUDIT_DETAIL_PATTERNS_EN = [
+  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "New analysis created: $2"],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "New user created: $1"],
+  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "User data updated: $1"],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "User deleted: $1"],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "User restored: $1"],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "User logged in: $1"],
+  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 analyses moved to trash: $2"],
+  [
+    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
+    "$1 analyses permanently deleted (ID: $2)",
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
+    "$1 analyses restored from trash (ID: $2)",
+  ],
+  [/^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i, "Analysis updated: $1. Changes: $2"],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    "Audit log cleared: all ($1 records)",
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    "Audit log cleared: $1 ($2 records)",
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Backup created: $1"],
+  [/^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i, "Backup fully restored (replace): $1"],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Backup deleted: $1"],
+  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Patient report (PDF) downloaded: $1"],
+  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Patient form (DOCX) downloaded: $1"],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_EN = [
+  [/\bYangi\b/gi, "New"],
+  [/\bfoydalanuvchi\b/gi, "user"],
+  [/\bFoydalanuvchi\b/g, "User"],
+  [/\bma'?lumotlari\b/gi, "data"],
+  [/\bMa'?lumotlar\b/g, "Data"],
+  [/\bMa'?lumot\b/g, "Data"],
+  [/\bma'?lumotlar\b/gi, "data"],
+  [/\bma'?lumot\b/gi, "data"],
+  [/\btahlil\b/gi, "analysis"],
+  [/\bTahlil\b/g, "Analysis"],
+  [/\bBemor hisoboti\b/g, "Patient report"],
+  [/\bbemor hisoboti\b/gi, "patient report"],
+  [/\bBemor anketasi\b/g, "Patient form"],
+  [/\bbemor anketasi\b/gi, "patient form"],
+  [/\bBemor\b/g, "Patient"],
+  [/\bbemor\b/gi, "patient"],
+  [/\bAdmin\b/g, "Admin"],
+  [/\badmin\b/gi, "admin"],
+  [/\bIzlanuvchi\b/g, "Researcher"],
+  [/\bizlanuvchi\b/gi, "researcher"],
+  [/\bResearcher\b/g, "Researcher"],
+  [/\bresearcher\b/gi, "researcher"],
+  [/\bAnalysis\b/g, "Analysis"],
+  [/\banalysis\b/gi, "analysis"],
+  [/\bUser\b/g, "User"],
+  [/\buser\b/gi, "user"],
+  [/\byaratildi\b/gi, "created"],
+  [/\byangilandi\b/gi, "updated"],
+  [/\btiklandi\b/gi, "restored"],
+  [/\bo'?chirildi\b/gi, "deleted"],
+  [/\bcreated\b/gi, "created"],
+  [/\bupdated\b/gi, "updated"],
+  [/\bdeleted\b/gi, "deleted"],
+  [/\brestored\b/gi, "restored"],
+  [/\byuklab olindi\b/gi, "downloaded"],
+  [/\byuklandi\b/gi, "uploaded"],
+  [/\bolindi\b/gi, "received"],
+  [/\bsavatga yuborildi\b/gi, "moved to trash"],
+  [/\bsavatdan\b/gi, "from trash"],
+  [/\bbutunlay\b/gi, "permanently"],
+  [/\bIDlar\b/g, "ID"],
+  [/\bBarchasi\b/g, "All"],
+  [/\bta yozuv\b/gi, "records"],
+  [/\bta\b/g, "items"],
+  [/\bZaxira nusxasi\b/g, "Backup"],
+  [/\bzaxira nusxasi\b/gi, "backup"],
+  [/\bZaxira\b/g, "Backup"],
+  [/\bzaxira\b/gi, "backup"],
+  [/\bfayl\b/gi, "file"],
+  [/\bO'?zgarishlar\b/gi, "Changes"],
+  [/\bAlmashtirish\b/gi, "replace"],
+  [/\btizimga kirdi\b/gi, "logged in"],
+];
+
+const AUDIT_DETAIL_CLEANUPS_EN = [
+  [/New analysis created/gi, "New analysis created"],
+  [/Patient form \(DOCX\) downloaded/gi, "Patient form (DOCX) downloaded"],
+  [/Patient report \(PDF\) downloaded/gi, "Patient report (PDF) downloaded"],
+  [/\s+:/g, ":"],
+];
+
+const AUDIT_DETAIL_PATTERNS_KZ = [
+  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Жаңа талдау құрылды: $2"],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Жаңа пайдаланушы құрылды: $1"],
+  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "Пайдаланушы деректері жаңартылды: $1"],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "Пайдаланушы жойылды: $1"],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "Пайдаланушы қалпына келтірілді: $1"],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "Пайдаланушы жүйеге кірді: $1"],
+  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 талдау себетке жіберілді: $2"],
+  [
+    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
+    "$1 талдау толық жойылды (ID: $2)",
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
+    "$1 талдау себеттен қалпына келтірілді (ID: $2)",
+  ],
+  [
+    /^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i,
+    "Талдау жаңартылды: $1. Өзгерістер: $2",
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    "Аудит журналы тазаланды: барлығы ($1 жазба)",
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    "Аудит журналы тазаланды: $1 ($2 жазба)",
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Сақтық көшірме құрылды: $1"],
+  [
+    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
+    "Сақтық көшірме толық қалпына келтірілді (ауыстыру): $1",
+  ],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Сақтық көшірме жойылды: $1"],
+  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Пациент есебі (PDF) жүктеп алынды: $1"],
+  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Пациент анкетасы (DOCX) жүктеп алынды: $1"],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_KZ = [
+  [/\bYangi\b/gi, "Жаңа"],
+  [/\bfoydalanuvchi\b/gi, "пайдаланушы"],
+  [/\bFoydalanuvchi\b/g, "Пайдаланушы"],
+  [/\bma'?lumotlari\b/gi, "деректері"],
+  [/\bMa'?lumotlar\b/g, "Деректер"],
+  [/\bMa'?lumot\b/g, "Дерек"],
+  [/\bma'?lumotlar\b/gi, "деректер"],
+  [/\bma'?lumot\b/gi, "дерек"],
+  [/\btahlil\b/gi, "талдау"],
+  [/\bTahlil\b/g, "Талдау"],
+  [/\bBemor hisoboti\b/g, "Пациент есебі"],
+  [/\bbemor hisoboti\b/gi, "пациент есебі"],
+  [/\bBemor anketasi\b/g, "Пациент анкетасы"],
+  [/\bbemor anketasi\b/gi, "пациент анкетасы"],
+  [/\bBemor\b/g, "Пациент"],
+  [/\bbemor\b/gi, "пациент"],
+  [/\bAdmin\b/g, "Админ"],
+  [/\badmin\b/gi, "админ"],
+  [/\bIzlanuvchi\b/g, "Зерттеуші"],
+  [/\bizlanuvchi\b/gi, "зерттеуші"],
+  [/\bResearcher\b/g, "Зерттеуші"],
+  [/\bresearcher\b/gi, "зерттеуші"],
+  [/\bAnalysis\b/g, "Талдау"],
+  [/\banalysis\b/gi, "талдау"],
+  [/\bUser\b/g, "Пайдаланушы"],
+  [/\buser\b/gi, "пайдаланушы"],
+  [/\byaratildi\b/gi, "құрылды"],
+  [/\byangilandi\b/gi, "жаңартылды"],
+  [/\btiklandi\b/gi, "қалпына келтірілді"],
+  [/\bo'?chirildi\b/gi, "жойылды"],
+  [/\bcreated\b/gi, "құрылды"],
+  [/\bupdated\b/gi, "жаңартылды"],
+  [/\bdeleted\b/gi, "жойылды"],
+  [/\brestored\b/gi, "қалпына келтірілді"],
+  [/\byuklab olindi\b/gi, "жүктеп алынды"],
+  [/\byuklandi\b/gi, "жүктелді"],
+  [/\bolindi\b/gi, "алынды"],
+  [/\bsavatga yuborildi\b/gi, "себетке жіберілді"],
+  [/\bsavatdan\b/gi, "себеттен"],
+  [/\bbutunlay\b/gi, "толық"],
+  [/\bIDlar\b/g, "ID"],
+  [/\bBarchasi\b/g, "Барлығы"],
+  [/\bta yozuv\b/gi, "жазба"],
+  [/\bta\b/g, "дана"],
+  [/\bZaxira nusxasi\b/g, "Сақтық көшірме"],
+  [/\bzaxira nusxasi\b/gi, "сақтық көшірме"],
+  [/\bZaxira\b/g, "Сақтық көшірме"],
+  [/\bzaxira\b/gi, "сақтық көшірме"],
+  [/\bfayl\b/gi, "файл"],
+  [/\bO'?zgarishlar\b/gi, "Өзгерістер"],
+  [/\bAlmashtirish\b/gi, "ауыстыру"],
+  [/\btizimga kirdi\b/gi, "жүйеге кірді"],
+];
+
+const AUDIT_DETAIL_CLEANUPS_KZ = [
+  [/Жаңа талдау құрылды/gi, "Жаңа талдау құрылды"],
+  [/Пациент анкетасы \(DOCX\) жүктеп алынды/gi, "Пациент анкетасы (DOCX) жүктеп алынды"],
+  [/Пациент есебі \(PDF\) жүктеп алынды/gi, "Пациент есебі (PDF) жүктеп алынды"],
+  [/\s+:/g, ":"],
+];
+
 const formatAuditAction = (action, lang) => {
   const value = String(action || "-");
-  if (lang !== "ru") return value;
+  const labels = AUDIT_ACTION_LABELS[lang];
+  if (!labels) return value;
   const key = value.toLowerCase().trim().replaceAll("-", "_");
-  return AUDIT_ACTION_LABELS.ru[key] || value;
+  return labels[key] || value;
 };
 
 const formatAuditTarget = (targetType, lang) => {
   if (!targetType) return "";
   const value = String(targetType);
-  if (lang !== "ru") return value;
-  return AUDIT_TARGET_LABELS_RU[value] || translateAuditTextRu(value);
+  if (lang === "en") return AUDIT_TARGET_LABELS_EN[value] || translateAuditText(value, lang);
+  if (lang === "ru") return AUDIT_TARGET_LABELS_RU[value] || translateAuditText(value, lang);
+  if (lang === "kz") return AUDIT_TARGET_LABELS_KZ[value] || translateAuditText(value, lang);
+  return value;
 };
 
 const formatAuditJsonValue = (value, lang) => {
@@ -266,20 +563,36 @@ const formatAuditJsonValue = (value, lang) => {
   if (Array.isArray(value)) return value.map((item) => formatAuditJsonValue(item, lang)).join(", ");
   if (typeof value === "object") return formatAuditDetails(value, lang);
   const text = String(value);
-  return lang === "ru" ? translateAuditTextRu(text) : text;
+  return lang === "en" || lang === "ru" || lang === "kz" ? translateAuditText(text, lang) : text;
 };
 
-const translateAuditTextRu = (text) => {
-  const patternMatch = AUDIT_DETAIL_PATTERNS_RU.find(([pattern]) => pattern.test(text));
+const translateAuditText = (text, lang) => {
+  const patterns =
+    lang === "en"
+      ? AUDIT_DETAIL_PATTERNS_EN
+      : lang === "kz"
+        ? AUDIT_DETAIL_PATTERNS_KZ
+        : AUDIT_DETAIL_PATTERNS_RU;
+  const replacements =
+    lang === "en"
+      ? AUDIT_DETAIL_REPLACEMENTS_EN
+      : lang === "kz"
+        ? AUDIT_DETAIL_REPLACEMENTS_KZ
+        : AUDIT_DETAIL_REPLACEMENTS_RU;
+  const cleanups =
+    lang === "en"
+      ? AUDIT_DETAIL_CLEANUPS_EN
+      : lang === "kz"
+        ? AUDIT_DETAIL_CLEANUPS_KZ
+        : AUDIT_DETAIL_CLEANUPS_RU;
+
+  const patternMatch = patterns.find(([pattern]) => pattern.test(text));
   if (patternMatch) return text.replace(patternMatch[0], patternMatch[1]);
-  const translated = AUDIT_DETAIL_REPLACEMENTS_RU.reduce(
+  const translated = replacements.reduce(
     (result, [pattern, to]) => result.replace(pattern, to),
     text,
   );
-  return AUDIT_DETAIL_CLEANUPS_RU.reduce(
-    (result, [pattern, to]) => result.replace(pattern, to),
-    translated,
-  );
+  return cleanups.reduce((result, [pattern, to]) => result.replace(pattern, to), translated);
 };
 
 const formatAuditDetails = (details, lang) => {
@@ -292,7 +605,13 @@ const formatAuditDetails = (details, lang) => {
       text = Object.entries(parsed)
         .map(([key, value]) => {
           const label =
-            lang === "ru" ? AUDIT_JSON_KEY_LABELS_RU[key] || translateAuditTextRu(key) : key;
+            lang === "en"
+              ? AUDIT_JSON_KEY_LABELS_EN[key] || translateAuditText(key, lang)
+              : lang === "ru"
+                ? AUDIT_JSON_KEY_LABELS_RU[key] || translateAuditText(key, lang)
+                : lang === "kz"
+                  ? AUDIT_JSON_KEY_LABELS_KZ[key] || translateAuditText(key, lang)
+                  : key;
           return `${label}: ${formatAuditJsonValue(value, lang)}`;
         })
         .join("; ");
@@ -301,8 +620,8 @@ const formatAuditDetails = (details, lang) => {
     // Plain text audit details are expected too.
   }
 
-  if (lang !== "ru") return text;
-  return translateAuditTextRu(text);
+  if (lang !== "en" && lang !== "ru" && lang !== "kz") return text;
+  return translateAuditText(text, lang);
 };
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -683,7 +1002,7 @@ const SuperAdminPage = () => {
               label: featureLabel(feature.properties),
             }))
             .filter((item) => item.label)
-            .sort((a, b) => a.label.localeCompare(b.label, "uz")),
+            .sort((a, b) => a.label.localeCompare(b.label, lang === "kz" ? "kk" : lang)),
         );
       })
       .catch((error) => console.warn("Mahalla layer load error:", error))

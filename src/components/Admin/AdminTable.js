@@ -47,6 +47,8 @@ const getRegionLabel = (value, lang) => {
   return REGION_LABELS_RU[key] || value || "-";
 };
 
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+
 const AdminTable = ({
   rows,
   checked,
@@ -61,6 +63,7 @@ const AdminTable = ({
 }) => {
   const { lang } = useLanguage();
   const t = (key) => pageT(lang, key);
+  const locale = localeByLang[lang] || "uz-UZ";
   const isSuperAdmin = user?.role === "superadmin";
   const translateGender = (value) => {
     const normalized = String(value || "").toLowerCase();
@@ -70,16 +73,12 @@ const AdminTable = ({
   };
   const translateBmiStatus = (value) => {
     const normalized = String(value || "").toLowerCase();
-    if (normalized.includes("normal")) return lang === "ru" ? "Норма" : value;
-    if (normalized.includes("semizlik") || normalized.includes("obese")) {
-      return lang === "ru" ? "Ожирение" : value;
-    }
-    if (normalized.includes("ozg") || normalized.includes("underweight")) {
-      return lang === "ru" ? "Недостаточный вес" : value;
-    }
-    if (normalized.includes("ortiqcha") || normalized.includes("overweight")) {
-      return lang === "ru" ? "Избыточный вес" : value;
-    }
+    if (normalized.includes("normal")) return t("normal") || value;
+    if (normalized.includes("semizlik") || normalized.includes("obese")) return t("obese") || value;
+    if (normalized.includes("ozg") || normalized.includes("underweight"))
+      return t("underweight") || value;
+    if (normalized.includes("ortiqcha") || normalized.includes("overweight"))
+      return t("overweight") || value;
     return value || "-";
   };
 
@@ -232,7 +231,7 @@ const AdminTable = ({
                               </Typography>
                               {row.deleted_at && (
                                 <Typography variant="caption" display="block">
-                                  📅 {new Date(row.deleted_at).toLocaleString("uz-UZ")}
+                                  📅 {new Date(row.deleted_at).toLocaleString(locale)}
                                 </Typography>
                               )}
                             </Box>

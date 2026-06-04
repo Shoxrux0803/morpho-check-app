@@ -59,6 +59,28 @@ const translations = {
     step3Desc: "Tayyor professional hisobotni yuklab oling.",
     trustedBy: "Ishonch bildirgan hamkorlar",
     getStartedNow: "Hoziroq boshlang",
+    storyTitle: "Klinik tahlildan hududiy monitoringgacha",
+    storyDesc:
+      "MorphoCheck Pro o'lchovlarni tahlil qiladi, risk signallarini ajratadi va natijani hududlar kesimida tushunarli ko'rinishga olib keladi.",
+    storyStep1Eyebrow: "01 / Yig'ish",
+    storyStep1Title: "Ma'lumotlar bir joyga yig'iladi",
+    storyStep1Desc:
+      "Antropometrik o'lchovlar, hudud va yosh guruhlari klinik tahlilga tayyor holatga keladi.",
+    storyStep1Metric: "data signal",
+    storyStep2Eyebrow: "02 / Tahlil",
+    storyStep2Title: "WHO LMS va Z-score avtomatik ishlaydi",
+    storyStep2Desc:
+      "Tizim HAZ, BAZ va SDS ko'rsatkichlarini real vaqt rejimida hisoblab, risk signallarini ajratadi.",
+    storyStep2Metric: "analysis sync",
+    storyStep3Eyebrow: "03 / Xarita",
+    storyStep3Title: "Hududiy holat scroll bilan jonlanadi",
+    storyStep3Desc: "Xarita qatlami viloyatlar kesimida klinik monitoring signalini ko'rsatadi.",
+    storyStep3Metric: "regional layers",
+    storyStep4Eyebrow: "04 / Hisobot",
+    storyStep4Title: "Natija hisobotga aylanadi",
+    storyStep4Desc:
+      "Shifokor, admin va researcher uchun tayyor tahliliy ko'rinish va eksport yo'llari ochiladi.",
+    storyStep4Metric: "ready report",
 
     // InfoDetail
     backBtn: "Orqaga qaytish",
@@ -346,6 +368,28 @@ const translations = {
     step3Desc: "Скачайте готовый профессиональный отчет.",
     trustedBy: "Нам доверяют",
     getStartedNow: "Начать прямо сейчас",
+    storyTitle: "От клинического анализа до регионального мониторинга",
+    storyDesc:
+      "MorphoCheck Pro анализирует измерения, выделяет сигналы риска и показывает результаты по регионам в понятном виде.",
+    storyStep1Eyebrow: "01 / Сбор",
+    storyStep1Title: "Данные собираются в одном месте",
+    storyStep1Desc:
+      "Антропометрические измерения, регион и возрастные группы подготавливаются для клинического анализа.",
+    storyStep1Metric: "сигнал данных",
+    storyStep2Eyebrow: "02 / Анализ",
+    storyStep2Title: "WHO LMS и Z-score работают автоматически",
+    storyStep2Desc:
+      "Система рассчитывает HAZ, BAZ и SDS в реальном времени и выделяет сигналы риска.",
+    storyStep2Metric: "синхронизация",
+    storyStep3Eyebrow: "03 / Карта",
+    storyStep3Title: "Региональная картина оживает при прокрутке",
+    storyStep3Desc: "Слой карты показывает сигнал клинического мониторинга по областям.",
+    storyStep3Metric: "региональные слои",
+    storyStep4Eyebrow: "04 / Отчет",
+    storyStep4Title: "Результат превращается в отчет",
+    storyStep4Desc:
+      "Для врача, администратора и исследователя открываются готовые аналитические представления и экспорт.",
+    storyStep4Metric: "готовый отчет",
 
     backBtn: "Назад",
     infoTitle: "Медицина будущего",
@@ -630,6 +674,28 @@ const translations = {
     step3Desc: "Download your professional medical report.",
     trustedBy: "Trusted by organizations",
     getStartedNow: "Get started now",
+    storyTitle: "From clinical analysis to regional monitoring",
+    storyDesc:
+      "MorphoCheck Pro analyzes measurements, separates risk signals, and turns results into a clear regional view.",
+    storyStep1Eyebrow: "01 / Collect",
+    storyStep1Title: "Data comes together in one place",
+    storyStep1Desc:
+      "Anthropometric measurements, regions, and age groups become ready for clinical analysis.",
+    storyStep1Metric: "data signal",
+    storyStep2Eyebrow: "02 / Analyze",
+    storyStep2Title: "WHO LMS and Z-score run automatically",
+    storyStep2Desc:
+      "The system calculates HAZ, BAZ, and SDS in real time and separates risk signals.",
+    storyStep2Metric: "analysis sync",
+    storyStep3Eyebrow: "03 / Map",
+    storyStep3Title: "Regional status comes alive on scroll",
+    storyStep3Desc: "The map layer shows clinical monitoring signals by region.",
+    storyStep3Metric: "regional layers",
+    storyStep4Eyebrow: "04 / Report",
+    storyStep4Title: "Results become a report",
+    storyStep4Desc:
+      "Ready analytical views and export paths open for doctors, admins, and researchers.",
+    storyStep4Metric: "ready report",
 
     backBtn: "Go back",
     infoTitle: "Medicine of the Future",
@@ -904,6 +970,37 @@ const translations = {
       "PDF, DOCX және Excel форматтарындағы толық есептерді бірнеше секунд ішінде жүктеп алыңыз.",
     allRights: "Барлық құқықтар қорғалған.",
     downloadDocx: "Word жүктеп алу",
+    processTitle: "Қалай жұмыс істейді?",
+    step1Title: "Деректерді енгізу",
+    step1Desc: "Антропометриялық өлшемдерді жүйеге енгізіңіз.",
+    step2Title: "AI талдау",
+    step2Desc: "Жасанды интеллект деректерді бірнеше секундта талдайды.",
+    step3Title: "Есеп алу",
+    step3Desc: "Дайын кәсіби есепті жүктеп алыңыз.",
+    trustedBy: "Сенім білдірген серіктестер",
+    getStartedNow: "Қазір бастау",
+    storyTitle: "Клиникалық талдаудан аймақтық мониторингке дейін",
+    storyDesc:
+      "MorphoCheck Pro өлшемдерді талдайды, қауіп сигналдарын бөледі және нәтижені аймақтар бойынша түсінікті көрініске айналдырады.",
+    storyStep1Eyebrow: "01 / Жинау",
+    storyStep1Title: "Деректер бір жерде жиналады",
+    storyStep1Desc:
+      "Антропометриялық өлшемдер, аймақ және жас топтары клиникалық талдауға дайындалады.",
+    storyStep1Metric: "дерек сигналы",
+    storyStep2Eyebrow: "02 / Талдау",
+    storyStep2Title: "WHO LMS және Z-score автоматты жұмыс істейді",
+    storyStep2Desc:
+      "Жүйе HAZ, BAZ және SDS көрсеткіштерін нақты уақытта есептеп, қауіп сигналдарын бөледі.",
+    storyStep2Metric: "талдау синхроны",
+    storyStep3Eyebrow: "03 / Карта",
+    storyStep3Title: "Аймақтық жағдай scroll арқылы жанданады",
+    storyStep3Desc: "Карта қабаты облыстар бойынша клиникалық мониторинг сигналын көрсетеді.",
+    storyStep3Metric: "аймақтық қабаттар",
+    storyStep4Eyebrow: "04 / Есеп",
+    storyStep4Title: "Нәтиже есепке айналады",
+    storyStep4Desc:
+      "Дәрігер, admin және researcher үшін дайын талдамалық көрініс пен экспорт жолдары ашылады.",
+    storyStep4Metric: "дайын есеп",
 
     backBtn: "Артқа қайту",
     infoTitle: "Болашақ медицинасы",
@@ -1019,6 +1116,13 @@ const translations = {
     loading: "Жүктелуде...",
     pageNotFound: "Бет табылмады",
     pageNotFoundDesc: "Мекенжай қате немесе бет жылжытылған болуы мүмкін.",
+    errNameRequired: "Аты-жөні міндетті",
+    errRegionRequired: "Облыс міндетті",
+    errAge: "Жас 2-120 аралығында болуы керек",
+    errHeight: "Бой 50-250 см аралығында болуы керек",
+    errWeight: "Салмақ 3-300 кг аралығында болуы керек",
+    errChest: "Кеуде көлемі 50-200 см аралығында болуы керек",
+    errHead: "Бас айналымы 40-70 см аралығында болуы керек",
 
     // InputForm
     personalInfo: "Жеке мәліметтер",
@@ -1031,6 +1135,8 @@ const translations = {
     genderLabel: "Жынысы",
     male: "Ер",
     female: "Әйел",
+    boy: "Ұл бала",
+    girl: "Қыз бала",
     fatherHeightLabel: "Әкенің бойы",
     motherHeightLabel: "Ананың бойы",
     parentsPhoneLabel: "Ата-ана телефоны",

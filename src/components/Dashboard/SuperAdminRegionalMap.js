@@ -253,6 +253,77 @@ const MAP_I18N = {
     obese: "Obesity",
     coverage: "Coverage",
   },
+  kz: {
+    country: "Өзбекстан",
+    title: "Аймақтық талдау картасы",
+    subtitle:
+      "Облыс, аудан және махалла бойынша талдаулар, админдер және зерттеушілер жағдайын бақылаңыз.",
+    region: "Облыс",
+    district: "Аудан",
+    mahalla: "Махалла",
+    analyticsLoading: "Аналитика жүктелуде",
+    analyses: "Талдау",
+    admin: "Админ",
+    admins: "Админ",
+    researcher: "Зерттеуші",
+    nextLayer: "Келесі қабат",
+    area: "Аудан",
+    riskSignal: "Клиникалық қауіп сигналы",
+    scientificProfile: "Ғылыми клиникалық профиль",
+    clinicalIndexProfile: "Клиникалық индекс профилі",
+    clinicalIndexSub: "Нормаланған BMI, Z-score және қауіп көрсеткіштері",
+    bmiDistribution: "BMI таралуы",
+    regionSample: (count) => `Аймақ бойынша n=${count}`,
+    zBands: "BMI Z-score белдеулері",
+    zBandsSub: "WHO LMS бойынша клиникалық топтастыру",
+    analyticalIndicators: "Талдамалық индикаторлар",
+    activityStructure: "Белсенділік құрылымы",
+    operationalAnalysis: "Операциялық талдау",
+    contact: "Байланысу",
+    satelliteOn: "Google satellite картасын қосу",
+    satelliteOff: "Қалыпты аймақтық картаға қайту",
+    layerLoading: "Аймақтық қабат жүктелуде",
+    patientExists: "Пациент бар",
+    selectedBack: "Таңдалған аймаққа қайту",
+    coverageIndex: "Қамту индексі",
+    contactPoints: "Байланыс нүктелері",
+    riskRecords: "Қауіп жазбалары",
+    lowerLayer: "Төменгі қабат",
+    analysesShare: "Талдау үлесі",
+    adminActivity: "Админ белсенділігі",
+    researcherBase: "Зерттеуші базасы",
+    regionalDensity: "Аймақтық тығыздық",
+    role: "Кім екені",
+    userId: "User ID",
+    roleField: "Рөл",
+    email: "Email",
+    phone: "Телефон",
+    location: "Аймақ",
+    address: "Нақты мекенжай",
+    coordinate: "Координата",
+    status: "Күйі",
+    registered: "Тіркелген",
+    lastActivity: "Соңғы белсенділік",
+    todayEntries: "Бүгінгі жазбалар",
+    monthEntries: "Айлық жазбалар",
+    totalEntries: "Жалпы жазбалар",
+    avgTime: "Орташа уақыт",
+    mostActiveTime: "Ең белсенді уақыт",
+    regionMatch: "Аймақ сәйкестігі",
+    matched: "Сәйкес келді",
+    fallback: "Fallback нүкте",
+    notSpecified: "Көрсетілмеген",
+    regionNotSpecified: "Аймақ көрсетілмеген",
+    sameAreaPin: "Осы аймақтағы pin",
+    chatError: "Chat тек админ немесе зерттеуші user pinдері үшін ашылады",
+    chatOpened: (name) => `${name} арқылы chat ашылды`,
+    chatPrompt: "Chat терезесі арқылы админге немесе зерттеушіге жаза аласыз",
+    underweight: "Салмақ жетіспеушілігі",
+    normal: "Қалыпты",
+    overweight: "Артық салмақ",
+    obese: "Семіздік",
+    coverage: "Қамту",
+  },
 };
 
 const PATIENT_BOUNDARY_COLOR = "#16a34a";
@@ -367,12 +438,14 @@ const parseMaybeJson = (value) => {
   }
 };
 
-const formatArea = (value) => {
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+
+const formatArea = (value, locale = "uz-UZ") => {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return "-";
   const km2 = n / 1_000_000;
   const digits = km2 >= 100 ? 0 : km2 >= 10 ? 1 : 2;
-  return `${km2.toLocaleString("uz-UZ", {
+  return `${km2.toLocaleString(locale, {
     minimumFractionDigits: digits,
     maximumFractionDigits: digits,
   })} km²`;
@@ -841,6 +914,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const isDark = theme.palette.mode === "dark";
   const { lang } = useLanguage();
   const mt = MAP_I18N[lang] || MAP_I18N.uz;
+  const locale = localeByLang[lang] || "uz-UZ";
   const mapContainerRef = useRef(null);
   const mapInteractionRef = useRef(null);
   const svgRef = useRef(null);
@@ -2133,7 +2207,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const formatDateTime = (value) => {
     if (!value) return "";
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("uz-UZ");
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(locale);
   };
 
   const selectedPinDetails = useMemo(() => {
@@ -2825,7 +2899,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               <StatPill label={mt.nextLayer} value={childCount} color="#f59e0b" />
               <StatPill
                 label={mt.area}
-                value={formatArea(selectedAreaSquareMeters)}
+                value={formatArea(selectedAreaSquareMeters, locale)}
                 color="text.primary"
               />
             </Stack>

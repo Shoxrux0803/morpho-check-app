@@ -141,6 +141,55 @@ const ADMIN_DASH_I18N = {
       `Средний BMI (${bmi}) немного выше нормы. Рекомендуется усилить профилактические меры.`,
     insightGender: (male, female) => `Состав контингента: ${male}% мужчин и ${female}% женщин.`,
   },
+  kz: {
+    welcome: (name) => `Қош келдіңіз, ${name || "Админ"}`,
+    subtitle: "Клиникалық антропометрия бойынша жеке аналитика панелі",
+    desc: "Барлық енгізілген деректер талдауы. Нәтижелерді сұрыптау үшін сүзгілерді пайдаланыңыз.",
+    total: "Барлығы",
+    avgBmi: "Орташа BMI",
+    avgAge: "Орташа жас",
+    filtered: "Сүзгіленген күйде",
+    scientificInsights: "Ғылыми қорытындылар",
+    scientificInsightsSub: "Автоматты талдау нәтижелері",
+    noEnoughData: "Деректер жеткіліксіз...",
+    totalMine: "Мен енгізген барлығы",
+    allTime: "Барлық уақыт бойынша",
+    todayEntered: "Бүгін енгізілген",
+    todaySession: "Бүгінгі сеанс",
+    groupWide: "Топ бойынша",
+    weeklyGrowth: "Апталық өсім",
+    thisWeek: "осы аптада",
+    years: "жас",
+    riskRegions: "Қауіп ең көп шыққан аймақтар",
+    riskRegionsSub: "BMI немесе Z-score қауіп шегінен шыққан жазбалар",
+    from: "ішінен",
+    risk: "қауіп",
+    dailyDynamics: "Күндік динамика",
+    dailyDynamicsSub: "Соңғы 14 күндегі енгізілген талдаулар",
+    noResult: "Нәтиже табылмады",
+    entered: "Енгізілгендер",
+    genderDistribution: "Жыныс бойынша таралу",
+    genderDistributionSub: "Ер/әйел арақатынасы",
+    ageGroups: "Жас топтары",
+    ageGroupsSub: "Пациенттер жасы бойынша",
+    patients: "Пациенттер",
+    bmiStatus: "BMI жағдайы",
+    bmiStatusSub: "Денсаулық топтары бойынша",
+    unit: "дана",
+    footer: "Кәсіби аналитика жүйесі",
+    male: "Ерлер",
+    female: "Әйелдер",
+    unknown: "Белгісіз",
+    normal: "Қалыпты",
+    overweight: "Артық салмақ",
+    obese: "Семіздік",
+    underweight: "Салмақ жетіспеушілігі",
+    insightNormal: "Топтағы пациенттердің көпшілігі (60%+) қалыпты салмаққа ие, бұл оң көрсеткіш.",
+    insightRisk: "Назар аударыңыз: топта артық салмақ пен семіздік үлесі жоғары (40%+).",
+    insightBmi: (bmi) =>
+      `Орташа BMI (${bmi}) қалыптан сәл жоғары. Профилактикалық шараларды күшейту ұсынылады.`,
+    insightGender: (male, female) => `Контингент құрамы: ${male}% ерлер және ${female}% әйелдер.`,
+  },
 };
 
 const COLORS = {
@@ -156,6 +205,7 @@ const COLORS = {
 };
 
 const PIE_COLORS = ["#3b82f6", "#f43f5e", "#14b8a6"];
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",
@@ -315,6 +365,7 @@ export default function AdminDashboard({
   const isDark = theme.palette.mode === "dark";
   const { lang } = useLanguage();
   const t = ADMIN_DASH_I18N[lang] || ADMIN_DASH_I18N.uz;
+  const locale = localeByLang[lang] || "uz-UZ";
   const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
   // Derive statistics from loaded data (admin's own data)
@@ -598,8 +649,8 @@ export default function AdminDashboard({
             label={t.totalMine}
             value={
               stats
-                ? (stats.total_analyses?.toLocaleString("uz-UZ") ?? "0")
-                : totalCount.toLocaleString("uz-UZ")
+                ? (stats.total_analyses?.toLocaleString(locale) ?? "0")
+                : totalCount.toLocaleString(locale)
             }
             sub={t.allTime}
             icon={<PersonAdd fontSize="large" />}
@@ -881,7 +932,7 @@ export default function AdminDashboard({
 
       <Box mt={6} textAlign="center" pb={4}>
         <Typography variant="caption" color="text.secondary" sx={{ letterSpacing: 0.5 }}>
-          MORPHO CHECK PRO • {t.footer} • {new Date().toLocaleDateString("uz-UZ")}
+          MORPHO CHECK PRO • {t.footer} • {new Date().toLocaleDateString(locale)}
         </Typography>
       </Box>
     </Box>

@@ -347,7 +347,7 @@ export default function AdminPage() {
   const [viewRow, setViewRow] = useState(null);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [pdfLang, setPdfLang] = useState("uz");
+  const [pdfLang, setPdfLang] = useState(lang);
 
   // Filters
   // Unified Filters for both Table and Dashboard
@@ -813,7 +813,7 @@ export default function AdminPage() {
                 allChecked={raw.length > 0 && raw.every((r) => checked.has(r.id))}
                 setViewRow={setViewRow}
                 onEdit={(r) => setEditRow(r)}
-                formatDate={(d) => new Date(d).toLocaleDateString("uz-UZ")}
+                formatDate={(d) => new Date(d).toLocaleDateString(getDateLocale(lang))}
                 user={user}
               />
               <TablePagination
