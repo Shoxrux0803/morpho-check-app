@@ -28,6 +28,11 @@ KZ_BMI_CATEGORIES = {
 
 
 _KY_REPLACEMENTS = [
+    (r"Noma'?lum", "Белгисиз"),
+    (r"Ma'?lumot yo'?q", "Маалымат жок"),
+    (r"Toshkent shahri", "Ташкент шаары"),
+    (r"\bshahri\b", "шаары"),
+    (r"\bshahar\b", "шаар"),
     (r"Vazn yetishmovchiligi \(yaqqol\)", "Салмак жетишсиздиги (айкын)"),
     (r"Vazn yetishmovchiligi", "Салмак жетишсиздиги"),
     (r"Ortiqcha vazn", "Ашыкча салмак"),
@@ -115,6 +120,45 @@ _KZ_REPLACEMENTS = [
     (r"Күніне 5-6 рет аз порциямен тамақтаныңыз", "Күніне 5-6 рет шағын порциялармен тамақтаныңыз"),
 ]
 
+_RU_REPLACEMENTS = [
+    (r"Toshkent shahri", "город Ташкент"),
+    (r"\bToshkent\b", "Ташкент"),
+    (r"\bShayxontohur\b", "Шайхантахур"),
+    (r"\bshahri\b", "город"),
+    (r"\bshahar\b", "город"),
+    (r"Sportga yo'?naltirish \(taxminiy\)", "Спортивная ориентация (примерно)"),
+    (r"Qo'?shimcha yo'?nalishlar", "Дополнительные направления"),
+    (r"\bSabab\b", "Причина"),
+    (r"tana ko'?rsatkichlari muvozanatli", "показатели тела сбалансированы"),
+    (r"yengil vazn va nisbatan nozik tana tuzilishi", "лёгкий вес и относительно худощавое телосложение"),
+    (r"morfologik uyg'?unlik yaxshi", "морфологическая гармония хорошая"),
+    (
+        r"Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin",
+        "При окончательном выборе следует учитывать интерес ребёнка, оценку тренера и разрешение врача",
+    ),
+    (r"yengil atletika", "лёгкая атлетика"),
+    (r"futbol", "футбол"),
+    (r"gimnastika", "гимнастика"),
+    (r"suzish", "плавание"),
+]
+
+_EN_REPLACEMENTS = [
+    (r"Noma'?lum", "Unknown"),
+    (r"Ma'?lumot yo'?q", "No data"),
+    (r"Toshkent shahri", "Tashkent city"),
+    (r"\bToshkent\b", "Tashkent"),
+    (r"\bShayxontohur\b", "Shaykhantakhur"),
+    (r"\bshahri\b", "city"),
+    (r"\bshahar\b", "city"),
+    (r"\bastenik\b", "Asthenic"),
+    (r"\bnormostenik\b", "Normosthenic"),
+    (r"\bgiperstenik\b", "Hypersthenic"),
+    (r"\bmos_emas\b", "Does not match"),
+    (r"\bmos\b", "Matches"),
+    (r"\bmavjud\b", "Present"),
+    (r"\byoq\b", "Absent"),
+]
+
 _ICON_PREFIX_RE = re.compile(
     r"^[\s\u200d\ufe0f]*(?:[👨⚕🍎🏃🏥📝•]|рџ\S*|пёЏ|вЂЌ)+\s*",
     re.IGNORECASE,
@@ -170,7 +214,20 @@ def ru_text(value: Any, lang: str = "uz") -> str:
         (r"Noma'?lum", "Неизвестно"),
         (r"Ma'?lumot yo'?q", "Нет данных"),
     ]
+    replacements.extend(_RU_REPLACEMENTS)
     for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
+
+def en_text(value: Any, lang: str = "uz") -> str:
+    if value is None:
+        return ""
+    text = str(value)
+    if lang != "en" or not text:
+        return text
+    text = _strip_leading_icons(_ICON_PREFIX_RE.sub("", _fix_mojibake(text)))
+    for pattern, replacement in _EN_REPLACEMENTS:
         text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
     return text
 
@@ -182,4 +239,6 @@ def report_text(value: Any, lang: str = "uz") -> str:
         return kz_text(value, lang)
     if lang == "ru":
         return ru_text(value, lang)
+    if lang == "en":
+        return en_text(value, lang)
     return _strip_leading_icons("" if value is None else str(value))

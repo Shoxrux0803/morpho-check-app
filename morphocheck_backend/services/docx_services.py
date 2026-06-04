@@ -10,12 +10,12 @@ import re
 from docx import Document
 from docx.shared import Pt, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_ROW_HEIGHT_RULE
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from io import BytesIO
 from utils.translit import lat2cyr
-from services.ky_localization import ky_text
+from services.ky_localization import ky_text, report_text
 
 __all__ = ["generate_docx_report"]
 
@@ -193,6 +193,15 @@ DOCX_LABELS = {
         "consultant": "Консультант",
         "sig_date": "Подпись / Дата",
         "doctor_parent": "Специалист / Родитель",
+        "astenik": "Астеник",
+        "normostenik": "Нормостеник",
+        "giperstenik": "Гиперстеник",
+        "mos": "Соответствует",
+        "mos_emas": "Не соответствует",
+        "mavjud": "Есть",
+        "yoq": "Нет",
+        "cm": "см",
+        "kg": "кг",
     },
     "en": {
         "title_child": "BIOIMPEDANCE + ANTHROPOMETRIC EXAMINATION FORM\nFOR PRE-SCHOOL CHILDREN",
@@ -277,6 +286,15 @@ DOCX_LABELS = {
         "consultant": "Consultant",
         "sig_date": "Signature / Date",
         "doctor_parent": "Specialist / Parent",
+        "astenik": "Asthenic",
+        "normostenik": "Normosthenic",
+        "giperstenik": "Hypersthenic",
+        "mos": "Matches",
+        "mos_emas": "Does not match",
+        "mavjud": "Present",
+        "yoq": "Absent",
+        "cm": "sm",
+        "kg": "kg",
     },
     "kz": {
         "title_child": "МЕКТЕПКЕ ДЕЙІНГІ ЖАСТАҒЫ БАЛАЛАРҒА АРНАЛҒАН\nБИОИМПЕДАНС + АНТРОПОМЕТРИЯЛЫҚ ТЕКСЕРУ АНКЕТАСЫ",
@@ -728,16 +746,26 @@ def _centile_eval(centile_str: str, lang: str = "uz") -> str:
 # Word formatlashtirish yordamchi funksiyalari
 # ---------------------------------------------------------------------------
 
+REPORT_HEADER_FILL = "4AACC0"
+REPORT_INDEX_FILL = "46A6BA"
+REPORT_ROW_FILL_A = "B7DDE8"
+REPORT_ROW_FILL_B = "DDEFF4"
+REPORT_BORDER = "FFFFFF"
+REPORT_HEADER_TEXT = "FFFFFF"
+REPORT_BODY_TEXT = "111111"
+
+
 def _set_cell_font(cell, text: str, bold: bool = False, size: int = 8,
-                   align=WD_ALIGN_PARAGRAPH.LEFT):
+                   align=WD_ALIGN_PARAGRAPH.LEFT, color: str = REPORT_BODY_TEXT):
     cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
     para = cell.paragraphs[0]
     para.alignment = align
     para.clear()
-    run = para.add_run(text)
+    run = para.add_run("" if text is None else str(text))
     run.bold = bold
-    run.font.size = Pt(size)
+    run.font.size = Pt(min(size, 7.5))
     run.font.name = "Times New Roman"
+    run.font.color.rgb = _hex_to_rgb(color)
     # Layout optimization: reduce line spacing within cells
     para.paragraph_format.line_spacing = 1.0
     para.paragraph_format.space_before = Pt(0)
@@ -752,11 +780,85 @@ def _set_col_width(table, col_idx: int, width_cm: float):
 def _shade_cell(cell, fill_hex: str = "D9D9D9"):
     tc = cell._tc
     tcPr = tc.get_or_add_tcPr()
+    for existing in tcPr.findall(qn("w:shd")):
+        tcPr.remove(existing)
     shd = OxmlElement("w:shd")
     shd.set(qn("w:val"), "clear")
     shd.set(qn("w:color"), "auto")
     shd.set(qn("w:fill"), fill_hex)
     tcPr.append(shd)
+
+
+def _hex_to_rgb(hex_color: str):
+    from docx.shared import RGBColor
+
+    hex_color = (hex_color or REPORT_BODY_TEXT).lstrip("#")
+    return RGBColor(
+        int(hex_color[0:2], 16),
+        int(hex_color[2:4], 16),
+        int(hex_color[4:6], 16),
+    )
+
+
+def _set_cell_borders(cell, color: str = REPORT_BORDER, size: str = "6"):
+    tc_pr = cell._tc.get_or_add_tcPr()
+    borders = tc_pr.first_child_found_in("w:tcBorders")
+    if borders is None:
+        borders = OxmlElement("w:tcBorders")
+        tc_pr.append(borders)
+    for edge in ("top", "left", "bottom", "right"):
+        tag = f"w:{edge}"
+        element = borders.find(qn(tag))
+        if element is None:
+            element = OxmlElement(tag)
+            borders.append(element)
+        element.set(qn("w:val"), "single")
+        element.set(qn("w:sz"), size)
+        element.set(qn("w:space"), "0")
+        element.set(qn("w:color"), color)
+
+
+def _set_cell_margins(cell, top: int = 10, start: int = 45, bottom: int = 10, end: int = 45):
+    tc_pr = cell._tc.get_or_add_tcPr()
+    margins = tc_pr.first_child_found_in("w:tcMar")
+    if margins is None:
+        margins = OxmlElement("w:tcMar")
+        tc_pr.append(margins)
+    for margin, value in (("top", top), ("start", start), ("bottom", bottom), ("end", end)):
+        element = margins.find(qn(f"w:{margin}"))
+        if element is None:
+            element = OxmlElement(f"w:{margin}")
+            margins.append(element)
+        element.set(qn("w:w"), str(value))
+        element.set(qn("w:type"), "dxa")
+
+
+def _set_cell_text_color(cell, color: str, bold=None):
+    for paragraph in cell.paragraphs:
+        for run in paragraph.runs:
+            run.font.color.rgb = _hex_to_rgb(color)
+            if bold is not None:
+                run.bold = bold
+
+
+def _style_report_table(table, number_cols=(0,), header_rows: int = 1):
+    for row_idx, row in enumerate(table.rows):
+        row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
+        row.height = Cm(0.27)
+        for col_idx, cell in enumerate(row.cells):
+            _set_cell_borders(cell)
+            _set_cell_margins(cell)
+            if row_idx < header_rows:
+                _shade_cell(cell, REPORT_HEADER_FILL)
+                _set_cell_text_color(cell, REPORT_HEADER_TEXT, bold=True)
+                continue
+            if col_idx in number_cols:
+                _shade_cell(cell, REPORT_INDEX_FILL)
+                _set_cell_text_color(cell, REPORT_HEADER_TEXT)
+            else:
+                _shade_cell(cell, REPORT_ROW_FILL_A if row_idx % 2 else REPORT_ROW_FILL_B)
+                _set_cell_text_color(cell, REPORT_BODY_TEXT)
+
 
 def _set_table_full_width(table):
     table.autofit = True
@@ -777,7 +879,7 @@ def _add_bold_centered_title(doc, text: str, size: int = 11) -> None:
     para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = para.add_run(text)
     run.bold = True
-    run.font.size = Pt(size)
+    run.font.size = Pt(min(size, 9.5))
     run.font.name = "Times New Roman"
 
 
@@ -786,10 +888,10 @@ def _section_head_paragraph(doc, text: str) -> None:
     para.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = para.add_run(text)
     run.bold = True
-    run.font.size = Pt(10)
+    run.font.size = Pt(8)
     run.font.name = "Times New Roman"
-    para.paragraph_format.space_before = Pt(1)
-    para.paragraph_format.space_after = Pt(1)
+    para.paragraph_format.space_before = Pt(0)
+    para.paragraph_format.space_after = Pt(0)
 
 
 def _checkbox(checked: bool) -> str:
@@ -820,10 +922,11 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     labels = DOCX_LABELS.get(lang, DOCX_LABELS["uz"])
 
     def LP(text):
-        """Transliteratsiya faqat uz tili uchun kerak bo'lsa."""
-        if lang == "uz":
-            return lat2cyr(text)
-        return text
+        """Transliteratsiya kirill yozuvidagi hisobotlar uchun kerak bo'lsa."""
+        localized = report_text(text, lang)
+        if lang in ("uz", "ru", "ky"):
+            return lat2cyr(localized)
+        return localized
 
     def L(key):
         return labels.get(key, key)
@@ -831,14 +934,14 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     doc = Document()
 
     for section in doc.sections:
-        section.top_margin    = Cm(0.7)
-        section.bottom_margin = Cm(0.7)
-        section.left_margin   = Cm(1.2)
-        section.right_margin  = Cm(0.7)
+        section.top_margin    = Cm(0.45)
+        section.bottom_margin = Cm(0.45)
+        section.left_margin   = Cm(0.8)
+        section.right_margin  = Cm(0.6)
 
     style = doc.styles["Normal"]
     style.font.name = "Times New Roman"
-    style.font.size = Pt(9)
+    style.font.size = Pt(8)
 
     # O'zgaruvchilar - Common fields extraction moved here to avoid NameError
     exam_date  = _val(data, "examination_date")
@@ -877,7 +980,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _add_bold_centered_title(
         doc,
         title_text,
-        size=11,
+        size=10,
     )
 
     # -----------------------------------------------------------------------
@@ -939,6 +1042,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _set_col_width(t1, 0, 1.0)
     _set_col_width(t1, 1, 6.5)
     _set_col_width(t1, 2, 8.5)
+    _style_report_table(t1)
 
     # -----------------------------------------------------------------------
     # II. АСОСИЙ АНТРОПОМЕТРИК КЎРСАТКИЧЛАР
@@ -994,6 +1098,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _set_col_width(t2, 4, 4.2)
     _set_col_width(t2, 5, 0.8)
     _set_col_width(t2, 6, 2.0)
+    _style_report_table(t2)
 
     # -----------------------------------------------------------------------
     # III. ҲИСОБЛАНГАН АНТРОПОМЕТРИК ИНДЕКСЛАР
@@ -1075,6 +1180,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _set_col_width(t3, 1, 7.0)
     _set_col_width(t3, 2, 2.0)
     _set_col_width(t3, 3, 5.2)
+    _style_report_table(t3)
 
     # -----------------------------------------------------------------------
     # IV. БИОИМПЕДАНС ТАҲЛИЛИ НАТИЖАЛАРИ
@@ -1114,6 +1220,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _set_col_width(t4, 2, 1.2)
     _set_col_width(t4, 3, 3.5)
     _set_col_width(t4, 4, 3.5)
+    _style_report_table(t4)
 
     # -----------------------------------------------------------------------
     # V. МОРФОЛОГИК ВА БИОЛОГИК БАҲОЛАШ
@@ -1172,6 +1279,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _set_col_width(t5, 0, 0.8)
     _set_col_width(t5, 1, 7.0)
     _set_col_width(t5, 2, 7.2)
+    _style_report_table(t5)
 
 
     # -----------------------------------------------------------------------
@@ -1201,6 +1309,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     _set_col_width(t7, 0, 9.5)
     _set_col_width(t7, 1, 5.5)
+    _style_report_table(t7, number_cols=())
 
     # -----------------------------------------------------------------------
     # Bufferga saqlash
