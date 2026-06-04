@@ -1,5 +1,6 @@
 import math
 from typing import Dict, Any
+from services.ky_localization import ky_text
 
 # ─────────────────────────────────────────────
 # 4-tilli matn lug'ati
@@ -329,7 +330,7 @@ def _t(key: str, lang: str, **kwargs) -> str:
             text = text.format(**kwargs)
         except KeyError:
             pass
-    return text
+    return ky_text(text, lang)
 
 
 def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
@@ -464,6 +465,7 @@ def get_corridor_from_z(z: float, lang: str) -> str:
         "uz": ["Juda kam vazn (<3-sentil)", "Kam vazn (3-15-sentil)", "Me'yor (15-85-sentil)", "Ortiqcha vazn (85-97-sentil)", "Semizlik (>97-sentil)"],
         "ru": ["Крайний дефицит массы (<3-центиль)", "Дефицит массы (3-15-центиль)", "Норма (15-85-центиль)", "Избыточная масса (85-97-центиль)", "Ожирение (>97-центиль)"],
         "en": ["Severe underweight (<3rd centile)", "Underweight (3rd-15th centile)", "Normal (15th-85th centile)", "Overweight (85th-97th centile)", "Obesity (>97th centile)"],
+        "ky": ["Өтө төмөн салмак (<3-сентиль)", "Төмөн салмак (3-15-сентиль)", "Норма (15-85-сентиль)", "Ашыкча салмак (85-97-сентиль)", "Семирүү (>97-сентиль)"],
         "kz": ["Салмақтың өте төмендігі (<3-центиль)", "Салмақ тапшылығы (3-15-центиль)", "Норма (15-85-центиль)", "Артық салмақ (85-97-центиль)", "Семіздік (>97-центиль)"]
     }
     texts = corridors.get(lang, corridors["uz"])
@@ -495,13 +497,13 @@ def calculate_detailed_indices(
             
             val = all_settings.get(s_key)
             if val and isinstance(val, dict):
-                text = val.get(l, val.get("uz", key))
+                text = val.get(l) or val.get("uz", key)
                 if kwargs:
                     try:
                         text = text.format(**kwargs)
                     except (KeyError, IndexError, ValueError) as exc:
                         text = f"{text} (format xatosi: {exc})"
-                return text
+                return ky_text(text, l)
         
         # Fallback to hardcoded _T
         return _t(key, l, **kwargs)

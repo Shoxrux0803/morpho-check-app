@@ -1,4 +1,4 @@
-﻿# morphocheck_backend/services/analyze_service.py
+# morphocheck_backend/services/analyze_service.py
 import datetime
 import logging
 import os
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.userdata import PatientAnalysis
 from services.indices_service import calculate_detailed_indices
+from services.ky_localization import KY_BMI_CATEGORIES, KZ_BMI_CATEGORIES, report_text
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -431,33 +432,38 @@ def _split_region_and_district(region: Optional[str], district: Optional[str]) -
 _BMI_CAT_I18N = {
     "v_low": {
         "uz": "Vazn yetishmovchiligi (yaqqol)",
+        "ky": KY_BMI_CATEGORIES["v_low"],
+        "kz": KZ_BMI_CATEGORIES["v_low"],
         "ru": "Р’С‹СЂР°Р¶РµРЅРЅС‹Р№ РґРµС„РёС†РёС‚ РјР°СЃСЃС‹",
         "en": "Severe underweight",
-        "kz": "РђР№Т›С‹РЅ СЃР°Р»РјР°Т› С‚Р°РїС€С‹Р»С‹Т“С‹",
     },
     "low": {
         "uz": "Vazn yetishmovchiligi",
+        "ky": KY_BMI_CATEGORIES["low"],
+        "kz": KZ_BMI_CATEGORIES["low"],
         "ru": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅР°СЏ РјР°СЃСЃР° С‚РµР»Р°",
         "en": "Underweight",
-        "kz": "РЎР°Р»РјР°Т› С‚Р°РїС€С‹Р»С‹Т“С‹",
     },
     "normal": {
         "uz": "Me'yor",
+        "ky": KY_BMI_CATEGORIES["normal"],
+        "kz": KZ_BMI_CATEGORIES["normal"],
         "ru": "РќРѕСЂРјР°",
         "en": "Normal",
-        "kz": "ТљР°Р»С‹РїС‚С‹",
     },
     "overweight": {
         "uz": "Ortiqcha vazn",
+        "ky": KY_BMI_CATEGORIES["overweight"],
+        "kz": KZ_BMI_CATEGORIES["overweight"],
         "ru": "РР·Р±С‹С‚РѕС‡РЅР°СЏ РјР°СЃСЃР° С‚РµР»Р°",
         "en": "Overweight",
-        "kz": "РђСЂС‚С‹Т› СЃР°Р»РјР°Т›",
     },
     "obese": {
         "uz": "Semizlik",
+        "ky": KY_BMI_CATEGORIES["obese"],
+        "kz": KZ_BMI_CATEGORIES["obese"],
         "ru": "РћР¶РёСЂРµРЅРёРµ",
         "en": "Obesity",
-        "kz": "РЎРµРјС–Р·РґС–Рє",
     }
 }
 
@@ -468,12 +474,19 @@ def _get_bmi_cat(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
     setting_key = f"bmi_cat_{key}"
     val = all_settings.get(setting_key, {})
     if val and isinstance(val, dict):
-        result = val.get(lang, val.get("uz", ""))
+        result = val.get(lang)
         if result:
-            return result
+            return report_text(result, lang)
+        if lang == "ky":
+            result = _BMI_CAT_I18N.get(key, {}).get("ky", "")
+            if result:
+                return result
+        result = val.get("uz", "")
+        if result:
+            return report_text(result, lang)
     # Fallback to built-in translations
     built_in = _BMI_CAT_I18N.get(key, {})
-    return built_in.get(lang, built_in.get("uz", key))
+    return report_text(built_in.get(lang, built_in.get("uz", key)), lang)
 
 
 # в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
@@ -581,15 +594,19 @@ def _ai(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
     val = all_settings.get(setting_key, {})
     
     # 1. Database settings (override)
-    res = val.get(lang) or val.get("uz")
+    res = val.get(lang)
+    if not res:
+        res = val.get("uz")
     if res:
-        return _clean_advice_text(res)
+        return report_text(_clean_advice_text(res), lang)
         
     # 2. Local dictionary fallback
     local_val = _ADVICE_I18N.get(key, {})
-    res = local_val.get(lang) or local_val.get("uz")
+    res = local_val.get(lang)
+    if not res:
+        res = local_val.get("uz")
     if res:
-        return _clean_advice_text(res)
+        return report_text(_clean_advice_text(res), lang)
         
     # 3. Final fallback to key itself
     return key
@@ -626,7 +643,29 @@ _SPORT_I18N = {
             "Sabab: {reasons}. Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin."
         ),
     },
-    "en": {
+    "kz": {
+        "sports": {
+            "swimming": "жүзу",
+            "athletics": "жеңіл атлетика",
+            "gymnastics": "гимнастика",
+            "football": "футбол",
+            "wrestling": "күрес",
+            "basketball": "баскетбол",
+            "cycling": "велоспорт",
+        },
+        "balanced": "дене көрсеткіштері теңгерімді",
+        "tall": "бой көрсеткіші салыстырмалы түрде жоғары",
+        "compact": "ықшам әрі ширақ дене бітімі",
+        "lean": "салмағы жеңіл және дене бітімі салыстырмалы түрде нәзік",
+        "high_bmi": "салмақ/BMI жоғары болғандықтан буындарға жеңілірек жүктеме қолайлы",
+        "strong": "күш және тірек-бұлшықет мүмкіндіктері жақсы дамуы мүмкін",
+        "harmony": "морфологиялық үйлесімділік жақсы",
+        "endurance": "бейімделу көрсеткіштері төзімділік жаттығуларына сәйкес",
+        "template": (
+            "Спортқа бағыттау (шамамен): {primary}. Қосымша бағыттар: {secondary}. "
+            "Себебі: {reasons}. Соңғы таңдауда баланың қызығушылығы, жаттықтырушы бағасы және дәрігер рұқсаты ескерілсін."
+        ),
+    },    "en": {
         "sports": {
             "swimming": "swimming",
             "athletics": "athletics",

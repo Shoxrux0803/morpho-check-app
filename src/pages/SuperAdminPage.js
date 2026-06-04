@@ -90,6 +90,7 @@ const PAGE_LABELS = {
   ru: { scientificAnalysis: "Научный анализ" },
   en: { scientificAnalysis: "Scientific Analysis" },
   kz: { scientificAnalysis: "Ғылыми талдау" },
+  ky: { scientificAnalysis: "Илимий талдоо" },
 };
 
 const RESEARCH_TYPE_OPTIONS = ["PhD", "DSc", "Magistrlik", "Grant loyihasi"];
@@ -161,6 +162,28 @@ const AUDIT_ACTION_LABELS = {
     export: "Экспорт",
     exported: "Экспортталды",
   },
+  ky: {
+    create: "Түзүү",
+    created: "Түзүлдү",
+    update: "Жаңыртуу",
+    updated: "Жаңыртылды",
+    delete: "Өчүрүү",
+    deleted: "Өчүрүлдү",
+    restore: "Калыбына келтирүү",
+    restored: "Калыбына келтирилди",
+    login: "Кирүү",
+    logout: "Чыгуу",
+    backup: "Камдык көчүрмө",
+    clear: "Тазалоо",
+    hard_delete: "Толук өчүрүү",
+    soft_delete: "Себетке жөнөтүү",
+    delete_hard: "Толук өчүрүү",
+    delete_soft: "Себетке жөнөтүү",
+    download: "Жүктөө",
+    downloaded: "Жүктөлдү",
+    export: "Экспорт",
+    exported: "Экспорттолду",
+  },
 };
 
 const AUDIT_TARGET_LABELS_RU = {
@@ -193,6 +216,15 @@ const AUDIT_TARGET_LABELS_KZ = {
   DOCX: "DOCX құжат",
 };
 
+const AUDIT_TARGET_LABELS_KY = {
+  Analysis: "Талдоо",
+  PatientAnalysis: "Бейтап талдоосу",
+  User: "Колдонуучу",
+  AuditLog: "Аудит журналы",
+  Backup: "Камдык көчүрмө",
+  PDF: "PDF отчет",
+  DOCX: "DOCX документ",
+};
 const AUDIT_JSON_KEY_LABELS_RU = {
   action: "Действие",
   target_type: "Тип объекта",
@@ -247,6 +279,23 @@ const AUDIT_JSON_KEY_LABELS_KZ = {
   count: "Саны",
 };
 
+const AUDIT_JSON_KEY_LABELS_KY = {
+  action: "Аракет",
+  target_type: "Объект түрү",
+  target_id: "Объект ID",
+  details: "Тавсиф",
+  user_id: "Колдонуучу ID",
+  user_name: "Колдонуучу",
+  user_email: "Колдонуучу email",
+  name: "Аты",
+  role: "Роль",
+  email: "Email",
+  old: "Мурун",
+  new: "Кийин",
+  changes: "Өзгөрүүлөр",
+  ids: "ID",
+  count: "Саны",
+};
 const AUDIT_DETAIL_PATTERNS_RU = [
   [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Новый анализ создан: $2"],
   [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Новый пользователь создан: $1"],
@@ -541,6 +590,67 @@ const AUDIT_DETAIL_CLEANUPS_KZ = [
   [/\s+:/g, ":"],
 ];
 
+const AUDIT_DETAIL_PATTERNS_KY = [
+  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Жаңы талдоо түзүлдү: $2"],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Жаңы колдонуучу түзүлдү: $1"],
+  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "Колдонуучунун маалыматы жаңыртылды: $1"],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "Колдонуучу өчүрүлдү: $1"],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "Колдонуучу калыбына келтирилди: $1"],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "Колдонуучу системага кирди: $1"],
+  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 талдоо себетке жөнөтүлдү: $2"],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    "Аудит журналы тазаланды: баары ($1 жазуу)",
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    "Аудит журналы тазаланды: $1 ($2 жазуу)",
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Камдык көчүрмө түзүлдү: $1"],
+  [
+    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
+    "Камдык көчүрмө толук калыбына келтирилди (алмаштыруу): $1",
+  ],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Камдык көчүрмө өчүрүлдү: $1"],
+  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Бейтап отчету (PDF) жүктөлдү: $1"],
+  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Бейтап анкетасы (DOCX) жүктөлдү: $1"],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_KY = [
+  [/\bYangi\b/gi, "Жаңы"],
+  [/\bfoydalanuvchi\b/gi, "колдонуучу"],
+  [/\bFoydalanuvchi\b/g, "Колдонуучу"],
+  [/\bma'?lumotlari\b/gi, "маалыматы"],
+  [/\bma'?lumotlar\b/gi, "маалыматтар"],
+  [/\btahlil\b/gi, "талдоо"],
+  [/\bTahlil\b/g, "Талдоо"],
+  [/\bBemor hisoboti\b/g, "Бейтап отчету"],
+  [/\bBemor anketasi\b/g, "Бейтап анкетасы"],
+  [/\bBemor\b/g, "Бейтап"],
+  [/\bAdmin\b/g, "Админ"],
+  [/\bIzlanuvchi\b/g, "Изилдөөчү"],
+  [/\bResearcher\b/g, "Изилдөөчү"],
+  [/\byaratildi\b/gi, "түзүлдү"],
+  [/\byangilandi\b/gi, "жаңыртылды"],
+  [/\btiklandi\b/gi, "калыбына келтирилди"],
+  [/\bo'?chirildi\b/gi, "өчүрүлдү"],
+  [/\byuklab olindi\b/gi, "жүктөлдү"],
+  [/\bsavatga yuborildi\b/gi, "себетке жөнөтүлдү"],
+  [/\bsavatdan\b/gi, "себеттен"],
+  [/\bbutunlay\b/gi, "толук"],
+  [/\bBarchasi\b/g, "Баары"],
+  [/\bta yozuv\b/gi, "жазуу"],
+  [/\bZaxira nusxasi\b/g, "Камдык көчүрмө"],
+  [/\bzaxira nusxasi\b/gi, "камдык көчүрмө"],
+  [/\bZaxira\b/g, "Камдык көчүрмө"],
+  [/\bzaxira\b/gi, "камдык көчүрмө"],
+  [/\bfayl\b/gi, "файл"],
+  [/\bO'?zgarishlar\b/gi, "Өзгөрүүлөр"],
+  [/\bAlmashtirish\b/gi, "алмаштыруу"],
+  [/\btizimga kirdi\b/gi, "системага кирди"],
+];
+
+const AUDIT_DETAIL_CLEANUPS_KY = [[/\s+:/g, ":"]];
 const formatAuditAction = (action, lang) => {
   const value = String(action || "-");
   const labels = AUDIT_ACTION_LABELS[lang];
@@ -555,6 +665,7 @@ const formatAuditTarget = (targetType, lang) => {
   if (lang === "en") return AUDIT_TARGET_LABELS_EN[value] || translateAuditText(value, lang);
   if (lang === "ru") return AUDIT_TARGET_LABELS_RU[value] || translateAuditText(value, lang);
   if (lang === "kz") return AUDIT_TARGET_LABELS_KZ[value] || translateAuditText(value, lang);
+  if (lang === "ky") return AUDIT_TARGET_LABELS_KY[value] || translateAuditText(value, lang);
   return value;
 };
 
@@ -563,28 +674,36 @@ const formatAuditJsonValue = (value, lang) => {
   if (Array.isArray(value)) return value.map((item) => formatAuditJsonValue(item, lang)).join(", ");
   if (typeof value === "object") return formatAuditDetails(value, lang);
   const text = String(value);
-  return lang === "en" || lang === "ru" || lang === "kz" ? translateAuditText(text, lang) : text;
+  return lang === "en" || lang === "ru" || lang === "kz" || lang === "ky"
+    ? translateAuditText(text, lang)
+    : text;
 };
 
 const translateAuditText = (text, lang) => {
   const patterns =
     lang === "en"
       ? AUDIT_DETAIL_PATTERNS_EN
-      : lang === "kz"
-        ? AUDIT_DETAIL_PATTERNS_KZ
-        : AUDIT_DETAIL_PATTERNS_RU;
+      : lang === "ky"
+        ? AUDIT_DETAIL_PATTERNS_KY
+        : lang === "kz"
+          ? AUDIT_DETAIL_PATTERNS_KZ
+          : AUDIT_DETAIL_PATTERNS_RU;
   const replacements =
     lang === "en"
       ? AUDIT_DETAIL_REPLACEMENTS_EN
-      : lang === "kz"
-        ? AUDIT_DETAIL_REPLACEMENTS_KZ
-        : AUDIT_DETAIL_REPLACEMENTS_RU;
+      : lang === "ky"
+        ? AUDIT_DETAIL_REPLACEMENTS_KY
+        : lang === "kz"
+          ? AUDIT_DETAIL_REPLACEMENTS_KZ
+          : AUDIT_DETAIL_REPLACEMENTS_RU;
   const cleanups =
     lang === "en"
       ? AUDIT_DETAIL_CLEANUPS_EN
-      : lang === "kz"
-        ? AUDIT_DETAIL_CLEANUPS_KZ
-        : AUDIT_DETAIL_CLEANUPS_RU;
+      : lang === "ky"
+        ? AUDIT_DETAIL_CLEANUPS_KY
+        : lang === "kz"
+          ? AUDIT_DETAIL_CLEANUPS_KZ
+          : AUDIT_DETAIL_CLEANUPS_RU;
 
   const patternMatch = patterns.find(([pattern]) => pattern.test(text));
   if (patternMatch) return text.replace(patternMatch[0], patternMatch[1]);
@@ -611,7 +730,9 @@ const formatAuditDetails = (details, lang) => {
                 ? AUDIT_JSON_KEY_LABELS_RU[key] || translateAuditText(key, lang)
                 : lang === "kz"
                   ? AUDIT_JSON_KEY_LABELS_KZ[key] || translateAuditText(key, lang)
-                  : key;
+                  : lang === "ky"
+                    ? AUDIT_JSON_KEY_LABELS_KY[key] || translateAuditText(key, lang)
+                    : key;
           return `${label}: ${formatAuditJsonValue(value, lang)}`;
         })
         .join("; ");
@@ -620,7 +741,7 @@ const formatAuditDetails = (details, lang) => {
     // Plain text audit details are expected too.
   }
 
-  if (lang !== "en" && lang !== "ru" && lang !== "kz") return text;
+  if (lang !== "en" && lang !== "ru" && lang !== "kz" && lang !== "ky") return text;
   return translateAuditText(text, lang);
 };
 

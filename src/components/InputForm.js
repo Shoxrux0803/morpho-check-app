@@ -728,12 +728,12 @@ export default function InputForm({
                       SelectProps={selectDisplayProps(t("selectLabel"))}
                       sx={inputSx}
                     >
-                      {!district && <MenuItem value="">Avval tumanni tanlang</MenuItem>}
+                      {!district && <MenuItem value="">{t("errSelectDistrictFirst")}</MenuItem>}
                       {district && mahallaLoading && (
-                        <MenuItem value="">Mahallalar yuklanmoqda...</MenuItem>
+                        <MenuItem value="">{t("mahallasLoading")}</MenuItem>
                       )}
                       {district && !mahallaLoading && mahallaOptions.length === 0 && (
-                        <MenuItem value="">Mahalla ro'yxati topilmadi</MenuItem>
+                        <MenuItem value="">{t("mahallaListNotFound")}</MenuItem>
                       )}
                       {!hasSelectedMahallaOption && (
                         <MenuItem value={mahallaValue}>{mahallaValue}</MenuItem>

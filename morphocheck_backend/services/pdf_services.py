@@ -10,6 +10,8 @@ from reportlab.graphics.barcode.qr import QrCodeWidget
 from io import BytesIO
 import datetime
 import os
+from services.ky_localization import report_text
+from utils.translit import lat2cyr
 
 __all__ = ["generate_pdf_report"]
 
@@ -99,6 +101,7 @@ PDF_LABELS = {
         "mahalla": "Махалля:",
         "address": "Адрес:",
         "id_code": "ID код:",
+        "parents_phone": "Телефон родителей:",
 
         "male": "Мужской",
         "female": "Женский",
@@ -146,12 +149,12 @@ PDF_LABELS = {
         "unit_day": "дн",
         "ai_parent_tips_title": "MORPHOAI: КРАТКИЕ СОВЕТЫ ДЛЯ РОДИТЕЛЕЙ",
         "adv_sport": "Спортивная ориентация",
-        "adv_specialist": "👨‍⚕️ Специалист",
-        "adv_nutrition": "🍎 Питание",
-        "adv_activity": "🏃 Активность",
-        "adv_checkups": "🏥 Обследования",
+        "adv_specialist": "Специалист",
+        "adv_nutrition": "Питание",
+        "adv_activity": "Активность",
+        "adv_checkups": "Обследования",
         "adv_sport": "Спортивная ориентация",
-        "adv_general": "📝 Общая рекомендация",
+        "adv_general": "Общая рекомендация",
         "detailed_advices_label": "ДОПОЛНИТЕЛЬНЫЕ УКАЗАНИЯ:",
     },
     "en": {
@@ -214,12 +217,12 @@ PDF_LABELS = {
         "unit_day": "days",
         "ai_parent_tips_title": "MORPHOAI: SHORT TIPS FOR PARENTS",
         "adv_sport": "Sports orientation",
-        "adv_specialist": "👨‍⚕️ Specialist",
-        "adv_nutrition": "🍎 Nutrition",
-        "adv_activity": "🏃 Activity",
-        "adv_checkups": "🏥 Checkups",
+        "adv_specialist": "Specialist",
+        "adv_nutrition": "Nutrition",
+        "adv_activity": "Activity",
+        "adv_checkups": "Checkups",
         "adv_sport": "Sports orientation",
-        "adv_general": "📝 General advice",
+        "adv_general": "General advice",
         "detailed_advices_label": "ADDITIONAL INSTRUCTIONS:",
     },
     "kz": {
@@ -282,10 +285,10 @@ PDF_LABELS = {
         "unit_day": "күн",
         "ai_parent_tips_title": "MORPHOAI: АТА-АНАЛАРҒА АРНАЛҒАН ҚЫСҚА КЕҢЕСТЕР",
         "adv_sport": "Спортқа бағыттау",
-        "adv_specialist": "👨‍⚕️ Маман",
-        "adv_nutrition": "🍎 Тамақтану",
-        "adv_activity": "🏃 Белсенділік",
-        "adv_checkups": "🏥 Тексерулер",
+        "adv_specialist": "Маман",
+        "adv_nutrition": "Тамақтану",
+        "adv_activity": "Белсенділік",
+        "adv_checkups": "Тексерулер",
         "adv_sport": "Спортқа бағыттау",
         "adv_general": "📝 Жалпы ұсыныс",
         "detailed_advices_label": "ҚОСЫМША НҰСҚАУЛАР:",
@@ -293,6 +296,67 @@ PDF_LABELS = {
 }
 
 
+PDF_LABELS["ky"] = {
+    **PDF_LABELS["uz"],
+    "title": "MORPHOCHECK PRO АНТРОПОМЕТРИЯЛЫК ТАЛДОО ОТЧЕТУ",
+    "full_name": "Аты-жөнү:",
+    "age": "Жашы:",
+    "gender": "Жынысы:",
+    "birth_date": "Туулган күнү:",
+    "exam_date": "Текшерүү күнү:",
+    "institution": "Мекеме:",
+    "region": "Облус:",
+    "district": "Район:",
+    "mahalla": "Махалла:",
+    "address": "Дарек:",
+    "id_code": "ID код:",
+    "parents_phone": "Ата-эне телефону:",
+    "male": "Эркек",
+    "female": "Аял",
+    "results_section": "ТАЛДООНУН НЕГИЗГИ ЖЫЙЫНТЫКТАРЫ",
+    "indicator": "Көрсөткүч",
+    "value": "Маани",
+    "note": "Эскертүү",
+    "bmi_label": "BMI (дене салмагынын индекси)",
+    "somatotype": "Дене түзүлүшү",
+    "somatotype_note": "Соматотип",
+    "ideal_weight": "Нормалдуу салмак",
+    "ideal_weight_note": "Сунушталган аралык",
+    "weight_diff": "Салмак айырмасы",
+    "weight_diff_note": "Идеалдан четтөө",
+    "bmi_status": "BMI абалы:",
+    "recommendation": "Сунуш:",
+    "advice_section": "ЖЕКЕ СУНУШТАР",
+    "advice_for_parents": " (АТА-ЭНЕЛЕР ҮЧҮН)",
+    "no_advice": "• Атайын сунуштар жок.",
+    "report_date": "Отчет күнү:",
+    "report_number": "Отчет номери:",
+    "doctor_sign": "Дарыгердин колу",
+    "patient_sign": "Бейтап/ата-эне колу",
+    "confidential": "Бул отчет купуя маалымат болуп саналат",
+    "bmi_underweight": "Салмак жетишсиздиги",
+    "bmi_normal": "Норма",
+    "bmi_overweight": "Ашыкча салмак",
+    "bmi_obese": "Семирүү",
+    "ai_title": "ПРОГНОЗДУК ТАЛДОО ЖАНА КОРКУНУЧТАР (AI)",
+    "ai_adult_height": "18 жаштагы болжолдуу бой:",
+    "ai_risk_type": "Коркунуч түрү",
+    "ai_probability": "Ыктымалдык (%)",
+    "risk_obesity": "Семирүү (Obesity)",
+    "risk_metabolic": "Метаболикалык синдром",
+    "risk_musculoskeletal": "Таяныч-кыймыл аппаратынын бузулуштары",
+    "unit_year": "жаш",
+    "unit_month": "ай",
+    "unit_day": "күн",
+    "ai_parent_tips_title": "MORPHOAI: АТА-ЭНЕЛЕР ҮЧҮН КЫСКА КЕҢЕШТЕР",
+    "adv_sport": "Спортко багыттоо",
+    "adv_specialist": "Адис",
+    "adv_nutrition": "Тамактануу",
+    "adv_activity": "Активдүүлүк",
+    "adv_checkups": "Текшерүүлөр",
+    "adv_general": "Жалпы сунуш",
+    "detailed_advices_label": "КОШУМЧА КӨРСӨТМӨЛӨР:",
+}
 def setup_font():
     try:
         font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'DejaVuSans.ttf')
@@ -356,6 +420,11 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             "doctor_note": "Doctor note:",
             "qr_title": "Verify or reopen this record",
             "qr_hint": "Scan the QR code",
+        },
+        "ky": {
+            "doctor_note": "Дарыгер эскертүүсү:",
+            "qr_title": "Жазууну текшерүү же кайра ачуу",
+            "qr_hint": "QR кодду сканерлеңиз",
         },
         "kz": {
             "doctor_note": "Дәрігер жазбасы:",
@@ -500,6 +569,12 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     birth_date = format_date_str(birth_date)
     examination_date = format_date_str(examination_date)
 
+    def localize_value(value, transliterate=False):
+        text = report_text(value or "-", lang)
+        if lang == "ru" and transliterate and text not in ("-", ""):
+            text = lat2cyr(text)
+        return text
+
     # Yoshni formatlash: 5 yosh, 8 oy, 19 kun
     age_str = f"{age_y} {L.get('unit_year', 'yosh')}"
     if age_m:
@@ -516,11 +591,11 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["gender"], gender_text],
         [L["birth_date"], birth_date or '-'],
         [L["exam_date"], examination_date or '-'],
-        [L["institution"], preschool_institution or '-'],
-        [L["region"], region or '-'],
-        [L["district"], district or '-'],
-        [L["mahalla"], mahalla or '-'],
-        [L["address"], address or '-'],
+        [L["institution"], localize_value(preschool_institution, transliterate=True)],
+        [L["region"], localize_value(region, transliterate=True)],
+        [L["district"], localize_value(district, transliterate=True)],
+        [L["mahalla"], localize_value(mahalla, transliterate=True)],
+        [L["address"], localize_value(address, transliterate=True)],
         [L.get("parents_phone", "Parents' phone:"), parents_phone or '-'],
         [L["id_code"], id_code_val or '-'],
     ]
@@ -565,8 +640,8 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
 
     analysis_table_data = [
         [L["indicator"], L["value"], L["note"]],
-        [L["bmi_label"], f"{analysis_data_dict.get('bmi', 0):.1f}", analysis_data_dict.get('bmi_category', '')],
-        [L["somatotype"], analysis_data_dict.get('somatotype', ''), L["somatotype_note"]],
+        [L["bmi_label"], f"{analysis_data_dict.get('bmi', 0):.1f}", report_text(analysis_data_dict.get('bmi_category', ''), lang)],
+        [L["somatotype"], report_text(analysis_data_dict.get('somatotype', ''), lang), L["somatotype_note"]],
         [L["ideal_weight"],
          f"{analysis_data_dict.get('ideal_weight_range', {}).get('min', 0)} - {analysis_data_dict.get('ideal_weight_range', {}).get('max', 0)} kg",
          L["ideal_weight_note"]],
@@ -581,9 +656,9 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
 
     detailed = analysis_data_dict.get('indices', {})
     if detailed and is_deep_analysis:
-        analysis_table_data.append([L["hmai"], f"{detailed.get('hmai', '')}", detailed.get('hmai_desc', '')])
-        analysis_table_data.append([L["mii"], f"{detailed.get('mii', '')}", detailed.get('mii_desc', '')])
-        analysis_table_data.append([L["adi"], f"{detailed.get('adi', '')}", detailed.get('adi_desc', '')])
+        analysis_table_data.append([L["hmai"], f"{detailed.get('hmai', '')}", report_text(detailed.get('hmai_desc', ''), lang)])
+        analysis_table_data.append([L["mii"], f"{detailed.get('mii', '')}", report_text(detailed.get('mii_desc', ''), lang)])
+        analysis_table_data.append([L["adi"], f"{detailed.get('adi', '')}", report_text(detailed.get('adi_desc', ''), lang)])
 
     if is_deep_analysis:
         shoulder_ratio = analysis_data_dict.get('shoulder_ratio', 0)
@@ -594,7 +669,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         if thigh_ratio:
             analysis_table_data.append([L["thigh_ratio"], f"{thigh_ratio}%", L["thigh_note"]])
 
-    col_widths = [2.2*inch, 0.8*inch, 3.4*inch]
+    col_widths = [2.0*inch, 1.3*inch, 3.1*inch]
 
     formatted_analysis_data = []
     for row in analysis_table_data:
@@ -735,7 +810,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         tips_data = []
         for tip in ai_tips:
             # Escape HTML characters to prevent ReportLab Paragraph errors
-            safe_tip = html.escape(str(tip))
+            safe_tip = html.escape(report_text(tip, lang))
             tips_data.append([Paragraph(f"• {safe_tip}", styles['Normal'])])
             
         t_tips = Table(tips_data, colWidths=[6.0*inch])
@@ -779,7 +854,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             if val and val != "—":
                 cat_elements.append([
                     Paragraph(f"<b>{title}:</b>", styles['Normal']),
-                    Paragraph(str(val), styles['Normal'])
+                    Paragraph(report_text(val, lang), styles['Normal'])
                 ])
         
         if cat_elements:
@@ -814,7 +889,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
                     break
             
             if not already_shown:
-                p = Paragraph(f"{item}", styles['Normal'])
+                p = Paragraph(report_text(item, lang), styles['Normal'])
                 bullet_p = Paragraph("•", styles['Normal'])
                 advice_elements.append([bullet_p, p])
 

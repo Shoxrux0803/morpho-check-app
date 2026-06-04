@@ -438,7 +438,26 @@ const parseMaybeJson = (value) => {
   }
 };
 
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+MAP_I18N.ky = {
+  ...MAP_I18N.uz,
+  title: "Аймактык карта",
+  subtitle: "Аймактар боюнча бейтаптар, BMI жана коркунуч көрсөткүчтөрү",
+  totalPatients: "Жалпы бейтаптар",
+  avgBmi: "Орточо BMI",
+  riskCount: "Коркунучтагы жазуулар",
+  noData: "Маалымат жок",
+  patients: "Бейтаптар",
+  analyses: "Талдоолор",
+  region: "Аймак",
+  district: "Район",
+  mahalla: "Махалла",
+  risk: "Коркунуч",
+  normal: "Норма",
+  overweight: "Ашыкча салмак",
+  obese: "Семирүү",
+  underweight: "Салмак жетишсиздиги",
+};
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
 
 const formatArea = (value, locale = "uz-UZ") => {
   const n = Number(value);

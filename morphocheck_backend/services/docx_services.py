@@ -15,6 +15,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from io import BytesIO
 from utils.translit import lat2cyr
+from services.ky_localization import ky_text
 
 __all__ = ["generate_docx_report"]
 
@@ -353,6 +354,13 @@ DOCX_LABELS = {
         "morph_type": "Морфологиялық типі",
         "bio_age_match": "Биол. жасқа сәйкестігі",
         "secular": "Секулярлы тренд белгілері",
+        "astenik": "Астеник",
+        "normostenik": "Нормостеник",
+        "giperstenik": "Гиперстеник",
+        "mos": "Сәйкес",
+        "mos_emas": "Сәйкес емес",
+        "mavjud": "Бар",
+        "yoq": "Жоқ",
         "section_6": "VI. Этикалық келісім және қолтаңбалар:",
         "parent": "Ата-ана (немесе қамқоршы)",
         "nurse": "Медбике (мекеме)",
@@ -519,6 +527,97 @@ def _dev_level(z_score_raw) -> tuple:
 # Z-score baholash matni (4 tilda)
 # ---------------------------------------------------------------------------
 
+DOCX_LABELS["ky"] = {
+    **DOCX_LABELS["uz"],
+    "title_child": "МЕКТЕПКЕ ЧЕЙИНКИ ЖАШТАГЫ БАЛДАР ҮЧҮН БИОИМПЕДАНС +\nАНТРОПОМЕТРИЯЛЫК ТЕКШЕРҮҮ АНКЕТАСЫ",
+    "title_pupil": "МЕКТЕП ЖАШЫНДАГЫ БАЛДАР ЖАНА ӨСПҮРҮМДӨР ҮЧҮН БИОИМПЕДАНС +\nАНТРОПОМЕТРИЯЛЫК ТЕКШЕРҮҮ АНКЕТАСЫ",
+    "title_adult": "АНТРОПОМЕТРИЯЛЫК ТЕКШЕРҮҮ ЖАНА БИОИМПЕДАНС ТАЛДОО АНКЕТАСЫ",
+    "section_1": "I. Жалпы маалыматтар",
+    "indicator": "Көрсөткүч",
+    "data_col": "Маалымат",
+    "name_label_child": "Аты-жөнү (баланын)",
+    "name_label_adult": "Аты-жөнү (бейтаптын)",
+    "exam_date": "Текшерүү күнү",
+    "age_label_child": "Жашы (баланын)",
+    "age_label_adult": "Жашы (бейтаптын)",
+    "age_suffix": "жаш",
+    "age_months": "ай",
+    "age_days": "күн",
+    "gender": "Жынысы",
+    "male": "Эркек",
+    "female": "Аял",
+    "birth_date": "Туулган күнү",
+    "city": "Шаар",
+    "village": "Айыл",
+    "institution": "Мекеме (мектеп/бакча)",
+    "address": "Жашаган дареги",
+    "parents_phone": "Ата-эне телефону",
+    "section_2": "II. Негизги антропометриялык көрсөткүчтөр (ДССУ стандарттары)",
+    "unit": "Бирдик",
+    "value": "Маани",
+    "height": "Бой узундугу",
+    "weight": "Дене салмагы",
+    "head": "Баш айланасы",
+    "chest": "Көкүрөк айланасы",
+    "waist": "Бел айланасы",
+    "sh_len": "Ийин узундугу",
+    "sh_br": "Ийин кеңдиги",
+    "sh_circ": "Ийин айланасы",
+    "arm_elb": "Билек узундугу",
+    "hand": "Кол манжа узундугу",
+    "thigh_len": "Сан узундугу",
+    "thigh_circ": "Сан айланасы",
+    "calf_len": "Балтыр узундугу",
+    "calf_circ": "Балтыр айланасы",
+    "foot": "Таман узундугу",
+    "body_len": "Дене узундугу",
+    "section_3": "III. Эсептелген антропометриялык индекстер",
+    "eval": "Баалоо",
+    "bmi_label": "BMI (кг/м²)",
+    "height_age_z": "Бой-жаш Z-score",
+    "weight_age_z": "Салмак-жаш Z-score",
+    "bmi_age_z": "BMI-жаш Z-score",
+    "centile": "Центиль аралыгы",
+    "corridor": "Ден соолук коридору",
+    "hmai_label": "HMAI (ыңгайлашуу)",
+    "mii_label": "MII (интеграция)",
+    "adi_label": "ADI (дисбаланс)",
+    "mcri_label": "MCRI (коркунуч индекси)",
+    "body_len_z": "Дене уз. Z-score",
+    "section_4": "IV. Биоимпеданс талдоосунун жыйынтыктары",
+    "norm": "Норма",
+    "tbw": "Жалпы суу (TBW)",
+    "fm_p": "Май тканы (%)",
+    "fm_kg": "Май массасы (кг)",
+    "muscle": "Булчуң массасы",
+    "bone": "Сөөк массасы",
+    "acm": "Активдүү клетка массасы (ACM)",
+    "visceral": "Висцералдык май деңгээли",
+    "section_5": "V. Морфологиялык жана биологиялык баалоо",
+    "dev_level": "Физикалык өнүгүү деңгээли",
+    "age_matches": "Жашына туура келет",
+    "behind": "Артта калган",
+    "ahead": "Алдыда",
+    "morph_type": "Морфологиялык тиби",
+    "bio_age_match": "Биологиялык жашына туура келиши",
+    "secular": "Секулярдык тренд белгилери",
+    "astenik": "Астеник",
+    "normostenik": "Нормостеник",
+    "giperstenik": "Гиперстеник",
+    "mos": "Туура келет",
+    "mos_emas": "Туура келбейт",
+    "mavjud": "Бар",
+    "yoq": "Жок",
+    "section_6": "VI. Этикалык макулдук жана колдор:",
+    "parent": "Ата-эне (камкорчу)",
+    "nurse": "Медайым (мекеме)",
+    "specialists": "Адис 1 / Адис 2",
+    "consultant": "Консультант",
+    "sig_date": "Кол / дата",
+    "doctor_parent": "Адис / ата-эне",
+    "cm": "см",
+    "kg": "кг",
+}
 _Z_EVAL_LABELS = {
     "uz": {
         "very_low":  "Жуда паст (< -2 SD)",
@@ -548,7 +647,13 @@ _Z_EVAL_LABELS = {
         "high":      "Жоғары (+1 … +2 SD)",
         "very_high": "Өте жоғары (> +2 SD)",
     },
-}
+    "ky": {
+        "very_low":  "Өтө төмөн (< -2 SD)",
+        "low":       "Төмөн (-2 … -1 SD)",
+        "normal":    "Нормада (-1 … +1 SD)",
+        "high":      "Жогору (+1 … +2 SD)",
+        "very_high": "Өтө жогору (> +2 SD)",
+    },}
 
 
 def _z_eval(z_raw, lang: str = "uz") -> str:
@@ -601,7 +706,13 @@ _CENTILE_EVAL = {
         "85 - 97": "Жоғары (85–97-центиль)",
         "> 97":  "Өте жоғары (> 97-центиль)",
     },
-}
+    "ky": {
+        "< 3":   "Өтө төмөн (< 3-сентиль)",
+        "3 - 15":  "Төмөн (3-15-сентиль)",
+        "15 - 85": "Норма (15-85-сентиль)",
+        "85 - 97": "Жогору (85-97-сентиль)",
+        "> 97":  "Өтө жогору (> 97-сентиль)",
+    },}
 
 
 def _centile_eval(centile_str: str, lang: str = "uz") -> str:
@@ -904,14 +1015,14 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         age_int = 0
 
     bmi_str    = f"{bmi_f:.1f}" if bmi_f else ""
-    bmi_cat    = LP(str(analysis.get("bmi_category", "") or ""))
+    bmi_cat    = LP(ky_text(analysis.get("bmi_category", "") or "", lang))
     zscore_str = f"{z_val:.2f}" if z_val else ""
 
     detailed = analysis.get("indices", {})
 
     # Centil va sog'lomlik yo'lagini indices orqali olamiz
     centil_str  = detailed.get("centile", "")
-    corridor    = LP(detailed.get("corridor", ""))
+    corridor    = LP(ky_text(detailed.get("corridor", ""), lang))
 
     z_h_str = f"{detailed.get('z_h', 0):.2f}"
     z_w_str = f"{detailed.get('z_w', 0):.2f}"
@@ -920,16 +1031,16 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     z_body_length_str = f"{detailed.get('z_body_length', 0):.2f}" if detailed.get("z_body_length") is not None else ""
     
     hmai_val = detailed.get("hmai", 0)
-    hmai_desc = LP(detailed.get("hmai_desc", ""))
+    hmai_desc = LP(ky_text(detailed.get("hmai_desc", ""), lang))
     
     mii_val = detailed.get("mii", 0)
-    mii_desc = LP(detailed.get("mii_desc", ""))
+    mii_desc = LP(ky_text(detailed.get("mii_desc", ""), lang))
     
     adi_val = detailed.get("adi", 0)
-    adi_desc = LP(detailed.get("adi_desc", ""))
+    adi_desc = LP(ky_text(detailed.get("adi_desc", ""), lang))
 
     mcri_val = detailed.get("mcri", 0)
-    mcri_desc = LP(detailed.get("mcri_desc", ""))
+    mcri_desc = LP(ky_text(detailed.get("mcri_desc", ""), lang))
 
     t3 = doc.add_table(rows=12, cols=4)
     t3.style = "Table Grid"
@@ -1033,17 +1144,17 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     s_trend_key = bio_results.get("secular_trend_key", "")
 
     morph_type_text = (
-        f"{_checkbox(m_type_key == 'astenik')} " + LP("Астеник") + "  "
-        f"{_checkbox(m_type_key == 'normostenik')} " + LP("Нормостеник") + "  "
-        f"{_checkbox(m_type_key == 'giperstenik')} " + LP("Гиперстеник")
+        f"{_checkbox(m_type_key == 'astenik')} {L('astenik')}  "
+        f"{_checkbox(m_type_key == 'normostenik')} {L('normostenik')}  "
+        f"{_checkbox(m_type_key == 'giperstenik')} {L('giperstenik')}"
     )
     bio_age_text = (
-        f"{_checkbox(b_age_key == 'mos')} " + LP("Мос") + "  "
-        f"{_checkbox(b_age_key == 'mos_emas')} " + LP("Мос эмас")
+        f"{_checkbox(b_age_key == 'mos')} {L('mos')}  "
+        f"{_checkbox(b_age_key == 'mos_emas')} {L('mos_emas')}"
     )
     secular_trend_text = (
-        f"{_checkbox(s_trend_key == 'mavjud')} " + LP("Мавжуд") + "  "
-        f"{_checkbox(s_trend_key == 'yoq')} " + LP("Йўқ")
+        f"{_checkbox(s_trend_key == 'mavjud')} {L('mavjud')}  "
+        f"{_checkbox(s_trend_key == 'yoq')} {L('yoq')}"
     )
 
     morph_rows = [

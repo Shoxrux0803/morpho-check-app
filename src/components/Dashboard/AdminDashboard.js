@@ -192,6 +192,33 @@ const ADMIN_DASH_I18N = {
   },
 };
 
+ADMIN_DASH_I18N.ky = {
+  ...ADMIN_DASH_I18N.uz,
+  welcome: (name) => `Кош келиңиз, ${name || "Админ"}`,
+  subtitle: "Клиникалык антропометрия боюнча жеке аналитика панели",
+  desc: "Киргизилген бардык маалыматтардын талдоосу. Натыйжаларды чыпкалар аркылуу иргеңиз.",
+  total: "Жалпы",
+  avgBmi: "Орточо BMI",
+  avgAge: "Орточо жаш",
+  scientificInsights: "Илимий корутундулар",
+  scientificInsightsSub: "Автоматтык талдоо жыйынтыктары",
+  totalMine: "Мен киргизген жалпы жазуулар",
+  todayEntered: "Бүгүн киргизилгендер",
+  weeklyGrowth: "Апталык өсүш",
+  riskRegions: "Коркунуч көп чыккан аймактар",
+  dailyDynamics: "Күнүмдүк динамика",
+  genderDistribution: "Жыныс боюнча бөлүштүрүү",
+  ageGroups: "Жаш топтору",
+  bmiStatus: "BMI абалы",
+  patients: "Бейтаптар",
+  male: "Эркек",
+  female: "Аял",
+  unknown: "Белгисиз",
+  normal: "Норма",
+  overweight: "Ашыкча салмак",
+  obese: "Семирүү",
+  underweight: "Салмак жетишсиздиги",
+};
 const COLORS = {
   primary: "#0f766e",
   secondary: "#2563eb",
@@ -205,7 +232,7 @@ const COLORS = {
 };
 
 const PIE_COLORS = ["#3b82f6", "#f43f5e", "#14b8a6"];
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",

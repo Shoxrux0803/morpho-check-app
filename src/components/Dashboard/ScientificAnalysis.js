@@ -261,7 +261,39 @@ const SCI_TEXT = {
   },
 };
 
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+SCI_TEXT.ky = {
+  ...SCI_TEXT.uz,
+  title: "Илимий талдоо",
+  subtitle: "Популяциялык Z-score, перцентиль, корреляция жана коркунуч топторунун талдоосу",
+  zDist: "Z-score боюнча бөлүштүрүү",
+  patientCount: "Бейтаптар саны",
+  patients: "Бейтаптар",
+  percentileTable: "Перцентиль таблицасы",
+  percentile: "Перцентиль",
+  heightCm: "Бой (см)",
+  weightKg: "Салмак (кг)",
+  correlationMatrix: "Корреляция матрицасы",
+  parameter: "Параметр",
+  age: "Жаш",
+  height: "Бой",
+  weight: "Салмак",
+  chest: "Көкүрөк",
+  riskGroups: "Коркунуч топторунун талдоосу",
+  healthy: "Дени сак (нормалдуу BMI)",
+  overweight: "Ашыкча салмак",
+  obese: "Семирүү",
+  underweight: "Салмак жетишсиздиги",
+  lowRisk: "Төмөн коркунуч",
+  mediumRisk: "Орточо коркунуч",
+  highRisk: "Жогорку коркунуч",
+  attention: "Көңүл буруңуз",
+  trendTitle: "6 айлык тренд талдоосу",
+  analysesCount: "Талдоолор саны",
+  avgBmi: "Орточо BMI",
+  average: "Орточо",
+  footer: "MorphoCheck илимий-статистикалык талдоо модулу • Бардык маалыматтар реалдуу убакытта •",
+};
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();

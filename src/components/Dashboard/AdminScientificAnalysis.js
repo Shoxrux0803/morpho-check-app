@@ -216,7 +216,36 @@ const ADMIN_SCI_TEXT = {
   },
 };
 
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+ADMIN_SCI_TEXT.ky = {
+  ...ADMIN_SCI_TEXT.uz,
+  emptyTitle: "Илимий талдоо үчүн маалымат жок",
+  emptySub: "Бейтаптарды каттаңыз",
+  title: "Илимий-антропометриялык талдоо",
+  subtitle: "Татаал статистикалык моделдер жана корреляциялык талдоо жыйынтыктары",
+  filtered: "Чыпкаланган",
+  bmiHistogram: "BMI гистограммасы",
+  bmiHistogramSub: "Бейтаптардын BMI маанилери боюнча статистикалык бөлүштүрүү",
+  patients: "Бейтаптар",
+  patientCount: "Бейтаптар саны",
+  zScoreAnalysis: "Z-score (SD) талдоосу",
+  percentiles: "Статистикалык перцентилдер",
+  percentile: "Перцентиль",
+  height: "Бой",
+  weight: "Салмак",
+  chest: "Көкүрөк",
+  age: "Жаш",
+  riskGroups: "Ден соолук коркунучу топтору",
+  normal: "Норма",
+  overweight: "Ашыкча салмак",
+  obese: "Семирүү",
+  underweight: "Салмак жетишсиздиги",
+  lowRisk: "Төмөн коркунуч",
+  mediumRisk: "Орточо коркунуч",
+  highRisk: "Жогорку коркунуч",
+  observe: "Көзөмөл",
+  measurements: "Өлчөөлөр",
+};
+const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();

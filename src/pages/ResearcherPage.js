@@ -354,15 +354,6 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
           >
             DOCX ({lang.toUpperCase()})
           </Button>
-          <Button
-            size="small"
-            startIcon={<Description />}
-            onClick={() => ResearchApi.downloadDocx(record.id, "ru")}
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
-          >
-            DOCX (RU)
-          </Button>
         </Stack>
         <Box flex={1} />
         <Button startIcon={<Edit />} variant="contained" onClick={() => onEdit(record)}>

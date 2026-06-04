@@ -191,6 +191,7 @@ const PAGE_LABELS = {
   ru: { scientificAnalysis: "Научный анализ" },
   en: { scientificAnalysis: "Scientific Analysis" },
   kz: { scientificAnalysis: "Ғылыми талдау" },
+  ky: { scientificAnalysis: "Илимий талдоо" },
 };
 
 const REGION_LABELS_RU = {

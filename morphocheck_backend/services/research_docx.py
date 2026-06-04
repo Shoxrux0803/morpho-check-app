@@ -260,6 +260,70 @@ LABELS = {
     }
 }
 
+LABELS["ky"] = {
+    **LABELS["uz"],
+    "title": "Изилдөө картасы",
+    "fio": "Аты-жөнү",
+    "school": "Мекеме аталышы (мектеп, бакча)",
+    "settlement": "Калктуу конуш",
+    "birth_place": "Туулган жери (шаар, облус)",
+    "birth_date": "Туулган жылы, айы жана күнү",
+    "father_nat": "Атасынын улуту",
+    "mother_nat": "энеси",
+    "living_since": "Текшерилүүчү бул аймакта качантан бери жашайт",
+    "enrolled": "Мектепке (бакчага) кабыл алынган күн",
+    "living_cond": "Турмуш шарттары",
+    "labor_regime": "Эмгек режими",
+    "past_illnesses": "Өткөргөн оорулар",
+    "children_count": "Үй-бүлөдө жалпы канча бала",
+    "child_order": "Бала неченчи",
+    "feeding_b": "б) жасалма эмизүүдө",
+    "marriage_b": "б) алыс тууган",
+    "mother_health": "Энесинин айтымында (ден соолугу)",
+    "measure_results": "Өлчөө жыйынтыктары",
+    "date_col": "Дата",
+    "indicator": "Көрсөткүч",
+    "gender": "Баланын жынысы",
+    "cat_phys": "I. Физикалык өнүгүү көрсөткүчтөрү",
+    "lower_leg": "1. Төмөнкү бут-кол",
+    "lower_leg_len": "Төмөнкү бут-кол узундугу",
+    "pelvic": "3. Жамбаш кеңдиги",
+    "thigh_l": "4. Сан узундугу",
+    "thigh_c": "5. Сан айланасы",
+    "calf_l": "6. Балтыр узундугу",
+    "calf_c": "7. Балтыр айланасы",
+    "foot_l": "8. Таман узундугу",
+    "teeth": "9. Тиштер саны",
+    "menstr": "10. Этек кирдин башталышы",
+    "cat_skull": "II. Баш сөөгүнүн формасын аныктоо",
+    "skull_long": "1. Узунунан диаметр",
+    "skull_trans": "2. Көлдөнөң өлчөм",
+    "head_circ": "3. Баш айланасы",
+    "forehead": "4. Маңдайдын көлдөнөң өлчөмү",
+    "cat_face": "Бет",
+    "face_biz": "1. Жаак диаметри",
+    "face_big": "2. Төмөнкү жаак диаметри",
+    "nose_h": "5. Мурун бийиктиги",
+    "nose_w": "6. Мурун кеңдиги",
+    "mouth_w": "10. Ооз кеңдиги",
+    "cat_chest": "Көкүрөк кутусу",
+    "height_stand": "1. Бою тик",
+    "height_sit": "2. бою отуруп",
+    "weight": "2. Салмагы",
+    "trunk_l": "3. Дене узундугу",
+    "chest_p": "5. Көкүрөк айланасы (пауза)",
+    "chest_i": "- толук дем алганда",
+    "chest_e": "- толук дем чыгарганда",
+    "waist": "6. Бел айланасы",
+    "cat_arm": "Жогорку бут-кол",
+    "shoulder_l": "2. Ийин узундугу",
+    "shoulder_w": "3. Ийин кеңдиги",
+    "arm_circ": "4. Ийин айланасы",
+    "forearm_l": "5. Билек узундугу",
+    "hand_l": "6. Кол манжа узундугу",
+    "dynamo": "7. Динамометрия",
+    "fat_title": "8. Тери астындагы май катмарынын калыңдыгы",
+}
 def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     if lang not in LABELS: lang = "ru"
     L = LABELS[lang]
@@ -298,9 +362,9 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
         # Gender translation logic
         v_low = res.lower()
         if v_low in ["boy", "erkak"]:
-            res = "O'g'il bola" if lang == "uz" else "Мальчик"
+            res = "O'g'il bola" if lang == "uz" else ("Эркек бала" if lang == "ky" else "Мальчик")
         elif v_low in ["girl", "ayol"]:
-            res = "Qiz bola" if lang == "uz" else "Девочка"
+            res = "Qiz bola" if lang == "uz" else ("Кыз бала" if lang == "ky" else "Девочка")
         
         import re
         if lang == "ru":

@@ -1064,8 +1064,8 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     }
   };
 
-  const handleDownloadDocx = (id, lang = "ru") => {
-    ResearchApi.downloadDocx(id, lang);
+  const handleDownloadDocx = (id, selectedLang = lang) => {
+    ResearchApi.downloadDocx(id, selectedLang);
   };
 
   const getCreatorName = (row) =>
@@ -1291,11 +1291,6 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                           </Tooltip>
                         </>
                       )}
-                      <Tooltip title="DOCX (RU)">
-                        <IconButton size="small" onClick={() => handleDownloadDocx(row.id, "ru")}>
-                          <Description fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
                       <Tooltip title={`DOCX (${lang.toUpperCase()})`}>
                         <IconButton
                           size="small"
@@ -1964,15 +1959,6 @@ const DetailModal = ({
             sx={{ borderRadius: 2 }}
           >
             DOCX ({lang.toUpperCase()})
-          </Button>
-          <Button
-            size="small"
-            startIcon={<Description />}
-            onClick={() => handleDownloadDocx(record.id, "ru")}
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
-          >
-            DOCX (RU)
           </Button>
         </Stack>
         <Box flex={1} />
