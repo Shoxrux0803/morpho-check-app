@@ -14,7 +14,9 @@ import {
   List,
   Divider,
   DialogContent,
+  MenuItem,
   Popover,
+  Select,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
@@ -564,41 +566,71 @@ export default function Header() {
                   <Typography variant="overline" color="text.secondary" fontWeight={900}>
                     {t("selectLang")}
                   </Typography>
-                  <Stack direction="row" flexWrap="wrap" gap={1} mt={0.75}>
-                    {LANGUAGES.map((l, idx) => (
-                      <Button
-                        key={l.code}
-                        size="small"
-                        variant={lang === l.code ? "contained" : "outlined"}
-                        onClick={() => handleLangChange(l.code)}
-                        startIcon={
+                  <Select
+                    fullWidth
+                    size="small"
+                    value={lang}
+                    onChange={(event) => handleLangChange(event.target.value)}
+                    renderValue={(selected) => {
+                      const selectedLang = LANGUAGES.find((l) => l.code === selected);
+                      return selectedLang ? (
+                        <Stack direction="row" alignItems="center" spacing={1}>
                           <Box
                             component="span"
                             sx={{
                               display: "inline-flex",
                               transition: "transform 0.24s ease",
-                              transform:
-                                langChanging && lang === l.code ? "rotate(180deg)" : "none",
+                              transform: langChanging ? "rotate(180deg)" : "none",
                             }}
                           >
-                            {l.flag}
+                            {selectedLang.flag}
                           </Box>
-                        }
-                        endIcon={lang === l.code ? <CheckIcon fontSize="small" /> : null}
-                        sx={{
+                          <Typography variant="body2" fontWeight={700}>
+                            {selectedLang.label}
+                          </Typography>
+                        </Stack>
+                      ) : null;
+                    }}
+                    sx={{
+                      mt: 0.75,
+                      borderRadius: 2,
+                      animation: `settingsItemIn 0.28s ease both`,
+                      animationDelay: `${THEME_VARIANTS.length * 35}ms`,
+                      "& .MuiSelect-select": {
+                        py: 1,
+                        display: "flex",
+                        alignItems: "center",
+                      },
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          mt: 1,
                           borderRadius: 2,
-                          textTransform: "none",
-                          minWidth: 156,
-                          justifyContent: "flex-start",
-                          animation: `settingsItemIn 0.28s ease both`,
-                          animationDelay: `${(idx + THEME_VARIANTS.length) * 35}ms`,
-                          "&:hover": { transform: "translateY(-2px)" },
-                        }}
-                      >
-                        {l.label}
-                      </Button>
+                          border: "1px solid",
+                          borderColor: "divider",
+                          boxShadow: "0 14px 36px rgba(0,0,0,0.18)",
+                        },
+                      },
+                    }}
+                  >
+                    {LANGUAGES.map((l) => (
+                      <MenuItem key={l.code} value={l.code}>
+                        <Stack direction="row" alignItems="center" spacing={1} width="100%">
+                          <Box component="span">{l.flag}</Box>
+                          <Typography variant="body2" fontWeight={lang === l.code ? 800 : 600}>
+                            {l.label}
+                          </Typography>
+                          {lang === l.code && (
+                            <CheckIcon
+                              fontSize="small"
+                              sx={{ ml: "auto", color: "primary.main" }}
+                            />
+                          )}
+                        </Stack>
+                      </MenuItem>
                     ))}
-                  </Stack>
+                  </Select>
                 </Box>
               </Stack>
             </DialogContent>
