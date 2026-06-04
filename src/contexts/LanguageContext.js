@@ -4,10 +4,10 @@ import React, { createContext, useContext, useState } from "react";
 const LanguageContext = createContext(null);
 
 export const LANGUAGES = [
-  { code: "uz", label: "UZ", flag: "🇺🇿" },
-  { code: "ru", label: "RU", flag: "🇷🇺" },
-  { code: "en", label: "EN", flag: "🇬🇧" },
-  { code: "kz", label: "KZ", flag: "🇰🇿" },
+  { code: "uz", label: "Uzbek", flag: "🇺🇿" },
+  { code: "ru", label: "Russian", flag: "🇷🇺" },
+  { code: "en", label: "English", flag: "🇬🇧" },
+  { code: "kz", label: "Kazak", flag: "🇰🇿" },
 ];
 
 const translations = {

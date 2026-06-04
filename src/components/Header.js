@@ -9,14 +9,12 @@ import {
   Button,
   IconButton,
   Tooltip,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   Typography,
   Drawer,
   List,
   Divider,
+  DialogContent,
+  Popover,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
@@ -26,10 +24,11 @@ import CheckIcon from "@mui/icons-material/Check";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import HomeIcon from "@mui/icons-material/Home";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
-import TranslateIcon from "@mui/icons-material/Translate";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SyncIcon from "@mui/icons-material/Sync";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import CloseIcon from "@mui/icons-material/Close";
 import Badge from "@mui/material/Badge";
 
 import { useThemeMode } from "../providers/ThemeProviderMUI";
@@ -48,6 +47,15 @@ const blurActiveElement = () => {
   }
 };
 
+const getThemeVariantLabel = (value) =>
+  value === "neo"
+    ? "Neo (Aurora)"
+    : value === "ocean"
+      ? "Ocean"
+      : value === "sunset"
+        ? "Sunset"
+        : "Minimal";
+
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
@@ -56,8 +64,7 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [langAnchorEl, setLangAnchorEl] = useState(null);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
   const [langChanging, setLangChanging] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -80,9 +87,17 @@ export default function Header() {
     setDrawerOpen(true);
   };
 
+  const openSettings = (event) => {
+    blurActiveElement();
+    setSettingsAnchorEl(event.currentTarget);
+  };
+
+  const closeSettings = () => {
+    setSettingsAnchorEl(null);
+  };
+
   const handleLangChange = (code) => {
     if (code === lang) {
-      setLangAnchorEl(null);
       return;
     }
     setLangChanging(true);
@@ -90,7 +105,6 @@ export default function Header() {
       setLang(code);
       setLangChanging(false);
     }, 220);
-    setLangAnchorEl(null);
   };
 
   const navButtonSx = {
@@ -137,8 +151,6 @@ export default function Header() {
     color: "primary.main",
     backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
   };
-
-  const currentLang = LANGUAGES.find((l) => l.code === lang) || LANGUAGES[0];
 
   return (
     <>
@@ -384,209 +396,213 @@ export default function Header() {
               </Tooltip>
             )}
 
-            <Tooltip title={t("selectLang")}>
-              <Button
-                onClick={(e) => setLangAnchorEl(e.currentTarget)}
-                size="small"
+            <Tooltip title="Settings">
+              <IconButton
+                onClick={openSettings}
+                aria-label="Settings"
                 sx={{
                   color: "text.secondary",
-                  borderRadius: 2,
-                  px: 1,
-                  minWidth: "unset",
-                  gap: 0.5,
-                  transition: "all 0.2s ease",
+                  transition: "transform 0.24s ease, color 0.24s ease, background 0.24s ease",
                   "&:hover": {
                     backgroundColor:
                       mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
                     color: "primary.main",
-                    transform: "scale(1.05)",
+                    transform: "rotate(35deg) scale(1.08)",
+                  },
+                  "& svg": {
+                    transition: "transform 0.24s ease",
+                    transform: settingsAnchorEl ? "rotate(90deg)" : "rotate(0deg)",
                   },
                 }}
               >
-                <TranslateIcon
-                  fontSize="small"
-                  sx={{
-                    transition: "transform 0.3s ease",
-                    transform: langChanging ? "rotate(180deg)" : "rotate(0deg)",
-                  }}
-                />
-                <Typography
-                  variant="caption"
-                  fontWeight={700}
-                  sx={{
-                    display: { xs: "none", sm: "inline" },
-                    transition: "opacity 0.22s ease, transform 0.22s ease",
-                    opacity: langChanging ? 0 : 1,
-                    transform: langChanging ? "translateY(-4px)" : "translateY(0)",
-                  }}
-                >
-                  {currentLang.flag} {currentLang.label}
-                </Typography>
-              </Button>
-            </Tooltip>
-
-            <Menu
-              anchorEl={langAnchorEl}
-              open={Boolean(langAnchorEl)}
-              onClose={() => setLangAnchorEl(null)}
-              TransitionProps={{ timeout: 200 }}
-              PaperProps={{
-                sx: {
-                  mt: 1,
-                  borderRadius: 2,
-                  minWidth: 140,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  overflow: "hidden",
-                },
-              }}
-            >
-              {LANGUAGES.map((l, idx) => (
-                <MenuItem
-                  key={l.code}
-                  selected={l.code === lang}
-                  onClick={() => handleLangChange(l.code)}
-                  sx={{
-                    borderRadius: 1,
-                    mx: 0.5,
-                    my: 0.25,
-                    gap: 1,
-                    transition: "background 0.18s ease, transform 0.18s ease",
-                    animation: `fadeSlideIn 0.18s ease both`,
-                    animationDelay: `${idx * 40}ms`,
-                    "@keyframes fadeSlideIn": {
-                      from: { opacity: 0, transform: "translateY(-6px)" },
-                      to: { opacity: 1, transform: "translateY(0)" },
-                    },
-                    "&:hover": {
-                      transform: "translateX(4px)",
-                      backgroundColor:
-                        mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-                    },
-                    "&.Mui-selected": {
-                      backgroundColor: "primary.main",
-                      color: "primary.contrastText",
-                      "&:hover": { backgroundColor: "primary.dark" },
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 28, fontSize: 20 }}>{l.flag}</ListItemIcon>
-                  <ListItemText primary={l.label} />
-                  {l.code === lang && (
-                    <CheckIcon
-                      fontSize="small"
-                      sx={{
-                        animation: "checkPop 0.25s cubic-bezier(0.175,0.885,0.32,1.275) both",
-                        "@keyframes checkPop": {
-                          from: { opacity: 0, transform: "scale(0)" },
-                          to: { opacity: 1, transform: "scale(1)" },
-                        },
-                      }}
-                    />
-                  )}
-                </MenuItem>
-              ))}
-            </Menu>
-
-            {/* Variant tanlash */}
-            <Tooltip title={t("themeStyle")}>
-              <IconButton
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                aria-label="Uslubni tanlash"
-                sx={{
-                  color: "text.secondary",
-                  "&:hover": {
-                    backgroundColor:
-                      mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                    color: "primary.main",
-                  },
-                }}
-              >
-                <PaletteOutlinedIcon />
-              </IconButton>
-            </Tooltip>
-
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={() => setAnchorEl(null)}
-              PaperProps={{
-                sx: {
-                  mt: 1,
-                  borderRadius: 2,
-                  minWidth: { xs: "calc(100vw - 32px)", sm: 180 },
-                  maxWidth: "90vw",
-                },
-              }}
-            >
-              {THEME_VARIANTS.map((v) => (
-                <MenuItem
-                  key={v}
-                  selected={v === variant}
-                  onClick={() => {
-                    setVariant(v);
-                    setAnchorEl(null);
-                  }}
-                  sx={{
-                    borderRadius: 1,
-                    mx: 1,
-                    my: 0.5,
-                    "&.Mui-selected": {
-                      backgroundColor: "primary.light",
-                      color: "primary.contrastText",
-                      "&:hover": { backgroundColor: "primary.main" },
-                    },
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 32 }}>
-                    {v === variant ? (
-                      <CheckIcon fontSize="small" sx={{ color: "inherit" }} />
-                    ) : (
-                      <Box
-                        sx={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: 1,
-                          backgroundColor: "currentColor",
-                          opacity: 0.3,
-                        }}
-                      />
-                    )}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      v === "neo"
-                        ? "Neo (Aurora)"
-                        : v === "ocean"
-                          ? "Ocean"
-                          : v === "sunset"
-                            ? "Sunset"
-                            : "Minimal"
-                    }
-                  />
-                </MenuItem>
-              ))}
-            </Menu>
-
-            {/* Dark/Light toggle */}
-            <Tooltip title={mode === "dark" ? t("lightTheme") : t("darkTheme")}>
-              <IconButton
-                onClick={toggle}
-                aria-label="Theme toggle"
-                sx={{
-                  color: "text.secondary",
-                  "&:hover": {
-                    backgroundColor:
-                      mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                    color: mode === "dark" ? "warning.light" : "primary.main",
-                  },
-                }}
-              >
-                {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
+                <SettingsOutlinedIcon />
               </IconButton>
             </Tooltip>
           </Stack>
+
+          <Popover
+            open={Boolean(settingsAnchorEl)}
+            anchorEl={settingsAnchorEl}
+            onClose={closeSettings}
+            keepMounted
+            transitionDuration={{ enter: 280, exit: 180 }}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "center",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "center",
+            }}
+            PaperProps={{
+              sx: {
+                width: { xs: "calc(100vw - 32px)", sm: 380 },
+                maxWidth: 380,
+                mt: 1.5,
+                borderRadius: 3,
+                overflow: "hidden",
+                background:
+                  mode === "dark"
+                    ? "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(8,47,73,0.92))"
+                    : "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(240,253,250,0.96))",
+                border: "1px solid",
+                borderColor: mode === "dark" ? "rgba(125,211,252,0.18)" : "rgba(14,116,144,0.14)",
+                boxShadow:
+                  mode === "dark"
+                    ? "0 24px 70px rgba(0,0,0,0.48)"
+                    : "0 24px 70px rgba(8,47,73,0.18)",
+                backdropFilter: "blur(20px)",
+                transformOrigin: "top center !important",
+              },
+            }}
+          >
+            <DialogContent sx={{ p: 2.25 }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      display: "grid",
+                      placeItems: "center",
+                      borderRadius: 2,
+                      color: "primary.main",
+                      bgcolor: mode === "dark" ? "rgba(125,211,252,0.12)" : "rgba(14,116,144,0.08)",
+                    }}
+                  >
+                    <SettingsOutlinedIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle1" fontWeight={900} lineHeight={1.1}>
+                      Settings
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Theme and language
+                    </Typography>
+                  </Box>
+                </Stack>
+                <IconButton size="small" onClick={closeSettings}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="overline" color="text.secondary" fontWeight={900}>
+                    Mode
+                  </Typography>
+                  <Stack direction="row" spacing={1} mt={0.75}>
+                    {[
+                      {
+                        value: "light",
+                        label: "Light",
+                        icon: <Brightness7Icon fontSize="small" />,
+                      },
+                      { value: "dark", label: "Dark", icon: <Brightness4Icon fontSize="small" /> },
+                    ].map((item) => (
+                      <Button
+                        key={item.value}
+                        fullWidth
+                        variant={mode === item.value ? "contained" : "outlined"}
+                        startIcon={item.icon}
+                        onClick={() => {
+                          if (mode !== item.value) toggle();
+                        }}
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: "none",
+                          justifyContent: "center",
+                          py: 1,
+                          transition: "transform 0.2s ease, box-shadow 0.2s ease",
+                          "&:hover": { transform: "translateY(-2px)" },
+                        }}
+                      >
+                        {item.label}
+                      </Button>
+                    ))}
+                  </Stack>
+                </Box>
+
+                <Box>
+                  <Typography variant="overline" color="text.secondary" fontWeight={900}>
+                    {t("themeStyle")}
+                  </Typography>
+                  <Stack direction="row" flexWrap="wrap" gap={1} mt={0.75}>
+                    {THEME_VARIANTS.map((v, idx) => (
+                      <Button
+                        key={v}
+                        size="small"
+                        variant={variant === v ? "contained" : "outlined"}
+                        onClick={() => setVariant(v)}
+                        startIcon={
+                          variant === v ? (
+                            <CheckIcon fontSize="small" />
+                          ) : (
+                            <PaletteOutlinedIcon fontSize="small" />
+                          )
+                        }
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: "none",
+                          minWidth: 104,
+                          animation: `settingsItemIn 0.28s ease both`,
+                          animationDelay: `${idx * 35}ms`,
+                          "@keyframes settingsItemIn": {
+                            from: { opacity: 0, transform: "translateY(8px) scale(0.97)" },
+                            to: { opacity: 1, transform: "translateY(0) scale(1)" },
+                          },
+                          "&:hover": { transform: "translateY(-2px)" },
+                        }}
+                      >
+                        {getThemeVariantLabel(v)}
+                      </Button>
+                    ))}
+                  </Stack>
+                </Box>
+
+                <Box>
+                  <Typography variant="overline" color="text.secondary" fontWeight={900}>
+                    {t("selectLang")}
+                  </Typography>
+                  <Stack direction="row" flexWrap="wrap" gap={1} mt={0.75}>
+                    {LANGUAGES.map((l, idx) => (
+                      <Button
+                        key={l.code}
+                        size="small"
+                        variant={lang === l.code ? "contained" : "outlined"}
+                        onClick={() => handleLangChange(l.code)}
+                        startIcon={
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-flex",
+                              transition: "transform 0.24s ease",
+                              transform:
+                                langChanging && lang === l.code ? "rotate(180deg)" : "none",
+                            }}
+                          >
+                            {l.flag}
+                          </Box>
+                        }
+                        endIcon={lang === l.code ? <CheckIcon fontSize="small" /> : null}
+                        sx={{
+                          borderRadius: 2,
+                          textTransform: "none",
+                          minWidth: 156,
+                          justifyContent: "flex-start",
+                          animation: `settingsItemIn 0.28s ease both`,
+                          animationDelay: `${(idx + THEME_VARIANTS.length) * 35}ms`,
+                          "&:hover": { transform: "translateY(-2px)" },
+                        }}
+                      >
+                        {l.label}
+                      </Button>
+                    ))}
+                  </Stack>
+                </Box>
+              </Stack>
+            </DialogContent>
+          </Popover>
 
           {/* Sync Manager & Toggle - Hidden on mobile, accessible in Drawer */}
           <Stack
@@ -724,56 +740,22 @@ export default function Header() {
 
               <Divider sx={{ my: 1 }} />
 
-              <Box sx={{ px: 1, py: 1 }}>
-                <Typography variant="overline" color="text.secondary" fontWeight="900">
-                  {t("selectLang")}
-                </Typography>
-                <Stack direction="row" flexWrap="wrap" gap={1} mt={1}>
-                  {LANGUAGES.map((l) => (
-                    <Button
-                      key={l.code}
-                      size="small"
-                      variant={lang === l.code ? "contained" : "outlined"}
-                      onClick={() => handleLangChange(l.code)}
-                      sx={{ borderRadius: 2, textTransform: "none", minWidth: 60 }}
-                    >
-                      {l.flag} {l.code.toUpperCase()}
-                    </Button>
-                  ))}
-                </Stack>
-              </Box>
-
-              <Divider sx={{ my: 1 }} />
-
-              <Box sx={{ px: 1, py: 1 }}>
-                <Typography variant="overline" color="text.secondary" fontWeight="900">
-                  {t("themeStyle")}
-                </Typography>
-                <Stack direction="row" flexWrap="wrap" gap={1} mt={1}>
-                  {THEME_VARIANTS.map((v) => (
-                    <Button
-                      key={v}
-                      size="small"
-                      variant={variant === v ? "contained" : "outlined"}
-                      onClick={() => setVariant(v)}
-                      sx={{ borderRadius: 2, textTransform: "none", minWidth: 80 }}
-                    >
-                      {v}
-                    </Button>
-                  ))}
-                </Stack>
-              </Box>
-
-              <Divider sx={{ my: 1 }} />
-
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1, py: 1 }}>
-                <Tooltip title={mode === "dark" ? t("lightTheme") : t("darkTheme")}>
-                  <IconButton onClick={toggle} color="inherit">
-                    {mode === "dark" ? <Brightness7Icon /> : <Brightness4Icon />}
-                  </IconButton>
-                </Tooltip>
-                <Typography variant="body2">{mode === "dark" ? "Dark" : "Light"}</Typography>
-              </Stack>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                onClick={openSettings}
+                startIcon={<SettingsOutlinedIcon />}
+                sx={{
+                  mt: 1,
+                  borderRadius: 2,
+                  justifyContent: "flex-start",
+                  py: 1.2,
+                  textTransform: "none",
+                }}
+              >
+                Settings
+              </Button>
 
               <Button
                 fullWidth
