@@ -1,7 +1,7 @@
 import React, { Suspense, useMemo, useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Outlines } from "@react-three/drei";
+import { Environment, Outlines } from "@react-three/drei";
 import { Physics, useSphere } from "@react-three/cannon";
 
 const rfs = THREE.MathUtils.randFloatSpread;
@@ -580,10 +580,12 @@ function SphereBackground({ isDark, pathname }) {
 
             <BackgroundAtmosphere isDark={isDark} />
 
-            <Physics gravity={[0, 2, 0]} iterations={4} allowSleep>
+            <Physics gravity={[0, 2, 0]} iterations={5} allowSleep>
               <Pointer mouseGlobal={mouseGlobal} isDark={isDark} />
               <Clump isDark={isDark} pathname={pathname} />
             </Physics>
+
+            <Environment files="/adamsbridge.hdr" />
           </Suspense>
         </Canvas>
       )}

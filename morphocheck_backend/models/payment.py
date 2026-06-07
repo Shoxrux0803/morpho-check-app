@@ -1,6 +1,6 @@
 # morphocheck_backend/models/payment.py
 
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, func, Index
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -18,3 +18,8 @@ class Payment(Base):
 
     # Aloqa: Payment -> User
     user = relationship("User", backref="payments")
+
+    __table_args__ = (
+        Index("ix_payments_user_created", "user_id", "created_at"),
+        Index("ix_payments_status_created", "status", "created_at"),
+    )

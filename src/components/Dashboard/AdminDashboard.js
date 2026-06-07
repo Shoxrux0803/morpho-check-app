@@ -219,6 +219,33 @@ ADMIN_DASH_I18N.ky = {
   obese: "Семирүү",
   underweight: "Салмак жетишсиздиги",
 };
+ADMIN_DASH_I18N.tg = {
+  ...ADMIN_DASH_I18N.uz,
+  welcome: (name) => `Хуш омадед, ${name || "Админ"}`,
+  subtitle: "Панели таҳлилии шахсӣ барои антропометрияи клиникӣ",
+  desc: "Таҳлили ҳамаи маълумоти воридшуда. Натиҷаҳоро тавассути графикҳо филтр кунед.",
+  total: "Ҳамагӣ",
+  avgBmi: "BMI миёна",
+  avgAge: "Синну соли миёна",
+  scientificInsights: "Хулосаҳои илмӣ",
+  totalMine: "Ҳамаи сабтҳои воридкардаи ман",
+  todayEntered: "Имрӯз воридшуда",
+  weeklyGrowth: "Афзоиши ҳафтаина",
+  riskRegions: "Ҳудудҳои хавфнок",
+  dailyDynamics: "Динамикаи рӯзона",
+  genderDistribution: "Тақсимот аз рӯи ҷинс",
+  ageGroups: "Гурӯҳҳои синнусолӣ",
+  bmiStatus: "Ҳолати BMI",
+  patients: "Беморон",
+  male: "Мард",
+  female: "Зан",
+  unknown: "Номаълум",
+  normal: "Меъёр",
+  overweight: "Вазни зиёдатӣ",
+  obese: "Фарбеҳӣ",
+  underweight: "Камвазнӣ",
+};
+
 const COLORS = {
   primary: "#0f766e",
   secondary: "#2563eb",
@@ -232,7 +259,7 @@ const COLORS = {
 };
 
 const PIE_COLORS = ["#3b82f6", "#f43f5e", "#14b8a6"];
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
+const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",

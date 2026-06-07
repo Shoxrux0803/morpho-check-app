@@ -370,7 +370,7 @@ const normalizeText = (value = "") =>
     .toLowerCase()
     .replace(/[ʻ‘’`]/g, "'")
     .replace(/вЂ|вЂ™|К»/g, "'")
-    .replace(/[‘’ʻʼ]/g, "'")
+    .replace(/[‘’`´ʻʼ]/g, "'")
     .replace(/\s+/g, " ")
     .trim();
 
@@ -382,6 +382,128 @@ const displayLocationName = (value = "") => {
   const normalized = baseName(text);
   if (normalized === "sirgali") return "Sergeli tumani";
   return text;
+};
+
+const looksMojibake = (value = "") =>
+  /(Р[ђ-џЃ‚]|\u0420[\u0452-\u045f\u0403\u201a]|вЂ|РІР‚|К»)/.test(String(value || ""));
+
+const latinToCyrillicUz = (value = "") => {
+  const text = displayLocationName(value)
+    .replace(/G['‘’`]/g, "Ғ")
+    .replace(/g['‘’`]/g, "ғ")
+    .replace(/O['‘’`]/g, "Ў")
+    .replace(/o['‘’`]/g, "ў")
+    .replace(/Ch/g, "Ч")
+    .replace(/ch/g, "ч")
+    .replace(/Sh/g, "Ш")
+    .replace(/sh/g, "ш");
+  const map = {
+    A: "А",
+    B: "Б",
+    D: "Д",
+    E: "Э",
+    F: "Ф",
+    G: "Г",
+    H: "Ҳ",
+    I: "И",
+    J: "Ж",
+    K: "К",
+    L: "Л",
+    M: "М",
+    N: "Н",
+    O: "О",
+    P: "П",
+    Q: "Қ",
+    R: "Р",
+    S: "С",
+    T: "Т",
+    U: "У",
+    V: "В",
+    X: "Х",
+    Y: "Й",
+    Z: "З",
+    a: "а",
+    b: "б",
+    d: "д",
+    e: "е",
+    f: "ф",
+    g: "г",
+    h: "ҳ",
+    i: "и",
+    j: "ж",
+    k: "к",
+    l: "л",
+    m: "м",
+    n: "н",
+    o: "о",
+    p: "п",
+    q: "қ",
+    r: "р",
+    s: "с",
+    t: "т",
+    u: "у",
+    v: "в",
+    x: "х",
+    y: "й",
+    z: "з",
+  };
+  return text.replace(/[A-Za-z]/g, (letter) => map[letter] || letter);
+};
+
+const transliterateUzToAscii = (value = "") =>
+  displayLocationName(value)
+    .replace(/[‘’`]/g, "'")
+    .replace(/g'/gi, (match) => (match[0] === "G" ? "Gh" : "gh"))
+    .replace(/o'/gi, (match) => (match[0] === "O" ? "O" : "o"))
+    .replace(/ʻ|ʼ/g, "'")
+    .replace(/Q/g, "K")
+    .replace(/q/g, "k")
+    .replace(/X/g, "Kh")
+    .replace(/x/g, "kh");
+
+const localizedSuffix = (base, level, lang) => {
+  const clean = baseName(base);
+  const title = displayLocationName(base)
+    .replace(/\s+(respublikasi|viloyati|tumani|shahri|mahallasi)$/i, "")
+    .trim();
+  const ascii = transliterateUzToAscii(title);
+
+  if (lang === "en") {
+    if (clean === "toshkent shahri" || /shahri$/i.test(base)) return `${ascii} city`;
+    if (/respublikasi$/i.test(base)) return `Republic of ${ascii}`;
+    if (level === 1) return `${ascii} region`;
+    if (level === 2) return `${ascii} district`;
+    return title;
+  }
+
+  if (lang === "ru") {
+    const cyrillic = latinToCyrillicUz(title);
+    if (clean === "toshkent shahri" || /shahri$/i.test(base)) return `город ${cyrillic}`;
+    if (/respublikasi$/i.test(base)) return `Республика ${cyrillic}`;
+    if (level === 1) return `${cyrillic}ская область`;
+    if (level === 2) return `${cyrillic}ский район`;
+    return cyrillic;
+  }
+
+  if (lang === "ky") {
+    const cyrillic = latinToCyrillicUz(title);
+    if (clean === "toshkent shahri" || /shahri$/i.test(base)) return `${cyrillic} шаары`;
+    if (/respublikasi$/i.test(base)) return `${cyrillic} Республикасы`;
+    if (level === 1) return `${cyrillic} облусу`;
+    if (level === 2) return `${cyrillic} району`;
+    return cyrillic;
+  }
+
+  if (lang === "kz") {
+    const cyrillic = latinToCyrillicUz(title);
+    if (clean === "toshkent shahri" || /shahri$/i.test(base)) return `${cyrillic} қаласы`;
+    if (/respublikasi$/i.test(base)) return `${cyrillic} Республикасы`;
+    if (level === 1) return `${cyrillic} облысы`;
+    if (level === 2) return `${cyrillic} ауданы`;
+    return cyrillic;
+  }
+
+  return displayLocationName(base);
 };
 
 const baseName = (value = "") =>
@@ -399,12 +521,21 @@ const baseName = (value = "") =>
   );
 
 const canonicalRegionName = (value = "") => {
+  const raw = normalizeText(value);
+  if (raw.includes("toshkent")) {
+    if (raw.includes("shah") || raw.includes("city") || raw.includes("город")) {
+      return "toshkent shahri";
+    }
+    if (raw.includes("viloyat") || raw.includes("region") || raw.includes("област")) {
+      return "toshkent viloyati";
+    }
+    return "toshkent shahri";
+  }
   const normalized = baseName(value);
   const aliases = {
     fargona: "farg'ona",
     qoraqalpogiston: "qoraqalpog'iston",
     "qoraqalpog'iston": "qoraqalpog'iston",
-    "toshkent sh": "toshkent",
   };
   return aliases[normalized] || normalized;
 };
@@ -414,20 +545,128 @@ const locationTokens = (value = "") =>
     .split(" ")
     .filter((part) => part && part.length > 1);
 
+const searchableLocation = (value = "") =>
+  baseName(value)
+    .replace(/'/g, "")
+    .replace(/[^a-zа-яё0-9]+/gi, " ")
+    .replace(/\b(tuman|tumani|shahar|shahri|mahalla|mahallasi|mfy|ofy)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const locationMatches = (left = "", right = "") => {
-  const a = baseName(left);
-  const b = baseName(right);
+  const a = searchableLocation(left);
+  const b = searchableLocation(right);
   if (!a || !b) return false;
   if (a === b || a.includes(b) || b.includes(a)) return true;
-  const aTokens = locationTokens(a);
-  const bTokens = locationTokens(b);
+  const aTokens = a.split(" ").filter((part) => part.length > 1);
+  const bTokens = b.split(" ").filter((part) => part.length > 1);
   return aTokens.length > 0 && aTokens.every((token) => bTokens.includes(token));
+};
+
+const buildLocationSearchText = (item = {}) =>
+  [
+    item.mahalla,
+    item.district,
+    item.address,
+    item.settlement,
+    item.school_name,
+    item.birth_place,
+    item.region,
+    item.name,
+    item.full_name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+const normalizeLocationItem = (item = {}) => {
+  const text = buildLocationSearchText(item);
+  return {
+    ...item,
+    __locationText: text,
+    district: item.district || text,
+    mahalla: item.mahalla || text,
+    address: item.address || item.settlement || item.school_name || text,
+  };
+};
+
+const getLocationFieldCandidates = (item = {}) =>
+  [
+    { value: item.mahalla, weight: 180 },
+    { value: item.district, weight: 170 },
+    { value: item.address, weight: 150 },
+    { value: item.settlement, weight: 130 },
+    { value: item.school_name, weight: 110 },
+    { value: item.birth_place, weight: 90 },
+    { value: item.region, weight: 70 },
+  ].filter((entry) => entry.value);
+
+const scoreLocationText = (boundaryName = "", rawText = "") => {
+  const boundary = searchableLocation(boundaryName);
+  const text = searchableLocation(rawText);
+  if (!boundary || !text) return 0;
+  if (boundary === text) return 1200;
+  const paddedText = ` ${text} `;
+  const paddedBoundary = ` ${boundary} `;
+  if (paddedText.includes(paddedBoundary)) return 1000 + boundary.length;
+  const boundaryTokens = locationTokens(boundary);
+  if (
+    boundaryTokens.length > 1 &&
+    boundaryTokens.every((token) => paddedText.includes(` ${token} `))
+  ) {
+    return 820 + boundaryTokens.length * 15;
+  }
+  if (text.includes(boundary)) return 760 + Math.min(boundary.length, 120);
+  if (boundary.includes(text) && text.length >= 5) return 520 + text.length;
+  return 0;
+};
+
+const findBestBoundaryMatch = (features = [], item = {}, minScore = 0) => {
+  const fields = getLocationFieldCandidates(item);
+  let bestFeature = null;
+  let bestScore = minScore;
+
+  features.forEach((feature) => {
+    const name = featureName(feature);
+    let featureScore = 0;
+    fields.forEach(({ value, weight }) => {
+      const score = scoreLocationText(name, value);
+      if (!score) return;
+      featureScore = Math.max(featureScore, score + weight);
+    });
+    if (featureScore > bestScore) {
+      bestScore = featureScore;
+      bestFeature = feature;
+    }
+  });
+
+  return bestFeature;
 };
 
 const featureName = (item) =>
   displayLocationName(
     item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "Unknown region",
   );
+
+const localizedFeatureName = (item, lang = "uz") => {
+  const props = item?.properties || item || {};
+  const level = Number(props.admin_leve || props.admin_level || 0);
+  const fallback = featureName(props);
+  const direct =
+    lang === "en"
+      ? props.name_en
+      : lang === "ru"
+        ? props.name_ru
+        : lang === "ky"
+          ? props.name_ky || props.name_kg
+          : lang === "kz"
+            ? props.name_kz || props.name_kk
+            : lang === "tg"
+              ? props.name_tg || props.name_tj
+              : props.name_uz || props.display_name;
+
+  if (direct && !looksMojibake(direct)) return displayLocationName(direct);
+  return localizedSuffix(fallback, level, lang);
+};
 
 const parseMaybeJson = (value) => {
   if (typeof value !== "string") return value;
@@ -457,7 +696,81 @@ MAP_I18N.ky = {
   obese: "Семирүү",
   underweight: "Салмак жетишсиздиги",
 };
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
+MAP_I18N.tg = {
+  ...MAP_I18N.uz,
+  country: "Ӯзбекистон",
+  title: "Харитаи таҳлили ҳудудӣ",
+  subtitle: "Ҳолати таҳлилҳо, админҳо ва таҳқиқгаронро аз рӯи вилоят, ноҳия ва маҳалла пайгирӣ кунед.",
+  region: "Вилоят",
+  district: "Ноҳия",
+  mahalla: "Маҳалла",
+  analyticsLoading: "Таҳлил бор шуда истодааст",
+  analyses: "Таҳлил",
+  admin: "Админ",
+  admins: "Админҳо",
+  researcher: "Таҳқиқгар",
+  nextLayer: "Қабати навбатӣ",
+  area: "Масоҳат",
+  riskSignal: "Сигнали хавфи клиникӣ",
+  scientificProfile: "Профили илмӣ-клиникӣ",
+  clinicalIndexProfile: "Профили индексҳои клиникӣ",
+  clinicalIndexSub: "Нишондиҳандаҳои нормализатсияшудаи BMI, Z-score ва хавф",
+  bmiDistribution: "Тақсимоти BMI",
+  regionSample: (count) => `Аз рӯи ҳудуд n=${count}`,
+  zBands: "Бандҳои BMI Z-score",
+  zBandsSub: "Гурӯҳбандии клиникӣ аз рӯи WHO LMS",
+  analyticalIndicators: "Нишондиҳандаҳои таҳлилӣ",
+  activityStructure: "Сохтори фаъолият",
+  operationalAnalysis: "Таҳлили амалиётӣ",
+  contact: "Тамос",
+  satelliteOn: "Фаъол кардани харитаи Google satellite",
+  satelliteOff: "Бозгашт ба харитаи одии ҳудудӣ",
+  layerLoading: "Қабати ҳудудӣ бор шуда истодааст",
+  patientExists: "Бемор мавҷуд",
+  selectedBack: "Бозгашт ба ҳудуди интихобшуда",
+  coverageIndex: "Индекси фарогирӣ",
+  contactPoints: "Нуқтаҳои тамос",
+  riskRecords: "Сабтҳои хавф",
+  lowerLayer: "Қабати поёнӣ",
+  analysesShare: "Ҳиссаи таҳлилҳо",
+  adminActivity: "Фаъолияти админ",
+  researcherBase: "Пойгоҳи таҳқиқгарон",
+  regionalDensity: "Зичии ҳудудӣ",
+  role: "Кӣ будан",
+  roleField: "Нақш",
+  phone: "Телефон",
+  location: "Ҳудуд",
+  address: "Суроғаи дақиқ",
+  coordinate: "Координата",
+  status: "Ҳолат",
+  registered: "Сабт шудааст",
+  lastActivity: "Фаъолияти охирин",
+  todayEntries: "Сабтҳои имрӯза",
+  monthEntries: "Сабтҳои моҳона",
+  totalEntries: "Ҳамаи сабтҳо",
+  avgTime: "Вақти миёна",
+  mostActiveTime: "Вақти фаъолтарин",
+  regionMatch: "Мутобиқати ҳудуд",
+  matched: "Мутобиқ шуд",
+  notSpecified: "Ворид нашудааст",
+  regionNotSpecified: "Ҳудуд ворид нашудааст",
+  sameAreaPin: "Pin дар ҳамин ҳудуд",
+  chatError: "Chat танҳо барои pin-ҳои админ ё таҳқиқгар кушода мешавад",
+  chatOpened: (name) => `Chat бо ${name} кушода шуд`,
+  chatPrompt: "Тавассути равзанаи chat метавонед ба админ ё таҳқиқгар нависед",
+  underweight: "Камвазнӣ",
+  normal: "Меъёр",
+  overweight: "Вазни зиёдатӣ",
+  obese: "Фарбеҳӣ",
+  coverage: "Фарогирӣ",
+  totalPatients: "Ҳамаи беморон",
+  avgBmi: "BMI миёна",
+  riskCount: "Сабтҳои хавфнок",
+  noData: "Маълумот нест",
+  patients: "Беморон",
+  risk: "Хавф",
+};
+const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
 
 const formatArea = (value, locale = "uz-UZ") => {
   const n = Number(value);
@@ -517,6 +830,32 @@ const getCollectionBounds = (geoJson) => {
 };
 
 const EARTH_RADIUS_METERS = 6378137;
+const MAX_MERCATOR = EARTH_RADIUS_METERS * Math.PI;
+const MERCATOR_LAT_LIMIT = 85.05112878;
+
+const clampLatitude = (lat) =>
+  Math.min(Math.max(Number(lat), -MERCATOR_LAT_LIMIT), MERCATOR_LAT_LIMIT);
+
+const lngLatToMercatorMeters = ([lng, lat] = []) => {
+  if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+  const safeLat = clampLatitude(lat);
+  const x = (lng * MAX_MERCATOR) / 180;
+  const y = Math.log(Math.tan(((90 + safeLat) * Math.PI) / 360)) * (EARTH_RADIUS_METERS || 1);
+  return [x, y];
+};
+
+const mercatorMetersToLngLat = ([x, y] = []) => {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  const lng = (x / MAX_MERCATOR) * 180;
+  const lat = (Math.atan(Math.exp(y / EARTH_RADIUS_METERS)) * 360) / Math.PI - 90;
+  return [lng, lat];
+};
+
+const isMercatorMeters = (x, y) =>
+  Number.isFinite(x) &&
+  Number.isFinite(y) &&
+  Math.abs(x) <= MAX_MERCATOR &&
+  Math.abs(y) <= MAX_MERCATOR;
 
 const ringAreaSquareMeters = (ring = []) => {
   if (!Array.isArray(ring) || ring.length < 3) return 0;
@@ -690,15 +1029,65 @@ const normalizeLngLat = (lng, lat) => {
   if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
   if (isUzbekistanLngLat([lng, lat])) return [lng, lat];
   if (isUzbekistanLngLat([lat, lng])) return [lat, lng];
+  if (isMercatorMeters(lng, lat)) {
+    const normalized = mercatorMetersToLngLat([lng, lat]);
+    if (isUzbekistanLngLat(normalized)) return normalized;
+  }
+  if (isMercatorMeters(lat, lng)) {
+    const normalized = mercatorMetersToLngLat([lat, lng]);
+    if (isUzbekistanLngLat(normalized)) return normalized;
+  }
   return null;
 };
 
-const spreadPoint = (center, index, total, distance = 0.16) => {
+const coordinatesFromText = (value = "") => {
+  const text = String(value || "");
+  const match = text.match(/(-?\d{1,3}(?:[.,]\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:[.,]\d+)?)/);
+  if (!match) return null;
+  const first = Number(match[1].replace(",", "."));
+  const second = Number(match[2].replace(",", "."));
+  return normalizeLngLat(first, second) || normalizeLngLat(second, first);
+};
+
+const spreadPoint = (center, index, total, distanceMeters = 160) => {
   if (total <= 1) return center;
+  const projectedCenter = lngLatToMercatorMeters(center);
+  if (!projectedCenter) return center;
   const ring = Math.floor(Math.sqrt(index));
   const angle = (index * 137.508 * Math.PI) / 180;
-  const radius = distance * (0.6 + ring * 0.52 + (index % 3) * 0.12);
-  return [center[0] + Math.cos(angle) * radius, center[1] + Math.sin(angle) * radius * 0.72];
+  const radius = distanceMeters * (0.6 + ring * 0.52 + (index % 3) * 0.12);
+  return (
+    mercatorMetersToLngLat([
+      projectedCenter[0] + Math.cos(angle) * radius,
+      projectedCenter[1] + Math.sin(angle) * radius * 0.72,
+    ]) || center
+  );
+};
+
+const stableHash = (value = "") => {
+  let hash = 2166136261;
+  const text = String(value);
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+const distributedPointInBoundary = (boundary, seed) => {
+  const bbox = parseMaybeJson(boundary?.bbox || boundary?.properties?.bbox);
+  if (!Array.isArray(bbox) || bbox.length !== 4) return getCenter(boundary);
+  const hashA = stableHash(`${seed}:lng`);
+  const hashB = stableHash(`${seed}:lat`);
+  const padLng = Math.abs(bbox[2] - bbox[0]) * 0.18;
+  const padLat = Math.abs(bbox[3] - bbox[1]) * 0.18;
+  const minLng = bbox[0] + padLng;
+  const maxLng = bbox[2] - padLng;
+  const minLat = bbox[1] + padLat;
+  const maxLat = bbox[3] - padLat;
+  const lng = minLng + (hashA / 0xffffffff) * Math.max(maxLng - minLng, 0.0001);
+  const lat = minLat + (hashB / 0xffffffff) * Math.max(maxLat - minLat, 0.0001);
+  return [lng, lat];
 };
 
 const getRiskColor = (riskRate) => {
@@ -958,6 +1347,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const [selected, setSelected] = useState(null);
   const [selectedPath, setSelectedPath] = useState({ region: null, district: null, mahalla: null });
   const [level3Features, setLevel3Features] = useState([]);
+  const [userMahallaFeatures, setUserMahallaFeatures] = useState([]);
   const [selectedPin, setSelectedPin] = useState(null);
   const [pinPopupPosition, setPinPopupPosition] = useState(null);
   const [analyses, setAnalyses] = useState([]);
@@ -999,6 +1389,162 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     });
     return map;
   }, [boundaryIndex]);
+
+  const level2ByRegionId = useMemo(() => {
+    const map = new Map();
+    (boundaryIndex?.levels?.["2"] || []).forEach((item) => {
+      const key = String(item.parent_id);
+      const current = map.get(key) || [];
+      current.push(item);
+      map.set(key, current);
+    });
+    return map;
+  }, [boundaryIndex]);
+
+  const resolveRegionBoundary = useCallback(
+    (item, district = null) => {
+      if (district) {
+        return (
+          (boundaryIndex?.levels?.["1"] || []).find(
+            (feature) => String(feature.id) === String(district.parent_id),
+          ) || null
+        );
+      }
+
+      const directRegion =
+        item.region &&
+        (level1ByName.get(canonicalRegionName(item.region)) ||
+          (boundaryIndex?.levels?.["1"] || []).find((feature) =>
+            locationMatches(featureName(feature), item.region),
+          ));
+      if (directRegion) return directRegion;
+
+      return findBestBoundaryMatch(boundaryIndex?.levels?.["1"] || [], item, 850);
+    },
+    [boundaryIndex, level1ByName],
+  );
+
+  const resolveDistrictBoundary = useCallback(
+    (item, region = null) => {
+      const pool = region
+        ? level2ByRegionId.get(String(region.id)) || []
+        : boundaryIndex?.levels?.["2"] || [];
+
+      const directDistrict =
+        item.district &&
+        (pool.find((feature) => locationMatches(featureName(feature), item.district)) ||
+          (boundaryIndex?.levels?.["2"] || []).find((feature) =>
+            locationMatches(featureName(feature), item.district),
+          ));
+      if (directDistrict) return directDistrict;
+
+      return (
+        findBestBoundaryMatch(pool, item, 900) ||
+        (!region ? null : findBestBoundaryMatch(boundaryIndex?.levels?.["2"] || [], item, 980))
+      );
+    },
+    [boundaryIndex, level2ByRegionId],
+  );
+
+  const resolveMahallaBoundary = useCallback(
+    (item, district = null, mahallaFeatures = userMahallaFeatures) => {
+      const pool = (mahallaFeatures || []).filter(
+        (feature) => !district || String(feature.properties?.parent_id) === String(district.id),
+      );
+      if (!pool.length) return null;
+
+      const directMahalla = item.mahalla
+        ? pool.find((feature) =>
+            locationMatches(featureName(feature.properties || feature), item.mahalla),
+          )
+        : null;
+      if (directMahalla) return directMahalla;
+
+      return findBestBoundaryMatch(pool, item, 980);
+    },
+    [userMahallaFeatures],
+  );
+
+  const loadBoundaryFile = useCallback(async (level, path) => {
+    if (!path) return EMPTY_COLLECTION;
+    const cacheKey = `${level}:${path}`;
+    if (loadedFilesRef.current[cacheKey]) return loadedFilesRef.current[cacheKey];
+    setLoadingBoundary(true);
+    try {
+      const data = await fetch(`${BOUNDARY_BASE}/${path}`).then((response) => response.json());
+      data.features = (data.features || []).map((feature) => {
+        const bbox = getFeatureBounds(feature);
+        return {
+          ...feature,
+          id: feature.properties?.boundary_id || feature.id,
+          bbox,
+          properties: {
+            ...feature.properties,
+            bbox,
+            center:
+              feature.properties?.center ||
+              (bbox ? [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2] : undefined),
+          },
+        };
+      });
+      loadedFilesRef.current[cacheKey] = data;
+      return data;
+    } finally {
+      setLoadingBoundary(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!boundaryIndex?.levels?.["2"]?.length || !boundaryIndex?.files?.["3"]) return undefined;
+
+    const preloadMahallaFiles = async () => {
+      const districtIds = [
+        ...new Set(
+          allRecords
+            .filter(
+              (item) =>
+                item.__source === "user" &&
+                ["admin", "researcher"].includes(item.__type) &&
+                !normalizeLngLat(
+                  Number(item.longitude ?? item.lon ?? item.lng),
+                  Number(item.latitude ?? item.lat),
+                ),
+            )
+            .map((item) => {
+              const locationItem = normalizeLocationItem(item);
+              const district = resolveDistrictBoundary(
+                locationItem,
+                resolveRegionBoundary(locationItem),
+              );
+              return district?.id;
+            })
+            .filter(Boolean),
+        ),
+      ];
+
+      if (!districtIds.length) {
+        if (mounted) setUserMahallaFeatures([]);
+        return;
+      }
+
+      const collections = await Promise.all(
+        districtIds.map(async (districtId) => {
+          const path =
+            boundaryIndex.files?.["3"]?.[String(districtId)] || `level3/${districtId}.geojson`;
+          return loadBoundaryFile(3, path);
+        }),
+      );
+
+      if (!mounted) return;
+      setUserMahallaFeatures(collections.flatMap((collection) => collection?.features || []));
+    };
+
+    preloadMahallaFiles();
+    return () => {
+      mounted = false;
+    };
+  }, [allRecords, boundaryIndex, loadBoundaryFile, resolveDistrictBoundary, resolveRegionBoundary]);
 
   const selectedRecords = useMemo(() => {
     if (!selected) return allRecords;
@@ -1208,35 +1754,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     const rows = allRecords
       .filter((item) => item.__source === "user" && ["admin", "researcher"].includes(item.__type))
       .map((item) => {
-        const locationText = [
-          item.region,
-          item.district,
-          item.mahalla,
-          item.address,
-          item.settlement,
-        ]
-          .filter(Boolean)
-          .join(" ");
-        const region =
-          level1ByName.get(canonicalRegionName(item.region || item.settlement || item.address)) ||
-          (boundaryIndex?.levels?.["1"] || []).find((feature) =>
-            locationMatches(featureName(feature), locationText),
-          );
-        const districts = (boundaryIndex?.levels?.["2"] || []).filter(
-          (feature) => !region || String(feature.parent_id) === String(region.id),
-        );
-        const district =
-          districts.find((feature) =>
-            locationMatches(featureName(feature), item.district || item.address || locationText),
-          ) ||
-          (boundaryIndex?.levels?.["2"] || []).find((feature) =>
-            locationMatches(featureName(feature), item.district || item.address || locationText),
-          );
-        const mahallaFeature = (level3Features || []).find((feature) => {
-          const props = feature.properties || {};
-          if (district && String(props.parent_id) !== String(district.id)) return false;
-          return locationMatches(featureName(props), item.mahalla || item.address || locationText);
-        });
+        const locationItem = normalizeLocationItem(item);
+        const district = resolveDistrictBoundary(locationItem, resolveRegionBoundary(locationItem));
+        const region = resolveRegionBoundary(locationItem, district);
+        const mahallaFeature = resolveMahallaBoundary(locationItem, district);
         const mahalla = mahallaFeature
           ? {
               ...mahallaFeature.properties,
@@ -1245,16 +1766,35 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
             }
           : null;
         const fallbackBoundary = mahalla || district || region;
-        const fallbackCenter = getCenter(fallbackBoundary);
+        const fallbackCenter = fallbackBoundary
+          ? mahalla || district
+            ? getCenter(fallbackBoundary)
+            : distributedPointInBoundary(
+                fallbackBoundary,
+                `${item.__type}-${item.id || item.email || item.name || locationItem.__locationText}`,
+              )
+          : null;
         const rawLng = Number(item.longitude ?? item.lon ?? item.lng);
         const rawLat = Number(item.latitude ?? item.lat);
-        const normalizedCoordinates = normalizeLngLat(rawLng, rawLat);
+        const normalizedCoordinates =
+          normalizeLngLat(rawLng, rawLat) || coordinatesFromText(locationItem.__locationText);
         const hasCoordinates = Boolean(normalizedCoordinates);
+        if (!hasCoordinates && !fallbackCenter) return null;
         const groupKey = hasCoordinates
           ? `${normalizedCoordinates[0].toFixed(4)}:${normalizedCoordinates[1].toFixed(4)}:${item.__type}`
           : `${fallbackBoundary?.boundary_id || fallbackBoundary?.id || "unknown"}:${item.__type}`;
-        return { item, region, fallbackCenter, normalizedCoordinates, hasCoordinates, groupKey };
-      });
+        return {
+          item,
+          region,
+          district,
+          mahalla,
+          fallbackCenter,
+          normalizedCoordinates,
+          hasCoordinates,
+          groupKey,
+        };
+      })
+      .filter(Boolean);
 
     const groupTotals = rows.reduce((acc, row) => {
       acc[row.groupKey] = (acc[row.groupKey] || 0) + 1;
@@ -1262,59 +1802,74 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     }, {});
 
     return rows
-      .map(({ item, region, fallbackCenter, normalizedCoordinates, hasCoordinates, groupKey }) => {
-        counters[groupKey] = (counters[groupKey] || 0) + 1;
-        const groupIndex = counters[groupKey] - 1;
-        const groupTotal = groupTotals[groupKey] || 1;
-        const coordinates = hasCoordinates
-          ? spreadPoint(normalizedCoordinates, groupIndex, groupTotal, 0.035)
-          : spreadPoint(fallbackCenter, groupIndex, groupTotal, 0.22);
-        const avgEntryTime =
-          item.avg_entry_time ??
-          (item.total_entry_time_seconds && item.completed_entries_count
-            ? Math.round(item.total_entry_time_seconds / item.completed_entries_count)
-            : "");
-        return {
-          type: "Feature",
-          geometry: { type: "Point", coordinates },
-          properties: {
-            id: `${item.__type}-${item.id || item.email || counters[groupKey]}`,
-            userId: item.__source === "user" ? item.id : null,
-            type: item.__type,
-            name: item.name || item.full_name || item.id_code || mt.notSpecified,
-            email: item.email || "",
-            phone: item.phone || item.parents_phone || "",
-            region: item.region || (region ? featureName(region) : mt.regionNotSpecified),
-            district: item.district || "",
-            mahalla: item.mahalla || "",
-            role: item.role || item.__type,
-            address: item.address || item.settlement || item.school_name || "",
-            status: item.status || "",
-            lastActiveAt: item.last_active_at || item.lastActiveAt || "",
-            createdAt: item.created_at || item.createdAt || "",
-            statsToday: item.stats_today ?? "",
-            statsMonth: item.stats_month ?? "",
-            totalEntries: item.total_entries ?? item.completed_entries_count ?? "",
-            avgEntryTime,
-            mostActiveHour: item.most_active_hour || "",
-            sourceRegionMatched: Boolean(region),
-            groupIndex: groupIndex + 1,
-            groupTotal,
-            originalLatitude: hasCoordinates ? normalizedCoordinates[1] : "",
-            originalLongitude: hasCoordinates ? normalizedCoordinates[0] : "",
-            latitude: coordinates[1],
-            longitude: coordinates[0],
-          },
-        };
-      })
+      .map(
+        ({
+          item,
+          region,
+          district,
+          mahalla,
+          fallbackCenter,
+          normalizedCoordinates,
+          hasCoordinates,
+          groupKey,
+        }) => {
+          counters[groupKey] = (counters[groupKey] || 0) + 1;
+          const groupIndex = counters[groupKey] - 1;
+          const groupTotal = groupTotals[groupKey] || 1;
+          const coordinates = hasCoordinates
+            ? spreadPoint(normalizedCoordinates, groupIndex, groupTotal, 35)
+            : spreadPoint(fallbackCenter, groupIndex, groupTotal, 220);
+          const avgEntryTime =
+            item.avg_entry_time ??
+            (item.total_entry_time_seconds && item.completed_entries_count
+              ? Math.round(item.total_entry_time_seconds / item.completed_entries_count)
+              : "");
+          return {
+            type: "Feature",
+            geometry: { type: "Point", coordinates },
+            properties: {
+              id: `${item.__type}-${item.id || item.email || counters[groupKey]}`,
+              userId: item.__source === "user" ? item.id : null,
+              type: item.__type,
+              name: item.name || item.full_name || item.id_code || mt.notSpecified,
+              email: item.email || "",
+              phone: item.phone || item.parents_phone || "",
+              region:
+                item.region || (region ? localizedFeatureName(region, lang) : mt.regionNotSpecified),
+              district: item.district || (district ? localizedFeatureName(district, lang) : ""),
+              mahalla: item.mahalla || (mahalla ? localizedFeatureName(mahalla, lang) : ""),
+              role: item.role || item.__type,
+              address: item.address || item.settlement || item.school_name || "",
+              status: item.status || "",
+              lastActiveAt: item.last_active_at || item.lastActiveAt || "",
+              createdAt: item.created_at || item.createdAt || "",
+              statsToday: item.stats_today ?? "",
+              statsMonth: item.stats_month ?? "",
+              totalEntries: item.total_entries ?? item.completed_entries_count ?? "",
+              avgEntryTime,
+              mostActiveHour: item.most_active_hour || "",
+              sourceRegionMatched: Boolean(region),
+              groupIndex: groupIndex + 1,
+              groupTotal,
+              originalLatitude: hasCoordinates ? normalizedCoordinates[1] : "",
+              originalLongitude: hasCoordinates ? normalizedCoordinates[0] : "",
+              latitude: hasCoordinates ? normalizedCoordinates[1] : (fallbackCenter?.[1] ?? ""),
+              longitude: hasCoordinates ? normalizedCoordinates[0] : (fallbackCenter?.[0] ?? ""),
+              displayLatitude: coordinates[1],
+              displayLongitude: coordinates[0],
+            },
+          };
+        },
+      )
       .filter(Boolean);
   }, [
     allRecords,
-    boundaryIndex,
-    level1ByName,
-    level3Features,
+    lang,
     mt.notSpecified,
     mt.regionNotSpecified,
+    resolveDistrictBoundary,
+    resolveMahallaBoundary,
+    resolveRegionBoundary,
   ]);
 
   const pinsGeoJson = useMemo(
@@ -1379,7 +1934,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         const boxHeight = Math.abs(y2 - y1);
         const shortSide = Math.min(boxWidth, boxHeight);
         const active = (props.boundary_id || feature.id) === svgSelectedId;
-        const rawLabel = featureName(props);
+        const rawLabel = localizedFeatureName(props, lang);
         const label = rawLabel.length > 22 ? `${rawLabel.slice(0, 21)}...` : rawLabel;
         const screenSize = active ? 13 : level === 1 ? 12 : level === 2 ? 10.5 : 8.5;
         const maxByBox = Math.min(
@@ -1403,7 +1958,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
         };
       })
       .filter(Boolean);
-  }, [svgMap, svgSelectedId, svgViewport.scale]);
+  }, [lang, svgMap, svgSelectedId, svgViewport.scale]);
 
   const setSourceData = useCallback((level, geoJson, makeVisible = true) => {
     const map = mapRef.current;
@@ -1433,35 +1988,6 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
     if (level === 1 && map.getLayer(LEVEL_META[1].fill)) {
       map.setLayoutProperty(LEVEL_META[1].fill, "visibility", "visible");
       map.setLayoutProperty(LEVEL_META[1].line, "visibility", "visible");
-    }
-  }, []);
-
-  const loadBoundaryFile = useCallback(async (level, path) => {
-    if (!path) return EMPTY_COLLECTION;
-    const cacheKey = `${level}:${path}`;
-    if (loadedFilesRef.current[cacheKey]) return loadedFilesRef.current[cacheKey];
-    setLoadingBoundary(true);
-    try {
-      const data = await fetch(`${BOUNDARY_BASE}/${path}`).then((response) => response.json());
-      data.features = (data.features || []).map((feature) => {
-        const bbox = getFeatureBounds(feature);
-        return {
-          ...feature,
-          id: feature.properties?.boundary_id || feature.id,
-          bbox,
-          properties: {
-            ...feature.properties,
-            bbox,
-            center:
-              feature.properties?.center ||
-              (bbox ? [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2] : undefined),
-          },
-        };
-      });
-      loadedFilesRef.current[cacheKey] = data;
-      return data;
-    } finally {
-      setLoadingBoundary(false);
     }
   }, []);
 
@@ -2029,24 +2555,24 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
   const breadcrumbItems = useMemo(
     () =>
       [
-        { label: "O'zbekiston", onClick: resetToCountry, active: !selected },
+        { label: mt.country, onClick: resetToCountry, active: !selected },
         selectedPath.region && {
-          label: featureName(selectedPath.region),
+          label: localizedFeatureName(selectedPath.region, lang),
           onClick: () => selectBoundary(selectedPath.region, 1),
           active: selected?.admin_leve === 1,
         },
         selectedPath.district && {
-          label: featureName(selectedPath.district),
+          label: localizedFeatureName(selectedPath.district, lang),
           onClick: () => selectBoundary(selectedPath.district, 2),
           active: selected?.admin_leve === 2,
         },
         selectedPath.mahalla && {
-          label: featureName(selectedPath.mahalla),
+          label: localizedFeatureName(selectedPath.mahalla, lang),
           onClick: () => selectBoundary(selectedPath.mahalla, 3),
           active: selected?.admin_leve === 3,
         },
       ].filter(Boolean),
-    [resetToCountry, selectBoundary, selected, selectedPath],
+    [lang, mt.country, resetToCountry, selectBoundary, selected, selectedPath],
   );
 
   const childCount = useMemo(() => {
@@ -2244,7 +2770,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       [mt.address, selectedPin.address],
       [
         mt.coordinate,
-        [selectedPin.latitude, selectedPin.longitude]
+        [
+          selectedPin.originalLatitude || selectedPin.latitude,
+          selectedPin.originalLongitude || selectedPin.longitude,
+        ]
           .filter((value) => value !== undefined && value !== null && value !== "")
           .map((value) => Number(value).toFixed(6))
           .join(", "),
@@ -2501,8 +3030,8 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                       >
                         <title>
                           {patientCount > 0
-                            ? `${featureName(item)}: ${patientCount} ta patient ma'lumoti bor`
-                            : `${featureName(item)}: patient ma'lumoti yo'q`}
+                            ? `${localizedFeatureName(item, lang)}: ${patientCount} ta patient ma'lumoti bor`
+                            : `${localizedFeatureName(item, lang)}: patient ma'lumoti yo'q`}
                         </title>
                       </path>
                     );
@@ -2886,13 +3415,13 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                   {levelLabel}
                 </Typography>
                 <Typography variant="h5" fontWeight={800}>
-                  {selected ? featureName(selected) : mt.country}
+                  {selected ? localizedFeatureName(selected, lang) : mt.country}
                 </Typography>
                 {selectedPath.region && (
                   <Typography variant="caption" color="text.secondary">
                     {[selectedPath.region, selectedPath.district, selectedPath.mahalla]
                       .filter(Boolean)
-                      .map(featureName)
+                      .map((item) => localizedFeatureName(item, lang))
                       .join(" / ")}
                   </Typography>
                 )}

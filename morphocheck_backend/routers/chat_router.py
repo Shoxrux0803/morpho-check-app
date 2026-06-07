@@ -46,6 +46,9 @@ typing_statuses: Dict[int, dict] = {}
 ALLOWED_UPLOAD_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx"}
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
+def _active_user_filter():
+    return User.is_deleted == 0
+
 def _validate_chat_file_url(file_url: Optional[str]) -> Optional[str]:
     if not file_url:
         return None
@@ -56,6 +59,34 @@ def _validate_chat_file_url(file_url: Optional[str]) -> Optional[str]:
     if basename != normalized.rsplit("/", 1)[-1] or not basename:
         raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
     return normalized
+
+def _hydrate_messages(db: Session, messages: List[ChatMessage]) -> List[ChatMessageOut]:
+    sender_ids = {m.sender_id for m in messages}
+    reply_ids = {m.reply_to_id for m in messages if m.reply_to_id}
+
+    parents = {}
+    if reply_ids:
+        parent_rows = db.query(ChatMessage).filter(ChatMessage.id.in_(reply_ids)).all()
+        parents = {p.id: p for p in parent_rows}
+        sender_ids.update(p.sender_id for p in parent_rows)
+
+    users = {}
+    if sender_ids:
+        user_rows = db.query(User.id, User.name).filter(User.id.in_(sender_ids)).all()
+        users = {user_id: name for user_id, name in user_rows}
+
+    results = []
+    for m in messages:
+        out = ChatMessageOut.from_orm(m)
+        out.sender_name = users.get(m.sender_id, "User")
+
+        parent = parents.get(m.reply_to_id)
+        if parent:
+            out.reply_to_content = parent.content
+            out.reply_to_sender = users.get(parent.sender_id, "User")
+
+        results.append(out)
+    return results
 
 @router.post("/send", response_model=ChatMessageOut)
 def send_message(
@@ -77,7 +108,10 @@ def send_message(
         msg.recipient_id = None
     elif not msg.recipient_id and current_user.role != "superadmin":
         # Find first superadmin to send message to
-        superadmin = db.query(User).filter(User.role == "superadmin").first()
+        superadmin = db.query(User).filter(
+            User.role == "superadmin",
+            _active_user_filter()
+        ).first()
         if superadmin:
             msg.recipient_id = superadmin.id
         else:
@@ -86,7 +120,7 @@ def send_message(
     elif msg.recipient_id:
         recipient = db.query(User).filter(
             User.id == msg.recipient_id,
-            (User.is_deleted == 0) | (User.is_deleted == None)
+            _active_user_filter()
         ).first()
         if not recipient:
             raise HTTPException(status_code=404, detail="Qabul qiluvchi topilmadi")
@@ -137,23 +171,7 @@ def get_my_messages(
         
     messages = query.order_by(ChatMessage.created_at.desc()).limit(100).all()
     
-    # Add sender names and reply info
-    results = []
-    for m in messages:
-        sender = db.query(User).filter(User.id == m.sender_id).first()
-        out = ChatMessageOut.from_orm(m)
-        out.sender_name = sender.name if sender else "System"
-        
-        if m.reply_to_id:
-            parent = db.query(ChatMessage).filter(ChatMessage.id == m.reply_to_id).first()
-            if parent:
-                out.reply_to_content = parent.content
-                parent_sender = db.query(User).filter(User.id == parent.sender_id).first()
-                out.reply_to_sender = parent_sender.name if parent_sender else "User"
-                
-        results.append(out)
-        
-    return results
+    return _hydrate_messages(db, messages)
 
 class ConversationOut(BaseModel):
     user_id: int
@@ -171,11 +189,18 @@ def get_conversations(
 ):
     # Determine which users should be visible to current_user
     if current_user.role == "superadmin":
-        # Superadmin sees ALL admins and researchers
-        visible_users = db.query(User).filter(User.id != current_user.id).all()
+        # Superadmin sees only active admins and researchers
+        visible_users = db.query(User).filter(
+            User.id != current_user.id,
+            User.role.in_(["admin", "researcher"]),
+            _active_user_filter()
+        ).all()
     else:
-        # Regular users and Admins ONLY see Superadmins
-        visible_users = db.query(User).filter(User.role == "superadmin").all()
+        # Regular users and Admins ONLY see active Superadmins
+        visible_users = db.query(User).filter(
+            User.role == "superadmin",
+            _active_user_filter()
+        ).all()
     
     results = []
     for user_obj in visible_users:
@@ -228,29 +253,24 @@ def get_chat_history(
 ):
     # For superadmin, get history with user_id
     # For normal user, they can only see history with superadmin (user_id must be superadmin or self)
-    
+    target_user = db.query(User).filter(
+        User.id == user_id,
+        _active_user_filter()
+    ).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
+    if current_user.role == "superadmin":
+        if target_user.role not in ["admin", "researcher"]:
+            raise HTTPException(status_code=403, detail="Bu foydalanuvchi chat ro'yxatida mavjud emas")
+    elif target_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Faqat super admin bilan yozish mumkin")
+
     messages = db.query(ChatMessage).filter(
         ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == user_id)) |
         ((ChatMessage.sender_id == user_id) & (ChatMessage.recipient_id == current_user.id))
     ).order_by(ChatMessage.created_at.asc()).all()
     
-    # Add sender names
-    results = []
-    for m in messages:
-        sender = db.query(User).filter(User.id == m.sender_id).first()
-        out = ChatMessageOut.from_orm(m)
-        out.sender_name = sender.name if sender else "User"
-        
-        if m.reply_to_id:
-            parent = db.query(ChatMessage).filter(ChatMessage.id == m.reply_to_id).first()
-            if parent:
-                out.reply_to_content = parent.content
-                parent_sender = db.query(User).filter(User.id == parent.sender_id).first()
-                out.reply_to_sender = parent_sender.name if parent_sender else "User"
-        
-        results.append(out)
-        
-    return results
+    return _hydrate_messages(db, messages)
 
 @router.post("/mark-read/{message_id}")
 def mark_as_read(

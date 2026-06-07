@@ -1,6 +1,6 @@
 # morphocheck_backend/models/chat.py
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, func
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Boolean, func, Index
 from .base import Base
 
 class ChatMessage(Base):
@@ -15,3 +15,9 @@ class ChatMessage(Base):
     message_type = Column(String(50), default="direct", index=True) # "direct" or "broadcast"
     is_read = Column(Boolean, default=False, index=True)
     created_at = Column(DateTime, server_default=func.now(), index=True)
+
+    __table_args__ = (
+        Index("ix_chat_messages_sender_recipient_created", "sender_id", "recipient_id", "created_at"),
+        Index("ix_chat_messages_recipient_sender_read", "recipient_id", "sender_id", "is_read"),
+        Index("ix_chat_messages_type_created", "message_type", "created_at"),
+    )

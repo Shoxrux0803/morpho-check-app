@@ -190,6 +190,7 @@ const PAGE_LABELS = {
   uz: { scientificAnalysis: "Ilmiy Tahlil" },
   ru: { scientificAnalysis: "Научный анализ" },
   en: { scientificAnalysis: "Scientific Analysis" },
+  tg: { scientificAnalysis: "Таҳлили илмӣ" },
   kz: { scientificAnalysis: "Ғылыми талдау" },
   ky: { scientificAnalysis: "Илимий талдоо" },
 };
@@ -330,7 +331,7 @@ function CustomModal({
 export default function AdminPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, login: authLogin, loading: authLoading } = useAuth();
+  const { user, login: authLogin, loading: authLoading, logout } = useAuth();
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const pt = useCallback((key) => pageT(lang, key), [lang]);
@@ -371,10 +372,12 @@ export default function AdminPage() {
   const [checked, setChecked] = useState(new Set());
 
   // Login state
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "", verification_code: "" });
+  const [requiresVerification, setRequiresVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginInProgress, setLoginInProgress] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const [exportingXlsx, setExportingXlsx] = useState(false);
   const [importingXlsx, setImportingXlsx] = useState(false);
@@ -389,9 +392,6 @@ export default function AdminPage() {
   // Deletion state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
-
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const { logout } = useAuth();
 
   // Load Data - Paginated
   const load = useCallback(async () => {
@@ -470,6 +470,11 @@ export default function AdminPage() {
       setLoginInProgress(true);
       try {
         const profile = await authLogin(loginForm);
+        if (profile.requires_verification) {
+          setRequiresVerification(true);
+          setLoginError(profile.message || "Emailga yuborilgan tasdiqlash kodini kiriting.");
+          return;
+        }
         if (profile.role === "researcher") {
           navigate("/researcher", { replace: true });
         } else if (profile.role !== "admin" && profile.role !== "superadmin") {
@@ -973,6 +978,18 @@ export default function AdminPage() {
                     ),
                   }}
                 />
+                {requiresVerification && (
+                  <TextField
+                    fullWidth
+                    label="Tasdiqlash kodi"
+                    variant="outlined"
+                    value={loginForm.verification_code}
+                    onChange={(e) =>
+                      setLoginForm({ ...loginForm, verification_code: e.target.value })
+                    }
+                    inputProps={{ inputMode: "numeric", maxLength: 6 }}
+                  />
+                )}
                 <Button
                   fullWidth
                   size="large"

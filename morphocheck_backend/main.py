@@ -1,6 +1,12 @@
-# morphocheck_backend/main.py
 import os
+from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
+
+# Load backend configuration before modules read environment variables.
+load_dotenv(Path(__file__).resolve().parent / ".env")
+load_dotenv()
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,15 +14,11 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from dotenv import load_dotenv
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from utils.rate_limit import limiter
 from starlette.middleware.base import BaseHTTPMiddleware
-
-# .env faylini yuklash
-load_dotenv()
 
 # Routers
 from routers.analyze_router import router as analyze_router
@@ -36,6 +38,7 @@ from models.base import Base
 from models.user import User
 from models.userdata import PatientAnalysis
 from models.chat import ChatMessage
+from models.auth_device import LoginVerificationCode, TrustedLoginDevice
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
@@ -132,15 +135,34 @@ def ensure_schema_updates():
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
 
+    def _columns(table_name: str) -> set[str]:
+        return {col["name"] for col in inspector.get_columns(table_name)}
+
+    def _create_index(conn, table_name: str, index_name: str, columns: tuple[str, ...]):
+        if table_name not in table_names:
+            return
+        existing_columns = _columns(table_name)
+        if not set(columns).issubset(existing_columns):
+            return
+        column_sql = ", ".join(columns)
+        conn.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_sql})"))
+
+    def _drop_index(conn, index_name: str):
+        conn.execute(text(f"DROP INDEX IF EXISTS {index_name}"))
+
     if "patient_analysis" in table_names:
         existing = {col["name"] for col in inspector.get_columns("patient_analysis")}
-        with engine.begin() as conn:
-            if "doctor_note" not in existing:
-                conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN doctor_note TEXT"))
-            if "mahalla" not in existing:
-                conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN mahalla VARCHAR(150)"))
-            if "parents_phone" not in existing:
-                conn.execute(text("ALTER TABLE patient_analysis ADD COLUMN parents_phone VARCHAR(50)"))
+        missing = []
+        if "doctor_note" not in existing:
+            missing.append(("doctor_note", "TEXT"))
+        if "mahalla" not in existing:
+            missing.append(("mahalla", "VARCHAR(150)"))
+        if "parents_phone" not in existing:
+            missing.append(("parents_phone", "VARCHAR(50)"))
+        if missing:
+            with engine.begin() as conn:
+                for column_name, column_type in missing:
+                    conn.execute(text(f"ALTER TABLE patient_analysis ADD COLUMN {column_name} {column_type}"))
 
     if "users" in table_names:
         user_columns = {
@@ -155,10 +177,65 @@ def ensure_schema_updates():
             "scientific_supervisor": "VARCHAR(200)",
         }
         existing = {col["name"] for col in inspector.get_columns("users")}
-        with engine.begin() as conn:
-            for column_name, column_type in user_columns.items():
-                if column_name not in existing:
-                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"))
+        missing = [(name, sql_type) for name, sql_type in user_columns.items() if name not in existing]
+        if missing:
+            with engine.begin() as conn:
+                for name, sql_type in missing:
+                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {name} {sql_type}"))
+
+    with engine.begin() as conn:
+        indexes = [
+            ("patient_analysis", "ix_patient_analysis_is_deleted", ("is_deleted",)),
+            ("patient_analysis", "ix_patient_analysis_created_by_id", ("created_by_id",)),
+            ("patient_analysis", "ix_patient_analysis_deleted_created", ("is_deleted", "created_at")),
+            ("patient_analysis", "ix_patient_analysis_owner_active_created", ("created_by_id", "is_deleted", "created_at")),
+            ("patient_analysis", "ix_patient_analysis_deleted_deleted_at", ("is_deleted", "deleted_at")),
+            ("patient_analysis", "ix_patient_analysis_region_active_created", ("region", "is_deleted", "created_at")),
+            ("patient_analysis", "ix_patient_analysis_gender_age_active", ("gender", "age", "is_deleted")),
+            ("patient_analysis", "ix_patient_analysis_child_history", ("name", "birth_date", "gender", "is_deleted", "created_at")),
+            ("research_records", "ix_research_records_deleted_created", ("is_deleted", "created_at")),
+            ("research_records", "ix_research_records_owner_active_id", ("created_by_id", "is_deleted", "id")),
+            ("research_records", "ix_research_records_active_exam_id", ("is_deleted", "examination_date", "id")),
+            ("research_records", "ix_research_records_owner_exam", ("created_by_id", "examination_date")),
+            ("research_records", "ix_research_records_gender_active", ("gender", "is_deleted")),
+            ("research_records", "ix_research_records_feeding_active", ("feeding_type", "is_deleted")),
+            ("research_records", "ix_research_records_marriage_active", ("parents_marriage", "is_deleted")),
+            ("chat_messages", "ix_chat_messages_sender_recipient_created", ("sender_id", "recipient_id", "created_at")),
+            ("chat_messages", "ix_chat_messages_recipient_sender_read", ("recipient_id", "sender_id", "is_read")),
+            ("chat_messages", "ix_chat_messages_type_created", ("message_type", "created_at")),
+            ("audit_logs", "ix_audit_logs_action_created", ("action", "created_at")),
+            ("audit_logs", "ix_audit_logs_user_created", ("user_id", "created_at")),
+            ("audit_logs", "ix_audit_logs_target", ("target_type", "target_id")),
+            ("payments", "ix_payments_user_created", ("user_id", "created_at")),
+            ("payments", "ix_payments_status_created", ("status", "created_at")),
+            ("users", "ix_users_role_active", ("role", "is_deleted")),
+            ("users", "ix_users_deleted_deleted_at", ("is_deleted", "deleted_at")),
+        ]
+        for table_name, index_name, columns in indexes:
+            _create_index(conn, table_name, index_name, columns)
+
+        for table_name in ("patient_analysis", "research_records", "users"):
+            if table_name in table_names and "is_deleted" in _columns(table_name):
+                conn.execute(text(f"UPDATE {table_name} SET is_deleted = 0 WHERE is_deleted IS NULL"))
+
+        for index_name in (
+            "idx_patient_gender",
+            "idx_patient_age",
+            "idx_patient_district",
+            "idx_patient_id_code",
+            "idx_patient_name",
+            "idx_patient_created_at",
+            "ix_patient_analysis_id",
+            "ix_users_id",
+            "ix_audit_logs_id",
+            "ix_payments_id",
+            "ix_ratings_id",
+            "ix_clinical_settings_id",
+        ):
+            _drop_index(conn, index_name)
+
+        if engine.dialect.name == "sqlite":
+            conn.execute(text("ANALYZE"))
 
 # ---- Routers (barchasi /api/ ostida) ----
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])

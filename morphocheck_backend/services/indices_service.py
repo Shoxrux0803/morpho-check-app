@@ -1,6 +1,6 @@
 import math
 from typing import Dict, Any
-from services.ky_localization import ky_text
+from services.ky_localization import report_text
 
 # ─────────────────────────────────────────────
 # 4-tilli matn lug'ati
@@ -11,18 +11,21 @@ _T = {
         "uz": "muhitga nisbatan optimal morfologik moslashuv",
         "ru": "оптимальная морфологическая адаптация к среде",
         "en": "optimal morphological adaptation to the environment",
+        "tg": "мутобиқшавии оптималии морфологӣ нисбат ба муҳит",
         "kz": "қоршаған ортаға оңтайлы морфологиялық бейімделу",
     },
     "hmai_accel": {
         "uz": "akseleratsiya / yuqori morfologik rivojlanish",
         "ru": "акселерация / высокое морфологическое развитие",
         "en": "acceleration / high morphological development",
+        "tg": "акселератсия / рушди баланди морфологӣ",
         "kz": "акселерация / жоғары морфологиялық дамуы",
     },
     "hmai_stress": {
         "uz": "moslashuv stresi yoki rivojlanishning sekinlashishi",
         "ru": "адаптационный стресс или замедление развития",
         "en": "adaptation stress or developmental delay",
+        "tg": "стресси мутобиқшавӣ ё сустшавии рушд",
         "kz": "бейімделу стрессі немесе дамуының баяулауы",
     },
     # MII tavsiflari
@@ -30,18 +33,21 @@ _T = {
         "uz": "somatik komponentlarning yuqori integratsiyasi",
         "ru": "высокая интеграция соматических компонентов",
         "en": "high integration of somatic components",
+        "tg": "интегратсияи баланди ҷузъҳои соматикӣ",
         "kz": "соматикалық компоненттердің жоғары интеграциясы",
     },
     "mii_normal": {
         "uz": "normal o'rtacha morfologik muvozanat",
         "ru": "нормальный средний морфологический баланс",
         "en": "normal average morphological balance",
+        "tg": "мувозинати миёнаи морфологии меъёрӣ",
         "kz": "қалыпты орташа морфологиялық тепе-теңдік",
     },
     "mii_low": {
         "uz": "past morfologik nomutanosiblik",
         "ru": "низкая морфологическая диспропорция",
         "en": "low morphological imbalance",
+        "tg": "номувофиқати пасти морфологӣ",
         "kz": "төмен морфологиялық диспропорция",
     },
     # ADI tavsiflari
@@ -49,18 +55,21 @@ _T = {
         "uz": "uyg'un rivojlanish",
         "ru": "гармоничное развитие",
         "en": "harmonious development",
+        "tg": "рушди ҳамоҳанг",
         "kz": "үйлесімді даму",
     },
     "adi_mid": {
         "uz": "o'rtacha nomutanosiblik",
         "ru": "умеренная диспропорция",
         "en": "moderate disharmony",
+        "tg": "номувофиқати миёна",
         "kz": "орташа диспропорция",
     },
     "adi_high": {
         "uz": "yuqori darajadagi nomutanosiblik",
         "ru": "высокая степень диспропорции",
         "en": "high degree of disharmony",
+        "tg": "номувофиқати дараҷаи баланд",
         "kz": "жоғары дәрежелі диспропорция",
     },
     # Tip va holat tavsiflari
@@ -250,6 +259,7 @@ _T = {
         "uz": "🎨 {sub_pos} normostenik tip: uyg'un rivojlanmoqda. Holatni saqlash uchun muvozanatli ovqatlanish rejimiga amal qiling.",
         "ru": "🎨 {sub_pos_nom} нормостенического типа: гармоничное развитие. Придерживайтесь сбалансированного питания для поддержания формы.",
         "en": "🎨 Normosthenic body type: harmonious development. Follow a balanced diet to maintain condition.",
+        "tg": "{sub_pos} навъи нормостеник дорад: рушд ҳамоҳанг аст. Барои нигоҳ доштани ҳолат ба реҷаи ғизои мутавозин риоя кунед.",
         "kz": "🎨 {sub_pos} нормостеникалық тип: үйлесімді дамуда. Жағдайды сақтау үшін теңдестірілген тамақтану режиміне сүйеніңіз.",
     },
     "adv_fat_high": {
@@ -286,18 +296,21 @@ _T = {
         "uz": "Xavf past",
         "ru": "Низкий риск",
         "en": "Low risk",
+        "tg": "Хавфи паст",
         "kz": "Қауіп төмен",
     },
     "mcri_moderate": {
         "uz": "O'rtacha xavf (Adipoz fenotip bosqichi)",
         "ru": "Умеренный риск (Стадия адипозного фенотипа)",
         "en": "Moderate risk (Adipose phenotype stage)",
+        "tg": "Хавфи миёна (марҳилаи фенотипи адипозӣ)",
         "kz": "Орташа қауіп",
     },
     "mcri_high": {
         "uz": "Yuqori xavf (Ortiqcha yog' va mushak yetishmovchiligi)",
         "ru": "Высокий риск (Избыток жира и дефицит мышц)",
         "en": "High risk (Fat excess and muscle deficit)",
+        "tg": "Хавфи баланд (зиёдатии чарб ва норасоии мушак)",
         "kz": "Жоғары қауіп",
     },
     "adv_mcri_high": {
@@ -330,7 +343,7 @@ def _t(key: str, lang: str, **kwargs) -> str:
             text = text.format(**kwargs)
         except KeyError:
             pass
-    return ky_text(text, lang)
+    return report_text(text, lang)
 
 
 def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
@@ -465,6 +478,7 @@ def get_corridor_from_z(z: float, lang: str) -> str:
         "uz": ["Juda kam vazn (<3-sentil)", "Kam vazn (3-15-sentil)", "Me'yor (15-85-sentil)", "Ortiqcha vazn (85-97-sentil)", "Semizlik (>97-sentil)"],
         "ru": ["Крайний дефицит массы (<3-центиль)", "Дефицит массы (3-15-центиль)", "Норма (15-85-центиль)", "Избыточная масса (85-97-центиль)", "Ожирение (>97-центиль)"],
         "en": ["Severe underweight (<3rd centile)", "Underweight (3rd-15th centile)", "Normal (15th-85th centile)", "Overweight (85th-97th centile)", "Obesity (>97th centile)"],
+        "tg": ["Камвазнии шадид (<3-сентил)", "Камвазнӣ (3-15-сентил)", "Меъёр (15-85-сентил)", "Вазни зиёдатӣ (85-97-сентил)", "Фарбеҳӣ (>97-сентил)"],
         "ky": ["Өтө төмөн салмак (<3-сентиль)", "Төмөн салмак (3-15-сентиль)", "Норма (15-85-сентиль)", "Ашыкча салмак (85-97-сентиль)", "Семирүү (>97-сентиль)"],
         "kz": ["Салмақтың өте төмендігі (<3-центиль)", "Салмақ тапшылығы (3-15-центиль)", "Норма (15-85-центиль)", "Артық салмақ (85-97-центиль)", "Семіздік (>97-центиль)"]
     }
@@ -503,7 +517,7 @@ def calculate_detailed_indices(
                         text = text.format(**kwargs)
                     except (KeyError, IndexError, ValueError) as exc:
                         text = f"{text} (format xatosi: {exc})"
-                return ky_text(text, l)
+                return report_text(text, l)
         
         # Fallback to hardcoded _T
         return _t(key, l, **kwargs)

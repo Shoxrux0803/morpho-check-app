@@ -41,6 +41,17 @@ import { UZB_LOCATIONS } from "../../data/uzbLocations";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 const SOMATOTYPES = ["Endomorph", "Mesomorph", "Ectomorph", "Central"];
+const DEFAULT_FILTERS = {
+  gender: "",
+  region: "",
+  age_min: 0,
+  age_max: 100,
+  bmi_min: 10,
+  bmi_max: 50,
+  somatotype: "",
+  date_from: "",
+  date_to: "",
+};
 
 const FILTER_I18N = {
   uz: {
@@ -108,6 +119,29 @@ const FILTER_I18N = {
   },
 };
 
+FILTER_I18N.tg = {
+  ...FILTER_I18N.uz,
+  title: "Филтрҳои таҳлилӣ",
+  subtitle: "Саракунӣ ва таҳлили маълумот",
+  activeFilters: (count) => `${count} филтр фаъол`,
+  demographics: "Демография",
+  gender: "ҶИНС",
+  male: "Мард",
+  female: "Зан",
+  all: "Ҳама",
+  region: "ҲУДУД (ВИЛОЯТ)",
+  allRegions: "Ҳамаи ҳудудҳо",
+  biometrics: "Биометрия",
+  ageRange: "ДИАПАЗОНИ СИННУ СОЛ",
+  bmiRange: "ДИАПАЗОНИ BMI",
+  scientific: "Таснифи илмӣ",
+  somatotype: "СОМАТОТИП",
+  allTypes: "Ҳамаи навъҳо",
+  dateFrom: "АЗ САНА",
+  clear: "Тоза кардан",
+  apply: "Татбиқ",
+};
+
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
@@ -149,15 +183,16 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
 
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
+  const safeFilters = { ...DEFAULT_FILTERS, ...(filters || {}) };
 
   const handleChange = (field) => (event, newValue) => {
     onFilterChange({
-      ...filters,
+      ...safeFilters,
       [field]: event?.target?.value !== undefined ? event.target.value : newValue,
     });
   };
 
-  const activeCount = Object.values(filters).filter(
+  const activeCount = Object.values(filters || {}).filter(
     (v) => v !== "" && v !== null && v !== undefined,
   ).length;
 
@@ -247,7 +282,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                     {t.gender}
                   </Typography>
                   <ToggleButtonGroup
-                    value={filters.gender}
+                    value={safeFilters.gender}
                     exclusive
                     onChange={handleChange("gender")}
                     fullWidth
@@ -284,7 +319,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                   </Typography>
                   <FormControl fullWidth size="small">
                     <Select
-                      value={filters.region}
+                      value={safeFilters.region}
                       onChange={handleChange("region")}
                       displayEmpty
                       sx={{ borderRadius: 2 }}
@@ -326,8 +361,8 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       label="Min"
                       type="number"
                       size="small"
-                      value={filters.age_min || 0}
-                      onChange={(e) => onFilterChange({ ...filters, age_min: e.target.value })}
+                      value={safeFilters.age_min || 0}
+                      onChange={(e) => onFilterChange({ ...safeFilters, age_min: e.target.value })}
                       sx={{ borderRadius: 2 }}
                     />
                     <Typography variant="body2" color="text.secondary">
@@ -337,8 +372,8 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       label="Max"
                       type="number"
                       size="small"
-                      value={filters.age_max || 100}
-                      onChange={(e) => onFilterChange({ ...filters, age_max: e.target.value })}
+                      value={safeFilters.age_max || 100}
+                      onChange={(e) => onFilterChange({ ...safeFilters, age_max: e.target.value })}
                       sx={{ borderRadius: 2 }}
                     />
                   </Stack>
@@ -358,8 +393,8 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       label="Min"
                       type="number"
                       size="small"
-                      value={filters.bmi_min || 10}
-                      onChange={(e) => onFilterChange({ ...filters, bmi_min: e.target.value })}
+                      value={safeFilters.bmi_min || 10}
+                      onChange={(e) => onFilterChange({ ...safeFilters, bmi_min: e.target.value })}
                       InputProps={{ inputProps: { step: 0.5 } }}
                       sx={{ borderRadius: 2 }}
                     />
@@ -370,8 +405,8 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       label="Max"
                       type="number"
                       size="small"
-                      value={filters.bmi_max || 50}
-                      onChange={(e) => onFilterChange({ ...filters, bmi_max: e.target.value })}
+                      value={safeFilters.bmi_max || 50}
+                      onChange={(e) => onFilterChange({ ...safeFilters, bmi_max: e.target.value })}
                       InputProps={{ inputProps: { step: 0.5 } }}
                       sx={{ borderRadius: 2 }}
                     />
@@ -402,7 +437,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                   </Typography>
                   <FormControl fullWidth size="small">
                     <Select
-                      value={filters.somatotype}
+                      value={safeFilters.somatotype}
                       onChange={handleChange("somatotype")}
                       displayEmpty
                       sx={{ borderRadius: 2 }}
@@ -428,8 +463,8 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                   </Typography>
                   <input
                     type="date"
-                    value={filters.date_from || ""}
-                    onChange={(e) => onFilterChange({ ...filters, date_from: e.target.value })}
+                    value={safeFilters.date_from || ""}
+                    onChange={(e) => onFilterChange({ ...safeFilters, date_from: e.target.value })}
                     style={{
                       width: "100%",
                       padding: "8.5px 14px",

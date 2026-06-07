@@ -251,6 +251,59 @@ const DASH_I18N = {
   },
 };
 
+DASH_I18N.tg = {
+  ...DASH_I18N.uz,
+  title: "Маркази таҳлилии SuperAdmin",
+  subtitle: "Панели ягона барои ҳудудҳо, админҳо, хавфи клиникӣ ва динамикаи моҳона",
+  analyses: "Таҳлилҳо",
+  admins: "Админҳо",
+  today: "Имрӯз",
+  totalAnalyses: "Ҳамаи таҳлилҳо",
+  allTime: "Дар тамоми давра",
+  todayAnalyses: "Таҳлилҳои имрӯза",
+  enteredToday: "Имрӯз ворид шудааст",
+  weeklyGrowth: "Афзоиши ҳафтаина",
+  thisWeek: "дар ин ҳафта",
+  totalAdmins: "Ҳамаи админҳо",
+  simple: "оддӣ",
+  avgBmi: "BMI миёна",
+  systemWide: "Дар тамоми низом",
+  riskRegions: "Ҳудудҳои дорои хавфи бештар",
+  riskRegionsSub: "Сабтҳое, ки аз ҳадди хавфи BMI ё Z-score гузаштаанд",
+  riskFrom: "аз",
+  risk: "хавф",
+  monthlyDynamics: "Динамикаи моҳона",
+  monthlyDynamicsSub: "Шумораи таҳлилҳо дар 12 моҳи охир",
+  analysesCount: "Шумораи таҳлилҳо",
+  genderDistribution: "Тақсимот аз рӯи ҷинс",
+  genderDistributionSub: "Нисбати мард / зан",
+  ageGroups: "Гурӯҳҳои синнусолӣ",
+  ageGroupsSub: "Беморон аз рӯи синну сол",
+  patientsCount: "Шумораи беморон",
+  somatotypeDistribution: "Тақсимоти соматотип",
+  somatotypeDistributionSub: "Таснифи сохтори бадан",
+  count: "Шумора",
+  topRegions: "Top-10 аз рӯи вилоятҳо",
+  topRegionsSub: "Ҳудудҳои дорои таҳлилҳои бештар",
+  bmiStatusDistribution: "Тақсимоти ҳолати BMI",
+  bmiStatusDistributionSub: "Аз рӯи гурӯҳҳои саломатӣ",
+  noData: "Маълумот нест",
+  patient: "бемор",
+  avgRadar: "Радари миёнаи соматотип",
+  avgRadarSub: "Нишондиҳандаҳои миёнаи соматометрӣ дар низом",
+  average: "Миёна",
+  adminsDistribution: "Тақсимоти админҳо",
+  adminsDistributionSub: "Истифодабарандагони низом аз рӯи нақшҳо",
+  lastUpdate: "Навсозии охирин",
+  male: "Мард",
+  female: "Зан",
+  unknown: "Номаълум",
+  normal: "Меъёр",
+  overweight: "Вазни зиёдатӣ",
+  obese: "Фарбеҳӣ",
+  underweight: "Камвазнӣ",
+};
+
 // ==== PALETTE ====
 const COLORS = {
   primary: "#0f766e",
@@ -264,7 +317,7 @@ const COLORS = {
 };
 const PIE_COLORS = [COLORS.info, COLORS.rose, COLORS.teal, COLORS.warning];
 const AGE_COLORS = ["#0f766e", "#2563eb", "#14b8a6", "#f59e0b", "#64748b"];
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",

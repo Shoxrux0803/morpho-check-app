@@ -158,7 +158,11 @@ export default function AuthorPage() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", position: "relative", py: { xs: 6, md: 10 } }}>
+    <Box
+      sx={{ minHeight: "100vh", position: "relative", overflow: "hidden", py: { xs: 6, md: 10 } }}
+    >
+      <MorphoProBackground theme={mode} />
+
       <Container maxWidth="lg" sx={{ position: "relative", zIndex: 10 }}>
         {/* Header */}
         <FadeIn y={-20}>

@@ -1,5 +1,5 @@
 # morphocheck_backend/models/audit.py
-from sqlalchemy import Column, Integer, String, Text, DateTime, func, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, func, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from .base import Base
 
@@ -16,3 +16,9 @@ class AuditLog(Base):
     created_at = Column(DateTime, server_default=func.now(), index=True)
 
     user = relationship("User", foreign_keys=[user_id])
+
+    __table_args__ = (
+        Index("ix_audit_logs_action_created", "action", "created_at"),
+        Index("ix_audit_logs_user_created", "user_id", "created_at"),
+        Index("ix_audit_logs_target", "target_type", "target_id"),
+    )

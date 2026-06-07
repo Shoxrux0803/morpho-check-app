@@ -27,6 +27,15 @@ KZ_BMI_CATEGORIES = {
 }
 
 
+TG_BMI_CATEGORIES = {
+    "v_low": "Камвазнии шадид",
+    "low": "Камвазнӣ",
+    "normal": "Меъёр",
+    "overweight": "Вазни зиёдатӣ",
+    "obese": "Фарбеҳӣ",
+}
+
+
 _KY_REPLACEMENTS = [
     (r"Noma'?lum", "Белгисиз"),
     (r"Ma'?lumot yo'?q", "Маалымат жок"),
@@ -159,6 +168,78 @@ _EN_REPLACEMENTS = [
     (r"\byoq\b", "Absent"),
 ]
 
+_TG_REPLACEMENTS = [
+    (r"Noma'?lum", "Номаълум"),
+    (r"Ma'?lumot yo'?q", "Маълумот нест"),
+    (r"Toshkent shahri", "шаҳри Тошканд"),
+    (r"\bToshkent\b", "Тошканд"),
+    (r"\bShayxontohur\b", "Шайхонтоҳур"),
+    (r"\bshahri\b", "шаҳр"),
+    (r"\bshahar\b", "шаҳр"),
+    (r"\btumani\b", "ноҳия"),
+    (r"\btuman\b", "ноҳия"),
+    (r"\bmahalla\b", "маҳалла"),
+    (r"Vazn yetishmovchiligi \(yaqqol\)", "Камвазнии шадид"),
+    (r"Vazn yetishmovchiligi", "Камвазнӣ"),
+    (r"Ortiqcha vazn", "Вазни зиёдатӣ"),
+    (r"Semizlik", "Фарбеҳӣ"),
+    (r"Me'?yor \(15[-–]85[-–]sentil\)", "Меъёр (15-85-сентил)"),
+    (r"Me'?yor", "Меъёр"),
+    (r"Tavsiya etilgan oraliq", "Диапазони тавсияшуда"),
+    (r"Idealdan og'?ish", "Дуршавӣ аз меъёр"),
+    (r"Somatotip", "Соматотип"),
+    (r"\bastenik\b", "астеник"),
+    (r"\bnormostenik\b", "нормостеник"),
+    (r"\bgiperstenik\b", "гиперстеник"),
+    (r"muhitga nisbatan optimal morfologik (moslashuv|мутобиқшавӣ)", "мутобиқшавии оптималии морфологӣ нисбат ба муҳит"),
+    (r"akseleratsiya / yuqori morfologik rivojlanish", "акселератсия / рушди баланди морфологӣ"),
+    (r"moslashuv stresi yoki rivojlanishning sekinlashishi", "стресси мутобиқшавӣ ё сустшавии рушд"),
+    (r"somatik komponentlarning yuqori integratsiyasi", "интегратсияи баланди ҷузъҳои соматикӣ"),
+    (r"normal o'?rtacha morfologik muvozanat", "мувозинати миёнаи морфологии меъёрӣ"),
+    (r"past morfologik nomutanosiblik", "номувофиқати пасти морфологӣ"),
+    (r"uyg'?un rivojlanish", "рушди ҳамоҳанг"),
+    (r"o'?rtacha nomutanosiblik", "номувофиқати миёна"),
+    (r"yuqori darajadagi nomutanosiblik", "номувофиқати дараҷаи баланд"),
+    (r"morfologik-kompozitsion xavf past", "хавфи морфологӣ-композитсионӣ паст"),
+    (r"morfologik-kompozitsion xavf o'?rtacha", "хавфи морфологӣ-композитсионӣ миёна"),
+    (r"morfologik-kompozitsion xavf yuqori", "хавфи морфологӣ-композитсионӣ баланд"),
+    (r"O'?rtacha xavf \(Adipoz fenotip bosqichi\)", "Хавфи миёна (марҳилаи фенотипи адипозӣ)"),
+    (r"Yuqori xavf \(Ortiqcha yog'? va mushak yetishmovchiligi\)", "Хавфи баланд (зиёдатии чарб ва норасоии мушак)"),
+    (r"Low risk", "Хавфи паст"),
+    (r"Moderate risk \(Adipose phenotype stage\)", "Хавфи миёна (марҳилаи фенотипи адипозӣ)"),
+    (r"High risk \(Fat excess and muscle deficit\)", "Хавфи баланд (зиёдатии чарб ва норасоии мушак)"),
+    (r"moslashuv", "мутобиқшавӣ"),
+    (r"integratsiya", "интегратсия"),
+    (r"nomutanosiblik", "номувофиқатӣ"),
+    (r"Xavf past", "Хавфи паст"),
+    (r"Xavf o'?rtacha", "Хавфи миёна"),
+    (r"Xavf yuqori", "Хавфи баланд"),
+    (r"Sportga yo'?naltirish \(taxminiy\)", "Роҳнамоӣ ба варзиш (тахминӣ)"),
+    (r"Qo'?shimcha yo'?nalishlar", "Самтҳои иловагӣ"),
+    (r"\bSabab\b", "Сабаб"),
+    (r"tana ko'?rsatkichlari muvozanatli", "нишондиҳандаҳои бадан мутавозинанд"),
+    (r"yengil vazn va nisbatan nozik tana tuzilishi", "вазни сабук ва сохтори нисбатан нозуки бадан"),
+    (r"morfologik uyg'?unlik yaxshi", "ҳамоҳангии морфологӣ хуб аст"),
+    (
+        r"Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin",
+        "Дар интихоби ниҳоӣ шавқи кӯдак, баҳодиҳии мураббӣ ва иҷозати духтур ба назар гирифта шавад",
+    ),
+    (r"Pediatr yoki parhezshunos \(dietolog\) ko'?rigi tavsiya etiladi", "Муоинаи педиатр ё диетолог тавсия мешавад"),
+    (r"Vazn yetishmasligi sabablarini aniqlash zarur", "Сабабҳои камвазниро муайян кардан зарур аст"),
+    (r"Yuqori kaloriyali va oqsillarga boy ovqatlanish tartibiga o'?ting", "Ба ғизои серкалория ва аз сафеда бой гузаред"),
+    (r"Kuniga 5-6 marta kichik porsiyalarda ovqatlaning", "Дар як рӯз 5-6 маротиба бо порсияҳои хурд ғизо гиред"),
+    (r"Bolada normostenik tip: uyg'?un rivojlanmoqda", "Дар кӯдак навъи нормостеник мушоҳида мешавад: рушд ҳамоҳанг аст"),
+    (r"Bolada нормостеник tip: uyg'?un rivojlanmoqda", "Дар кӯдак навъи нормостеник мушоҳида мешавад: рушд ҳамоҳанг аст"),
+    (r"Holatni saqlash uchun muvozanatli ovqatlanish rejimiga amal qiling", "Барои нигоҳ доштани ҳолат ба реҷаи ғизои мутавозин риоя кунед"),
+    (r"Kuchli kardio mashqlarni kamaytirib, mushak massasini oshirishga qaratilgan mashqlarni bajaring", "Машқҳои пуршиддати кардиоро кам карда, машқҳои афзоиши массаи мушакҳоро иҷро кунед"),
+    (r"Qon tahlili \(gemoglobin\), gormonal fon va oshqozon-ichak tizimi tekshiruvidan o'?tish tavsiya etiladi", "Гузаронидани таҳлили хун (гемоглобин), санҷиши заминаи гормонӣ ва низоми меъдаю рӯда тавсия мешавад"),
+    (r"Toza suv ichish rejimini nazorat qiling", "Режими нӯшидани оби тозаро назорат кунед"),
+    (r"yengil atletika", "варзиши сабук"),
+    (r"futbol", "футбол"),
+    (r"gimnastika", "гимнастика"),
+    (r"suzish", "шиноварӣ"),
+]
+
 _ICON_PREFIX_RE = re.compile(
     r"^[\s\u200d\ufe0f]*(?:[👨⚕🍎🏃🏥📝•]|рџ\S*|пёЏ|вЂЌ)+\s*",
     re.IGNORECASE,
@@ -232,7 +313,21 @@ def en_text(value: Any, lang: str = "uz") -> str:
     return text
 
 
+def tg_text(value: Any, lang: str = "uz") -> str:
+    if value is None:
+        return ""
+    text = str(value)
+    if lang != "tg" or not text:
+        return text
+    text = _strip_leading_icons(_ICON_PREFIX_RE.sub("", _fix_mojibake(text)))
+    for pattern, replacement in _TG_REPLACEMENTS:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
+
 def report_text(value: Any, lang: str = "uz") -> str:
+    if lang == "tg":
+        return tg_text(value, lang)
     if lang == "ky":
         return ky_text(value, lang)
     if lang == "kz":

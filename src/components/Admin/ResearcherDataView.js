@@ -28,6 +28,7 @@ import {
   Tab,
   MenuItem,
   LinearProgress,
+  TablePagination,
 } from "@mui/material";
 import {
   Download,
@@ -91,6 +92,7 @@ const SectionTitle = ({ icon: Icon, title }) => (
 const getDateLocale = (lang) => {
   if (lang === "ru") return "ru-RU";
   if (lang === "kz") return "kk-KZ";
+  if (lang === "tg") return "tg-TJ";
   if (lang === "en") return "en-US";
   return "uz-UZ";
 };
@@ -831,8 +833,13 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const dateLocale = getDateLocale(lang);
   const [data, setData] = useState([]);
   const [deletedData, setDeletedData] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [deletedTotal, setDeletedTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deletedLoading, setDeletedLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [deletedPage, setDeletedPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
   const [activeTab, setActiveTab] = useState(0); // 0: Active, 1: Deleted
   const [filter, setFilter] = useState({
@@ -850,6 +857,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     date_from: "",
     date_to: "",
   });
+  const [appliedFilter, setAppliedFilter] = useState(filter);
   const [detailRecord, setDetailRecord] = useState(null);
   const [editRecord, setEditRecord] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -909,36 +917,75 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   }, [checked.size, onDeleteSelected]);
 
   const fetchData = useCallback(
-    async (params = filter) => {
+    async (params = appliedFilter, nextPage = page, nextRowsPerPage = rowsPerPage) => {
       setLoading(true);
       try {
-        const result = await ResearchApi.list(params);
-        setData(result);
+        const result = await ResearchApi.list({
+          ...params,
+          page: nextPage + 1,
+          page_size: nextRowsPerPage,
+          paginated: true,
+        });
+        const items = Array.isArray(result) ? result : result.items || [];
+        setData(items);
+        setTotal(Array.isArray(result) ? items.length : result.total || 0);
       } catch (err) {
         toast.error(t("loadDataError"));
       } finally {
         setLoading(false);
       }
     },
-    [filter, t],
+    [appliedFilter, page, rowsPerPage, t],
   );
 
-  const fetchDeletedData = useCallback(async () => {
-    setDeletedLoading(true);
-    try {
-      const result = await ResearchApi.deletedList();
-      setDeletedData(result);
-    } catch (err) {
-      toast.error(t("loadDeletedError"));
-    } finally {
-      setDeletedLoading(false);
-    }
-  }, [t]);
+  const fetchDeletedData = useCallback(
+    async (nextPage = deletedPage, nextRowsPerPage = rowsPerPage) => {
+      setDeletedLoading(true);
+      try {
+        const result = await ResearchApi.deletedList({
+          page: nextPage + 1,
+          page_size: nextRowsPerPage,
+          paginated: true,
+        });
+        const items = Array.isArray(result) ? result : result.items || [];
+        setDeletedData(items);
+        setDeletedTotal(Array.isArray(result) ? items.length : result.total || 0);
+      } catch (err) {
+        toast.error(t("loadDeletedError"));
+      } finally {
+        setDeletedLoading(false);
+      }
+    },
+    [deletedPage, rowsPerPage, t],
+  );
 
   useEffect(() => {
     if (activeTab === 0) fetchData();
     else if (activeTab === 1) fetchDeletedData();
   }, [activeTab, fetchData, fetchDeletedData]);
+
+  useEffect(() => {
+    setChecked(new Set());
+  }, [activeTab, page, deletedPage, rowsPerPage]);
+
+  const handleSearch = useCallback(() => {
+    setAppliedFilter(filter);
+    setPage(0);
+  }, [filter]);
+
+  const handlePageChange = useCallback(
+    (_, nextPage) => {
+      if (activeTab === 0) setPage(nextPage);
+      else setDeletedPage(nextPage);
+    },
+    [activeTab],
+  );
+
+  const handleRowsPerPageChange = useCallback((event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+    setDeletedPage(0);
+  }, []);
 
   const handleDelete = async (idOrIds, type) => {
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds];
@@ -1013,7 +1060,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
   const handleExportSummaryDocx = async () => {
     try {
-      const blob = await ResearchApi.exportSummaryDocx(filter);
+      const blob = await ResearchApi.exportSummaryDocx({ ...filter, lang });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -1076,238 +1123,256 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   /* ── Table Components ── */
   const renderTable = (rows, isLoading, isDeletedView = false) => {
     const columnCount = 6 + (isSuperAdmin ? 1 : 0) + (isDeletedView ? 1 : 0);
+    const currentPage = isDeletedView ? deletedPage : page;
+    const rowTotal = isDeletedView ? deletedTotal : total;
 
     return (
-      <TableContainer component={GlassPaper}>
-        <Table size="small" sx={{ minWidth: isSuperAdmin ? 980 : 760 }}>
-          <TableHead
-            sx={{ background: isDeletedView ? "rgba(244,67,54,0.06)" : "rgba(15,118,110,0.06)" }}
-          >
-            <TableRow>
-              <TableCell sx={{ width: 40, p: 1 }}>
-                <IconButton size="small" onClick={toggleAll} color="primary">
-                  {rows.length > 0 && rows.every((r) => checked.has(r.id)) ? (
-                    <CheckCircle fontSize="small" />
-                  ) : (
-                    <InfoOutlined fontSize="small" />
-                  )}
-                </IconButton>
-              </TableCell>
-              <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("fullName")}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("schoolKindergarten")}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("exam")}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{t("heightWeight")}</TableCell>
-              {isSuperAdmin && (
-                <TableCell sx={{ fontWeight: 700 }}>{t("createdByResearcher")}</TableCell>
-              )}
-              {isDeletedView && (
-                <TableCell sx={{ fontWeight: 700, color: "error.main" }}>
-                  {t("deletedDate")}
-                </TableCell>
-              )}
-              <TableCell sx={{ fontWeight: 700 }} align="right">
-                {t("actions")}
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isLoading ? (
+      <>
+        <TableContainer component={GlassPaper}>
+          <Table size="small" sx={{ minWidth: isSuperAdmin ? 980 : 760 }}>
+            <TableHead
+              sx={{ background: isDeletedView ? "rgba(244,67,54,0.06)" : "rgba(15,118,110,0.06)" }}
+            >
               <TableRow>
-                <TableCell colSpan={columnCount} align="center" sx={{ py: 6 }}>
-                  <CircularProgress />
+                <TableCell sx={{ width: 40, p: 1 }}>
+                  <IconButton size="small" onClick={toggleAll} color="primary">
+                    {rows.length > 0 && rows.every((r) => checked.has(r.id)) ? (
+                      <CheckCircle fontSize="small" />
+                    ) : (
+                      <InfoOutlined fontSize="small" />
+                    )}
+                  </IconButton>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t("fullName")}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t("schoolKindergarten")}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t("exam")}</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>{t("heightWeight")}</TableCell>
+                {isSuperAdmin && (
+                  <TableCell sx={{ fontWeight: 700 }}>{t("createdByResearcher")}</TableCell>
+                )}
+                {isDeletedView && (
+                  <TableCell sx={{ fontWeight: 700, color: "error.main" }}>
+                    {t("deletedDate")}
+                  </TableCell>
+                )}
+                <TableCell sx={{ fontWeight: 700 }} align="right">
+                  {t("actions")}
                 </TableCell>
               </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={columnCount}
-                  align="center"
-                  sx={{ py: 6, color: "text.secondary" }}
-                >
-                  {t("noData")}
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row, idx) => (
-                <TableRow
-                  key={row.id}
-                  hover
-                  sx={{
-                    cursor: "pointer",
-                    "&:hover": { background: "rgba(15,118,110,0.04)" },
-                    bgcolor: checked.has(row.id) ? "rgba(15,118,110,0.08)" : "inherit",
-                  }}
-                  onClick={() => setDetailRecord(row)}
-                >
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={columnCount} align="center" sx={{ py: 6 }}>
+                    <CircularProgress />
+                  </TableCell>
+                </TableRow>
+              ) : rows.length === 0 ? (
+                <TableRow>
                   <TableCell
-                    sx={{ p: 1 }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleOne(row.id);
-                    }}
+                    colSpan={columnCount}
+                    align="center"
+                    sx={{ py: 6, color: "text.secondary" }}
                   >
-                    <IconButton size="small" color={checked.has(row.id) ? "primary" : "default"}>
-                      {checked.has(row.id) ? (
-                        <CheckCircle fontSize="small" />
-                      ) : (
-                        <Box
-                          sx={{
-                            width: 18,
-                            height: 18,
-                            border: "2px solid",
-                            borderColor: "divider",
-                            borderRadius: "4px",
-                          }}
-                        />
-                      )}
-                    </IconButton>
+                    {t("noData")}
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="caption" color="text.secondary">
-                      {idx + 1}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Avatar
-                        sx={{ width: 30, height: 30, fontSize: 12, bgcolor: "primary.light" }}
-                      >
-                        {(row.full_name || "?").charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Typography variant="body2" fontWeight={600}>
-                        {row.full_name || "—"}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{row.school_name || "—"}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {row.settlement || ""}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={row.examination_date || "—"}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: 11 }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="caption" color="text.secondary">
-                      {row.chest_standing_height ? `${row.chest_standing_height} sm` : "—"} /
-                      {row.weight ? ` ${row.weight} kg` : " —"}
-                    </Typography>
-                  </TableCell>
-                  {isSuperAdmin && (
+                </TableRow>
+              ) : (
+                rows.map((row, idx) => (
+                  <TableRow
+                    key={row.id}
+                    hover
+                    sx={{
+                      cursor: "pointer",
+                      "&:hover": { background: "rgba(15,118,110,0.04)" },
+                      bgcolor: checked.has(row.id) ? "rgba(15,118,110,0.08)" : "inherit",
+                    }}
+                    onClick={() => setDetailRecord(row)}
+                  >
+                    <TableCell
+                      sx={{ p: 1 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleOne(row.id);
+                      }}
+                    >
+                      <IconButton size="small" color={checked.has(row.id) ? "primary" : "default"}>
+                        {checked.has(row.id) ? (
+                          <CheckCircle fontSize="small" />
+                        ) : (
+                          <Box
+                            sx={{
+                              width: 18,
+                              height: 18,
+                              border: "2px solid",
+                              borderColor: "divider",
+                              borderRadius: "4px",
+                            }}
+                          />
+                        )}
+                      </IconButton>
+                    </TableCell>
                     <TableCell>
-                      <Typography variant="body2" fontWeight={700}>
-                        {getCreatorName(row)}
+                      <Typography variant="caption" color="text.secondary">
+                        {currentPage * rowsPerPage + idx + 1}
                       </Typography>
-                      {row.created_by_email && row.created_by_email !== row.created_by_name && (
-                        <Typography variant="caption" color="text.secondary">
-                          {row.created_by_email}
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar
+                          sx={{ width: 30, height: 30, fontSize: 12, bgcolor: "primary.light" }}
+                        >
+                          {(row.full_name || "?").charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" fontWeight={600}>
+                          {row.full_name || "—"}
                         </Typography>
-                      )}
+                      </Stack>
                     </TableCell>
-                  )}
-                  {isDeletedView && (
                     <TableCell>
-                      <Typography variant="caption" color="error">
-                        {row.deleted_at
-                          ? new Date(row.deleted_at).toLocaleDateString(dateLocale)
-                          : "—"}
+                      <Typography variant="body2">{row.school_name || "—"}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.settlement || ""}
                       </Typography>
                     </TableCell>
-                  )}
-                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                      <Tooltip title={t("viewDetails")}>
-                        <IconButton size="small" color="info" onClick={() => setDetailRecord(row)}>
-                          <Visibility fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      {!isDeletedView ? (
-                        <>
-                          <Tooltip title={t("edit")}>
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => {
-                                setEditRecord(row);
-                                setEditForm({ ...row });
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title={t("softDelete")}>
-                            <IconButton
-                              size="small"
-                              color="warning"
-                              onClick={() => {
-                                setChecked(new Set([row.id]));
-                                setDeleteConfirmOpen(true);
-                              }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          {isSuperAdmin && (
-                            <Tooltip title={t("hardDelete")}>
+                    <TableCell>
+                      <Chip
+                        label={row.examination_date || "—"}
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontSize: 11 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.chest_standing_height ? `${row.chest_standing_height} sm` : "—"} /
+                        {row.weight ? ` ${row.weight} kg` : " —"}
+                      </Typography>
+                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={700}>
+                          {getCreatorName(row)}
+                        </Typography>
+                        {row.created_by_email && row.created_by_email !== row.created_by_name && (
+                          <Typography variant="caption" color="text.secondary">
+                            {row.created_by_email}
+                          </Typography>
+                        )}
+                      </TableCell>
+                    )}
+                    {isDeletedView && (
+                      <TableCell>
+                        <Typography variant="caption" color="error">
+                          {row.deleted_at
+                            ? new Date(row.deleted_at).toLocaleDateString(dateLocale)
+                            : "—"}
+                        </Typography>
+                      </TableCell>
+                    )}
+                    <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                      <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                        <Tooltip title={t("viewDetails")}>
+                          <IconButton
+                            size="small"
+                            color="info"
+                            onClick={() => setDetailRecord(row)}
+                          >
+                            <Visibility fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {!isDeletedView ? (
+                          <>
+                            <Tooltip title={t("edit")}>
                               <IconButton
                                 size="small"
-                                color="error"
+                                color="primary"
+                                onClick={() => {
+                                  setEditRecord(row);
+                                  setEditForm({ ...row });
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t("softDelete")}>
+                              <IconButton
+                                size="small"
+                                color="warning"
                                 onClick={() => {
                                   setChecked(new Set([row.id]));
                                   setDeleteConfirmOpen(true);
                                 }}
                               >
+                                <Delete fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            {isSuperAdmin && (
+                              <Tooltip title={t("hardDelete")}>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => {
+                                    setChecked(new Set([row.id]));
+                                    setDeleteConfirmOpen(true);
+                                  }}
+                                >
+                                  <DeleteForever fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <Tooltip title={t("restore")}>
+                              <IconButton
+                                size="small"
+                                color="success"
+                                onClick={() => handleDelete(row.id, "restore")}
+                              >
+                                <Refresh fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t("hardDelete")}>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => handleDelete(row.id, "hard")}
+                              >
                                 <DeleteForever fontSize="small" />
                               </IconButton>
                             </Tooltip>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <Tooltip title={t("restore")}>
-                            <IconButton
-                              size="small"
-                              color="success"
-                              onClick={() => handleDelete(row.id, "restore")}
-                            >
-                              <Refresh fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title={t("hardDelete")}>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDelete(row.id, "hard")}
-                            >
-                              <DeleteForever fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                      <Tooltip title={`DOCX (${lang.toUpperCase()})`}>
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => handleDownloadDocx(row.id, lang)}
-                        >
-                          <Description fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                          </>
+                        )}
+                        <Tooltip title={`DOCX (${lang.toUpperCase()})`}>
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => handleDownloadDocx(row.id, lang)}
+                          >
+                            <Description fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          component="div"
+          count={rowTotal}
+          page={currentPage}
+          rowsPerPage={rowsPerPage}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          rowsPerPageOptions={[10, 20, 50, 100]}
+          labelRowsPerPage="Sahifada:"
+        />
+      </>
     );
   };
 
@@ -1403,7 +1468,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
       {activeTab === 0 && (
         <Stack spacing={3}>
-          <AdvancedResearchFilter filter={filter} setFilter={setFilter} onSearch={fetchData} />
+          <AdvancedResearchFilter filter={filter} setFilter={setFilter} onSearch={handleSearch} />
 
           <ResearchStatisticsPanel rows={data} />
 

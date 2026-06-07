@@ -24,6 +24,103 @@ METRICS = [
 
 ANALYSIS_METRICS = METRICS[:6]
 
+SUMMARY_I18N = {
+    "uz": {
+        "title": "MORPHOCHECK ILMIY-STATISTIK DOCX HISOBOTI",
+        "report_date": "Hisobot sanasi",
+        "summary": "1. Umumiy svodka",
+        "scope": "Qamrov",
+        "all_researchers": "Barcha izlanuvchilar ma'lumotlari",
+        "researcher_scope": "Izlanuvchiga tegishli ma'lumotlar",
+        "researcher": "Izlanuvchi",
+        "total_records": "Jami yozuvlar",
+        "age_range": "Yosh oralig'i",
+        "avg_age": "O'rtacha yosh",
+        "active_filters": "Faol filtrlar",
+        "none": "Yo'q",
+        "indicator": "Ko'rsatkich",
+        "value": "Qiymat",
+        "demographics": "2. Demografik infografikalar",
+        "gender": "Jins",
+        "region": "Hudud",
+        "visual_share": "Vizual ulush",
+        "stats": "3. Avtomatik statistik tahlil jadvallari",
+        "z_group": "BMI Z-score guruhi",
+        "groups": "4. Guruhlar kesimidagi tahlil",
+        "male_n": "Erkak N",
+        "male_mean": "Erkak mean",
+        "female_n": "Ayol N",
+        "female_mean": "Ayol mean",
+        "diff": "Farq",
+        "share": "Ulush",
+        "correlation": "5. Korrelyatsiya va regressiya",
+        "model": "Model",
+        "not_enough": "Ma'lumot yetarli emas",
+        "equation": "Vazn = {intercept} + {slope} x Bo'y",
+        "note_title": "6. Ilmiy izoh",
+        "note": "Hisobot avtomatik shakllantirildi. Jadvallarda tavsifiy statistika, jinslar bo'yicha t-test, hududlar bo'yicha ANOVA, korrelyatsiya matritsasi va bo'y-vazn regressiya modeli keltirilgan.",
+        "years": "yil",
+    },
+    "tg": {
+        "title": "MORPHOCHECK ҲИСОБОТИ ИЛМӢ-ОМОРИИ DOCX",
+        "report_date": "Санаи ҳисобот",
+        "summary": "1. Хулосаи умумӣ",
+        "scope": "Фарогирӣ",
+        "all_researchers": "Маълумоти ҳамаи таҳқиқотчиён",
+        "researcher_scope": "Маълумоти марбут ба таҳқиқотчӣ",
+        "researcher": "Таҳқиқотчӣ",
+        "total_records": "Ҳамаи сабтҳо",
+        "age_range": "Диапазони синну сол",
+        "avg_age": "Синну соли миёна",
+        "active_filters": "Филтрҳои фаъол",
+        "none": "Нест",
+        "indicator": "Нишондиҳанда",
+        "value": "Қимат",
+        "demographics": "2. Инфографикаи демографӣ",
+        "gender": "Ҷинс",
+        "region": "Ҳудуд",
+        "visual_share": "Ҳиссаи визуалӣ",
+        "stats": "3. Ҷадвалҳои таҳлили омории худкор",
+        "z_group": "Гурӯҳи BMI Z-score",
+        "groups": "4. Таҳлил аз рӯи гурӯҳҳо",
+        "male_n": "Мард N",
+        "male_mean": "Мард mean",
+        "female_n": "Зан N",
+        "female_mean": "Зан mean",
+        "diff": "Фарқ",
+        "share": "Ҳисса",
+        "correlation": "5. Коррелятсия ва регрессия",
+        "model": "Модел",
+        "not_enough": "Маълумот кофӣ нест",
+        "equation": "Вазн = {intercept} + {slope} x Қад",
+        "note_title": "6. Шарҳи илмӣ",
+        "note": "Ҳисобот ба таври худкор шакл дода шуд. Ҷадвалҳо омори тавсифӣ, t-test аз рӯи ҷинс, ANOVA аз рӯи ҳудуд, матритсаи коррелятсия ва модели регрессияи қад-вазнро дар бар мегиранд.",
+        "years": "сол",
+    },
+}
+
+METRIC_LABELS = {
+    "tg": {
+        "chest_standing_height": "Қад (рост)",
+        "weight": "Вазн",
+        "bmi": "BMI",
+        "chest_circumference_pause": "Даври сина",
+        "waist_circumference": "Даври миён",
+        "head_circumference": "Даври сар",
+        "thigh_circumference": "Даври рон",
+        "calf_circumference": "Даври соқ",
+        "dynamometry": "Динамометрия",
+    }
+}
+
+
+def _tr(lang, key):
+    return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(key, SUMMARY_I18N["uz"].get(key, key))
+
+
+def _metric_label(key, label, lang):
+    return METRIC_LABELS.get(lang, {}).get(key, label)
+
 
 def _fmt(value, digits=2):
     if value is None or not isinstance(value, (int, float)) or not math.isfinite(value):
@@ -62,13 +159,13 @@ def _percentile(values, p):
     return ordered[lower] + (ordered[upper] - ordered[lower]) * (index - lower)
 
 
-def _gender_label(gender):
+def _gender_label(gender, lang="uz"):
     value = str(gender or "").lower()
     if "girl" in value or "ayol" in value or "qiz" in value or "female" in value:
-        return "Qiz/Ayol"
+        return "Духтар/Зан" if lang == "tg" else "Qiz/Ayol"
     if "boy" in value or "erkak" in value or "o'g" in value or "og" in value or "male" in value:
-        return "O'g'il/Erkak"
-    return "Noma'lum"
+        return "Писар/Мард" if lang == "tg" else "O'g'il/Erkak"
+    return "Номаълум" if lang == "tg" else "Noma'lum"
 
 
 def _age(record):
@@ -178,7 +275,7 @@ def _pearson(pairs):
     return numerator / (sx * sy) if sx and sy else None
 
 
-def _build_stats(records):
+def _build_stats(records, lang="uz"):
     descriptive = []
     for key, label, unit in METRICS:
         values = [_metric_value(record, key) for record in records]
@@ -191,7 +288,7 @@ def _build_stats(records):
         descriptive.append(
             {
                 "key": key,
-                "label": label,
+                "label": _metric_label(key, label, lang),
                 "unit": unit,
                 "n": len(values),
                 "mean": avg,
@@ -214,12 +311,12 @@ def _build_stats(records):
         groups = defaultdict(list)
         for record in records:
             value = _metric_value(record, key)
-            gender_name = _gender_label(getattr(record, "gender", None))
-            if value is not None and gender_name != "Noma'lum":
+            gender_name = _gender_label(getattr(record, "gender", None), lang)
+            if value is not None and gender_name != _gender_label(None, lang):
                 groups[gender_name].append(value)
-        male = groups["O'g'il/Erkak"]
-        female = groups["Qiz/Ayol"]
-        row = {"label": label, "unit": unit, "male_n": len(male), "female_n": len(female)}
+        male = groups["Писар/Мард" if lang == "tg" else "O'g'il/Erkak"]
+        female = groups["Духтар/Зан" if lang == "tg" else "Qiz/Ayol"]
+        row = {"label": _metric_label(key, label, lang), "unit": unit, "male_n": len(male), "female_n": len(female)}
         if len(male) >= 2 and len(female) >= 2:
             m1 = _mean(male)
             m2 = _mean(female)
@@ -247,7 +344,7 @@ def _build_stats(records):
         name = (
             getattr(record, "settlement", None)
             or getattr(record, "birth_place", None)
-            or "Noma'lum"
+            or ("Номаълум" if lang == "tg" else "Noma'lum")
         )
         value = _metric_value(record, "bmi")
         if value is not None:
@@ -325,7 +422,7 @@ def _build_stats(records):
             }
         )
 
-    genders = Counter(_gender_label(getattr(record, "gender", None)) for record in records)
+    genders = Counter(_gender_label(getattr(record, "gender", None), lang) for record in records)
     settlements = Counter(
         str(getattr(record, "settlement", None) or getattr(record, "birth_place", None) or "Noma'lum").strip()
         or "Noma'lum"
@@ -415,8 +512,8 @@ def _p_label(value):
     return "<0.001" if value < 0.001 else f"{value:.3f}"
 
 
-def generate_research_summary_docx(records, current_user=None, researcher=None, filters=None):
-    stats = _build_stats(records)
+def generate_research_summary_docx(records, current_user=None, researcher=None, filters=None, lang="uz"):
+    stats = _build_stats(records, lang=lang)
     doc = Document()
     for section in doc.sections:
         section.top_margin = Cm(1.2)
@@ -428,42 +525,42 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
     style.font.name = "Times New Roman"
     style.font.size = Pt(9)
 
-    _heading(doc, "MORPHOCHECK ILMIY-STATISTIK DOCX HISOBOTI", 1)
+    _heading(doc, _tr(lang, "title"), 1)
     subtitle = doc.add_paragraph()
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    subtitle.add_run(f"Hisobot sanasi: {datetime.now().strftime('%Y-%m-%d %H:%M')}").font.size = Pt(9)
+    subtitle.add_run(f"{_tr(lang, 'report_date')}: {datetime.now().strftime('%Y-%m-%d %H:%M')}").font.size = Pt(9)
 
     owner_name = getattr(researcher, "name", None) or getattr(current_user, "name", None) or "-"
     owner_email = getattr(researcher, "email", None) or getattr(current_user, "email", None) or "-"
-    scope = "Barcha izlanuvchilar ma'lumotlari" if getattr(current_user, "role", "") == "superadmin" and researcher is None else "Izlanuvchiga tegishli ma'lumotlar"
+    scope = _tr(lang, "all_researchers") if getattr(current_user, "role", "") == "superadmin" and researcher is None else _tr(lang, "researcher_scope")
 
-    _heading(doc, "1. Umumiy svodka", 2)
+    _heading(doc, _tr(lang, "summary"), 2)
     ages = stats["ages"]
     summary_rows = [
-        ["Qamrov", scope],
-        ["Izlanuvchi", f"{owner_name} ({owner_email})"],
-        ["Jami yozuvlar", stats["count"]],
-        ["Yosh oralig'i", f"{_fmt(min(ages), 1)} - {_fmt(max(ages), 1)} yil" if ages else "-"],
-        ["O'rtacha yosh", f"{_fmt(_mean(ages), 1)} yil" if ages else "-"],
-        ["Faol filtrlar", ", ".join(f"{k}={v}" for k, v in (filters or {}).items() if v not in (None, "")) or "Yo'q"],
+        [_tr(lang, "scope"), scope],
+        [_tr(lang, "researcher"), f"{owner_name} ({owner_email})"],
+        [_tr(lang, "total_records"), stats["count"]],
+        [_tr(lang, "age_range"), f"{_fmt(min(ages), 1)} - {_fmt(max(ages), 1)} {_tr(lang, 'years')}" if ages else "-"],
+        [_tr(lang, "avg_age"), f"{_fmt(_mean(ages), 1)} {_tr(lang, 'years')}" if ages else "-"],
+        [_tr(lang, "active_filters"), ", ".join(f"{k}={v}" for k, v in (filters or {}).items() if v not in (None, "")) or _tr(lang, "none")],
     ]
-    _table(doc, ["Ko'rsatkich", "Qiymat"], summary_rows, widths=[5, 11])
+    _table(doc, [_tr(lang, "indicator"), _tr(lang, "value")], summary_rows, widths=[5, 11])
 
-    _heading(doc, "2. Demografik infografikalar", 2)
+    _heading(doc, _tr(lang, "demographics"), 2)
     total = max(stats["count"], 1)
     gender_rows = [
         [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
         for name, count in stats["genders"].most_common()
     ]
-    _table(doc, ["Jins", "N", "%", "Vizual ulush"], gender_rows or [["-", "-", "-", "-"]], widths=[4, 2, 2, 8])
+    _table(doc, [_tr(lang, "gender"), "N", "%", _tr(lang, "visual_share")], gender_rows or [["-", "-", "-", "-"]], widths=[4, 2, 2, 8])
 
     settlement_rows = [
         [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
         for name, count in stats["settlements"].most_common(10)
     ]
-    _table(doc, ["Hudud", "N", "%", "Vizual ulush"], settlement_rows or [["-", "-", "-", "-"]], widths=[6, 2, 2, 7])
+    _table(doc, [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")], settlement_rows or [["-", "-", "-", "-"]], widths=[6, 2, 2, 7])
 
-    _heading(doc, "3. Avtomatik statistik tahlil jadvallari", 2)
+    _heading(doc, _tr(lang, "stats"), 2)
     descriptive_rows = []
     for item in stats["descriptive"]:
         descriptive_rows.append(
@@ -476,7 +573,7 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
                 f"{_fmt(item.get('p5'))} / {_fmt(item.get('p25'))} / {_fmt(item.get('p75'))} / {_fmt(item.get('p95'))}",
             ]
         )
-    _table(doc, ["Ko'rsatkich", "N", "Mean +/- SD", "Median", "Min-Max", "P5/P25/P75/P95"], descriptive_rows)
+    _table(doc, [_tr(lang, "indicator"), "N", "Mean +/- SD", "Median", "Min-Max", "P5/P25/P75/P95"], descriptive_rows)
 
     bmi = next((item for item in stats["descriptive"] if item["key"] == "bmi"), None)
     if bmi:
@@ -485,9 +582,9 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
             ["-2 <= Z <= 2", bmi.get("z_normal", 0), _bar(bmi.get("z_normal", 0), max(bmi.get("n", 0), 1))],
             ["Z > 2", bmi.get("z_high", 0), _bar(bmi.get("z_high", 0), max(bmi.get("n", 0), 1))],
         ]
-        _table(doc, ["BMI Z-score guruhi", "N", "Infografika"], z_rows, widths=[5, 2, 9])
+        _table(doc, [_tr(lang, "z_group"), "N", "Infografika"], z_rows, widths=[5, 2, 9])
 
-    _heading(doc, "4. Guruhlar kesimidagi tahlil", 2)
+    _heading(doc, _tr(lang, "groups"), 2)
     gender_analysis_rows = [
         [
             row["label"],
@@ -503,7 +600,7 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
     ]
     _table(
         doc,
-        ["Ko'rsatkich", "Erkak N", "Erkak mean", "Ayol N", "Ayol mean", "Farq", "p", "Effect"],
+        [_tr(lang, "indicator"), _tr(lang, "male_n"), _tr(lang, "male_mean"), _tr(lang, "female_n"), _tr(lang, "female_mean"), _tr(lang, "diff"), "p", "Effect"],
         gender_analysis_rows,
     )
 
@@ -512,12 +609,12 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
         [row["name"], row["n"], _fmt(row["mean"]), _fmt(row["sd"]), _bar(row["n"], total)]
         for row in region["groups"]
     ]
-    _table(doc, ["Hudud", "N", "BMI mean", "SD", "Ulush"], region_rows or [["-", "-", "-", "-", "-"]])
+    _table(doc, [_tr(lang, "region"), "N", "BMI mean", "SD", _tr(lang, "share")], region_rows or [["-", "-", "-", "-", "-"]])
     doc.add_paragraph(
         f"ANOVA: F={_fmt(region.get('f'))}; p={_p_label(region.get('p'))}; eta^2={_fmt(region.get('eta_squared'), 3)}"
     )
 
-    _heading(doc, "5. Korrelyatsiya va regressiya", 2)
+    _heading(doc, _tr(lang, "correlation"), 2)
     corr_headers = [""] + [metric[1] for metric in ANALYSIS_METRICS]
     corr_rows = [
         [row["label"]] + [_fmt(value, 2) if value is not None else "-" for value in row["values"]]
@@ -527,25 +624,20 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
 
     regression = stats["regression"]
     equation = (
-        f"Vazn = {_fmt(regression.get('intercept'))} + {_fmt(regression.get('slope'), 3)} x Bo'y"
+        _tr(lang, "equation").format(intercept=_fmt(regression.get('intercept')), slope=_fmt(regression.get('slope'), 3))
         if regression.get("intercept") is not None
-        else "Ma'lumot yetarli emas"
+        else _tr(lang, "not_enough")
     )
     _table(
         doc,
-        ["Model", "N", "R", "R2", "p"],
+        [_tr(lang, "model"), "N", "R", "R2", "p"],
         [[equation, regression.get("n", 0), _fmt(regression.get("r"), 3), _fmt(regression.get("r2"), 3), _p_label(regression.get("p"))]],
         widths=[8, 2, 2, 2, 2],
     )
 
-    _heading(doc, "6. Ilmiy izoh", 2)
+    _heading(doc, _tr(lang, "note_title"), 2)
     note = doc.add_paragraph()
-    note.add_run(
-        "Hisobot avtomatik shakllantirildi. Jadvallarda tavsifiy statistika, jinslar bo'yicha "
-        "t-test, hududlar bo'yicha ANOVA, korrelyatsiya matritsasi va bo'y-vazn regressiya modeli "
-        "keltirilgan. Natijalarni ilmiy ishda ishlatishda tanlanma hajmi, filtrlar va metodologik "
-        "cheklovlar alohida ko'rsatilishi tavsiya etiladi."
-    )
+    note.add_run(_tr(lang, "note"))
 
     buffer = io.BytesIO()
     doc.save(buffer)

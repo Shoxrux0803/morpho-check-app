@@ -69,14 +69,41 @@ class PatientData(BaseModel):
         cleaned = v.strip()
         return cleaned or None
 
+    @field_validator(
+        "height", "weight", "chest", "waist", "head", "shoulder_length",
+        "shoulder_breadth", "shoulder_circumference", "arm_elbow_length",
+        "hand_length", "thigh_length", "thigh_circumference", "calf_length",
+        "calf_circumference", "foot_length", "body_length", "father_height",
+        "mother_height", "total_body_water", "fat_percent", "fat_mass",
+        "muscle_mass", "bone_mass", "acm", "visceral_fat",
+    )
+    @classmethod
+    def finite_number(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, bool):
+            raise ValueError("Raqamli maydon bool bo'lishi mumkin emas")
+        value = float(v)
+        if not math.isfinite(value):
+            raise ValueError("Raqamli maydon chekli son bo'lishi kerak")
+        return value
+
     @field_validator("gender")
     @classmethod
     def validate_gender(cls, v):
         value = (v or "").strip().lower()
-        allowed = {"erkak", "ayol", "male", "female", "ogil", "o'g'il", "qiz"}
-        if value not in allowed:
+        normalized = {
+            "erkak": "erkak",
+            "male": "erkak",
+            "ogil": "erkak",
+            "o'g'il": "erkak",
+            "ayol": "ayol",
+            "female": "ayol",
+            "qiz": "ayol",
+        }.get(value)
+        if not normalized:
             raise ValueError("Jins erkak yoki ayol bo'lishi kerak")
-        return value
+        return normalized
 
     @field_validator("examination_date", "birth_date")
     @classmethod
@@ -92,16 +119,40 @@ class PatientData(BaseModel):
 
     @model_validator(mode="after")
     def validate_anthropometry(self):
+        required_text = {
+            "firstName": self.first_name,
+            "lastName": self.last_name,
+            "region": self.region,
+            "address": self.address,
+            "examinationDate": self.examination_date,
+        }
+        missing = [name for name, value in required_text.items() if not value]
+        if missing:
+            raise ValueError(f"Majburiy maydonlar bo'sh: {', '.join(missing)}")
+
+        if self.age == 0 and not self.age_months and not self.age_days:
+            raise ValueError("Yosh, oy yoki kunlardan kamida biri 0 dan katta bo'lishi kerak")
+
+        exam = datetime.date.fromisoformat(self.examination_date[:10])
+        if exam > datetime.date.today():
+            raise ValueError("Ko'rik sanasi kelajakda bo'lishi mumkin emas")
+
         bmi = self.weight / ((self.height / 100) ** 2)
         if not 8 <= bmi <= 80:
             raise ValueError("BMI amaliy diapazondan tashqarida")
         if self.chest < self.height * 0.25 or self.chest > self.height * 1.05:
             raise ValueError("Ko'krak aylanasi bo'yga nisbatan mos emas")
+        if self.waist and (self.waist < self.height * 0.20 or self.waist > self.height * 1.20):
+            raise ValueError("Bel aylanasi bo'yga nisbatan mos emas")
+        if self.head < self.height * 0.20 or self.head > self.height * 0.70:
+            raise ValueError("Bosh aylanasi bo'yga nisbatan mos emas")
         if self.birth_date != "Noma'lum":
             birth = datetime.date.fromisoformat(self.birth_date[:10])
-            exam = datetime.date.fromisoformat(self.examination_date[:10])
             if birth > exam:
                 raise ValueError("Tug'ilgan sana ko'rik sanasidan keyin bo'lishi mumkin emas")
+            actual_age = exam.year - birth.year - ((exam.month, exam.day) < (birth.month, birth.day))
+            if abs(actual_age - int(self.age)) > 1:
+                raise ValueError("Yosh tug'ilgan sana va ko'rik sanasiga mos emas")
         return self
 
 class AnalysisResult(BaseModel):
@@ -215,10 +266,14 @@ class UserRegister(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+    device_id: Optional[str] = None
+    verification_code: Optional[str] = None
 
 class Token(BaseModel):
-    access_token: str
-    token_type: str
+    access_token: Optional[str] = None
+    token_type: Optional[str] = None
+    requires_verification: bool = False
+    message: Optional[str] = None
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

@@ -69,13 +69,18 @@ class PatientAnalysis(Base):
     created_at = Column(DateTime, server_default=func.now(), index=True)
 
     # Soft Delete maydonlari
-    is_deleted    = Column(Integer, default=0, nullable=True, index=True)   # 0=yo'q, 1=ha
+    is_deleted    = Column(Integer, default=0, nullable=False, index=True)   # 0=yo'q, 1=ha
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deleted_at    = Column(DateTime, nullable=True)
     deleted_by    = relationship("User", foreign_keys=[deleted_by_id])
     
     __table_args__ = (
         Index('ix_patient_analysis_deleted_created', 'is_deleted', 'created_at'),
+        Index('ix_patient_analysis_owner_active_created', 'created_by_id', 'is_deleted', 'created_at'),
+        Index('ix_patient_analysis_deleted_deleted_at', 'is_deleted', 'deleted_at'),
+        Index('ix_patient_analysis_region_active_created', 'region', 'is_deleted', 'created_at'),
+        Index('ix_patient_analysis_gender_age_active', 'gender', 'age', 'is_deleted'),
+        Index('ix_patient_analysis_child_history', 'name', 'birth_date', 'gender', 'is_deleted', 'created_at'),
     )
 
 class ResearchRecord(Base):
@@ -186,11 +191,17 @@ class ResearchRecord(Base):
     mother_height = Column(Float, nullable=True)
 
     # Soft Delete maydonlari
-    is_deleted    = Column(Integer, default=0, nullable=True, index=True)   # 0=yo'q, 1=ha
+    is_deleted    = Column(Integer, default=0, nullable=False, index=True)   # 0=yo'q, 1=ha
     deleted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     deleted_at    = Column(DateTime, nullable=True)
     deleted_by    = relationship("User", foreign_keys=[deleted_by_id])
 
     __table_args__ = (
         Index('ix_research_records_deleted_created', 'is_deleted', 'created_at'),
+        Index('ix_research_records_owner_active_id', 'created_by_id', 'is_deleted', 'id'),
+        Index('ix_research_records_active_exam_id', 'is_deleted', 'examination_date', 'id'),
+        Index('ix_research_records_owner_exam', 'created_by_id', 'examination_date'),
+        Index('ix_research_records_gender_active', 'gender', 'is_deleted'),
+        Index('ix_research_records_feeding_active', 'feeding_type', 'is_deleted'),
+        Index('ix_research_records_marriage_active', 'parents_marriage', 'is_deleted'),
     )

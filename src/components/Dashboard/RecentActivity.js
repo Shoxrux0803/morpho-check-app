@@ -45,7 +45,16 @@ const ACTIVITY_TEXT = {
   },
 };
 
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+ACTIVITY_TEXT.tg = {
+  ...ACTIVITY_TEXT.uz,
+  title: "Фаъолияти охирин",
+  empty: "Фаъолият ёфт нашуд",
+  noData: "Маълумот нест",
+  unknownRegion: "Вилоят муайян нашудааст",
+  years: "сола",
+};
+
+const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const RecentActivity = ({ data, loading }) => {
   const { lang } = useLanguage();

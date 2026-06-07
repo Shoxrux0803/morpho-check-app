@@ -324,6 +324,102 @@ LABELS["ky"] = {
     "dynamo": "7. Динамометрия",
     "fat_title": "8. Тери астындагы май катмарынын калыңдыгы",
 }
+LABELS["tg"] = {
+    **LABELS["uz"],
+    "title": "Корти таҳқиқот",
+    "fio": "Ному насаб",
+    "school": "Номи муассиса (мактаб, боғча)",
+    "settlement": "Маҳалли аҳолинишин",
+    "birth_place": "Ҷои таваллуд (шаҳр, вилоят)",
+    "birth_date": "Соли, моҳ ва рӯзи таваллуд",
+    "father_nat": "Миллати падар",
+    "mother_nat": "модар",
+    "living_since": "Аз кай дар ин маҳал зиндагӣ мекунад",
+    "enrolled": "Санаи қабул ба мактаб (боғча)",
+    "living_cond": "Шароити маишӣ",
+    "labor_regime": "Режими меҳнат",
+    "past_illnesses": "Бемориҳои гузашта",
+    "children_count": "Шумораи умумии фарзандон дар оила",
+    "child_order": "Кӯдак чандумин фарзанд аст",
+    "feeding_a": "Дар ғизодиҳии: а) табиӣ",
+    "feeding_b": "б) сунъӣ",
+    "marriage_a": "Хешутабории волидон: а) хеши наздик",
+    "marriage_b": "б) хеши дур",
+    "mother_health": "Аз гуфтаи модар (саломатӣ)",
+    "measure_results": "Натиҷаҳои ченкунӣ",
+    "date_col": "Сана",
+    "indicator": "Нишондиҳанда",
+    "gender": "Ҷинси кӯдак",
+    "cat_phys": "I. Нишондиҳандаҳои рушди ҷисмонӣ",
+    "lower_leg": "1. Пойи поёнӣ",
+    "lower_leg_len": "Дарозии пойи поёнӣ",
+    "spina": "а. Нуқтаи spina iliaca anterior superior",
+    "symph": "б. Нуқтаи канори болоии symphysion",
+    "tibiale_title": "2.",
+    "tibiale": "а. Нуқтаи болоӣ дар миёна, болои condylus tibiale",
+    "pelvic": "3. Паҳнои кос",
+    "thigh_l": "4. Дарозии рон",
+    "thigh_c": "5. Даври рон",
+    "calf_l": "6. Дарозии соқ",
+    "calf_c": "7. Даври соқ",
+    "foot_l": "8. Дарозии пойпанҷа",
+    "teeth": "9. Шумораи дандонҳо",
+    "menstr": "10. Оғози ҳайз",
+    "cat_skull": "II. Муайян кардани шакли косахонаи сар",
+    "skull_long": "1. Диаметри тӯлонӣ",
+    "skull_trans": "2. Андозаи кӯндаланг",
+    "head_circ": "3. Даври сар",
+    "forehead": "4. Андозаи кӯндаланги пешонӣ",
+    "skull_height": "5. Диаметри баландӣ ё амудӣ",
+    "skull_base_title": "Муайян кардани андозаи асоси косахонаи сар",
+    "skull_base_l": "1. Дарозии асоси косахонаи сар",
+    "skull_base_w": "2. Паҳнои асоси косахонаи сар",
+    "cat_face": "Рӯй",
+    "face_biz": "1. Диаметри рухсора",
+    "face_big": "2. Диаметри ҷоғи поён",
+    "face_morph": "3. Баландии морфологии рӯй",
+    "face_phys": "4. Баландии физиогномикии рӯй",
+    "nose_h": "5. Баландии бинӣ",
+    "nose_w": "6. Паҳнои бинӣ",
+    "outer_oc": "7. Паҳнои кунҷҳои берунии чашм",
+    "inner_oc": "8. Паҳнои кунҷҳои дохилии чашм",
+    "lips_h": "9. Баландии қисми луобии лабҳо",
+    "mouth_w": "10. Паҳнои даҳон",
+    "cat_chest": "Қафаси сина",
+    "height_body": "1. Дарозии бадан",
+    "height_stand": "1. Қад рост",
+    "height_sit": "2. Қад нишаста",
+    "weight": "2. Вазн",
+    "trunk_l": "3. Дарозии тана",
+    "torso_l": "4. Дарозии корпус",
+    "chest_p": "5. Даври сина (пауза)",
+    "chest_i": "- ҳангоми нафаскашии пурра",
+    "chest_e": "- ҳангоми нафасбарории пурра",
+    "waist": "6. Даври миён",
+    "abd_c": "7. Даври шикам",
+    "upper_s": "8. Дарозии сегменти болоӣ",
+    "chest_td": "9. Диаметри кӯндаланги сина",
+    "chest_ad": "10. Диаметри пешу қафо",
+    "chest_h": "11. Баландии қафаси сина",
+    "cat_arm": "Даст",
+    "arm_l": "1. Дарозии даст",
+    "shoulder_l": "2. Дарозии китф",
+    "shoulder_w": "3. Паҳнои китф",
+    "arm_circ": "4. Даври китф",
+    "arm_circ_rest": "а) дар ҳолати ором",
+    "arm_circ_flex": "б) дар ҳолати кашида",
+    "forearm_l": "5. Дарозии бозу",
+    "hand_l": "6. Дарозии панҷа",
+    "dynamo": "7. Динамометрия",
+    "fat_title": "8. Ғафсии қабати равғани зери пӯст",
+    "fat_tri": "а. болои мушаки се-сар",
+    "fat_bi": "б. болои мушаки ду-сар",
+    "fat_sub": "в. зери кунҷи поёнии шона",
+    "fat_iliac": "г. болои канори устухони кос",
+    "fat_pop": "д. дар чуқурии зери зону",
+}
+
+
 def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     if lang not in LABELS: lang = "ru"
     L = LABELS[lang]
@@ -362,14 +458,16 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
         # Gender translation logic
         v_low = res.lower()
         if v_low in ["boy", "erkak"]:
-            res = "O'g'il bola" if lang == "uz" else ("Эркек бала" if lang == "ky" else "Мальчик")
+            res = "O'g'il bola" if lang == "uz" else ("Эркек бала" if lang == "ky" else ("Писарбача" if lang == "tg" else "Мальчик"))
         elif v_low in ["girl", "ayol"]:
-            res = "Qiz bola" if lang == "uz" else ("Кыз бала" if lang == "ky" else "Девочка")
+            res = "Qiz bola" if lang == "uz" else ("Кыз бала" if lang == "ky" else ("Духтарча" if lang == "tg" else "Девочка"))
         
         import re
         if lang == "ru":
             res = _translate_uz_to_ru(res)
             if re.search(r'[a-zA-Z]', res): res = _lat_to_cyr(res)
+        elif lang == "tg":
+            pass
         else:
             if re.search(r'[а-яА-ЯёЁўЎқҚғҒҳҲ]', res):
                 res = _cyr_to_lat(res)

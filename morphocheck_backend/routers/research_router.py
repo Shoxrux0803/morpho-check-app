@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, date
 from models.user import User
 from models.userdata import ResearchRecord
 from models.schemas import ResearchRecordCreate, ResearchRecordOut
@@ -16,14 +16,12 @@ import pandas as pd
 import io
 import urllib.parse
 import calendar
+import re
 from jose import JWTError, jwt
-import os
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from utils.translit import lat2cyr
-
-SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
+from utils.security import ALGORITHM, SECRET_KEY
 
 router = APIRouter(tags=["Researcher"])
 
@@ -189,6 +187,28 @@ FLOAT_IMPORT_FIELDS = {
         "menstruation_start",
     }
 }
+
+
+def get_research_import_headers() -> List[str]:
+    return [
+        RESEARCH_TEMPLATE_LABELS.get(field, field)
+        for field in RESEARCH_IMPORT_FIELDS
+    ]
+
+
+def get_research_xlsx_styles():
+    return {
+        "header_fill": PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid"),
+        "header_font": Font(color="FFFFFF", bold=True),
+        "border": Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin"),
+        ),
+        "center_align": Alignment(horizontal="center", vertical="center"),
+        "left_align": Alignment(horizontal="left", vertical="center"),
+    }
 
 RESEARCH_TEMPLATE_LABELS = {
     "full_name": "F.I.SH",
@@ -362,6 +382,13 @@ RESEARCH_CHILD_AGE_EXPORT_LABELS = {
     "kz": "Тексеру күніндегі жасы",
 }
 
+RESEARCH_AGE_GROUP_EXPORT_LABELS = {
+    "uz": "Ёш гуруҳи",
+    "ru": "Vozrastnaya gruppa",
+    "en": "Age group",
+    "kz": "Jas toby",
+}
+
 RESEARCH_CHILD_AGE_UNITS = {
     "uz": ("ёш", "ой", "кун"),
     "ru": ("г.", "мес.", "дн."),
@@ -425,6 +452,39 @@ RESEARCH_INDEX_VALUE_LABELS = {
 }
 
 
+RESEARCH_INDEX_EXPORT_LABELS["tg"] = {
+    **RESEARCH_INDEX_EXPORT_LABELS["uz"],
+    "tvi": "BMI",
+    "z_h": "Қад-синну сол z-score",
+    "z_w": "Вазн-синну сол z-score",
+    "z_bmi": "BMI-синну сол z-score",
+    "z_body_length": "Дарозии бадан z-score",
+    "centile": "Интервали сентилӣ",
+    "corridor": "Коридори саломатӣ",
+    "morphological_type": "Соматотип",
+    "mcri": "MCRI",
+}
+
+RESEARCH_CHILD_AGE_EXPORT_LABELS["tg"] = "Синну сол дар санаи муоина"
+RESEARCH_AGE_GROUP_EXPORT_LABELS["tg"] = "Гурӯҳи синнусолӣ"
+RESEARCH_CHILD_AGE_UNITS["tg"] = ("сол", "моҳ", "рӯз")
+
+if "corridor" in RESEARCH_INDEX_VALUE_LABELS:
+    RESEARCH_INDEX_VALUE_LABELS["corridor"]["tg"] = {
+        "< 3": "Камвазнии шадид (<3-сентил)",
+        "3 - 15": "Камвазнӣ (3-15-сентил)",
+        "15 - 85": "Меъёр (15-85-сентил)",
+        "85 - 97": "Вазни зиёдатӣ (85-97-сентил)",
+        "> 97": "Фарбеҳӣ (>97-сентил)",
+    }
+if "morphological_type" in RESEARCH_INDEX_VALUE_LABELS:
+    RESEARCH_INDEX_VALUE_LABELS["morphological_type"]["tg"] = {
+        "astenik": "Астеник",
+        "normostenik": "Нормостеник",
+        "giperstenik": "Гиперстеник",
+    }
+
+
 def get_research_index_export_headers(lang: str):
     labels = RESEARCH_INDEX_EXPORT_LABELS.get(lang, RESEARCH_INDEX_EXPORT_LABELS["uz"])
     return [
@@ -446,6 +506,10 @@ def get_research_index_value_label(group: str, key: str, lang: str):
 
 def get_research_child_age_export_header(lang: str):
     return RESEARCH_CHILD_AGE_EXPORT_LABELS.get(lang, RESEARCH_CHILD_AGE_EXPORT_LABELS["uz"])
+
+
+def get_research_age_group_export_header(lang: str):
+    return RESEARCH_AGE_GROUP_EXPORT_LABELS.get(lang, RESEARCH_AGE_GROUP_EXPORT_LABELS["uz"])
 
 
 def _parse_research_date(value):
@@ -499,6 +563,26 @@ def format_research_child_age(record: ResearchRecord, lang: str = "uz"):
         RESEARCH_CHILD_AGE_UNITS["uz"],
     )
     return f"{years} {year_unit} {months} {month_unit} {days} {day_unit}"
+
+
+def calculate_research_age_group(record: ResearchRecord) -> Optional[float]:
+    parts = _calculate_research_age_parts(record)
+    if not parts:
+        return None
+    years, months, days = parts
+    total_months = years * 12 + months + days / 30.4375
+    half_year_units = int(total_months / 6 + 0.5)
+    half_year_units = max(2, min(14, half_year_units))
+    return half_year_units / 2
+
+
+def format_research_age_group(record: ResearchRecord):
+    age_group = calculate_research_age_group(record)
+    if age_group is None:
+        return None
+    if float(age_group).is_integer():
+        return str(int(age_group))
+    return str(age_group).replace(".", ",")
 
 
 def _calculate_research_age(record: ResearchRecord) -> Optional[int]:
@@ -664,7 +748,7 @@ def get_current_researcher_or_superadmin(
     user.last_active_at = datetime.utcnow()
     try:
         db.commit()
-    except:
+    except Exception:
         db.rollback()
 
     return user
@@ -674,22 +758,29 @@ def get_current_researcher_or_superadmin(
 #  STATIC PATHS — MUST BE BEFORE /{record_id}
 # ═══════════════════════════════════════════════
 
-@router.get("/deleted/list", response_model=List[ResearchRecordOut])
+@router.get("/deleted/list")
 def list_deleted_research(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    paginated: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """O'chirilgan yozuvlar ro'yxati — faqat superadmin"""
     if current_user.role != "superadmin":
         raise HTTPException(status_code=403, detail="Faqat superadmin uchun")
-    records = (
+    query = (
         db.query(ResearchRecord)
         .options(joinedload(ResearchRecord.deleted_by))
         .filter(ResearchRecord.is_deleted == 1)
         .order_by(ResearchRecord.deleted_at.desc())
-        .all()
     )
-    return [research_record_to_dict(record) for record in records]
+    total = query.order_by(None).count()
+    records = query.offset((page - 1) * page_size).limit(page_size).all()
+    items = [research_record_to_dict(record) for record in records]
+    if paginated:
+        return {"items": items, "total": int(total)}
+    return items
 
 
 @router.get("/export/xlsx")
@@ -776,6 +867,7 @@ def export_research_xlsx(
         ("Туғилган жойи", "birth_place"),
         ("Туғилган санаси", "birth_date"),
         (get_research_child_age_export_header(export_lang), "child_age"),
+        (get_research_age_group_export_header(export_lang), "age_group"),
         ("Жинси", "gender"),
         ("Отасининг миллати", "father_nationality"),
         ("Онасининг миллати", "mother_nationality"),
@@ -893,6 +985,8 @@ def export_research_xlsx(
                 val = record.created_by.email if record.created_by else None
             elif field_name == "child_age":
                 val = format_research_child_age(record, export_lang)
+            elif field_name == "age_group":
+                val = format_research_age_group(record)
             elif field_name in index_values:
                 val = index_values[field_name]
             else:
@@ -907,7 +1001,7 @@ def export_research_xlsx(
                 display_val = format_research_gender_for_xlsx(val)
             elif field_name == "created_by_email":
                 display_val = val if val else "-"
-            elif field_name == "child_age" or field_name in index_values:
+            elif field_name in {"child_age", "age_group"} or field_name in index_values:
                 display_val = val if val is not None else "-"
             elif isinstance(val, str):
                 display_val = lat2cyr(val) if val else "-"
@@ -930,10 +1024,11 @@ def export_research_xlsx(
         column = col[0].column_letter
         for cell in col:
             try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
+                cell_length = len(str(cell.value))
+            except (TypeError, ValueError):
+                continue
+            if cell_length > max_length:
+                max_length = cell_length
         ws.column_dimensions[column].width = min(50, max_length + 2)
 
     buf = io.BytesIO()
@@ -953,9 +1048,7 @@ def clean_import_value(value):
         return None
     if isinstance(value, str):
         cleaned = value.strip()
-        if not cleaned or cleaned in {"-", "—"}:
-            return None
-        return cleaned
+        return None if cleaned in {"", "-", "—"} else cleaned
     return value
 
 
@@ -978,7 +1071,7 @@ def coerce_import_value(field: str, value):
     value = clean_import_value(value)
     if value is None:
         return None
-    if isinstance(value, datetime):
+    if isinstance(value, (datetime, date)):
         return value.strftime("%Y-%m-%d")
     if field in INTEGER_IMPORT_FIELDS:
         try:
@@ -990,10 +1083,10 @@ def coerce_import_value(field: str, value):
             return float(str(value).replace(",", "."))
         except (TypeError, ValueError) as exc:
             raise ValueError(f"{field}: raqam bo'lishi kerak") from exc
-    return str(value).strip()
+    return str(value).strip() if isinstance(value, str) else value
 
 
-def map_research_import_headers(headers):
+def map_import_headers(headers: List[str]) -> dict:
     field_set = set(RESEARCH_IMPORT_FIELDS)
     label_aliases = {
         normalize_import_header(label): field
@@ -1042,6 +1135,12 @@ def map_research_import_headers(headers):
     return mapped
 
 
+map_research_import_headers = map_import_headers
+
+
+#  LIST  (superadmin hammani, researcher o'zini)
+
+
 @router.get("/import/template")
 def download_research_import_template(
     current_user: User = Depends(get_current_researcher_or_superadmin),
@@ -1050,37 +1149,27 @@ def download_research_import_template(
     wb = Workbook()
     ws = wb.active
     ws.title = "Research Data"
-    template_headers = [
-        RESEARCH_TEMPLATE_LABELS.get(field, field)
-        for field in RESEARCH_IMPORT_FIELDS
-    ]
-    template_values = [
-        RESEARCH_TEMPLATE_EXAMPLE.get(field)
-        for field in RESEARCH_IMPORT_FIELDS
-    ]
-    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True)
-    border = Border(left=Side(style="thin"), right=Side(style="thin"), top=Side(style="thin"), bottom=Side(style="thin"))
-    center_align = Alignment(horizontal="center", vertical="center")
-    left_align = Alignment(horizontal="left", vertical="center")
+    template_headers = get_research_import_headers()
+    styles = get_research_xlsx_styles()
 
     for col_num, header_text in enumerate(template_headers, 1):
         header = ws.cell(row=1, column=col_num, value=header_text)
-        header.fill = header_fill
-        header.font = header_font
-        header.alignment = center_align
-        header.border = border
+        header.fill = styles["header_fill"]
+        header.font = styles["header_font"]
+        header.alignment = styles["center_align"]
+        header.border = styles["border"]
 
-    for col_num, value in enumerate(template_values, 1):
-        cell = ws.cell(row=2, column=col_num, value=value)
-        cell.alignment = left_align
-        cell.border = border
+    for col_num, field in enumerate(RESEARCH_IMPORT_FIELDS, 1):
+        example = RESEARCH_TEMPLATE_EXAMPLE.get(field)
+        cell = ws.cell(row=2, column=col_num, value=example)
+        cell.alignment = styles["left_align"]
+        cell.border = styles["border"]
 
-    for row_num in range(2, 102):
+    for row_num in range(3, 102):
         for col_num in range(1, len(template_headers) + 1):
-            cell = ws.cell(row=row_num, column=col_num)
-            cell.alignment = left_align
-            cell.border = border
+            cell = ws.cell(row=row_num, column=col_num, value=None)
+            cell.alignment = styles["left_align"]
+            cell.border = styles["border"]
 
     for col in ws.columns:
         max_length = 0
@@ -1113,8 +1202,9 @@ async def import_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
-    if not file.filename or not file.filename.lower().endswith((".xlsx", ".xls")):
-        raise HTTPException(status_code=400, detail="Faqat Excel fayllari (.xlsx, .xls) qabul qilinadi")
+    filename = (file.filename or "").lower()
+    if not filename.endswith(".xlsx"):
+        raise HTTPException(status_code=400, detail="Faqat .xlsx fayl qabul qilinadi")
 
     target_user = current_user
     if researcher_id is not None:
@@ -1124,18 +1214,19 @@ async def import_research_xlsx(
         if not target_user or target_user.role != "researcher":
             raise HTTPException(status_code=404, detail="Researcher topilmadi")
 
-    contents = await file.read()
     try:
+        contents = await file.read()
         wb = load_workbook(io.BytesIO(contents), data_only=True)
+        ws = wb.active
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Excel fayl o'qilmadi: {exc}") from exc
-    ws = wb.active
-    rows = [tuple(cell.value for cell in row) for row in ws.iter_rows()]
+
+    rows = list(ws.iter_rows(values_only=True))
     if not rows:
         raise HTTPException(status_code=400, detail="Excel faylda ma'lumot topilmadi")
 
-    headers = rows[0]
-    column_map = map_research_import_headers(headers)
+    headers = [str(value or "").strip() for value in rows[0]]
+    column_map = map_import_headers(headers)
     if not column_map:
         raise HTTPException(status_code=400, detail="Import uchun mos ustunlar topilmadi")
 
@@ -1198,7 +1289,7 @@ async def import_research_xlsx(
     return {"status": "ok", "imported": len(records), "skipped": skipped}
 
 
-@router.get("/", response_model=List[ResearchRecordOut])
+@router.get("/")
 def list_research_records(
     search: Optional[str] = Query(None),
     full_name: Optional[str] = Query(None),
@@ -1216,6 +1307,9 @@ def list_research_records(
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
     age_max: Optional[int] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    paginated: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
@@ -1291,10 +1385,9 @@ def list_research_records(
         else:
             query = query.filter(func.lower(ResearchRecord.gender) == gender_norm)
 
-    records = query.order_by(ResearchRecord.id.desc()).all()
-
     # Age filter (in Python for accuracy)
     if age_min is not None or age_max is not None:
+        records = query.order_by(ResearchRecord.id.desc()).all()
         filtered = []
         for r in records:
             try:
@@ -1312,9 +1405,24 @@ def list_research_records(
                 # If date format is invalid, include in list only if no age filter applied
                 if age_min is None and age_max is None:
                     filtered.append(r)
+        total = len(filtered)
+        start = (page - 1) * page_size
+        items = [research_record_to_dict(record) for record in filtered[start:start + page_size]]
+        if paginated:
+            return {"items": items, "total": total}
         return [research_record_to_dict(record) for record in filtered]
 
-    return [research_record_to_dict(record) for record in records]
+    total = query.order_by(None).count()
+    records = (
+        query.order_by(ResearchRecord.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    items = [research_record_to_dict(record) for record in records]
+    if paginated:
+        return {"items": items, "total": int(total)}
+    return items
 
 
 @router.get("/export/dataset")
@@ -1363,7 +1471,7 @@ def export_dataset_for_analysis(
             e_date_str = r.examination_date or datetime.now().strftime("%Y-%m-%d")
             e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
             age = round((e_date - b_date).days / 365.25, 2)
-        except:
+        except (TypeError, ValueError):
             age = None
         
         if age_min is not None and (age is None or age < age_min): continue
@@ -1384,6 +1492,7 @@ def export_dataset_for_analysis(
             "id": r.id,
             "full_name": r.full_name,
             "age_years": age,
+            "age_group": calculate_research_age_group(r),
             "gender": r.gender,
             "gender_code": gender_code,
             "settlement": r.settlement,
@@ -1439,9 +1548,11 @@ def export_research_summary_docx(
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
     age_max: Optional[int] = Query(None),
+    lang: Optional[str] = Query("uz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin)
 ):
+    export_lang = normalize_export_lang(lang)
     query = (
         db.query(ResearchRecord)
         .options(joinedload(ResearchRecord.created_by))
@@ -1518,6 +1629,7 @@ def export_research_summary_docx(
         current_user=current_user,
         researcher=researcher,
         filters=filters,
+        lang=export_lang,
     )
     encoded_filename = urllib.parse.quote(
         f"research_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"

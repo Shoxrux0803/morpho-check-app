@@ -579,6 +579,12 @@ export default function Header() {
                             component="span"
                             sx={{
                               display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: 20,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              lineHeight: 1,
                               transition: "transform 0.24s ease",
                               transform: langChanging ? "rotate(180deg)" : "none",
                             }}
@@ -617,7 +623,20 @@ export default function Header() {
                     {LANGUAGES.map((l) => (
                       <MenuItem key={l.code} value={l.code}>
                         <Stack direction="row" alignItems="center" spacing={1} width="100%">
-                          <Box component="span">{l.flag}</Box>
+                          <Box
+                            component="span"
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              minWidth: 20,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              lineHeight: 1,
+                            }}
+                          >
+                            {l.flag}
+                          </Box>
                           <Typography variant="body2" fontWeight={lang === l.code ? 800 : 600}>
                             {l.label}
                           </Typography>

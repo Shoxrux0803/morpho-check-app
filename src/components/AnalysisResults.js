@@ -74,8 +74,17 @@ export default function AnalysisResults({ formData, results, generatePDF, onCont
   const showNum = (n, digits = 2) =>
     n == null || n === "" ? "—" : Number(Number(n).toFixed(digits));
 
-  const cleanAdviceText = (text) =>
-    typeof text === "string" ? text.replace(/^(?:рџ\S*\s*)+/, "").trim() : text;
+  const cleanAdviceText = (text) => {
+    if (typeof text !== "string") return text;
+
+    return text
+      .replace(/^(?:[\u{1F300}-\u{1FAFF}\u2600-\u27BF]\uFE0F?|\u200D|\s)+/u, "")
+      .replace(
+        /^(?:(?:рџ|СЂСџ|РЎР‚РЎСџ|РЎСџ|Р РЏ|Р РЉ|РІР‚|вЂ|РЃ|Р†|РЉ|С—|С™|Сћ|Сџ|РЏ|Тђ|В|В|В|В|Џ|Ѓ|Њ|ў|•|‘|™|⚕|️)\S*\s*)+/,
+        "",
+      )
+      .trim();
+  };
 
   // BMI kategoriyasi
   let bmiCategory = null;

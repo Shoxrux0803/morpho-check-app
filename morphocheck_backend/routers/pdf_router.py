@@ -6,7 +6,15 @@ from io import BytesIO
 from services.pdf_services import generate_pdf_file
 from services.docx_services import generate_docx_report
 from services.clinical_service import clinical_service
-from routers.analyze_router import PatientData, calculate_bmi, generate_advices, generate_region_based_id
+from models.schemas import PatientData
+from services.analyze_service import (
+    BMI_CATEGORIES,
+    calculate_bmi,
+    generate_advices,
+    generate_region_based_id,
+    get_bmi_range_by_age_and_gender,
+    get_ideal_weight_by_age_and_gender,
+)
 from utils.database import get_db
 from models.userdata import PatientAnalysis
 from sqlalchemy.orm import Session
@@ -144,10 +152,6 @@ async def generate_pdf_by_id_endpoint(
     current_user: User = Depends(get_current_admin)
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda PDF qaytaradi."""
-    from routers.analyze_router import (
-        get_bmi_range_by_age_and_gender,
-        get_ideal_weight_by_age_and_gender,
-    )
     from services.indices_service import calculate_detailed_indices
 
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
@@ -191,7 +195,6 @@ async def generate_pdf_by_id_endpoint(
         ideal_w = get_ideal_weight_by_age_and_gender(actual_age, h, rec.gender or "")
 
         # Localize BMI category
-        from routers.analyze_router import BMI_CATEGORIES
         bmi_cat_key = "normal"
         if bmi_val < 16.0: bmi_cat_key = "v_low"
         elif bmi_val < 18.5: bmi_cat_key = "low"
@@ -243,6 +246,7 @@ async def generate_pdf_by_id_endpoint(
             "district": rec.district or "",
             "mahalla": getattr(rec, "mahalla", None) or "",
             "address": rec.address or "",
+            "parents_phone": rec.parents_phone or "",
             "id_code": rec.id_code or "",
             "analysis": analysis,
             "advices": advices,
@@ -325,10 +329,6 @@ async def generate_docx_by_id_endpoint(
     current_user: User = Depends(get_current_admin)
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda DOCX (anketa) qaytaradi."""
-    from routers.analyze_router import (
-        get_bmi_range_by_age_and_gender,
-        get_ideal_weight_by_age_and_gender,
-    )
     from services.indices_service import calculate_detailed_indices
 
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
@@ -371,7 +371,6 @@ async def generate_docx_by_id_endpoint(
         ideal_w = get_ideal_weight_by_age_and_gender(actual_age, h, rec.gender or "")
 
         # Localize BMI category
-        from routers.analyze_router import BMI_CATEGORIES
         bmi_cat_key = "normal"
         if bmi_val < 16.0: bmi_cat_key = "v_low"
         elif bmi_val < 18.5: bmi_cat_key = "low"
@@ -412,6 +411,7 @@ async def generate_docx_by_id_endpoint(
             "district": rec.district or "",
             "mahalla": getattr(rec, "mahalla", None) or "",
             "address": rec.address or "",
+            "parents_phone": rec.parents_phone or "",
             "id_code": rec.id_code or "",
             "analysis": analysis,
             "parents_phone": rec.parents_phone or "",

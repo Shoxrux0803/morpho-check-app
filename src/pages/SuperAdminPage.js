@@ -89,6 +89,7 @@ const PAGE_LABELS = {
   uz: { scientificAnalysis: "Ilmiy Tahlil" },
   ru: { scientificAnalysis: "Научный анализ" },
   en: { scientificAnalysis: "Scientific Analysis" },
+  tg: { scientificAnalysis: "Таҳлили илмӣ" },
   kz: { scientificAnalysis: "Ғылыми талдау" },
   ky: { scientificAnalysis: "Илимий талдоо" },
 };
@@ -816,7 +817,8 @@ const SuperAdminPage = () => {
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const pt = useCallback((key) => pageT(lang, key), [lang]);
   const [activeTab, setActiveTab] = useState(0);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "", verification_code: "" });
+  const [requiresVerification, setRequiresVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [loginInProgress, setLoginInProgress] = useState(false);
@@ -852,6 +854,25 @@ const SuperAdminPage = () => {
   const adminMahallaValue = adminForm.mahalla || "";
   const hasSelectedAdminMahallaOption =
     !adminMahallaValue || mahallaOptions.some((mahalla) => mahalla.label === adminMahallaValue);
+
+  const normalizeAdminForm = (admin = {}) => ({
+    name: admin.name || "",
+    email: admin.email || "",
+    password: "",
+    confirmPassword: "",
+    role: admin.role || "admin",
+    phone: admin.phone || "",
+    region: admin.region || "",
+    district: admin.district || "",
+    mahalla: admin.mahalla || "",
+    address: admin.address || "",
+    latitude: admin.latitude ?? "",
+    longitude: admin.longitude ?? "",
+    research_topic: admin.research_topic || "",
+    research_type: admin.research_type || "",
+    research_area: admin.research_area || "",
+    scientific_supervisor: admin.scientific_supervisor || "",
+  });
 
   // Deleted Data State
   const [deletedData, setDeletedData] = useState([]);
@@ -916,6 +937,22 @@ const SuperAdminPage = () => {
     (item) => item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "",
     [],
   );
+  const canonicalRegionName = useCallback(
+    (value = "") => {
+      const raw = String(value).toLowerCase();
+      if (raw.includes("toshkent")) {
+        if (raw.includes("shah") || raw.includes("city") || raw.includes("город")) {
+          return "toshkent shahri";
+        }
+        if (raw.includes("viloyat") || raw.includes("region") || raw.includes("област")) {
+          return "toshkent viloyati";
+        }
+        return "toshkent shahri";
+      }
+      return normalizeLocationName(value);
+    },
+    [normalizeLocationName],
+  );
   const locationTokens = useCallback(
     (value = "") =>
       normalizeLocationName(value)
@@ -936,11 +973,13 @@ const SuperAdminPage = () => {
     [locationTokens, normalizeLocationName],
   );
   const findBoundaryRegion = useCallback(
-    (regionName) =>
-      (boundaryIndex?.levels?.["1"] || []).find((item) =>
-        locationMatches(featureLabel(item), regionName),
-      ),
-    [boundaryIndex, featureLabel, locationMatches],
+    (regionName) => {
+      const key = canonicalRegionName(regionName);
+      return (boundaryIndex?.levels?.["1"] || []).find(
+        (item) => canonicalRegionName(featureLabel(item)) === key,
+      );
+    },
+    [boundaryIndex, canonicalRegionName, featureLabel],
   );
   const findBoundaryDistrict = useCallback(
     (districtName, regionName = adminForm.region) => {
@@ -993,6 +1032,42 @@ const SuperAdminPage = () => {
     }
     return null;
   };
+  const MAX_MERCATOR = 20037508.342789244;
+  const normalizeCoordinatePair = useCallback((latitude, longitude) => {
+    const rawLat = Number(latitude);
+    const rawLng = Number(longitude);
+    const isLngLatUzbekistan = (lng, lat) =>
+      Number.isFinite(lng) &&
+      Number.isFinite(lat) &&
+      lng >= 55 &&
+      lng <= 74 &&
+      lat >= 37 &&
+      lat <= 46;
+    const mercatorToLngLat = (x, y) => {
+      const lng = (x / MAX_MERCATOR) * 180;
+      const lat = (Math.atan(Math.exp(y / 6378137)) * 360) / Math.PI - 90;
+      return [lng, lat];
+    };
+    const isMercator = (x, y) =>
+      Number.isFinite(x) &&
+      Number.isFinite(y) &&
+      Math.abs(x) <= MAX_MERCATOR &&
+      Math.abs(y) <= MAX_MERCATOR;
+
+    if (isLngLatUzbekistan(rawLng, rawLat)) return { latitude: rawLat, longitude: rawLng };
+    if (isLngLatUzbekistan(rawLat, rawLng)) return { latitude: rawLng, longitude: rawLat };
+
+    if (isMercator(rawLng, rawLat)) {
+      const [lng, lat] = mercatorToLngLat(rawLng, rawLat);
+      if (isLngLatUzbekistan(lng, lat)) return { latitude: lat, longitude: lng };
+    }
+    if (isMercator(rawLat, rawLng)) {
+      const [lng, lat] = mercatorToLngLat(rawLat, rawLng);
+      if (isLngLatUzbekistan(lng, lat)) return { latitude: lat, longitude: lng };
+    }
+
+    return null;
+  }, []);
   const getGenderLabel = (gender) => {
     if (!gender) return "-";
     const normalized = String(gender).toLowerCase();
@@ -1181,6 +1256,36 @@ const SuperAdminPage = () => {
     toast.success(pt("pinSelectedCenter"));
   };
 
+  const setAdminFormWithBoundaryCenter = (patch, options = {}) => {
+    const nextForm = { ...adminForm, ...patch };
+    const selectedMahalla = mahallaOptions.find((item) => item.label === nextForm.mahalla);
+    const selectedDistrict = findBoundaryDistrict(nextForm.district, nextForm.region);
+    const selectedRegion = findBoundaryRegion(nextForm.region);
+    const preferredBoundary =
+      options.preferMahalla && selectedMahalla
+        ? selectedMahalla
+        : options.preferDistrict && selectedDistrict
+          ? selectedDistrict
+          : null;
+    const center =
+      getLocationCenter(preferredBoundary) ||
+      (options.fillFallbackCenter
+        ? getLocationCenter(selectedMahalla) ||
+          getLocationCenter(selectedDistrict) ||
+          getLocationCenter(selectedRegion)
+        : null);
+
+    setAdminForm({
+      ...nextForm,
+      ...(center
+        ? {
+            longitude: Number(center[0]).toFixed(6),
+            latitude: Number(center[1]).toFixed(6),
+          }
+        : {}),
+    });
+  };
+
   const resolveAdminBoundaryCenter = () => {
     const selectedMahalla = mahallaOptions.find((item) => item.label === adminForm.mahalla);
     const selectedDistrict = findBoundaryDistrict(adminForm.district, adminForm.region);
@@ -1314,6 +1419,11 @@ const SuperAdminPage = () => {
     setLoginInProgress(true);
     try {
       const profile = await authLogin(loginForm);
+      if (profile.requires_verification) {
+        setRequiresVerification(true);
+        setLoginError(profile.message || "Emailga yuborilgan tasdiqlash kodini kiriting.");
+        return;
+      }
       if (profile.role === "researcher") {
         navigate("/researcher", { replace: true });
       } else if (profile.role !== "superadmin" && profile.role !== "admin") {
@@ -1355,12 +1465,22 @@ const SuperAdminPage = () => {
         payload.latitude === "" || payload.latitude === null || payload.latitude === undefined;
       const lngMissing =
         payload.longitude === "" || payload.longitude === null || payload.longitude === undefined;
-      if ((latMissing || lngMissing) && payload.region) {
-        const center = resolveAdminBoundaryCenter();
-        if (center) {
-          payload.longitude = Number(center[0]).toFixed(6);
-          payload.latitude = Number(center[1]).toFixed(6);
-        }
+      if (latMissing !== lngMissing) {
+        toast.error("Aniq pin uchun latitude va longitude ikkisi ham kiritilishi kerak");
+        return;
+      }
+      const normalizedPair =
+        payload.latitude !== "" &&
+        payload.latitude !== null &&
+        payload.latitude !== undefined &&
+        payload.longitude !== "" &&
+        payload.longitude !== null &&
+        payload.longitude !== undefined
+          ? normalizeCoordinatePair(payload.latitude, payload.longitude)
+          : null;
+      if (normalizedPair) {
+        payload.latitude = normalizedPair.latitude;
+        payload.longitude = normalizedPair.longitude;
       }
       ["latitude", "longitude"].forEach((key) => {
         if (payload[key] === "" || payload[key] === null || payload[key] === undefined) {
@@ -1597,6 +1717,18 @@ const SuperAdminPage = () => {
                     ),
                   }}
                 />
+                {requiresVerification && (
+                  <TextField
+                    fullWidth
+                    label="Tasdiqlash kodi"
+                    variant="outlined"
+                    value={loginForm.verification_code}
+                    onChange={(e) =>
+                      setLoginForm({ ...loginForm, verification_code: e.target.value })
+                    }
+                    inputProps={{ inputMode: "numeric", maxLength: 6 }}
+                  />
+                )}
                 <Button
                   fullWidth
                   size="large"
@@ -1694,24 +1826,7 @@ const SuperAdminPage = () => {
                 onClick={() => {
                   blurActiveElement();
                   setCurrentAdmin(null);
-                  setAdminForm({
-                    name: "",
-                    email: "",
-                    password: "",
-                    confirmPassword: "",
-                    role: "admin",
-                    phone: "",
-                    region: "",
-                    district: "",
-                    mahalla: "",
-                    address: "",
-                    latitude: "",
-                    longitude: "",
-                    research_topic: "",
-                    research_type: "",
-                    research_area: "",
-                    scientific_supervisor: "",
-                  });
+                  setAdminForm(normalizeAdminForm());
                   setShowAdminPassword(false);
                   setAdminDialogOpen(true);
                 }}
@@ -1771,7 +1886,15 @@ const SuperAdminPage = () => {
                               onClick={() => {
                                 blurActiveElement();
                                 setCurrentAdmin(admin);
-                                setAdminForm({ ...admin, password: "", confirmPassword: "" });
+                                const normalizedPair = normalizeCoordinatePair(
+                                  admin.latitude,
+                                  admin.longitude,
+                                );
+                                setAdminForm({
+                                  ...normalizeAdminForm(admin),
+                                  latitude: normalizedPair?.latitude ?? admin.latitude ?? "",
+                                  longitude: normalizedPair?.longitude ?? admin.longitude ?? "",
+                                });
                                 setShowAdminPassword(false);
                                 setAdminDialogOpen(true);
                               }}
@@ -2578,7 +2701,10 @@ const SuperAdminPage = () => {
                   value={adminForm.district || ""}
                   label={pt("districtCity")}
                   onChange={(e) =>
-                    setAdminForm({ ...adminForm, district: e.target.value, mahalla: "" })
+                    setAdminFormWithBoundaryCenter(
+                      { district: e.target.value, mahalla: "" },
+                      { preferDistrict: true },
+                    )
                   }
                 >
                   {!adminForm.region && <MenuItem value="">{pt("chooseRegionFirst")}</MenuItem>}
@@ -2594,7 +2720,12 @@ const SuperAdminPage = () => {
                 <Select
                   value={adminMahallaValue}
                   label={pt("mahalla")}
-                  onChange={(e) => setAdminForm({ ...adminForm, mahalla: e.target.value })}
+                  onChange={(e) =>
+                    setAdminFormWithBoundaryCenter(
+                      { mahalla: e.target.value },
+                      { preferMahalla: true, fillFallbackCenter: true },
+                    )
+                  }
                 >
                   {mahallaLoading && <MenuItem value="">{pt("mahallasLoading")}</MenuItem>}
                   {!mahallaLoading && mahallaOptions.length === 0 && (
@@ -2615,6 +2746,7 @@ const SuperAdminPage = () => {
                 fullWidth
                 value={adminForm.address || ""}
                 onChange={(e) => setAdminForm({ ...adminForm, address: e.target.value })}
+                helperText="Matnli manzildan aniq koordinata avtomatik topilmaydi. Exact pin uchun latitude va longitude kiriting yoki joriy lokatsiyani oling."
               />
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <TextField

@@ -27,9 +27,13 @@ from models.userdata import PatientAnalysis, ResearchRecord
 from routers.auth_router import get_current_user, get_current_admin, get_current_superadmin
 from models.schemas import (
     UserCreate, UserUpdate, UserOut,
-    PaymentCreate, PaymentOut
+    PaymentCreate, PaymentOut, PatientData
 )
-from routers.analyze_router import calculate_bmi as calc_full_bmi, PatientData, generate_advices, _split_region_and_district
+from services.analyze_service import (
+    calculate_bmi as calc_full_bmi,
+    generate_advices,
+    _split_region_and_district,
+)
 from utils.translit import lat2cyr
 from utils.security import get_password_hash
 from services.clinical_service import clinical_service
@@ -211,6 +215,36 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         
     return payload
 
+USER_LOCATION_FIELDS = ("region", "district", "mahalla", "address", "latitude", "longitude")
+
+def clean_user_payload(data: dict, preserve_empty_location: bool = False) -> dict:
+    cleaned = dict(data)
+    for key in ("name", "email", "phone", "role", "region", "district", "mahalla", "address"):
+        if key in cleaned and isinstance(cleaned[key], str):
+            cleaned[key] = cleaned[key].strip()
+
+    for key in ("latitude", "longitude"):
+        if key not in cleaned:
+            continue
+        value = cleaned[key]
+        if value in ("", None):
+            if preserve_empty_location:
+                cleaned.pop(key, None)
+            else:
+                cleaned[key] = None
+            continue
+        try:
+            cleaned[key] = float(value)
+        except (TypeError, ValueError):
+            cleaned.pop(key, None)
+
+    if preserve_empty_location:
+        for key in USER_LOCATION_FIELDS:
+            if cleaned.get(key) == "":
+                cleaned.pop(key, None)
+
+    return cleaned
+
 # ------------------ USERS ----------------------
 @router.get("/users", response_model=List[UserOut], dependencies=[Depends(get_current_superadmin)])
 def list_users(
@@ -219,7 +253,7 @@ def list_users(
     page: int = 1,
     page_size: int = 20,
 ):
-    query = db.query(User).filter((User.is_deleted == 0) | (User.is_deleted == None))
+    query = db.query(User).filter(User.is_deleted == 0)
     if q:
         like = f"%{q}%"
         query = query.filter(or_(User.name.ilike(like), User.email.ilike(like), User.phone.ilike(like)))
@@ -253,7 +287,7 @@ def create_user(
         if existing_user:
             raise HTTPException(400, "Ushbu email bilan foydalanuvchi allaqachon mavjud.")
             
-    user_data = payload.model_dump(exclude_unset=True)
+    user_data = clean_user_payload(payload.model_dump(exclude_unset=True))
     
     # Hash password if provided
     if "password" in user_data:
@@ -302,7 +336,7 @@ def update_user(
     if not user:
         raise HTTPException(404, "User not found")
         
-    update_data = payload.model_dump(exclude_unset=True)
+    update_data = clean_user_payload(payload.model_dump(exclude_unset=True), preserve_empty_location=True)
     
     # Check if new email conflicts with other users
     if "email" in update_data and update_data["email"] != user.email:
@@ -416,15 +450,13 @@ def list_analyses(
         # Oddiy admin: faqat o'z ma'lumotlari + o'chirilmaganlar
         base = base.filter(
             PatientAnalysis.created_by_id == current_user.id,
-            (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
+            PatientAnalysis.is_deleted == 0
         )
     else:
         # Super admin: barcha ma'lumotlar
         # Agar show_deleted=False bo'lsa — faqat o'chirilmaganlar
         if not show_deleted:
-            base = base.filter(
-                (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
-            )
+            base = base.filter(PatientAnalysis.is_deleted == 0)
         else:
             # show_deleted=True bo'lsa hech qanday filter yo'q — barcha ko'rinadi (o'chirilganlar ham)
             pass
@@ -765,9 +797,7 @@ def stats(
     total_users = db.query(func.count(User.id)).scalar() or 0
     
     # Filter analyses stats by ownership and exclusion of deleted records
-    analysis_q = db.query(PatientAnalysis).filter(
-        (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
-    )
+    analysis_q = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 0)
     if current_user.role != "superadmin":
         analysis_q = analysis_q.filter(PatientAnalysis.created_by_id == current_user.id)
 
@@ -1134,6 +1164,8 @@ def export_analyses_xlsx(
         "ACM (%)", "Висцерал Ёғ", "Тана узунлиги (см)"
     ]
     
+    headers.append("Ota-ona telefon raqami")
+
     # Header styling
     header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
     header_font = Font(color="FFFFFF", bold=True)
@@ -1213,6 +1245,7 @@ def export_analyses_xlsx(
             indices.get("acm_percent", getattr(r, "acm", None) or "-"),
             indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
             r.body_length or 0,
+            r.parents_phone or "-",
         ]
         
         # Barcha string qiymatlarni lat2cyr orqali o'girish shart emas —
@@ -1234,10 +1267,11 @@ def export_analyses_xlsx(
         column = col[0].column_letter
         for cell in col:
             try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
+                cell_length = len(str(cell.value))
+            except (TypeError, ValueError):
+                continue
+            if cell_length > max_length:
+                max_length = cell_length
         adjusted_width = (max_length + 2)
         ws.column_dimensions[column].width = adjusted_width
 
@@ -1561,7 +1595,7 @@ async def import_analyses_xlsx(
             ts = str(v).strip().replace(',', '.')
             if not ts or ts.lower() == 'nan': return default
             return float(ts)
-        except:
+        except (TypeError, ValueError):
             return default
 
     def format_int(v, default=0):
@@ -1572,7 +1606,7 @@ async def import_analyses_xlsx(
             ts = str(v).strip().split('.')[0] # handle '10.0' as string
             if not ts: return default
             return int(ts)
-        except:
+        except (TypeError, ValueError):
             return default
 
     def format_date(v, default=""):
@@ -1657,7 +1691,7 @@ async def import_analyses_xlsx(
             existing = db.query(PatientAnalysis).filter(
                 PatientAnalysis.name == full_name,
                 PatientAnalysis.created_by_id == current_user.id,
-                (PatientAnalysis.is_deleted == 0) | (PatientAnalysis.is_deleted == None)
+                PatientAnalysis.is_deleted == 0
             )
             if data.get("birth_date"):
                 existing = existing.filter(PatientAnalysis.birth_date == str(data["birth_date"]))
@@ -1714,7 +1748,8 @@ async def import_analyses_xlsx(
                 int(rec.age),
                 rec.gender,
                 all_settings,
-                bio_data=analysis["indices"]
+                bio_data=analysis["indices"],
+                lang="uz",
             )
             
             rec.recommendations = (
@@ -1852,24 +1887,24 @@ def get_admin_activity(
         stats_today = db.query(func.count(model_class.id)).filter(
             model_class.created_by_id == u.id,
             model_class.created_at >= today_start,
-            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+            model_class.is_deleted == 0
         ).scalar() or 0
 
         stats_week = db.query(func.count(model_class.id)).filter(
             model_class.created_by_id == u.id,
             model_class.created_at >= week_start,
-            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+            model_class.is_deleted == 0
         ).scalar() or 0
         
         stats_month = db.query(func.count(model_class.id)).filter(
             model_class.created_by_id == u.id,
             model_class.created_at >= month_start,
-            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+            model_class.is_deleted == 0
         ).scalar() or 0
 
         total_entries = db.query(func.count(model_class.id)).filter(
             model_class.created_by_id == u.id,
-            (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+            model_class.is_deleted == 0
         ).scalar() or 0
         
         # Avg time
@@ -1879,11 +1914,11 @@ def get_admin_activity(
         elif total_entries > 1:
             first_entry_at = db.query(func.min(model_class.created_at)).filter(
                 model_class.created_by_id == u.id,
-                (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+                model_class.is_deleted == 0
             ).scalar()
             last_entry_at = db.query(func.max(model_class.created_at)).filter(
                 model_class.created_by_id == u.id,
-                (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+                model_class.is_deleted == 0
             ).scalar()
             if first_entry_at and last_entry_at and last_entry_at > first_entry_at:
                 avg_time = round((last_entry_at - first_entry_at).total_seconds() / (total_entries - 1), 1)
@@ -1897,13 +1932,13 @@ def get_admin_activity(
                 func.count(model_class.id).label("count")
             ).filter(
                 model_class.created_by_id == u.id,
-                (model_class.is_deleted == 0) | (model_class.is_deleted == None)
+                model_class.is_deleted == 0
             ).group_by("hour").order_by(desc("count")).first()
             
             if hour_query:
                 most_active_hour = f"{hour_query.hour}:00"
-        except:
-            pass
+        except Exception as exc:
+            logger.warning("Unable to calculate most active hour for user %s: %s", u.id, exc)
 
         result.append({
             "id": u.id,

@@ -132,11 +132,28 @@ export async function generateDocx(payload, lang = "uz") {
 }
 
 /* -------------------- AUTH & USER -------------------- */
+function getLoginDeviceId() {
+  const key = "superadmin_device_id";
+  let deviceId = localStorage.getItem(key);
+  if (!deviceId) {
+    deviceId =
+      window.crypto?.randomUUID?.() ||
+      `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
+        .toString(36)
+        .slice(2)}`;
+    localStorage.setItem(key, deviceId);
+  }
+  return deviceId;
+}
+
 export async function login(credentials) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
+    body: JSON.stringify({
+      ...credentials,
+      device_id: getLoginDeviceId(),
+    }),
   });
 
   if (!resp.ok) {
@@ -912,9 +929,13 @@ export const ResearchApi = {
   },
 
   /** O'chirilganlar ro'yxati — faqat superadmin */
-  deletedList: async () => {
+  deletedList: async (params = {}) => {
+    const q = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+    });
     const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/deleted/list`, {
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/deleted/list?${q.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!resp.ok) {

@@ -131,6 +131,38 @@ const ACTIVITY_I18N = {
     noAdmins: "Админдер табылмады",
     noResearchers: "Зерттеушілер табылмады",
   },
+  tg: {
+    typing: "• ворид мекунад...",
+    sec: "сон",
+    min: "дақ",
+    best: "Беҳтарин",
+    researcher: "Таҳқиқотчӣ",
+    admin: "Админ",
+    today: "Имрӯз",
+    week: "Ҳафта",
+    month: "Ин моҳ",
+    monthShort: "Моҳ",
+    ratingScore: "Холи рейтинг",
+    perRecord: "Барои 1 сабт:",
+    totalEntered: "Ҳамагӣ ворид кард:",
+    unit: "то",
+    activeTime: "Вақти фаъолтарин:",
+    lastActivity: "Фаъолияти охирин:",
+    refreshError: "Хато ҳангоми навсозии маълумот!",
+    title: "Top chart",
+    usersOnline: (count) => `Ҳоло ${count} истифодабаранда online`,
+    lastUpdate: "Навсозии охирин",
+    all: "Ҳама",
+    admins: "Админҳо",
+    researchers: "Таҳқиқотчиён",
+    refresh: "Навсозӣ",
+    loading: "Маълумот бор шуда истодааст...",
+    bestResult: "Натиҷаи беҳтарин",
+    oneRecord: "1 сабт",
+    noUsers: "Истифодабаранда ёфт нашуд",
+    noAdmins: "Админҳо ёфт нашуданд",
+    noResearchers: "Таҳқиқотчиён ёфт нашуданд",
+  },
 };
 
 const StatusBadge = ({ status, isTyping, t }) => {
@@ -176,7 +208,7 @@ const formatAvgMinutes = (seconds = 0, t = ACTIVITY_I18N.uz) => {
   return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} ${t.min}`;
 };
 
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const getScore = (admin) =>
   (admin.stats_today || 0) * 3 + (admin.stats_week || 0) * 2 + (admin.stats_month || 0);

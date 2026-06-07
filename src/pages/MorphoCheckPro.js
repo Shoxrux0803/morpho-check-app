@@ -49,6 +49,7 @@ const emptyFormData = {
   visceralFat: "",
   bodyLength: "",
   doctorNote: "",
+  parentsPhone: "",
 };
 
 const loadDraft = () => {
@@ -188,6 +189,7 @@ export default function MorphoCheckPro() {
         parentsPhone: formData.parentsPhone || "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
+        parentsPhone: formData.parentsPhone || "",
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -233,7 +235,6 @@ export default function MorphoCheckPro() {
         setEditingItem(null);
         toast.success("Corrected and synced!");
       }
-
       localStorage.removeItem(FORM_DRAFT_KEY);
       setResults(raw);
       setActiveTab("results");
@@ -262,6 +263,7 @@ export default function MorphoCheckPro() {
       parentsPhone: "",
       fatherHeight: "",
       motherHeight: "",
+      parentsPhone: "",
       shoulderLength: "",
       shoulderBreadth: "",
       shoulderCircumference: "",
@@ -312,6 +314,7 @@ export default function MorphoCheckPro() {
         parentsPhone: formData.parentsPhone || "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
+        parentsPhone: formData.parentsPhone || "",
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -377,6 +380,7 @@ export default function MorphoCheckPro() {
         parentsPhone: formData.parentsPhone || "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
+        parentsPhone: formData.parentsPhone || "",
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -426,27 +430,29 @@ export default function MorphoCheckPro() {
   }, [error]);
 
   return (
-    <div className="container my-4">
-      {activeTab === "form" ? (
-        <InputForm
-          formData={formData}
-          handleInputChange={handleInputChange}
-          onBulkUpdate={handleBulkUpdate}
-          handleSubmit={handleSubmit}
-          loading={loading}
-          error={error}
-        />
-      ) : (
-        <div ref={resultsRef}>
-          <AnalysisResults
+    <div className="mc-analysis-page">
+      <div className="container my-4 mc-analysis-content">
+        {activeTab === "form" ? (
+          <InputForm
             formData={formData}
-            results={results}
-            generatePDF={generatePDF}
-            onContinue={handleContinue}
+            handleInputChange={handleInputChange}
+            onBulkUpdate={handleBulkUpdate}
+            handleSubmit={handleSubmit}
+            loading={loading}
+            error={error}
           />
-        </div>
-      )}
-      {/* Dublikat chiqmasligi uchun alohida FeedbackForm-ni bu yerda chaqirmaymiz */}
+        ) : (
+          <div ref={resultsRef}>
+            <AnalysisResults
+              formData={formData}
+              results={results}
+              generatePDF={generatePDF}
+              onContinue={handleContinue}
+            />
+          </div>
+        )}
+        {/* Dublikat chiqmasligi uchun alohida FeedbackForm-ni bu yerda chaqirmaymiz */}
+      </div>
     </div>
   );
 }

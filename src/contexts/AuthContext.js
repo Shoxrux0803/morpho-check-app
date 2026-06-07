@@ -18,6 +18,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const data = await api.login(credentials);
+      if (data.requires_verification) {
+        return data;
+      }
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
         await set("auth_token", data.access_token);
@@ -50,7 +53,9 @@ export const AuthProvider = ({ children }) => {
       const profile = await api.getUserProfile();
       setUser(profile);
     } catch (err) {
-      console.error("Auth check failed:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Stored auth token is invalid or expired; logging out.");
+      }
       logout();
     } finally {
       setLoading(false);

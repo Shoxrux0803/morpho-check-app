@@ -47,7 +47,7 @@ const getRegionLabel = (value, lang) => {
   return REGION_LABELS_RU[key] || value || "-";
 };
 
-const localeByLang = { uz: "uz-UZ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
 const AdminTable = ({
   rows,

@@ -1,6 +1,6 @@
 # morphocheck_backend/models/user.py
 
-from sqlalchemy import Column, Float, Integer, String, DateTime, func
+from sqlalchemy import Column, Float, Integer, String, DateTime, func, Index
 from .base import Base   # shu papkadan Base ni olish uchun
 
 class User(Base):
@@ -34,3 +34,8 @@ class User(Base):
     is_deleted = Column(Integer, default=0, index=True) # 0=Active, 1=Deleted
     deleted_at = Column(DateTime, nullable=True)
     deleted_by_id = Column(Integer, nullable=True)
+
+    __table_args__ = (
+        Index("ix_users_role_active", "role", "is_deleted"),
+        Index("ix_users_deleted_deleted_at", "is_deleted", "deleted_at"),
+    )

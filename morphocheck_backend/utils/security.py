@@ -3,20 +3,13 @@ from typing import Optional
 import os
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import logging
 import secrets
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = os.getenv("SECRET_KEY", "supersecretjwtkey_please_change_in_prod")
-DEFAULT_SECRET_KEY = "supersecretjwtkey_please_change_in_prod"
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-if SECRET_KEY == DEFAULT_SECRET_KEY:
-    message = "CRITICAL SECURITY WARNING: MorphoCheck backend is using default SECRET_KEY!"
-    if DEBUG:
-        logging.warning("%s Change it before production.", message)
-    else:
-        raise RuntimeError(f"{message} Set a strong SECRET_KEY in .env.")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is required. Set a strong SECRET_KEY in .env.")
 if len(SECRET_KEY) < 32:
     raise RuntimeError("SECRET_KEY must be at least 32 characters long.")
 

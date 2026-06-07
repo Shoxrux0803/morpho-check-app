@@ -51,6 +51,9 @@ import {
   Assessment,
   TrendingUp,
   People,
+  FactCheck,
+  Timeline,
+  WarningAmber,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -139,6 +142,7 @@ const SectionTitle = ({ icon: Icon, title }) => (
 const getDateLocale = (lang) => {
   if (lang === "ru") return "ru-RU";
   if (lang === "kz") return "kk-KZ";
+  if (lang === "tg") return "tg-TJ";
   if (lang === "en") return "en-US";
   return "uz-UZ";
 };
@@ -1241,7 +1245,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
             size="large"
             onClick={async () => {
               try {
-                const blob = await ResearchApi.exportSummaryDocx({});
+                const blob = await ResearchApi.exportSummaryDocx({ lang });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
@@ -1269,6 +1273,648 @@ const ResearchAnalytics = ({ data, isDark }) => {
 /* ════════════════════════════════════════════════════
    MAIN PAGE
 ════════════════════════════════════════════════════ */
+const EnhancedResearchAnalytics = ({ data, isDark }) => {
+  const [timeRange, setTimeRange] = useState("all");
+
+  const stats = useMemo(() => {
+    const rows = Array.isArray(data) ? data : [];
+    const toNumber = (value) => {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+    const avg = (values) => {
+      const clean = values.map(toNumber).filter((value) => value !== null && value > 0);
+      return clean.length ? clean.reduce((sum, value) => sum + value, 0) / clean.length : 0;
+    };
+    const pct = (value, base) => (base ? Math.round((value / base) * 100) : 0);
+    const getAge = (record) => {
+      if (!record.birth_date) return null;
+      const birthDate = new Date(record.birth_date);
+      const examinationDate = record.examination_date
+        ? new Date(record.examination_date)
+        : new Date();
+      if (Number.isNaN(birthDate.getTime()) || Number.isNaN(examinationDate.getTime())) return null;
+      const age = Math.floor((examinationDate - birthDate) / (365.25 * 24 * 60 * 60 * 1000));
+      return age >= 0 && age <= 20 ? age : null;
+    };
+    const normalizeGender = (gender) => {
+      const g = (gender || "").toLowerCase();
+      if (g === "boy" || g === "m" || g === "male" || g === "erkak" || g.includes("o'g'il"))
+        return "boy";
+      if (g === "girl" || g === "f" || g === "female" || g === "ayol" || g.includes("qiz"))
+        return "girl";
+      return "unknown";
+    };
+
+    const filteredRows =
+      timeRange === "30d"
+        ? rows.filter((record) => {
+            const createdAt = new Date(record.created_at);
+            return (
+              !Number.isNaN(createdAt.getTime()) && Date.now() - createdAt.getTime() < 30 * 86400000
+            );
+          })
+        : rows;
+
+    const total = filteredRows.length;
+    const boys = filteredRows.filter((record) => normalizeGender(record.gender) === "boy").length;
+    const girls = filteredRows.filter((record) => normalizeGender(record.gender) === "girl").length;
+    const unknownGender = Math.max(total - boys - girls, 0);
+    const bmiRows = filteredRows
+      .map((record) => {
+        const weight = toNumber(record.weight);
+        const height = toNumber(record.chest_standing_height);
+        if (!weight || !height) return null;
+        return { ...record, weight, height, bmi: weight / Math.pow(height / 100, 2) };
+      })
+      .filter(Boolean);
+
+    const fieldCounts = filteredRows.reduce(
+      (acc, record) => {
+        if (record.weight) acc.weight += 1;
+        if (record.chest_standing_height) acc.height += 1;
+        if (record.birth_date) acc.age += 1;
+        if (record.settlement) acc.settlement += 1;
+        if (record.school_name) acc.school += 1;
+        return acc;
+      },
+      { weight: 0, height: 0, age: 0, settlement: 0, school: 0 },
+    );
+    const completeness = total
+      ? Math.round(
+          ((fieldCounts.weight +
+            fieldCounts.height +
+            fieldCounts.age +
+            fieldCounts.settlement +
+            fieldCounts.school) /
+            (total * 5)) *
+            100,
+        )
+      : 0;
+
+    const topList = (key) =>
+      Object.entries(
+        filteredRows.reduce((acc, record) => {
+          const name = record[key] || "Noma'lum";
+          acc[name] = (acc[name] || 0) + 1;
+          return acc;
+        }, {}),
+      )
+        .map(([name, value]) => ({ name, value, percent: pct(value, total) }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5);
+
+    const ageBuckets = filteredRows.reduce(
+      (acc, record) => {
+        const age = getAge(record);
+        if (age === null) acc.unknown += 1;
+        else if (age <= 6) acc.preschool += 1;
+        else if (age <= 10) acc.primary += 1;
+        else if (age <= 14) acc.middle += 1;
+        else acc.teen += 1;
+        return acc;
+      },
+      { preschool: 0, primary: 0, middle: 0, teen: 0, unknown: 0 },
+    );
+
+    const ageMap = filteredRows.reduce((acc, record) => {
+      const age = getAge(record);
+      if (age === null) return acc;
+      if (!acc[age]) acc[age] = { age, count: 0, weight: [], height: [], bmi: [] };
+      const weight = toNumber(record.weight);
+      const height = toNumber(record.chest_standing_height);
+      if (weight) acc[age].weight.push(weight);
+      if (height) acc[age].height.push(height);
+      if (weight && height) acc[age].bmi.push(weight / Math.pow(height / 100, 2));
+      acc[age].count += 1;
+      return acc;
+    }, {});
+
+    const timelineMap = filteredRows.reduce((acc, record) => {
+      const createdAt = record.created_at ? new Date(record.created_at) : new Date();
+      if (Number.isNaN(createdAt.getTime())) return acc;
+      const date = createdAt.toISOString().slice(0, 10);
+      acc[date] = (acc[date] || 0) + 1;
+      return acc;
+    }, {});
+    let cumulative = 0;
+    const highBmi = bmiRows.filter((record) => record.bmi >= 25).length;
+    const lowBmi = bmiRows.filter((record) => record.bmi < 18.5).length;
+    const cityData = topList("settlement");
+    const schoolData = topList("school_name");
+
+    return {
+      total,
+      boys,
+      girls,
+      avgBmi: avg(bmiRows.map((record) => record.bmi)).toFixed(1),
+      avgHeight: avg(filteredRows.map((record) => record.chest_standing_height)).toFixed(1),
+      avgWeight: avg(filteredRows.map((record) => record.weight)).toFixed(1),
+      bmiCoverage: pct(bmiRows.length, total),
+      bmiRecords: bmiRows.length,
+      completeness,
+      quality: completeness >= 85 ? "Yuqori" : completeness >= 60 ? "O'rtacha" : "E'tibor kerak",
+      genderBalance: total ? 100 - Math.abs(pct(boys, total) - pct(girls, total)) : 0,
+      highBmiPercent: pct(highBmi, bmiRows.length),
+      lowBmiPercent: pct(lowBmi, bmiRows.length),
+      risk:
+        bmiRows.length === 0
+          ? "Ma'lumot yo'q"
+          : pct(highBmi + lowBmi, bmiRows.length) >= 35
+            ? "Kengaytirilgan kuzatuv"
+            : "Barqaror kuzatuv",
+      topCity: cityData[0],
+      topSchool: schoolData[0],
+      genderData: [
+        { name: "O'g'il bolalar", value: boys, color: "#2563eb" },
+        { name: "Qiz bolalar", value: girls, color: "#ec4899" },
+        { name: "Noma'lum", value: unknownGender, color: "#94a3b8" },
+      ].filter((item) => item.value > 0),
+      bmiData: [
+        { name: "BMI < 18.5", value: lowBmi, color: "#f59e0b" },
+        {
+          name: "18.5-24.9",
+          value: bmiRows.filter((record) => record.bmi >= 18.5 && record.bmi < 25).length,
+          color: "#10b981",
+        },
+        {
+          name: "25-29.9",
+          value: bmiRows.filter((record) => record.bmi >= 25 && record.bmi < 30).length,
+          color: "#0ea5e9",
+        },
+        {
+          name: "BMI >= 30",
+          value: bmiRows.filter((record) => record.bmi >= 30).length,
+          color: "#ef4444",
+        },
+      ].filter((item) => item.value > 0),
+      ageGroupData: [
+        { name: "0-6", value: ageBuckets.preschool, color: "#14b8a6" },
+        { name: "7-10", value: ageBuckets.primary, color: "#2563eb" },
+        { name: "11-14", value: ageBuckets.middle, color: "#8b5cf6" },
+        { name: "15-20", value: ageBuckets.teen, color: "#f97316" },
+        { name: "Noma'lum", value: ageBuckets.unknown, color: "#94a3b8" },
+      ].filter((item) => item.value > 0),
+      cityData,
+      schoolData,
+      ageData: Object.values(ageMap)
+        .map((item) => ({
+          age: `${item.age} yosh`,
+          count: item.count,
+          vazn: Number(avg(item.weight).toFixed(1)),
+          "bo'y": Number(avg(item.height).toFixed(1)),
+          bmi: Number(avg(item.bmi).toFixed(1)),
+        }))
+        .sort((a, b) => parseInt(a.age) - parseInt(b.age)),
+      timelineData: Object.entries(timelineMap)
+        .map(([date, count]) => ({ date, count }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((item) => {
+          cumulative += item.count;
+          return { ...item, cumulative };
+        }),
+    };
+  }, [data, timeRange]);
+
+  const chartGrid = isDark ? "rgba(255,255,255,0.10)" : "rgba(15,23,42,0.08)";
+  const axisTick = isDark ? "#cbd5e1" : "#475569";
+  const panelBg = isDark ? "rgba(15,23,42,0.72)" : "rgba(255,255,255,0.94)";
+
+  return (
+    <Stack spacing={4}>
+      <GlassPaper
+        sx={{
+          p: { xs: 2.5, md: 3.5 },
+          background: isDark
+            ? "linear-gradient(135deg, rgba(15,23,42,0.88), rgba(20,83,45,0.32))"
+            : "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(236,253,245,0.78))",
+        }}
+      >
+        <Stack direction={{ xs: "column", md: "row" }} spacing={3} justifyContent="space-between">
+          <Box>
+            <Chip
+              icon={<Timeline fontSize="small" />}
+              label="Real vaqtli tadqiqot paneli"
+              sx={{ mb: 2, fontWeight: 900, color: "#047857", bgcolor: "rgba(16,185,129,0.12)" }}
+            />
+            <Typography variant="h4" fontWeight={950}>
+              Analitika Markazi
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 780 }}>
+              Tadqiqot ma'lumotlarining qamrovi, demografik tarkibi, antropometrik ko'rsatkichlari
+              va ma'lumot sifati bo'yicha professional tahlil.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1} alignItems="center">
+            {[
+              { value: "all", label: "Barchasi" },
+              { value: "30d", label: "30 kun" },
+            ].map((option) => (
+              <Button
+                key={option.value}
+                variant={timeRange === option.value ? "contained" : "outlined"}
+                size="small"
+                onClick={() => setTimeRange(option.value)}
+                sx={{ borderRadius: 2.5, fontWeight: 900, textTransform: "none" }}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </Stack>
+        </Stack>
+      </GlassPaper>
+
+      <Grid container spacing={3}>
+        {[
+          {
+            label: "Jami yozuvlar",
+            value: stats.total,
+            helper: `${stats.boys} o'g'il / ${stats.girls} qiz`,
+            icon: <People />,
+            color: "#2563eb",
+          },
+          {
+            label: "O'rtacha BMI",
+            value: stats.avgBmi,
+            helper: `${stats.bmiCoverage}% yozuvda BMI`,
+            icon: <Assessment />,
+            color: "#10b981",
+          },
+          {
+            label: "Ma'lumot to'liqligi",
+            value: `${stats.completeness}%`,
+            helper: stats.quality,
+            icon: <FactCheck />,
+            color: "#f59e0b",
+          },
+          {
+            label: "Jins balansi",
+            value: `${stats.genderBalance}%`,
+            helper: "Taqsimot muvozanati",
+            icon: <TrendingUp />,
+            color: "#8b5cf6",
+          },
+        ].map((card) => (
+          <Grid xs={12} sm={6} md={3} key={card.label}>
+            <GlassPaper sx={{ p: 2.5, height: "100%", background: panelBg }}>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box
+                  sx={{
+                    width: 46,
+                    height: 46,
+                    borderRadius: 2,
+                    bgcolor: `${card.color}16`,
+                    color: card.color,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  {card.icon}
+                </Box>
+                <Box>
+                  <Typography
+                    variant="h4"
+                    fontWeight={950}
+                    sx={{ color: card.color, lineHeight: 1 }}
+                  >
+                    {card.value}
+                  </Typography>
+                  <Typography variant="body2" fontWeight={900} sx={{ mt: 0.6 }}>
+                    {card.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {card.helper}
+                  </Typography>
+                </Box>
+              </Stack>
+            </GlassPaper>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Grid container spacing={3}>
+        {[
+          {
+            title: "Antropometrik profil",
+            rows: [
+              ["O'rtacha bo'y", `${stats.avgHeight} sm`],
+              ["O'rtacha vazn", `${stats.avgWeight} kg`],
+              ["BMI yozuvlari", `${stats.bmiRecords} ta`],
+            ],
+          },
+          {
+            title: "Kuzatuv xulosasi",
+            rows: [
+              ["Status", stats.risk],
+              ["Yuqori BMI ulushi", `${stats.highBmiPercent}%`],
+              ["Past BMI ulushi", `${stats.lowBmiPercent}%`],
+            ],
+          },
+          {
+            title: "Hududiy qamrov",
+            rows: [
+              ["Yetakchi hudud", stats.topCity?.name || "-"],
+              ["Hudud ulushi", stats.topCity ? `${stats.topCity.percent}%` : "-"],
+              ["Yetakchi muassasa", stats.topSchool?.name || "-"],
+            ],
+          },
+        ].map((block) => (
+          <Grid xs={12} md={4} key={block.title}>
+            <GlassPaper
+              sx={{
+                p: 2.5,
+                height: "100%",
+                background: isDark ? "rgba(15,23,42,0.58)" : "rgba(248,250,252,0.92)",
+              }}
+            >
+              <Stack direction="row" spacing={1.2} alignItems="center" mb={2}>
+                <WarningAmber sx={{ color: "#f59e0b" }} />
+                <Typography variant="subtitle1" fontWeight={950}>
+                  {block.title}
+                </Typography>
+              </Stack>
+              <Stack spacing={1.2}>
+                {block.rows.map(([label, value]) => (
+                  <Box
+                    key={label}
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 2,
+                      p: 1.2,
+                      borderRadius: 2,
+                      bgcolor: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.82)",
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" fontWeight={700}>
+                      {label}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={950} textAlign="right">
+                      {value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Stack>
+            </GlassPaper>
+          </Grid>
+        ))}
+      </Grid>
+
+      <Grid container spacing={3}>
+        {[
+          ["Jinsi bo'yicha taqsimot", stats.genderData],
+          ["BMI segmentlari", stats.bmiData],
+        ].map(([title, chartData]) => (
+          <Grid xs={12} md={4} key={title}>
+            <GlassPaper sx={{ p: 3, height: "100%" }}>
+              <Typography variant="subtitle1" fontWeight={900} mb={3}>
+                {title}
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    innerRadius={58}
+                    outerRadius={84}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`${title}-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
+            </GlassPaper>
+          </Grid>
+        ))}
+        <Grid xs={12} md={4}>
+          <GlassPaper sx={{ p: 3, height: "100%" }}>
+            <Typography variant="subtitle1" fontWeight={900} mb={3}>
+              Yosh guruhlari
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.ageGroupData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGrid} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 12, fill: axisTick }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis tick={{ fontSize: 11, fill: axisTick }} axisLine={false} tickLine={false} />
+                <RechartsTooltip cursor={{ fill: "transparent" }} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} barSize={34}>
+                  {stats.ageGroupData.map((entry, index) => (
+                    <Cell key={`age-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+
+        <Grid xs={12} md={7}>
+          <GlassPaper sx={{ p: 3, height: "100%" }}>
+            <Typography variant="subtitle1" fontWeight={900} mb={3}>
+              Top 5 hududlar
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.cityData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGrid} />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={110}
+                  tick={{ fontSize: 12, fontWeight: 700, fill: axisTick }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <RechartsTooltip cursor={{ fill: "transparent" }} />
+                <Bar dataKey="value" fill="#2563eb" radius={[0, 6, 6, 0]} barSize={24} />
+              </BarChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+        <Grid xs={12} md={5}>
+          <GlassPaper sx={{ p: 3, height: "100%" }}>
+            <Typography variant="subtitle1" fontWeight={900} mb={3}>
+              Top muassasalar
+            </Typography>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.schoolData} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={chartGrid} />
+                <XAxis type="number" hide />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  width={125}
+                  tick={{ fontSize: 11, fontWeight: 700, fill: axisTick }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <RechartsTooltip cursor={{ fill: "transparent" }} />
+                <Bar dataKey="value" fill="#10b981" radius={[0, 6, 6, 0]} barSize={22} />
+              </BarChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+
+        <Grid xs={12}>
+          <GlassPaper sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight={900} mb={3}>
+              Ma'lumotlar yig'ish dinamikasi
+            </Typography>
+            <ResponsiveContainer width="100%" height={350}>
+              <AreaChart data={stats.timelineData}>
+                <defs>
+                  <linearGradient id="enhancedColorCount" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGrid} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 10, fill: axisTick }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis tick={{ fontSize: 10, fill: axisTick }} axisLine={false} tickLine={false} />
+                <RechartsTooltip />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#2563eb"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#enhancedColorCount)"
+                  name="Kunlik yozuv"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cumulative"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={false}
+                  name="Jami yig'indi"
+                />
+                <Legend />
+              </AreaChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+
+        <Grid xs={12}>
+          <GlassPaper sx={{ p: 3 }}>
+            <Typography variant="subtitle1" fontWeight={900} mb={3}>
+              Yosh bo'yicha antropometrik ko'rsatkichlar
+            </Typography>
+            <ResponsiveContainer width="100%" height={350}>
+              <ComposedChart data={stats.ageData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={chartGrid} />
+                <XAxis dataKey="age" tick={{ fill: axisTick, fontSize: 12 }} />
+                <YAxis
+                  yAxisId="left"
+                  orientation="left"
+                  stroke="#2563eb"
+                  label={{ value: "Vazn / BMI", angle: -90, position: "insideLeft" }}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  stroke="#ec4899"
+                  label={{ value: "Bo'y (sm)", angle: 90, position: "insideRight" }}
+                />
+                <RechartsTooltip />
+                <Legend />
+                <Bar
+                  yAxisId="left"
+                  dataKey="vazn"
+                  fill="#2563eb"
+                  radius={[4, 4, 0, 0]}
+                  opacity={0.58}
+                  name="O'rtacha vazn (kg)"
+                />
+                <Line
+                  yAxisId="right"
+                  type="monotone"
+                  dataKey="bo'y"
+                  stroke="#ec4899"
+                  strokeWidth={4}
+                  dot={{ r: 5 }}
+                  name="O'rtacha bo'y (sm)"
+                />
+                <Line
+                  yAxisId="left"
+                  type="monotone"
+                  dataKey="bmi"
+                  stroke="#f59e0b"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  name="O'rtacha BMI"
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </GlassPaper>
+        </Grid>
+      </Grid>
+
+      <GlassPaper
+        sx={{
+          p: 4,
+          textAlign: "center",
+          background: isDark
+            ? "linear-gradient(135deg, rgba(16,185,129,0.16) 0%, rgba(37,99,235,0.08) 100%)"
+            : "linear-gradient(135deg, rgba(236,253,245,0.94) 0%, rgba(239,246,255,0.8) 100%)",
+        }}
+      >
+        <Typography variant="h5" fontWeight={950} mb={1}>
+          Tadqiqot Hisoboti
+        </Typography>
+        <Typography variant="body2" color="text.secondary" mb={4}>
+          Barcha to'plangan ma'lumotlarni tahliliy formatda (.xlsx) yuklab oling
+        </Typography>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={async () => {
+            try {
+              const blob = await ResearchApi.exportDataset({});
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `full_analysis_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              window.URL.revokeObjectURL(url);
+              toast.success("Yuklab olish yakunlandi");
+            } catch (err) {
+              toast.error("Xatolik: " + err.message);
+            }
+          }}
+          startIcon={<Download />}
+          sx={{
+            borderRadius: 3,
+            px: { xs: 3, sm: 8 },
+            py: 2,
+            fontWeight: 900,
+            background: "linear-gradient(135deg, #059669 0%, #2563eb 100%)",
+          }}
+        >
+          To'liq bazani eksport qilish
+        </Button>
+      </GlassPaper>
+    </Stack>
+  );
+};
+
 const ResearcherPage = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
@@ -1423,7 +2069,7 @@ const ResearcherPage = () => {
 
   const handleExportSummaryDocx = async () => {
     try {
-      const blob = await ResearchApi.exportSummaryDocx(filter);
+      const blob = await ResearchApi.exportSummaryDocx({ ...filter, lang });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -2238,7 +2884,7 @@ const ResearcherPage = () => {
                   <Box sx={{ mt: 3 }}>
                     <ResearchStatisticsPanel rows={data} />
                   </Box>
-                  <ResearchAnalytics data={data} isDark={isDark} />
+                  <EnhancedResearchAnalytics data={data} isDark={isDark} />
                 </Stack>
               )}
 

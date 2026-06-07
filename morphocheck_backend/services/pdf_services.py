@@ -34,6 +34,7 @@ PDF_LABELS = {
         "mahalla": "Mahalla:",
         "address": "Manzil:",
         "id_code": "ID kod:",
+        "parents_phone": "Ota-ona telefon raqami:",
 
         "male": "Erkak",
         "female": "Ayol",
@@ -170,6 +171,7 @@ PDF_LABELS = {
         "mahalla": "Mahalla:",
         "address": "Address:",
         "id_code": "ID Code:",
+        "parents_phone": "Parent phone:",
 
         "male": "Male",
         "female": "Female",
@@ -402,6 +404,76 @@ def draw_watermark(canvas, doc):
     canvas.restoreState()
 
 
+PDF_LABELS["tg"] = {
+    **PDF_LABELS["uz"],
+    "title": "MORPHOCHECK PRO ҲИСОБОТИ ТАҲЛИЛИ АНТРОПОМЕТРӢ",
+    "full_name": "Ному насаб:",
+    "age": "Синну сол:",
+    "gender": "Ҷинс:",
+    "birth_date": "Санаи таваллуд:",
+    "exam_date": "Санаи муоина:",
+    "institution": "Муассиса:",
+    "region": "Вилоят:",
+    "district": "Ноҳия:",
+    "mahalla": "Маҳалла:",
+    "address": "Суроға:",
+    "id_code": "ID код:",
+    "parents_phone": "Телефони волидон:",
+    "male": "Мард",
+    "female": "Зан",
+    "results_section": "НАТИҶАҲОИ АСОСИИ ТАҲЛИЛ",
+    "indicator": "Нишондиҳанда",
+    "value": "Қимат",
+    "note": "Эзоҳ",
+    "bmi_label": "BMI (индекси массаи бадан)",
+    "somatotype": "Сохтори бадан",
+    "somatotype_note": "Соматотип",
+    "ideal_weight": "Вазни меъёрӣ",
+    "ideal_weight_note": "Диапазони тавсияшуда",
+    "weight_diff": "Фарқи вазн",
+    "weight_diff_note": "Дуршавӣ аз меъёр",
+    "hmai": "HMAI (мутобиқшавӣ)",
+    "mii": "MII (интегратсия)",
+    "adi": "ADI (номувофиқатӣ)",
+    "shoulder_ratio": "Мутаносибии китф",
+    "shoulder_note": "Нисбат ба қад",
+    "thigh_ratio": "Мутаносибии рон",
+    "thigh_note": "Нисбат ба қад",
+    "bmi_status": "Ҳолати BMI:",
+    "recommendation": "Тавсия:",
+    "advice_section": "ТАВСИЯҲОИ ШАХСӢ",
+    "advice_for_parents": " (БАРОИ ВОЛИДОН)",
+    "no_advice": "• Тавсияи махсус мавҷуд нест.",
+    "report_date": "Санаи ҳисобот:",
+    "report_number": "Рақами ҳисобот:",
+    "doctor_sign": "Имзои духтур",
+    "patient_sign": "Имзои бемор/волид",
+    "confidential": "Ин ҳисобот маълумоти махфӣ мебошад",
+    "bmi_underweight": "Камвазнӣ",
+    "bmi_normal": "Меъёр",
+    "bmi_overweight": "Вазни зиёдатӣ",
+    "bmi_obese": "Фарбеҳӣ",
+    "ai_title": "ТАҲЛИЛИ ПЕШГӮӢ ВА ХАВФҲО (AI)",
+    "ai_adult_height": "Қади тахминӣ дар 18-солагӣ:",
+    "ai_risk_type": "Навъи хавф",
+    "ai_probability": "Эҳтимолият (%)",
+    "risk_obesity": "Фарбеҳӣ",
+    "risk_metabolic": "Синдроми метаболикӣ",
+    "risk_musculoskeletal": "Ихтилоли такягоҳу ҳаракат",
+    "unit_year": "сол",
+    "unit_month": "моҳ",
+    "unit_day": "рӯз",
+    "ai_parent_tips_title": "MORPHOAI: МАСЛИҲАТҲОИ КӮТОҲ БАРОИ ВОЛИДОН",
+    "adv_sport": "Роҳнамоӣ ба варзиш",
+    "adv_specialist": "Мутахассис",
+    "adv_nutrition": "Ғизо",
+    "adv_activity": "Фаъолият",
+    "adv_checkups": "Муоинаҳо",
+    "adv_general": "Тавсияи умумӣ",
+    "detailed_advices_label": "ДАСТУРҲОИ ИЛОВАГӢ:",
+}
+
+
 def generate_pdf_file(data: dict, lang: str = 'uz'):
     # Til lug'atini olish (topilmasa UZ)
     L = PDF_LABELS.get(lang, PDF_LABELS['uz'])
@@ -430,6 +502,11 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             "doctor_note": "Дәрігер жазбасы:",
             "qr_title": "Жазбаны тексеру немесе қайта ашу",
             "qr_hint": "QR кодты сканерлеңіз",
+        },
+        "tg": {
+            "doctor_note": "Эзоҳи духтур:",
+            "qr_title": "Санҷиш ё бозкушоии сабт",
+            "qr_hint": "QR кодро скан кунед",
         },
     }
     L = {**L, **fallback_extra.get(lang, fallback_extra["uz"])}
@@ -534,12 +611,18 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     age_d = gv('age_days', 'ageDays', 0)
 
     # Ensure integers
-    try: age_y = int(age_y or 0)
-    except: age_y = 0
-    try: age_m = int(age_m or 0)
-    except: age_m = 0
-    try: age_d = int(age_d or 0)
-    except: age_d = 0
+    try:
+        age_y = int(age_y or 0)
+    except (TypeError, ValueError):
+        age_y = 0
+    try:
+        age_m = int(age_m or 0)
+    except (TypeError, ValueError):
+        age_m = 0
+    try:
+        age_d = int(age_d or 0)
+    except (TypeError, ValueError):
+        age_d = 0
 
     gender = gv('gender', 'gender', '')
     birth_date = gv('birth_date', 'birthDate', '')
@@ -562,8 +645,8 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             if len(d_str) == 10 and d_str[4] == '-' and d_str[7] == '-':
                 parts = d_str.split('-')
                 return f"{parts[2]}.{parts[1]}.{parts[0]}"
-        except:
-            pass
+        except (IndexError, TypeError, ValueError):
+            return d_str
         return d_str
 
     birth_date = format_date_str(birth_date)
@@ -651,7 +734,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     shoulder_length_val = data.get('shoulder_length', 0) if isinstance(data, dict) else getattr(data, 'shoulder_length', 0)
     try:
         is_deep_analysis = float(shoulder_length_val) > 0
-    except:
+    except (TypeError, ValueError):
         is_deep_analysis = False
 
     detailed = analysis_data_dict.get('indices', {})
@@ -753,7 +836,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         # 1. 18 Yoshdagi Taxminiy Bo'y (faqat 18 yoshdan kichiklar uchun)
         try:
             current_age = int(float(age_y))
-        except:
+        except (TypeError, ValueError):
             current_age = 0
             
         if current_age < 18:
