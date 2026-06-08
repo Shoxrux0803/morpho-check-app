@@ -16,36 +16,7 @@ import {
 import { Visibility, RestoreFromTrash, Edit } from "@mui/icons-material";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { pageT } from "../../utils/pageI18n";
-
-const REGION_LABELS_RU = {
-  "toshkent shahri": "г. Ташкент",
-  toshkent: "Ташкентская область",
-  "toshkent viloyati": "Ташкентская область",
-  qoraqalpogiston: "Республика Каракалпакстан",
-  "qoraqalpog'iston": "Республика Каракалпакстан",
-  andijon: "Андижанская область",
-  buxoro: "Бухарская область",
-  fargona: "Ферганская область",
-  "farg'ona": "Ферганская область",
-  jizzax: "Джизакская область",
-  xorazm: "Хорезмская область",
-  namangan: "Наманганская область",
-  navoiy: "Навоийская область",
-  qashqadaryo: "Кашкадарьинская область",
-  samarqand: "Самаркандская область",
-  sirdaryo: "Сырдарьинская область",
-  surxondaryo: "Сурхандарьинская область",
-};
-
-const getRegionLabel = (value, lang) => {
-  if (lang !== "ru") return value || "-";
-  const key = String(value || "")
-    .toLowerCase()
-    .replace(/[‘’`ʻʼ]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-  return REGION_LABELS_RU[key] || value || "-";
-};
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
 
@@ -175,9 +146,15 @@ const AdminTable = ({
                   </TableCell>
 
                   <TableCell>
-                    {getRegionLabel(row.region, lang)}
+                    {getLocalizedLocationLabel(row.region, lang, 1)}
                     <Typography variant="caption" display="block" color="text.secondary">
-                      {[row.district, row.mahalla, row.address].filter(Boolean).join(" / ")}
+                      {[
+                        getLocalizedLocationLabel(row.district, lang, 2),
+                        getLocalizedLocationLabel(row.mahalla, lang, 3),
+                        row.address,
+                      ]
+                        .filter((part) => part && part !== "-")
+                        .join(" / ")}
                     </Typography>
                   </TableCell>
 

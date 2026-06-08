@@ -38,6 +38,7 @@ import {
 } from "recharts";
 import { motion } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const ADMIN_DASH_I18N = {
   uz: {
@@ -140,6 +141,57 @@ const ADMIN_DASH_I18N = {
     insightBmi: (bmi) =>
       `Средний BMI (${bmi}) немного выше нормы. Рекомендуется усилить профилактические меры.`,
     insightGender: (male, female) => `Состав контингента: ${male}% мужчин и ${female}% женщин.`,
+  },
+  en: {
+    welcome: (name) => `Welcome, ${name || "Admin"}`,
+    subtitle: "Personal clinical anthropometry analytics dashboard",
+    desc: "Analysis of all entered records. Use filters to narrow and compare the results.",
+    total: "Total",
+    avgBmi: "Average BMI",
+    avgAge: "Average age",
+    filtered: "Filtered view",
+    scientificInsights: "Scientific insights",
+    scientificInsightsSub: "Automatic analysis results",
+    noEnoughData: "Not enough data yet...",
+    totalMine: "My total entries",
+    allTime: "Across all time",
+    todayEntered: "Entered today",
+    todaySession: "Today's session",
+    groupWide: "Across the group",
+    weeklyGrowth: "Weekly growth",
+    thisWeek: "this week",
+    years: "years",
+    riskRegions: "Regions with the highest risk",
+    riskRegionsSub: "Records outside BMI or Z-score risk thresholds",
+    from: "out of",
+    risk: "risk",
+    dailyDynamics: "Daily dynamics",
+    dailyDynamicsSub: "Analyses entered over the last 14 days",
+    noResult: "No results found",
+    entered: "Entered",
+    genderDistribution: "Gender distribution",
+    genderDistributionSub: "Male/female ratio",
+    ageGroups: "Age groups",
+    ageGroupsSub: "Patients by age",
+    patients: "Patients",
+    bmiStatus: "BMI status",
+    bmiStatusSub: "By health groups",
+    unit: "records",
+    footer: "Professional analytics system",
+    male: "Male",
+    female: "Female",
+    unknown: "Unknown",
+    normal: "Normal",
+    overweight: "Overweight",
+    obese: "Obesity",
+    underweight: "Underweight",
+    insightNormal:
+      "Most patients in the group (60%+) have normal weight, which is a positive indicator.",
+    insightRisk: "Attention: the share of overweight and obesity is high in this group (40%+).",
+    insightBmi: (bmi) =>
+      `Average BMI (${bmi}) is slightly above the norm. Strengthening preventive measures is recommended.`,
+    insightGender: (male, female) =>
+      `Cohort composition: ${male}% male and ${female}% female patients.`,
   },
   kz: {
     welcome: (name) => `Қош келдіңіз, ${name || "Админ"}`,
@@ -259,7 +311,14 @@ const COLORS = {
 };
 
 const PIE_COLORS = ["#3b82f6", "#f43f5e", "#14b8a6"];
-const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
+const localeByLang = {
+  uz: "uz-UZ",
+  tg: "tg-TJ",
+  ru: "ru-RU",
+  en: "en-US",
+  kz: "kk-KZ",
+  ky: "ky-KG",
+};
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",
@@ -282,7 +341,7 @@ const REGION_LABELS_RU = {
 };
 
 const getRegionLabel = (value, lang) => {
-  if (lang !== "ru") return value || "-";
+  if (lang === "en" || lang === "ru") return getLocalizedLocationLabel(value, lang, 1);
   const key = String(value || "")
     .toLowerCase()
     .replace(/[‘’`ʻʼ]/g, "'")

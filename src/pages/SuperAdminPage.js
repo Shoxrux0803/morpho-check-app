@@ -71,6 +71,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { pageT } from "../utils/pageI18n";
+import { getLocalizedLocationLabel } from "../utils/locationI18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { AdminApi, ResearchApi } from "../services/api";
 import { toast } from "react-hot-toast";
@@ -2690,7 +2691,7 @@ const SuperAdminPage = () => {
                   <MenuItem value="">{pt("allGlobal")}</MenuItem>
                   {Object.keys(UZB_LOCATIONS).map((r) => (
                     <MenuItem key={r} value={r}>
-                      {r}
+                      {getLocalizedLocationLabel(r, lang, 1)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -2710,7 +2711,7 @@ const SuperAdminPage = () => {
                   {!adminForm.region && <MenuItem value="">{pt("chooseRegionFirst")}</MenuItem>}
                   {(UZB_LOCATIONS[adminForm.region] || []).map((district) => (
                     <MenuItem key={district} value={district}>
-                      {district}
+                      {getLocalizedLocationLabel(district, lang, 2)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -2732,11 +2733,13 @@ const SuperAdminPage = () => {
                     <MenuItem value="">{pt("mahallaNotFound")}</MenuItem>
                   )}
                   {!hasSelectedAdminMahallaOption && (
-                    <MenuItem value={adminMahallaValue}>{adminMahallaValue}</MenuItem>
+                    <MenuItem value={adminMahallaValue}>
+                      {getLocalizedLocationLabel(adminMahallaValue, lang, 3)}
+                    </MenuItem>
                   )}
                   {mahallaOptions.map((mahalla) => (
                     <MenuItem key={mahalla.boundary_id || mahalla.id} value={mahalla.label}>
-                      {mahalla.label}
+                      {getLocalizedLocationLabel(mahalla.label, lang, 3)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -2746,7 +2749,7 @@ const SuperAdminPage = () => {
                 fullWidth
                 value={adminForm.address || ""}
                 onChange={(e) => setAdminForm({ ...adminForm, address: e.target.value })}
-                helperText="Matnli manzildan aniq koordinata avtomatik topilmaydi. Exact pin uchun latitude va longitude kiriting yoki joriy lokatsiyani oling."
+                helperText={pt("addressCoordinateHelp")}
               />
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                 <TextField

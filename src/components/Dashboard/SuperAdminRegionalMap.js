@@ -26,6 +26,7 @@ import {
 import { toast } from "react-hot-toast";
 import { AdminApi, ResearchApi } from "../../services/api";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const BOUNDARY_BASE = "/maps/admin-boundaries";
 const EMPTY_COLLECTION = { type: "FeatureCollection", features: [] };
@@ -73,6 +74,8 @@ const MAP_I18N = {
     satelliteOff: "Oddiy hududiy xaritaga qaytish",
     layerLoading: "Hududiy qatlam yuklanmoqda",
     patientExists: "Patient bor",
+    patientDataTooltip: (name, count) =>
+      count > 0 ? `${name}: ${count} ta patient ma'lumoti bor` : `${name}: patient ma'lumoti yo'q`,
     selectedBack: "Tanlangan hududga qaytish",
     coverageIndex: "Qamrov indeksi",
     contactPoints: "Aloqa nuqtalari",
@@ -213,6 +216,10 @@ const MAP_I18N = {
     satelliteOff: "Return to the standard regional map",
     layerLoading: "Loading regional layer",
     patientExists: "Patient exists",
+    patientDataTooltip: (name, count) =>
+      count > 0
+        ? `${name}: ${count} patient record${count === 1 ? "" : "s"} available`
+        : `${name}: no patient records`,
     selectedBack: "Return to selected region",
     coverageIndex: "Coverage index",
     contactPoints: "Contact points",
@@ -700,7 +707,8 @@ MAP_I18N.tg = {
   ...MAP_I18N.uz,
   country: "Ӯзбекистон",
   title: "Харитаи таҳлили ҳудудӣ",
-  subtitle: "Ҳолати таҳлилҳо, админҳо ва таҳқиқгаронро аз рӯи вилоят, ноҳия ва маҳалла пайгирӣ кунед.",
+  subtitle:
+    "Ҳолати таҳлилҳо, админҳо ва таҳқиқгаронро аз рӯи вилоят, ноҳия ва маҳалла пайгирӣ кунед.",
   region: "Вилоят",
   district: "Ноҳия",
   mahalla: "Маҳалла",
@@ -770,7 +778,14 @@ MAP_I18N.tg = {
   patients: "Беморон",
   risk: "Хавф",
 };
-const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
+const localeByLang = {
+  uz: "uz-UZ",
+  tg: "tg-TJ",
+  ru: "ru-RU",
+  en: "en-US",
+  kz: "kk-KZ",
+  ky: "ky-KG",
+};
 
 const formatArea = (value, locale = "uz-UZ") => {
   const n = Number(value);
@@ -1835,7 +1850,8 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
               email: item.email || "",
               phone: item.phone || item.parents_phone || "",
               region:
-                item.region || (region ? localizedFeatureName(region, lang) : mt.regionNotSpecified),
+                item.region ||
+                (region ? localizedFeatureName(region, lang) : mt.regionNotSpecified),
               district: item.district || (district ? localizedFeatureName(district, lang) : ""),
               mahalla: item.mahalla || (mahalla ? localizedFeatureName(mahalla, lang) : ""),
               role: item.role || item.__type,
@@ -2765,7 +2781,13 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       [mt.phone, selectedPin.phone],
       [
         mt.location,
-        [selectedPin.region, selectedPin.district, selectedPin.mahalla].filter(Boolean).join(" / "),
+        [
+          getLocalizedLocationLabel(selectedPin.region, lang, 1),
+          getLocalizedLocationLabel(selectedPin.district, lang, 2),
+          getLocalizedLocationLabel(selectedPin.mahalla, lang, 3),
+        ]
+          .filter((part) => part && part !== "-")
+          .join(" / "),
       ],
       [mt.address, selectedPin.address],
       [
@@ -2789,7 +2811,7 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
       [mt.regionMatch, selectedPin.sourceRegionMatched ? mt.matched : mt.fallback],
     ];
     return rows.filter(([, value]) => value !== undefined && value !== null && value !== "");
-  }, [getPinRoleLabel, mt, selectedPin]);
+  }, [getPinRoleLabel, lang, mt, selectedPin]);
 
   const handleChat = (pin = selectedPin) => {
     if (!pin?.userId) {
@@ -3029,9 +3051,10 @@ export default function SuperAdminRegionalMap({ stats, statsLoading, admins = []
                         }}
                       >
                         <title>
-                          {patientCount > 0
-                            ? `${localizedFeatureName(item, lang)}: ${patientCount} ta patient ma'lumoti bor`
-                            : `${localizedFeatureName(item, lang)}: patient ma'lumoti yo'q`}
+                          {(mt.patientDataTooltip || MAP_I18N.uz.patientDataTooltip)(
+                            localizedFeatureName(item, lang),
+                            patientCount,
+                          )}
                         </title>
                       </path>
                     );

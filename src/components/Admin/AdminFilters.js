@@ -15,36 +15,7 @@ import { Search } from "@mui/icons-material";
 import { UZB_LOCATIONS } from "../../data/uzbLocations";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { pageT } from "../../utils/pageI18n";
-
-const REGION_LABELS_RU = {
-  "toshkent shahri": "г. Ташкент",
-  toshkent: "Ташкентская область",
-  "toshkent viloyati": "Ташкентская область",
-  qoraqalpogiston: "Республика Каракалпакстан",
-  "qoraqalpog'iston": "Республика Каракалпакстан",
-  andijon: "Андижанская область",
-  buxoro: "Бухарская область",
-  fargona: "Ферганская область",
-  "farg'ona": "Ферганская область",
-  jizzax: "Джизакская область",
-  xorazm: "Хорезмская область",
-  namangan: "Наманганская область",
-  navoiy: "Навоийская область",
-  qashqadaryo: "Кашкадарьинская область",
-  samarqand: "Самаркандская область",
-  sirdaryo: "Сырдарьинская область",
-  surxondaryo: "Сурхандарьинская область",
-};
-
-const getRegionLabel = (value, lang) => {
-  if (lang !== "ru") return value || "-";
-  const key = String(value || "")
-    .toLowerCase()
-    .replace(/[‘’`ʻʼ]/g, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-  return REGION_LABELS_RU[key] || value || "-";
-};
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const AdminFilters = ({
   q,
@@ -110,7 +81,7 @@ const AdminFilters = ({
                 <MenuItem value="">{t("all")}</MenuItem>
                 {regions.map((r) => (
                   <MenuItem key={r} value={r}>
-                    {getRegionLabel(r, lang)}
+                    {getLocalizedLocationLabel(r, lang, 1)}
                   </MenuItem>
                 ))}
               </Select>

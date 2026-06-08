@@ -41,6 +41,7 @@ import {
   Legend,
 } from "recharts";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const DASH_I18N = {
   uz: {
@@ -359,7 +360,7 @@ const normalizeRegionKey = (value = "") =>
     .trim();
 
 const getRegionLabel = (value, lang) => {
-  if (lang !== "ru") return value || "-";
+  if (lang === "en" || lang === "ru") return getLocalizedLocationLabel(value, lang, 1);
   const key = normalizeRegionKey(value);
   return REGION_LABELS_RU[key] || value || "-";
 };

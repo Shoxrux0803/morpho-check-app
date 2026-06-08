@@ -33,6 +33,7 @@ import TrendingUp from "@mui/icons-material/TrendingUp";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const ACTIVITY_I18N = {
   uz: {
@@ -98,6 +99,38 @@ const ACTIVITY_I18N = {
     noUsers: "Пользователи не найдены",
     noAdmins: "Админы не найдены",
     noResearchers: "Исследователи не найдены",
+  },
+  en: {
+    typing: "• typing...",
+    sec: "sec",
+    min: "min",
+    best: "Best",
+    researcher: "Researcher",
+    admin: "Admin",
+    today: "Today",
+    week: "Week",
+    month: "This month",
+    monthShort: "Month",
+    ratingScore: "Rating score",
+    perRecord: "Per record:",
+    totalEntered: "Total entered:",
+    unit: "records",
+    activeTime: "Most active time:",
+    lastActivity: "Last activity:",
+    refreshError: "Error while refreshing data!",
+    title: "Top chart",
+    usersOnline: (count) => `${count} user${count === 1 ? "" : "s"} currently online`,
+    lastUpdate: "Last update",
+    all: "All",
+    admins: "Admins",
+    researchers: "Researchers",
+    refresh: "Refresh",
+    loading: "Loading data...",
+    bestResult: "Best result",
+    oneRecord: "1 record",
+    noUsers: "No users found",
+    noAdmins: "No admins found",
+    noResearchers: "No researchers found",
   },
   kz: {
     typing: "• енгізіп жатыр...",
@@ -218,7 +251,7 @@ const getActivityKey = (admin, index) => {
   return id ? `activity-${id}` : `activity-${admin.role || "user"}-${index}`;
 };
 
-const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t, locale }) => {
+const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t, locale, lang }) => {
   const isResearcher = admin.role === "researcher";
   const score = getScore(admin);
   const progress = maxScore ? Math.round((score / maxScore) * 100) : 0;
@@ -344,7 +377,7 @@ const ActivityCard = ({ admin, isDark, rank, isBest, maxScore, t, locale }) => {
               <Stack direction="row" sx={{ mt: 1 }}>
                 <Chip
                   icon={<LocationOn sx={{ fontSize: "0.9rem !important" }} />}
-                  label={admin.region || "Global"}
+                  label={admin.region ? getLocalizedLocationLabel(admin.region, lang, 1) : "Global"}
                   size="small"
                   sx={{
                     maxWidth: "100%",
@@ -699,6 +732,7 @@ export default function AdminActivity() {
                   maxScore={maxScore}
                   t={t}
                   locale={locale}
+                  lang={lang}
                 />
               </Grid>
             ))}

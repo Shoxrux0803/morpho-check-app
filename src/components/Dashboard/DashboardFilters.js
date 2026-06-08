@@ -9,15 +9,12 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel,
   Button,
   Stack,
   Collapse,
   useTheme,
   Chip,
   IconButton,
-  Divider,
-  InputAdornment,
   TextField,
 } from "@mui/material";
 
@@ -27,18 +24,13 @@ import {
   ExpandMore,
   ExpandLess,
   Wc,
-  Event,
-  Place,
-  ShowChart,
-  PersonSearch,
   CheckCircle,
-  Close,
   Science,
   FitnessCenter,
 } from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
 import { UZB_LOCATIONS } from "../../data/uzbLocations";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { getLocalizedLocationLabel } from "../../utils/locationI18n";
 
 const SOMATOTYPES = ["Endomorph", "Mesomorph", "Ectomorph", "Central"];
 const DEFAULT_FILTERS = {
@@ -95,6 +87,27 @@ const FILTER_I18N = {
     dateFrom: "С ДАТЫ",
     clear: "Очистить",
     apply: "Применить",
+  },
+  en: {
+    title: "Analytical Filters",
+    subtitle: "Filter and analyze records",
+    activeFilters: (count) => `${count} active filter${count === 1 ? "" : "s"}`,
+    demographics: "Demographics",
+    gender: "GENDER",
+    male: "Male",
+    female: "Female",
+    all: "All",
+    region: "REGION",
+    allRegions: "All regions",
+    biometrics: "Biometrics",
+    ageRange: "AGE RANGE",
+    bmiRange: "BMI RANGE",
+    scientific: "Scientific Classification",
+    somatotype: "SOMATOTYPE",
+    allTypes: "All types",
+    dateFrom: "FROM DATE",
+    clear: "Clear",
+    apply: "Apply",
   },
   kz: {
     title: "Талдамалық сүзгілер",
@@ -327,7 +340,7 @@ const DashboardFilters = ({ filters, onFilterChange, onReset }) => {
                       <MenuItem value="">{t.allRegions}</MenuItem>
                       {Object.keys(UZB_LOCATIONS).map((loc) => (
                         <MenuItem key={loc} value={loc}>
-                          {loc}
+                          {getLocalizedLocationLabel(loc, lang, 1)}
                         </MenuItem>
                       ))}
                     </Select>
