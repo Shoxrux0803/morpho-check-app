@@ -30,6 +30,8 @@ const SuperAdminPage = lazy(() => import("./pages/SuperAdminPage"));
 const ResearcherPage = lazy(() => import("./pages/ResearcherPage"));
 const InfoDetail = lazy(() => import("./pages/InfoDetail"));
 const AuthorPage = lazy(() => import("./pages/AuthorPage"));
+const GuidelinesPage = lazy(() => import("./pages/GuidelinesPage"));
+const PrivacyCompliancePage = lazy(() => import("./pages/PrivacyCompliancePage"));
 
 // 404
 const NotFound = () => (
@@ -150,7 +152,7 @@ function AnimatedRoutes() {
   const location = useLocation();
   const { mode } = useThemeMode();
 
-  const publicRoutes = ["/", "/info", "/author"];
+  const publicRoutes = ["/", "/info", "/author", "/guidelines", "/privacy-compliance"];
   const showBg = publicRoutes.includes(location.pathname);
 
   return (
@@ -180,6 +182,22 @@ function AnimatedRoutes() {
             element={
               <PageTransition>
                 <AuthorPage />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/guidelines"
+            element={
+              <PageTransition>
+                <GuidelinesPage />
+              </PageTransition>
+            }
+          />
+          <Route
+            path="/privacy-compliance"
+            element={
+              <PageTransition>
+                <PrivacyCompliancePage />
               </PageTransition>
             }
           />

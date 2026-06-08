@@ -54,6 +54,7 @@ import aiService from "../services/aiService";
 import { MCTextField as Field, MCSelect } from "./ui/MCField";
 import { UZB_LOCATIONS } from "../data/uzbLocations";
 import { useGrowthAnalytics } from "../hooks/useGrowthAnalytics";
+import { CONSENT_POLICY_VERSION, PrivacyConsentPanel } from "./Consent/PrivacyConsentPanel";
 
 /* ===== Helpers (validatsiya mantiqi) ===== */
 const round1 = (x) => Math.round(x * 10) / 10;
@@ -115,6 +116,13 @@ export default function InputForm({
     // BMI (5-80) - juda ekstremal holatlar
     if (form.__bmi && (form.__bmi < 5 || form.__bmi > 80)) {
       errs.push(`BMI: 5–80.`);
+    }
+
+    if (!form.consentConfirmed) {
+      errs.push("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
+    }
+    if (!String(form.consentGuardianName || "").trim()) {
+      errs.push("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.");
     }
 
     return errs;
@@ -674,6 +682,17 @@ export default function InputForm({
                         </Grid>
                       </Grid>
                     </Collapse>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <PrivacyConsentPanel
+                      values={{
+                        ...formData,
+                        consentPolicyVersion:
+                          formData.consentPolicyVersion || CONSENT_POLICY_VERSION,
+                      }}
+                      onChange={handleInputChange}
+                      FieldComponent={Field}
+                    />
                   </Grid>
                 </Grid>
 

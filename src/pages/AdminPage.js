@@ -75,6 +75,7 @@ import AdminTable from "../components/Admin/AdminTable";
 import InputForm from "../components/InputForm";
 import ResearcherDataView from "../components/Admin/ResearcherDataView";
 import DashboardFilters from "../components/Dashboard/DashboardFilters";
+import { ConsentStatus } from "../components/Consent/PrivacyConsentPanel";
 
 /** ===== Helpers ===== */
 const calcBMI = (wKg, hCm) => {
@@ -104,6 +105,12 @@ const normalize = (r) => {
     lastName: r.last_name || r.lastName,
     parentsPhone: r.parents_phone || r.parentsPhone || "",
     doctorNote: r.doctor_note || r.doctorNote || "",
+    consentConfirmed: r.consent_confirmed ?? r.consentConfirmed ?? false,
+    consentGuardianName: r.consent_guardian_name || r.consentGuardianName || "",
+    consentGuardianRelationship:
+      r.consent_guardian_relationship || r.consentGuardianRelationship || "",
+    consentGuardianPhone: r.consent_guardian_phone || r.consentGuardianPhone || "",
+    consentPolicyVersion: r.consent_policy_version || r.consentPolicyVersion || "",
     bmi: bmiVal,
     bmiStatus: r.bmi_status || bmiStatus(bmiVal, r.age),
   };
@@ -1148,6 +1155,7 @@ export default function AdminPage() {
           pdfLang={pdfLang}
           setPdfLang={setPdfLang}
         >
+          <ConsentStatus record={viewRow} />
           <Table size="small">
             <TableBody>
               <TableRow>

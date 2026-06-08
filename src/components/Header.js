@@ -26,6 +26,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import HomeIcon from "@mui/icons-material/Home";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SyncIcon from "@mui/icons-material/Sync";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
@@ -61,6 +62,15 @@ const getThemeVariantLabel = (value) =>
 const languageOptions = [...LANGUAGES].sort((a, b) =>
   a.code === "en" ? -1 : b.code === "en" ? 1 : 0,
 );
+
+const guidelinesLabels = {
+  uz: { label: "Yordam", tooltip: "Vizual yo'riqnomalar" },
+  ru: { label: "Помощь", tooltip: "Визуальные инструкции" },
+  en: { label: "Help", tooltip: "Visual guidelines" },
+  tg: { label: "Ёрӣ", tooltip: "Дастурҳои визуалӣ" },
+  kz: { label: "Көмек", tooltip: "Көрнекі нұсқаулықтар" },
+  ky: { label: "Жардам", tooltip: "Визуалдык колдонмолор" },
+};
 
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
@@ -136,6 +146,7 @@ export default function Header() {
     researcherSection === "home";
   const homePath = user?.role === "researcher" ? "/researcher" : "/";
   const analyzePath = "/morphocheck-pro";
+  const guidelinesPath = "/guidelines";
   const researcherNavItems = [
     { label: "Asosiy", to: "/researcher?section=home", section: "home", icon: <HomeIcon /> },
     {
@@ -157,6 +168,7 @@ export default function Header() {
     color: "primary.main",
     backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
   };
+  const guidelinesCopy = guidelinesLabels[lang] || guidelinesLabels.en;
 
   return (
     <>
@@ -367,6 +379,19 @@ export default function Header() {
                 </Button>
               </Tooltip>
             )}
+
+            <Tooltip title={guidelinesCopy.tooltip}>
+              <Button
+                component={NavLink}
+                to={guidelinesPath}
+                sx={navButtonSx}
+                startIcon={<HelpOutlineIcon fontSize="small" />}
+              >
+                <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                  {guidelinesCopy.label}
+                </Box>
+              </Button>
+            </Tooltip>
 
             {user?.role === "superadmin" && (
               <Tooltip title="Super Admin Panel">
@@ -792,6 +817,16 @@ export default function Header() {
                   Super Admin
                 </Button>
               )}
+
+              <Button
+                component={NavLink}
+                to={guidelinesPath}
+                sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                startIcon={<HelpOutlineIcon />}
+                onClick={() => setDrawerOpen(false)}
+              >
+                {guidelinesCopy.label}
+              </Button>
 
               <Divider sx={{ my: 1 }} />
 

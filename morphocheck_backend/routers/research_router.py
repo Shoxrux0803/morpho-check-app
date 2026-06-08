@@ -48,6 +48,8 @@ RESEARCH_IMPORT_FIELDS = [
     "shoulder_circumference_flexed", "forearm_length", "hand_length", "dynamometry",
     "fat_triceps", "fat_biceps", "fat_subscapular", "fat_iliac", "fat_popliteal",
     "father_height", "mother_height",
+    "consent_confirmed", "consent_guardian_name", "consent_guardian_relationship",
+    "consent_guardian_phone", "consent_policy_version",
 ]
 
 RESEARCH_IMPORT_ALIASES = {
@@ -94,6 +96,15 @@ RESEARCH_IMPORT_ALIASES = {
     "telefon": "parents_phone",
     "ota ona telefoni": "parents_phone",
     "parents phone": "parents_phone",
+    "rozilik": "consent_confirmed",
+    "consent": "consent_confirmed",
+    "vasiy": "consent_guardian_name",
+    "guardian": "consent_guardian_name",
+    "guardian name": "consent_guardian_name",
+    "vasiy munosabati": "consent_guardian_relationship",
+    "guardian relationship": "consent_guardian_relationship",
+    "vasiy telefoni": "consent_guardian_phone",
+    "guardian phone": "consent_guardian_phone",
     "father height": "father_height",
     "ota boyi": "father_height",
     "ota bo'yi": "father_height",
@@ -184,7 +195,8 @@ FLOAT_IMPORT_FIELDS = {
         "father_nationality", "mother_nationality", "living_since", "enrolled_date",
         "living_conditions", "labor_regime", "past_illnesses", "feeding_type",
         "parents_marriage", "mother_health_status", "parents_phone", "examination_date",
-        "menstruation_start",
+        "menstruation_start", "consent_guardian_name", "consent_guardian_relationship",
+        "consent_guardian_phone", "consent_policy_version",
     }
 }
 
@@ -1649,6 +1661,8 @@ def create_research_record(
 ):
     record = ResearchRecord(**payload.model_dump(exclude_unset=True))
     record.created_by_id = current_user.id
+    if record.consent_confirmed and not record.consent_confirmed_at:
+        record.consent_confirmed_at = datetime.utcnow()
     db.add(record)
     
     # Update user stats
@@ -1692,6 +1706,8 @@ def update_research_record(
 
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(record, field, value)
+    if record.consent_confirmed and not record.consent_confirmed_at:
+        record.consent_confirmed_at = datetime.utcnow()
     db.commit()
     db.refresh(record)
     return record

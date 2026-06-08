@@ -56,6 +56,7 @@ import { toast } from "react-hot-toast";
 import { useLanguage } from "../../contexts/LanguageContext";
 import AdvancedResearchFilter from "../Research/AdvancedResearchFilter";
 import { researcherT } from "../../utils/researcherI18n";
+import { ConsentStatus } from "../Consent/PrivacyConsentPanel";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -1896,6 +1897,7 @@ const DetailModal = ({
       </DialogTitle>
 
       <DialogContent dividers>
+        <ConsentStatus record={record} />
         <Section
           title={t("sectionPassport")}
           Icon={Person}

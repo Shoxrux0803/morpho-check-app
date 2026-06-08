@@ -138,9 +138,7 @@ function getLoginDeviceId() {
   if (!deviceId) {
     deviceId =
       window.crypto?.randomUUID?.() ||
-      `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
-        .toString(36)
-        .slice(2)}`;
+      `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
     localStorage.setItem(key, deviceId);
   }
   return deviceId;

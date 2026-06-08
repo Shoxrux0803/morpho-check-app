@@ -287,7 +287,14 @@ ADMIN_SCI_TEXT.tg = {
   measurements: "Ченакҳо",
   footerSuffix: "сабт таҳлил шуд",
 };
-const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
+const localeByLang = {
+  uz: "uz-UZ",
+  tg: "tg-TJ",
+  ru: "ru-RU",
+  en: "en-US",
+  kz: "kk-KZ",
+  ky: "ky-KG",
+};
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();

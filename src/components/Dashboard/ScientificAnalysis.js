@@ -331,7 +331,8 @@ SCI_TEXT.tg = {
   highRisk: "Хавфи баланд",
   observeRisk: "Назорат лозим",
   attention: "Диққат",
-  highRiskNote: "Дар низом {pct}% беморон дар гурӯҳи хавфи баланд мебошанд. Дахолати клиникӣ тавсия мешавад.",
+  highRiskNote:
+    "Дар низом {pct}% беморон дар гурӯҳи хавфи баланд мебошанд. Дахолати клиникӣ тавсия мешавад.",
   trendTitle: "Таҳлили тренди 6 моҳа",
   trendSub: "Динамика, суръати афзоиш ва арзиши миёнаи BMI",
   analysesCount: "Шумораи таҳлилҳо",
@@ -345,7 +346,14 @@ SCI_TEXT.tg = {
   zPlus1: "+1σ - +2σ",
   zGreater: "> +2σ (фарбеҳӣ)",
 };
-const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ", ky: "ky-KG" };
+const localeByLang = {
+  uz: "uz-UZ",
+  tg: "tg-TJ",
+  ru: "ru-RU",
+  en: "en-US",
+  kz: "kk-KZ",
+  ky: "ky-KG",
+};
 
 const GlassCard = ({ children, sx = {} }) => {
   const theme = useTheme();

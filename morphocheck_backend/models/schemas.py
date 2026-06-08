@@ -5,6 +5,8 @@ import math
 import datetime
 import re
 
+CONSENT_POLICY_VERSION = "privacy-consent-v1"
+
 class PatientData(BaseModel):
     first_name: str = Field(..., alias="firstName", min_length=1, max_length=80)
     last_name: str = Field(..., alias="lastName", min_length=1, max_length=80)
@@ -45,6 +47,11 @@ class PatientData(BaseModel):
     father_height: Optional[float] = Field(None, alias="fatherHeight", ge=120, le=230)
     mother_height: Optional[float] = Field(None, alias="motherHeight", ge=120, le=230)
     parents_phone: Optional[str] = Field(None, alias="parentsPhone", max_length=50)
+    consent_confirmed: bool = Field(False, alias="consentConfirmed")
+    consent_guardian_name: Optional[str] = Field(None, alias="consentGuardianName", max_length=255)
+    consent_guardian_relationship: Optional[str] = Field(None, alias="consentGuardianRelationship", max_length=100)
+    consent_guardian_phone: Optional[str] = Field(None, alias="consentGuardianPhone", max_length=50)
+    consent_policy_version: str = Field(CONSENT_POLICY_VERSION, alias="consentPolicyVersion", max_length=50)
 
     total_body_water: Optional[float] = Field(None, alias="totalBodyWater", ge=0, le=100)
     fat_percent: Optional[float] = Field(None, alias="fatPercent", ge=0, le=80)
@@ -59,7 +66,13 @@ class PatientData(BaseModel):
         populate_by_name = True
         extra = "forbid"
 
-    @field_validator("first_name", "last_name", "region", "district", "mahalla", "address", "preschool_institution", "parents_phone", "doctor_note", mode="before")
+    @field_validator(
+        "first_name", "last_name", "region", "district", "mahalla", "address",
+        "preschool_institution", "parents_phone", "doctor_note",
+        "consent_guardian_name", "consent_guardian_relationship",
+        "consent_guardian_phone", "consent_policy_version",
+        mode="before",
+    )
     @classmethod
     def strip_text(cls, v):
         if v is None:
@@ -123,7 +136,6 @@ class PatientData(BaseModel):
             "firstName": self.first_name,
             "lastName": self.last_name,
             "region": self.region,
-            "address": self.address,
             "examinationDate": self.examination_date,
         }
         missing = [name for name, value in required_text.items() if not value]
@@ -132,6 +144,11 @@ class PatientData(BaseModel):
 
         if self.age == 0 and not self.age_months and not self.age_days:
             raise ValueError("Yosh, oy yoki kunlardan kamida biri 0 dan katta bo'lishi kerak")
+
+        if not self.consent_confirmed:
+            raise ValueError("Bola ma'lumotlarini qayta ishlash uchun vasiyning roziligi tasdiqlanishi kerak")
+        if not self.consent_guardian_name:
+            raise ValueError("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak")
 
         exam = datetime.date.fromisoformat(self.examination_date[:10])
         if exam > datetime.date.today():
@@ -462,6 +479,11 @@ class ResearchRecordCreate(BaseModel):
     examination_date: Optional[str] = None
     gender: Optional[str] = None
     parents_phone: Optional[str] = None
+    consent_confirmed: Optional[bool] = False
+    consent_guardian_name: Optional[str] = Field(None, max_length=255)
+    consent_guardian_relationship: Optional[str] = Field(None, max_length=100)
+    consent_guardian_phone: Optional[str] = Field(None, max_length=50)
+    consent_policy_version: Optional[str] = Field(CONSENT_POLICY_VERSION, max_length=50)
     father_height: Optional[float] = None
     mother_height: Optional[float] = None
 

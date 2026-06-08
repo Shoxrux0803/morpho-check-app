@@ -159,10 +159,35 @@ def ensure_schema_updates():
             missing.append(("mahalla", "VARCHAR(150)"))
         if "parents_phone" not in existing:
             missing.append(("parents_phone", "VARCHAR(50)"))
+        consent_columns = {
+            "consent_confirmed": "INTEGER DEFAULT 0 NOT NULL",
+            "consent_guardian_name": "VARCHAR(255)",
+            "consent_guardian_relationship": "VARCHAR(100)",
+            "consent_guardian_phone": "VARCHAR(50)",
+            "consent_confirmed_at": "DATETIME",
+            "consent_policy_version": "VARCHAR(50)",
+        }
+        missing.extend((name, sql_type) for name, sql_type in consent_columns.items() if name not in existing)
         if missing:
             with engine.begin() as conn:
                 for column_name, column_type in missing:
                     conn.execute(text(f"ALTER TABLE patient_analysis ADD COLUMN {column_name} {column_type}"))
+
+    if "research_records" in table_names:
+        existing = {col["name"] for col in inspector.get_columns("research_records")}
+        consent_columns = {
+            "consent_confirmed": "INTEGER DEFAULT 0 NOT NULL",
+            "consent_guardian_name": "VARCHAR(255)",
+            "consent_guardian_relationship": "VARCHAR(100)",
+            "consent_guardian_phone": "VARCHAR(50)",
+            "consent_confirmed_at": "DATETIME",
+            "consent_policy_version": "VARCHAR(50)",
+        }
+        missing = [(name, sql_type) for name, sql_type in consent_columns.items() if name not in existing]
+        if missing:
+            with engine.begin() as conn:
+                for name, sql_type in missing:
+                    conn.execute(text(f"ALTER TABLE research_records ADD COLUMN {name} {sql_type}"))
 
     if "users" in table_names:
         user_columns = {
@@ -192,6 +217,7 @@ def ensure_schema_updates():
             ("patient_analysis", "ix_patient_analysis_deleted_deleted_at", ("is_deleted", "deleted_at")),
             ("patient_analysis", "ix_patient_analysis_region_active_created", ("region", "is_deleted", "created_at")),
             ("patient_analysis", "ix_patient_analysis_gender_age_active", ("gender", "age", "is_deleted")),
+            ("patient_analysis", "ix_patient_analysis_consent_active", ("consent_confirmed", "is_deleted")),
             ("patient_analysis", "ix_patient_analysis_child_history", ("name", "birth_date", "gender", "is_deleted", "created_at")),
             ("research_records", "ix_research_records_deleted_created", ("is_deleted", "created_at")),
             ("research_records", "ix_research_records_owner_active_id", ("created_by_id", "is_deleted", "id")),
@@ -200,6 +226,7 @@ def ensure_schema_updates():
             ("research_records", "ix_research_records_gender_active", ("gender", "is_deleted")),
             ("research_records", "ix_research_records_feeding_active", ("feeding_type", "is_deleted")),
             ("research_records", "ix_research_records_marriage_active", ("parents_marriage", "is_deleted")),
+            ("research_records", "ix_research_records_consent_active", ("consent_confirmed", "is_deleted")),
             ("chat_messages", "ix_chat_messages_sender_recipient_created", ("sender_id", "recipient_id", "created_at")),
             ("chat_messages", "ix_chat_messages_recipient_sender_read", ("recipient_id", "sender_id", "is_read")),
             ("chat_messages", "ix_chat_messages_type_created", ("message_type", "created_at")),

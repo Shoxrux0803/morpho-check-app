@@ -21,6 +21,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import aiService from "../../services/aiService";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { researcherT } from "../../utils/researcherI18n";
+import { CONSENT_POLICY_VERSION, PrivacyConsentPanel } from "../Consent/PrivacyConsentPanel";
 
 /* в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
    Utility Component: GlassPaper
@@ -137,6 +138,11 @@ const ResearcherForm = ({ onSuccess }) => {
     fat_iliac: "",
     fat_popliteal: "",
     gender: "",
+    consent_confirmed: false,
+    consent_guardian_name: "",
+    consent_guardian_relationship: "",
+    consent_guardian_phone: "",
+    consent_policy_version: CONSENT_POLICY_VERSION,
   };
   const [formData, setFormData] = useState(emptyForm);
 
@@ -152,6 +158,10 @@ const ResearcherForm = ({ onSuccess }) => {
   const validateStep1 = () => {
     if (!formData.full_name) {
       toast.error(tr("requiredFullName"));
+      return false;
+    }
+    if (!formData.consent_confirmed || !formData.consent_guardian_name) {
+      toast.error("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
       return false;
     }
     return true;
@@ -438,6 +448,19 @@ const ResearcherForm = ({ onSuccess }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   {I("mother_health_status", tr("motherHealth"), "text")}
+                </Grid>
+                <Grid item xs={12}>
+                  <PrivacyConsentPanel
+                    values={formData}
+                    onChange={handleChange}
+                    nameMap={{
+                      confirmed: "consent_confirmed",
+                      guardianName: "consent_guardian_name",
+                      relationship: "consent_guardian_relationship",
+                      phone: "consent_guardian_phone",
+                      policyVersion: "consent_policy_version",
+                    }}
+                  />
                 </Grid>
               </Grid>
             </Box>

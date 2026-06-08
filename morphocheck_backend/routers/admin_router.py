@@ -109,6 +109,11 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
         fatherHeight=rec.father_height,
         motherHeight=rec.mother_height,
         parentsPhone=rec.parents_phone,
+        consentConfirmed=bool(getattr(rec, "consent_confirmed", 0)),
+        consentGuardianName=getattr(rec, "consent_guardian_name", None) or "Stored record",
+        consentGuardianRelationship=getattr(rec, "consent_guardian_relationship", None) or "guardian",
+        consentGuardianPhone=getattr(rec, "consent_guardian_phone", None) or rec.parents_phone,
+        consentPolicyVersion=getattr(rec, "consent_policy_version", None) or "privacy-consent-v1",
         shoulderLength=float(rec.shoulder_length or 0.0),
         shoulderBreadth=float(rec.shoulder_breadth or 0.0),
         shoulderCircumference=float(rec.shoulder_circumference or 0.0),
@@ -183,6 +188,12 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "ai_recommendations": getattr(row, "ai_recommendations", None),
         "doctor_note": getattr(row, "doctor_note", None),
         "parents_phone": getattr(row, "parents_phone", None),
+        "consent_confirmed": bool(getattr(row, "consent_confirmed", 0)),
+        "consent_guardian_name": getattr(row, "consent_guardian_name", None),
+        "consent_guardian_relationship": getattr(row, "consent_guardian_relationship", None),
+        "consent_guardian_phone": getattr(row, "consent_guardian_phone", None),
+        "consent_confirmed_at": getattr(row, "consent_confirmed_at", None),
+        "consent_policy_version": getattr(row, "consent_policy_version", None),
     }
     # Agar modelda mavjud bo'lsa: region, yelka, oyoq uzunliklari va hk
     extra_fields = (
@@ -682,7 +693,9 @@ def update_analysis(
             "calf_length", "calf_circumference", "foot_length", "body_length",
             "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat",
             "mahalla", "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations",
-            "parents_phone", "doctor_note"
+            "parents_phone", "doctor_note", "consent_guardian_name",
+            "consent_guardian_relationship", "consent_guardian_phone",
+            "consent_policy_version"
         ]
         
         changes = []
@@ -697,6 +710,16 @@ def update_analysis(
                 if str(old_val) != str(val):
                     changes.append(f"{f}: {old_val} -> {val}")
                 setattr(rec, f, val)
+
+        if "consent_confirmed" in payload or "consentConfirmed" in payload:
+            consent_value = payload.get("consent_confirmed", payload.get("consentConfirmed"))
+            old_val = bool(getattr(rec, "consent_confirmed", 0))
+            new_val = bool(consent_value)
+            rec.consent_confirmed = 1 if new_val else 0
+            if new_val and not getattr(rec, "consent_confirmed_at", None):
+                rec.consent_confirmed_at = datetime.utcnow()
+            if old_val != new_val:
+                changes.append(f"consent_confirmed: {old_val} -> {new_val}")
 
         # 4. Qayta hisoblash
         try:

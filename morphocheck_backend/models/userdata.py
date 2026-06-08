@@ -62,6 +62,13 @@ class PatientAnalysis(Base):
     recommendations = Column(Text, nullable=False)
     ai_recommendations = Column(Text, nullable=True)
     doctor_note = Column(Text, nullable=True)
+
+    consent_confirmed = Column(Integer, default=0, nullable=False, index=True)
+    consent_guardian_name = Column(String(255), nullable=True)
+    consent_guardian_relationship = Column(String(100), nullable=True)
+    consent_guardian_phone = Column(String(50), nullable=True)
+    consent_confirmed_at = Column(DateTime, nullable=True)
+    consent_policy_version = Column(String(50), nullable=True)
     
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_by = relationship("User", foreign_keys=[created_by_id])
@@ -111,6 +118,13 @@ class ResearchRecord(Base):
     parents_marriage = Column(String(100), nullable=True) 
     mother_health_status = Column(String(255), nullable=True)
     parents_phone = Column(String(50), nullable=True)
+
+    consent_confirmed = Column(Integer, default=0, nullable=False, index=True)
+    consent_guardian_name = Column(String(255), nullable=True)
+    consent_guardian_relationship = Column(String(100), nullable=True)
+    consent_guardian_phone = Column(String(50), nullable=True)
+    consent_confirmed_at = Column(DateTime, nullable=True)
+    consent_policy_version = Column(String(50), nullable=True)
 
     # Date of examination
     examination_date = Column(String(50), nullable=True, index=True)

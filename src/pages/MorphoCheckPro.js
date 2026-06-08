@@ -49,7 +49,11 @@ const emptyFormData = {
   visceralFat: "",
   bodyLength: "",
   doctorNote: "",
-  parentsPhone: "",
+  consentConfirmed: false,
+  consentGuardianName: "",
+  consentGuardianRelationship: "",
+  consentGuardianPhone: "",
+  consentPolicyVersion: "privacy-consent-v1",
 };
 
 const loadDraft = () => {
@@ -167,6 +171,12 @@ export default function MorphoCheckPro() {
     if (formData.weight < 3 || formData.weight > 300) return setError(t("errWeight"));
     if (formData.chest < 50 || formData.chest > 200) return setError(t("errChest"));
     if (formData.head < 40 || formData.head > 70) return setError(t("errHead"));
+    if (!formData.consentConfirmed) {
+      return setError("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
+    }
+    if (!String(formData.consentGuardianName || "").trim()) {
+      return setError("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.");
+    }
 
     setLoading(true);
     try {
@@ -189,7 +199,6 @@ export default function MorphoCheckPro() {
         parentsPhone: formData.parentsPhone || "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
-        parentsPhone: formData.parentsPhone || "",
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -213,6 +222,11 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || "",
+        consentConfirmed: Boolean(formData.consentConfirmed),
+        consentGuardianName: formData.consentGuardianName || "",
+        consentGuardianRelationship: formData.consentGuardianRelationship || "",
+        consentGuardianPhone: formData.consentGuardianPhone || formData.parentsPhone || "",
+        consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
       };
 
       if (!navigator.onLine) {
@@ -263,7 +277,6 @@ export default function MorphoCheckPro() {
       parentsPhone: "",
       fatherHeight: "",
       motherHeight: "",
-      parentsPhone: "",
       shoulderLength: "",
       shoulderBreadth: "",
       shoulderCircumference: "",
@@ -314,7 +327,6 @@ export default function MorphoCheckPro() {
         parentsPhone: formData.parentsPhone || "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
-        parentsPhone: formData.parentsPhone || "",
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -338,6 +350,11 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || "",
+        consentConfirmed: Boolean(formData.consentConfirmed),
+        consentGuardianName: formData.consentGuardianName || "",
+        consentGuardianRelationship: formData.consentGuardianRelationship || "",
+        consentGuardianPhone: formData.consentGuardianPhone || formData.parentsPhone || "",
+        consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
       };
 
       const blob = await generatePdf(payload, selectedLang);
@@ -380,7 +397,6 @@ export default function MorphoCheckPro() {
         parentsPhone: formData.parentsPhone || "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
-        parentsPhone: formData.parentsPhone || "",
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
         birthDate: formData.birthDate || t("unknown"),
         preschoolInstitution: formData.preschoolInstitution || t("unknown"),
@@ -404,6 +420,11 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || "",
+        consentConfirmed: Boolean(formData.consentConfirmed),
+        consentGuardianName: formData.consentGuardianName || "",
+        consentGuardianRelationship: formData.consentGuardianRelationship || "",
+        consentGuardianPhone: formData.consentGuardianPhone || formData.parentsPhone || "",
+        consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
       };
 
       const blob = await generateDocx(payload, selectedLang);

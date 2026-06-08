@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import HTTPException, Request
@@ -154,6 +155,12 @@ def analyze_and_store(
         acm=data.acm,
         visceral_fat=data.visceral_fat,
         doctor_note=(data.doctor_note or "").strip() or None,
+        consent_confirmed=1 if data.consent_confirmed else 0,
+        consent_guardian_name=(data.consent_guardian_name or "").strip() or None,
+        consent_guardian_relationship=(data.consent_guardian_relationship or "").strip() or None,
+        consent_guardian_phone=(data.consent_guardian_phone or data.parents_phone or "").strip() or None,
+        consent_confirmed_at=datetime.utcnow() if data.consent_confirmed else None,
+        consent_policy_version=data.consent_policy_version,
         recommendations=(
             f"Sport: {advices.get('sport', '')}; "
             f"Specialist: {advices.get('specialist', '')}; "
@@ -164,9 +171,7 @@ def analyze_and_store(
     db.add(rec)
 
     if current_user:
-        import datetime
-
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
         if current_user.last_form_open_at:
             diff = (now - current_user.last_form_open_at).total_seconds()
             if 0 < diff < 3600:
@@ -213,6 +218,11 @@ def analyze_and_store(
             "examination_date": data.examination_date,
             "doctor_note": data.doctor_note,
             "parents_phone": data.parents_phone,
+            "consent_confirmed": data.consent_confirmed,
+            "consent_guardian_name": data.consent_guardian_name,
+            "consent_guardian_relationship": data.consent_guardian_relationship,
+            "consent_guardian_phone": data.consent_guardian_phone,
+            "consent_policy_version": data.consent_policy_version,
         },
         "measurements": {
             "height": data.height,
@@ -244,6 +254,11 @@ def build_pdf_report_data(data: PatientData, db: Session, lang: str = "uz") -> D
     report_data["ai_parent_tips"] = ai_tips
     report_data["doctor_note"] = data.doctor_note
     report_data["parents_phone"] = data.parents_phone
+    report_data["consent_confirmed"] = data.consent_confirmed
+    report_data["consent_guardian_name"] = data.consent_guardian_name
+    report_data["consent_guardian_relationship"] = data.consent_guardian_relationship
+    report_data["consent_guardian_phone"] = data.consent_guardian_phone
+    report_data["consent_policy_version"] = data.consent_policy_version
     return report_data
 
 
@@ -402,6 +417,12 @@ def build_pdf_report_data_by_id(patient_id: int, db: Session, lang: str = "uz") 
         "mahalla": getattr(rec, "mahalla", None) or "",
         "address": rec.address or "",
         "parents_phone": rec.parents_phone or "",
+        "consent_confirmed": bool(getattr(rec, "consent_confirmed", 0)),
+        "consent_guardian_name": getattr(rec, "consent_guardian_name", None) or "",
+        "consent_guardian_relationship": getattr(rec, "consent_guardian_relationship", None) or "",
+        "consent_guardian_phone": getattr(rec, "consent_guardian_phone", None) or "",
+        "consent_confirmed_at": getattr(rec, "consent_confirmed_at", None),
+        "consent_policy_version": getattr(rec, "consent_policy_version", None) or "",
         "analysis": analysis,
         "advices": advices,
         "ai_parent_tips": ai_tips,
