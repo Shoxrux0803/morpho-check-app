@@ -3,6 +3,8 @@ from models.clinical import ClinicalSetting
 from typing import Dict, Any, Optional
 import time
 
+from services.cache_service import cache_service
+
 class ClinicalService:
     """
     Klinik sozlamalarni boshqarish va keshdan olish.
@@ -39,5 +41,6 @@ class ClinicalService:
         """Keshni tozalash (o'zgarish bo'lganda chaqiriladi)."""
         cls._cache = {}
         cls._last_refresh = 0
+        cache_service.delete_pattern("morphocheck:analysis:*")
 
 clinical_service = ClinicalService()

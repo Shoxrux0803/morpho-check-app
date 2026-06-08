@@ -18,3 +18,4 @@ slowapi
 scikit-learn
 google-generativeai
 pandas
+redis

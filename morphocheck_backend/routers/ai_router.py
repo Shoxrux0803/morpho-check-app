@@ -10,6 +10,7 @@ from routers.auth_router import get_current_user
 from models.user import User
 from dotenv import load_dotenv
 from services.ai_advice_service import generate_parent_tips
+from services.nlp_service import analyze_text
 
 load_dotenv(override=True)
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=True)
@@ -65,6 +66,10 @@ class PredictParamsRequest(BaseModel):
     gender: str
     target_form: str
 
+class TextAnalysisRequest(BaseModel):
+    text: str
+    lang: str = "uz"
+
 @router.post("/chat")
 async def ai_chat(req: ChatRequest, current_user: User = Depends(get_current_user)):
     try:
@@ -96,6 +101,12 @@ async def predict_params(req: PredictParamsRequest, current_user: User = Depends
     except Exception as e:
         print(f"[AI PREDICT ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail="Error predicting parameters")
+
+@router.post("/analyze-text")
+async def analyze_text_fast(req: TextAnalysisRequest, current_user: User = Depends(get_current_user)):
+    if not req.text or not req.text.strip():
+        raise HTTPException(status_code=400, detail="Matn bo'sh bo'lmasligi kerak.")
+    return analyze_text(req.text, lang=req.lang)
 
 @router.post("/generate-parent-tips")
 async def ai_parent_tips(req: Dict, current_user: User = Depends(get_current_user)):

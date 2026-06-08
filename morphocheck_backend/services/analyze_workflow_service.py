@@ -18,6 +18,7 @@ from services.analyze_service import (
     get_ideal_weight_by_age_and_gender,
     _split_region_and_district,
 )
+from services.cache_service import cache_service
 from services.clinical_service import clinical_service
 from services.indices_service import calculate_detailed_indices
 from services.ml_service import get_ml_predictions
@@ -46,13 +47,16 @@ def _ml_payload(data: PatientData, analysis: Dict[str, Any], gender_norm: str) -
     }
 
 
-def analyze_and_store(
-    data: PatientData,
-    db: Session,
-    request: Request,
-    lang: str = "uz",
-    current_user: Optional[User] = None,
-) -> Dict[str, Any]:
+def _analysis_cache_payload(data: PatientData, lang: str) -> Dict[str, Any]:
+    return {"lang": lang, "patient": data.model_dump(mode="json", by_alias=True)}
+
+
+def build_fast_analysis_context(data: PatientData, db: Session, lang: str = "uz") -> Dict[str, Any]:
+    cache_key = cache_service.make_key("analysis:fast-context:v1", _analysis_cache_payload(data, lang))
+    cached = cache_service.get_json(cache_key)
+    if cached is not None:
+        return cached
+
     all_settings = clinical_service.get_all_settings(db)
     gender_norm = (data.gender or "").strip().lower()
     analysis = calculate_bmi(data, all_settings, lang=lang)
@@ -65,8 +69,40 @@ def analyze_and_store(
         bio_data=analysis["indices"],
         lang=lang,
     )
-
     ml_predictions = get_ml_predictions(_ml_payload(data, analysis, gender_norm), lang=lang)
+    ai_tips = generate_parent_tips(
+        patient_data={
+            "age": int(data.age),
+            "gender": gender_norm,
+            "bmi": analysis["bmi"],
+            "z_score": analysis["z_score"],
+        },
+        ml_predictions=ml_predictions,
+        lang=lang,
+    )
+    result = {
+        "gender_norm": gender_norm,
+        "analysis": analysis,
+        "advices": advices,
+        "ml_predictions": ml_predictions,
+        "ai_tips": ai_tips,
+    }
+    cache_service.set_json(cache_key, result)
+    return result
+
+
+def analyze_and_store(
+    data: PatientData,
+    db: Session,
+    request: Request,
+    lang: str = "uz",
+    current_user: Optional[User] = None,
+) -> Dict[str, Any]:
+    fast_context = build_fast_analysis_context(data, db, lang=lang)
+    gender_norm = fast_context["gender_norm"]
+    analysis = fast_context["analysis"]
+    advices = fast_context["advices"]
+    ml_predictions = fast_context["ml_predictions"]
     clean_region, clean_district = _split_region_and_district(
         data.region, getattr(data, "district", None)
     )
@@ -156,16 +192,7 @@ def analyze_and_store(
         details=f"Yangi tahlil yaratildi: {full_name} ({id_code})",
         request=request,
     )
-    ai_tips = generate_parent_tips(
-        patient_data={
-            "age": int(data.age),
-            "gender": gender_norm,
-            "bmi": analysis["bmi"],
-            "z_score": analysis["z_score"],
-        },
-        ml_predictions=ml_predictions,
-        lang=lang,
-    )
+    ai_tips = fast_context["ai_tips"]
 
     return {
         "status": "success",
@@ -204,29 +231,11 @@ def analyze_and_store(
 
 
 def build_pdf_report_data(data: PatientData, db: Session, lang: str = "uz") -> Dict[str, Any]:
-    all_settings = clinical_service.get_all_settings(db)
-    gender_norm = (data.gender or "").lower()
-    analysis = calculate_bmi(data, all_settings, lang=lang)
-    ai_preds = get_ml_predictions(_ml_payload(data, analysis, gender_norm), lang=lang)
-    advices = generate_advices(
-        analysis["bmi"],
-        analysis["weight_diff"],
-        int(data.age),
-        gender_norm,
-        all_settings,
-        bio_data=analysis["indices"],
-        lang=lang,
-    )
-    ai_tips = generate_parent_tips(
-        patient_data={
-            "age": int(data.age),
-            "gender": gender_norm,
-            "bmi": analysis["bmi"],
-            "z_score": analysis["z_score"],
-        },
-        ml_predictions=ai_preds,
-        lang=lang,
-    )
+    fast_context = build_fast_analysis_context(data, db, lang=lang)
+    analysis = fast_context["analysis"]
+    ai_preds = fast_context["ml_predictions"]
+    advices = fast_context["advices"]
+    ai_tips = fast_context["ai_tips"]
 
     report_data = data.model_dump(by_alias=True)
     report_data["analysis"] = analysis
