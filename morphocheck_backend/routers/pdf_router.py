@@ -5,6 +5,7 @@ from io import BytesIO
 
 from services.pdf_services import generate_pdf_file
 from services.docx_services import generate_docx_report
+from services.consent_docx import generate_consent_docx
 from services.clinical_service import clinical_service
 from models.schemas import PatientData
 from services.analyze_service import (
@@ -39,6 +40,17 @@ class PDFRequest(BaseModel):
     patient_data: dict
     analysis: dict
     advices: dict
+
+
+class ConsentDocxRequest(BaseModel):
+    child_name: str = ""
+    first_name: str = ""
+    last_name: str = ""
+    guardian_name: str = ""
+    guardian_relationship: str = ""
+    guardian_phone: str = ""
+    consent_policy_version: str = "privacy-consent-v1"
+    confirmed_at: str = ""
 
 
 @router.post(
@@ -452,6 +464,65 @@ async def generate_docx_by_id_endpoint(
         import traceback
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"DOCX yaratishda xato: {str(e)}")
+
+
+@router.post("/consent-docx")
+async def generate_consent_docx_endpoint(
+    payload: ConsentDocxRequest,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz, ky, tg"),
+):
+    buffer = generate_consent_docx(payload.model_dump(), lang=lang)
+    return StreamingResponse(
+        content=buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={
+            "Content-Disposition": "attachment; filename=morphocheck_privacy_consent.docx",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
+
+
+@router.get("/consent-docx-by-id/{patient_id}")
+async def generate_consent_docx_by_id_endpoint(
+    patient_id: int,
+    request: Request,
+    lang: str = Query(default="uz", description="Til: uz, ru, en, kz, ky, tg"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
+    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q")
+
+    data = {
+        "child_name": rec.name or "",
+        "guardian_name": getattr(rec, "consent_guardian_name", None) or "",
+        "guardian_relationship": getattr(rec, "consent_guardian_relationship", None) or "",
+        "guardian_phone": getattr(rec, "consent_guardian_phone", None) or rec.parents_phone or "",
+        "confirmed_at": str(getattr(rec, "consent_confirmed_at", None) or ""),
+        "consent_policy_version": getattr(rec, "consent_policy_version", None) or "privacy-consent-v1",
+    }
+    buffer = generate_consent_docx(data, lang=lang)
+    if current_user:
+        record_audit_log(
+            db=db,
+            user_id=current_user.id,
+            action="DOWNLOAD",
+            target_type="PatientAnalysis",
+            target_id=rec.id,
+            details=f"Maxfiylik rozilik DOCX yuklab olindi: {rec.name}",
+            request=request,
+        )
+    return StreamingResponse(
+        content=buffer,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={
+            "Content-Disposition": f"attachment; filename=morphocheck_consent_{patient_id}_{lang}.docx",
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
 
 
 @router.post(

@@ -1116,6 +1116,10 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     ResearchApi.downloadDocx(id, selectedLang);
   };
 
+  const handleDownloadConsentDocx = (id, selectedLang = lang) => {
+    ResearchApi.downloadConsentDocx(id, selectedLang);
+  };
+
   const getCreatorName = (row) =>
     row.created_by_name ||
     row.created_by_email ||
@@ -1495,6 +1499,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
         }}
         isSuperAdmin={isSuperAdmin}
         handleDownloadDocx={handleDownloadDocx}
+        handleDownloadConsentDocx={handleDownloadConsentDocx}
       />
 
       {/* ── Edit Modal ── */}
@@ -1843,6 +1848,7 @@ const DetailModal = ({
   onDelete,
   isSuperAdmin,
   handleDownloadDocx,
+  handleDownloadConsentDocx,
 }) => {
   const { lang } = useLanguage();
   const t = useCallback((key) => researcherT(lang, key), [lang]);
@@ -1897,7 +1903,11 @@ const DetailModal = ({
       </DialogTitle>
 
       <DialogContent dividers>
-        <ConsentStatus record={record} />
+        <ConsentStatus
+          record={record}
+          lang={lang}
+          onDownloadDocx={() => handleDownloadConsentDocx(record.id, lang)}
+        />
         <Section
           title={t("sectionPassport")}
           Icon={Person}

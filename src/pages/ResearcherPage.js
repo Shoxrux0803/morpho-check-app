@@ -86,6 +86,7 @@ import { useLanguage } from "../contexts/LanguageContext";
 import { researcherT } from "../utils/researcherI18n";
 import { pageT } from "../utils/pageI18n";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ConsentStatus } from "../components/Consent/PrivacyConsentPanel";
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -232,6 +233,11 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
       </DialogTitle>
 
       <DialogContent dividers>
+        <ConsentStatus
+          record={record}
+          lang={lang}
+          onDownloadDocx={() => ResearchApi.downloadConsentDocx(record.id, lang)}
+        />
         <Section
           title={tr("sectionPassport")}
           Icon={Person}
@@ -357,6 +363,15 @@ const DetailModal = ({ record, open, onClose, onEdit, onDelete, isSuperAdmin }) 
             sx={{ borderRadius: 2 }}
           >
             DOCX ({lang.toUpperCase()})
+          </Button>
+          <Button
+            size="small"
+            startIcon={<Description />}
+            onClick={() => ResearchApi.downloadConsentDocx(record.id, lang)}
+            variant="outlined"
+            sx={{ borderRadius: 2 }}
+          >
+            Consent DOCX
           </Button>
         </Stack>
         <Box flex={1} />

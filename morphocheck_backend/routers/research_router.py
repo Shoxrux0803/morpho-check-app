@@ -11,6 +11,7 @@ from utils.database import get_db
 from routers.auth_router import get_current_user
 from services.research_docx import generate_researcher_docx
 from services.research_summary_docx import generate_research_summary_docx
+from services.consent_docx import generate_consent_docx
 from services.indices_service import calculate_detailed_indices
 import pandas as pd
 import io
@@ -1786,6 +1787,36 @@ def download_research_docx(
     data = {c.name: getattr(record, c.name) for c in record.__table__.columns}
     buf = generate_researcher_docx(data, lang=lang)
     encoded_filename = urllib.parse.quote(f"Research_{record.id}_{lang}.docx")
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
+    )
+
+
+@router.get("/{record_id}/consent-docx")
+def download_research_consent_docx(
+    record_id: int,
+    lang: str = Query("uz"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_researcher_or_superadmin)
+):
+    record = db.get(ResearchRecord, record_id)
+    if not record or record.is_deleted == 1:
+        raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
+    if current_user.role == "researcher" and record.created_by_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
+
+    data = {
+        "child_name": record.full_name or "",
+        "guardian_name": getattr(record, "consent_guardian_name", None) or "",
+        "guardian_relationship": getattr(record, "consent_guardian_relationship", None) or "",
+        "guardian_phone": getattr(record, "consent_guardian_phone", None) or record.parents_phone or "",
+        "confirmed_at": str(getattr(record, "consent_confirmed_at", None) or ""),
+        "consent_policy_version": getattr(record, "consent_policy_version", None) or "privacy-consent-v1",
+    }
+    buf = generate_consent_docx(data, lang=lang)
+    encoded_filename = urllib.parse.quote(f"Research_consent_{record.id}_{lang}.docx")
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

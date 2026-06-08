@@ -1,6 +1,12 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { AdminApi } from "../services/AdminApi";
-import { generateDocx, generatePdf, generatePdfById, generateDocxById } from "../services/api";
+import {
+  generateConsentDocxById,
+  generateDocx,
+  generatePdf,
+  generatePdfById,
+  generateDocxById,
+} from "../services/api";
 import { LANGUAGES, useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -355,6 +361,7 @@ export default function AdminPage() {
   // States for downloads
   const [viewRow, setViewRow] = useState(null);
   const [downloadingDocx, setDownloadingDocx] = useState(false);
+  const [downloadingConsentDocx, setDownloadingConsentDocx] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [pdfLang, setPdfLang] = useState(lang);
 
@@ -675,6 +682,26 @@ export default function AdminPage() {
       setDownloadingDocx(false);
     }
   }, [handleDownloadPdf, viewRow, pdfLang]);
+
+  const handleDownloadConsentDocx = useCallback(async () => {
+    if (!viewRow) return;
+    setDownloadingConsentDocx(true);
+    try {
+      const blob = await generateConsentDocxById(viewRow.id, pdfLang);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `consent_${viewRow.idCode || viewRow.id}_${pdfLang}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast.error(`${pt("errorPrefix")} ${e.message}`);
+    } finally {
+      setDownloadingConsentDocx(false);
+    }
+  }, [pdfLang, pt, viewRow]);
 
   const handleExportXlsx = useCallback(async () => {
     setExportingXlsx(true);
@@ -1155,7 +1182,12 @@ export default function AdminPage() {
           pdfLang={pdfLang}
           setPdfLang={setPdfLang}
         >
-          <ConsentStatus record={viewRow} />
+          <ConsentStatus
+            record={viewRow}
+            lang={lang}
+            downloading={downloadingConsentDocx}
+            onDownloadDocx={handleDownloadConsentDocx}
+          />
           <Table size="small">
             <TableBody>
               <TableRow>

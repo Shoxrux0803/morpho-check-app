@@ -109,6 +109,39 @@ export async function generateDocxById(patientId, lang = "uz") {
   return resp.blob();
 }
 
+export async function generateConsentDocx(payload, lang = "uz") {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/consent-docx?lang=${lang}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+  return resp.blob();
+}
+
+export async function generateConsentDocxById(patientId, lang = "uz") {
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/pdf/consent-docx-by-id/${patientId}?lang=${lang}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      },
+    },
+  );
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+  return resp.blob();
+}
+
 /* -------------------- DOCX -------------------- */
 /**
  * /api/pdf/generate-docx endpointiga POST yuborib, DOCX blob qaytaradi.
@@ -952,6 +985,15 @@ export const ResearchApi = {
     );
   },
 
+  /** Privacy consent DOCX */
+  downloadConsentDocx: (id, lang = "uz") => {
+    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    window.open(
+      `${API_BASE}${API_PREFIX}/research/${id}/consent-docx?accessToken=${token}&lang=${lang}`,
+      "_blank",
+    );
+  },
+
   /** XLSX export */
   exportXlsx: async (params = {}) => {
     const q = new URLSearchParams();
@@ -1048,6 +1090,8 @@ const apiService = {
   generatePdfById,
   generateDocx,
   generateDocxById,
+  generateConsentDocx,
+  generateConsentDocxById,
   login,
   register,
   getUserProfile,
