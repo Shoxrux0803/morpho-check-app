@@ -1813,7 +1813,7 @@ def download_research_consent_docx(
         "guardian_relationship": getattr(record, "consent_guardian_relationship", None) or "",
         "guardian_phone": getattr(record, "consent_guardian_phone", None) or record.parents_phone or "",
         "confirmed_at": str(getattr(record, "consent_confirmed_at", None) or ""),
-        "consent_policy_version": getattr(record, "consent_policy_version", None) or "privacy-consent-v1",
+        "consent_policy_version": getattr(record, "consent_policy_version", None) or "helsinki-declaration-consent-v1",
     }
     buf = generate_consent_docx(data, lang=lang)
     encoded_filename = urllib.parse.quote(f"Research_consent_{record.id}_{lang}.docx")

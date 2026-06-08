@@ -36,6 +36,14 @@ TG_BMI_CATEGORIES = {
 }
 
 
+
+TM_BMI_CATEGORIES = {
+    "v_low": "Agram yetmezciligi (aydyn)",
+    "low": "Agram yetmezciligi",
+    "normal": "Kada",
+    "overweight": "Artyk agram",
+    "obese": "Semizlik",
+}
 _KY_REPLACEMENTS = [
     (r"Noma'?lum", "Белгисиз"),
     (r"Ma'?lumot yo'?q", "Маалымат жок"),

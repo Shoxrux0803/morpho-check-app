@@ -8,61 +8,73 @@ from docx.shared import Cm, Pt, RGBColor
 
 CONSENT_I18N = {
     "uz": {
-        "title": "MAXFIYLIK STANDARTLARI VA ROZILIK BAYONNOMASI",
-        "subtitle": "MorphoCheck tizimida bola/bemor ma'lumotlarini qayta ishlash",
+        "title": "HELSINKI DEKLARATSIYASI ASOSIDAGI ETIK ROZILIK BAYONNOMASI",
+        "subtitle": "MorphoCheck tizimida inson ishtirokidagi tibbiy tadqiqot ma'lumotlarini qayta ishlash",
         "child": "Bola/bemor F.I.SH.",
         "guardian": "Ota-ona yoki qonuniy vasiy",
         "relationship": "Munosabati",
         "phone": "Telefon",
         "date": "Sana",
         "policy": "Policy versiyasi",
-        "standard": "Maxfiylik standarti",
+        "standard": "Etik asos",
         "standard_text": (
-            "Tizim shaxsiy va sog'liq ma'lumotlarini HIPAA/GDPR tamoyillariga mos tarzda: "
-            "maqsadli ishlov berish, minimal kirish huquqi, auditga tayyor iz va ruxsatli "
-            "foydalanuvchilar bilan cheklangan ko'rish asosida yuritadi."
+            "Tizim shaxsiy, antropometrik va sog'liq ma'lumotlarini Jahon tibbiyot "
+            "assotsiatsiyasining inson ishtirokidagi tibbiy tadqiqotlar uchun etik tamoyillar "
+            "to'g'risidagi Helsinki deklaratsiyasi asosida yuritadi: ishtirokchining huquqlari "
+            "va farovonligi ustuvorligi, xabardor qilingan ixtiyoriy rozilik, maxfiylik, "
+            "xavfni kamaytirish va ilmiy asoslangan maqsad."
         ),
         "consent": "Rozilik matni",
         "consent_text": (
             "Men bolaning qonuniy vakili sifatida uning shaxsiy, antropometrik va sog'liq "
             "ma'lumotlarini MorphoCheck tizimida tibbiy tahlil, ilmiy kuzatuv va hisobot "
-            "tayyorlash maqsadida qayta ishlashga rozilik beraman."
+            "tayyorlash maqsadida qayta ishlashga rozilik beraman. Rozilik ixtiyoriy bo'lib, "
+            "qonuniy vakil tushunarli axborot olish va rozilikni bekor qilish huquqiga ega. "
+            "Men bolamning jismoniy rivojlanishini tekshirish Helsinki deklaratsiyasi "
+            "qoidalari asosida olib borilishiga rozilik bildiraman. Deklaratsiya matni bilan "
+            "to'laligicha tanishdim."
         ),
         "use": "Ma'lumotlardan foydalanish",
         "use_items": [
             "Tibbiy-antropometrik tahlil va klinik tavsiyalar tayyorlash.",
-            "Ruxsatli admin, superadmin yoki izlanuvchi tomonidan ko'rib chiqish.",
-            "Ilmiy/statistik tahlilda imkon qadar minimallashtirilgan shaklda foydalanish.",
+            "Faqat ruxsatli admin, superadmin yoki izlanuvchi tomonidan ko'rib chiqish.",
+            "Ilmiy/statistik tahlilda imkon qadar identifikatsiyasiz yoki minimallashtirilgan shaklda foydalanish.",
+            "Bola kabi zaif ishtirokchilar manfaatini himoya qilish va zarar xavfini kamaytirish.",
         ],
         "signature": "Vasiy imzosi",
         "system": "Tizim qaydi",
     },
     "en": {
-        "title": "PRIVACY STANDARDS AND CONSENT FORM",
-        "subtitle": "Processing child/patient data in MorphoCheck",
+        "title": "ETHICAL CONSENT FORM UNDER THE DECLARATION OF HELSINKI",
+        "subtitle": "Processing medical research data involving human participants in MorphoCheck",
         "child": "Child/patient full name",
         "guardian": "Parent or legal guardian",
         "relationship": "Relationship",
         "phone": "Phone",
         "date": "Date",
         "policy": "Policy version",
-        "standard": "Privacy standard",
+        "standard": "Ethical basis",
         "standard_text": (
-            "The system handles personal and health data according to HIPAA/GDPR principles: "
-            "purpose limitation, minimum necessary access, audit-ready records, and restricted "
-            "viewing by authorized users."
+            "The system handles personal, anthropometric, and health data under the World "
+            "Medical Association Declaration of Helsinki ethical principles for medical research "
+            "involving human participants: priority of participant rights and welfare, informed "
+            "voluntary consent, confidentiality, risk minimization, and a scientifically justified purpose."
         ),
         "consent": "Consent statement",
         "consent_text": (
             "As the child's legal representative, I consent to processing the child's personal, "
             "anthropometric, and health data in MorphoCheck for medical analysis, research "
-            "observation, and report preparation."
+            "observation, and report preparation. Consent is voluntary, and the legal "
+            "representative has the right to receive understandable information and withdraw consent. "
+            "I consent to my child's physical development assessment being conducted in accordance "
+            "with the rules of the Declaration of Helsinki. I have fully reviewed the text of the Declaration."
         ),
         "use": "Use of data",
         "use_items": [
             "Medical anthropometric analysis and clinical recommendations.",
-            "Review by authorized admin, superadmin, or researcher users.",
-            "Scientific/statistical analysis in a minimized form whenever possible.",
+            "Review only by authorized admin, superadmin, or researcher users.",
+            "Scientific/statistical analysis in de-identified or minimized form whenever possible.",
+            "Protection of vulnerable participants such as children and minimization of possible harm.",
         ],
         "signature": "Guardian signature",
         "system": "System record",
@@ -78,7 +90,7 @@ CONSENT_I18N = {
         "policy": "Версия политики",
         "standard": "Стандарт конфиденциальности",
         "standard_text": (
-            "Система обрабатывает персональные и медицинские данные согласно принципам HIPAA/GDPR: "
+            "Система обрабатывает персональные и медицинские данные согласно этическим принципам Хельсинкской декларации: "
             "целевое использование, минимально необходимый доступ, журналируемость и просмотр "
             "только авторизованными пользователями."
         ),
@@ -86,7 +98,9 @@ CONSENT_I18N = {
         "consent_text": (
             "Я, как законный представитель ребенка, даю согласие на обработку персональных, "
             "антропометрических и медицинских данных в MorphoCheck для медицинского анализа, "
-            "научного наблюдения и подготовки отчетов."
+            "научного наблюдения и подготовки отчетов. Я согласен(на), чтобы оценка "
+            "физического развития моего ребенка проводилась в соответствии с правилами "
+            "Хельсинкской декларации. С текстом Декларации я полностью ознакомлен(а)."
         ),
         "use": "Использование данных",
         "use_items": [
@@ -108,7 +122,7 @@ CONSENT_I18N = {
         "policy": "Саясат нұсқасы",
         "standard": "Құпиялылық стандарты",
         "standard_text": (
-            "Жүйе жеке және денсаулық деректерін HIPAA/GDPR қағидаттарына сай өңдейді: "
+            "Жүйе жеке және денсаулық деректерін Хельсинки декларациясының этикалық қағидаттарына сай өңдейді: "
             "мақсатты пайдалану, ең аз қажетті қолжетімділік, аудит ізі және тек рұқсатты "
             "пайдаланушыларға көрсету."
         ),
@@ -116,7 +130,9 @@ CONSENT_I18N = {
         "consent_text": (
             "Мен баланың заңды өкілі ретінде оның жеке, антропометриялық және денсаулық "
             "деректерін MorphoCheck жүйесінде медициналық талдау, ғылыми бақылау және есеп "
-            "дайындау мақсатында өңдеуге келісім беремін."
+            "дайындау мақсатында өңдеуге келісім беремін. Мен баламның физикалық дамуын "
+            "тексеру Хельсинки декларациясының қағидалары негізінде жүргізілуіне келісім "
+            "беремін. Декларация мәтінімен толық таныстым."
         ),
         "use": "Деректерді пайдалану",
         "use_items": [
@@ -138,7 +154,7 @@ CONSENT_I18N = {
         "policy": "Саясат версиясы",
         "standard": "Купуялык стандарты",
         "standard_text": (
-            "Тутум жеке жана ден соолук маалыматтарын HIPAA/GDPR принциптерине ылайык иштетет: "
+            "Тутум жеке жана ден соолук маалыматтарын Хельсинки декларациясынын этикалык принциптерине ылайык иштетет: "
             "максаттуу колдонуу, минималдуу жеткиликтүүлүк, аудит изи жана уруксат берилген "
             "колдонуучуларга гана көрсөтүү."
         ),
@@ -146,7 +162,9 @@ CONSENT_I18N = {
         "consent_text": (
             "Мен баланын мыйзамдуу өкүлү катары анын жеке, антропометриялык жана ден соолук "
             "маалыматтарын MorphoCheck тутумунда медициналык талдоо, илимий байкоо жана отчет "
-            "даярдоо максатында иштетүүгө макулдук берем."
+            "даярдоо максатында иштетүүгө макулдук берем. Баламдын физикалык өнүгүүсүн "
+            "текшерүү Хельсинки декларациясынын эрежелерине ылайык жүргүзүлүшүнө макулдук "
+            "берем. Декларациянын тексти менен толук тааныштым."
         ),
         "use": "Маалыматтарды колдонуу",
         "use_items": [
@@ -168,7 +186,7 @@ CONSENT_I18N = {
         "policy": "Версияи сиёсат",
         "standard": "Стандарти махфият",
         "standard_text": (
-            "Низом маълумоти шахсӣ ва тиббиро мувофиқи принсипҳои HIPAA/GDPR коркард мекунад: "
+            "Низом маълумоти шахсӣ ва тиббиро мувофиқи принсипҳои ахлоқии Эъломияи Ҳелсинки коркард мекунад: "
             "истифодаи мақсаднок, дастрасии ҳадди ақал, сабти аудит ва намоиш танҳо ба "
             "корбарони иҷозатдор."
         ),
@@ -176,7 +194,9 @@ CONSENT_I18N = {
         "consent_text": (
             "Ман ҳамчун намояндаи қонунии кӯдак барои коркарди маълумоти шахсӣ, антропометрӣ "
             "ва тиббии ӯ дар MorphoCheck бо мақсади таҳлили тиббӣ, назорати илмӣ ва омодасозии "
-            "ҳисобот розигӣ медиҳам."
+            "ҳисобот розигӣ медиҳам. Ман розӣ ҳастам, ки санҷиши рушди ҷисмонии фарзанди "
+            "ман тибқи қоидаҳои Эъломияи Ҳелсинки гузаронида шавад. Бо матни Эъломия пурра "
+            "шинос шудам."
         ),
         "use": "Истифодаи маълумот",
         "use_items": [
@@ -245,7 +265,7 @@ def generate_consent_docx(data: dict, lang: str = "uz") -> io.BytesIO:
     _add_label_value(table, c["relationship"], data.get("guardian_relationship") or data.get("consent_guardian_relationship") or data.get("consentGuardianRelationship"))
     _add_label_value(table, c["phone"], data.get("guardian_phone") or data.get("consent_guardian_phone") or data.get("consentGuardianPhone") or data.get("parents_phone") or data.get("parentsPhone"))
     _add_label_value(table, c["date"], str(data.get("confirmed_at") or data.get("consent_confirmed_at") or datetime.utcnow().strftime("%Y-%m-%d")))
-    _add_label_value(table, c["policy"], data.get("consent_policy_version") or data.get("consentPolicyVersion") or "privacy-consent-v1")
+    _add_label_value(table, c["policy"], data.get("consent_policy_version") or data.get("consentPolicyVersion") or "helsinki-declaration-consent-v1")
 
     for title_key, text_key in (("standard", "standard_text"), ("consent", "consent_text")):
         doc.add_paragraph()

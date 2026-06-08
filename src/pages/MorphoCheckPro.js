@@ -53,7 +53,7 @@ const emptyFormData = {
   consentGuardianName: "",
   consentGuardianRelationship: "",
   consentGuardianPhone: "",
-  consentPolicyVersion: "privacy-consent-v1",
+  consentPolicyVersion: "helsinki-declaration-consent-v1",
 };
 
 const loadDraft = () => {
@@ -169,7 +169,7 @@ export default function MorphoCheckPro() {
     consentGuardianPhone: requiresGuardianConsent
       ? formData.consentGuardianPhone || formData.parentsPhone || ""
       : "",
-    consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
+    consentPolicyVersion: formData.consentPolicyVersion || "helsinki-declaration-consent-v1",
   };
 
   const handleSubmit = async (e) => {

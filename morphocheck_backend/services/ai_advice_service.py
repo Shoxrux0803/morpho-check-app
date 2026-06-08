@@ -78,6 +78,10 @@ EXPERT_TIPS_LIBRARY = {
     }
 }
 
+for _section in EXPERT_TIPS_LIBRARY.values():
+    for _item in _section.values():
+        if "tm" not in _item:
+            _item["tm"] = _item.get("uz", [])
 GEMINI_MODELS = [
     "gemini-3-flash-preview",
     "gemini-2.5-flash",
@@ -104,7 +108,7 @@ def get_expert_tips(patient_data: Dict, ml_predictions: Dict, lang: str = "uz") 
     Работает мгновенно.
     """
     tips = []
-    l = lang if lang in ["uz", "ru", "en", "kz"] else "uz"
+    l = lang if lang in ["uz", "ru", "en", "kz", "tm"] else "uz"
     
     # 1. Совет по питанию (на основе ИМТ / Z-score)
     z = patient_data.get("z_score", 0)

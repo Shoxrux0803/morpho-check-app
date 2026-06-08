@@ -49,7 +49,7 @@ class ConsentDocxRequest(BaseModel):
     guardian_name: str = ""
     guardian_relationship: str = ""
     guardian_phone: str = ""
-    consent_policy_version: str = "privacy-consent-v1"
+    consent_policy_version: str = "helsinki-declaration-consent-v1"
     confirmed_at: str = ""
 
 
@@ -65,7 +65,7 @@ class ConsentDocxRequest(BaseModel):
 async def generate_pdf_endpoint(
     request: Request,
     request_data: PatientData,
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
     db: Session = Depends(get_db)
 ):
     try:
@@ -159,7 +159,7 @@ async def generate_pdf_endpoint(
 async def generate_pdf_by_id_endpoint(
     patient_id: int,
     request: Request,
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
@@ -336,7 +336,7 @@ async def generate_pdf_by_id_endpoint(
 async def generate_docx_by_id_endpoint(
     patient_id: int,
     request: Request,
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin)
 ):
@@ -502,7 +502,7 @@ async def generate_consent_docx_by_id_endpoint(
         "guardian_relationship": getattr(rec, "consent_guardian_relationship", None) or "",
         "guardian_phone": getattr(rec, "consent_guardian_phone", None) or rec.parents_phone or "",
         "confirmed_at": str(getattr(rec, "consent_confirmed_at", None) or ""),
-        "consent_policy_version": getattr(rec, "consent_policy_version", None) or "privacy-consent-v1",
+        "consent_policy_version": getattr(rec, "consent_policy_version", None) or "helsinki-declaration-consent-v1",
     }
     buffer = generate_consent_docx(data, lang=lang)
     if current_user:
@@ -540,7 +540,7 @@ async def generate_consent_docx_by_id_endpoint(
 )
 async def generate_docx_endpoint(
     request_data: PatientData,
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
     db: Session = Depends(get_db)
 ):
     """

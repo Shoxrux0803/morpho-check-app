@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.userdata import PatientAnalysis
 from services.indices_service import calculate_detailed_indices
-from services.ky_localization import KY_BMI_CATEGORIES, KZ_BMI_CATEGORIES, report_text
+from services.ky_localization import KY_BMI_CATEGORIES, KZ_BMI_CATEGORIES, TM_BMI_CATEGORIES, report_text
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -434,6 +434,7 @@ _BMI_CAT_I18N = {
         "uz": "Vazn yetishmovchiligi (yaqqol)",
         "ky": KY_BMI_CATEGORIES["v_low"],
         "kz": KZ_BMI_CATEGORIES["v_low"],
+        "tm": TM_BMI_CATEGORIES["v_low"],
         "ru": "Р’С‹СЂР°Р¶РµРЅРЅС‹Р№ РґРµС„РёС†РёС‚ РјР°СЃСЃС‹",
         "en": "Severe underweight",
     },
@@ -441,6 +442,7 @@ _BMI_CAT_I18N = {
         "uz": "Vazn yetishmovchiligi",
         "ky": KY_BMI_CATEGORIES["low"],
         "kz": KZ_BMI_CATEGORIES["low"],
+        "tm": TM_BMI_CATEGORIES["low"],
         "ru": "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅР°СЏ РјР°СЃСЃР° С‚РµР»Р°",
         "en": "Underweight",
     },
@@ -448,6 +450,7 @@ _BMI_CAT_I18N = {
         "uz": "Me'yor",
         "ky": KY_BMI_CATEGORIES["normal"],
         "kz": KZ_BMI_CATEGORIES["normal"],
+        "tm": TM_BMI_CATEGORIES["normal"],
         "ru": "РќРѕСЂРјР°",
         "en": "Normal",
     },
@@ -455,6 +458,7 @@ _BMI_CAT_I18N = {
         "uz": "Ortiqcha vazn",
         "ky": KY_BMI_CATEGORIES["overweight"],
         "kz": KZ_BMI_CATEGORIES["overweight"],
+        "tm": TM_BMI_CATEGORIES["overweight"],
         "ru": "РР·Р±С‹С‚РѕС‡РЅР°СЏ РјР°СЃСЃР° С‚РµР»Р°",
         "en": "Overweight",
     },
@@ -462,6 +466,7 @@ _BMI_CAT_I18N = {
         "uz": "Semizlik",
         "ky": KY_BMI_CATEGORIES["obese"],
         "kz": KZ_BMI_CATEGORIES["obese"],
+        "tm": TM_BMI_CATEGORIES["obese"],
         "ru": "РћР¶РёСЂРµРЅРёРµ",
         "en": "Obesity",
     }
@@ -899,7 +904,3 @@ def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, all_
                     res["general"] += " " + adv
 
     return {key: _clean_advice_text(value) for key, value in res.items()}
-
-
-
-

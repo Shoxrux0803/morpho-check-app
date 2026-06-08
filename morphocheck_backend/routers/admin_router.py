@@ -113,7 +113,7 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
         consentGuardianName=getattr(rec, "consent_guardian_name", None) or "Stored record",
         consentGuardianRelationship=getattr(rec, "consent_guardian_relationship", None) or "guardian",
         consentGuardianPhone=getattr(rec, "consent_guardian_phone", None) or rec.parents_phone,
-        consentPolicyVersion=getattr(rec, "consent_policy_version", None) or "privacy-consent-v1",
+        consentPolicyVersion=getattr(rec, "consent_policy_version", None) or "helsinki-declaration-consent-v1",
         shoulderLength=float(rec.shoulder_length or 0.0),
         shoulderBreadth=float(rec.shoulder_breadth or 0.0),
         shoulderCircumference=float(rec.shoulder_circumference or 0.0),

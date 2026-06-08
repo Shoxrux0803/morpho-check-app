@@ -114,6 +114,55 @@ METRIC_LABELS = {
 }
 
 
+SUMMARY_I18N["tm"] = {
+    **SUMMARY_I18N["uz"],
+    "title": "MORPHOCHECK YLMY-STATISTIK DOCX HASABATY",
+    "report_date": "Hasabat senesi",
+    "summary": "1. Umumy jemleme",
+    "scope": "Gurshawy",
+    "all_researchers": "Ahli gozlegcilerin maglumatlary",
+    "researcher_scope": "Gozlegca degisli maglumatlar",
+    "researcher": "Gozlegci",
+    "total_records": "Jemi yazgylar",
+    "age_range": "Yas aralygy",
+    "avg_age": "Orta yas",
+    "active_filters": "Isjen filtrler",
+    "none": "Yok",
+    "indicator": "Gorkeziji",
+    "value": "Bahasy",
+    "demographics": "2. Demografik infografikalar",
+    "gender": "Jyns",
+    "region": "Sebit",
+    "visual_share": "Wizual ulus",
+    "stats": "3. Awtomatik statistik analiz tablisalary",
+    "z_group": "BMI Z-score topary",
+    "groups": "4. Toparlar kesiminde analiz",
+    "male_n": "Erkek N",
+    "male_mean": "Erkek mean",
+    "female_n": "Ayal N",
+    "female_mean": "Ayal mean",
+    "diff": "Tapawut",
+    "share": "Ulus",
+    "correlation": "5. Korrelýasiya we regressiya",
+    "model": "Model",
+    "not_enough": "Maglumat yeterlik dal",
+    "equation": "Agram = {intercept} + {slope} x Boy",
+    "note_title": "6. Ylmy bellik",
+    "note": "Hasabat awtomatik sekillendirildi. Tablisalarda teswirleyji statistika, jynslar boyunca t-test, sebitler boyunca ANOVA, korrelýasiya matrisasy we boy-agram regressiya modeli berildi.",
+    "years": "yas",
+}
+
+METRIC_LABELS["tm"] = {
+    "chest_standing_height": "Boy (dik)",
+    "weight": "Agram",
+    "bmi": "BMI",
+    "chest_circumference_pause": "Gursi aylawy",
+    "waist_circumference": "Bil aylawy",
+    "head_circumference": "Bas aylawy",
+    "thigh_circumference": "Son aylawy",
+    "calf_circumference": "Boldur aylawy",
+    "dynamometry": "Dinamometriya",
+}
 def _tr(lang, key):
     return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(key, SUMMARY_I18N["uz"].get(key, key))
 
@@ -162,10 +211,10 @@ def _percentile(values, p):
 def _gender_label(gender, lang="uz"):
     value = str(gender or "").lower()
     if "girl" in value or "ayol" in value or "qiz" in value or "female" in value:
-        return "Духтар/Зан" if lang == "tg" else "Qiz/Ayol"
+        return "Gyz/Ayal" if lang == "tm" else ("Духтар/Зан" if lang == "tg" else "Qiz/Ayol")
     if "boy" in value or "erkak" in value or "o'g" in value or "og" in value or "male" in value:
-        return "Писар/Мард" if lang == "tg" else "O'g'il/Erkak"
-    return "Номаълум" if lang == "tg" else "Noma'lum"
+        return "Oglan/Erkek" if lang == "tm" else ("Писар/Мард" if lang == "tg" else "O'g'il/Erkak")
+    return "Namalum" if lang == "tm" else ("Номаълум" if lang == "tg" else "Noma'lum")
 
 
 def _age(record):
@@ -314,8 +363,8 @@ def _build_stats(records, lang="uz"):
             gender_name = _gender_label(getattr(record, "gender", None), lang)
             if value is not None and gender_name != _gender_label(None, lang):
                 groups[gender_name].append(value)
-        male = groups["Писар/Мард" if lang == "tg" else "O'g'il/Erkak"]
-        female = groups["Духтар/Зан" if lang == "tg" else "Qiz/Ayol"]
+        male = groups["Oglan/Erkak" if lang == "tm" else ("Писар/Мард" if lang == "tg" else "O'g'il/Erkak")]
+        female = groups["Gyz/Ayal" if lang == "tm" else ("Духтар/Зан" if lang == "tg" else "Qiz/Ayol")]
         row = {"label": _metric_label(key, label, lang), "unit": unit, "male_n": len(male), "female_n": len(female)}
         if len(male) >= 2 and len(female) >= 2:
             m1 = _mean(male)
@@ -344,7 +393,7 @@ def _build_stats(records, lang="uz"):
         name = (
             getattr(record, "settlement", None)
             or getattr(record, "birth_place", None)
-            or ("Номаълум" if lang == "tg" else "Noma'lum")
+            or ("Namalum" if lang == "tm" else ("Номаълум" if lang == "tg" else "Noma'lum"))
         )
         value = _metric_value(record, "bmi")
         if value is not None:

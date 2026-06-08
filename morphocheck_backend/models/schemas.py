@@ -5,7 +5,7 @@ import math
 import datetime
 import re
 
-CONSENT_POLICY_VERSION = "privacy-consent-v1"
+CONSENT_POLICY_VERSION = "helsinki-declaration-consent-v1"
 
 class PatientData(BaseModel):
     first_name: str = Field(..., alias="firstName", min_length=1, max_length=80)

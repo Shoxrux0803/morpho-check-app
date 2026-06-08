@@ -1,5 +1,5 @@
 /** @jsxRuntime classic */
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -26,11 +26,13 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import GppGoodOutlinedIcon from "@mui/icons-material/GppGoodOutlined";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "react-hot-toast";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { generateConsentDocx } from "../../services/api";
 
-export const CONSENT_POLICY_VERSION = "privacy-consent-v1";
+export const CONSENT_POLICY_VERSION = "helsinki-declaration-consent-v1";
 
 export const CONSENT_RELATIONSHIPS = [
   { value: "mother", label: "Ona" },
@@ -40,17 +42,23 @@ export const CONSENT_RELATIONSHIPS = [
 
 const COPY = {
   uz: {
-    title: "Maxfiylik va ota-ona/vasiyning roziligi",
-    compliance: "HIPAA/GDPR tamoyillariga mos ishlov berish",
-    note: "Bemor va bola sog'lig'iga oid ma'lumotlar faqat tibbiy tahlil, ilmiy kuzatuv va hisobot tayyorlash uchun ishlatiladi. Kirish huquqi admin, superadmin va ruxsatli izlanuvchilar bilan cheklanadi.",
+    title: "Helsinki deklaratsiyasi asosidagi ota-ona/vasiyning roziligi",
+    compliance: "Inson ishtirokidagi tibbiy tadqiqotlar uchun etik tamoyillar",
+    note: "Bemor va bola sog'lig'iga oid ma'lumotlar Jahon tibbiyot assotsiatsiyasining Helsinki deklaratsiyasi tamoyillari asosida faqat tibbiy tahlil, ilmiy kuzatuv va hisobot tayyorlash uchun ishlatiladi. Ishtirokchi huquqlari, maxfiylik, xavfni kamaytirish va ixtiyoriy rozilik ustuvor hisoblanadi.",
     guardianName: "Rozilik bergan ota-ona yoki vasiy F.I.SH.",
     relationship: "Munosabati",
     phone: "Vasiy telefoni",
     child: "Bola/bemor",
     checkbox:
-      "Men bolaning qonuniy vakili sifatida uning shaxsiy va sog'liq ma'lumotlarini MorphoCheck tizimida qayta ishlashga roziman.",
-    privacyHelp: "Maxfiylik standartlari bilan tanishing",
+      "Men bolaning qonuniy vakili sifatida Helsinki deklaratsiyasi tamoyillari bo'yicha tushuntirilgan maqsadlar asosida uning shaxsiy va sog'liq ma'lumotlarini MorphoCheck tizimida qayta ishlashga roziman.",
+    privacyHelp: "Etik rozilik tamoyillari bilan tanishing",
     privacyButton: "Ko'rish",
+    declarationButton: "Deklaratsiyani to'liq ko'rish",
+    declarationTitle: "Helsinki deklaratsiyasi to'liq matni",
+    declarationAcknowledge: "Tanishib chiqdim",
+    declarationScrollHint: "Tasdiqlash uchun matn oxirigacha tushing.",
+    declarationLoading: "Deklaratsiya matni yuklanmoqda...",
+    declarationError: "Deklaratsiya matnini yuklashda xatolik yuz berdi.",
     docxButton: "DOCX olish",
     close: "Yopish",
     confirmed: "Rozilik tasdiqlangan",
@@ -58,17 +66,23 @@ const COPY = {
     language: "Til",
   },
   en: {
-    title: "Privacy and parent/guardian consent",
-    compliance: "Processing aligned with HIPAA/GDPR principles",
-    note: "Patient and child health data is used only for medical analysis, research observation, and report preparation. Access is limited to authorized admins, superadmins, and researchers.",
+    title: "Parent/guardian consent under the Declaration of Helsinki",
+    compliance: "Ethical principles for medical research involving human participants",
+    note: "Patient and child health data is handled under the World Medical Association Declaration of Helsinki principles and used only for medical analysis, research observation, and report preparation. Participant rights, confidentiality, risk minimization, and voluntary consent are treated as priorities.",
     guardianName: "Consenting parent or guardian full name",
     relationship: "Relationship",
     phone: "Guardian phone",
     child: "Child/patient",
     checkbox:
-      "As the child's legal representative, I consent to processing the child's personal and health data in MorphoCheck.",
-    privacyHelp: "Review the privacy standards",
+      "As the child's legal representative, I consent to processing the child's personal and health data in MorphoCheck for the explained purposes under Declaration of Helsinki principles.",
+    privacyHelp: "Review the ethical consent principles",
     privacyButton: "View",
+    declarationButton: "View full Declaration",
+    declarationTitle: "Full text of the Declaration of Helsinki",
+    declarationAcknowledge: "I have reviewed it",
+    declarationScrollHint: "Scroll to the end of the text to acknowledge.",
+    declarationLoading: "Loading the Declaration text...",
+    declarationError: "Could not load the Declaration text.",
     docxButton: "Download DOCX",
     close: "Close",
     confirmed: "Consent confirmed",
@@ -77,7 +91,7 @@ const COPY = {
   },
   ru: {
     title: "Конфиденциальность и согласие родителя/представителя",
-    compliance: "Обработка по принципам HIPAA/GDPR",
+    compliance: "Этические принципы Хельсинкской декларации",
     note: "Медицинские данные пациента и ребенка используются только для анализа, научного наблюдения и подготовки отчетов. Доступ ограничен авторизованными пользователями.",
     guardianName: "Ф.И.О. родителя или законного представителя",
     relationship: "Отношение",
@@ -87,6 +101,12 @@ const COPY = {
       "Я, как законный представитель ребенка, даю согласие на обработку его персональных и медицинских данных в MorphoCheck.",
     privacyHelp: "Ознакомьтесь со стандартами конфиденциальности",
     privacyButton: "Открыть",
+    declarationButton: "Полный текст декларации",
+    declarationTitle: "Полный текст Хельсинкской декларации",
+    declarationAcknowledge: "Ознакомлен(а)",
+    declarationScrollHint: "Прокрутите текст до конца, чтобы подтвердить ознакомление.",
+    declarationLoading: "Загрузка текста декларации...",
+    declarationError: "Не удалось загрузить текст декларации.",
     docxButton: "Скачать DOCX",
     close: "Закрыть",
     confirmed: "Согласие подтверждено",
@@ -95,7 +115,7 @@ const COPY = {
   },
   kz: {
     title: "Құпиялылық және ата-ана/өкіл келісімі",
-    compliance: "HIPAA/GDPR қағидаттарына сай өңдеу",
+    compliance: "Хельсинки декларациясының этикалық қағидаттары",
     note: "Пациент пен бала денсаулығына қатысты деректер тек медициналық талдау, ғылыми бақылау және есеп дайындау үшін қолданылады.",
     guardianName: "Келісім берген ата-ана немесе заңды өкіл",
     relationship: "Қатынасы",
@@ -105,6 +125,12 @@ const COPY = {
       "Мен баланың заңды өкілі ретінде оның жеке және денсаулық деректерін MorphoCheck жүйесінде өңдеуге келісім беремін.",
     privacyHelp: "Құпиялылық стандарттарымен танысыңыз",
     privacyButton: "Көру",
+    declarationButton: "Декларацияны толық көру",
+    declarationTitle: "Хельсинки декларациясының толық мәтіні",
+    declarationAcknowledge: "Таныстым",
+    declarationScrollHint: "Танысуды растау үшін мәтіннің соңына дейін түсіңіз.",
+    declarationLoading: "Декларация мәтіні жүктелуде...",
+    declarationError: "Декларация мәтінін жүктеу мүмкін болмады.",
     docxButton: "DOCX жүктеу",
     close: "Жабу",
     confirmed: "Келісім расталды",
@@ -113,7 +139,7 @@ const COPY = {
   },
   ky: {
     title: "Купуялык жана ата-эне/өкүл макулдугу",
-    compliance: "HIPAA/GDPR принциптерине ылайык иштетүү",
+    compliance: "Хельсинки декларациясынын этикалык принциптери",
     note: "Бейтап жана бала ден соолук маалыматтары медициналык талдоо, илимий байкоо жана отчет даярдоо үчүн гана колдонулат.",
     guardianName: "Макулдук берген ата-эне же мыйзамдуу өкүл",
     relationship: "Мамилеси",
@@ -123,6 +149,12 @@ const COPY = {
       "Мен баланын мыйзамдуу өкүлү катары анын жеке жана ден соолук маалыматтарын MorphoCheck тутумунда иштетүүгө макулмун.",
     privacyHelp: "Купуялык стандарттары менен таанышыңыз",
     privacyButton: "Көрүү",
+    declarationButton: "Декларацияны толук көрүү",
+    declarationTitle: "Хельсинки декларациясынын толук тексти",
+    declarationAcknowledge: "Тааныштым",
+    declarationScrollHint: "Таанышууну ырастоо үчүн тексттин аягына чейин түшүңүз.",
+    declarationLoading: "Декларация тексти жүктөлүүдө...",
+    declarationError: "Декларация текстин жүктөө мүмкүн болбоду.",
     docxButton: "DOCX жүктөө",
     close: "Жабуу",
     confirmed: "Макулдук тастыкталды",
@@ -131,7 +163,7 @@ const COPY = {
   },
   tg: {
     title: "Махфият ва розигии волид/васӣ",
-    compliance: "Коркард мувофиқи принсипҳои HIPAA/GDPR",
+    compliance: "Принсипҳои ахлоқии Эъломияи Ҳелсинки",
     note: "Маълумоти тиббии бемор ва кӯдак танҳо барои таҳлили тиббӣ, назорати илмӣ ва омодасозии ҳисобот истифода мешавад.",
     guardianName: "Ному насаби волид ё васии қонунӣ",
     relationship: "Муносибат",
@@ -141,15 +173,45 @@ const COPY = {
       "Ман ҳамчун намояндаи қонунии кӯдак барои коркарди маълумоти шахсӣ ва тиббии ӯ дар MorphoCheck розигӣ медиҳам.",
     privacyHelp: "Бо стандартҳои махфият шинос шавед",
     privacyButton: "Дидан",
+    declarationButton: "Дидани пурраи Эъломия",
+    declarationTitle: "Матни пурраи Эъломияи Ҳелсинки",
+    declarationAcknowledge: "Шинос шудам",
+    declarationScrollHint: "Барои тасдиқ матнро то охир поён баред.",
+    declarationLoading: "Матни Эъломия бор мешавад...",
+    declarationError: "Бор кардани матни Эъломия муяссар нашуд.",
     docxButton: "DOCX гирифтан",
     close: "Пӯшидан",
     confirmed: "Розигӣ тасдиқ шуд",
     missing: "Розигӣ ҳанӯз тасдиқ нашудааст",
     language: "Забон",
   },
+  tm: {
+    title: "Helsinki deklarasiýasy esasynda ene-ata/hossar razylygy",
+    compliance: "Adamyň gatnaşmagyndaky lukmançylyk barlaglary üçin etiki ýörelgeler",
+    note: "Näsagyň we çaganyň saglygyna degişli maglumatlar Bütindünýä lukmançylyk assosiasiýasynyň Helsinki deklarasiýasynyň ýörelgeleri esasynda diňe lukmançylyk seljermesi, ylmy gözegçilik we hasabat taýýarlamak üçin ulanylýar.",
+    guardianName: "Razylyk beren ene-ata ýa-da kanuny hossar",
+    relationship: "Gatnaşygy",
+    phone: "Hossaryň telefony",
+    child: "Çaga/näsag",
+    checkbox:
+      "Men çaganyň kanuny wekili hökmünde onuň şahsy we saglyk maglumatlarynyň MorphoCheck ulgamynda işlenmegine razylyk berýärin.",
+    privacyHelp: "Etiki razylyk ýörelgeleri bilen tanyşyň",
+    privacyButton: "Görmek",
+    declarationButton: "Deklarasiýany doly görmek",
+    declarationTitle: "Helsinki deklarasiýasynyň doly teksti",
+    declarationAcknowledge: "Tanyşdym",
+    declarationScrollHint: "Tassyklamak üçin tekstiň ahyryna çenli aşak düşüň.",
+    declarationLoading: "Deklarasiýa teksti ýüklenýär...",
+    declarationError: "Deklarasiýa tekstini ýüklemek başartmady.",
+    docxButton: "DOCX almak",
+    close: "Ýapmak",
+    confirmed: "Razylyk tassyklandy",
+    missing: "Razylyk entek tassyklanmady",
+    language: "Dil",
+  },
 };
 
-const LANGS = ["uz", "ru", "en", "kz", "ky", "tg"];
+const LANGS = ["uz", "ru", "en", "kz", "ky", "tg", "tm"];
 const getCopy = (lang) => COPY[lang] || COPY.uz;
 
 const downloadBlob = (blob, filename) => {
@@ -163,6 +225,120 @@ const downloadBlob = (blob, filename) => {
   URL.revokeObjectURL(url);
 };
 
+function HelsinkiDeclarationDialog({ open, onClose, copy, lang = "uz" }) {
+  const contentRef = useRef(null);
+  const [markdown, setMarkdown] = useState("");
+  const [loadedPath, setLoadedPath] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [atBottom, setAtBottom] = useState(false);
+  const declarationPath =
+    {
+      uz: "/Helsinki_declaration_uz.md",
+      ru: "/Helsinki_declaration_ru.md",
+      en: "/Helsinki_declaration_en.md",
+      kz: "/Helsinki_declaration_kz.md",
+      ky: "/Helsinki_declaration_kg.md",
+      tg: "/Helsinki_declaration_tj.md",
+      tm: "/Helsinki_declaration_tm.md",
+    }[lang] || "/Declaration_of_Helsinki_2013.md";
+
+  useEffect(() => {
+    if (!open) return;
+    setAtBottom(false);
+    if ((markdown && loadedPath === declarationPath) || loading) return;
+
+    setLoading(true);
+
+    fetch(declarationPath)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Declaration file not found");
+        }
+        return response.text();
+      })
+      .then((text) => {
+        setMarkdown(text);
+        setLoadedPath(declarationPath);
+        setError("");
+      })
+      .catch(() => {
+        setError(copy.declarationError);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [copy.declarationError, declarationPath, loadedPath, loading, markdown, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const timer = window.setTimeout(() => {
+      const node = contentRef.current;
+      if (!node) return;
+      setAtBottom(node.scrollHeight <= node.clientHeight + 8);
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [markdown, open]);
+
+  const handleScroll = (event) => {
+    const node = event.currentTarget;
+    const bottom = node.scrollTop + node.clientHeight >= node.scrollHeight - 12;
+    if (bottom) setAtBottom(true);
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle sx={{ fontWeight: 900 }}>{copy.declarationTitle}</DialogTitle>
+      <DialogContent
+        dividers
+        ref={contentRef}
+        onScroll={handleScroll}
+        sx={{
+          maxHeight: { xs: "68vh", md: "72vh" },
+          bgcolor: "background.paper",
+        }}
+      >
+        {loading && (
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <CircularProgress size={20} />
+            <Typography variant="body2">{copy.declarationLoading}</Typography>
+          </Stack>
+        )}
+        {error && <Alert severity="error">{error}</Alert>}
+        {!loading && !error && (
+          <Box
+            sx={{
+              "& h1": { fontSize: "1.55rem", fontWeight: 900, mt: 0, mb: 1.5 },
+              "& h2": { fontSize: "1.25rem", fontWeight: 850, mt: 3, mb: 1 },
+              "& h3": { fontSize: "1rem", fontWeight: 850, mt: 2, mb: 0.5 },
+              "& p, & li": { fontSize: "0.95rem", lineHeight: 1.7 },
+              "& ul": { pl: 3 },
+              "& hr": { border: 0, borderTop: "1px solid", borderColor: "divider", my: 2.5 },
+            }}
+          >
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+          </Box>
+        )}
+      </DialogContent>
+      <DialogActions sx={{ p: 2, gap: 1, flexWrap: "wrap" }}>
+        {!atBottom && !error && (
+          <Typography variant="caption" color="text.secondary" sx={{ mr: "auto" }}>
+            {copy.declarationScrollHint}
+          </Typography>
+        )}
+        <Button
+          variant="contained"
+          onClick={onClose}
+          disabled={!atBottom && !error}
+          sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
+        >
+          {copy.declarationAcknowledge}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 export function PrivacyConsentPanel({
   values,
   onChange,
@@ -173,6 +349,7 @@ export function PrivacyConsentPanel({
   const { lang } = useLanguage();
   const copy = getCopy(lang);
   const [open, setOpen] = useState(false);
+  const [declarationOpen, setDeclarationOpen] = useState(false);
   const [docLang, setDocLang] = useState(lang || "uz");
   const [downloading, setDownloading] = useState(false);
   const keys = {
@@ -276,6 +453,15 @@ export function PrivacyConsentPanel({
             sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
           >
             {copy.privacyButton}
+          </Button>
+          <Button
+            onClick={() => setDeclarationOpen(true)}
+            size="small"
+            variant="contained"
+            startIcon={<DescriptionOutlinedIcon fontSize="small" />}
+            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+          >
+            {copy.declarationButton}
           </Button>
         </Stack>
 
@@ -400,46 +586,72 @@ export function PrivacyConsentPanel({
           <Button onClick={() => setOpen(false)}>{copy.close}</Button>
         </DialogActions>
       </Dialog>
+      <HelsinkiDeclarationDialog
+        open={declarationOpen}
+        onClose={() => setDeclarationOpen(false)}
+        copy={copy}
+        lang={lang}
+      />
     </Paper>
   );
 }
 
 export function ConsentStatus({ record, onDownloadDocx, downloading = false, lang = "uz" }) {
   const copy = getCopy(lang);
+  const [declarationOpen, setDeclarationOpen] = useState(false);
   const confirmed = Boolean(record?.consent_confirmed ?? record?.consentConfirmed);
   const age = Number(record?.age ?? record?.age_years ?? 0);
-  if (age >= 18 && !confirmed) return null;
+  const consentRequired = age < 18 || confirmed;
   const guardian =
     record?.consent_guardian_name || record?.consentGuardianName || record?.guardianName || "";
   const relationship =
     record?.consent_guardian_relationship || record?.consentGuardianRelationship || "";
   const confirmedAt = record?.consent_confirmed_at || record?.consentConfirmedAt || "";
+  const severity = consentRequired ? (confirmed ? "success" : "warning") : "info";
+  const title = consentRequired ? (confirmed ? copy.confirmed : copy.missing) : copy.compliance;
 
   return (
     <Alert
-      severity={confirmed ? "success" : "warning"}
+      severity={severity}
       icon={<VerifiedUserOutlinedIcon />}
       sx={{ mb: 2, borderRadius: 2 }}
     >
       <Typography variant="body2" fontWeight={800}>
-        {confirmed ? copy.confirmed : copy.missing}
+        {title}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {guardian ? `${guardian}${relationship ? ` (${relationship})` : ""}` : copy.note}
         {confirmedAt ? ` | ${new Date(confirmedAt).toLocaleString()}` : ""}
       </Typography>
-      {onDownloadDocx && (
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1 }}>
         <Button
           size="small"
-          variant="outlined"
-          startIcon={downloading ? <CircularProgress size={16} /> : <DescriptionOutlinedIcon />}
-          onClick={onDownloadDocx}
-          disabled={downloading}
-          sx={{ mt: 1, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+          variant="contained"
+          startIcon={<VisibilityOutlinedIcon fontSize="small" />}
+          onClick={() => setDeclarationOpen(true)}
+          sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
         >
-          {copy.docxButton}
+          {copy.declarationButton}
         </Button>
-      )}
+        {onDownloadDocx && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={downloading ? <CircularProgress size={16} /> : <DescriptionOutlinedIcon />}
+            onClick={onDownloadDocx}
+            disabled={downloading}
+            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+          >
+            {copy.docxButton}
+          </Button>
+        )}
+      </Stack>
+      <HelsinkiDeclarationDialog
+        open={declarationOpen}
+        onClose={() => setDeclarationOpen(false)}
+        copy={copy}
+        lang={lang}
+      />
     </Alert>
   );
 }
