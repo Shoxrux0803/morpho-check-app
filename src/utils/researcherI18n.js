@@ -1185,6 +1185,9 @@ dictionaries.tg = {
   ageYearsSuffix: "сол",
 };
 
-export const researcherT = (lang, key) => dictionaries[lang]?.[key] ?? dictionaries.uz[key] ?? key;
+const DEFAULT_LANGUAGE = "en";
+
+export const researcherT = (lang, key) =>
+  dictionaries[lang]?.[key] ?? dictionaries[DEFAULT_LANGUAGE]?.[key] ?? key;
 
 export const researcherOption = (lang, key) => researcherT(lang, key);

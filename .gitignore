@@ -49,6 +49,21 @@ __pycache__/
 !.env.example
 !*.env.example
 
+# Secrets and credentials
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets.*
+*.secret
+credentials.json
+service-account*.json
+api-keys.*
+passwords.*
+
 # Reports and temporary files
 test_output*.docx
 test_pdf*.pdf

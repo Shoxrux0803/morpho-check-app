@@ -1062,14 +1062,16 @@ dictionaries.tg = {
   underweight: "Камвазн",
 };
 
+const DEFAULT_LANGUAGE = "en";
+
 const normalizeLang = (lang) => {
-  const code = String(lang || "uz")
+  const code = String(lang || DEFAULT_LANGUAGE)
     .toLowerCase()
     .split(/[-_]/)[0];
-  return dictionaries[code] ? code : "uz";
+  return dictionaries[code] ? code : DEFAULT_LANGUAGE;
 };
 
 export const pageT = (lang, key, fallback = "") => {
   const code = normalizeLang(lang);
-  return dictionaries[code]?.[key] ?? dictionaries.uz[key] ?? fallback;
+  return dictionaries[code]?.[key] ?? dictionaries[DEFAULT_LANGUAGE]?.[key] ?? fallback;
 };

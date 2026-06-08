@@ -58,6 +58,10 @@ const getThemeVariantLabel = (value) =>
         ? "Sunset"
         : "Minimal";
 
+const languageOptions = [...LANGUAGES].sort((a, b) =>
+  a.code === "en" ? -1 : b.code === "en" ? 1 : 0,
+);
+
 export default function Header() {
   const { mode, toggle, variant, setVariant } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
@@ -572,7 +576,7 @@ export default function Header() {
                     value={lang}
                     onChange={(event) => handleLangChange(event.target.value)}
                     renderValue={(selected) => {
-                      const selectedLang = LANGUAGES.find((l) => l.code === selected);
+                      const selectedLang = languageOptions.find((l) => l.code === selected);
                       return selectedLang ? (
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <Box
@@ -620,7 +624,7 @@ export default function Header() {
                       },
                     }}
                   >
-                    {LANGUAGES.map((l) => (
+                    {languageOptions.map((l) => (
                       <MenuItem key={l.code} value={l.code}>
                         <Stack direction="row" alignItems="center" spacing={1} width="100%">
                           <Box

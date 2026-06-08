@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState } from "react";
 
 const LanguageContext = createContext(null);
+const DEFAULT_LANGUAGE = "en";
 
 export const LANGUAGES = [
   { code: "tg", label: "Tojik", flag: "TJ" },
@@ -1425,7 +1426,8 @@ translations.tg = {
   step3Desc: "Ҳисоботи касбии тайёрро боргирӣ кунед.",
   backBtn: "Бозгашт",
   infoTitle: "Тибби оянда",
-  infoSubtitle: "Платформаи мо ба фаҳмидани маълумоти антропометрӣ ва назорати саломатӣ кӯмак мекунад.",
+  infoSubtitle:
+    "Платформаи мо ба фаҳмидани маълумоти антропометрӣ ва назорати саломатӣ кӯмак мекунад.",
   userLabel: "Истифодабаранда",
   downloadPdf: "Боргирии PDF",
   selectPdfLang: "Забони PDF",
@@ -1600,15 +1602,17 @@ translations.tg = {
 };
 
 export function LanguageProvider({ children }) {
-  const saved = localStorage.getItem("appLang") || "uz";
-  const [lang, setLangState] = useState(saved);
+  const saved = localStorage.getItem("appLang");
+  const initialLang = translations[saved] ? saved : DEFAULT_LANGUAGE;
+  const [lang, setLangState] = useState(initialLang);
 
   const setLang = (code) => {
+    if (!translations[code]) return;
     setLangState(code);
     localStorage.setItem("appLang", code);
   };
 
-  const t = (key) => translations[lang]?.[key] ?? translations["uz"][key] ?? key;
+  const t = (key) => translations[lang]?.[key] ?? translations[DEFAULT_LANGUAGE]?.[key] ?? key;
 
   return (
     <LanguageContext.Provider value={{ lang, setLang, t, LANGUAGES }}>
