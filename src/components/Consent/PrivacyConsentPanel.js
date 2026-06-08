@@ -407,6 +407,8 @@ export function PrivacyConsentPanel({
 export function ConsentStatus({ record, onDownloadDocx, downloading = false, lang = "uz" }) {
   const copy = getCopy(lang);
   const confirmed = Boolean(record?.consent_confirmed ?? record?.consentConfirmed);
+  const age = Number(record?.age ?? record?.age_years ?? 0);
+  if (age >= 18 && !confirmed) return null;
   const guardian =
     record?.consent_guardian_name || record?.consentGuardianName || record?.guardianName || "";
   const relationship =

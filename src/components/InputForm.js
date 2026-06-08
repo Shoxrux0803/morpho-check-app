@@ -19,7 +19,6 @@ import PersonOutline from "@mui/icons-material/PersonOutline";
 import BadgeOutlined from "@mui/icons-material/BadgeOutlined";
 import CalendarMonth from "@mui/icons-material/CalendarMonth";
 import WcIcon from "@mui/icons-material/Wc";
-import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import HeightIcon from "@mui/icons-material/Height";
 import MonitorWeightIcon from "@mui/icons-material/MonitorWeight";
@@ -118,10 +117,12 @@ export default function InputForm({
       errs.push(`BMI: 5–80.`);
     }
 
-    if (!form.consentConfirmed) {
+    const requiresGuardianConsent = Number(form.age) > 0 && Number(form.age) < 18;
+
+    if (requiresGuardianConsent && !form.consentConfirmed) {
       errs.push("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
     }
-    if (!String(form.consentGuardianName || "").trim()) {
+    if (requiresGuardianConsent && !String(form.consentGuardianName || "").trim()) {
       errs.push("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.");
     }
 
@@ -622,19 +623,6 @@ export default function InputForm({
                       </MenuItem>
                     </MCSelect>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field
-                      fullWidth
-                      label={`${t("parentsPhoneLabel")} (${t("optionalLabel")})`}
-                      name="parentsPhone"
-                      type="tel"
-                      value={formData.parentsPhone || ""}
-                      onChange={handleInputChange}
-                      InputProps={adorn(<PhoneOutlinedIcon />)}
-                      sx={inputSx}
-                      placeholder="+998"
-                    />
-                  </Grid>
                   <Grid item xs={12}>
                     <Collapse
                       in={Number(formData.age) > 0 && Number(formData.age) < 18}
@@ -684,15 +672,20 @@ export default function InputForm({
                     </Collapse>
                   </Grid>
                   <Grid item xs={12}>
-                    <PrivacyConsentPanel
-                      values={{
-                        ...formData,
-                        consentPolicyVersion:
-                          formData.consentPolicyVersion || CONSENT_POLICY_VERSION,
-                      }}
-                      onChange={handleInputChange}
-                      FieldComponent={Field}
-                    />
+                    <Collapse
+                      in={Number(formData.age) > 0 && Number(formData.age) < 18}
+                      timeout={600}
+                    >
+                      <PrivacyConsentPanel
+                        values={{
+                          ...formData,
+                          consentPolicyVersion:
+                            formData.consentPolicyVersion || CONSENT_POLICY_VERSION,
+                        }}
+                        onChange={handleInputChange}
+                        FieldComponent={Field}
+                      />
+                    </Collapse>
                   </Grid>
                 </Grid>
 

@@ -159,6 +159,19 @@ export default function MorphoCheckPro() {
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
+  const requiresGuardianConsent = Number(formData.age) > 0 && Number(formData.age) < 18;
+  const consentPayload = {
+    consentConfirmed: requiresGuardianConsent ? Boolean(formData.consentConfirmed) : false,
+    consentGuardianName: requiresGuardianConsent ? formData.consentGuardianName || "" : "",
+    consentGuardianRelationship: requiresGuardianConsent
+      ? formData.consentGuardianRelationship || ""
+      : "",
+    consentGuardianPhone: requiresGuardianConsent
+      ? formData.consentGuardianPhone || formData.parentsPhone || ""
+      : "",
+    consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -171,10 +184,10 @@ export default function MorphoCheckPro() {
     if (formData.weight < 3 || formData.weight > 300) return setError(t("errWeight"));
     if (formData.chest < 50 || formData.chest > 200) return setError(t("errChest"));
     if (formData.head < 40 || formData.head > 70) return setError(t("errHead"));
-    if (!formData.consentConfirmed) {
+    if (requiresGuardianConsent && !formData.consentConfirmed) {
       return setError("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
     }
-    if (!String(formData.consentGuardianName || "").trim()) {
+    if (requiresGuardianConsent && !String(formData.consentGuardianName || "").trim()) {
       return setError("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.");
     }
 
@@ -196,7 +209,7 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
-        parentsPhone: formData.parentsPhone || "",
+        parentsPhone: requiresGuardianConsent ? formData.parentsPhone || "" : "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
@@ -222,11 +235,7 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || "",
-        consentConfirmed: Boolean(formData.consentConfirmed),
-        consentGuardianName: formData.consentGuardianName || "",
-        consentGuardianRelationship: formData.consentGuardianRelationship || "",
-        consentGuardianPhone: formData.consentGuardianPhone || formData.parentsPhone || "",
-        consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
+        ...consentPayload,
       };
 
       if (!navigator.onLine) {
@@ -324,7 +333,7 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
-        parentsPhone: formData.parentsPhone || "",
+        parentsPhone: requiresGuardianConsent ? formData.parentsPhone || "" : "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
@@ -350,11 +359,7 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || "",
-        consentConfirmed: Boolean(formData.consentConfirmed),
-        consentGuardianName: formData.consentGuardianName || "",
-        consentGuardianRelationship: formData.consentGuardianRelationship || "",
-        consentGuardianPhone: formData.consentGuardianPhone || formData.parentsPhone || "",
-        consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
+        ...consentPayload,
       };
 
       const blob = await generatePdf(payload, selectedLang);
@@ -394,7 +399,7 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
-        parentsPhone: formData.parentsPhone || "",
+        parentsPhone: requiresGuardianConsent ? formData.parentsPhone || "" : "",
         fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
         motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
         examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
@@ -420,11 +425,7 @@ export default function MorphoCheckPro() {
         visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
         bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || "",
-        consentConfirmed: Boolean(formData.consentConfirmed),
-        consentGuardianName: formData.consentGuardianName || "",
-        consentGuardianRelationship: formData.consentGuardianRelationship || "",
-        consentGuardianPhone: formData.consentGuardianPhone || formData.parentsPhone || "",
-        consentPolicyVersion: formData.consentPolicyVersion || "privacy-consent-v1",
+        ...consentPayload,
       };
 
       const blob = await generateDocx(payload, selectedLang);

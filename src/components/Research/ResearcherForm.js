@@ -160,7 +160,7 @@ const ResearcherForm = ({ onSuccess }) => {
       toast.error(tr("requiredFullName"));
       return false;
     }
-    if (!formData.consent_confirmed || !formData.consent_guardian_name) {
+    if (!isAdult && (!formData.consent_confirmed || !formData.consent_guardian_name)) {
       toast.error("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
       return false;
     }
@@ -229,6 +229,13 @@ const ResearcherForm = ({ onSuccess }) => {
       Object.keys(formData).forEach((k) => {
         if (formData[k] !== "") cleanData[k] = formData[k];
       });
+      if (isAdult) {
+        delete cleanData.consent_confirmed;
+        delete cleanData.consent_guardian_name;
+        delete cleanData.consent_guardian_relationship;
+        delete cleanData.consent_guardian_phone;
+        delete cleanData.consent_policy_version;
+      }
       await ResearchApi.create(cleanData);
 
       // Trigger success animation
@@ -449,19 +456,21 @@ const ResearcherForm = ({ onSuccess }) => {
                 <Grid item xs={12} sm={6} md={4}>
                   {I("mother_health_status", tr("motherHealth"), "text")}
                 </Grid>
-                <Grid item xs={12}>
-                  <PrivacyConsentPanel
-                    values={formData}
-                    onChange={handleChange}
-                    nameMap={{
-                      confirmed: "consent_confirmed",
-                      guardianName: "consent_guardian_name",
-                      relationship: "consent_guardian_relationship",
-                      phone: "consent_guardian_phone",
-                      policyVersion: "consent_policy_version",
-                    }}
-                  />
-                </Grid>
+                {!isAdult && (
+                  <Grid item xs={12}>
+                    <PrivacyConsentPanel
+                      values={formData}
+                      onChange={handleChange}
+                      nameMap={{
+                        confirmed: "consent_confirmed",
+                        guardianName: "consent_guardian_name",
+                        relationship: "consent_guardian_relationship",
+                        phone: "consent_guardian_phone",
+                        policyVersion: "consent_policy_version",
+                      }}
+                    />
+                  </Grid>
+                )}
               </Grid>
             </Box>
           ) : (

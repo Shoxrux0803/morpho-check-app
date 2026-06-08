@@ -145,9 +145,10 @@ class PatientData(BaseModel):
         if self.age == 0 and not self.age_months and not self.age_days:
             raise ValueError("Yosh, oy yoki kunlardan kamida biri 0 dan katta bo'lishi kerak")
 
-        if not self.consent_confirmed:
+        requires_guardian_consent = int(self.age or 0) < 18
+        if requires_guardian_consent and not self.consent_confirmed:
             raise ValueError("Bola ma'lumotlarini qayta ishlash uchun vasiyning roziligi tasdiqlanishi kerak")
-        if not self.consent_guardian_name:
+        if requires_guardian_consent and not self.consent_guardian_name:
             raise ValueError("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak")
 
         exam = datetime.date.fromisoformat(self.examination_date[:10])
