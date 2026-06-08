@@ -10,7 +10,7 @@ pydantic[email]
 python-multipart
 pillow
 passlib[bcrypt]
-bcrypt==3.2.2
+bcrypt==5.0.0
 python-jose[cryptography]
 python-docx
 openpyxl
