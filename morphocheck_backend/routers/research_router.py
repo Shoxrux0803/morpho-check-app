@@ -1667,6 +1667,15 @@ def create_research_record(
     
     db.commit()
     db.refresh(record)
+
+    # ClickHouse ga ma'lumot jo'natish
+    try:
+        from utils.clickhouse import insert_research_event
+        from routers.research_router import research_record_to_dict
+        insert_research_event(research_record_to_dict(record))
+    except Exception:
+        pass
+
     return record
 
 

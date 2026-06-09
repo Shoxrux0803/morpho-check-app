@@ -24,6 +24,7 @@ from services.clinical_service import clinical_service
 from services.indices_service import calculate_detailed_indices
 from services.ml_service import get_ml_predictions
 from utils.audit_helper import record_audit_log
+from utils.clickhouse import insert_analysis_event  # ClickHouse sync
 
 
 def store_raw_analysis(data: Dict[str, Any], db: Session, current_user: User) -> PatientAnalysis:
@@ -197,6 +198,14 @@ def analyze_and_store(
         details=f"Yangi tahlil yaratildi: {full_name} ({id_code})",
         request=request,
     )
+
+    # ClickHouse ga ma'lumot jo'natish (analytics uchun)
+    try:
+        from routers.admin_router import to_dict_analysis
+        insert_analysis_event(to_dict_analysis(rec))
+    except Exception:
+        pass
+
     ai_tips = fast_context["ai_tips"]
 
     return {
