@@ -287,14 +287,40 @@ function HelsinkiDeclarationDialog({ open, onClose, copy, lang = "uz" }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ fontWeight: 900 }}>{copy.declarationTitle}</DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          width: { xs: "calc(100% - 16px)", sm: "calc(100% - 48px)" },
+          m: { xs: 1, sm: 3 },
+          maxHeight: { xs: "calc(100dvh - 16px)", sm: "calc(100dvh - 48px)" },
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          px: { xs: 2, sm: 3 },
+          py: { xs: 1.5, sm: 2 },
+          fontSize: { xs: "1.05rem", sm: "1.25rem" },
+          fontWeight: 900,
+          lineHeight: 1.25,
+          overflowWrap: "anywhere",
+        }}
+      >
+        {copy.declarationTitle}
+      </DialogTitle>
       <DialogContent
         dividers
         ref={contentRef}
         onScroll={handleScroll}
         sx={{
-          maxHeight: { xs: "68vh", md: "72vh" },
+          px: { xs: 2, sm: 3 },
+          py: { xs: 1.5, sm: 2 },
+          maxHeight: { xs: "calc(100dvh - 148px)", sm: "72vh" },
           bgcolor: "background.paper",
         }}
       >
@@ -308,11 +334,17 @@ function HelsinkiDeclarationDialog({ open, onClose, copy, lang = "uz" }) {
         {!loading && !error && (
           <Box
             sx={{
-              "& h1": { fontSize: "1.55rem", fontWeight: 900, mt: 0, mb: 1.5 },
-              "& h2": { fontSize: "1.25rem", fontWeight: 850, mt: 3, mb: 1 },
+              overflowWrap: "anywhere",
+              "& h1": {
+                fontSize: { xs: "1.2rem", sm: "1.55rem" },
+                fontWeight: 900,
+                mt: 0,
+                mb: 1.5,
+              },
+              "& h2": { fontSize: { xs: "1.05rem", sm: "1.25rem" }, fontWeight: 850, mt: 3, mb: 1 },
               "& h3": { fontSize: "1rem", fontWeight: 850, mt: 2, mb: 0.5 },
-              "& p, & li": { fontSize: "0.95rem", lineHeight: 1.7 },
-              "& ul": { pl: 3 },
+              "& p, & li": { fontSize: { xs: "0.9rem", sm: "0.95rem" }, lineHeight: 1.7 },
+              "& ul, & ol": { pl: { xs: 2.25, sm: 3 } },
               "& hr": { border: 0, borderTop: "1px solid", borderColor: "divider", my: 2.5 },
             }}
           >
@@ -320,9 +352,20 @@ function HelsinkiDeclarationDialog({ open, onClose, copy, lang = "uz" }) {
           </Box>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 2, gap: 1, flexWrap: "wrap" }}>
+      <DialogActions
+        sx={{
+          p: { xs: 1.5, sm: 2 },
+          gap: 1,
+          alignItems: { xs: "stretch", sm: "center" },
+          flexDirection: { xs: "column", sm: "row" },
+        }}
+      >
         {!atBottom && !error && (
-          <Typography variant="caption" color="text.secondary" sx={{ mr: "auto" }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ mr: { sm: "auto" }, width: { xs: "100%", sm: "auto" } }}
+          >
             {copy.declarationScrollHint}
           </Typography>
         )}
@@ -330,7 +373,12 @@ function HelsinkiDeclarationDialog({ open, onClose, copy, lang = "uz" }) {
           variant="contained"
           onClick={onClose}
           disabled={!atBottom && !error}
-          sx={{ borderRadius: 2, textTransform: "none", fontWeight: 800 }}
+          sx={{
+            width: { xs: "100%", sm: "auto" },
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 800,
+          }}
         >
           {copy.declarationAcknowledge}
         </Button>
@@ -394,18 +442,25 @@ export function PrivacyConsentPanel({
     <Paper
       elevation={0}
       sx={{
-        p: compact ? 2 : 2.5,
+        p: { xs: compact ? 1.5 : 2, sm: compact ? 2 : 2.5 },
         borderRadius: 2,
         border: "1px solid",
         borderColor: checked ? "success.light" : "warning.light",
         bgcolor: checked ? "rgba(46,125,50,0.06)" : "rgba(245,158,11,0.06)",
+        overflow: "hidden",
       }}
     >
       <Stack spacing={2}>
-        <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="space-between">
-          <Stack direction="row" spacing={1.2} alignItems="center">
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1.5}
+          alignItems={{ xs: "stretch", sm: "center" }}
+          justifyContent="space-between"
+        >
+          <Stack direction="row" spacing={1.2} alignItems="center" sx={{ minWidth: 0 }}>
             <Box
               sx={{
+                flex: "0 0 auto",
                 width: 36,
                 height: 36,
                 borderRadius: 2,
@@ -417,11 +472,19 @@ export function PrivacyConsentPanel({
             >
               <GppGoodOutlinedIcon fontSize="small" />
             </Box>
-            <Box>
-              <Typography variant={compact ? "subtitle2" : "subtitle1"} fontWeight={800}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                variant={compact ? "subtitle2" : "subtitle1"}
+                fontWeight={800}
+                sx={{ lineHeight: 1.25, overflowWrap: "anywhere" }}
+              >
                 {copy.title}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", lineHeight: 1.35, overflowWrap: "anywhere" }}
+              >
                 {copy.compliance}
               </Typography>
             </Box>
@@ -431,7 +494,16 @@ export function PrivacyConsentPanel({
             label={checked ? copy.confirmed : copy.missing}
             color={checked ? "success" : "warning"}
             size="small"
-            sx={{ fontWeight: 800 }}
+            sx={{
+              alignSelf: { xs: "flex-start", sm: "center" },
+              maxWidth: "100%",
+              fontWeight: 800,
+              "& .MuiChip-label": {
+                display: "block",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              },
+            }}
           />
         </Stack>
 
@@ -440,9 +512,9 @@ export function PrivacyConsentPanel({
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={1}
-          alignItems={{ xs: "flex-start", sm: "center" }}
+          alignItems={{ xs: "stretch", sm: "center" }}
         >
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
             {copy.privacyHelp}
           </Typography>
           <Button
@@ -450,7 +522,14 @@ export function PrivacyConsentPanel({
             size="small"
             variant="outlined"
             startIcon={<VisibilityOutlinedIcon fontSize="small" />}
-            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 700,
+              whiteSpace: "normal",
+              lineHeight: 1.25,
+            }}
           >
             {copy.privacyButton}
           </Button>
@@ -459,7 +538,14 @@ export function PrivacyConsentPanel({
             size="small"
             variant="contained"
             startIcon={<DescriptionOutlinedIcon fontSize="small" />}
-            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 700,
+              whiteSpace: "normal",
+              lineHeight: 1.25,
+            }}
           >
             {copy.declarationButton}
           </Button>
@@ -509,8 +595,14 @@ export function PrivacyConsentPanel({
         </Grid>
 
         <FormControlLabel
+          sx={{
+            m: 0,
+            alignItems: "flex-start",
+            "& .MuiFormControlLabel-label": { minWidth: 0 },
+          }}
           control={
             <Checkbox
+              sx={{ mt: -0.5, ml: -1 }}
               checked={checked}
               onChange={(event) => {
                 handleValue(keys.confirmed, event.target.checked);
@@ -519,19 +611,45 @@ export function PrivacyConsentPanel({
             />
           }
           label={
-            <Typography variant="body2" fontWeight={600}>
+            <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: "anywhere" }}>
               {copy.checkbox}
             </Typography>
           }
         />
       </Stack>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 900 }}>{copy.title}</DialogTitle>
-        <DialogContent dividers>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        scroll="paper"
+        PaperProps={{
+          sx: {
+            width: { xs: "calc(100% - 16px)", sm: "calc(100% - 48px)" },
+            m: { xs: 1, sm: 3 },
+            maxHeight: { xs: "calc(100dvh - 16px)", sm: "calc(100dvh - 48px)" },
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: { xs: 1.5, sm: 2 },
+            fontSize: { xs: "1.05rem", sm: "1.25rem" },
+            fontWeight: 900,
+            lineHeight: 1.25,
+            overflowWrap: "anywhere",
+          }}
+        >
+          {copy.title}
+        </DialogTitle>
+        <DialogContent dividers sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1.5, sm: 2 } }}>
           <Stack spacing={2}>
             <Alert severity="info">{copy.note}</Alert>
-            <Typography variant="body2">{copy.checkbox}</Typography>
+            <Typography variant="body2" sx={{ overflowWrap: "anywhere" }}>
+              {copy.checkbox}
+            </Typography>
             <Grid container spacing={1.5}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -554,8 +672,15 @@ export function PrivacyConsentPanel({
             </Grid>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1, flexWrap: "wrap" }}>
-          <FormControl size="small" sx={{ minWidth: 100, mr: "auto" }}>
+        <DialogActions
+          sx={{
+            p: { xs: 1.5, sm: 2 },
+            gap: 1,
+            alignItems: { xs: "stretch", sm: "center" },
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 100 }, mr: { sm: "auto" } }}>
             <InputLabel>{copy.language}</InputLabel>
             <Select
               value={docLang}
@@ -580,10 +705,13 @@ export function PrivacyConsentPanel({
             }
             onClick={handleDownload}
             disabled={downloading}
+            sx={{ width: { xs: "100%", sm: "auto" }, whiteSpace: "normal", lineHeight: 1.25 }}
           >
             {copy.docxButton}
           </Button>
-          <Button onClick={() => setOpen(false)}>{copy.close}</Button>
+          <Button onClick={() => setOpen(false)} sx={{ width: { xs: "100%", sm: "auto" } }}>
+            {copy.close}
+          </Button>
         </DialogActions>
       </Dialog>
       <HelsinkiDeclarationDialog
@@ -611,11 +739,7 @@ export function ConsentStatus({ record, onDownloadDocx, downloading = false, lan
   const title = consentRequired ? (confirmed ? copy.confirmed : copy.missing) : copy.compliance;
 
   return (
-    <Alert
-      severity={severity}
-      icon={<VerifiedUserOutlinedIcon />}
-      sx={{ mb: 2, borderRadius: 2 }}
-    >
+    <Alert severity={severity} icon={<VerifiedUserOutlinedIcon />} sx={{ mb: 2, borderRadius: 2 }}>
       <Typography variant="body2" fontWeight={800}>
         {title}
       </Typography>
@@ -623,13 +747,25 @@ export function ConsentStatus({ record, onDownloadDocx, downloading = false, lan
         {guardian ? `${guardian}${relationship ? ` (${relationship})` : ""}` : copy.note}
         {confirmedAt ? ` | ${new Date(confirmedAt).toLocaleString()}` : ""}
       </Typography>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 1 }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1}
+        alignItems={{ xs: "stretch", sm: "center" }}
+        sx={{ mt: 1 }}
+      >
         <Button
           size="small"
           variant="contained"
           startIcon={<VisibilityOutlinedIcon fontSize="small" />}
           onClick={() => setDeclarationOpen(true)}
-          sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+          sx={{
+            width: { xs: "100%", sm: "auto" },
+            borderRadius: 2,
+            textTransform: "none",
+            fontWeight: 700,
+            whiteSpace: "normal",
+            lineHeight: 1.25,
+          }}
         >
           {copy.declarationButton}
         </Button>
@@ -640,7 +776,14 @@ export function ConsentStatus({ record, onDownloadDocx, downloading = false, lan
             startIcon={downloading ? <CircularProgress size={16} /> : <DescriptionOutlinedIcon />}
             onClick={onDownloadDocx}
             disabled={downloading}
-            sx={{ borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 700,
+              whiteSpace: "normal",
+              lineHeight: 1.25,
+            }}
           >
             {copy.docxButton}
           </Button>
