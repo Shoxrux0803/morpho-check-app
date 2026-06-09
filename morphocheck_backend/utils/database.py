@@ -51,9 +51,12 @@ if _is_sqlite:
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.execute("PRAGMA busy_timeout=5000")
-        cursor.execute("PRAGMA cache_size=-64000")  # ~64MB
+        cursor.execute("PRAGMA busy_timeout=15000")  # 15s — ko'p foydalanuvchi bilan
+        cursor.execute("PRAGMA cache_size=-128000")  # ~128MB shared cache
         cursor.execute("PRAGMA temp_store=MEMORY")
+        cursor.execute("PRAGMA mmap_size=268435456")  # 256MB memory-mapped I/O
+        cursor.execute("PRAGMA wal_autocheckpoint=1000")  # WAL checkpoint every 1000 pages
+        cursor.execute("PRAGMA page_size=4096")  # Optimal page size
         cursor.close()
 else:
     engine = create_engine(

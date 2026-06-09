@@ -757,12 +757,15 @@ def get_current_researcher_or_superadmin(
     if user.role not in ["researcher", "superadmin"]:
         raise HTTPException(status_code=403, detail="Sizda ushbu amalni bajarish uchun ruxsat yo'q.")
     
-    # Update activity
-    user.last_active_at = datetime.utcnow()
-    try:
-        db.commit()
-    except Exception:
-        db.rollback()
+    # Update activity — 5 daqiqada bir marta (har so'rovda commit qilmaslik)
+    _now = datetime.utcnow()
+    _last = getattr(user, "last_active_at", None)
+    if _last is None or (_now - _last).total_seconds() > 300:
+        user.last_active_at = _now
+        try:
+            db.commit()
+        except Exception:
+            db.rollback()
 
     return user
 
@@ -844,25 +847,23 @@ def export_research_xlsx(
         gender=gender,
     )
 
-    records = query.order_by(ResearchRecord.id.desc()).all()
+    # Age filter — SQL orqali (Python loop o'rniga)
     if age_min is not None or age_max is not None:
-        filtered_records = []
-        for record in records:
-            try:
-                if not record.birth_date:
-                    continue
-                b_date = datetime.strptime(record.birth_date, "%Y-%m-%d")
-                e_date_str = record.examination_date if record.examination_date else datetime.now().strftime("%Y-%m-%d")
-                e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
-                age = (e_date - b_date).days / 365.25
-                if age_min is not None and age < age_min:
-                    continue
-                if age_max is not None and age > age_max:
-                    continue
-                filtered_records.append(record)
-            except Exception:
-                continue
-        records = filtered_records
+        if age_min is not None:
+            query = query.filter(
+                ResearchRecord.birth_date.isnot(None),
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25 >= age_min
+            )
+        if age_max is not None:
+            query = query.filter(
+                ResearchRecord.birth_date.isnot(None),
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25 <= age_max
+            )
+
+    # Export limit: xotira uchun maksimal 10000 yozuv
+    records = query.order_by(ResearchRecord.id.desc()).limit(10000).all()
     if not records:
         raise HTTPException(status_code=404, detail="Ma'lumotlar mavjud emas")
 
@@ -1398,32 +1399,31 @@ def list_research_records(
         else:
             query = query.filter(func.lower(ResearchRecord.gender) == gender_norm)
 
-    # Age filter (in Python for accuracy)
+    # Age filter — endi SQL orqali (Python loop o'rniga)
     if age_min is not None or age_max is not None:
-        records = query.order_by(ResearchRecord.id.desc()).all()
-        filtered = []
-        for r in records:
-            try:
-                if not r.birth_date: continue
-                b_date = datetime.strptime(r.birth_date, "%Y-%m-%d")
-                e_date_str = r.examination_date if r.examination_date else datetime.now().strftime("%Y-%m-%d")
-                e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
-                age = (e_date - b_date).days / 365.25
-                if age_min is not None and age < age_min: continue
-                if age_max is not None and age > age_max: continue
-                filtered.append(r)
-            except Exception as e:
-                print(f"Age filter error for record {r.id}: {e}")
-                continue
-                # If date format is invalid, include in list only if no age filter applied
-                if age_min is None and age_max is None:
-                    filtered.append(r)
-        total = len(filtered)
-        start = (page - 1) * page_size
-        items = [research_record_to_dict(record) for record in filtered[start:start + page_size]]
-        if paginated:
-            return {"items": items, "total": total}
-        return [research_record_to_dict(record) for record in filtered]
+        from sqlalchemy import text as sa_text
+        # SQLite: julianday(exam_date) - julianday(birth_date) = kunlar soni
+        # Yil: / 365.25
+        # NULL bo'lsa chiqarib tashlash
+        age_expr = (
+            func.cast(
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25,
+                func.cast(0.0, type_=None).__class__
+            )
+        )
+        if age_min is not None:
+            query = query.filter(
+                ResearchRecord.birth_date.isnot(None),
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25 >= age_min
+            )
+        if age_max is not None:
+            query = query.filter(
+                ResearchRecord.birth_date.isnot(None),
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25 <= age_max
+            )
 
     total = query.order_by(None).count()
     records = (
@@ -1589,26 +1589,22 @@ def export_research_summary_docx(
         date_to=date_to,
         gender=gender,
     )
-    records = query.order_by(ResearchRecord.id.desc()).all()
-
+    # Age filter — SQL orqali (Python loop o'rniga)
     if age_min is not None or age_max is not None:
-        filtered_records = []
-        for record in records:
-            try:
-                if not record.birth_date:
-                    continue
-                b_date = datetime.strptime(record.birth_date, "%Y-%m-%d")
-                e_date_str = record.examination_date if record.examination_date else datetime.now().strftime("%Y-%m-%d")
-                e_date = datetime.strptime(e_date_str, "%Y-%m-%d")
-                age = (e_date - b_date).days / 365.25
-                if age_min is not None and age < age_min:
-                    continue
-                if age_max is not None and age > age_max:
-                    continue
-                filtered_records.append(record)
-            except Exception:
-                continue
-        records = filtered_records
+        if age_min is not None:
+            query = query.filter(
+                ResearchRecord.birth_date.isnot(None),
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25 >= age_min
+            )
+        if age_max is not None:
+            query = query.filter(
+                ResearchRecord.birth_date.isnot(None),
+                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
+                 - func.julianday(ResearchRecord.birth_date)) / 365.25 <= age_max
+            )
+
+    records = query.order_by(ResearchRecord.id.desc()).limit(5000).all()
 
     if not records:
         raise HTTPException(status_code=404, detail="Filterga mos ma'lumotlar topilmadi")

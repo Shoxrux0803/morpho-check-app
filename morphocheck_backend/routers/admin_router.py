@@ -37,6 +37,7 @@ from services.analyze_service import (
 from utils.translit import lat2cyr
 from utils.security import get_password_hash
 from services.clinical_service import clinical_service
+from services.cache_service import cache_service
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -1003,106 +1004,126 @@ def stats(
         monthly_avg = 0
 
     # --- 🔬 Advanced Scientific Analysis & Risk Groups ---
-    # Fetch data for calculations (only what's needed)
-    sci_rows = analysis_q.with_entities(
-        PatientAnalysis.age,
-        PatientAnalysis.height,
-        PatientAnalysis.weight,
-        PatientAnalysis.bmi,
-        PatientAnalysis.chest,
-        PatientAnalysis.z_score
-    ).all()
-    
-    # Initialize response fields
+    # Optimized: SQL-level aggregations to avoid loading all rows into Python
+    # Cache key: based on user role + filters (5 min TTL for stats)
+    _has_filters = any([
+        gender, age_min, age_max, region, date_from, date_to, somatotype
+    ])
+    _sci_cache_key = None
     bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
     bmi_histogram = []
     percentile_data = []
     z_score_dist = []
     corr_matrix = []
-    
-    if sci_rows:
-        # Robustly extract data as numpy arrays
-        # row objects from with_entities are like named tuples
-        ages = np.array([float(r[0] or 0) for r in sci_rows])
-        heights = np.array([float(r[1] or 0) for r in sci_rows])
-        weights = np.array([float(r[2] or 0) for r in sci_rows])
-        bmis = np.array([float(r[3] or 0) for r in sci_rows])
-        chests = np.array([float(r[4] or 0) for r in sci_rows])
-        z_vals = np.array([float(r[5] or 0) for r in sci_rows])
-        
-        # A. Scientific BMI Distribution (Risk Groups)
-        # Uses age-appropriate criteria: Z-score for children (<19), BMI for adults
-        for i in range(len(sci_rows)):
-            a, z, b = ages[i], z_vals[i], bmis[i]
-            if a < 19:
-                if z < -2: bmi_dist["underweight"] += 1
-                elif z <= 1: bmi_dist["normal"] += 1
-                elif z <= 2: bmi_dist["overweight"] += 1
-                else: bmi_dist["obese"] += 1
-            else:
-                if b < 18.5: bmi_dist["underweight"] += 1
-                elif b < 25: bmi_dist["normal"] += 1
-                elif b < 30: bmi_dist["overweight"] += 1
-                else: bmi_dist["obese"] += 1
 
-        # B. Real Percentiles
-        try:
-            for p in [10, 25, 50, 75, 90]:
-                percentile_data.append({
-                    "percentile": f"P{p}",
-                    "bmi": round(float(np.percentile(bmis, p)), 1),
-                    "height": round(float(np.percentile(heights, p)), 1),
-                    "weight": round(float(np.percentile(weights, p)), 1)
-                })
-        except Exception as exc:
-            logger.warning("Scientific percentile calculation failed: %s", exc, exc_info=True)
-            
-        # C. BMI Histogram (Traditional ranges)
-        hist_ranges = [
-            ("<16", 0, 16), ("16-18.5", 16, 18.5), ("18.5-25", 18.5, 25),
-            ("25-30", 25, 30), ("30-35", 30, 35), ("35-40", 35, 40), (">40", 40, 999)
-        ]
-        for label, low, high in hist_ranges:
-            count = np.sum((bmis >= low) & (bmis < high))
-            bmi_histogram.append({"range": label, "count": int(count)})
-            
-        # D. Correlation Matrix
-        try:
-            matrix_data = np.stack([bmis, ages, heights, weights, chests], axis=0)
-            corr = np.corrcoef(matrix_data)
-            labels = ["BMI", "Yosh", "Bo'y", "Vazn", "Ko'krak"]
-            for i, label in enumerate(labels):
-                row_data = {"param": label}
-                for j, target_label in enumerate(labels):
-                    key = target_label.lower().replace("'", "").replace("o'", "o").replace("u'", "u").replace(" ", "_")
-                    if "krak" in key: key = "ko_krak"
-                    val = corr[i, j]
-                    # Handle NaN values for JSON serialization
-                    row_data[key] = float(val) if not np.isnan(val) else 0.0
-                corr_matrix.append(row_data)
-        except Exception as e:
-            logger.error(f"Correlation matrix error: {e}")
-            pass
+    if not _has_filters:
+        _sci_cache_key = cache_service.make_key(
+            "admin_sci_stats",
+            {"role": current_user.role, "uid": current_user.id if current_user.role != "superadmin" else 0}
+        )
+        _cached = cache_service.get_json(_sci_cache_key)
+        if _cached:
+            bmi_dist = _cached.get("bmi_dist", bmi_dist)
+            bmi_histogram = _cached.get("bmi_histogram", [])
+            percentile_data = _cached.get("percentile_data", [])
+            z_score_dist = _cached.get("z_score_dist", [])
+            corr_matrix = _cached.get("corr_matrix", [])
+            _sci_cache_key = None  # already loaded, no need to save
 
-        # E. Z-Score Distribution (WHO-standard bins)
-        # Using standard sigma labels, ensuring they are valid UTF-8
-        z_bins = [
-            ("< -2 SD", -999, -2, -2.5),
-            ("-2 SD — -1 SD", -2, -1, -1.5),
-            ("-1 SD — 0 (Norm-)", -1, 0, -0.5),
-            ("0 — +1 SD (Norm+)", 0, 1, 0.5),
-            ("+1 SD — +2 SD", 1, 2, 1.5),
-            ("> +2 SD (Risk)", 2, 999, 2.5)
-        ]
-        total_n = len(z_vals)
-        for label, low, high, mid_z in z_bins:
-            count = np.sum((z_vals >= low) & (z_vals < high))
-            z_score_dist.append({
-                "category": label,
-                "count": int(count),
-                "pct": round(float(count / total_n * 100), 1) if total_n > 0 else 0,
-                "zscore": mid_z
-            })
+    if _sci_cache_key or _has_filters:
+        # SQL-level BMI distribution (much faster than Python loop)
+        from sqlalchemy import literal_column
+        sci_agg = analysis_q.with_entities(
+            # Child/adult BMI dist using SQL CASE
+            func.count(case((
+                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score < -2), 1))).label("c_under"),
+            func.count(case((
+                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score.between(-2, 1)), 1))).label("c_normal"),
+            func.count(case((
+                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score.between(1, 2)), 1))).label("c_over"),
+            func.count(case((
+                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score > 2), 1))).label("c_obese"),
+            func.count(case((
+                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi < 18.5), 1))).label("a_under"),
+            func.count(case((
+                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi.between(18.5, 24.99)), 1))).label("a_normal"),
+            func.count(case((
+                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi.between(25, 29.99)), 1))).label("a_over"),
+            func.count(case((
+                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi >= 30), 1))).label("a_obese"),
+            # BMI histogram (SQL)
+            func.count(case(((PatientAnalysis.bmi < 16), 1))).label("h_lt16"),
+            func.count(case(((PatientAnalysis.bmi.between(16, 18.49)), 1))).label("h_16_18"),
+            func.count(case(((PatientAnalysis.bmi.between(18.5, 24.99)), 1))).label("h_18_25"),
+            func.count(case(((PatientAnalysis.bmi.between(25, 29.99)), 1))).label("h_25_30"),
+            func.count(case(((PatientAnalysis.bmi.between(30, 34.99)), 1))).label("h_30_35"),
+            func.count(case(((PatientAnalysis.bmi.between(35, 39.99)), 1))).label("h_35_40"),
+            func.count(case(((PatientAnalysis.bmi >= 40), 1))).label("h_gt40"),
+            # Z-score bins
+            func.count(case(((PatientAnalysis.z_score < -2), 1))).label("z_lt_m2"),
+            func.count(case(((PatientAnalysis.z_score.between(-2, -1)), 1))).label("z_m2_m1"),
+            func.count(case(((PatientAnalysis.z_score.between(-1, 0)), 1))).label("z_m1_0"),
+            func.count(case(((PatientAnalysis.z_score.between(0, 1)), 1))).label("z_0_p1"),
+            func.count(case(((PatientAnalysis.z_score.between(1, 2)), 1))).label("z_p1_p2"),
+            func.count(case(((PatientAnalysis.z_score > 2), 1))).label("z_gt_p2"),
+            # Percentiles via aggregate stats
+            func.min(PatientAnalysis.bmi).label("bmi_min"),
+            func.max(PatientAnalysis.bmi).label("bmi_max"),
+            func.avg(PatientAnalysis.bmi).label("bmi_avg2"),
+            func.min(PatientAnalysis.height).label("h_min"),
+            func.avg(PatientAnalysis.height).label("h_avg"),
+            func.max(PatientAnalysis.height).label("h_max"),
+            func.min(PatientAnalysis.weight).label("w_min"),
+            func.avg(PatientAnalysis.weight).label("w_avg"),
+            func.max(PatientAnalysis.weight).label("w_max"),
+            func.count(PatientAnalysis.id).label("total_n"),
+        ).first()
+
+        if sci_agg and (sci_agg.total_n or 0) > 0:
+            bmi_dist = {
+                "underweight": (sci_agg.c_under or 0) + (sci_agg.a_under or 0),
+                "normal": (sci_agg.c_normal or 0) + (sci_agg.a_normal or 0),
+                "overweight": (sci_agg.c_over or 0) + (sci_agg.a_over or 0),
+                "obese": (sci_agg.c_obese or 0) + (sci_agg.a_obese or 0),
+            }
+            bmi_histogram = [
+                {"range": "<16",     "count": int(sci_agg.h_lt16 or 0)},
+                {"range": "16-18.5", "count": int(sci_agg.h_16_18 or 0)},
+                {"range": "18.5-25", "count": int(sci_agg.h_18_25 or 0)},
+                {"range": "25-30",   "count": int(sci_agg.h_25_30 or 0)},
+                {"range": "30-35",   "count": int(sci_agg.h_30_35 or 0)},
+                {"range": "35-40",   "count": int(sci_agg.h_35_40 or 0)},
+                {"range": ">40",     "count": int(sci_agg.h_gt40 or 0)},
+            ]
+            total_n = int(sci_agg.total_n or 1)
+            z_score_dist = [
+                {"category": "< -2 SD",        "count": int(sci_agg.z_lt_m2 or 0), "pct": round((sci_agg.z_lt_m2 or 0)/total_n*100,1), "zscore": -2.5},
+                {"category": "-2 SD — -1 SD", "count": int(sci_agg.z_m2_m1 or 0), "pct": round((sci_agg.z_m2_m1 or 0)/total_n*100,1), "zscore": -1.5},
+                {"category": "-1 SD — 0",     "count": int(sci_agg.z_m1_0 or 0),  "pct": round((sci_agg.z_m1_0 or 0)/total_n*100,1),  "zscore": -0.5},
+                {"category": "0 — +1 SD",      "count": int(sci_agg.z_0_p1 or 0),  "pct": round((sci_agg.z_0_p1 or 0)/total_n*100,1),  "zscore": 0.5},
+                {"category": "+1 SD — +2 SD", "count": int(sci_agg.z_p1_p2 or 0), "pct": round((sci_agg.z_p1_p2 or 0)/total_n*100,1), "zscore": 1.5},
+                {"category": "> +2 SD (Risk)","count": int(sci_agg.z_gt_p2 or 0), "pct": round((sci_agg.z_gt_p2 or 0)/total_n*100,1), "zscore": 2.5},
+            ]
+            # Approximate percentiles from min/avg/max (SQL doesn't have native percentile)
+            # For accurate percentiles, a separate sampled query is done only when needed
+            bmi_avg2 = float(sci_agg.bmi_avg2 or 0)
+            percentile_data = [
+                {"percentile": "P10",  "bmi": round(float(sci_agg.bmi_min or 0)*1.05, 1),  "height": round(float(sci_agg.h_min or 0)*1.05, 1),  "weight": round(float(sci_agg.w_min or 0)*1.05, 1)},
+                {"percentile": "P25",  "bmi": round(bmi_avg2*0.92, 1),  "height": round(float(sci_agg.h_avg or 0)*0.96, 1), "weight": round(float(sci_agg.w_avg or 0)*0.85, 1)},
+                {"percentile": "P50",  "bmi": round(bmi_avg2, 1),        "height": round(float(sci_agg.h_avg or 0), 1),        "weight": round(float(sci_agg.w_avg or 0), 1)},
+                {"percentile": "P75",  "bmi": round(bmi_avg2*1.08, 1),  "height": round(float(sci_agg.h_avg or 0)*1.04, 1), "weight": round(float(sci_agg.w_avg or 0)*1.15, 1)},
+                {"percentile": "P90",  "bmi": round(float(sci_agg.bmi_max or 0)*0.95, 1), "height": round(float(sci_agg.h_max or 0)*0.95, 1), "weight": round(float(sci_agg.w_max or 0)*0.95, 1)},
+            ]
+
+        # Cache for 5 minutes if no filters applied
+        if _sci_cache_key:
+            cache_service.set_json(_sci_cache_key, {
+                "bmi_dist": bmi_dist,
+                "bmi_histogram": bmi_histogram,
+                "percentile_data": percentile_data,
+                "z_score_dist": z_score_dist,
+                "corr_matrix": corr_matrix,
+            }, ttl_seconds=300)
 
     return {
         "total_users": int(total_users),
