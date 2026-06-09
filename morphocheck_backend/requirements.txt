@@ -24,3 +24,5 @@ minio
 boto3
 # Alembic (kelajakda migratsiyalar uchun)
 alembic
+# ClickHouse (3-bosqich: Analytics)
+clickhouse-driver

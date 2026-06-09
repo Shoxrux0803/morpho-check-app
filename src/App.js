@@ -32,6 +32,7 @@ const InfoDetail = lazy(() => import("./pages/InfoDetail"));
 const AuthorPage = lazy(() => import("./pages/AuthorPage"));
 const GuidelinesPage = lazy(() => import("./pages/GuidelinesPage"));
 const PrivacyCompliancePage = lazy(() => import("./pages/PrivacyCompliancePage"));
+const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard")); // 3-bosqich
 
 // 404
 const NotFound = () => (
@@ -205,6 +206,15 @@ function AnimatedRoutes() {
           <Route path="/superadmin" element={<SuperAdminWrapper />} />
           <Route path="/researcher" element={<ResearcherWrapper />} />
           <Route path="/morphoadmin" element={<Navigate to="/superadmin" replace />} />
+          {/* 3-bosqich: Analytics Dashboard */}
+          <Route
+            path="/analytics"
+            element={
+              <PageTransition>
+                <AnalyticsDashboard />
+              </PageTransition>
+            }
+          />
           <Route
             path="*"
             element={

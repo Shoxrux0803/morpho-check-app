@@ -53,6 +53,14 @@ services:
       MINIO_BUCKET_PDF: "${MINIO_BUCKET_PDF:-morphocheck-pdfs}"
       MINIO_BUCKET_IMAGES: "${MINIO_BUCKET_IMAGES:-morphocheck-images}"
       MINIO_SECURE: "${MINIO_SECURE:-false}"
+      # ClickHouse (3-bosqich: Analytics)
+      CLICKHOUSE_HOST: "${CLICKHOUSE_HOST:-clickhouse}"
+      CLICKHOUSE_PORT: "${CLICKHOUSE_HTTP_PORT:-8123}"
+      CLICKHOUSE_DB: "${CLICKHOUSE_DB:-morphocheck_analytics}"
+      CLICKHOUSE_USER: "${CLICKHOUSE_USER:-morpho}"
+      CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD:-morpho_click_2024}"
+      # pgvector (3-bosqich: AI embeddings)
+      PGVECTOR_ENABLED: "${PGVECTOR_ENABLED:-false}"
       # SMTP
       SMTP_HOST: "${SMTP_HOST:-}"
       SMTP_PORT: "${SMTP_PORT:-587}"
@@ -68,6 +76,8 @@ services:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      clickhouse:
         condition: service_healthy
     networks:
       - morphonet
@@ -89,10 +99,12 @@ services:
       - morphonet
 
   # ---------------------------------------------------------------------------
-  # PostgreSQL 15 (2-bosqich uchun TimescaleDB ga almashtiriladi)
+  # 2-BOSQICH: TimescaleDB (PostgreSQL 15 o'rniga — 100% compatible)
+  # TimescaleDB = PostgreSQL + time-series superpowers
+  # Barcha mavjud SQLAlchemy kodi o'zgarishsiz ishlaydi!
   # ---------------------------------------------------------------------------
   db:
-    image: postgres:15-alpine
+    image: timescale/timescaledb:latest-pg15
     container_name: morphocheck_db
     restart: unless-stopped
     environment:
@@ -100,17 +112,51 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-morpho_secret_2024}"
       POSTGRES_DB: "${POSTGRES_DB:-morphocheck}"
       PGDATA: /var/lib/postgresql/data/pgdata
+      TIMESCALEDB_TELEMETRY: "off"
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./morphocheck_backend/scripts/init_postgres.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./morphocheck_backend/scripts/init_timescale.sql:/docker-entrypoint-initdb.d/02_timescale.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-morpho} -d ${POSTGRES_DB:-morphocheck}"]
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 15s
+    networks:
+      - morphonet
+
+  # ---------------------------------------------------------------------------
+  # 3-BOSQICH: ClickHouse (Analytics Dashboard uchun)
+  # OLAP engine — katta hajmli analytics so'rovlari uchun optimallashtirilgan
+  # ---------------------------------------------------------------------------
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: morphocheck_clickhouse
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: "${CLICKHOUSE_DB:-morphocheck_analytics}"
+      CLICKHOUSE_USER: "${CLICKHOUSE_USER:-morpho}"
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+      CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD:-morpho_click_2024}"
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"   # HTTP API (curl, dbeaver)
+      - "${CLICKHOUSE_NATIVE_PORT:-9009}:9000" # Native protocol
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./morphocheck_backend/scripts/init_clickhouse.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - morphonet
 
@@ -163,37 +209,6 @@ services:
     networks:
       - morphonet
 
-# =============================================================================
-# 2-BOSQICH: TimescaleDB (hozircha izohlangan, keyin yoqiladi)
-# =============================================================================
-#  timescale_db:
-#    image: timescale/timescaledb:latest-pg15
-#    container_name: morphocheck_timescale
-#    environment:
-#      POSTGRES_USER: "${POSTGRES_USER:-morpho}"
-#      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-morpho_secret_2024}"
-#      POSTGRES_DB: "${POSTGRES_DB:-morphocheck}"
-#    ports:
-#      - "5433:5432"
-#    volumes:
-#      - timescale_data:/var/lib/postgresql/data
-#    networks:
-#      - morphonet
-
-# =============================================================================
-# 3-BOSQICH: ClickHouse (hozircha izohlangan)
-# =============================================================================
-#  clickhouse:
-#    image: clickhouse/clickhouse-server:latest
-#    container_name: morphocheck_clickhouse
-#    ports:
-#      - "8123:8123"   # HTTP
-#      - "9009:9000"   # Native
-#    volumes:
-#      - clickhouse_data:/var/lib/clickhouse
-#    networks:
-#      - morphonet
-
 volumes:
   db_data:
     driver: local
@@ -203,8 +218,8 @@ volumes:
     driver: local
   uploads_data:
     driver: local
-  # timescale_data:   # 2-bosqich uchun
-  # clickhouse_data:  # 3-bosqich uchun
+  clickhouse_data:
+    driver: local
 
 networks:
   morphonet:
