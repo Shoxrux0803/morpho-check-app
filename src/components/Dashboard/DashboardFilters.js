@@ -155,6 +155,29 @@ FILTER_I18N.tg = {
   apply: "Татбиқ",
 };
 
+FILTER_I18N.tm = {
+  ...FILTER_I18N.uz,
+  title: "Analitik filtrler",
+  subtitle: "Maglumatlary saylamak we analiz etmek",
+  activeFilters: (count) => `${count} filtr isjen`,
+  demographics: "Demografiya",
+  gender: "JYNSY",
+  male: "Erkek",
+  female: "Ayal",
+  all: "Hemmesi",
+  region: "SEBIT (WELAYAT)",
+  allRegions: "Ahli sebitler",
+  biometrics: "Biometriya",
+  ageRange: "YAS ARALYGY",
+  bmiRange: "BMI ARALYGY",
+  scientific: "Ylmy klassifikasiya",
+  somatotype: "SOMATOTIP",
+  allTypes: "Ahli tipler",
+  dateFrom: "SENEDAN",
+  clear: "Arassala",
+  apply: "Ulan",
+};
+
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}

@@ -64,9 +64,9 @@ const ClinicalCMS = () => {
   const handleRefreshCache = async () => {
     try {
       await clinical.refreshCache();
-      toast.success("Kesh yangilandi!");
+      toast.success(t("cacheRefreshed"));
     } catch (err) {
-      toast.error("Keshni yangilashda xatolik: " + err.message);
+      toast.error(`${t("cacheRefreshError")} ${err.message}`);
     }
   };
 
@@ -191,7 +191,7 @@ const ClinicalCMS = () => {
                 <>
                   <Box sx={{ width: "100%", overflowX: "auto" }}>
                     <Grid container spacing={2}>
-                      {["uz", "ru", "en", "kz"].map((lang) => (
+                      {["uz", "ru", "en", "kz", "tm"].map((lang) => (
                         <Grid item xs={12} md={6} key={lang}>
                           <TextField
                             fullWidth

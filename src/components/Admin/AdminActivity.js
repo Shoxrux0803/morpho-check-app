@@ -198,6 +198,39 @@ const ACTIVITY_I18N = {
   },
 };
 
+ACTIVITY_I18N.tm = {
+  typing: "- girizyar...",
+  sec: "sek",
+  min: "min",
+  best: "In gowy",
+  researcher: "Gozlegci",
+  admin: "Admin",
+  today: "Bugun",
+  week: "Hepde",
+  month: "Su ay",
+  monthShort: "Ay",
+  ratingScore: "Reyting baly",
+  perRecord: "1 yazga:",
+  totalEntered: "Jemi girizen:",
+  unit: "sany",
+  activeTime: "In isjen wagty:",
+  lastActivity: "Songky isjenlik:",
+  refreshError: "Maglumatlary tazelemekde yalnyslyk!",
+  title: "Top chart",
+  usersOnline: (count) => `Hazir ${count} ulanyjy online`,
+  lastUpdate: "Songky tazelenme",
+  all: "Hemmesi",
+  admins: "Adminler",
+  researchers: "Gozlegciler",
+  refresh: "Tazele",
+  loading: "Maglumatlar yuklenyar...",
+  bestResult: "In gowy netije",
+  oneRecord: "1 yazgy",
+  noUsers: "Ulanyjylar tapylmady",
+  noAdmins: "Adminler tapylmady",
+  noResearchers: "Gozlegciler tapylmady",
+};
+
 const StatusBadge = ({ status, isTyping, t }) => {
   const colors = {
     online: "#10B981",
@@ -241,7 +274,14 @@ const formatAvgMinutes = (seconds = 0, t = ACTIVITY_I18N.uz) => {
   return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} ${t.min}`;
 };
 
-const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+const localeByLang = {
+  uz: "uz-UZ",
+  tg: "tg-TJ",
+  tm: "tk-TM",
+  ru: "ru-RU",
+  en: "en-US",
+  kz: "kk-KZ",
+};
 
 const getScore = (admin) =>
   (admin.stats_today || 0) * 3 + (admin.stats_week || 0) * 2 + (admin.stats_month || 0);

@@ -298,6 +298,59 @@ ADMIN_DASH_I18N.tg = {
   underweight: "Камвазнӣ",
 };
 
+ADMIN_DASH_I18N.tm = {
+  ...ADMIN_DASH_I18N.uz,
+  welcome: (name) => `Hos geldiniz, ${name || "Admin"}`,
+  subtitle: "Kliniki antropometriya boyunca sahsy analitika paneli",
+  desc: "Ahli girizilen maglumatlaryn analizi. Netijeleri saylamak ucin filtrlerden peydalanyn.",
+  total: "Jemi",
+  avgBmi: "Orta BMI",
+  avgAge: "Orta yas",
+  filtered: "Filtrlenen yagdayda",
+  scientificInsights: "Ylmy netijeler",
+  scientificInsightsSub: "Awtomatik analiz netijeleri",
+  noEnoughData: "Maglumat yeterlik dal...",
+  totalMine: "Menin jemi girizenlerim",
+  allTime: "Ahli wagt boyunca",
+  todayEntered: "Bugun girizilenler",
+  todaySession: "Bugunki seans",
+  groupWide: "Topar boyunca",
+  weeklyGrowth: "Hepdelik osus",
+  thisWeek: "su hepde",
+  years: "yas",
+  riskRegions: "Risk in kop cykan sebitler",
+  riskRegionsSub: "BMI ya-da Z-score risk serhedinden cykan yazgylar",
+  from: "icinden",
+  risk: "risk",
+  dailyDynamics: "Gunluk dinamika",
+  dailyDynamicsSub: "Songky 14 gundaki girizilen analizler",
+  noResult: "Netije tapylmady",
+  entered: "Girizilenler",
+  genderDistribution: "Jyns boyunca paylanys",
+  genderDistributionSub: "Erkek/ayal gatnasygy",
+  ageGroups: "Yas toparlary",
+  ageGroupsSub: "Patientler yasy boyunca",
+  patients: "Patientler",
+  bmiStatus: "BMI yagdayy",
+  bmiStatusSub: "Saglyk toparlary boyunca",
+  unit: "yazgy",
+  footer: "Professional analitika ulgamy",
+  male: "Erkek",
+  female: "Ayal",
+  unknown: "Namalum",
+  normal: "Kada",
+  overweight: "Artyk agram",
+  obese: "Semizlik",
+  underweight: "Agram yetmezciligi",
+  insightNormal:
+    "Topardaky patientlerin kopusi (60%+) kadaly agrama eye, bu gowy gorkeziji.",
+  insightRisk: "Uns: toparda artyk agram we semizlik payy yokary (40%+).",
+  insightBmi: (bmi) =>
+    `Orta BMI (${bmi}) kadadan biraz yokary. Onuni alys carelerini guyclendirmek maslahat berilyar.`,
+  insightGender: (male, female) =>
+    `Kontingent duzumi: ${male}% erkekler we ${female}% ayallar.`,
+};
+
 const COLORS = {
   primary: "#0f766e",
   secondary: "#2563eb",
@@ -314,6 +367,7 @@ const PIE_COLORS = ["#3b82f6", "#f43f5e", "#14b8a6"];
 const localeByLang = {
   uz: "uz-UZ",
   tg: "tg-TJ",
+  tm: "tk-TM",
   ru: "ru-RU",
   en: "en-US",
   kz: "kk-KZ",
@@ -341,7 +395,7 @@ const REGION_LABELS_RU = {
 };
 
 const getRegionLabel = (value, lang) => {
-  if (lang === "en" || lang === "ru") return getLocalizedLocationLabel(value, lang, 1);
+  if (["en", "ru", "tm"].includes(lang)) return getLocalizedLocationLabel(value, lang, 1);
   const key = String(value || "")
     .toLowerCase()
     .replace(/[‘’`ʻʼ]/g, "'")

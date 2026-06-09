@@ -90,6 +90,7 @@ const PAGE_LABELS = {
   uz: { scientificAnalysis: "Ilmiy Tahlil" },
   ru: { scientificAnalysis: "Научный анализ" },
   en: { scientificAnalysis: "Scientific Analysis" },
+  tm: { scientificAnalysis: "Ylmy analiz" },
   tg: { scientificAnalysis: "Таҳлили илмӣ" },
   kz: { scientificAnalysis: "Ғылыми талдау" },
   ky: { scientificAnalysis: "Илимий талдоо" },

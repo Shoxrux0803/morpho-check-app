@@ -483,6 +483,14 @@ const localizedSuffix = (base, level, lang) => {
     return title;
   }
 
+  if (lang === "tm") {
+    if (clean === "toshkent shahri" || /shahri$/i.test(base)) return `${ascii} saheri`;
+    if (/respublikasi$/i.test(base)) return `${ascii} Respublikasy`;
+    if (level === 1) return `${ascii} welayaty`;
+    if (level === 2) return `${ascii} etraby`;
+    return title;
+  }
+
   if (lang === "ru") {
     const cyrillic = latinToCyrillicUz(title);
     if (clean === "toshkent shahri" || /shahri$/i.test(base)) return `город ${cyrillic}`;
@@ -778,9 +786,90 @@ MAP_I18N.tg = {
   patients: "Беморон",
   risk: "Хавф",
 };
+MAP_I18N.tm = {
+  ...MAP_I18N.uz,
+  country: "Ozbegistan",
+  title: "Sebitleyin analiz kartasy",
+  subtitle: "Welayat, etrap we mahalla boyunca analizleri, adminleri we gozlegcileri yzarlap gorun.",
+  region: "Welayat",
+  district: "Etrap",
+  mahalla: "Mahalla",
+  analyticsLoading: "Analitika yuklenyar",
+  analyses: "Analiz",
+  admin: "Admin",
+  admins: "Admin",
+  researcher: "Gozlegci",
+  nextLayer: "Indiki gatlak",
+  area: "Meydan",
+  riskSignal: "Kliniki risk signaly",
+  scientificProfile: "Ylmy kliniki profil",
+  clinicalIndexProfile: "Kliniki indeks profili",
+  clinicalIndexSub: "Normalizirlenen BMI, Z-score we risk gorkezijileri",
+  bmiDistribution: "BMI paylanysy",
+  regionSample: (count) => `Sebit boyunca n=${count}`,
+  zBands: "BMI Z-score aralyklary",
+  zBandsSub: "WHO LMS boyunca kliniki toparlama",
+  analyticalIndicators: "Analitik gorkezijiler",
+  activityStructure: "Isjenlik duzulisi",
+  operationalAnalysis: "Operasion analiz",
+  contact: "Habarlasmak",
+  satelliteOn: "Google satellite kartany ac",
+  satelliteOff: "Adaty sebitleyin karta dolan",
+  layerLoading: "Sebit gatlagy yuklenyar",
+  patientExists: "Patient bar",
+  patientDataTooltip: (name, count) =>
+    count > 0 ? `${name}: ${count} patient maglumaty bar` : `${name}: patient maglumaty yok`,
+  selectedBack: "Saylanan sebite dolan",
+  coverageIndex: "Gursaw indeksi",
+  contactPoints: "Aragatnasyk nokatlary",
+  riskRecords: "Risk yazgylary",
+  lowerLayer: "Asaky gatlak",
+  analysesShare: "Analiz payy",
+  adminActivity: "Admin isjenligi",
+  researcherBase: "Gozlegci bazasy",
+  regionalDensity: "Sebitleyin dykyzlyk",
+  role: "Kimligi",
+  userId: "User ID",
+  roleField: "Rol",
+  email: "Email",
+  phone: "Telefon",
+  location: "Sebit",
+  address: "Takyk salgy",
+  coordinate: "Koordinata",
+  status: "Yagday",
+  registered: "Hasaba alnan",
+  lastActivity: "Songky isjenlik",
+  todayEntries: "Bugunki yazgylar",
+  monthEntries: "Aylyk yazgylar",
+  totalEntries: "Jemi yazgylar",
+  avgTime: "Orta wagt",
+  mostActiveTime: "In isjen wagty",
+  regionMatch: "Sebit gabat gelmesi",
+  matched: "Gabat geldi",
+  fallback: "Fallback nokady",
+  notSpecified: "Gorkezilmedik",
+  regionNotSpecified: "Sebit gorkezilmedik",
+  sameAreaPin: "Su sebitdaki pin",
+  chatError: "Chat dine admin ya-da gozlegci user pinleri ucin acylyar",
+  chatOpened: (name) => `${name} bilen chat acyldy`,
+  chatPrompt: "Chat penjiresi arkaly admin ya-da gozlegci bilen habarlashyp bilersiniz",
+  underweight: "Agram yetmezciligi",
+  normal: "Kada",
+  overweight: "Artyk agram",
+  obese: "Semizlik",
+  coverage: "Gursaw",
+  totalPatients: "Jemi patientler",
+  avgBmi: "Orta BMI",
+  riskCount: "Risk yazgylary",
+  noData: "Maglumat yok",
+  patients: "Patientler",
+  risk: "Risk",
+};
+
 const localeByLang = {
   uz: "uz-UZ",
   tg: "tg-TJ",
+  tm: "tk-TM",
   ru: "ru-RU",
   en: "en-US",
   kz: "kk-KZ",

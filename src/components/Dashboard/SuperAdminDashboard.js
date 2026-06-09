@@ -305,6 +305,59 @@ DASH_I18N.tg = {
   underweight: "Камвазнӣ",
 };
 
+DASH_I18N.tm = {
+  ...DASH_I18N.uz,
+  title: "SuperAdmin analitika merkezi",
+  subtitle: "Sebitler, adminler, kliniki risk we aylyk dinamika boyunca yeke-tak gozegcilik paneli",
+  analyses: "Analizler",
+  admins: "Adminler",
+  today: "Bugun",
+  totalAnalyses: "Jemi analizler",
+  allTime: "Ahli wagt boyunca",
+  todayAnalyses: "Bugunki analizler",
+  enteredToday: "Bugun girizilen",
+  weeklyGrowth: "Hepdelik osus",
+  thisWeek: "su hepde",
+  totalAdmins: "Jemi adminler",
+  simple: "adaty",
+  avgBmi: "Orta BMI",
+  systemWide: "Ulgam boyunca",
+  riskRegions: "Risk in kop cykan sebitler",
+  riskRegionsSub: "BMI ya-da Z-score risk serhedinden cykan yazgylar",
+  riskFrom: "icinden",
+  risk: "risk",
+  monthlyDynamics: "Aylyk dinamika",
+  monthlyDynamicsSub: "Songky 12 ay boyunca analizler sany",
+  analysesCount: "Analizler sany",
+  genderDistribution: "Jyns boyunca paylanys",
+  genderDistributionSub: "Erkek / ayal gatnasygy",
+  ageGroups: "Yas toparlary",
+  ageGroupsSub: "Patientler yasy boyunca",
+  patientsCount: "Patientler sany",
+  somatotypeDistribution: "Somatotip paylanysy",
+  somatotypeDistributionSub: "Beden duzulisi klassifikasiýasy",
+  count: "Sany",
+  topRegions: "Welayatlar boyunca top-10",
+  topRegionsSub: "In kop analiz girizilen sebitler",
+  bmiStatusDistribution: "BMI yagdayy paylanysy",
+  bmiStatusDistributionSub: "Saglyk toparlary boyunca",
+  noData: "Maglumat yok",
+  patient: "patient",
+  avgRadar: "Orta somatotip radary",
+  avgRadarSub: "Ulgam boyunca orta somatometrik gorkezijiler",
+  average: "Orta",
+  adminsDistribution: "Adminler paylanysy",
+  adminsDistributionSub: "Ulgam ulanyjylary rollar boyunca",
+  lastUpdate: "Songky tazelenme",
+  male: "Erkek",
+  female: "Ayal",
+  unknown: "Namalum",
+  normal: "Kada",
+  overweight: "Artyk agram",
+  obese: "Semizlik",
+  underweight: "Agram yetmezciligi",
+};
+
 // ==== PALETTE ====
 const COLORS = {
   primary: "#0f766e",
@@ -318,7 +371,14 @@ const COLORS = {
 };
 const PIE_COLORS = [COLORS.info, COLORS.rose, COLORS.teal, COLORS.warning];
 const AGE_COLORS = ["#0f766e", "#2563eb", "#14b8a6", "#f59e0b", "#64748b"];
-const localeByLang = { uz: "uz-UZ", tg: "tg-TJ", ru: "ru-RU", en: "en-US", kz: "kk-KZ" };
+const localeByLang = {
+  uz: "uz-UZ",
+  tg: "tg-TJ",
+  tm: "tk-TM",
+  ru: "ru-RU",
+  en: "en-US",
+  kz: "kk-KZ",
+};
 
 const REGION_LABELS_RU = {
   "toshkent shahri": "г. Ташкент",
@@ -360,7 +420,7 @@ const normalizeRegionKey = (value = "") =>
     .trim();
 
 const getRegionLabel = (value, lang) => {
-  if (lang === "en" || lang === "ru") return getLocalizedLocationLabel(value, lang, 1);
+  if (["en", "ru", "tm"].includes(lang)) return getLocalizedLocationLabel(value, lang, 1);
   const key = normalizeRegionKey(value);
   return REGION_LABELS_RU[key] || value || "-";
 };
