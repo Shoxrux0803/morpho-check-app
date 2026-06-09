@@ -1,62 +1,211 @@
 version: "3.9"
 
+# =============================================================================
+# MorphoCheck Pro — Docker Compose
+# 1-bosqich: PostgreSQL + Redis + MinIO
+# 2-bosqich (keyingi): TimescaleDB
+# 3-bosqich (keyingi): ClickHouse + pgvector
+# =============================================================================
+
 services:
+  # ---------------------------------------------------------------------------
+  # Backend (FastAPI)
+  # ---------------------------------------------------------------------------
   backend:
     build:
       context: ./morphocheck_backend
       dockerfile: Dockerfile
     container_name: morphocheck_backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./morphocheck_backend:/app
+      - uploads_data:/app/uploads
     environment:
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-morpho}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}@db:5432/${POSTGRES_DB:-morphocheck}"
-      SECRET_KEY: "${SECRET_KEY:?Set SECRET_KEY in your environment}"
+      DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER:-morpho}:${POSTGRES_PASSWORD:-morpho_secret_2024}@db:5432/${POSTGRES_DB:-morphocheck}"
+      SECRET_KEY: "${SECRET_KEY:-change_me_in_production_at_least_32_chars}"
       ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440
-      DEBUG: "false"
-      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
-      ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      DEBUG: "${DEBUG:-false}"
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}"
+      ALLOWED_HOSTS: "${ALLOWED_HOSTS:-localhost,127.0.0.1,testserver}"
+      # AI
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      # Cache / Redis
       CACHE_BACKEND: "${CACHE_BACKEND:-redis}"
       REDIS_URL: "${REDIS_URL:-redis://redis:6379/0}"
       CACHE_TTL_SECONDS: "${CACHE_TTL_SECONDS:-900}"
       CACHE_MEMORY_MAX_ITEMS: "${CACHE_MEMORY_MAX_ITEMS:-512}"
+      # DB Pool
+      DB_POOL_SIZE: "${DB_POOL_SIZE:-10}"
+      DB_MAX_OVERFLOW: "${DB_MAX_OVERFLOW:-20}"
+      DB_POOL_RECYCLE: "${DB_POOL_RECYCLE:-300}"
+      DB_POOL_TIMEOUT: "${DB_POOL_TIMEOUT:-30}"
+      DB_INIT_RETRIES: "30"
+      DB_INIT_DELAY: "2"
+      UVICORN_WORKERS: "${UVICORN_WORKERS:-4}"
+      PORT: "8000"
+      # MinIO / S3
+      MINIO_ENDPOINT: "${MINIO_ENDPOINT:-minio:9000}"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY:-morpho_minio}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY:-morpho_minio_secret_2024}"
+      MINIO_BUCKET_PDF: "${MINIO_BUCKET_PDF:-morphocheck-pdfs}"
+      MINIO_BUCKET_IMAGES: "${MINIO_BUCKET_IMAGES:-morphocheck-images}"
+      MINIO_SECURE: "${MINIO_SECURE:-false}"
+      # SMTP
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME: "${SMTP_USERNAME:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
+      SMTP_USE_TLS: "${SMTP_USE_TLS:-true}"
+      # Superadmin
+      MORPHOCHECK_SUPERADMIN_EMAIL: "${MORPHOCHECK_SUPERADMIN_EMAIL:-}"
+      MORPHOCHECK_SUPERADMIN_PASSWORD: "${MORPHOCHECK_SUPERADMIN_PASSWORD:-}"
+      MORPHOCHECK_SUPERADMIN_NAME: "${MORPHOCHECK_SUPERADMIN_NAME:-Super Admin}"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - morphonet
 
+  # ---------------------------------------------------------------------------
+  # Frontend (React)
+  # ---------------------------------------------------------------------------
   frontend:
     build:
       context: .
       dockerfile: ./Dockerfile
     container_name: morphocheck_frontend
+    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT:-3000}:80"
     depends_on:
       - backend
+    networks:
+      - morphonet
 
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 15 (2-bosqich uchun TimescaleDB ga almashtiriladi)
+  # ---------------------------------------------------------------------------
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     container_name: morphocheck_db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: "${POSTGRES_USER:-morpho}"
-      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-morpho_secret_2024}"
       POSTGRES_DB: "${POSTGRES_DB:-morphocheck}"
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./morphocheck_backend/scripts/init_postgres.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-morpho} -d ${POSTGRES_DB:-morphocheck}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - morphonet
 
+  # ---------------------------------------------------------------------------
+  # Redis 7 (Cache va rate-limiting uchun)
+  # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: morphocheck_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --loglevel warning
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - morphonet
+
+  # ---------------------------------------------------------------------------
+  # MinIO (PDF va rasm saqlash — S3-compatible)
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: morphocheck_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ACCESS_KEY:-morpho_minio}"
+      MINIO_ROOT_PASSWORD: "${MINIO_SECRET_KEY:-morpho_minio_secret_2024}"
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - morphonet
+
+# =============================================================================
+# 2-BOSQICH: TimescaleDB (hozircha izohlangan, keyin yoqiladi)
+# =============================================================================
+#  timescale_db:
+#    image: timescale/timescaledb:latest-pg15
+#    container_name: morphocheck_timescale
+#    environment:
+#      POSTGRES_USER: "${POSTGRES_USER:-morpho}"
+#      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-morpho_secret_2024}"
+#      POSTGRES_DB: "${POSTGRES_DB:-morphocheck}"
+#    ports:
+#      - "5433:5432"
+#    volumes:
+#      - timescale_data:/var/lib/postgresql/data
+#    networks:
+#      - morphonet
+
+# =============================================================================
+# 3-BOSQICH: ClickHouse (hozircha izohlangan)
+# =============================================================================
+#  clickhouse:
+#    image: clickhouse/clickhouse-server:latest
+#    container_name: morphocheck_clickhouse
+#    ports:
+#      - "8123:8123"   # HTTP
+#      - "9009:9000"   # Native
+#    volumes:
+#      - clickhouse_data:/var/lib/clickhouse
+#    networks:
+#      - morphonet
 
 volumes:
   db_data:
+    driver: local
   redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  uploads_data:
+    driver: local
+  # timescale_data:   # 2-bosqich uchun
+  # clickhouse_data:  # 3-bosqich uchun
+
+networks:
+  morphonet:
+    driver: bridge

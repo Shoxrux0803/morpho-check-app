@@ -129,9 +129,13 @@ def on_startup():
     ensure_schema_updates()
 
 def ensure_schema_updates():
-    """Small additive schema fixes for deployments without migrations."""
+    """Small additive schema fixes for deployments without Alembic migrations.
+    PostgreSQL va SQLite ikkalasida ham ishlaydi.
+    """
     from sqlalchemy import inspect, text
 
+    is_pg = engine.dialect.name == "postgresql"
+    is_sqlite = engine.dialect.name == "sqlite"
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
 
@@ -148,65 +152,80 @@ def ensure_schema_updates():
         conn.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_sql})"))
 
     def _drop_index(conn, index_name: str):
-        conn.execute(text(f"DROP INDEX IF EXISTS {index_name}"))
+        """PostgreSQL da tablename talab qilinmaydi, SQLite ham shu."""
+        if is_pg:
+            conn.execute(text(f"DROP INDEX IF EXISTS {index_name}"))
+        else:
+            conn.execute(text(f"DROP INDEX IF EXISTS {index_name}"))
 
+    def _pg_type(sqlite_type: str) -> str:
+        """SQLite tiplarini PostgreSQL ekvivalentiga aylantirish."""
+        mapping = {
+            "INTEGER DEFAULT 0 NOT NULL": "INTEGER DEFAULT 0 NOT NULL",
+            "DATETIME": "TIMESTAMP WITH TIME ZONE",
+            "FLOAT": "DOUBLE PRECISION",
+        }
+        return mapping.get(sqlite_type, sqlite_type)
+
+    def _add_column_if_missing(table_name: str, column_name: str, column_type: str):
+        if table_name not in table_names:
+            return
+        if column_name in _columns(table_name):
+            return
+        pg_type = _pg_type(column_type) if is_pg else column_type
+        if is_pg:
+            # PostgreSQL: ADD COLUMN IF NOT EXISTS
+            with engine.begin() as conn:
+                conn.execute(text(
+                    f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {pg_type}"
+                ))
+        else:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    f"ALTER TABLE {table_name} ADD COLUMN {column_name} {pg_type}"
+                ))
+
+    # -- patient_analysis ustunlari --
     if "patient_analysis" in table_names:
-        existing = {col["name"] for col in inspector.get_columns("patient_analysis")}
-        missing = []
-        if "doctor_note" not in existing:
-            missing.append(("doctor_note", "TEXT"))
-        if "mahalla" not in existing:
-            missing.append(("mahalla", "VARCHAR(150)"))
-        if "parents_phone" not in existing:
-            missing.append(("parents_phone", "VARCHAR(50)"))
-        consent_columns = {
-            "consent_confirmed": "INTEGER DEFAULT 0 NOT NULL",
-            "consent_guardian_name": "VARCHAR(255)",
-            "consent_guardian_relationship": "VARCHAR(100)",
-            "consent_guardian_phone": "VARCHAR(50)",
-            "consent_confirmed_at": "DATETIME",
-            "consent_policy_version": "VARCHAR(50)",
-        }
-        missing.extend((name, sql_type) for name, sql_type in consent_columns.items() if name not in existing)
-        if missing:
-            with engine.begin() as conn:
-                for column_name, column_type in missing:
-                    conn.execute(text(f"ALTER TABLE patient_analysis ADD COLUMN {column_name} {column_type}"))
+        for col, typ in [
+            ("doctor_note", "TEXT"),
+            ("mahalla", "VARCHAR(150)"),
+            ("parents_phone", "VARCHAR(50)"),
+            ("consent_confirmed", "INTEGER DEFAULT 0 NOT NULL"),
+            ("consent_guardian_name", "VARCHAR(255)"),
+            ("consent_guardian_relationship", "VARCHAR(100)"),
+            ("consent_guardian_phone", "VARCHAR(50)"),
+            ("consent_confirmed_at", "DATETIME"),
+            ("consent_policy_version", "VARCHAR(50)"),
+        ]:
+            _add_column_if_missing("patient_analysis", col, typ)
 
+    # -- research_records ustunlari --
     if "research_records" in table_names:
-        existing = {col["name"] for col in inspector.get_columns("research_records")}
-        consent_columns = {
-            "consent_confirmed": "INTEGER DEFAULT 0 NOT NULL",
-            "consent_guardian_name": "VARCHAR(255)",
-            "consent_guardian_relationship": "VARCHAR(100)",
-            "consent_guardian_phone": "VARCHAR(50)",
-            "consent_confirmed_at": "DATETIME",
-            "consent_policy_version": "VARCHAR(50)",
-        }
-        missing = [(name, sql_type) for name, sql_type in consent_columns.items() if name not in existing]
-        if missing:
-            with engine.begin() as conn:
-                for name, sql_type in missing:
-                    conn.execute(text(f"ALTER TABLE research_records ADD COLUMN {name} {sql_type}"))
+        for col, typ in [
+            ("consent_confirmed", "INTEGER DEFAULT 0 NOT NULL"),
+            ("consent_guardian_name", "VARCHAR(255)"),
+            ("consent_guardian_relationship", "VARCHAR(100)"),
+            ("consent_guardian_phone", "VARCHAR(50)"),
+            ("consent_confirmed_at", "DATETIME"),
+            ("consent_policy_version", "VARCHAR(50)"),
+        ]:
+            _add_column_if_missing("research_records", col, typ)
 
+    # -- users ustunlari --
     if "users" in table_names:
-        user_columns = {
-            "district": "VARCHAR(100)",
-            "mahalla": "VARCHAR(150)",
-            "address": "VARCHAR(255)",
-            "latitude": "FLOAT",
-            "longitude": "FLOAT",
-            "research_topic": "VARCHAR(500)",
-            "research_type": "VARCHAR(100)",
-            "research_area": "VARCHAR(255)",
-            "scientific_supervisor": "VARCHAR(200)",
-        }
-        existing = {col["name"] for col in inspector.get_columns("users")}
-        missing = [(name, sql_type) for name, sql_type in user_columns.items() if name not in existing]
-        if missing:
-            with engine.begin() as conn:
-                for name, sql_type in missing:
-                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {name} {sql_type}"))
+        for col, typ in [
+            ("district", "VARCHAR(100)"),
+            ("mahalla", "VARCHAR(150)"),
+            ("address", "VARCHAR(255)"),
+            ("latitude", "FLOAT"),
+            ("longitude", "FLOAT"),
+            ("research_topic", "VARCHAR(500)"),
+            ("research_type", "VARCHAR(100)"),
+            ("research_area", "VARCHAR(255)"),
+            ("scientific_supervisor", "VARCHAR(200)"),
+        ]:
+            _add_column_if_missing("users", col, typ)
 
     with engine.begin() as conn:
         indexes = [
@@ -241,10 +260,15 @@ def ensure_schema_updates():
         for table_name, index_name, columns in indexes:
             _create_index(conn, table_name, index_name, columns)
 
+        # is_deleted = NULL ni 0 ga tuzatish
+        null_val = "FALSE" if is_pg else "0"
         for table_name in ("patient_analysis", "research_records", "users"):
             if table_name in table_names and "is_deleted" in _columns(table_name):
-                conn.execute(text(f"UPDATE {table_name} SET is_deleted = 0 WHERE is_deleted IS NULL"))
+                conn.execute(text(
+                    f"UPDATE {table_name} SET is_deleted = {null_val} WHERE is_deleted IS NULL"
+                ))
 
+        # Eski indekslarni olib tashlash
         for index_name in (
             "idx_patient_gender",
             "idx_patient_age",
@@ -261,8 +285,8 @@ def ensure_schema_updates():
         ):
             _drop_index(conn, index_name)
 
-        if engine.dialect.name == "sqlite":
-            conn.execute(text("ANALYZE"))
+        # ANALYZE — PostgreSQL va SQLite da ishlaydi
+        conn.execute(text("ANALYZE"))
 
 # ---- Routers (barchasi /api/ ostida) ----
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])

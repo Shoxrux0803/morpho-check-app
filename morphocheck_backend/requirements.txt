@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 sqlalchemy
 asyncpg
@@ -19,3 +19,8 @@ scikit-learn
 google-generativeai
 pandas
 redis
+# MinIO / S3 uchun
+minio
+boto3
+# Alembic (kelajakda migratsiyalar uchun)
+alembic
