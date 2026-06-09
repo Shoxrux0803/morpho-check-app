@@ -1,156 +1,135 @@
-# MorphoCheck Pro
+# 🧬 MorphoCheck Pro
 
-MorphoCheck Pro is a clinical anthropometry platform for entering patient measurements, calculating BMI and growth indicators, managing clinical recommendations, and generating PDF/DOCX reports.
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01?style=for-the-badge&logo=clickhouse&logoColor=black)
+![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-## Stack
+**MorphoCheck Pro** is an advanced, AI-powered clinical anthropometry platform. It provides precise patient measurements, calculates BMI and complex growth indicators, and manages clinical recommendations. Designed for both clinical use and scientific research, it leverages a highly scalable modern microservices architecture.
 
-- Frontend: React, CRACO, Material UI, Tailwind CSS
-- Backend: FastAPI, SQLAlchemy, Pydantic, slowapi
-- Database: SQLite for local development, PostgreSQL-ready through SQLAlchemy
-- Reports: ReportLab, python-docx, openpyxl
-- Deployment: Docker or separate frontend/backend services
+---
 
-## Repository Layout
+## ✨ Key Features
 
-```text
-morpho-check-app/
-|-- morphocheck_backend/       FastAPI application
-|   |-- main.py                Backend ASGI app
-|   |-- models/                Pydantic and SQLAlchemy models
-|   |-- routers/               API routers
-|   |-- services/              Business logic and report generation
-|   |-- utils/                 Database, security and audit helpers
-|-- src/                       React application
-|-- public/                    Static frontend assets
-|-- Dockerfile                 Frontend container image
-|-- docker-compose.yml         Local compose stack
-|-- package.json               Frontend dependencies and scripts
+- 🏥 **Clinical Anthropometry:** Detailed body measurements, calculating Z-scores, BMI, and ideal weight specific to age/gender norms.
+- 🤖 **AI-Powered Diagnostics:** Integration with Machine Learning models and Google Gemini/GenAI for generating personalized tips and treatment advice.
+- 📊 **Real-time Analytics Dashboard:** Aggregates and analyzes massive amounts of patient data instantly using **ClickHouse** and beautiful frontend charts.
+- ⏱️ **Time-Series Tracking:** Built-in **TimescaleDB** capabilities for analyzing historical growth trends and patient progress tracking.
+- 📑 **Automated Reporting:** Generate ready-to-print DOCX and PDF medical reports with a single click.
+- 🔒 **Role-based Access:** Multi-tier authentication supporting Superadmins, Researchers, and ordinary Admins.
+
+---
+
+## 🏗 System Architecture
+
+MorphoCheck Pro operates on a modern, decoupled architecture allowing for massive scalability.
+
+```mermaid
+graph TD
+    Client([💻 React Frontend]) -->|REST API| API(⚡ FastAPI Backend)
+    
+    API -->|Primary Storage| PG[(🐘 PostgreSQL + TimescaleDB)]
+    API -->|OLAP / Analytics| CH[(📈 ClickHouse)]
+    API -->|Session & Cache| Redis[(🔴 Redis)]
+    API -->|Object Storage| S3[(📦 MinIO S3)]
+    
+    PG -->|Sync / Timeseries| CH
 ```
 
-## Requirements
+---
 
-- Node.js 18 or newer
-- npm 9 or newer
-- Python 3.11 or newer
-- Docker and Docker Compose for container deployment
+## 💻 Technology Stack
 
-## Configuration
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React 18, TailwindCSS, Framer Motion | Dynamic, Glassmorphism UI with smooth animations and responsive design. |
+| **Backend** | Python 3.11+, FastAPI | Extremely fast ASGI web framework for building the core RESTful APIs. |
+| **Primary DB** | PostgreSQL 15, SQLAlchemy | Relational data handling with ACID compliance. |
+| **Time-Series** | TimescaleDB | Extension for PostgreSQL optimizing historical metrics. |
+| **Analytics** | ClickHouse | Lightning-fast column-oriented DBMS for the analytics dashboard. |
+| **Caching** | Redis | In-memory key-value store to speed up frequent queries. |
+| **Storage** | MinIO | S3-compatible object storage for PDFs, images, and backups. |
 
-Create backend environment files from the examples:
+---
 
-```powershell
-Copy-Item .env.example .env
-Copy-Item morphocheck_backend\.env.example morphocheck_backend\.env
-```
+## 🚀 Quick Start (Recommended: Docker)
 
-Important backend variables:
+The easiest and recommended way to start MorphoCheck Pro in a production-like environment is via Docker Compose.
 
-```env
-API_PREFIX=/api
-DEBUG=false
-SECRET_KEY=change-this-in-production
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-ALLOWED_HOSTS=localhost,127.0.0.1,testserver
-DATABASE_URL=sqlite:///./morphocheck.db
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Shoxrux0803/morpho-check-app.git
+   cd morpho-check-app
+   ```
 
-Production notes:
+2. **Configure Environment:**
+   Copy the example environment files and adjust them if necessary.
+   ```bash
+   cp morphocheck_backend/.env.example morphocheck_backend/.env
+   ```
 
-- Use a strong unique `SECRET_KEY`.
-- Set explicit `CORS_ORIGINS`; wildcard origins are rejected by the app.
-- Set `ALLOWED_HOSTS` to the real hostnames served by the API.
-- Prefer PostgreSQL for multi-user production deployments.
-- Keep `.env`, database files, generated reports, uploads and cache folders out of Git.
+3. **Start the Infrastructure:**
+   ```bash
+   docker-compose up -d
+   ```
+   *This single command will pull and start PostgreSQL, ClickHouse, MinIO, Redis, the FastAPI backend, and the React frontend.*
 
-## Local Backend Setup
+4. **Access the Application:**
+   - Frontend Web App: `http://localhost:3000`
+   - Backend API Docs: `http://localhost:8000/docs`
+   - MinIO Console: `http://localhost:9001`
 
-```powershell
+---
+
+## 🛠 Local Development (Fallback: SQLite)
+
+If you cannot install Docker, you can run the application locally using SQLite as a fallback. Note that advanced features like ClickHouse Analytics and TimescaleDB will be disabled in this mode.
+
+### 1. Backend Setup
+```bash
 cd morphocheck_backend
 python -m venv venv
+# Activate virtual environment (Windows)
 .\venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
+# Install dependencies
 pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The API will be available at `http://localhost:8000`.
-
-Health check:
-
-```powershell
-Invoke-RestMethod http://localhost:8000/api/health
+Create a `.env` file in `morphocheck_backend/` with the following:
+```env
+DATABASE_URL=sqlite:///./morphocheck.db
+CACHE_BACKEND=memory
+MINIO_SECURE=false
 ```
 
-## Local Frontend Setup
+Start Uvicorn:
+```bash
+python -m uvicorn main:app --reload --port 8000
+```
 
-In a second terminal:
-
-```powershell
+### 2. Frontend Setup
+In a new terminal:
+```bash
+cd ../ # Back to project root
 npm install
 npm start
 ```
 
-The frontend will be available at `http://localhost:3000`. Development API traffic is proxied to `http://localhost:8000`.
+---
 
-## Docker Compose
+## ⚙️ Environment Variables
 
-```powershell
-docker compose up --build
-```
+Critical variables located in `morphocheck_backend/.env`:
 
-After startup, verify the backend:
+- `DATABASE_URL`: Connection string. Use `postgresql+psycopg2://...` for Production or `sqlite:///./morphocheck.db` for local tests.
+- `SECRET_KEY`: Keep this secure! Used for JWT signing.
+- `GEMINI_API_KEY`: Required for generating AI parent tips.
+- `CACHE_BACKEND`: `redis` (recommended) or `memory`.
 
-```powershell
-Invoke-RestMethod http://localhost:8000/api/health
-```
+---
 
-## Database Initialization
+## 🛡️ License & Contact
 
-The backend creates missing tables on startup through `init_db`. For existing SQLite deployments, `ensure_schema_updates()` applies small additive schema fixes.
-
-Recommended production flow:
-
-1. Back up the current database.
-2. Deploy the new backend image or service.
-3. Start the API and verify `/api/health`.
-4. Run a smoke test for login, analysis creation and PDF generation.
-
-## Common Commands
-
-```powershell
-# Frontend production build
-npm run build
-
-# Frontend tests
-npm test -- --watchAll=false
-
-# Backend syntax check
-cd morphocheck_backend
-python -m compileall .
-
-# Run backend directly from repository root
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-
-## Deployment Checklist
-
-- Configure production `.env` values.
-- Use HTTPS at the reverse proxy.
-- Forward only required ports.
-- Persist database and uploaded files outside the container filesystem.
-- Configure backups for the production database.
-- Review generated report storage and retention policy.
-- Confirm `CORS_ORIGINS` and `ALLOWED_HOSTS` match production domains.
-- Run health, authentication, analysis and PDF smoke tests after release.
-
-## Maintenance
-
-Generated files should not be committed:
-
-- `*.db`, `*.sqlite`, `*.sqlite3`
-- `__pycache__/`, `*.pyc`
-- `build/`, `dist/`, `out/`
-- generated test reports and temporary DOCX/PDF files
-- uploads and local backup files unless explicitly required
-
-Use `git status --short` before every release and keep runtime data outside the repository.
+Developed for MorphoCheck platform. For support, issues, or contributions, please contact the repository administrator. All rights reserved.
