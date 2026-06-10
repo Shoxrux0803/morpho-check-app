@@ -114,6 +114,57 @@ METRIC_LABELS = {
 }
 
 
+SUMMARY_I18N["ky"] = {
+    **SUMMARY_I18N["uz"],
+    "title": "MORPHOCHECK ИЛИМИЙ-СТАТИСТИКАЛЫК DOCX ОТЧЕТУ",
+    "report_date": "Отчет датасы",
+    "summary": "1. Жалпы жыйынтык",
+    "scope": "Камтуу",
+    "all_researchers": "Бардык изилдөөчүлөрдүн маалыматтары",
+    "researcher_scope": "Изилдөөчүгө тиешелүү маалыматтар",
+    "researcher": "Изилдөөчү",
+    "total_records": "Жалпы жазуулар",
+    "age_range": "Жаш аралыгы",
+    "avg_age": "Орточо жаш",
+    "active_filters": "Активдүү фильтрлер",
+    "none": "Жок",
+    "indicator": "Көрсөткүч",
+    "value": "Маани",
+    "demographics": "2. Демографиялык инфографикалар",
+    "gender": "Жыныс",
+    "region": "Аймак",
+    "visual_share": "Визуалдык үлүш",
+    "stats": "3. Автоматтык статистикалык талдоо таблицалары",
+    "z_group": "BMI Z-score тобу",
+    "groups": "4. Топтор боюнча талдоо",
+    "male_n": "Эркек N",
+    "male_mean": "Эркек mean",
+    "female_n": "Аял N",
+    "female_mean": "Аял mean",
+    "diff": "Айырма",
+    "share": "Үлүш",
+    "correlation": "5. Корреляция жана регрессия",
+    "model": "Модель",
+    "not_enough": "Маалымат жетишсиз",
+    "equation": "Салмак = {intercept} + {slope} x Бой",
+    "note_title": "6. Илимий түшүндүрмө",
+    "note": "Отчет автоматтык түрдө түзүлдү. Таблицаларда сыпаттамалык статистика, жыныстар боюнча t-test, аймактар боюнча ANOVA, корреляция матрицасы жана бой-салмак регрессия модели берилген.",
+    "years": "жаш",
+}
+
+METRIC_LABELS["ky"] = {
+    "chest_standing_height": "Бой (тик)",
+    "weight": "Салмак",
+    "bmi": "BMI",
+    "chest_circumference_pause": "Көкүрөк айланасы",
+    "waist_circumference": "Бел айланасы",
+    "head_circumference": "Баш айланасы",
+    "thigh_circumference": "Сан айланасы",
+    "calf_circumference": "Балтыр айланасы",
+    "dynamometry": "Динамометрия",
+}
+
+
 SUMMARY_I18N["tm"] = {
     **SUMMARY_I18N["uz"],
     "title": "MORPHOCHECK YLMY-STATISTIK DOCX HASABATY",
@@ -211,10 +262,28 @@ def _percentile(values, p):
 def _gender_label(gender, lang="uz"):
     value = str(gender or "").lower()
     if "girl" in value or "ayol" in value or "qiz" in value or "female" in value:
-        return "Gyz/Ayal" if lang == "tm" else ("Духтар/Зан" if lang == "tg" else "Qiz/Ayol")
+        if lang == "tm":
+            return "Gyz/Ayal"
+        if lang == "tg":
+            return "Духтар/Зан"
+        if lang == "ky":
+            return "Кыз/Аял"
+        return "Qiz/Ayol"
     if "boy" in value or "erkak" in value or "o'g" in value or "og" in value or "male" in value:
-        return "Oglan/Erkek" if lang == "tm" else ("Писар/Мард" if lang == "tg" else "O'g'il/Erkak")
-    return "Namalum" if lang == "tm" else ("Номаълум" if lang == "tg" else "Noma'lum")
+        if lang == "tm":
+            return "Oglan/Erkek"
+        if lang == "tg":
+            return "Писар/Мард"
+        if lang == "ky":
+            return "Эркек/Бала"
+        return "O'g'il/Erkak"
+    if lang == "tm":
+        return "Namalum"
+    if lang == "tg":
+        return "Номаълум"
+    if lang == "ky":
+        return "Белгисиз"
+    return "Noma'lum"
 
 
 def _age(record):

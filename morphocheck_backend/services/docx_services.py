@@ -635,6 +635,13 @@ DOCX_LABELS["ky"] = {
     "doctor_parent": "Адис / ата-эне",
     "cm": "см",
     "kg": "кг",
+    "no": "Катар №",
+    "id_code": "ID код",
+    "area_type": "Аймак түрү",
+    "mii_label": "MII (интеграция индекси)",
+    "consultant": "Кеңешчи",
+    "cm": "см",
+    "kg": "кг",
 }
 DOCX_LABELS["tg"] = {
     **DOCX_LABELS["uz"],

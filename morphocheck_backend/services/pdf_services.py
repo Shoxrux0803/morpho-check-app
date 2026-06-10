@@ -358,6 +358,13 @@ PDF_LABELS["ky"] = {
     "adv_checkups": "Текшерүүлөр",
     "adv_general": "Жалпы сунуш",
     "detailed_advices_label": "КОШУМЧА КӨРСӨТМӨЛӨР:",
+    "hmai": "HMAI (ыңгайлашуу)",
+    "mii": "MII (интеграция)",
+    "adi": "ADI (дисгармония)",
+    "shoulder_ratio": "Ийин пропорциясы",
+    "shoulder_note": "Бойго салыштырмалуу",
+    "thigh_ratio": "Сан пропорциясы",
+    "thigh_note": "Бойго салыштырмалуу",
 }
 def setup_font():
     try:
