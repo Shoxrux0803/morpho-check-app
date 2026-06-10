@@ -123,6 +123,38 @@ const REGION_LABELS_TG = {
   "surxondaryo viloyati": "вилояти Сурхондарё",
 };
 
+const REGION_LABELS_KZ = {
+  "toshkent shahri": "Ташкент қаласы",
+  toshkent: "Ташкент облысы",
+  "toshkent viloyati": "Ташкент облысы",
+  qoraqalpogiston: "Қарақалпақстан Республикасы",
+  "qoraqalpog'iston": "Қарақалпақстан Республикасы",
+  "qoraqalpog'iston respublikasi": "Қарақалпақстан Республикасы",
+  andijon: "Әндіжан облысы",
+  "andijon viloyati": "Әндіжан облысы",
+  buxoro: "Бұхара облысы",
+  "buxoro viloyati": "Бұхара облысы",
+  fargona: "Ферғана облысы",
+  "farg'ona": "Ферғана облысы",
+  "farg'ona viloyati": "Ферғана облысы",
+  jizzax: "Жызақ облысы",
+  "jizzax viloyati": "Жызақ облысы",
+  xorazm: "Хорезм облысы",
+  "xorazm viloyati": "Хорезм облысы",
+  namangan: "Наманган облысы",
+  "namangan viloyati": "Наманган облысы",
+  navoiy: "Науаи облысы",
+  "navoiy viloyati": "Науаи облысы",
+  qashqadaryo: "Қашқадарья облысы",
+  "qashqadaryo viloyati": "Қашқадарья облысы",
+  samarqand: "Самарқанд облысы",
+  "samarqand viloyati": "Самарқанд облысы",
+  sirdaryo: "Сырдарья облысы",
+  "sirdaryo viloyati": "Сырдарья облысы",
+  surxondaryo: "Сурхандарья облысы",
+  "surxondaryo viloyati": "Сурхандарья облысы",
+};
+
 export const getLocalizedLocationLabel = (value, lang, level = 1) => {
   if (!value) return "-";
   const key = normalizeLocationKey(value);
@@ -159,6 +191,18 @@ export const getLocalizedLocationLabel = (value, lang, level = 1) => {
     if (/respublikasi$/i.test(value)) return `Republic of ${ascii}`;
     if (/viloyati$/i.test(value) || level === 1) return `${ascii} region`;
     if (/tumani$/i.test(value) || level === 2) return `${ascii} district`;
+    return clean;
+  }
+
+  if (lang === "kz") {
+    const clean = stripUzSuffix(value);
+    const ascii = transliterateUzToAscii(value);
+    if (REGION_LABELS_KZ[key]) return REGION_LABELS_KZ[key];
+    if (key === "toshkent shahri" || /shahri$/i.test(value)) return `${ascii} қаласы`;
+    if (/respublikasi$/i.test(value)) return `${ascii} Республикасы`;
+    if (/viloyati$/i.test(value) || level === 1) return `${ascii} облысы`;
+    if (/tumani$/i.test(value) || level === 2) return `${ascii} ауданы`;
+    if (/mahallasi$/i.test(value) || level === 3) return `${clean} махалласы`;
     return clean;
   }
 
