@@ -22,7 +22,7 @@ redis
 # MinIO / S3 uchun
 minio
 boto3
-# Alembic (kelajakda migratsiyalar uchun)
+# Alembic — DB migratsiyalarini versiyalash uchun (faol ishlatiladi)
 alembic
 # ClickHouse (3-bosqich: Analytics)
 clickhouse-driver
