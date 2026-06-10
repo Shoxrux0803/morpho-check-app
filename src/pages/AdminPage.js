@@ -709,6 +709,7 @@ export default function AdminPage() {
     try {
       const blob = await AdminApi.analyses.exportXlsx({
         ...dashFilters,
+        lang,
       });
 
       const url = window.URL.createObjectURL(blob);

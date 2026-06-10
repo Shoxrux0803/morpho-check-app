@@ -871,105 +871,107 @@ def export_research_xlsx(
     ws = wb.active
     ws.title = "Research Data"
 
-    # 1. Заголовки (Кириллица)
+    from utils.i18n_export import get_research_header
+
+    # 1. Заголовки (Локализованные)
     headers_map = [
-        ("Сана", "created_at"),
-        ("ID", "id"),
-        ("Ф.И.Ш.", "full_name"),
-        ("Мактаб/Муассаса", "school_name"),
-        ("Аҳоли пункти", "settlement"),
-        ("Туғилган жойи", "birth_place"),
-        ("Туғилган санаси", "birth_date"),
+        (get_research_header(export_lang, "created_at"), "created_at"),
+        (get_research_header(export_lang, "id"), "id"),
+        (get_research_header(export_lang, "full_name"), "full_name"),
+        (get_research_header(export_lang, "school_name"), "school_name"),
+        (get_research_header(export_lang, "settlement"), "settlement"),
+        (get_research_header(export_lang, "birth_place"), "birth_place"),
+        (get_research_header(export_lang, "birth_date"), "birth_date"),
         (get_research_child_age_export_header(export_lang), "child_age"),
         (get_research_age_group_export_header(export_lang), "age_group"),
-        ("Жинси", "gender"),
-        ("Отасининг миллати", "father_nationality"),
-        ("Онасининг миллати", "mother_nationality"),
-        ("Қачондан бери яшайди", "living_since"),
-        ("Рўйхатга олинган сана", "enrolled_date"),
-        ("Яшаш шароити", "living_conditions"),
-        ("Меҳнат режими", "labor_regime"),
-        ("Ўтказилган касалликлар", "past_illnesses"),
-        ("Болалар сони", "children_count"),
-        ("Бола нечанчи", "child_order"),
-        ("Озиқланиш тури", "feeding_type"),
-        ("Ота-она никоҳи", "parents_marriage"),
-        ("Она соғлиғи", "mother_health_status"),
-        ("Текширув санаси", "examination_date"),
+        (get_research_header(export_lang, "gender"), "gender"),
+        (get_research_header(export_lang, "father_nationality"), "father_nationality"),
+        (get_research_header(export_lang, "mother_nationality"), "mother_nationality"),
+        (get_research_header(export_lang, "living_since"), "living_since"),
+        (get_research_header(export_lang, "enrolled_date"), "enrolled_date"),
+        (get_research_header(export_lang, "living_conditions"), "living_conditions"),
+        (get_research_header(export_lang, "labor_regime"), "labor_regime"),
+        (get_research_header(export_lang, "past_illnesses"), "past_illnesses"),
+        (get_research_header(export_lang, "children_count"), "children_count"),
+        (get_research_header(export_lang, "child_order"), "child_order"),
+        (get_research_header(export_lang, "feeding_type"), "feeding_type"),
+        (get_research_header(export_lang, "parents_marriage"), "parents_marriage"),
+        (get_research_header(export_lang, "mother_health_status"), "mother_health_status"),
+        (get_research_header(export_lang, "examination_date"), "examination_date"),
         
         # I Показатели физического развития
-        ("Пастки оёқ-қўл (см)", "lower_leg_total"),
-        ("Олд юқори ёнбош ўсимтасидан (см)", "lower_leg_spina_iliaca"),
-        ("Қовуқ устидан (см)", "lower_leg_symphysion"),
-        ("Пастки оёқ-қўл узунлиги (см)", "lower_leg_length"),
-        ("Болдир баландлиги (см)", "tibiale_height"),
-        ("Чанноқ кенглиги (см)", "pelvic_width"),
-        ("Сон узунлиги (см)", "thigh_length"),
-        ("Сон айланаси (см)", "thigh_circumference"),
-        ("Болдир узунлиги (см)", "calf_length"),
-        ("Болдир айланаси (см)", "calf_circumference"),
-        ("Оёқ кафти узунлиги (см)", "foot_length"),
-        ("Тишлар сони", "teeth_count"),
-        ("Ҳайз бошланиши", "menstruation_start"),
+        (get_research_header(export_lang, "lower_leg_total"), "lower_leg_total"),
+        (get_research_header(export_lang, "lower_leg_spina_iliaca"), "lower_leg_spina_iliaca"),
+        (get_research_header(export_lang, "lower_leg_symphysion"), "lower_leg_symphysion"),
+        (get_research_header(export_lang, "lower_leg_length"), "lower_leg_length"),
+        (get_research_header(export_lang, "tibiale_height"), "tibiale_height"),
+        (get_research_header(export_lang, "pelvic_width"), "pelvic_width"),
+        (get_research_header(export_lang, "thigh_length"), "thigh_length"),
+        (get_research_header(export_lang, "thigh_circumference"), "thigh_circumference"),
+        (get_research_header(export_lang, "calf_length"), "calf_length"),
+        (get_research_header(export_lang, "calf_circumference"), "calf_circumference"),
+        (get_research_header(export_lang, "foot_length"), "foot_length"),
+        (get_research_header(export_lang, "teeth_count"), "teeth_count"),
+        (get_research_header(export_lang, "menstruation_start"), "menstruation_start"),
 
         # II Определение формы черепа
-        ("Бош суяги бўйлама (см)", "skull_longitudinal"),
-        ("Бош суяги кўндаланг (см)", "skull_transverse"),
-        ("Бош айланаси (см)", "head_circumference"),
-        ("Пешона кўндаланг (см)", "forehead_transverse"),
-        ("Бош суяги баландлиги (см)", "skull_height"),
-        ("Бош суяги асоси узунлиги (см)", "skull_base_length"),
-        ("Бош суяги асоси кенглиги (см)", "skull_base_width"),
+        (get_research_header(export_lang, "skull_longitudinal"), "skull_longitudinal"),
+        (get_research_header(export_lang, "skull_transverse"), "skull_transverse"),
+        (get_research_header(export_lang, "head_circumference"), "head_circumference"),
+        (get_research_header(export_lang, "forehead_transverse"), "forehead_transverse"),
+        (get_research_header(export_lang, "skull_height"), "skull_height"),
+        (get_research_header(export_lang, "skull_base_length"), "skull_base_length"),
+        (get_research_header(export_lang, "skull_base_width"), "skull_base_width"),
 
         # Лицо
-        ("Юз кенглиги (см)", "face_bizygomatic"),
-        ("Пастки жағ кенглиги (см)", "face_bigonial"),
-        ("Юз морфологик баландлиги (см)", "face_morphological_height"),
-        ("Юз физиогномик баландлиги (см)", "face_physiognomic_height"),
-        ("Бурун баландлиги (см)", "nose_height"),
-        ("Бурун кенглиги (см)", "nose_width"),
-        ("Кўз ташқи бурчаклари (см)", "outer_canthal_width"),
-        ("Кўз ички бурчаклари (см)", "inner_canthal_width"),
-        ("Лаблар шиллиқ қавати (см)", "lips_mucosa_height"),
-        ("Оғиз кенглиги (см)", "mouth_width"),
+        (get_research_header(export_lang, "face_bizygomatic"), "face_bizygomatic"),
+        (get_research_header(export_lang, "face_bigonial"), "face_bigonial"),
+        (get_research_header(export_lang, "face_morphological_height"), "face_morphological_height"),
+        (get_research_header(export_lang, "face_physiognomic_height"), "face_physiognomic_height"),
+        (get_research_header(export_lang, "nose_height"), "nose_height"),
+        (get_research_header(export_lang, "nose_width"), "nose_width"),
+        (get_research_header(export_lang, "outer_canthal_width"), "outer_canthal_width"),
+        (get_research_header(export_lang, "inner_canthal_width"), "inner_canthal_width"),
+        (get_research_header(export_lang, "lips_mucosa_height"), "lips_mucosa_height"),
+        (get_research_header(export_lang, "mouth_width"), "mouth_width"),
 
         # Грудь
-        ("Бўйи (тик) (см)", "chest_standing_height"),
-        ("Бўйи (ўтирган) (см)", "chest_sitting_height"),
-        ("Вазн (кг)", "weight"),
-        ("Гавда узунлиги (см)", "trunk_length"),
-        ("Тана узунлиги (см)", "torso_length"),
-        ("Кўкрак айланаси (пауза) (см)", "chest_circumference_pause"),
-        ("Кўкрак айланаси (нафас) (см)", "chest_circumference_inhale"),
-        ("Кўкрак айланаси (чиқариш) (см)", "chest_circumference_exhale"),
-        ("Бел айланаси (см)", "waist_circumference"),
-        ("Қорин айланаси (см)", "abdomen_circumference"),
-        ("Юқори сегмент узунлиги (см)", "upper_segment_length"),
-        ("Кўкрак кўндаланг (см)", "chest_transverse_diameter"),
-        ("Кўкрак олд-орқа (см)", "chest_anteroposterior_diameter"),
-        ("Кўкрак баландлиги (см)", "chest_height"),
+        (get_research_header(export_lang, "chest_standing_height"), "chest_standing_height"),
+        (get_research_header(export_lang, "chest_sitting_height"), "chest_sitting_height"),
+        (get_research_header(export_lang, "weight"), "weight"),
+        (get_research_header(export_lang, "trunk_length"), "trunk_length"),
+        (get_research_header(export_lang, "torso_length"), "torso_length"),
+        (get_research_header(export_lang, "chest_circumference_pause"), "chest_circumference_pause"),
+        (get_research_header(export_lang, "chest_circumference_inhale"), "chest_circumference_inhale"),
+        (get_research_header(export_lang, "chest_circumference_exhale"), "chest_circumference_exhale"),
+        (get_research_header(export_lang, "waist_circumference"), "waist_circumference"),
+        (get_research_header(export_lang, "abdomen_circumference"), "abdomen_circumference"),
+        (get_research_header(export_lang, "upper_segment_length"), "upper_segment_length"),
+        (get_research_header(export_lang, "chest_transverse_diameter"), "chest_transverse_diameter"),
+        (get_research_header(export_lang, "chest_anteroposterior_diameter"), "chest_anteroposterior_diameter"),
+        (get_research_header(export_lang, "chest_height"), "chest_height"),
 
         # Верхняя конечность
-        ("Қўл узунлиги (см)", "arm_length"),
-        ("Елка узунлиги (см)", "shoulder_length"),
-        ("Елка кенглиги (см)", "shoulder_width"),
-        ("Елка айланаси (тинч) (см)", "shoulder_circumference_rest"),
-        ("Елка айланаси (букилган) (см)", "shoulder_circumference_flexed"),
-        ("Билак узунлиги (см)", "forearm_length"),
-        ("Қўл кафти узунлиги (см)", "hand_length"),
-        ("Динамометрия (кг)", "dynamometry"),
+        (get_research_header(export_lang, "arm_length"), "arm_length"),
+        (get_research_header(export_lang, "shoulder_length"), "shoulder_length"),
+        (get_research_header(export_lang, "shoulder_width"), "shoulder_width"),
+        (get_research_header(export_lang, "shoulder_circumference_rest"), "shoulder_circumference_rest"),
+        (get_research_header(export_lang, "shoulder_circumference_flexed"), "shoulder_circumference_flexed"),
+        (get_research_header(export_lang, "forearm_length"), "forearm_length"),
+        (get_research_header(export_lang, "hand_length"), "hand_length"),
+        (get_research_header(export_lang, "dynamometry"), "dynamometry"),
 
         # Толщина подкожно-жировой клетчатки
-        ("Трицепс ёғ (мм)", "fat_triceps"),
-        ("Бицепс ёғ (мм)", "fat_biceps"),
-        ("Курак ости ёғ (мм)", "fat_subscapular"),
-        ("Ёнбош ёғ (мм)", "fat_iliac"),
-        ("Тизза ости ёғ (мм)", "fat_popliteal"),
+        (get_research_header(export_lang, "fat_triceps"), "fat_triceps"),
+        (get_research_header(export_lang, "fat_biceps"), "fat_biceps"),
+        (get_research_header(export_lang, "fat_subscapular"), "fat_subscapular"),
+        (get_research_header(export_lang, "fat_iliac"), "fat_iliac"),
+        (get_research_header(export_lang, "fat_popliteal"), "fat_popliteal"),
     ]
 
     if current_user.role == "superadmin":
-        headers_map.insert(2, ("Киритган изланувчи", "created_by_name"))
-        headers_map.insert(3, ("Киритган email", "created_by_email"))
+        headers_map.insert(2, (get_research_header(export_lang, "created_by_name"), "created_by_name"))
+        headers_map.insert(3, (get_research_header(export_lang, "created_by_email"), "created_by_email"))
 
     headers_map.extend(get_research_index_export_headers(export_lang))
 
@@ -1018,7 +1020,12 @@ def export_research_xlsx(
             elif field_name in {"child_age", "age_group"} or field_name in index_values:
                 display_val = val if val is not None else "-"
             elif isinstance(val, str):
-                display_val = lat2cyr(val) if val else "-"
+                from services.ky_localization import report_text
+                localized = report_text(val, export_lang) if val else "-"
+                if export_lang in ["en", "tm"]:
+                    display_val = localized
+                else:
+                    display_val = lat2cyr(localized) if localized != "-" else "-"
             elif val is None:
                 display_val = "-"
             else:

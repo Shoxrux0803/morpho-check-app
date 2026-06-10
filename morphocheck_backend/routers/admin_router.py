@@ -1164,6 +1164,7 @@ def export_analyses_xlsx(
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
     region: Optional[str] = Query(None),
+    lang: Optional[str] = Query("uz"),
 ):
     base = db.query(PatientAnalysis)
     
@@ -1195,20 +1196,8 @@ def export_analyses_xlsx(
     ws = wb.active
     ws.title = "Analyses"
 
-    # Sarlavhalar (To'liq o'zbekcha kirill yozuvida, texnik qismlar lotinda)
-    headers = [
-        "Сана", "ID код", "Ф.И.Ш.", "Жинс", "Ёш", "Вилоят", "Туман", "Манзил", "Киритди",
-        "Бўй (см)", "Вазн (кг)", "ИАВ", "Ҳолат", "Соматотип",
-        "Идеал Вазн (кг)", "Фарқ (кг)", "Вазн Оралиғи",
-        "Кўкрак айл.", "Бел айл.", "Бош айл.",
-        "Елка кенг.", "Елка проп.", "Сон айл.", "Сон проп.",
-        "HMAI", "MII", "ADI",
-        "TBW (%)", "Ёғ (%)", "Ёғ (кг)",
-        "Мускул (кг)", "Суяк (кг)",
-        "ACM (%)", "Висцерал Ёғ", "Тана узунлиги (см)"
-    ]
-    
-    headers.append("Ota-ona telefon raqami")
+    from utils.i18n_export import get_admin_headers
+    headers = get_admin_headers(lang)
 
     # Header styling
     header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
@@ -1232,7 +1221,7 @@ def export_analyses_xlsx(
             analysis = calc_full_bmi(
                 build_patient_data_from_analysis(r),
                 all_settings=all_settings,
-                lang="uz",
+                lang=lang,
             )
         except Exception as e:
             logger.error(f"Error calculating analysis for XLSX row (id={r.id}): {e}")
@@ -1244,30 +1233,55 @@ def export_analyses_xlsx(
             vazn_range = f"{rng.get('min', '-')}-{rng.get('max', '-')}"
         indices = analysis.get("indices", {}) or {}
 
-        # Yosh formati
+        age_labels = {
+            "uz": ("y.", "o.", "k."),
+            "ru": ("г.", "м.", "д."),
+            "en": ("y.", "m.", "d."),
+            "kk": ("ж.", "а.", "к."),
+            "tg": ("с.", "м.", "р.")
+        }
+        y_label, m_label, d_label = age_labels.get(lang, ("й.", "о.", "к."))
+        if lang in ["uz", "en", "kk", "tg"]:
+            y_label, m_label, d_label = age_labels.get(lang, ("y.", "o.", "k."))
+            if lang == "uz":
+                # Provide fallback cyrillic if needed, but let's just stick to the labels
+                pass
+
         age_m = getattr(r, "age_months", 0) or 0
         age_d = getattr(r, "age_days", 0) or 0
-        age_str = f"{r.age} й."
+        age_str = f"{r.age} {y_label}"
         if age_m:
-            age_str += f", {age_m} о."
+            age_str += f", {age_m} {m_label}"
         if age_d:
-            age_str += f", {age_d} к."
+            age_str += f", {age_d} {d_label}"
+
+        from services.ky_localization import report_text
+        def _fmt(val):
+            if not val: return "-"
+            val_str = str(val)
+            # Apply language-specific localization first
+            localized = report_text(val_str, lang)
+            # English and Turkmen use Latin alphabet
+            if lang in ["en", "tm"]:
+                return localized
+            # Others use Cyrillic
+            return lat2cyr(localized)
 
         vals = [
             r.created_at.strftime("%Y-%m-%d") if r.created_at else "-",
             r.id_code or "-",
-            lat2cyr(r.name) if r.name else "-",
-            lat2cyr(r.gender) if r.gender else "-",
+            _fmt(r.name),
+            _fmt(r.gender),
             age_str,
-            lat2cyr(r.region) if r.region else "-",
-            lat2cyr(r.district) if r.district else "-",
-            lat2cyr(r.address) if r.address else "-",
-            lat2cyr(r.created_by.name) if r.created_by and r.created_by.name else "-",
+            _fmt(r.region),
+            _fmt(r.district),
+            _fmt(r.address),
+            _fmt(r.created_by.name if r.created_by else ""),
             r.height or 0,
             r.weight or 0,
             analysis.get("bmi", r.bmi or "-"),
-            lat2cyr(analysis.get("bmi_category", "-")),
-            lat2cyr(analysis.get("somatotype", r.somatotype or "-")),
+            _fmt(analysis.get("bmi_category", "-")),
+            _fmt(analysis.get("somatotype", r.somatotype or "-")),
             analysis.get("ideal_weight", "-"),
             analysis.get("weight_diff", "-"),
             vazn_range,

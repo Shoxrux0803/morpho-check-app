@@ -1046,7 +1046,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
   const handleExportXlsx = async () => {
     try {
-      const blob = await ResearchApi.exportXlsx({ lang });
+      const blob = await ResearchApi.exportXlsx({ ...appliedFilter, lang });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
