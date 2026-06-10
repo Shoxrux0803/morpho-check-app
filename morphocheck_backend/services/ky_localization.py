@@ -248,6 +248,84 @@ _TG_REPLACEMENTS = [
     (r"suzish", "шиноварӣ"),
 ]
 
+_TM_REPLACEMENTS = [
+    (r"Noma'?lum", "Namalum"),
+    (r"Ma'?lumot yo'?q", "Maglumat yok"),
+    (r"Toshkent shahri", "Toshkent saheri"),
+    (r"\bToshkent\b", "Toshkent"),
+    (r"\bShayxontohur\b", "Shayhontohur"),
+    (r"\bshahri\b", "saheri"),
+    (r"\bshahar\b", "saher"),
+    (r"\btumani\b", "etraby"),
+    (r"\btuman\b", "etrap"),
+    (r"\bviloyati\b", "welayaty"),
+    (r"\bmahalla\b", "mahalla"),
+    (r"Vazn yetishmovchiligi \(yaqqol\)", "Agram yetmezciligi (aydyn)"),
+    (r"Vazn yetishmovchiligi", "Agram yetmezciligi"),
+    (r"Ortiqcha vazn", "Artyk agram"),
+    (r"Semizlik", "Semizlik"),
+    (r"Me'?yor \(15[-–]85[-–]sentil\)", "Kada (15-85-sentil)"),
+    (r"Me'?yor", "Kada"),
+    (r"Tavsiya etilgan oraliq", "Maslahat berlen aralyk"),
+    (r"Idealdan og'?ish", "Idealden gyssarma"),
+    (r"Somatotip", "Somatotip"),
+    (r"\bastenik\b", "astenik"),
+    (r"\bnormostenik\b", "normostenik"),
+    (r"\bgiperstenik\b", "giperstenik"),
+    (r"\bmos_emas\b", "gabat gelenok"),
+    (r"\bmos\b", "gabat gelyar"),
+    (r"\bmavjud\b", "bar"),
+    (r"\byoq\b", "yok"),
+    (r"muhitga nisbatan optimal morfologik moslashuv", "dasky gurshawa garanda optimal morfologik uygunlasma"),
+    (r"akseleratsiya / yuqori morfologik rivojlanish", "akselerasiya / yokary morfologik osus"),
+    (r"moslashuv stresi yoki rivojlanishning sekinlashishi", "uygunlasma stresi ya-da osusin hayallamagy"),
+    (r"normal o'?rtacha morfologik muvozanat", "kadaly orta morfologik denagramlylyk"),
+    (r"somatik komponentlarning yuqori integratsiyasi", "somatik komponentlerin yokary integrasiyasy"),
+    (r"past morfologik nomutanosiblik", "pes morfologik nomutanosiplik"),
+    (r"uyg'?un rivojlanish", "uygun osus"),
+    (r"o'?rtacha nomutanosiblik", "orta nomutanosiplik"),
+    (r"yuqori darajadagi nomutanosiblik", "yokary derejeli nomutanosiplik"),
+    (r"morfologik-kompozitsion xavf past", "morfologik-kompozision howp pes"),
+    (r"morfologik-kompozitsion xavf o'?rtacha", "morfologik-kompozision howp orta"),
+    (r"morfologik-kompozitsion xavf yuqori", "morfologik-kompozision howp yokary"),
+    (r"O'?rtacha xavf \(Adipoz fenotip bosqichi\)", "Orta howp (adipoz fenotip tapgyry)"),
+    (r"Yuqori xavf \(Ortiqcha yog'? va mushak yetishmovchiligi\)", "Yokary howp (artyk yag we muskul yetmezciligi)"),
+    (r"Low risk", "Pes howp"),
+    (r"Moderate risk \(Adipose phenotype stage\)", "Orta howp (adipoz fenotip tapgyry)"),
+    (r"High risk \(Fat excess and muscle deficit\)", "Yokary howp (artyk yag we muskul yetmezciligi)"),
+    (r"moslashuv", "uygunlasma"),
+    (r"integratsiya", "integrasiya"),
+    (r"nomutanosiblik", "nomutanosiplik"),
+    (r"Xavf past", "Howp pes"),
+    (r"Xavf o'?rtacha", "Howp orta"),
+    (r"Xavf yuqori", "Howp yokary"),
+    (r"Sportga yo'?naltirish \(taxminiy\)", "Sporta ugrukdyrmak (takmynan)"),
+    (r"Qo'?shimcha yo'?nalishlar", "Gosmaya ugurlar"),
+    (r"\bSabab\b", "Sebap"),
+    (r"tana ko'?rsatkichlari muvozanatli", "beden gorkezijileri denagramly"),
+    (r"yengil vazn va nisbatan nozik tana tuzilishi", "yenil agram we incerak beden gurlusy"),
+    (r"morfologik uyg'?unlik yaxshi", "morfologik uygunlyk gowy"),
+    (
+        r"Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin",
+        "Ahyrky saylawda caganyn gyzyklanmasy, trenerin bahasy we lukmanyn rugsady goz onunde tutulmalydyr",
+    ),
+    (r"Pediatr yoki parhezshunos \(dietolog\) ko'?rigi tavsiya etiladi", "Pediatr ya-da dietolog gorugi maslahat berilyar"),
+    (r"Vazn yetishmasligi sabablarini aniqlash zarur", "Agram yetmezciliginin sebaplerini anyklamak zerur"),
+    (r"Yuqori kaloriyali va oqsillarga boy ovqatlanish tartibiga o'?ting", "Yokary kaloriyaly we beloga bay iymitlenme tertibine gecin"),
+    (r"Kuniga 5-6 marta kichik porsiyalarda ovqatlaning", "Gunde 5-6 gezek kici porsiyalarda iymitlenin"),
+    (r"Bolada normostenik tip: uyg'?un rivojlanmoqda", "Cagada normostenik tip: uygun osyar"),
+    (r"Holatni saqlash uchun muvozanatli ovqatlanish rejimiga amal qiling", "Yagdayy saklamak ucin denagramly iymitlenme rezimine amal edin"),
+    (r"Kuchli kardio mashqlarni kamaytirib, mushak massasini oshirishga qaratilgan mashqlarni bajaring", "Goycli kardio masklary azaldyp, muskul massasyny artdyrmaga gonukdirilen masklary yerine yetirin"),
+    (r"Qon tahlili \(gemoglobin\), gormonal fon va oshqozon-ichak tizimi tekshiruvidan o'?tish tavsiya etiladi", "Gan analizi (gemoglobin), gormonal fon we asgazan-icege ulgamynyn barlagy maslahat berilyar"),
+    (r"Mavsumiy sabzavot va mevalar xilma-xilligini ta'?minlang", "Mowsumleyin gok-onumlerin we miwelerin kopdurliligini upjun edin"),
+    (r"Ijodiy va intellektual yuklamalarni jismoniy faollik bilan navbatlang", "Doredijilik we intellektual yukleri fiziki isjenlik bilen gezeklesdirin"),
+    (r"Toza suv ichish rejimini nazorat qiling", "Arassa suw icmek rezimine gozegcilik edin"),
+    (r"yengil atletika", "yenil atletika"),
+    (r"futbol", "futbol"),
+    (r"gimnastika", "gimnastika"),
+    (r"suzish", "yuzmek"),
+]
+
 _ICON_PREFIX_RE = re.compile(
     r"^[\s\u200d\ufe0f]*(?:[👨⚕🍎🏃🏥📝•]|рџ\S*|пёЏ|вЂЌ)+\s*",
     re.IGNORECASE,
@@ -333,7 +411,21 @@ def tg_text(value: Any, lang: str = "uz") -> str:
     return text
 
 
+def tm_text(value: Any, lang: str = "uz") -> str:
+    if value is None:
+        return ""
+    text = str(value)
+    if lang != "tm" or not text:
+        return text
+    text = _strip_leading_icons(_ICON_PREFIX_RE.sub("", _fix_mojibake(text)))
+    for pattern, replacement in _TM_REPLACEMENTS:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
+
 def report_text(value: Any, lang: str = "uz") -> str:
+    if lang == "tm":
+        return tm_text(value, lang)
     if lang == "tg":
         return tg_text(value, lang)
     if lang == "ky":

@@ -460,22 +460,57 @@ LABELS["tm"] = {
     "skull_trans": "2. Keseligine diametr",
     "head_circ": "3. Bas aylawy",
     "forehead": "4. Manlay keseligine olcegi",
+    "spina": "a. Yanbas suyeginin yokarky on oky nokady",
+    "symph": "b. Gasyk birlesmesinin yokarky gyrasyndaky nokat",
+    "tibiale_title": "2.",
+    "tibiale": "a. Uly injik suyegindäki yokarky nokat",
+    "skull_height": "5. Bas beyikligi ya-da dik diametr",
+    "skull_base_title": "Bas suyegi esasynyn olcegini anyklamak",
+    "skull_base_l": "1. Bas suyegi esasynyn uzynlygy",
+    "skull_base_w": "2. Bas suyegi esasynyn inligi",
     "cat_face": "Yuz",
+    "face_biz": "1. Yanak diametri",
+    "face_big": "2. Asaky an diametri",
+    "face_morph": "3. Yuzun morfologik beyikligi",
+    "face_phys": "4. Yuzun fizionomik beyikligi",
+    "nose_h": "5. Burun beyikligi",
+    "nose_w": "6. Burun inligi",
+    "outer_oc": "7. Dasarky goz inligi",
+    "inner_oc": "8. Icki goz inligi",
+    "lips_h": "9. Dodak nemli gatlagynyn beyikligi",
+    "mouth_w": "10. Agiz inligi",
     "cat_chest": "Gursi",
+    "height_body": "1. Beden uzynlygy",
     "height_stand": "1. Boy (dik)",
     "height_sit": "2. Boy (oturan)",
     "weight": "2. Agram",
     "trunk_l": "3. Beden uzynlygy",
+    "torso_l": "4. Korpus uzynlygy",
     "chest_p": "5. Gursi aylawy (pauza)",
+    "chest_i": "- doly dem alanda",
+    "chest_e": "- doly dem cykaranda",
     "waist": "6. Bil aylawy",
+    "abd_c": "7. Garyn aylawy",
+    "upper_s": "8. Yokarky segment uzynlygy",
+    "chest_td": "9. Gursinin keseligine diametri",
+    "chest_ad": "10. On-yz diametri",
+    "chest_h": "11. Gursi kapasasynyn beyikligi",
     "cat_arm": "Yokarky el-ayak bolumi",
     "arm_l": "1. El uzynlygy",
     "shoulder_l": "2. Yelka uzynlygy",
     "shoulder_w": "3. Yelka inligi",
     "arm_circ": "4. Yelka aylawy",
+    "arm_circ_rest": "a) dynch yagdayynda",
+    "arm_circ_flex": "b) dartgyn yagdayynda",
     "forearm_l": "5. Bilek uzynlygy",
     "hand_l": "6. Penje uzynlygy",
     "dynamo": "7. Dinamometriya",
+    "fat_title": "8. Deri asty yag gatlagynyn galynlygy",
+    "fat_tri": "a. triseps ustunde",
+    "fat_bi": "b. biseps ustunde",
+    "fat_sub": "c. pilce astynda",
+    "fat_iliac": "d. yanbas suyegi ustunde",
+    "fat_pop": "e. dyz yzy cunkurlygynda",
 }
 def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     if lang not in LABELS: lang = "ru"
@@ -515,9 +550,27 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
         # Gender translation logic
         v_low = res.lower()
         if v_low in ["boy", "erkak"]:
-            res = "O'g'il bola" if lang == "uz" else ("Эркек бала" if lang == "ky" else ("Писарбача" if lang == "tg" else "Мальчик"))
+            if lang == "uz":
+                res = "O'g'il bola"
+            elif lang == "tm":
+                res = "Oglan/Erkek"
+            elif lang == "ky":
+                res = "Эркек бала"
+            elif lang == "tg":
+                res = "Писарбача"
+            else:
+                res = "Мальчик"
         elif v_low in ["girl", "ayol"]:
-            res = "Qiz bola" if lang == "uz" else ("Кыз бала" if lang == "ky" else ("Духтарча" if lang == "tg" else "Девочка"))
+            if lang == "uz":
+                res = "Qiz bola"
+            elif lang == "tm":
+                res = "Gyz/Ayal"
+            elif lang == "ky":
+                res = "Кыз бала"
+            elif lang == "tg":
+                res = "Духтарча"
+            else:
+                res = "Девочка"
         
         import re
         if lang == "ru":

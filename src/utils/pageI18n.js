@@ -1150,7 +1150,8 @@ dictionaries.tm = {
   researcherHeroBadge: "Gozlegci ucin sanly antropometriya",
   researcherHeroTitle1: "Sanly",
   researcherHeroTitle2: "gozleg penjiresi",
-  researcherHeroDesc: "Gozlegci sahypasy maglumat girizmegi, yazgylary tertiplemegi, statistikany gormegi we hasabat tayyarlamagy birleşdiryar.",
+  researcherHeroDesc:
+    "Gozlegci sahypasy maglumat girizmegi, yazgylary tertiplemegi, statistikany gormegi we hasabat tayyarlamagy birleşdiryar.",
   liveReport: "Janly hasabat",
   researchStatus: "Gozleg yagdayy",
   researchBase: "Gozleg bazasy",
@@ -1226,7 +1227,7 @@ dictionaries.tm = {
   hardDeleteDataConfirm:
     "UNS BERIN! Bu maglumat bazadan doly pozylyar. Dikeldip bolmayar! Dowam edelimi?",
   backupRestoreConfirm:
-    "UNS BERIN! \"{filename}\" nusgasyndan maglumatlary dikeltmek isleyarsinizmi? Bar bolan maglumatlar uytgap biler.",
+    'UNS BERIN! "{filename}" nusgasyndan maglumatlary dikeltmek isleyarsinizmi? Bar bolan maglumatlar uytgap biler.',
   restoredSuccessfully: "Maglumatlar ustunlikli dikeldildi",
   fileDeleted: "Fayl pozyldy",
   clearAuditConfirm: "Ahli jurnal yazgylaryny arassalamak isleyarsinizmi?",
@@ -1246,6 +1247,26 @@ dictionaries.tm = {
   monthShort: "ay",
   dayShort: "gun",
   searchPatientPlaceholder: "Ady, familiyasy, jynsy, yasy...",
+  importHelp:
+    "Maglumatlary kopcapleyin gosmak ucin sablony dolduryn we su yere yuklan. Ady, familiyasy, jynsy, yasy, welayaty we esasy olcegleri hokmany doldurylmaly.",
+  importSummary: "Import netijesi:",
+  row: "Setir",
+  column: "Sutun",
+  error: "Yalnyslyk",
+  value: "Bahasy",
+  recordNotFound: "QR arkaly acylan yazgy tapylmady ya-da rugsat yok.",
+  locationInstitution: "Sebit / edara",
+  dataReadyDesc: "Panel arkaly yazgylary filtrlemek, gormek we eksport etmek mumkin.",
+  featureAnalyzeText:
+    "Taze caga ya-da osmur boyunca pasport maglumatlaryny we antropometrik olcegleri girizin.",
+  featurePanelText: "Girizilen yazgylary gorun, gozlan, filtrlan we uytgetmek isini dolandyryn.",
+  featureStatsTitle: "Statistik analiz",
+  featureStatsText:
+    "Boy, agram, BMI, jyns, sebit we yas boyunca umumy gorkezijiler awtomatik jemlenyar.",
+  featureReportsTitle: "Hasabatlar",
+  featureReportsText:
+    "Yygnalan maglumatlary DOCX ya-da Excel formatynda ylmy hasabatlar ucin tayyarlan.",
+  searchPlaceholder: "Ady, mekdep ya-da saher boyunca gozle...",
 };
 
 const DEFAULT_LANGUAGE = "en";
