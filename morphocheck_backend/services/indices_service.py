@@ -1,5 +1,6 @@
 import math
-from typing import Dict, Any
+from typing import Any, Dict
+
 from services.ky_localization import report_text
 
 # ─────────────────────────────────────────────

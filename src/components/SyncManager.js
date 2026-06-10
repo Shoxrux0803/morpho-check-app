@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Drawer,
   Box,
@@ -12,7 +12,7 @@ import {
   Chip,
   Divider,
   Tooltip,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Sync as SyncIcon,
   Delete as DeleteIcon,
@@ -22,9 +22,9 @@ import {
   CheckCircleOutline as CheckIcon,
   Refresh as RefreshIcon,
   Close as CloseIcon,
-} from "@mui/icons-material";
-import { useOfflineSync } from "../providers/OfflineSyncProvider";
-import { useLanguage } from "../contexts/LanguageContext";
+} from '@mui/icons-material';
+import { useOfflineSync } from '../providers/OfflineSyncProvider';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export default function SyncManager({ open, onClose, onEditItem }) {
   const { queue, isSyncing, removeFromQueue, syncManual } = useOfflineSync();
@@ -32,24 +32,24 @@ export default function SyncManager({ open, onClose, onEditItem }) {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "pending":
-        return "warning";
-      case "syncing":
-        return "info";
-      case "failed":
-        return "error";
+      case 'pending':
+        return 'warning';
+      case 'syncing':
+        return 'info';
+      case 'failed':
+        return 'error';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "pending":
+      case 'pending':
         return <OffIcon color="warning" />;
-      case "syncing":
+      case 'syncing':
         return <SyncIcon className="animate-spin" color="info" />;
-      case "failed":
+      case 'failed':
         return <ErrorIcon color="error" />;
       default:
         return <CheckIcon />;
@@ -59,8 +59,15 @@ export default function SyncManager({ open, onClose, onEditItem }) {
   return (
     <Drawer anchor="right" open={open} onClose={onClose}>
       <Box sx={{ width: 350, p: 3 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-          <Typography variant="h6">{t("syncManagerTitle")}</Typography>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <Typography variant="h6">{t('syncManagerTitle')}</Typography>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
@@ -74,15 +81,15 @@ export default function SyncManager({ open, onClose, onEditItem }) {
             disabled={isSyncing || queue.length === 0}
             onClick={syncManual}
           >
-            {isSyncing ? t("syncing") : t("syncAllNow")}
+            {isSyncing ? t('syncing') : t('syncAllNow')}
           </Button>
         </Box>
 
         <Divider />
 
         {queue.length === 0 ? (
-          <Box sx={{ py: 4, textAlignment: "center", opacity: 0.6 }}>
-            <Typography align="center">{t("noPendingItems")}</Typography>
+          <Box sx={{ py: 4, textAlignment: 'center', opacity: 0.6 }}>
+            <Typography align="center">{t('noPendingItems')}</Typography>
           </Box>
         ) : (
           <List>
@@ -90,14 +97,23 @@ export default function SyncManager({ open, onClose, onEditItem }) {
               <ListItem
                 key={item.id}
                 sx={{
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  borderBottom: "1px solid #eee",
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  borderBottom: '1px solid #eee',
                   py: 2,
                 }}
               >
-                <Box sx={{ display: "flex", width: "100%", alignItems: "center", mb: 1 }}>
-                  <ListItemIcon sx={{ minWidth: 40 }}>{getStatusIcon(item.status)}</ListItemIcon>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    width: '100%',
+                    alignItems: 'center',
+                    mb: 1,
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {getStatusIcon(item.status)}
+                  </ListItemIcon>
                   <ListItemText
                     primary={`${item.payload.firstName} ${item.payload.lastName}`}
                     secondary={new Date(item.timestamp).toLocaleString()}
@@ -111,19 +127,34 @@ export default function SyncManager({ open, onClose, onEditItem }) {
                 </Box>
 
                 {item.lastError && (
-                  <Typography variant="caption" color="error" sx={{ mb: 1, display: "block" }}>
-                    {t("errorPrefix")} {item.lastError}
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ mb: 1, display: 'block' }}
+                  >
+                    {t('errorPrefix')} {item.lastError}
                   </Typography>
                 )}
 
-                <Box sx={{ display: "flex", justifyContent: "flex-end", width: "100%", gap: 1 }}>
-                  <Tooltip title={t("editAndFix")}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    width: '100%',
+                    gap: 1,
+                  }}
+                >
+                  <Tooltip title={t('editAndFix')}>
                     <IconButton size="small" onClick={() => onEditItem(item)}>
                       <EditIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title={t("remove")}>
-                    <IconButton size="small" color="error" onClick={() => removeFromQueue(item.id)}>
+                  <Tooltip title={t('remove')}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => removeFromQueue(item.id)}
+                    >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>

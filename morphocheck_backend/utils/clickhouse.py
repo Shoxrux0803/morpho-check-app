@@ -4,10 +4,10 @@ ClickHouse ulanish va yozish utility.
 Analytics ma'lumotlarini PostgreSQL dan ClickHouse ga sinxronlash uchun.
 """
 
-import os
 import logging
-from typing import Optional
+import os
 from datetime import datetime
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 

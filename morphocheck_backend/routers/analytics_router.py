@@ -5,21 +5,22 @@ Analytics Dashboard API Router
 Faqat admin va superadmin uchun.
 """
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
 from typing import Optional
 
-from utils.database import get_db
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+
 from models.user import User
 from routers.auth_router import get_current_admin
 from services.analytics_service import (
-    get_dashboard_overview,
+    get_age_distribution,
     get_bmi_distribution,
-    get_trend_data,
+    get_dashboard_overview,
     get_region_stats,
     get_somatotype_distribution,
-    get_age_distribution,
+    get_trend_data,
 )
+from utils.database import get_db
 from utils.timescale import get_timescale_stats, is_timescaledb_available
 
 router = APIRouter(tags=["Analytics Dashboard"])

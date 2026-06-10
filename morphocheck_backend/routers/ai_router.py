@@ -1,14 +1,16 @@
 # morphocheck_backend/routers/ai_router.py
 
-import os
 import json
+import os
+from typing import Dict, List, Optional
+
 import google.generativeai as genai
+from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from typing import List, Optional, Dict
-from routers.auth_router import get_current_user
+
 from models.user import User
-from dotenv import load_dotenv
+from routers.auth_router import get_current_user
 from services.ai_advice_service import generate_parent_tips
 from services.nlp_service import analyze_text
 

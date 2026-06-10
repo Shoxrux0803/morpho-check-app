@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -8,11 +8,11 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
-} from "recharts";
-import { Typography, useTheme } from "@mui/material";
-import { Cake } from "@mui/icons-material";
-import DashboardCard from "./DashboardCard";
-import { useLanguage } from "../../contexts/LanguageContext";
+} from 'recharts';
+import { Typography, useTheme } from '@mui/material';
+import { Cake } from '@mui/icons-material';
+import DashboardCard from './DashboardCard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const AgeGroupDistribution = ({ data, loading }) => {
   const theme = useTheme();
@@ -22,34 +22,50 @@ const AgeGroupDistribution = ({ data, loading }) => {
     if (!data || data.length === 0) return [];
 
     const counts = {
-      "0-5": 0,
-      "6-12": 0,
-      "13-18": 0,
-      "18+": 0,
+      '0-5': 0,
+      '6-12': 0,
+      '13-18': 0,
+      '18+': 0,
     };
 
     data.forEach((user) => {
       const age = Number(user.age);
-      if (age <= 5) counts["0-5"]++;
-      else if (age <= 12) counts["6-12"]++;
-      else if (age <= 18) counts["13-18"]++;
-      else counts["18+"]++;
+      if (age <= 5) counts['0-5']++;
+      else if (age <= 12) counts['6-12']++;
+      else if (age <= 18) counts['13-18']++;
+      else counts['18+']++;
     });
 
     return [
-      { name: `0-5 ${t("yearsShort")}`, value: counts["0-5"], color: "#8884d8" },
-      { name: `6-12 ${t("yearsShort")}`, value: counts["6-12"], color: "#82ca9d" },
-      { name: `13-18 ${t("yearsShort")}`, value: counts["13-18"], color: "#ffc658" },
-      { name: `18+ ${t("yearsShort")}`, value: counts["18+"], color: "#ff7300" },
+      {
+        name: `0-5 ${t('yearsShort')}`,
+        value: counts['0-5'],
+        color: '#8884d8',
+      },
+      {
+        name: `6-12 ${t('yearsShort')}`,
+        value: counts['6-12'],
+        color: '#82ca9d',
+      },
+      {
+        name: `13-18 ${t('yearsShort')}`,
+        value: counts['13-18'],
+        color: '#ffc658',
+      },
+      {
+        name: `18+ ${t('yearsShort')}`,
+        value: counts['18+'],
+        color: '#ff7300',
+      },
     ];
   }, [data, t]);
 
   const total = ageData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <DashboardCard title={t("ageGroups")} icon={<Cake />} loading={loading}>
+    <DashboardCard title={t('ageGroups')} icon={<Cake />} loading={loading}>
       {total === 0 ? (
-        <Typography color="text.secondary">{t("noData")}</Typography>
+        <Typography color="text.secondary">{t('noData')}</Typography>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={ageData} layout="vertical" margin={{ left: 20 }}>
@@ -63,7 +79,11 @@ const AgeGroupDistribution = ({ data, loading }) => {
               type="category"
               dataKey="name"
               width={70}
-              tick={{ fontSize: 12, fontWeight: 500, fill: theme.palette.text.secondary }}
+              tick={{
+                fontSize: 12,
+                fontWeight: 500,
+                fill: theme.palette.text.secondary,
+              }}
               axisLine={false}
               tickLine={false}
             />
@@ -72,10 +92,10 @@ const AgeGroupDistribution = ({ data, loading }) => {
               contentStyle={{
                 borderRadius: 12,
                 boxShadow:
-                  theme.palette.mode === "dark"
-                    ? "0 4px 12px rgba(0,0,0,0.5)"
-                    : "0 4px 12px rgba(0,0,0,0.1)",
-                border: "none",
+                  theme.palette.mode === 'dark'
+                    ? '0 4px 12px rgba(0,0,0,0.5)'
+                    : '0 4px 12px rgba(0,0,0,0.1)',
+                border: 'none',
                 backgroundColor: theme.palette.background.paper,
                 color: theme.palette.text.primary,
               }}

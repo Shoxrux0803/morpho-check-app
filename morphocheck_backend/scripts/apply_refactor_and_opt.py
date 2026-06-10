@@ -1,5 +1,5 @@
-import sqlite3
 import os
+import sqlite3
 
 db_path = "d:/BOT/morpho-check-app/morphocheck_backend/morphocheck.db"
 

@@ -1,9 +1,16 @@
-import React, { useMemo } from "react";
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
-import { Box, Typography, useTheme } from "@mui/material";
-import { Wc } from "@mui/icons-material";
-import DashboardCard from "./DashboardCard";
-import { useLanguage } from "../../contexts/LanguageContext";
+import React, { useMemo } from 'react';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+} from 'recharts';
+import { Box, Typography, useTheme } from '@mui/material';
+import { Wc } from '@mui/icons-material';
+import DashboardCard from './DashboardCard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const GenderDistribution = ({ data, loading }) => {
   const theme = useTheme();
@@ -16,43 +23,47 @@ const GenderDistribution = ({ data, loading }) => {
     let female = 0;
 
     data.forEach((user) => {
-      const g = (user.gender || "").toLowerCase();
+      const g = (user.gender || '').toLowerCase();
 
       // Robust male check
       const isMale =
-        g === "m" ||
-        g === "male" ||
-        g === "boy" ||
+        g === 'm' ||
+        g === 'male' ||
+        g === 'boy' ||
         g.includes("o'g'il") ||
         g.includes("о'ғил") ||
-        g.includes("муж");
+        g.includes('муж');
       // Robust female check
       const isFemale =
-        g === "f" ||
-        g === "female" ||
-        g === "girl" ||
-        g.includes("qiz") ||
-        g.includes("қиз") ||
-        g.includes("жен");
+        g === 'f' ||
+        g === 'female' ||
+        g === 'girl' ||
+        g.includes('qiz') ||
+        g.includes('қиз') ||
+        g.includes('жен');
 
       if (isMale) male++;
       else if (isFemale) female++;
     });
 
     return [
-      { name: t("male"), value: male, color: "#0088FE" },
-      { name: t("female"), value: female, color: "#FF8042" },
+      { name: t('male'), value: male, color: '#0088FE' },
+      { name: t('female'), value: female, color: '#FF8042' },
     ];
   }, [data, t]);
 
   const total = genderData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <DashboardCard title={t("genderDistributionTitle")} icon={<Wc />} loading={loading}>
+    <DashboardCard
+      title={t('genderDistributionTitle')}
+      icon={<Wc />}
+      loading={loading}
+    >
       {total === 0 ? (
-        <Typography color="text.secondary">{t("noData")}</Typography>
+        <Typography color="text.secondary">{t('noData')}</Typography>
       ) : (
-        <Box sx={{ width: "100%", height: "100%", position: "relative" }}>
+        <Box sx={{ width: '100%', height: '100%', position: 'relative' }}>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -73,10 +84,10 @@ const GenderDistribution = ({ data, loading }) => {
                 contentStyle={{
                   borderRadius: 12,
                   boxShadow:
-                    theme.palette.mode === "dark"
-                      ? "0 4px 12px rgba(0,0,0,0.5)"
-                      : "0 4px 12px rgba(0,0,0,0.1)",
-                  border: "none",
+                    theme.palette.mode === 'dark'
+                      ? '0 4px 12px rgba(0,0,0,0.5)'
+                      : '0 4px 12px rgba(0,0,0,0.1)',
+                  border: 'none',
                   backgroundColor: theme.palette.background.paper,
                   color: theme.palette.text.primary,
                 }}
@@ -87,12 +98,12 @@ const GenderDistribution = ({ data, loading }) => {
           </ResponsiveContainer>
           <Box
             sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              textAlign: "center",
-              pointerEvents: "none",
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              pointerEvents: 'none',
               mb: 4,
             }}
           >
@@ -100,7 +111,7 @@ const GenderDistribution = ({ data, loading }) => {
               {total}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t("totalLabel")}
+              {t('totalLabel')}
             </Typography>
           </Box>
         </Box>

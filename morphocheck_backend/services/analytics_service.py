@@ -10,11 +10,12 @@ Dashboard uchun statistika, tendensiyalar va somatotip taqsimoti.
 import logging
 from datetime import datetime, timedelta
 from typing import Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 
-from models.userdata import PatientAnalysis, ResearchRecord
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
 from models.user import User
+from models.userdata import PatientAnalysis, ResearchRecord
 
 logger = logging.getLogger(__name__)
 

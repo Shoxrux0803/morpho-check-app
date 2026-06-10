@@ -1,16 +1,17 @@
 # morphocheck_backend/models/chat.py
 
 from sqlalchemy import (
+    Boolean,
     Column,
+    DateTime,
+    ForeignKey,
+    Index,
     Integer,
     String,
     Text,
-    DateTime,
-    ForeignKey,
-    Boolean,
     func,
-    Index,
 )
+
 from .base import Base
 
 

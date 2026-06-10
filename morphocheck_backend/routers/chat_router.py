@@ -1,17 +1,18 @@
 # morphocheck_backend/routers/chat_router.py
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
-from sqlalchemy.orm import Session
-from typing import List, Optional, Dict
-from datetime import datetime, timedelta
 import os
 import uuid
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
 
-from utils.database import get_db
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from models.chat import ChatMessage
 from models.user import User
 from routers.auth_router import get_current_user
-from pydantic import BaseModel
+from utils.database import get_db
 
 router = APIRouter(tags=["Chat"])
 

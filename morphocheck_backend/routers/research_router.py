@@ -1,28 +1,30 @@
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
-from fastapi.responses import StreamingResponse
-from typing import List, Optional
-from datetime import datetime, date
-from models.user import User
-from models.userdata import ResearchRecord
-from models.schemas import ResearchRecordCreate, ResearchRecordOut
-from utils.database import get_db
-from routers.auth_router import get_current_user
-from services.research_docx import generate_researcher_docx
-from services.research_summary_docx import generate_research_summary_docx
-from services.consent_docx import generate_consent_docx
-from services.indices_service import calculate_detailed_indices
-import pandas as pd
 import asyncio
+import calendar
 import io
 import urllib.parse
-import calendar
+from datetime import date, datetime
+from typing import List, Optional
+
+import pandas as pd
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi.responses import StreamingResponse
 from jose import JWTError, jwt
 from openpyxl import Workbook, load_workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from utils.translit import lat2cyr
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
+
+from models.schemas import ResearchRecordCreate, ResearchRecordOut
+from models.user import User
+from models.userdata import ResearchRecord
+from routers.auth_router import get_current_user
+from services.consent_docx import generate_consent_docx
+from services.indices_service import calculate_detailed_indices
+from services.research_docx import generate_researcher_docx
+from services.research_summary_docx import generate_research_summary_docx
+from utils.database import get_db
 from utils.security import ALGORITHM, SECRET_KEY
+from utils.translit import lat2cyr
 
 router = APIRouter(tags=["Researcher"])
 
@@ -804,7 +806,7 @@ def build_research_index_export_values(
     weight = float(record.weight or 0)
     age = _calculate_research_age(record)
     if age is None or height <= 0 or weight <= 0:
-        return {field: None for field in RESEARCH_INDEX_EXPORT_FIELDS}
+        return dict.fromkeys(RESEARCH_INDEX_EXPORT_FIELDS)
 
     tvi = round(weight / ((height / 100) ** 2), 2)
     manual_data = {
@@ -1544,7 +1546,9 @@ async def import_research_xlsx(
 
     try:
         contents = await file.read()
-        wb = await asyncio.to_thread(load_workbook, io.BytesIO(contents), data_only=True)
+        wb = await asyncio.to_thread(
+            load_workbook, io.BytesIO(contents), data_only=True
+        )
         ws = wb.active
     except Exception as exc:
         raise HTTPException(
@@ -2057,8 +2061,8 @@ def create_research_record(
 
     # ClickHouse ga ma'lumot jo'natish
     try:
-        from utils.clickhouse import insert_research_event
         from routers.research_router import research_record_to_dict
+        from utils.clickhouse import insert_research_event
 
         insert_research_event(research_record_to_dict(record))
     except Exception:

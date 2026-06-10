@@ -1,6 +1,6 @@
 # morphocheck_backend/scripts/setup_superadmin.py
-import sys
 import os
+import sys
 
 # Mahalla papkani path ga qo'shamiz
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,9 +13,9 @@ load_dotenv(
 )
 load_dotenv()
 
+from models.user import User
 from utils.database import SessionLocal
 from utils.security import get_password_hash
-from models.user import User
 
 
 def setup_superadmin():

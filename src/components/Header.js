@@ -1,5 +1,10 @@
-import React, { useState } from "react";
-import { Link as RouterLink, NavLink, useLocation, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import {
+  Link as RouterLink,
+  NavLink,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 
 import {
   AppBar,
@@ -17,32 +22,32 @@ import {
   MenuItem,
   Popover,
   Select,
-} from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import Brightness4Icon from "@mui/icons-material/Brightness4";
-import Brightness7Icon from "@mui/icons-material/Brightness7";
-import PaletteOutlinedIcon from "@mui/icons-material/PaletteOutlined";
-import CheckIcon from "@mui/icons-material/Check";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import HomeIcon from "@mui/icons-material/Home";
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import LogoutIcon from "@mui/icons-material/Logout";
-import SyncIcon from "@mui/icons-material/Sync";
-import CloudOffIcon from "@mui/icons-material/CloudOff";
-import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import CloseIcon from "@mui/icons-material/Close";
-import Badge from "@mui/material/Badge";
+} from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
+import CheckIcon from '@mui/icons-material/Check';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import HomeIcon from '@mui/icons-material/Home';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import LogoutIcon from '@mui/icons-material/Logout';
+import SyncIcon from '@mui/icons-material/Sync';
+import CloudOffIcon from '@mui/icons-material/CloudOff';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import Badge from '@mui/material/Badge';
 
-import { useThemeMode } from "../providers/ThemeProviderMUI";
-import { THEME_VARIANTS } from "../theme/muiTheme";
-import logo from "../assets/morphocheck-logo.png";
-import { useLanguage, LANGUAGES } from "../contexts/LanguageContext";
-import { useAuth } from "../contexts/AuthContext";
-import { useOfflineSync } from "../providers/OfflineSyncProvider";
-import WeatherClock from "./WeatherClock";
-import SyncManager from "./SyncManager";
-import LogoutConfirmDialog from "./LogoutConfirmDialog";
+import { useThemeMode } from '../providers/ThemeProviderMUI';
+import { THEME_VARIANTS } from '../theme/muiTheme';
+import logo from '../assets/morphocheck-logo.png';
+import { useLanguage, LANGUAGES } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useOfflineSync } from '../providers/OfflineSyncProvider';
+import WeatherClock from './WeatherClock';
+import SyncManager from './SyncManager';
+import LogoutConfirmDialog from './LogoutConfirmDialog';
 
 const blurActiveElement = () => {
   if (document.activeElement instanceof HTMLElement) {
@@ -51,25 +56,25 @@ const blurActiveElement = () => {
 };
 
 const getThemeVariantLabel = (value) =>
-  value === "neo"
-    ? "Neo (Aurora)"
-    : value === "ocean"
-      ? "Ocean"
-      : value === "sunset"
-        ? "Sunset"
-        : "Minimal";
+  value === 'neo'
+    ? 'Neo (Aurora)'
+    : value === 'ocean'
+      ? 'Ocean'
+      : value === 'sunset'
+        ? 'Sunset'
+        : 'Minimal';
 
 const languageOptions = [...LANGUAGES].sort((a, b) =>
-  a.code === "en" ? -1 : b.code === "en" ? 1 : 0,
+  a.code === 'en' ? -1 : b.code === 'en' ? 1 : 0
 );
 
 const guidelinesLabels = {
-  uz: { label: "Yordam", tooltip: "Vizual yo'riqnomalar" },
-  ru: { label: "Помощь", tooltip: "Визуальные инструкции" },
-  en: { label: "Help", tooltip: "Visual guidelines" },
-  tg: { label: "Ёрӣ", tooltip: "Дастурҳои визуалӣ" },
-  kz: { label: "Көмек", tooltip: "Көрнекі нұсқаулықтар" },
-  ky: { label: "Жардам", tooltip: "Визуалдык колдонмолор" },
+  uz: { label: 'Yordam', tooltip: "Vizual yo'riqnomalar" },
+  ru: { label: 'Помощь', tooltip: 'Визуальные инструкции' },
+  en: { label: 'Help', tooltip: 'Visual guidelines' },
+  tg: { label: 'Ёрӣ', tooltip: 'Дастурҳои визуалӣ' },
+  kz: { label: 'Көмек', tooltip: 'Көрнекі нұсқаулықтар' },
+  ky: { label: 'Жардам', tooltip: 'Визуалдык колдонмолор' },
 };
 
 export default function Header() {
@@ -124,49 +129,58 @@ export default function Header() {
   };
 
   const navButtonSx = {
-    "&.active": {
+    '&.active': {
       fontWeight: 700,
-      color: "primary.main",
-      backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+      color: 'primary.main',
+      backgroundColor:
+        mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
     },
-    color: "text.secondary",
+    color: 'text.secondary',
     borderRadius: 2,
     px: 2,
-    transition: "all 0.2s ease",
-    "&:hover": {
-      backgroundColor: mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.06)",
-      transform: "translateY(-1px)",
+    transition: 'all 0.2s ease',
+    '&:hover': {
+      backgroundColor:
+        mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
+      transform: 'translateY(-1px)',
     },
   };
 
-  const researcherSection = new URLSearchParams(location.search).get("section") || "home";
+  const researcherSection =
+    new URLSearchParams(location.search).get('section') || 'home';
   const isResearcherHome =
-    user?.role === "researcher" &&
-    location.pathname === "/researcher" &&
-    researcherSection === "home";
-  const homePath = user?.role === "researcher" ? "/researcher" : "/";
-  const analyzePath = "/morphocheck-pro";
-  const guidelinesPath = "/guidelines";
+    user?.role === 'researcher' &&
+    location.pathname === '/researcher' &&
+    researcherSection === 'home';
+  const homePath = user?.role === 'researcher' ? '/researcher' : '/';
+  const analyzePath = '/morphocheck-pro';
+  const guidelinesPath = '/guidelines';
   const researcherNavItems = [
-    { label: "Asosiy", to: "/researcher?section=home", section: "home", icon: <HomeIcon /> },
     {
-      label: "Tahlil qilish",
-      to: "/researcher?section=analyze",
-      section: "analyze",
+      label: 'Asosiy',
+      to: '/researcher?section=home',
+      section: 'home',
+      icon: <HomeIcon />,
+    },
+    {
+      label: 'Tahlil qilish',
+      to: '/researcher?section=analyze',
+      section: 'analyze',
       icon: <AnalyticsIcon />,
     },
     {
-      label: "Izlanuvchi panel",
-      to: "/researcher?section=panel",
-      section: "panel",
+      label: 'Izlanuvchi panel',
+      to: '/researcher?section=panel',
+      section: 'panel',
       icon: <AdminPanelSettingsIcon />,
     },
   ];
 
   const activeNavSx = {
     fontWeight: 700,
-    color: "primary.main",
-    backgroundColor: mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
+    color: 'primary.main',
+    backgroundColor:
+      mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
   };
   const guidelinesCopy = guidelinesLabels[lang] || guidelinesLabels.en;
 
@@ -179,8 +193,8 @@ export default function Header() {
         elevation={0}
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 20,
-          backdropFilter: "blur(18px)",
-          WebkitBackdropFilter: "blur(18px)",
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
         }}
       >
         <Toolbar sx={{ py: 1 }}>
@@ -192,11 +206,11 @@ export default function Header() {
             component={RouterLink}
             to={homePath}
             sx={{
-              textDecoration: "none",
-              color: "inherit",
+              textDecoration: 'none',
+              color: 'inherit',
               flexGrow: 1,
               minWidth: 0,
-              "&:hover img": { transform: "scale(1.06)" },
+              '&:hover img': { transform: 'scale(1.06)' },
             }}
           >
             <Box
@@ -204,20 +218,22 @@ export default function Header() {
                 width: { xs: 44, sm: 48 },
                 height: { xs: 44, sm: 48 },
                 borderRadius: 2,
-                display: "grid",
-                placeItems: "center",
+                display: 'grid',
+                placeItems: 'center',
                 flexShrink: 0,
                 background:
-                  mode === "dark"
-                    ? "linear-gradient(145deg, rgba(15, 118, 110, 0.22), rgba(37, 99, 235, 0.14))"
-                    : "linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 250, 0.94))",
-                border: "1px solid",
+                  mode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(15, 118, 110, 0.22), rgba(37, 99, 235, 0.14))'
+                    : 'linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 250, 0.94))',
+                border: '1px solid',
                 borderColor:
-                  mode === "dark" ? "rgba(125, 211, 252, 0.24)" : "rgba(14, 116, 144, 0.14)",
+                  mode === 'dark'
+                    ? 'rgba(125, 211, 252, 0.24)'
+                    : 'rgba(14, 116, 144, 0.14)',
                 boxShadow:
-                  mode === "dark"
-                    ? "0 10px 26px rgba(0, 0, 0, 0.22)"
-                    : "0 10px 24px rgba(8, 47, 73, 0.10)",
+                  mode === 'dark'
+                    ? '0 10px 26px rgba(0, 0, 0, 0.22)'
+                    : '0 10px 24px rgba(8, 47, 73, 0.10)',
               }}
             >
               <Box
@@ -228,15 +244,21 @@ export default function Header() {
                 sx={{
                   width: { xs: 38, sm: 42 },
                   height: { xs: 38, sm: 42 },
-                  objectFit: "contain",
-                  transition: "transform 0.24s ease",
-                  filter: mode === "dark" ? "drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22))" : "none",
+                  objectFit: 'contain',
+                  transition: 'transform 0.24s ease',
+                  filter:
+                    mode === 'dark'
+                      ? 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.22))'
+                      : 'none',
                 }}
               />
             </Box>
             <Box lineHeight={1}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Box component="span" sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 } }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Box
+                  component="span"
+                  sx={{ fontWeight: 700, fontSize: { xs: 16, sm: 18 } }}
+                >
                   MorphoCheck Pro
                 </Box>
                 {user && (
@@ -248,33 +270,33 @@ export default function Header() {
                       py: 0.4,
                       borderRadius: 1.5,
                       background: (theme) =>
-                        user.role === "superadmin"
-                          ? "linear-gradient(135deg, #0f172a 0%, #0f766e 100%)"
-                          : user.role === "researcher"
-                            ? "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)"
-                            : theme.palette.mode === "dark"
-                              ? "rgba(255, 255, 255, 0.1)"
-                              : "rgba(0, 0, 0, 0.05)",
+                        user.role === 'superadmin'
+                          ? 'linear-gradient(135deg, #0f172a 0%, #0f766e 100%)'
+                          : user.role === 'researcher'
+                            ? 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)'
+                            : theme.palette.mode === 'dark'
+                              ? 'rgba(255, 255, 255, 0.1)'
+                              : 'rgba(0, 0, 0, 0.05)',
                       color:
-                        user.role === "superadmin" || user.role === "researcher"
-                          ? "#fff"
-                          : "text.secondary",
+                        user.role === 'superadmin' || user.role === 'researcher'
+                          ? '#fff'
+                          : 'text.secondary',
                       fontWeight: 700,
-                      textTransform: "uppercase",
+                      textTransform: 'uppercase',
                       letterSpacing: 0.5,
-                      display: { xs: "none", md: "flex" },
-                      alignItems: "center",
+                      display: { xs: 'none', md: 'flex' },
+                      alignItems: 'center',
                       gap: 0.5,
                       border:
-                        user.role === "superadmin" || user.role === "researcher"
-                          ? "none"
-                          : "1px solid rgba(0,0,0,0.1)",
+                        user.role === 'superadmin' || user.role === 'researcher'
+                          ? 'none'
+                          : '1px solid rgba(0,0,0,0.1)',
                       boxShadow:
-                        user.role === "superadmin"
-                          ? "0 2px 8px rgba(15, 23, 42, 0.24)"
-                          : user.role === "researcher"
-                            ? "0 2px 8px rgba(15, 118, 110, 0.24)"
-                            : "none",
+                        user.role === 'superadmin'
+                          ? '0 2px 8px rgba(15, 23, 42, 0.24)'
+                          : user.role === 'researcher'
+                            ? '0 2px 8px rgba(15, 118, 110, 0.24)'
+                            : 'none',
                     }}
                   >
                     <Box component="span" sx={{ opacity: 0.9 }}>
@@ -284,25 +306,29 @@ export default function Header() {
                       |
                     </Box>
                     <Box component="span">
-                      {user.role === "superadmin"
-                        ? t("roleSuperAdmin")
-                        : user.role === "researcher"
-                          ? "Izlanuvchi"
-                          : t("roleAdmin")}
+                      {user.role === 'superadmin'
+                        ? t('roleSuperAdmin')
+                        : user.role === 'researcher'
+                          ? 'Izlanuvchi'
+                          : t('roleAdmin')}
                     </Box>
                   </Box>
                 )}
               </Box>
               <Box
                 component="span"
-                sx={{ fontSize: 12, color: "text.secondary", display: { xs: "none", sm: "block" } }}
+                sx={{
+                  fontSize: 12,
+                  color: 'text.secondary',
+                  display: { xs: 'none', sm: 'block' },
+                }}
               >
-                {t("subtitle")}
+                {t('subtitle')}
               </Box>
             </Box>
           </Stack>
 
-          <Box sx={{ display: { xs: "none", sm: "block" } }}>
+          <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
             <WeatherClock />
           </Box>
 
@@ -311,10 +337,10 @@ export default function Header() {
             direction="row"
             alignItems="center"
             spacing={0.5}
-            sx={{ display: { xs: "none", md: "flex" } }}
+            sx={{ display: { xs: 'none', md: 'flex' } }}
           >
             {/* Navigation Links */}
-            {user?.role === "researcher" ? (
+            {user?.role === 'researcher' ? (
               researcherNavItems.map((item) => (
                 <Tooltip title={item.label} key={item.section}>
                   <Button
@@ -322,13 +348,19 @@ export default function Header() {
                     to={item.to}
                     sx={{
                       ...navButtonSx,
-                      ...(location.pathname === "/researcher" && researcherSection === item.section
+                      ...(location.pathname === '/researcher' &&
+                      researcherSection === item.section
                         ? activeNavSx
                         : {}),
                     }}
-                    startIcon={React.cloneElement(item.icon, { fontSize: "small" })}
+                    startIcon={React.cloneElement(item.icon, {
+                      fontSize: 'small',
+                    })}
                   >
-                    <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'none', md: 'inline' } }}
+                    >
                       {item.label}
                     </Box>
                   </Button>
@@ -336,45 +368,57 @@ export default function Header() {
               ))
             ) : (
               <>
-                <Tooltip title={t("homeTooltip")}>
+                <Tooltip title={t('homeTooltip')}>
                   <Button
                     component={NavLink}
                     to={homePath}
                     end
-                    sx={{ ...navButtonSx, ...(isResearcherHome ? activeNavSx : {}) }}
+                    sx={{
+                      ...navButtonSx,
+                      ...(isResearcherHome ? activeNavSx : {}),
+                    }}
                     startIcon={<HomeIcon fontSize="small" />}
                   >
-                    <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
-                      {t("home")}
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'none', md: 'inline' } }}
+                    >
+                      {t('home')}
                     </Box>
                   </Button>
                 </Tooltip>
 
-                <Tooltip title={t("analyzeTooltip")}>
+                <Tooltip title={t('analyzeTooltip')}>
                   <Button
                     component={NavLink}
                     to={analyzePath}
                     sx={navButtonSx}
                     startIcon={<AnalyticsIcon fontSize="small" />}
                   >
-                    <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
-                      {t("analyze")}
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'none', md: 'inline' } }}
+                    >
+                      {t('analyze')}
                     </Box>
                   </Button>
                 </Tooltip>
               </>
             )}
 
-            {(user?.role === "admin" || user?.role === "superadmin") && (
-              <Tooltip title={t("adminPanelTooltip")}>
+            {(user?.role === 'admin' || user?.role === 'superadmin') && (
+              <Tooltip title={t('adminPanelTooltip')}>
                 <Button
                   component={NavLink}
                   to="/admin"
                   sx={navButtonSx}
                   startIcon={<AdminPanelSettingsIcon fontSize="small" />}
                 >
-                  <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
-                    {t("adminPanel")}
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: 'none', md: 'inline' } }}
+                  >
+                    {t('adminPanel')}
                   </Box>
                 </Button>
               </Tooltip>
@@ -387,21 +431,29 @@ export default function Header() {
                 sx={navButtonSx}
                 startIcon={<HelpOutlineIcon fontSize="small" />}
               >
-                <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                <Box
+                  component="span"
+                  sx={{ display: { xs: 'none', md: 'inline' } }}
+                >
                   {guidelinesCopy.label}
                 </Box>
               </Button>
             </Tooltip>
 
-            {user?.role === "superadmin" && (
+            {user?.role === 'superadmin' && (
               <Tooltip title="Super Admin Panel">
                 <Button
                   component={NavLink}
                   to="/superadmin"
                   sx={navButtonSx}
-                  startIcon={<AdminPanelSettingsIcon fontSize="small" color="primary" />}
+                  startIcon={
+                    <AdminPanelSettingsIcon fontSize="small" color="primary" />
+                  }
                 >
-                  <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                  <Box
+                    component="span"
+                    sx={{ display: { xs: 'none', md: 'inline' } }}
+                  >
                     Super Admin
                   </Box>
                 </Button>
@@ -413,12 +465,12 @@ export default function Header() {
                 <IconButton
                   onClick={openLogoutDialog}
                   sx={{
-                    color: "error.main",
+                    color: 'error.main',
                     ml: 0.5,
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      backgroundColor: "rgba(211, 47, 47, 0.04)",
-                      transform: "scale(1.1)",
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                      transform: 'scale(1.1)',
                     },
                   }}
                 >
@@ -432,17 +484,22 @@ export default function Header() {
                 onClick={openSettings}
                 aria-label="Settings"
                 sx={{
-                  color: "text.secondary",
-                  transition: "transform 0.24s ease, color 0.24s ease, background 0.24s ease",
-                  "&:hover": {
+                  color: 'text.secondary',
+                  transition:
+                    'transform 0.24s ease, color 0.24s ease, background 0.24s ease',
+                  '&:hover': {
                     backgroundColor:
-                      mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.04)",
-                    color: "primary.main",
-                    transform: "rotate(35deg) scale(1.08)",
+                      mode === 'dark'
+                        ? 'rgba(255,255,255,0.08)'
+                        : 'rgba(0,0,0,0.04)',
+                    color: 'primary.main',
+                    transform: 'rotate(35deg) scale(1.08)',
                   },
-                  "& svg": {
-                    transition: "transform 0.24s ease",
-                    transform: settingsAnchorEl ? "rotate(90deg)" : "rotate(0deg)",
+                  '& svg': {
+                    transition: 'transform 0.24s ease',
+                    transform: settingsAnchorEl
+                      ? 'rotate(90deg)'
+                      : 'rotate(0deg)',
                   },
                 }}
               >
@@ -458,53 +515,68 @@ export default function Header() {
             keepMounted
             transitionDuration={{ enter: 280, exit: 180 }}
             anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center",
+              vertical: 'bottom',
+              horizontal: 'center',
             }}
             transformOrigin={{
-              vertical: "top",
-              horizontal: "center",
+              vertical: 'top',
+              horizontal: 'center',
             }}
             PaperProps={{
               sx: {
-                width: { xs: "calc(100vw - 32px)", sm: 380 },
+                width: { xs: 'calc(100vw - 32px)', sm: 380 },
                 maxWidth: 380,
                 mt: 1.5,
                 borderRadius: 3,
-                overflow: "hidden",
+                overflow: 'hidden',
                 background:
-                  mode === "dark"
-                    ? "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(8,47,73,0.92))"
-                    : "linear-gradient(145deg, rgba(255,255,255,0.98), rgba(240,253,250,0.96))",
-                border: "1px solid",
-                borderColor: mode === "dark" ? "rgba(125,211,252,0.18)" : "rgba(14,116,144,0.14)",
+                  mode === 'dark'
+                    ? 'linear-gradient(145deg, rgba(15,23,42,0.96), rgba(8,47,73,0.92))'
+                    : 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(240,253,250,0.96))',
+                border: '1px solid',
+                borderColor:
+                  mode === 'dark'
+                    ? 'rgba(125,211,252,0.18)'
+                    : 'rgba(14,116,144,0.14)',
                 boxShadow:
-                  mode === "dark"
-                    ? "0 24px 70px rgba(0,0,0,0.48)"
-                    : "0 24px 70px rgba(8,47,73,0.18)",
-                backdropFilter: "blur(20px)",
-                transformOrigin: "top center !important",
+                  mode === 'dark'
+                    ? '0 24px 70px rgba(0,0,0,0.48)'
+                    : '0 24px 70px rgba(8,47,73,0.18)',
+                backdropFilter: 'blur(20px)',
+                transformOrigin: 'top center !important',
               },
             }}
           >
             <DialogContent sx={{ p: 2.25 }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" mb={1.5}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                mb={1.5}
+              >
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Box
                     sx={{
                       width: 34,
                       height: 34,
-                      display: "grid",
-                      placeItems: "center",
+                      display: 'grid',
+                      placeItems: 'center',
                       borderRadius: 2,
-                      color: "primary.main",
-                      bgcolor: mode === "dark" ? "rgba(125,211,252,0.12)" : "rgba(14,116,144,0.08)",
+                      color: 'primary.main',
+                      bgcolor:
+                        mode === 'dark'
+                          ? 'rgba(125,211,252,0.12)'
+                          : 'rgba(14,116,144,0.08)',
                     }}
                   >
                     <SettingsOutlinedIcon fontSize="small" />
                   </Box>
                   <Box>
-                    <Typography variant="subtitle1" fontWeight={900} lineHeight={1.1}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight={900}
+                      lineHeight={1.1}
+                    >
                       Settings
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
@@ -519,33 +591,42 @@ export default function Header() {
 
               <Stack spacing={2}>
                 <Box>
-                  <Typography variant="overline" color="text.secondary" fontWeight={900}>
+                  <Typography
+                    variant="overline"
+                    color="text.secondary"
+                    fontWeight={900}
+                  >
                     Mode
                   </Typography>
                   <Stack direction="row" spacing={1} mt={0.75}>
                     {[
                       {
-                        value: "light",
-                        label: "Light",
+                        value: 'light',
+                        label: 'Light',
                         icon: <Brightness7Icon fontSize="small" />,
                       },
-                      { value: "dark", label: "Dark", icon: <Brightness4Icon fontSize="small" /> },
+                      {
+                        value: 'dark',
+                        label: 'Dark',
+                        icon: <Brightness4Icon fontSize="small" />,
+                      },
                     ].map((item) => (
                       <Button
                         key={item.value}
                         fullWidth
-                        variant={mode === item.value ? "contained" : "outlined"}
+                        variant={mode === item.value ? 'contained' : 'outlined'}
                         startIcon={item.icon}
                         onClick={() => {
                           if (mode !== item.value) toggle();
                         }}
                         sx={{
                           borderRadius: 2,
-                          textTransform: "none",
-                          justifyContent: "center",
+                          textTransform: 'none',
+                          justifyContent: 'center',
                           py: 1,
-                          transition: "transform 0.2s ease, box-shadow 0.2s ease",
-                          "&:hover": { transform: "translateY(-2px)" },
+                          transition:
+                            'transform 0.2s ease, box-shadow 0.2s ease',
+                          '&:hover': { transform: 'translateY(-2px)' },
                         }}
                       >
                         {item.label}
@@ -555,15 +636,19 @@ export default function Header() {
                 </Box>
 
                 <Box>
-                  <Typography variant="overline" color="text.secondary" fontWeight={900}>
-                    {t("themeStyle")}
+                  <Typography
+                    variant="overline"
+                    color="text.secondary"
+                    fontWeight={900}
+                  >
+                    {t('themeStyle')}
                   </Typography>
                   <Stack direction="row" flexWrap="wrap" gap={1} mt={0.75}>
                     {THEME_VARIANTS.map((v, idx) => (
                       <Button
                         key={v}
                         size="small"
-                        variant={variant === v ? "contained" : "outlined"}
+                        variant={variant === v ? 'contained' : 'outlined'}
                         onClick={() => setVariant(v)}
                         startIcon={
                           variant === v ? (
@@ -574,15 +659,21 @@ export default function Header() {
                         }
                         sx={{
                           borderRadius: 2,
-                          textTransform: "none",
+                          textTransform: 'none',
                           minWidth: 104,
                           animation: `settingsItemIn 0.28s ease both`,
                           animationDelay: `${idx * 35}ms`,
-                          "@keyframes settingsItemIn": {
-                            from: { opacity: 0, transform: "translateY(8px) scale(0.97)" },
-                            to: { opacity: 1, transform: "translateY(0) scale(1)" },
+                          '@keyframes settingsItemIn': {
+                            from: {
+                              opacity: 0,
+                              transform: 'translateY(8px) scale(0.97)',
+                            },
+                            to: {
+                              opacity: 1,
+                              transform: 'translateY(0) scale(1)',
+                            },
                           },
-                          "&:hover": { transform: "translateY(-2px)" },
+                          '&:hover': { transform: 'translateY(-2px)' },
                         }}
                       >
                         {getThemeVariantLabel(v)}
@@ -592,8 +683,12 @@ export default function Header() {
                 </Box>
 
                 <Box>
-                  <Typography variant="overline" color="text.secondary" fontWeight={900}>
-                    {t("selectLang")}
+                  <Typography
+                    variant="overline"
+                    color="text.secondary"
+                    fontWeight={900}
+                  >
+                    {t('selectLang')}
                   </Typography>
                   <Select
                     fullWidth
@@ -601,21 +696,25 @@ export default function Header() {
                     value={lang}
                     onChange={(event) => handleLangChange(event.target.value)}
                     renderValue={(selected) => {
-                      const selectedLang = languageOptions.find((l) => l.code === selected);
+                      const selectedLang = languageOptions.find(
+                        (l) => l.code === selected
+                      );
                       return selectedLang ? (
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <Box
                             component="span"
                             sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                               minWidth: 20,
                               fontSize: 11,
                               fontWeight: 800,
                               lineHeight: 1,
-                              transition: "transform 0.24s ease",
-                              transform: langChanging ? "rotate(180deg)" : "none",
+                              transition: 'transform 0.24s ease',
+                              transform: langChanging
+                                ? 'rotate(180deg)'
+                                : 'none',
                             }}
                           >
                             {selectedLang.flag}
@@ -631,10 +730,10 @@ export default function Header() {
                       borderRadius: 2,
                       animation: `settingsItemIn 0.28s ease both`,
                       animationDelay: `${THEME_VARIANTS.length * 35}ms`,
-                      "& .MuiSelect-select": {
+                      '& .MuiSelect-select': {
                         py: 1,
-                        display: "flex",
-                        alignItems: "center",
+                        display: 'flex',
+                        alignItems: 'center',
                       },
                     }}
                     MenuProps={{
@@ -642,22 +741,27 @@ export default function Header() {
                         sx: {
                           mt: 1,
                           borderRadius: 2,
-                          border: "1px solid",
-                          borderColor: "divider",
-                          boxShadow: "0 14px 36px rgba(0,0,0,0.18)",
+                          border: '1px solid',
+                          borderColor: 'divider',
+                          boxShadow: '0 14px 36px rgba(0,0,0,0.18)',
                         },
                       },
                     }}
                   >
                     {languageOptions.map((l) => (
                       <MenuItem key={l.code} value={l.code}>
-                        <Stack direction="row" alignItems="center" spacing={1} width="100%">
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={1}
+                          width="100%"
+                        >
                           <Box
                             component="span"
                             sx={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
                               minWidth: 20,
                               fontSize: 11,
                               fontWeight: 800,
@@ -666,13 +770,16 @@ export default function Header() {
                           >
                             {l.flag}
                           </Box>
-                          <Typography variant="body2" fontWeight={lang === l.code ? 800 : 600}>
+                          <Typography
+                            variant="body2"
+                            fontWeight={lang === l.code ? 800 : 600}
+                          >
                             {l.label}
                           </Typography>
                           {lang === l.code && (
                             <CheckIcon
                               fontSize="small"
-                              sx={{ ml: "auto", color: "primary.main" }}
+                              sx={{ ml: 'auto', color: 'primary.main' }}
                             />
                           )}
                         </Stack>
@@ -689,7 +796,7 @@ export default function Header() {
             direction="row"
             alignItems="center"
             spacing={1}
-            sx={{ ml: 1, display: { xs: "none", md: "flex" } }}
+            sx={{ ml: 1, display: { xs: 'none', md: 'flex' } }}
           >
             {!isOnline && (
               <Tooltip title="Oflayn rejim">
@@ -697,14 +804,22 @@ export default function Header() {
               </Tooltip>
             )}
 
-            <Tooltip title={t("syncQueue") || "Oflayn navbat"}>
+            <Tooltip title={t('syncQueue') || 'Oflayn navbat'}>
               <IconButton color="inherit" onClick={openSyncManager}>
                 <Badge
                   badgeContent={pendingCount}
                   color="error"
-                  sx={{ "& .MuiBadge-badge": { fontSize: 10, height: 16, minWidth: 16 } }}
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: 10,
+                      height: 16,
+                      minWidth: 16,
+                    },
+                  }}
                 >
-                  <SyncIcon className={pendingCount > 0 ? "animate-pulse" : ""} />
+                  <SyncIcon
+                    className={pendingCount > 0 ? 'animate-pulse' : ''}
+                  />
                 </Badge>
               </IconButton>
             </Tooltip>
@@ -714,7 +829,7 @@ export default function Header() {
           <IconButton
             color="inherit"
             onClick={openDrawer}
-            sx={{ display: { xs: "flex", md: "none" }, ml: 1 }}
+            sx={{ display: { xs: 'flex', md: 'none' }, ml: 1 }}
           >
             <Badge badgeContent={pendingCount} color="error" variant="dot">
               <MenuIcon />
@@ -729,14 +844,19 @@ export default function Header() {
             PaperProps={{
               sx: {
                 width: 280,
-                bgcolor: "background.paper",
-                backgroundImage: "none",
+                bgcolor: 'background.paper',
+                backgroundImage: 'none',
                 p: 2,
               },
             }}
           >
             <Box
-              sx={{ mb: 3, display: "flex", alignItems: "center", justifyContent: "space-between" }}
+              sx={{
+                mb: 3,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
             >
               <Typography variant="h6" fontWeight="900">
                 Menu
@@ -746,8 +866,8 @@ export default function Header() {
               </IconButton>
             </Box>
 
-            <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              {user?.role === "researcher" ? (
+            <List sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {user?.role === 'researcher' ? (
                 researcherNavItems.map((item) => (
                   <Button
                     key={item.section}
@@ -755,9 +875,10 @@ export default function Header() {
                     to={item.to}
                     sx={{
                       ...navButtonSx,
-                      justifyContent: "flex-start",
+                      justifyContent: 'flex-start',
                       py: 1.5,
-                      ...(location.pathname === "/researcher" && researcherSection === item.section
+                      ...(location.pathname === '/researcher' &&
+                      researcherSection === item.section
                         ? activeNavSx
                         : {}),
                     }}
@@ -775,42 +896,46 @@ export default function Header() {
                     end
                     sx={{
                       ...navButtonSx,
-                      justifyContent: "flex-start",
+                      justifyContent: 'flex-start',
                       py: 1.5,
                       ...(isResearcherHome ? activeNavSx : {}),
                     }}
                     startIcon={<HomeIcon />}
                     onClick={() => setDrawerOpen(false)}
                   >
-                    {t("home")}
+                    {t('home')}
                   </Button>
                   <Button
                     component={NavLink}
                     to={analyzePath}
-                    sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                    sx={{
+                      ...navButtonSx,
+                      justifyContent: 'flex-start',
+                      py: 1.5,
+                    }}
                     startIcon={<AnalyticsIcon />}
                     onClick={() => setDrawerOpen(false)}
                   >
-                    {t("analyze")}
+                    {t('analyze')}
                   </Button>
                 </>
               )}
-              {(user?.role === "admin" || user?.role === "superadmin") && (
+              {(user?.role === 'admin' || user?.role === 'superadmin') && (
                 <Button
                   component={NavLink}
                   to="/admin"
-                  sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                  sx={{ ...navButtonSx, justifyContent: 'flex-start', py: 1.5 }}
                   startIcon={<AdminPanelSettingsIcon />}
                   onClick={() => setDrawerOpen(false)}
                 >
-                  {t("adminPanel")}
+                  {t('adminPanel')}
                 </Button>
               )}
-              {user?.role === "superadmin" && (
+              {user?.role === 'superadmin' && (
                 <Button
                   component={NavLink}
                   to="/superadmin"
-                  sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                  sx={{ ...navButtonSx, justifyContent: 'flex-start', py: 1.5 }}
                   startIcon={<AdminPanelSettingsIcon color="primary" />}
                   onClick={() => setDrawerOpen(false)}
                 >
@@ -821,7 +946,7 @@ export default function Header() {
               <Button
                 component={NavLink}
                 to={guidelinesPath}
-                sx={{ ...navButtonSx, justifyContent: "flex-start", py: 1.5 }}
+                sx={{ ...navButtonSx, justifyContent: 'flex-start', py: 1.5 }}
                 startIcon={<HelpOutlineIcon />}
                 onClick={() => setDrawerOpen(false)}
               >
@@ -839,9 +964,9 @@ export default function Header() {
                 sx={{
                   mt: 1,
                   borderRadius: 2,
-                  justifyContent: "flex-start",
+                  justifyContent: 'flex-start',
                   py: 1.2,
-                  textTransform: "none",
+                  textTransform: 'none',
                 }}
               >
                 Settings
@@ -852,7 +977,11 @@ export default function Header() {
                 variant="outlined"
                 color="inherit"
                 onClick={openSyncManager}
-                startIcon={<SyncIcon className={pendingCount > 0 ? "animate-pulse" : ""} />}
+                startIcon={
+                  <SyncIcon
+                    className={pendingCount > 0 ? 'animate-pulse' : ''}
+                  />
+                }
                 sx={{ mt: 1, borderRadius: 2 }}
               >
                 Sync ({pendingCount})
@@ -867,7 +996,7 @@ export default function Header() {
                   startIcon={<LogoutIcon />}
                   sx={{ mt: 2, borderRadius: 2 }}
                 >
-                  {t("logout") || "Chiqish"}
+                  {t('logout') || 'Chiqish'}
                 </Button>
               )}
             </List>
@@ -879,7 +1008,7 @@ export default function Header() {
             onEditItem={(item) => {
               setEditingItem(item);
               setSyncOpen(false);
-              navigate("/morphocheck-pro");
+              navigate('/morphocheck-pro');
             }}
           />
 

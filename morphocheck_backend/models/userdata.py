@@ -1,15 +1,16 @@
 from sqlalchemy import (
     Column,
-    Integer,
-    String,
-    Float,
-    Text,
     DateTime,
-    func,
+    Float,
     ForeignKey,
     Index,
+    Integer,
+    String,
+    Text,
+    func,
 )
 from sqlalchemy.orm import relationship
+
 from .base import Base
 
 

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from 'react';
 import {
   Typography,
   Box,
@@ -7,11 +7,18 @@ import {
   DialogTitle,
   DialogContent,
   IconButton,
-} from "@mui/material";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { MonitorWeight, Close } from "@mui/icons-material";
-import DashboardCard from "./DashboardCard";
-import { useLanguage } from "../../contexts/LanguageContext";
+} from '@mui/material';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
+import { MonitorWeight, Close } from '@mui/icons-material';
+import DashboardCard from './DashboardCard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const BMIDistribution = ({ data, loading }) => {
   const theme = useTheme();
@@ -42,17 +49,19 @@ const BMIDistribution = ({ data, loading }) => {
       }
 
       const status = bmiStr.toLowerCase();
-      if (status.includes("ozg'in") || status.includes("underweight")) ozgin++;
-      else if (status.includes("normal")) normal++;
-      else if (status.includes("ortiqcha") || status.includes("overweight")) ortiqcha++;
-      else if (status.includes("semizlik") || status.includes("obese")) semizlik++;
+      if (status.includes("ozg'in") || status.includes('underweight')) ozgin++;
+      else if (status.includes('normal')) normal++;
+      else if (status.includes('ortiqcha') || status.includes('overweight'))
+        ortiqcha++;
+      else if (status.includes('semizlik') || status.includes('obese'))
+        semizlik++;
     });
 
     return [
-      { name: "Ozg'in", value: ozgin, color: "#00C49F" },
-      { name: "Normal", value: normal, color: "#0088FE" },
-      { name: "Ortiqcha", value: ortiqcha, color: "#FFBB28" },
-      { name: "Semizlik", value: semizlik, color: "#FF8042" },
+      { name: "Ozg'in", value: ozgin, color: '#00C49F' },
+      { name: 'Normal', value: normal, color: '#0088FE' },
+      { name: 'Ortiqcha', value: ortiqcha, color: '#FFBB28' },
+      { name: 'Semizlik', value: semizlik, color: '#FF8042' },
     ];
   }, [data]);
 
@@ -79,12 +88,12 @@ const BMIDistribution = ({ data, loading }) => {
           contentStyle={{
             borderRadius: 12,
             boxShadow:
-              theme.palette.mode === "dark"
-                ? "0 4px 12px rgba(0,0,0,0.5)"
-                : "0 4px 12px rgba(0,0,0,0.1)",
-            border: "none",
+              theme.palette.mode === 'dark'
+                ? '0 4px 12px rgba(0,0,0,0.5)'
+                : '0 4px 12px rgba(0,0,0,0.1)',
+            border: 'none',
             backgroundColor: theme.palette.background.paper,
-            backdropFilter: "blur(5px)",
+            backdropFilter: 'blur(5px)',
             color: theme.palette.text.primary,
           }}
           itemStyle={{ color: theme.palette.text.primary }}
@@ -97,13 +106,13 @@ const BMIDistribution = ({ data, loading }) => {
   return (
     <>
       <DashboardCard
-        title={t("bmiDistribution")}
+        title={t('bmiDistribution')}
         icon={<MonitorWeight />}
         loading={loading}
         onFullscreen={() => setOpenModal(true)}
       >
         {total === 0 ? (
-          <Typography color="text.secondary">{t("noData")}</Typography>
+          <Typography color="text.secondary">{t('noData')}</Typography>
         ) : (
           renderChart(300)
         )}
@@ -118,27 +127,31 @@ const BMIDistribution = ({ data, loading }) => {
           sx: {
             borderRadius: 4,
             background:
-              theme.palette.mode === "dark"
-                ? "rgba(23, 26, 33, 0.95)"
-                : "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(20px)",
+              theme.palette.mode === 'dark'
+                ? 'rgba(23, 26, 33, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(20px)',
             border:
-              theme.palette.mode === "dark"
-                ? "1px solid rgba(255,255,255,0.12)"
-                : "1px solid rgba(100,116,139,0.15)",
+              theme.palette.mode === 'dark'
+                ? '1px solid rgba(255,255,255,0.12)'
+                : '1px solid rgba(100,116,139,0.15)',
             boxShadow:
-              theme.palette.mode === "dark"
-                ? "0 24px 48px rgba(0,0,0,0.5)"
-                : "0 24px 48px rgba(100,116,139,0.15)",
+              theme.palette.mode === 'dark'
+                ? '0 24px 48px rgba(0,0,0,0.5)'
+                : '0 24px 48px rgba(100,116,139,0.15)',
           },
         }}
       >
         <DialogTitle
-          sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
         >
           <Box display="flex" alignItems="center">
-            <MonitorWeight sx={{ mr: 1, color: "primary.main" }} />
-            {t("bmiDistributionDetails")}
+            <MonitorWeight sx={{ mr: 1, color: 'primary.main' }} />
+            {t('bmiDistributionDetails')}
           </Box>
           <IconButton onClick={() => setOpenModal(false)}>
             <Close />
@@ -146,8 +159,13 @@ const BMIDistribution = ({ data, loading }) => {
         </DialogTitle>
         <DialogContent dividers sx={{ pb: 4 }}>
           {total === 0 ? (
-            <Box display="flex" justifyContent="center" alignItems="center" height={400}>
-              <Typography color="text.secondary">{t("noData")}</Typography>
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              height={400}
+            >
+              <Typography color="text.secondary">{t('noData')}</Typography>
             </Box>
           ) : (
             renderChart(500)

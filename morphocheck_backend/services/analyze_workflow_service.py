@@ -10,6 +10,7 @@ from models.user import User
 from models.userdata import PatientAnalysis
 from services.ai_advice_service import generate_parent_tips
 from services.analyze_service import (
+    _split_region_and_district,
     build_growth_standards,
     build_progress_tracking,
     calculate_bmi,
@@ -17,7 +18,6 @@ from services.analyze_service import (
     generate_region_based_id,
     get_bmi_range_by_age_and_gender,
     get_ideal_weight_by_age_and_gender,
-    _split_region_and_district,
 )
 from services.cache_service import cache_service
 from services.clinical_service import clinical_service

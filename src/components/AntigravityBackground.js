@@ -1,7 +1,7 @@
 // src/components/AntigravityBackground.js
-import React, { useRef, useMemo } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef, useMemo } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 
 // --- Configuration ---
 const PARTICLE_COUNT = 8000;
@@ -12,13 +12,13 @@ const DAMPING = 0.93;
 
 // Google Brand Colors + Premium Palette
 const PREMIUM_COLORS = [
-  "#4285F4", // Google Blue
-  "#EA4335", // Google Red
-  "#FBBC05", // Google Yellow
-  "#34A853", // Google Green
-  "#a855f7", // Purple
-  "#22d3ee", // Cyan
-  "#f472b6", // Pink
+  '#4285F4', // Google Blue
+  '#EA4335', // Google Red
+  '#FBBC05', // Google Yellow
+  '#34A853', // Google Green
+  '#a855f7', // Purple
+  '#22d3ee', // Cyan
+  '#f472b6', // Pink
 ];
 
 // --- Simple Noise Helpers ---
@@ -99,10 +99,10 @@ const PremiumParticles = ({ isDark }) => {
       opacities[i] = 0.3 + Math.random() * 0.5;
     }
 
-    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    geo.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
-    geo.setAttribute("opacity", new THREE.BufferAttribute(opacities, 1));
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+    geo.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
 
     return [geo, initial, vels];
   }, []);
@@ -181,12 +181,12 @@ const PremiumParticles = ({ isDark }) => {
     pointsRef.current.rotation.y = THREE.MathUtils.lerp(
       pointsRef.current.rotation.y,
       state.mouse.x * 0.15,
-      0.05,
+      0.05
     );
     pointsRef.current.rotation.x = THREE.MathUtils.lerp(
       pointsRef.current.rotation.x,
       -state.mouse.y * 0.15,
-      0.05,
+      0.05
     );
   });
 
@@ -201,46 +201,48 @@ const PremiumParticles = ({ isDark }) => {
     });
   }, [isDark]);
 
-  return <points ref={pointsRef} geometry={geometry} material={shaderMaterial} />;
+  return (
+    <points ref={pointsRef} geometry={geometry} material={shaderMaterial} />
+  );
 };
 
 export default function AntigravityBackground({ theme }) {
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         zIndex: 0,
         background: isDark
-          ? "radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)"
-          : "radial-gradient(circle at 50% 50%, #f0f9ff 0%, #ffffff 100%)",
-        transition: "background 0.8s ease-in-out",
+          ? 'radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)'
+          : 'radial-gradient(circle at 50% 50%, #f0f9ff 0%, #ffffff 100%)',
+        transition: 'background 0.8s ease-in-out',
       }}
     >
       {/* Animated Vignette Layer */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           boxShadow: isDark
-            ? "inset 0 0 180px rgba(59, 130, 246, 0.2)"
-            : "inset 0 0 150px rgba(37, 99, 235, 0.1)",
-          pointerEvents: "none",
+            ? 'inset 0 0 180px rgba(59, 130, 246, 0.2)'
+            : 'inset 0 0 150px rgba(37, 99, 235, 0.1)',
+          pointerEvents: 'none',
           zIndex: 1,
         }}
       />
 
       <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
         <PremiumParticles isDark={isDark} />
-        <fog attach="fog" args={[isDark ? "#020617" : "#ffffff", 10, 30]} />
+        <fog attach="fog" args={[isDark ? '#020617' : '#ffffff', 10, 30]} />
       </Canvas>
 
       {/* Custom styles to prevent scrolling artifacts */}

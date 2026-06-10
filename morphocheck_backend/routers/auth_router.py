@@ -1,18 +1,22 @@
-from datetime import datetime, timedelta
 import hashlib
 import os
 import secrets
 import smtplib
+from datetime import datetime, timedelta
 from email.message import EmailMessage
 
-from fastapi import APIRouter, HTTPException, Depends, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from models.schemas import UserRegister, UserLogin, UserOut, Token
+
 from models.auth_device import LoginVerificationCode, TrustedLoginDevice
+from models.schemas import Token, UserLogin, UserOut, UserRegister
 from models.user import User
+from utils.audit_helper import record_audit_log
 from utils.database import get_db
+from utils.rate_limit import limiter
 from utils.security import (
     ALGORITHM,
     SECRET_KEY,
@@ -20,9 +24,6 @@ from utils.security import (
     get_password_hash,
     verify_password,
 )
-from utils.audit_helper import record_audit_log
-from jose import JWTError, jwt
-from utils.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -223,7 +224,7 @@ def get_optional_user(
     if not token:
         return None
     try:
-        from jose import jwt, JWTError
+        from jose import JWTError, jwt
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")

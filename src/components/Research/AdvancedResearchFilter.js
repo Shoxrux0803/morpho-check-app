@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
@@ -11,7 +11,7 @@ import {
   MenuItem,
   Typography,
   Chip,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Search,
   FilterList,
@@ -22,26 +22,30 @@ import {
   Person,
   Download,
   Wc,
-} from "@mui/icons-material";
-import { useLanguage } from "../../contexts/LanguageContext";
-import { researcherT } from "../../utils/researcherI18n";
+} from '@mui/icons-material';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { researcherT } from '../../utils/researcherI18n';
 
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
       background: (theme) =>
-        theme.palette.mode === "dark" ? "rgba(30,30,40,0.7)" : "rgba(255,255,255,0.85)",
-      backdropFilter: "blur(20px)",
+        theme.palette.mode === 'dark'
+          ? 'rgba(30,30,40,0.7)'
+          : 'rgba(255,255,255,0.85)',
+      backdropFilter: 'blur(20px)',
       borderRadius: 4,
-      border: "1px solid",
+      border: '1px solid',
       borderColor: (theme) =>
-        theme.palette.mode === "dark" ? "rgba(255,255,255,0.12)" : "rgba(100, 116, 139, 0.12)",
-      overflow: "hidden",
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.12)'
+          : 'rgba(100, 116, 139, 0.12)',
+      overflow: 'hidden',
       boxShadow: (theme) =>
-        theme.palette.mode === "dark"
-          ? "0 8px 32px rgba(0,0,0,0.4)"
-          : "0 8px 32px rgba(100,116,139,0.08)",
+        theme.palette.mode === 'dark'
+          ? '0 8px 32px rgba(0,0,0,0.4)'
+          : '0 8px 32px rgba(100,116,139,0.08)',
       ...sx,
     }}
   >
@@ -56,45 +60,50 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
 
   // Feeding type options
   const feedingOptions = [
-    { value: "Tabiiy (естественном вскармливании)", label: t("natural") },
-    { value: "Sun'iy (искусственном вскармливании)", label: t("artificial") },
+    { value: 'Tabiiy (естественном вскармливании)', label: t('natural') },
+    { value: "Sun'iy (искусственном вскармливании)", label: t('artificial') },
   ];
 
   // Parents marriage options
   const marriageOptions = [
-    { value: "Yaqin qarindosh (близкородственный)", label: t("closeRelative") },
-    { value: "Uzoq qarindosh (дальнородственный)", label: t("distantRelative") },
-    { value: "Qarindosh emas (неродственный)", label: t("notRelative") },
+    { value: 'Yaqin qarindosh (близкородственный)', label: t('closeRelative') },
+    {
+      value: 'Uzoq qarindosh (дальнородственный)',
+      label: t('distantRelative'),
+    },
+    { value: 'Qarindosh emas (неродственный)', label: t('notRelative') },
   ];
 
   const handleClear = () => {
     const emptyFilter = {
-      search: "",
-      full_name: "",
-      school_name: "",
-      settlement: "",
-      feeding_type: "",
-      parents_marriage: "",
-      gender: "",
-      weight_min: "",
-      weight_max: "",
-      height_min: "",
-      height_max: "",
-      date_from: "",
-      date_to: "",
+      search: '',
+      full_name: '',
+      school_name: '',
+      settlement: '',
+      feeding_type: '',
+      parents_marriage: '',
+      gender: '',
+      weight_min: '',
+      weight_max: '',
+      height_min: '',
+      height_max: '',
+      date_from: '',
+      date_to: '',
     };
     setFilter(emptyFilter);
     onSearch(emptyFilter);
   };
 
   const handleRemoveChip = (key) => {
-    const updatedFilter = { ...filter, [key]: "" };
+    const updatedFilter = { ...filter, [key]: '' };
     setFilter(updatedFilter);
     onSearch(updatedFilter);
   };
 
   const activeFilters = Object.entries(filter).filter(([key, value]) => {
-    return value !== "" && value !== null && value !== undefined && key !== "search";
+    return (
+      value !== '' && value !== null && value !== undefined && key !== 'search'
+    );
   });
 
   const handleChange = (e) => {
@@ -110,14 +119,14 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             fullWidth
             size="small"
             name="search"
-            placeholder={t("quickSearchPlaceholder")}
-            value={filter.search || ""}
+            placeholder={t('quickSearchPlaceholder')}
+            value={filter.search || ''}
             onChange={handleChange}
-            onKeyDown={(e) => e.key === "Enter" && onSearch()}
+            onKeyDown={(e) => e.key === 'Enter' && onSearch()}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <Search sx={{ color: "primary.main" }} />
+                  <Search sx={{ color: 'primary.main' }} />
                 </InputAdornment>
               ),
               sx: { borderRadius: 3 },
@@ -125,21 +134,21 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
           />
 
           <Button
-            variant={expanded ? "contained" : "outlined"}
+            variant={expanded ? 'contained' : 'outlined'}
             startIcon={expanded ? <ExpandLess /> : <FilterList />}
             onClick={() => setExpanded(!expanded)}
-            sx={{ borderRadius: 3, textTransform: "none", minWidth: 140 }}
+            sx={{ borderRadius: 3, textTransform: 'none', minWidth: 140 }}
           >
-            {t("filters")}
+            {t('filters')}
           </Button>
 
           <Button
             variant="contained"
             color="primary"
             onClick={() => onSearch()}
-            sx={{ borderRadius: 3, px: 3, textTransform: "none" }}
+            sx={{ borderRadius: 3, px: 3, textTransform: 'none' }}
           >
-            {t("search")}
+            {t('search')}
           </Button>
 
           {onExport && (
@@ -148,7 +157,12 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
               color="success"
               startIcon={<Download />}
               onClick={onExport}
-              sx={{ borderRadius: 3, px: 2, textTransform: "none", whiteSpace: "nowrap" }}
+              sx={{
+                borderRadius: 3,
+                px: 2,
+                textTransform: 'none',
+                whiteSpace: 'nowrap',
+              }}
             >
               XLSX
             </Button>
@@ -162,9 +176,9 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
               mt: 3,
               pt: 3,
               borderTop: (theme) =>
-                theme.palette.mode === "dark"
-                  ? "1px solid rgba(255,255,255,0.08)"
-                  : "1px solid rgba(0,0,0,0.06)",
+                theme.palette.mode === 'dark'
+                  ? '1px solid rgba(255,255,255,0.08)'
+                  : '1px solid rgba(0,0,0,0.06)',
             }}
           >
             <Grid container spacing={3}>
@@ -173,17 +187,17 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                 <Typography
                   variant="overline"
                   color="text.secondary"
-                  sx={{ fontWeight: 700, mb: 1, display: "block" }}
+                  sx={{ fontWeight: 700, mb: 1, display: 'block' }}
                 >
-                  {t("demographics")}
+                  {t('demographics')}
                 </Typography>
                 <Stack spacing={2}>
                   <TextField
                     fullWidth
                     size="small"
                     name="full_name"
-                    label={t("fullNameDetailed")}
-                    value={filter.full_name || ""}
+                    label={t('fullNameDetailed')}
+                    value={filter.full_name || ''}
                     onChange={handleChange}
                     InputProps={{
                       startAdornment: (
@@ -198,8 +212,8 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="gender"
-                    label={t("gender")}
-                    value={filter.gender || ""}
+                    label={t('gender')}
+                    value={filter.gender || ''}
                     onChange={handleChange}
                     InputProps={{
                       startAdornment: (
@@ -209,16 +223,16 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       ),
                     }}
                   >
-                    <MenuItem value="">{t("all")}</MenuItem>
-                    <MenuItem value="erkak">{t("maleChild")}</MenuItem>
-                    <MenuItem value="ayol">{t("femaleChild")}</MenuItem>
+                    <MenuItem value="">{t('all')}</MenuItem>
+                    <MenuItem value="erkak">{t('maleChild')}</MenuItem>
+                    <MenuItem value="ayol">{t('femaleChild')}</MenuItem>
                   </TextField>
                   <TextField
                     fullWidth
                     size="small"
                     name="school_name"
-                    label={t("schoolKindergarten")}
-                    value={filter.school_name || ""}
+                    label={t('schoolKindergarten')}
+                    value={filter.school_name || ''}
                     onChange={handleChange}
                     InputProps={{
                       startAdornment: (
@@ -232,8 +246,8 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="settlement"
-                    label={t("settlement")}
-                    value={filter.settlement || ""}
+                    label={t('settlement')}
+                    value={filter.settlement || ''}
                     onChange={handleChange}
                     InputProps={{
                       startAdornment: (
@@ -251,9 +265,9 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                 <Typography
                   variant="overline"
                   color="text.secondary"
-                  sx={{ fontWeight: 700, mb: 1, display: "block" }}
+                  sx={{ fontWeight: 700, mb: 1, display: 'block' }}
                 >
-                  {t("attributes")}
+                  {t('attributes')}
                 </Typography>
                 <Stack spacing={2}>
                   <TextField
@@ -261,11 +275,11 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="feeding_type"
-                    label={t("feedingType")}
-                    value={filter.feeding_type || ""}
+                    label={t('feedingType')}
+                    value={filter.feeding_type || ''}
                     onChange={handleChange}
                   >
-                    <MenuItem value="">{t("all")}</MenuItem>
+                    <MenuItem value="">{t('all')}</MenuItem>
                     {feedingOptions.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
                         {opt.label}
@@ -277,11 +291,11 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     fullWidth
                     size="small"
                     name="parents_marriage"
-                    label={t("parentsMarriage")}
-                    value={filter.parents_marriage || ""}
+                    label={t('parentsMarriage')}
+                    value={filter.parents_marriage || ''}
                     onChange={handleChange}
                   >
-                    <MenuItem value="">{t("all")}</MenuItem>
+                    <MenuItem value="">{t('all')}</MenuItem>
                     {marriageOptions.map((opt) => (
                       <MenuItem key={opt.value} value={opt.value}>
                         {opt.label}
@@ -293,9 +307,9 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       fullWidth
                       size="small"
                       name="date_from"
-                      label={t("dateFrom")}
+                      label={t('dateFrom')}
                       placeholder="2024-01-01"
-                      value={filter.date_from || ""}
+                      value={filter.date_from || ''}
                       onChange={handleChange}
                       InputLabelProps={{ shrink: true }}
                     />
@@ -303,9 +317,9 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                       fullWidth
                       size="small"
                       name="date_to"
-                      label={t("dateTo")}
+                      label={t('dateTo')}
                       placeholder="2024-12-31"
-                      value={filter.date_to || ""}
+                      value={filter.date_to || ''}
                       onChange={handleChange}
                       InputLabelProps={{ shrink: true }}
                     />
@@ -318,21 +332,24 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                 <Typography
                   variant="overline"
                   color="text.secondary"
-                  sx={{ fontWeight: 700, mb: 1, display: "block" }}
+                  sx={{ fontWeight: 700, mb: 1, display: 'block' }}
                 >
-                  {t("measurements")}
+                  {t('measurements')}
                 </Typography>
                 <Stack spacing={2}>
                   <Box>
-                    <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
-                      {t("weightRange")}
+                    <Typography
+                      variant="caption"
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      {t('weightRange')}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TextField
                         size="small"
                         name="weight_min"
                         placeholder="Min"
-                        value={filter.weight_min || ""}
+                        value={filter.weight_min || ''}
                         onChange={handleChange}
                         type="number"
                       />
@@ -341,22 +358,25 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                         size="small"
                         name="weight_max"
                         placeholder="Max"
-                        value={filter.weight_max || ""}
+                        value={filter.weight_max || ''}
                         onChange={handleChange}
                         type="number"
                       />
                     </Stack>
                   </Box>
                   <Box>
-                    <Typography variant="caption" sx={{ mb: 1, display: "block" }}>
-                      {t("heightRange")}
+                    <Typography
+                      variant="caption"
+                      sx={{ mb: 1, display: 'block' }}
+                    >
+                      {t('heightRange')}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <TextField
                         size="small"
                         name="height_min"
                         placeholder="Min"
-                        value={filter.height_min || ""}
+                        value={filter.height_min || ''}
                         onChange={handleChange}
                         type="number"
                       />
@@ -365,7 +385,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                         size="small"
                         name="height_max"
                         placeholder="Max"
-                        value={filter.height_max || ""}
+                        value={filter.height_max || ''}
                         onChange={handleChange}
                         type="number"
                       />
@@ -377,9 +397,9 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
                     color="error"
                     startIcon={<RestartAlt />}
                     onClick={handleClear}
-                    sx={{ mt: "auto", py: 1 }}
+                    sx={{ mt: 'auto', py: 1 }}
                   >
-                    {t("clearFilters")}
+                    {t('clearFilters')}
                   </Button>
                 </Stack>
               </Grid>
@@ -390,21 +410,30 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
 
       {/* Active Filter Chips */}
       {activeFilters.length > 0 && (
-        <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: "wrap", gap: 1 }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ mt: 2, flexWrap: 'wrap', gap: 1 }}
+        >
           <Typography
             variant="body2"
-            sx={{ alignSelf: "center", mr: 1, fontWeight: 600, color: "text.secondary" }}
+            sx={{
+              alignSelf: 'center',
+              mr: 1,
+              fontWeight: 600,
+              color: 'text.secondary',
+            }}
           >
-            {t("activeFilters")}
+            {t('activeFilters')}
           </Typography>
           {activeFilters.map(([key, value]) => {
             let label = `${key}: ${value}`;
-            if (key === "date_from") label = `${t("fromDate")}: ${value}`;
-            if (key === "date_to") label = `${t("toDate")}: ${value}`;
-            if (key === "weight_min") label = `${t("weightShort")} >= ${value}`;
-            if (key === "weight_max") label = `${t("weightShort")} <= ${value}`;
-            if (key === "gender")
-              label = `${t("gender")}: ${value === "erkak" ? t("male") : t("female")}`;
+            if (key === 'date_from') label = `${t('fromDate')}: ${value}`;
+            if (key === 'date_to') label = `${t('toDate')}: ${value}`;
+            if (key === 'weight_min') label = `${t('weightShort')} >= ${value}`;
+            if (key === 'weight_max') label = `${t('weightShort')} <= ${value}`;
+            if (key === 'gender')
+              label = `${t('gender')}: ${value === 'erkak' ? t('male') : t('female')}`;
 
             return (
               <Chip
@@ -421,9 +450,9 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
           <Button
             size="small"
             onClick={handleClear}
-            sx={{ textTransform: "none", fontWeight: 600 }}
+            sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {t("clearAll")}
+            {t('clearAll')}
           </Button>
         </Stack>
       )}

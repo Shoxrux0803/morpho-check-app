@@ -5,7 +5,6 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt, RGBColor
 
-
 CONSENT_I18N = {
     "uz": {
         "title": "HELSINKI DEKLARATSIYASI ASOSIDAGI ETIK ROZILIK BAYONNOMASI",

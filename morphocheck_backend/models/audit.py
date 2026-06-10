@@ -1,6 +1,7 @@
 # morphocheck_backend/models/audit.py
-from sqlalchemy import Column, Integer, String, Text, DateTime, func, ForeignKey, Index
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import relationship
+
 from .base import Base
 
 

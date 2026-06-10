@@ -1,13 +1,13 @@
 // src/components/Footer.jsx
-import { useLanguage } from "../contexts/LanguageContext";
+import { useLanguage } from '../contexts/LanguageContext';
 
 const FOOTER_TEXT = {
   uz: "O'zbekistonda ❤️ bilan yaratilgan",
-  ru: "Создано в Узбекистане с ❤️",
-  en: "Made with ❤️ in Uzbekistan",
-  kz: "Өзбекстанда ❤️ жасалған",
-  ky: "Өзбекстанда ❤️ менен жасалган",
-  tg: "Дар Ӯзбекистон бо ❤️ сохта шудааст",
+  ru: 'Создано в Узбекистане с ❤️',
+  en: 'Made with ❤️ in Uzbekistan',
+  kz: 'Өзбекстанда ❤️ жасалған',
+  ky: 'Өзбекстанда ❤️ менен жасалган',
+  tg: 'Дар Ӯзбекистон бо ❤️ сохта шудааст',
 };
 
 export default function Footer() {

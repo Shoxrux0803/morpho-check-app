@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { Typography, useTheme } from "@mui/material";
+import React, { useMemo } from 'react';
+import { Typography, useTheme } from '@mui/material';
 import {
   AreaChart,
   Area,
@@ -8,10 +8,10 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { TrendingUp } from "@mui/icons-material";
-import DashboardCard from "./DashboardCard";
-import { useLanguage } from "../../contexts/LanguageContext";
+} from 'recharts';
+import { TrendingUp } from '@mui/icons-material';
+import DashboardCard from './DashboardCard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const UserGrowthChart = ({ data, loading }) => {
   const theme = useTheme();
@@ -25,8 +25,8 @@ const UserGrowthChart = ({ data, loading }) => {
       const date = user.created_at || user.createdAt;
       if (date) {
         const day = new Date(date).toLocaleDateString(lang, {
-          month: "short",
-          day: "numeric",
+          month: 'short',
+          day: 'numeric',
         });
         grouped[day] = (grouped[day] || 0) + 1;
       }
@@ -38,19 +38,35 @@ const UserGrowthChart = ({ data, loading }) => {
   }, [data, lang]);
 
   return (
-    <DashboardCard title={t("userGrowthTitle")} icon={<TrendingUp />} loading={loading}>
+    <DashboardCard
+      title={t('userGrowthTitle')}
+      icon={<TrendingUp />}
+      loading={loading}
+    >
       {chartData.length === 0 ? (
-        <Typography color="text.secondary">{t("noData")}</Typography>
+        <Typography color="text.secondary">{t('noData')}</Typography>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={theme.palette.primary.main} stopOpacity={0} />
+                <stop
+                  offset="5%"
+                  stopColor={theme.palette.primary.main}
+                  stopOpacity={0.3}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={theme.palette.primary.main}
+                  stopOpacity={0}
+                />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke={theme.palette.divider}
+            />
             <XAxis
               dataKey="name"
               axisLine={false}
@@ -66,10 +82,10 @@ const UserGrowthChart = ({ data, loading }) => {
               contentStyle={{
                 borderRadius: 12,
                 boxShadow:
-                  theme.palette.mode === "dark"
-                    ? "0 4px 12px rgba(0,0,0,0.5)"
-                    : "0 4px 12px rgba(0,0,0,0.1)",
-                border: "none",
+                  theme.palette.mode === 'dark'
+                    ? '0 4px 12px rgba(0,0,0,0.5)'
+                    : '0 4px 12px rgba(0,0,0,0.1)',
+                border: 'none',
                 backgroundColor: theme.palette.background.paper,
                 color: theme.palette.text.primary,
               }}
@@ -82,7 +98,7 @@ const UserGrowthChart = ({ data, loading }) => {
               strokeWidth={3}
               fillOpacity={1}
               fill="url(#colorValue)"
-              name={t("usersLabel")}
+              name={t('usersLabel')}
               animationDuration={1500}
             />
           </AreaChart>

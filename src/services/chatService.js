@@ -1,15 +1,22 @@
 // src/services/chatService.js
-import axios from "axios";
+import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8000/api";
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
 
 const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 export const chatService = {
-  sendMessage: async (recipientId, content, type = "direct", replyToId = null, fileUrl = null) => {
+  sendMessage: async (
+    recipientId,
+    content,
+    type = 'direct',
+    replyToId = null,
+    fileUrl = null
+  ) => {
     const payload = {
       recipient_id: recipientId,
       content,
@@ -25,11 +32,11 @@ export const chatService = {
 
   uploadFile: async (file) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
     const response = await axios.post(`${API_BASE_URL}/chat/upload`, formData, {
       headers: {
         ...getAuthHeader(),
-        "Content-Type": "multipart/form-data",
+        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
@@ -41,7 +48,7 @@ export const chatService = {
       {},
       {
         headers: getAuthHeader(),
-      },
+      }
     );
   },
 
@@ -81,7 +88,7 @@ export const chatService = {
       {},
       {
         headers: getAuthHeader(),
-      },
+      }
     );
     return response.data;
   },
@@ -92,7 +99,7 @@ export const chatService = {
       {},
       {
         headers: getAuthHeader(),
-      },
+      }
     );
     return response.data;
   },
@@ -103,7 +110,7 @@ export const chatService = {
       {},
       {
         headers: getAuthHeader(),
-      },
+      }
     );
     return response.data;
   },

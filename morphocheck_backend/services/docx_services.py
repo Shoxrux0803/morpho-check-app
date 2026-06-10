@@ -7,15 +7,17 @@ DOCX hisobot generatsiyasi — "Мактабгача таълим ёшидаги
 """
 
 import re
+from io import BytesIO
+
 from docx import Document
-from docx.shared import Pt, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_ROW_HEIGHT_RULE
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from io import BytesIO
-from utils.translit import lat2cyr
+from docx.shared import Cm, Pt
+
 from services.ky_localization import ky_text, report_text
+from utils.translit import lat2cyr
 
 __all__ = ["generate_docx_report"]
 

@@ -1,5 +1,5 @@
 // src/components/Charts/GrowthChart.jsx
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -11,24 +11,28 @@ import {
   ReferenceDot,
   Legend,
   Label,
-} from "recharts";
-import { useTheme } from "@mui/material";
-import { WHO_DATA } from "../../utils/growthReference";
-import { useLanguage } from "../../contexts/LanguageContext";
+} from 'recharts';
+import { useTheme } from '@mui/material';
+import { WHO_DATA } from '../../utils/growthReference';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const GrowthChart = ({ gender, age, type, value }) => {
   const theme = useTheme();
   const { t } = useLanguage();
-  const isDark = theme.palette.mode === "dark";
+  const isDark = theme.palette.mode === 'dark';
 
-  const dataKey = gender === "erkak" || gender === "male" || gender === "o'g'il" ? "boys" : "girls";
-  const indicatorKey = type === "height" ? "heightForAge" : "bmiForAge";
+  const dataKey =
+    gender === 'erkak' || gender === 'male' || gender === "o'g'il"
+      ? 'boys'
+      : 'girls';
+  const indicatorKey = type === 'height' ? 'heightForAge' : 'bmiForAge';
   const baseData = WHO_DATA[dataKey];
   const rawData =
-    type === "weight"
+    type === 'weight'
       ? baseData.heightForAge.map((heightRow, index) => {
           const bmiRow =
-            baseData.bmiForAge[index] || baseData.bmiForAge[baseData.bmiForAge.length - 1];
+            baseData.bmiForAge[index] ||
+            baseData.bmiForAge[baseData.bmiForAge.length - 1];
           const toWeight = (heightCm, bmiValue) =>
             Number((bmiValue * Math.pow(heightCm / 100, 2)).toFixed(1));
           return {
@@ -46,12 +50,12 @@ const GrowthChart = ({ gender, age, type, value }) => {
 
   // Ranglar va uslublar
   const colors = {
-    sd3: isDark ? "#ff5252" : "#d32f2f", // Qizil
-    sd2: isDark ? "#ffa726" : "#f57c00", // To'q sariq
-    sd1: isDark ? "#ffeb3b" : "#fbc02d", // Sariq
-    median: isDark ? "#4caf50" : "#2e7d32", // Yashil
-    patient: isDark ? "#ffffff" : "#000000",
-    grid: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
+    sd3: isDark ? '#ff5252' : '#d32f2f', // Qizil
+    sd2: isDark ? '#ffa726' : '#f57c00', // To'q sariq
+    sd1: isDark ? '#ffeb3b' : '#fbc02d', // Sariq
+    median: isDark ? '#4caf50' : '#2e7d32', // Yashil
+    patient: isDark ? '#ffffff' : '#000000',
+    grid: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
     text: theme.palette.text.secondary,
   };
 
@@ -62,19 +66,19 @@ const GrowthChart = ({ gender, age, type, value }) => {
       return (
         <div
           style={{
-            backgroundColor: isDark ? "#1a1a2e" : "#fff",
-            padding: "10px",
+            backgroundColor: isDark ? '#1a1a2e' : '#fff',
+            padding: '10px',
             border: `1px solid ${theme.palette.divider}`,
-            borderRadius: "8px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           }}
         >
-          <p style={{ margin: 0, fontWeight: 700, fontSize: "14px" }}>
-            {payload[0].payload.age} {t("yearsOld")}
+          <p style={{ margin: 0, fontWeight: 700, fontSize: '14px' }}>
+            {payload[0].payload.age} {t('yearsOld')}
           </p>
-          <div style={{ fontSize: "12px", marginTop: "4px" }}>
+          <div style={{ fontSize: '12px', marginTop: '4px' }}>
             {payload.map((p, i) => (
-              <p key={i} style={{ margin: "2px 0", color: p.color }}>
+              <p key={i} style={{ margin: '2px 0', color: p.color }}>
                 {p.name}: {p.value}
               </p>
             ))}
@@ -86,13 +90,26 @@ const GrowthChart = ({ gender, age, type, value }) => {
   };
 
   return (
-    <div style={{ width: "100%", height: 400, marginTop: "20px" }}>
+    <div style={{ width: '100%', height: 400, marginTop: '20px' }}>
       <ResponsiveContainer>
-        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} vertical={false} />
-          <XAxis dataKey="age" stroke={colors.text} fontSize={12} tickLine={false} axisLine={false}>
+        <LineChart
+          data={chartData}
+          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke={colors.grid}
+            vertical={false}
+          />
+          <XAxis
+            dataKey="age"
+            stroke={colors.text}
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          >
             <Label
-              value={t("ageLabel")}
+              value={t('ageLabel')}
               offset={-10}
               position="insideBottom"
               fill={colors.text}
@@ -104,13 +121,13 @@ const GrowthChart = ({ gender, age, type, value }) => {
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            domain={["auto", "auto"]}
+            domain={['auto', 'auto']}
           >
             <Label
-              value={type === "bmi" ? "BMI" : type === "weight" ? "kg" : "cm"}
+              value={type === 'bmi' ? 'BMI' : type === 'weight' ? 'kg' : 'cm'}
               angle={-90}
               position="insideLeft"
-              style={{ textAnchor: "middle", fill: colors.text, fontSize: 12 }}
+              style={{ textAnchor: 'middle', fill: colors.text, fontSize: 12 }}
             />
           </YAxis>
           <Tooltip content={<CustomTooltip />} />
@@ -189,7 +206,7 @@ const GrowthChart = ({ gender, age, type, value }) => {
               strokeWidth={2}
               isFront={true}
               label={{
-                position: "top",
+                position: 'top',
                 value: `${value}`,
                 fill: colors.text,
                 fontSize: 13,

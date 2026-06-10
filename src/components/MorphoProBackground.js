@@ -1,31 +1,36 @@
-import React, { Suspense, useMemo, useRef, useEffect, useState } from "react";
-import * as THREE from "three";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Environment, Outlines } from "@react-three/drei";
-import { Physics, useSphere } from "@react-three/cannon";
+import React, { Suspense, useMemo, useRef, useEffect, useState } from 'react';
+import * as THREE from 'three';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Environment, Outlines } from '@react-three/drei';
+import { Physics, useSphere } from '@react-three/cannon';
 
 const rfs = THREE.MathUtils.randFloatSpread;
 const CLUMP_COUNT = 24;
 
-function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Vector3() }) {
+function Clump({
+  isDark,
+  pathname,
+  mat = new THREE.Matrix4(),
+  vec = new THREE.Vector3(),
+}) {
   // Generate a dynamic "M" texture that changes based on theme
   const mTexture = useMemo(() => {
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext('2d');
 
     // Pitch black background in dark mode, white in light mode
-    ctx.fillStyle = isDark ? "#000000" : "#ffffff";
+    ctx.fillStyle = isDark ? '#000000' : '#ffffff';
     ctx.fillRect(0, 0, 512, 512);
 
     // White M in dark mode, black M in light mode
-    ctx.fillStyle = isDark ? "#ffffff" : "#000000";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
+    ctx.fillStyle = isDark ? '#ffffff' : '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     // Reduced font size to make the 'M' smaller
-    ctx.font = "900 200px sans-serif";
-    ctx.fillText("M", 256, 280);
+    ctx.font = '900 200px sans-serif';
+    ctx.fillText('M', 256, 280);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.anisotropy = 4;
@@ -37,7 +42,7 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
   // Create material ONCE to prevent remounting the Physics InstancedMesh
   const baubleMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
-      color: "white", // Color stays white, the texture provides the pitch black color
+      color: 'white', // Color stays white, the texture provides the pitch black color
       roughness: 0,
       envMapIntensity: 1,
     });
@@ -71,8 +76,12 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
           api
             .at(i)
             .applyImpulse(
-              [(Math.random() - 0.5) * 35, (Math.random() - 0.5) * 35, (Math.random() - 0.5) * 35],
-              [0, 0, 0],
+              [
+                (Math.random() - 0.5) * 35,
+                (Math.random() - 0.5) * 35,
+                (Math.random() - 0.5) * 35,
+              ],
+              [0, 0, 0]
             );
         }
       }, 250);
@@ -86,7 +95,9 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
       ref.current.getMatrixAt(i, mat);
       vec.setFromMatrixPosition(mat);
       if (vec.length() > 0.1) {
-        api.at(i).applyForce(vec.normalize().multiplyScalar(-35).toArray(), [0, 0, 0]);
+        api
+          .at(i)
+          .applyForce(vec.normalize().multiplyScalar(-35).toArray(), [0, 0, 0]);
       }
     }
   });
@@ -97,20 +108,24 @@ function Clump({ isDark, pathname, mat = new THREE.Matrix4(), vec = new THREE.Ve
       args={[sphereGeometry, baubleMaterial, CLUMP_COUNT]}
       material-map={mTexture}
     >
-      <Outlines thickness={0.0} color={isDark ? "white" : "black"} />
+      <Outlines thickness={0.0} color={isDark ? 'white' : 'black'} />
     </instancedMesh>
   );
 }
 
 function Pointer({ mouseGlobal, isDark }) {
   const viewport = useThree((state) => state.viewport);
-  const [ref, api] = useSphere(() => ({ type: "Kinematic", args: [3], position: [0, 0, 0] }));
+  const [ref, api] = useSphere(() => ({
+    type: 'Kinematic',
+    args: [3],
+    position: [0, 0, 0],
+  }));
 
   useFrame((state) => {
     api.position.set(
       (mouseGlobal.current.x * viewport.width) / 2,
       (mouseGlobal.current.y * viewport.height) / 2,
-      0,
+      0
     );
   });
 
@@ -127,8 +142,16 @@ function ProCamera({ mouseGlobal }) {
     const targetY = scrollY * -0.015 + mouseGlobal.current.y * 2;
     const targetX = mouseGlobal.current.x * 2;
 
-    state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, targetY, 0.05);
-    state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, targetX, 0.05);
+    state.camera.position.y = THREE.MathUtils.lerp(
+      state.camera.position.y,
+      targetY,
+      0.05
+    );
+    state.camera.position.x = THREE.MathUtils.lerp(
+      state.camera.position.x,
+      targetX,
+      0.05
+    );
     state.camera.lookAt(0, 0, 0);
   });
   return null;
@@ -180,16 +203,18 @@ function BackgroundAtmosphere({ isDark }) {
       speeds[i] = 0.2 + Math.random();
     }
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-    geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
-    geo.setAttribute("aSpeed", new THREE.BufferAttribute(speeds, 1));
-    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+    geo.setAttribute('aSpeed', new THREE.BufferAttribute(speeds, 1));
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     return geo;
   }, []);
 
   // Safely update colors without replacing the geometry object
   useEffect(() => {
-    const colorObj = isDark ? new THREE.Color("#6366f1") : new THREE.Color("#2563eb");
+    const colorObj = isDark
+      ? new THREE.Color('#6366f1')
+      : new THREE.Color('#2563eb');
     const colors = geometry.attributes.color.array;
     for (let i = 0; i < count; i++) {
       colors[i * 3] = colorObj.r;
@@ -202,7 +227,8 @@ function BackgroundAtmosphere({ isDark }) {
   useFrame((state) => {
     if (pointsRef.current) {
       pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.02;
-      pointsRef.current.material.uniforms.uTime.value = state.clock.getElapsedTime();
+      pointsRef.current.material.uniforms.uTime.value =
+        state.clock.getElapsedTime();
     }
   });
 
@@ -231,8 +257,9 @@ function WebGLContextGuard({ onContextLost }) {
       onContextLost();
     };
 
-    canvas.addEventListener("webglcontextlost", handleContextLost, false);
-    return () => canvas.removeEventListener("webglcontextlost", handleContextLost, false);
+    canvas.addEventListener('webglcontextlost', handleContextLost, false);
+    return () =>
+      canvas.removeEventListener('webglcontextlost', handleContextLost, false);
   }, [gl, onContextLost]);
 
   return null;
@@ -240,70 +267,74 @@ function WebGLContextGuard({ onContextLost }) {
 
 function SoftMeshGridBackground({ isDark }) {
   const base = isDark
-    ? "linear-gradient(135deg, #020617 0%, #07111f 46%, #0b1726 100%)"
-    : "linear-gradient(135deg, #f8fbff 0%, #eef8fb 45%, #f7fbf8 100%)";
+    ? 'linear-gradient(135deg, #020617 0%, #07111f 46%, #0b1726 100%)'
+    : 'linear-gradient(135deg, #f8fbff 0%, #eef8fb 45%, #f7fbf8 100%)';
 
-  const gridColor = isDark ? "rgba(148, 163, 184, 0.13)" : "rgba(15, 118, 110, 0.12)";
-  const gridAccent = isDark ? "rgba(34, 211, 238, 0.08)" : "rgba(37, 99, 235, 0.06)";
+  const gridColor = isDark
+    ? 'rgba(148, 163, 184, 0.13)'
+    : 'rgba(15, 118, 110, 0.12)';
+  const gridAccent = isDark
+    ? 'rgba(34, 211, 238, 0.08)'
+    : 'rgba(37, 99, 235, 0.06)';
 
   return (
     <>
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           inset: 0,
           background: base,
-          transition: "background 800ms cubic-bezier(0.4, 0, 0.2, 1)",
+          transition: 'background 800ms cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       />
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           inset: 0,
           background: isDark
-            ? "radial-gradient(circle at 12% 18%, rgba(45, 212, 191, 0.30), transparent 31%), radial-gradient(circle at 84% 10%, rgba(59, 130, 246, 0.26), transparent 30%), radial-gradient(circle at 72% 78%, rgba(34, 197, 94, 0.20), transparent 34%), radial-gradient(circle at 38% 64%, rgba(125, 211, 252, 0.14), transparent 28%)"
-            : "radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.28), transparent 31%), radial-gradient(circle at 84% 10%, rgba(20, 184, 166, 0.24), transparent 30%), radial-gradient(circle at 72% 78%, rgba(34, 197, 94, 0.20), transparent 34%), radial-gradient(circle at 38% 64%, rgba(59, 130, 246, 0.12), transparent 28%)",
-          backgroundSize: "125% 125%",
-          filter: "blur(16px)",
-          transform: "scale(1.1)",
-          animation: "morphoMeshPulse 9s ease-in-out infinite alternate",
+            ? 'radial-gradient(circle at 12% 18%, rgba(45, 212, 191, 0.30), transparent 31%), radial-gradient(circle at 84% 10%, rgba(59, 130, 246, 0.26), transparent 30%), radial-gradient(circle at 72% 78%, rgba(34, 197, 94, 0.20), transparent 34%), radial-gradient(circle at 38% 64%, rgba(125, 211, 252, 0.14), transparent 28%)'
+            : 'radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.28), transparent 31%), radial-gradient(circle at 84% 10%, rgba(20, 184, 166, 0.24), transparent 30%), radial-gradient(circle at 72% 78%, rgba(34, 197, 94, 0.20), transparent 34%), radial-gradient(circle at 38% 64%, rgba(59, 130, 246, 0.12), transparent 28%)',
+          backgroundSize: '125% 125%',
+          filter: 'blur(16px)',
+          transform: 'scale(1.1)',
+          animation: 'morphoMeshPulse 9s ease-in-out infinite alternate',
           opacity: isDark ? 0.92 : 1,
         }}
       />
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           inset: 0,
           backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px), linear-gradient(${gridAccent} 1px, transparent 1px), linear-gradient(90deg, ${gridAccent} 1px, transparent 1px)`,
-          backgroundSize: "48px 48px, 48px 48px, 192px 192px, 192px 192px",
+          backgroundSize: '48px 48px, 48px 48px, 192px 192px, 192px 192px',
           maskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.38) 42%, transparent 92%)",
+            'linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.38) 42%, transparent 92%)',
           WebkitMaskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.38) 42%, transparent 92%)",
+            'linear-gradient(to bottom, rgba(0,0,0,0.76), rgba(0,0,0,0.38) 42%, transparent 92%)',
           opacity: isDark ? 0.58 : 0.68,
-          animation: "morphoGridPan 14s linear infinite",
+          animation: 'morphoGridPan 14s linear infinite',
         }}
       />
       <WaveDotField isDark={isDark} />
       <div
         style={{
-          position: "absolute",
-          inset: "-20%",
+          position: 'absolute',
+          inset: '-20%',
           background:
-            "linear-gradient(115deg, transparent 18%, rgba(255,255,255,0.10) 34%, rgba(255,255,255,0.20) 42%, rgba(255,255,255,0.08) 50%, transparent 66%)",
-          mixBlendMode: isDark ? "screen" : "soft-light",
+            'linear-gradient(115deg, transparent 18%, rgba(255,255,255,0.10) 34%, rgba(255,255,255,0.20) 42%, rgba(255,255,255,0.08) 50%, transparent 66%)',
+          mixBlendMode: isDark ? 'screen' : 'soft-light',
           opacity: isDark ? 0.42 : 0.5,
-          transform: "translateX(-34%) rotate(0.001deg)",
-          animation: "morphoLightSweep 7s ease-in-out infinite",
+          transform: 'translateX(-34%) rotate(0.001deg)',
+          animation: 'morphoLightSweep 7s ease-in-out infinite',
         }}
       />
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           inset: 0,
           background: isDark
-            ? "linear-gradient(180deg, rgba(2, 6, 23, 0.06) 0%, rgba(2, 6, 23, 0.56) 100%)"
-            : "linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.72) 100%)",
+            ? 'linear-gradient(180deg, rgba(2, 6, 23, 0.06) 0%, rgba(2, 6, 23, 0.56) 100%)'
+            : 'linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.72) 100%)',
         }}
       />
       <style>
@@ -354,7 +385,7 @@ function WaveDotField({ isDark }) {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext("2d", { alpha: true });
+    const ctx = canvas?.getContext('2d', { alpha: true });
 
     if (!canvas || !ctx) return undefined;
 
@@ -437,25 +468,37 @@ function WaveDotField({ isDark }) {
             Math.sin((iy + count) * 0.5) * 50 +
             Math.sin((ix + iy + count) * 0.16) * 24;
           const pulse =
-            (Math.sin((ix + count) * 0.3) + 1) * 3.1 + (Math.sin((iy + count) * 0.5) + 1) * 3.1;
+            (Math.sin((ix + count) * 0.3) + 1) * 3.1 +
+            (Math.sin((iy + count) * 0.5) + 1) * 3.1;
           const projected = project(x, waveY, z);
-          const depthFade = Math.max(0, Math.min(1, 1 - (projected.depth - 3700) / 3600));
+          const depthFade = Math.max(
+            0,
+            Math.min(1, 1 - (projected.depth - 3700) / 3600)
+          );
           const verticalFade = Math.max(
             0,
-            Math.min(1, (projected.y - height * 0.25) / (height * 0.3)),
+            Math.min(1, (projected.y - height * 0.25) / (height * 0.3))
           );
           const edgeFade = Math.max(
             0,
             Math.min(
               1,
-              Math.min(projected.x / (width * 0.16), (width - projected.x) / (width * 0.16)),
-            ),
+              Math.min(
+                projected.x / (width * 0.16),
+                (width - projected.x) / (width * 0.16)
+              )
+            )
           );
           const horizonFade = Math.max(
             0.16,
-            Math.min(1, (projected.y - height * 0.32) / (height * 0.28)),
+            Math.min(1, (projected.y - height * 0.32) / (height * 0.28))
           );
-          const alpha = depthFade * verticalFade * edgeFade * horizonFade * (isDark ? 0.68 : 0.5);
+          const alpha =
+            depthFade *
+            verticalFade *
+            edgeFade *
+            horizonFade *
+            (isDark ? 0.68 : 0.5);
           const radius = Math.max(0.42, pulse * projected.scale * 2.05);
 
           points[ix][iy] = { ...projected, alpha, radius };
@@ -488,7 +531,8 @@ function WaveDotField({ isDark }) {
           for (const next of [right, down]) {
             if (!next) continue;
 
-            const alpha = Math.min(point.alpha, next.alpha) * (isDark ? 0.07 : 0.045);
+            const alpha =
+              Math.min(point.alpha, next.alpha) * (isDark ? 0.07 : 0.045);
             ctx.strokeStyle = `rgba(${palette.line[0]}, ${palette.line[1]}, ${palette.line[2]}, ${alpha})`;
             ctx.beginPath();
             ctx.moveTo(point.x, point.y);
@@ -503,13 +547,15 @@ function WaveDotField({ isDark }) {
     };
 
     resize();
-    window.addEventListener("resize", resize, { passive: true });
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener('resize', resize, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, {
+      passive: true,
+    });
     frameId = window.requestAnimationFrame(animate);
 
     return () => {
-      window.removeEventListener("resize", resize);
-      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('pointermove', handlePointerMove);
       window.cancelAnimationFrame(frameId);
     };
   }, [isDark]);
@@ -518,25 +564,25 @@ function WaveDotField({ isDark }) {
     <canvas
       ref={canvasRef}
       style={{
-        position: "absolute",
+        position: 'absolute',
         inset: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         opacity: isDark ? 0.74 : 0.58,
         maskImage:
-          "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, transparent 18%, rgba(0,0,0,0.65) 34%, black 100%)",
+          'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, transparent 18%, rgba(0,0,0,0.65) 34%, black 100%)',
         WebkitMaskImage:
-          "linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, transparent 18%, rgba(0,0,0,0.65) 34%, black 100%)",
-        maskComposite: "intersect",
-        WebkitMaskComposite: "source-in",
-        mixBlendMode: isDark ? "screen" : "multiply",
+          'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, transparent 18%, rgba(0,0,0,0.65) 34%, black 100%)',
+        maskComposite: 'intersect',
+        WebkitMaskComposite: 'source-in',
+        mixBlendMode: isDark ? 'screen' : 'multiply',
       }}
     />
   );
 }
 
 function SphereBackground({ isDark, pathname }) {
-  const bg = isDark ? "#020617" : "#dfdfdf";
+  const bg = isDark ? '#020617' : '#dfdfdf';
   const [contextLost, setContextLost] = useState(false);
 
   const mouseGlobal = useRef(new THREE.Vector2(0, 0));
@@ -546,28 +592,33 @@ function SphereBackground({ isDark, pathname }) {
       mouseGlobal.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouseGlobal.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         zIndex: -1,
-        pointerEvents: "none",
+        pointerEvents: 'none',
         background: bg,
-        overflow: "hidden",
-        transition: "background 1s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflow: 'hidden',
+        transition: 'background 1s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       {!contextLost && (
         <Canvas
-          gl={{ antialias: false, alpha: true, stencil: false, powerPreference: "low-power" }}
+          gl={{
+            antialias: false,
+            alpha: true,
+            stencil: false,
+            powerPreference: 'low-power',
+          }}
           dpr={1}
           camera={{ position: [0, 0, 20], fov: 35, near: 1, far: 100 }}
         >
@@ -576,7 +627,12 @@ function SphereBackground({ isDark, pathname }) {
             <ProCamera mouseGlobal={mouseGlobal} />
 
             <ambientLight intensity={0.5} />
-            <spotLight intensity={1} angle={0.2} penumbra={1} position={[30, 30, 30]} />
+            <spotLight
+              intensity={1}
+              angle={0.2}
+              penumbra={1}
+              position={[30, 30, 30]}
+            />
 
             <BackgroundAtmosphere isDark={isDark} />
 
@@ -592,31 +648,31 @@ function SphereBackground({ isDark, pathname }) {
       {/* Premium Pro Overlays & Glassmorphism Blur */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           background: isDark
-            ? "radial-gradient(circle at 50% 50%, rgba(2, 6, 23, 0.2) 0%, rgba(2, 6, 23, 0.8) 100%)"
-            : "radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(223, 223, 223, 0.8) 100%)",
-          backdropFilter: "blur(6px)",
-          WebkitBackdropFilter: "blur(6px)",
-          pointerEvents: "none",
+            ? 'radial-gradient(circle at 50% 50%, rgba(2, 6, 23, 0.2) 0%, rgba(2, 6, 23, 0.8) 100%)'
+            : 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2) 0%, rgba(223, 223, 223, 0.8) 100%)',
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          pointerEvents: 'none',
           zIndex: 1,
         }}
       />
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
           opacity: isDark ? 0.05 : 0.03,
-          mixBlendMode: "overlay",
-          pointerEvents: "none",
+          mixBlendMode: 'overlay',
+          pointerEvents: 'none',
           zIndex: 2,
         }}
       />
@@ -624,24 +680,28 @@ function SphereBackground({ isDark, pathname }) {
   );
 }
 
-export default function MorphoProBackground({ theme, pathname, variant = "mesh-grid" }) {
-  const isDark = theme === "dark";
+export default function MorphoProBackground({
+  theme,
+  pathname,
+  variant = 'mesh-grid',
+}) {
+  const isDark = theme === 'dark';
 
-  if (variant === "sphere") {
+  if (variant === 'sphere') {
     return <SphereBackground isDark={isDark} pathname={pathname} />;
   }
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         zIndex: -1,
-        pointerEvents: "none",
-        overflow: "hidden",
+        pointerEvents: 'none',
+        overflow: 'hidden',
       }}
     >
       <SoftMeshGridBackground isDark={isDark} />

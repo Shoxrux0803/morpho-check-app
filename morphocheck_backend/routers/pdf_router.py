@@ -1,14 +1,16 @@
 import asyncio
-from fastapi import APIRouter, Request, HTTPException, Query, Depends
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 from io import BytesIO
 
-from services.pdf_services import generate_pdf_file
-from services.docx_services import generate_docx_report
-from services.consent_docx import generate_consent_docx
-from services.clinical_service import clinical_service
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from models.schemas import PatientData
+from models.user import User
+from models.userdata import PatientAnalysis
+from routers.auth_router import get_current_admin
+from services.ai_advice_service import generate_parent_tips
 from services.analyze_service import (
     BMI_CATEGORIES,
     calculate_bmi,
@@ -17,15 +19,14 @@ from services.analyze_service import (
     get_bmi_range_by_age_and_gender,
     get_ideal_weight_by_age_and_gender,
 )
-from utils.database import get_db
-from models.userdata import PatientAnalysis
-from sqlalchemy.orm import Session
-from utils.audit_helper import record_audit_log
-from routers.auth_router import get_current_admin
-from models.user import User
+from services.clinical_service import clinical_service
+from services.consent_docx import generate_consent_docx
+from services.docx_services import generate_docx_report
 from services.ml_service import get_ml_predictions
+from services.pdf_services import generate_pdf_file
+from utils.audit_helper import record_audit_log
+from utils.database import get_db
 from utils.date_utils import calculate_age_precise
-from services.ai_advice_service import generate_parent_tips
 
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
 

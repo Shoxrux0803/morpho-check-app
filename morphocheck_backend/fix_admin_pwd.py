@@ -1,5 +1,5 @@
-import sqlite3
 import os
+import sqlite3
 
 db_path = "morphocheck.db"
 correct_hash = "$2b$12$/yCt2vBm6Rt//uKLd4gVFO8o/wpSbaZ6XBB/cePMmZhzUWfRUhGNy"

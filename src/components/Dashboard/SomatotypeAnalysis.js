@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -8,11 +8,11 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
-} from "recharts";
-import { Typography, useTheme } from "@mui/material";
-import { AccessibilityNew } from "@mui/icons-material";
-import DashboardCard from "./DashboardCard";
-import { useLanguage } from "../../contexts/LanguageContext";
+} from 'recharts';
+import { Typography, useTheme } from '@mui/material';
+import { AccessibilityNew } from '@mui/icons-material';
+import DashboardCard from './DashboardCard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const SomatotypeAnalysis = ({ data, loading }) => {
   const theme = useTheme();
@@ -24,7 +24,7 @@ const SomatotypeAnalysis = ({ data, loading }) => {
     const counts = {};
 
     data.forEach((user) => {
-      const type = (user.somatotype || t("unknown")).trim();
+      const type = (user.somatotype || t('unknown')).trim();
       if (type) {
         counts[type] = (counts[type] || 0) + 1;
       }
@@ -40,13 +40,21 @@ const SomatotypeAnalysis = ({ data, loading }) => {
   const total = somatotypeData.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
-    <DashboardCard title={t("somatotypeLabel")} icon={<AccessibilityNew />} loading={loading}>
+    <DashboardCard
+      title={t('somatotypeLabel')}
+      icon={<AccessibilityNew />}
+      loading={loading}
+    >
       {total === 0 ? (
-        <Typography color="text.secondary">{t("noData")}</Typography>
+        <Typography color="text.secondary">{t('noData')}</Typography>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={somatotypeData} margin={{ bottom: 40 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme.palette.divider} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke={theme.palette.divider}
+            />
             <XAxis
               dataKey="name"
               angle={-45}
@@ -66,10 +74,10 @@ const SomatotypeAnalysis = ({ data, loading }) => {
               contentStyle={{
                 borderRadius: 12,
                 boxShadow:
-                  theme.palette.mode === "dark"
-                    ? "0 4px 12px rgba(0,0,0,0.5)"
-                    : "0 4px 12px rgba(0,0,0,0.1)",
-                border: "none",
+                  theme.palette.mode === 'dark'
+                    ? '0 4px 12px rgba(0,0,0,0.5)'
+                    : '0 4px 12px rgba(0,0,0,0.1)',
+                border: 'none',
                 backgroundColor: theme.palette.background.paper,
                 color: theme.palette.text.primary,
               }}
@@ -84,7 +92,11 @@ const SomatotypeAnalysis = ({ data, loading }) => {
               {somatotypeData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={index % 2 === 0 ? theme.palette.primary.light : theme.palette.primary.main}
+                  fill={
+                    index % 2 === 0
+                      ? theme.palette.primary.light
+                      : theme.palette.primary.main
+                  }
                 />
               ))}
             </Bar>

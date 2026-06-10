@@ -1,6 +1,6 @@
 # morphocheck_backend/services/norms_service.py
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Extended reference table for typical anthropometric values (Birth to Adult)
 # Values are for: [height, weight, chest, waist, head]

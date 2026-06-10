@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,9 +9,9 @@ import {
   Box,
   IconButton,
   Zoom,
-} from "@mui/material";
-import { Logout, Close } from "@mui/icons-material";
-import { useLanguage } from "../contexts/LanguageContext";
+} from '@mui/material';
+import { Logout, Close } from '@mui/icons-material';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
   const { t } = useLanguage();
@@ -27,46 +27,48 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
           borderRadius: 4,
           p: 1,
           background: (theme) =>
-            theme.palette.mode === "dark" ? "rgba(30, 32, 40, 0.9)" : "rgba(255, 255, 255, 0.9)",
-          backdropFilter: "blur(20px)",
+            theme.palette.mode === 'dark'
+              ? 'rgba(30, 32, 40, 0.9)'
+              : 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(20px)',
           border: (theme) =>
-            theme.palette.mode === "dark"
-              ? "1px solid rgba(255, 255, 255, 0.1)"
-              : "1px solid rgba(0, 0, 0, 0.05)",
+            theme.palette.mode === 'dark'
+              ? '1px solid rgba(255, 255, 255, 0.1)'
+              : '1px solid rgba(0, 0, 0, 0.05)',
           boxShadow: (theme) =>
-            theme.palette.mode === "dark"
-              ? "0 24px 48px rgba(0, 0, 0, 0.5)"
-              : "0 24px 48px rgba(100, 116, 139, 0.2)",
+            theme.palette.mode === 'dark'
+              ? '0 24px 48px rgba(0, 0, 0, 0.5)'
+              : '0 24px 48px rgba(100, 116, 139, 0.2)',
         },
       }}
     >
       <DialogTitle
         component="div"
-        sx={{ m: 0, p: 2, display: "flex", alignItems: "center", gap: 1.5 }}
+        sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', gap: 1.5 }}
       >
         <Box
           sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             width: 40,
             height: 40,
             borderRadius: 2,
-            bgcolor: "error.main",
-            color: "white",
-            boxShadow: "0 4px 12px rgba(211, 47, 47, 0.3)",
+            bgcolor: 'error.main',
+            color: 'white',
+            boxShadow: '0 4px 12px rgba(211, 47, 47, 0.3)',
           }}
         >
           <Logout fontSize="small" />
         </Box>
         <Typography variant="h6" fontWeight={800}>
-          {t("logoutTitle")}
+          {t('logoutTitle')}
         </Typography>
         <IconButton
           aria-label="close"
           onClick={onClose}
           sx={{
-            position: "absolute",
+            position: 'absolute',
             right: 12,
             top: 12,
             color: (theme) => theme.palette.grey[500],
@@ -77,7 +79,7 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
       </DialogTitle>
       <DialogContent sx={{ px: 3, py: 1 }}>
         <Typography variant="body1" color="text.secondary" fontWeight={500}>
-          {t("logoutQuestion")}
+          {t('logoutQuestion')}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1 }}>
@@ -87,12 +89,12 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
           color="inherit"
           sx={{
             borderRadius: 2,
-            textTransform: "none",
+            textTransform: 'none',
             fontWeight: 700,
             px: 3,
           }}
         >
-          {t("no")}
+          {t('no')}
         </Button>
         <Button
           onClick={onConfirm}
@@ -101,13 +103,13 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
           autoFocus
           sx={{
             borderRadius: 2,
-            textTransform: "none",
+            textTransform: 'none',
             fontWeight: 700,
             px: 3,
-            boxShadow: "0 4px 12px rgba(211, 47, 47, 0.2)",
+            boxShadow: '0 4px 12px rgba(211, 47, 47, 0.2)',
           }}
         >
-          {t("yes")}
+          {t('yes')}
         </Button>
       </DialogActions>
     </Dialog>

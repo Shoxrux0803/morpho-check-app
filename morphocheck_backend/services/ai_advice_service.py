@@ -1,9 +1,10 @@
 # morphocheck_backend/services/ai_advice_service.py
 
 import os
-import google.generativeai as genai
-from typing import List, Dict
 import random
+from typing import Dict, List
+
+import google.generativeai as genai
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ЭКСПЕРТНАЯ БАЗА ЗНАНИЙ (SCIENTIFIC TEMPLATES)

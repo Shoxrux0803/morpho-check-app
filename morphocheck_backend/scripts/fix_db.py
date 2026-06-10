@@ -1,7 +1,10 @@
-import sqlite3
 import os
+import sqlite3
+
 from sqlalchemy import create_engine, inspect
+
 from models.base import Base
+
 # Import all models to ensure they are registered with Base.metadata
 
 DATABASE_URL = "sqlite:///morphocheck.db"

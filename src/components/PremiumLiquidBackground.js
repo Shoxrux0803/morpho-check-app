@@ -1,7 +1,7 @@
 // src/components/PremiumLiquidBackground.js
-import React, { useRef, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 
 const vertexShader = `
   varying vec2 vUv;
@@ -82,15 +82,15 @@ const LiquidMesh = ({ isDark }) => {
   const colors = useMemo(() => {
     if (isDark) {
       return {
-        a: new THREE.Color("#0f172a"), // Deep Blue
-        b: new THREE.Color("#1e1b4b"), // Deep Purple
-        c: new THREE.Color("#0ea5e9"), // Sky Blue Cyan
+        a: new THREE.Color('#0f172a'), // Deep Blue
+        b: new THREE.Color('#1e1b4b'), // Deep Purple
+        c: new THREE.Color('#0ea5e9'), // Sky Blue Cyan
       };
     } else {
       return {
-        a: new THREE.Color("#f0f9ff"), // Light Blue
-        b: new THREE.Color("#fae8ff"), // Light Pink
-        c: new THREE.Color("#60a5fa"), // Primary Blue
+        a: new THREE.Color('#f0f9ff'), // Light Blue
+        b: new THREE.Color('#fae8ff'), // Light Pink
+        c: new THREE.Color('#60a5fa'), // Primary Blue
       };
     }
   }, [isDark]);
@@ -103,23 +103,24 @@ const LiquidMesh = ({ isDark }) => {
       uColorB: { value: colors.b },
       uColorC: { value: colors.c },
     }),
-    [colors],
+    [colors]
   );
 
   useFrame((state) => {
     if (!meshRef.current) return;
-    meshRef.current.material.uniforms.uTime.value = state.clock.getElapsedTime();
+    meshRef.current.material.uniforms.uTime.value =
+      state.clock.getElapsedTime();
 
     // Lerp mouse for extra smoothness
     meshRef.current.material.uniforms.uMouse.value.x = THREE.MathUtils.lerp(
       meshRef.current.material.uniforms.uMouse.value.x,
       (state.mouse.x + 1) / 2,
-      0.05,
+      0.05
     );
     meshRef.current.material.uniforms.uMouse.value.y = THREE.MathUtils.lerp(
       meshRef.current.material.uniforms.uMouse.value.y,
       (state.mouse.y + 1) / 2,
-      0.05,
+      0.05
     );
   });
 
@@ -136,36 +137,39 @@ const LiquidMesh = ({ isDark }) => {
 };
 
 export default function PremiumLiquidBackground({ theme }) {
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         zIndex: 0,
-        pointerEvents: "none",
+        pointerEvents: 'none',
       }}
     >
-      <Canvas camera={{ position: [0, 0, 1] }} gl={{ antialias: true, alpha: false }}>
+      <Canvas
+        camera={{ position: [0, 0, 1] }}
+        gl={{ antialias: true, alpha: false }}
+      >
         <LiquidMesh isDark={isDark} />
       </Canvas>
 
       {/* Overlay for depth and texture */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           background: isDark
-            ? "radial-gradient(circle at 50% 50%, transparent 0%, rgba(2, 6, 23, 0.4) 100%)"
-            : "radial-gradient(circle at 50% 50%, transparent 0%, rgba(255, 255, 255, 0.3) 100%)",
-          backdropFilter: "blur(20px)",
+            ? 'radial-gradient(circle at 50% 50%, transparent 0%, rgba(2, 6, 23, 0.4) 100%)'
+            : 'radial-gradient(circle at 50% 50%, transparent 0%, rgba(255, 255, 255, 0.3) 100%)',
+          backdropFilter: 'blur(20px)',
           opacity: 0.6,
           zIndex: 1,
         }}
@@ -174,15 +178,16 @@ export default function PremiumLiquidBackground({ theme }) {
       {/* Noise Grain Overlay for premium feel */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')",
+          width: '100%',
+          height: '100%',
+          backgroundImage:
+            "url('https://grainy-gradients.vercel.app/noise.svg')",
           opacity: 0.05,
           zIndex: 2,
-          pointerEvents: "none",
+          pointerEvents: 'none',
         }}
       />
 

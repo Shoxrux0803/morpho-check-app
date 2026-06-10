@@ -2,8 +2,8 @@
 // proxy (package.json "proxy": "http://localhost:8000") orqali CORS bartaraf etiladi.
 // Development da API_BASE bo'sh - nisbiy URL lar proxy orqali o'tadi.
 // Production da REACT_APP_API_URL ni to'liq URL ga o'rnating.
-export const API_BASE = process.env.REACT_APP_API_URL || "";
-export const API_PREFIX = process.env.REACT_APP_API_PREFIX || "/api";
+export const API_BASE = process.env.REACT_APP_API_URL || '';
+export const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
 
 /* -------------------- Yordamchi: xatoni ajratib olish -------------------- */
 async function parseError(resp) {
@@ -12,9 +12,9 @@ async function parseError(resp) {
 
     // FastAPI 422 validation
     if (resp.status === 422 && Array.isArray(data?.detail)) {
-      return data.detail.map((d) => d?.msg || JSON.stringify(d)).join("; ");
+      return data.detail.map((d) => d?.msg || JSON.stringify(d)).join('; ');
     }
-    if (typeof data?.detail === "string") return data.detail;
+    if (typeof data?.detail === 'string') return data.detail;
     if (data?.message) return data.message;
     return JSON.stringify(data);
   } catch {
@@ -33,15 +33,18 @@ async function parseError(resp) {
  * shunda frontenddagi AnalysisResults `results.data.analysis` va `results.data.advices` bilan
  * muammosiz ishlaydi.
  */
-export async function postAnalysis(payload, lang = "uz") {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/analyze/full?lang=${lang}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-    },
-    body: JSON.stringify(payload),
-  });
+export async function postAnalysis(payload, lang = 'uz') {
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/analyze/full?lang=${lang}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -57,12 +60,12 @@ export async function postAnalysis(payload, lang = "uz") {
  * Asl router bizda /api/pdf/... ostida. Eski kod /analyze/pdf-report bo'lishi mumkin.
  * Fallback qo'ydik: avval /api/pdf/report, 404 bo'lsa /api/analyze/pdf-report.
  */
-export async function generatePdf(payload, lang = "uz") {
+export async function generatePdf(payload, lang = 'uz') {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report?lang=${lang}`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
     },
     body: JSON.stringify(payload),
   });
@@ -75,31 +78,15 @@ export async function generatePdf(payload, lang = "uz") {
 }
 
 // Admin panel uchun: ID bo'yicha PDF olish
-export async function generatePdfById(patientId, lang = "uz") {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/report-by-id/${patientId}?lang=${lang}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-    },
-  });
-
-  if (!resp.ok) {
-    const msg = await parseError(resp);
-    throw new Error(msg);
-  }
-  return resp.blob();
-}
-
-// Admin panel uchun: ID bo'yicha DOCX olish
-export async function generateDocxById(patientId, lang = "uz") {
+export async function generatePdfById(patientId, lang = 'uz') {
   const resp = await fetch(
-    `${API_BASE}${API_PREFIX}/pdf/report-docx-by-id/${patientId}?lang=${lang}`,
+    `${API_BASE}${API_PREFIX}/pdf/report-by-id/${patientId}?lang=${lang}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
       },
-    },
+    }
   );
 
   if (!resp.ok) {
@@ -109,15 +96,18 @@ export async function generateDocxById(patientId, lang = "uz") {
   return resp.blob();
 }
 
-export async function generateConsentDocx(payload, lang = "uz") {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/consent-docx?lang=${lang}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-    },
-    body: JSON.stringify(payload),
-  });
+// Admin panel uchun: ID bo'yicha DOCX olish
+export async function generateDocxById(patientId, lang = 'uz') {
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/pdf/report-docx-by-id/${patientId}?lang=${lang}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      },
+    }
+  );
+
   if (!resp.ok) {
     const msg = await parseError(resp);
     throw new Error(msg);
@@ -125,15 +115,34 @@ export async function generateConsentDocx(payload, lang = "uz") {
   return resp.blob();
 }
 
-export async function generateConsentDocxById(patientId, lang = "uz") {
+export async function generateConsentDocx(payload, lang = 'uz') {
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/pdf/consent-docx?lang=${lang}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+  return resp.blob();
+}
+
+export async function generateConsentDocxById(patientId, lang = 'uz') {
   const resp = await fetch(
     `${API_BASE}${API_PREFIX}/pdf/consent-docx-by-id/${patientId}?lang=${lang}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
       },
-    },
+    }
   );
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -147,15 +156,18 @@ export async function generateConsentDocxById(patientId, lang = "uz") {
  * /api/pdf/generate-docx endpointiga POST yuborib, DOCX blob qaytaradi.
  * Payload PDF bilan bir xil (PatientData + analysis).
  */
-export async function generateDocx(payload, lang = "uz") {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/pdf/generate-docx?lang=${lang}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-    },
-    body: JSON.stringify(payload),
-  });
+export async function generateDocx(payload, lang = 'uz') {
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/pdf/generate-docx?lang=${lang}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -166,7 +178,7 @@ export async function generateDocx(payload, lang = "uz") {
 
 /* -------------------- AUTH & USER -------------------- */
 function getLoginDeviceId() {
-  const key = "superadmin_device_id";
+  const key = 'superadmin_device_id';
   let deviceId = localStorage.getItem(key);
   if (!deviceId) {
     deviceId =
@@ -179,8 +191,8 @@ function getLoginDeviceId() {
 
 export async function login(credentials) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...credentials,
       device_id: getLoginDeviceId(),
@@ -198,8 +210,8 @@ export async function login(credentials) {
 
 export async function register(userData) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userData),
   });
 
@@ -214,10 +226,10 @@ export async function register(userData) {
 
 export async function getUserProfile() {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/me`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json',
     },
   });
 
@@ -232,10 +244,10 @@ export async function getUserProfile() {
 
 export async function updateUserProfile(profileData) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/user/profile`, {
-    method: "PUT",
+    method: 'PUT',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(profileData),
   });
@@ -254,12 +266,12 @@ export async function getAnalysisHistory(page = 1, limit = 10) {
   const resp = await fetch(
     `${API_BASE}${API_PREFIX}/analysis/history?page=${page}&limit=${limit}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        'Content-Type': 'application/json',
       },
-    },
+    }
   );
 
   if (!resp.ok) {
@@ -273,10 +285,10 @@ export async function getAnalysisHistory(page = 1, limit = 10) {
 
 export async function getAnalysisById(id) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/analysis/${id}`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json',
     },
   });
 
@@ -291,10 +303,10 @@ export async function getAnalysisById(id) {
 
 export async function deleteAnalysis(id) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/analysis/${id}`, {
-    method: "DELETE",
+    method: 'DELETE',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json',
     },
   });
 
@@ -310,10 +322,10 @@ export async function deleteAnalysis(id) {
 /* -------------------- REGIONAL STATISTICS -------------------- */
 export async function getRegionalStats() {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/regional-stats`, {
-    method: "GET",
+    method: 'GET',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json',
     },
   });
 
@@ -329,9 +341,9 @@ export async function getRegionalStats() {
 /* -------------------- IMAGE UPLOAD -------------------- */
 export async function uploadImage(formData) {
   const resp = await fetch(`${API_BASE}${API_PREFIX}/upload/image`, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
     },
     body: formData,
   });
@@ -353,7 +365,7 @@ export const AdminApi = {
 
       // Parametrlarni qo'shish
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
@@ -361,12 +373,12 @@ export const AdminApi = {
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
       if (!resp.ok) {
@@ -379,13 +391,16 @@ export const AdminApi = {
     },
 
     remove: async (id) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/analyses/${id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -397,14 +412,17 @@ export const AdminApi = {
     },
 
     update: async (id, data) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/${id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/analyses/${id}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -416,10 +434,10 @@ export const AdminApi = {
 
     removeMany: async (ids) => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ ids }),
       });
@@ -435,14 +453,17 @@ export const AdminApi = {
 
     // Restore — soft deleted ni tiklash (faqat super admin)
     restore: async (ids) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/restore`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids }),
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/analyses/restore`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids }),
+        }
+      );
 
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -455,14 +476,17 @@ export const AdminApi = {
 
     // Hard delete — DB dan butunlay o'chirish (faqat super admin)
     hardDelete: async (ids) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/analyses/hard-delete`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids }),
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/analyses/hard-delete`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ids }),
+        }
+      );
 
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -477,22 +501,22 @@ export const AdminApi = {
     deletedList: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
-      queryParams.set("show_deleted", "true");
-      if (!queryParams.has("page_size")) queryParams.set("page_size", "50");
+      queryParams.set('show_deleted', 'true');
+      if (!queryParams.has('page_size')) queryParams.set('page_size', '50');
 
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -505,18 +529,18 @@ export const AdminApi = {
     exportDeletedDocx: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/export-deleted-docx?${queryParams.toString()}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
           },
-        },
+        }
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -528,18 +552,18 @@ export const AdminApi = {
     exportXlsx: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/export-xlsx?${queryParams.toString()}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
           },
-        },
+        }
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -551,16 +575,18 @@ export const AdminApi = {
     exportDataset: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/research/export/dataset?${queryParams.toString()}`,
         {
-          method: "GET",
-          headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
-        },
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        }
       );
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -574,7 +600,7 @@ export const AdminApi = {
     list: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
@@ -582,12 +608,12 @@ export const AdminApi = {
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/audit-logs?${queryParams.toString()}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
       if (!resp.ok) {
@@ -600,15 +626,15 @@ export const AdminApi = {
     },
     clear: async (actionFilter = null) => {
       const url =
-        actionFilter && actionFilter !== "ALL"
+        actionFilter && actionFilter !== 'ALL'
           ? `${API_BASE}${API_PREFIX}/admin/audit-logs/clear?action=${actionFilter}`
           : `${API_BASE}${API_PREFIX}/admin/audit-logs/clear`;
 
       const resp = await fetch(url, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -623,8 +649,10 @@ export const AdminApi = {
   backup: {
     list: async () => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
       });
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -634,8 +662,10 @@ export const AdminApi = {
     },
     create: async () => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/create`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
       });
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -643,11 +673,16 @@ export const AdminApi = {
       }
       return resp.json();
     },
-    restore: async (filename, mode = "replace") => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/restore/${filename}?mode=${mode}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
-      });
+    restore: async (filename, mode = 'replace') => {
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/backup/restore/${filename}?mode=${mode}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        }
+      );
       if (!resp.ok) {
         const msg = await parseError(resp);
         throw new Error(msg);
@@ -656,8 +691,10 @@ export const AdminApi = {
     },
     delete: async (filename) => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/backup/${filename}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        },
       });
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -672,18 +709,21 @@ export const AdminApi = {
       const queryParams = new URLSearchParams();
 
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
+        if (value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
 
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users?${queryParams.toString()}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/users?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!resp.ok) {
         const msg = await parseError(resp);
@@ -696,10 +736,10 @@ export const AdminApi = {
 
     create: async (userData) => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
       });
@@ -715,10 +755,10 @@ export const AdminApi = {
 
     update: async (id, userData) => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
       });
@@ -734,10 +774,10 @@ export const AdminApi = {
 
     delete: async (id) => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
       });
 
@@ -752,10 +792,10 @@ export const AdminApi = {
 
     deletedList: async () => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/deleted`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
       });
       if (!resp.ok) {
@@ -766,13 +806,16 @@ export const AdminApi = {
     },
 
     restore: async (id) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/users/${id}/restore`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/users/${id}/restore`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       if (!resp.ok) {
         const msg = await parseError(resp);
         throw new Error(msg);
@@ -784,18 +827,21 @@ export const AdminApi = {
   stats: async (params = {}) => {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
+      if (value !== undefined && value !== null && value !== '') {
         queryParams.append(key, value.toString());
       }
     });
 
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/stats?${queryParams.toString()}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        "Content-Type": "application/json",
-      },
-    });
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/admin/stats?${queryParams.toString()}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     if (!resp.ok) {
       const msg = await parseError(resp);
@@ -809,10 +855,10 @@ export const AdminApi = {
   clinical: {
     list: async () => {
       const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/settings`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
         },
       });
       if (!resp.ok) {
@@ -823,14 +869,17 @@ export const AdminApi = {
     },
 
     update: async (key, data) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/settings/${key}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/clinical/settings/${key}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
       if (!resp.ok) {
         const msg = await parseError(resp);
         throw new Error(msg);
@@ -839,13 +888,16 @@ export const AdminApi = {
     },
 
     refreshCache: async () => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/clinical/refresh-cache`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/clinical/refresh-cache`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
       if (!resp.ok) {
         const msg = await parseError(resp);
         throw new Error(msg);
@@ -861,12 +913,18 @@ export const ResearchApi = {
   list: async (params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+      if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/?${q.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/?${q.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -876,7 +934,10 @@ export const ResearchApi = {
 
   /** Bitta yozuv */
   get: async (id) => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -889,10 +950,16 @@ export const ResearchApi = {
 
   /** Yangi yozuv yaratish */
   create: async (data) => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(data),
     });
     if (!resp.ok) {
@@ -904,10 +971,16 @@ export const ResearchApi = {
 
   /** Yozuvni tahrirlash */
   update: async (id, data) => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(data),
     });
     if (!resp.ok) {
@@ -919,9 +992,12 @@ export const ResearchApi = {
 
   /** Soft delete */
   softDelete: async (id) => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!resp.ok) {
@@ -933,9 +1009,12 @@ export const ResearchApi = {
 
   /** Hard delete — faqat superadmin */
   hardDelete: async (id) => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}/hard`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!resp.ok) {
@@ -947,11 +1026,17 @@ export const ResearchApi = {
 
   /** Restore — faqat superadmin */
   restore: async (id) => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/${id}/restore`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/${id}/restore`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -963,12 +1048,18 @@ export const ResearchApi = {
   deletedList: async (params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+      if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/deleted/list?${q.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/deleted/list?${q.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -977,20 +1068,26 @@ export const ResearchApi = {
   },
 
   /** DOCX yuklash */
-  downloadDocx: (id, lang = "ru") => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+  downloadDocx: (id, lang = 'ru') => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     window.open(
       `${API_BASE}${API_PREFIX}/research/${id}/docx?accessToken=${token}&lang=${lang}`,
-      "_blank",
+      '_blank'
     );
   },
 
   /** Privacy consent DOCX */
-  downloadConsentDocx: (id, lang = "uz") => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+  downloadConsentDocx: (id, lang = 'uz') => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     window.open(
       `${API_BASE}${API_PREFIX}/research/${id}/consent-docx?accessToken=${token}&lang=${lang}`,
-      "_blank",
+      '_blank'
     );
   },
 
@@ -998,12 +1095,18 @@ export const ResearchApi = {
   exportXlsx: async (params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+      if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/xlsx?${q.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/export/xlsx?${q.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -1015,16 +1118,22 @@ export const ResearchApi = {
   importXlsx: async (file, params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+      if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
     const formData = new FormData();
-    formData.append("file", file);
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/import/xlsx?${q.toString()}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+    formData.append('file', file);
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/import/xlsx?${q.toString()}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -1034,10 +1143,16 @@ export const ResearchApi = {
 
   /** XLSX import template */
   downloadImportTemplate: async () => {
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/import/template`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/import/template`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -1049,12 +1164,18 @@ export const ResearchApi = {
   exportDataset: async (params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+      if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
-    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/export/dataset?${q.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/export/dataset?${q.toString()}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!resp.ok) {
       const msg = await parseError(resp);
       throw new Error(msg);
@@ -1066,14 +1187,17 @@ export const ResearchApi = {
   exportSummaryDocx: async (params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") q.append(k, v.toString());
+      if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
-    const token = localStorage.getItem("access_token") || localStorage.getItem("token") || "";
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
     const resp = await fetch(
       `${API_BASE}${API_PREFIX}/research/export/summary-docx?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
-      },
+      }
     );
     if (!resp.ok) {
       const msg = await parseError(resp);

@@ -1,22 +1,24 @@
+import datetime
+import os
+from io import BytesIO
+
+from reportlab.graphics.barcode.qr import QrCodeWidget
+from reportlab.graphics.shapes import Drawing, Line
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
-    SimpleDocTemplate,
+    Image,
     Paragraph,
+    SimpleDocTemplate,
     Spacer,
     Table,
     TableStyle,
-    Image,
 )
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import inch
-from reportlab.graphics.shapes import Drawing, Line
-from reportlab.graphics.barcode.qr import QrCodeWidget
-from io import BytesIO
-import datetime
-import os
+
 from services.ky_localization import report_text
 from utils.translit import lat2cyr
 
@@ -1022,7 +1024,7 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
             ai_height_info = [
                 [
                     Paragraph(
-                        f"<b>{L.get('ai_adult_height', "18 yoshdagi taxminiy bo'y:")}</b>",
+                        f"<b>{L.get('ai_adult_height', '18 yoshdagi taxminiy bo\\'y:')}</b>",
                         styles["Normal"],
                     ),
                     Paragraph(f"<b>{adult_height} sm</b>", styles["Normal"]),

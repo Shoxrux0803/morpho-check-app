@@ -7,14 +7,14 @@
 // You can also change the default strategies for assets and images
 // to better suit your needs.
 
-import { clientsClaim } from "workbox-core";
-import { ExpirationPlugin } from "workbox-expiration";
-import { precacheAndRoute, createHandlerBoundToURL } from "workbox-precaching";
-import { registerRoute } from "workbox-routing";
-import { StaleWhileRevalidate } from "workbox-strategies";
+import { clientsClaim } from 'workbox-core';
+import { ExpirationPlugin } from 'workbox-expiration';
+import { precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { StaleWhileRevalidate } from 'workbox-strategies';
 
 // Any other custom service worker logic can go here.
-import { get, set } from "idb-keyval";
+import { get, set } from 'idb-keyval';
 
 clientsClaim();
 
@@ -27,17 +27,17 @@ precacheAndRoute(self.__WB_MANIFEST);
 // Set up App Shell-style routing, so that all navigation requests
 // are fulfilled with your index.html shell. Learn more at
 // https://developers.google.com/web/fundamentals/architecture/app-shell
-const fileExtensionRegexp = new RegExp("/[^/?]+\\.[^/]+$");
+const fileExtensionRegexp = new RegExp('/[^/?]+\\.[^/]+$');
 registerRoute(
   // Return false to exempt requests from being fulfilled by index.html.
   ({ request, url }) => {
     // If this isn't a navigation, skip.
-    if (request.mode !== "navigate") {
+    if (request.mode !== 'navigate') {
       return false;
     }
 
     // If this is a URL that starts with /_ (e.g. /__), skip.
-    if (url.pathname.startsWith("/_")) {
+    if (url.pathname.startsWith('/_')) {
       return false;
     }
 
@@ -49,42 +49,43 @@ registerRoute(
     // Return true to signal that we want to use the handler.
     return true;
   },
-  createHandlerBoundToURL(process.env.PUBLIC_URL + "/index.html"),
+  createHandlerBoundToURL(process.env.PUBLIC_URL + '/index.html')
 );
 
 // An example runtime caching route for requests that aren't handled by the
 // precache, in this case same-origin .png requests like those from in public/
 registerRoute(
   // Add in any other file extensions or routing criteria as needed.
-  ({ url }) => url.origin === self.location.origin && url.pathname.endsWith(".png"),
+  ({ url }) =>
+    url.origin === self.location.origin && url.pathname.endsWith('.png'),
   // Customize this strategy as needed, e.g., by changing to CacheFirst.
   new StaleWhileRevalidate({
-    cacheName: "images",
+    cacheName: 'images',
     plugins: [
       // Ensure that once this runtime cache reaches a maximum size the
       // least-recently used images are removed.
       new ExpirationPlugin({ maxEntries: 50 }),
     ],
-  }),
+  })
 );
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
-self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-records") {
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-records') {
     event.waitUntil(syncPendingRecords());
   }
 });
 
 async function syncPendingRecords() {
-  const queue = await get("pending_measurements");
-  const token = await get("auth_token");
+  const queue = await get('pending_measurements');
+  const token = await get('auth_token');
 
   if (!queue || queue.length === 0 || !token) return;
 
@@ -93,17 +94,20 @@ async function syncPendingRecords() {
 
   for (let i = 0; i < updatedQueue.length; i++) {
     const item = updatedQueue[i];
-    if (item.status === "syncing") continue; // Avoid double sync if tab is also syncing
+    if (item.status === 'syncing') continue; // Avoid double sync if tab is also syncing
 
     try {
-      const response = await fetch("/api/analyze/full?lang=" + (item.lang || "uz"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(item.payload),
-      });
+      const response = await fetch(
+        '/api/analyze/full?lang=' + (item.lang || 'uz'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(item.payload),
+        }
+      );
 
       if (response.ok) {
         updatedQueue.splice(i, 1);
@@ -111,22 +115,25 @@ async function syncPendingRecords() {
         changed = true;
       } else {
         // Log error but keep in queue
-        const errorData = await response.json().catch(() => ({ detail: "Unknown error" }));
-        item.status = "failed";
-        item.lastError = errorData.detail || errorData.message || "Server error";
+        const errorData = await response
+          .json()
+          .catch(() => ({ detail: 'Unknown error' }));
+        item.status = 'failed';
+        item.lastError =
+          errorData.detail || errorData.message || 'Server error';
         item.attempts = (item.attempts || 0) + 1;
         changed = true;
       }
     } catch (err) {
-      console.error("Background sync failed for item:", item.id, err);
+      console.error('Background sync failed for item:', item.id, err);
       // Network error, will retry later by browser
     }
   }
 
   if (changed) {
-    await set("pending_measurements", updatedQueue);
+    await set('pending_measurements', updatedQueue);
     // Notify clients if any are open
     const clients = await self.clients.matchAll();
-    clients.forEach((client) => client.postMessage({ type: "SYNC_UPDATED" }));
+    clients.forEach((client) => client.postMessage({ type: 'SYNC_UPDATED' }));
   }
 }

@@ -15,7 +15,7 @@
 }
 
 .mc-ambient-sheen::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -145,7 +145,7 @@
 }
 
 /* ✅ DARK MODE - QORA MODAL */
-[data-theme="dark"] .mc-modal {
+[data-theme='dark'] .mc-modal {
   background-color: #1f2937 !important;
   color: #ffffff !important;
   border: 1px solid #374151 !important;
@@ -224,7 +224,7 @@
   cursor: pointer;
 }
 
-[data-theme="dark"] .btn-icon {
+[data-theme='dark'] .btn-icon {
   border: 1px solid #374151;
 }
 
@@ -232,7 +232,7 @@
   background: #f3f4f6;
 }
 
-[data-theme="dark"] .btn-icon:hover {
+[data-theme='dark'] .btn-icon:hover {
   background: #374151;
 }
 

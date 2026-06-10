@@ -1,59 +1,59 @@
 // src/pages/MorphoCheckPro.js
-import React, { useState, useRef, useEffect } from "react";
-import InputForm from "../components/InputForm";
-import AnalysisResults from "../components/AnalysisResults";
-import { postAnalysis, generatePdf, generateDocx } from "../services/api";
-import { AdminApi } from "../services/AdminApi";
-import { useAuth } from "../contexts/AuthContext";
+import React, { useState, useRef, useEffect } from 'react';
+import InputForm from '../components/InputForm';
+import AnalysisResults from '../components/AnalysisResults';
+import { postAnalysis, generatePdf, generateDocx } from '../services/api';
+import { AdminApi } from '../services/AdminApi';
+import { useAuth } from '../contexts/AuthContext';
 
-import { useLanguage } from "../contexts/LanguageContext";
-import { useOfflineSync } from "../providers/OfflineSyncProvider";
-import { toast } from "react-hot-toast";
+import { useLanguage } from '../contexts/LanguageContext';
+import { useOfflineSync } from '../providers/OfflineSyncProvider';
+import { toast } from 'react-hot-toast';
 
-const FORM_DRAFT_KEY = "morphocheck.analysisFormDraft.v1";
+const FORM_DRAFT_KEY = 'morphocheck.analysisFormDraft.v1';
 const emptyFormData = {
-  firstName: "",
-  lastName: "",
-  region: "",
-  district: "",
-  mahalla: "",
-  address: "",
-  birthDate: "",
-  examinationDate: "",
-  age: "",
+  firstName: '',
+  lastName: '',
+  region: '',
+  district: '',
+  mahalla: '',
+  address: '',
+  birthDate: '',
+  examinationDate: '',
+  age: '',
   ageMonths: 0,
   ageDays: 0,
-  gender: "erkak",
-  height: "",
-  weight: "",
-  chest: "",
-  waist: "",
-  head: "",
-  parentsPhone: "",
-  shoulderLength: "",
-  shoulderBreadth: "",
-  shoulderCircumference: "",
-  armElbowLength: "",
-  handLength: "",
-  thighLength: "",
-  thighCircumference: "",
-  calfLength: "",
-  calfCircumference: "",
-  footLength: "",
-  totalBodyWater: "",
-  fatPercent: "",
-  fatMass: "",
-  muscleMass: "",
-  boneMass: "",
-  acm: "",
-  visceralFat: "",
-  bodyLength: "",
-  doctorNote: "",
+  gender: 'erkak',
+  height: '',
+  weight: '',
+  chest: '',
+  waist: '',
+  head: '',
+  parentsPhone: '',
+  shoulderLength: '',
+  shoulderBreadth: '',
+  shoulderCircumference: '',
+  armElbowLength: '',
+  handLength: '',
+  thighLength: '',
+  thighCircumference: '',
+  calfLength: '',
+  calfCircumference: '',
+  footLength: '',
+  totalBodyWater: '',
+  fatPercent: '',
+  fatMass: '',
+  muscleMass: '',
+  boneMass: '',
+  acm: '',
+  visceralFat: '',
+  bodyLength: '',
+  doctorNote: '',
   consentConfirmed: false,
-  consentGuardianName: "",
-  consentGuardianRelationship: "",
-  consentGuardianPhone: "",
-  consentPolicyVersion: "helsinki-declaration-consent-v1",
+  consentGuardianName: '',
+  consentGuardianRelationship: '',
+  consentGuardianPhone: '',
+  consentPolicyVersion: 'helsinki-declaration-consent-v1',
 };
 
 const loadDraft = () => {
@@ -67,19 +67,25 @@ const loadDraft = () => {
 
 export default function MorphoCheckPro() {
   const { lang, t } = useLanguage();
-  const { addToQueue, isOnline, editingItem, setEditingItem, updateQueueItem, removeFromQueue } =
-    useOfflineSync();
+  const {
+    addToQueue,
+    isOnline,
+    editingItem,
+    setEditingItem,
+    updateQueueItem,
+    removeFromQueue,
+  } = useOfflineSync();
   const [formData, setFormData] = useState(loadDraft);
 
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("form");
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('form');
   const resultsRef = useRef(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user?.role === "admin" || user?.role === "superadmin") {
+    if (user?.role === 'admin' || user?.role === 'superadmin') {
       AdminApi.activity.pingFormStart().catch(() => {});
     }
   }, [user]);
@@ -97,16 +103,20 @@ export default function MorphoCheckPro() {
         ...prev,
         ...editingItem.payload,
       }));
-      toast.success(t("fixingOfflineRecord") || "Fixing offline record...", { icon: "🔧" });
-      setError("");
-      setActiveTab("form");
+      toast.success(t('fixingOfflineRecord') || 'Fixing offline record...', {
+        icon: '🔧',
+      });
+      setError('');
+      setActiveTab('form');
     }
   }, [editingItem, t]);
 
   useEffect(() => {
     if (formData.birthDate) {
       const birth = new Date(formData.birthDate);
-      const exam = formData.examinationDate ? new Date(formData.examinationDate) : new Date();
+      const exam = formData.examinationDate
+        ? new Date(formData.examinationDate)
+        : new Date();
 
       let years = exam.getFullYear() - birth.getFullYear();
       let months = exam.getMonth() - birth.getMonth();
@@ -124,11 +134,15 @@ export default function MorphoCheckPro() {
       }
 
       if (years < 0) {
-        setFormData((prev) => ({ ...prev, age: "", ageMonths: 0, ageDays: 0 }));
+        setFormData((prev) => ({ ...prev, age: '', ageMonths: 0, ageDays: 0 }));
         return;
       }
 
-      if (formData.age !== years || formData.ageMonths !== months || formData.ageDays !== days) {
+      if (
+        formData.age !== years ||
+        formData.ageMonths !== months ||
+        formData.ageDays !== days
+      ) {
         setFormData((prev) => ({
           ...prev,
           age: years,
@@ -140,18 +154,19 @@ export default function MorphoCheckPro() {
   }, [formData.birthDate, formData.examinationDate]);
 
   const numericFields = [
-    "age",
-    "height",
-    "weight",
-    "chest",
-    "waist",
-    "head",
-    "fatherHeight",
-    "motherHeight",
+    'age',
+    'height',
+    'weight',
+    'chest',
+    'waist',
+    'head',
+    'fatherHeight',
+    'motherHeight',
   ];
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const v = numericFields.includes(name) && value !== "" ? Number(value) : value;
+    const v =
+      numericFields.includes(name) && value !== '' ? Number(value) : value;
     setFormData((prev) => ({ ...prev, [name]: v }));
   };
 
@@ -159,36 +174,51 @@ export default function MorphoCheckPro() {
     setFormData((prev) => ({ ...prev, ...data }));
   };
 
-  const requiresGuardianConsent = Number(formData.age) > 0 && Number(formData.age) < 18;
+  const requiresGuardianConsent =
+    Number(formData.age) > 0 && Number(formData.age) < 18;
   const consentPayload = {
-    consentConfirmed: requiresGuardianConsent ? Boolean(formData.consentConfirmed) : false,
-    consentGuardianName: requiresGuardianConsent ? formData.consentGuardianName || "" : "",
+    consentConfirmed: requiresGuardianConsent
+      ? Boolean(formData.consentConfirmed)
+      : false,
+    consentGuardianName: requiresGuardianConsent
+      ? formData.consentGuardianName || ''
+      : '',
     consentGuardianRelationship: requiresGuardianConsent
-      ? formData.consentGuardianRelationship || ""
-      : "",
+      ? formData.consentGuardianRelationship || ''
+      : '',
     consentGuardianPhone: requiresGuardianConsent
-      ? formData.consentGuardianPhone || formData.parentsPhone || ""
-      : "",
-    consentPolicyVersion: formData.consentPolicyVersion || "helsinki-declaration-consent-v1",
+      ? formData.consentGuardianPhone || formData.parentsPhone || ''
+      : '',
+    consentPolicyVersion:
+      formData.consentPolicyVersion || 'helsinki-declaration-consent-v1',
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     // Front tekshiruvlar...
-    if (!formData.firstName || !formData.lastName) return setError(t("errNameRequired"));
-    if (!formData.region) return setError(t("errRegionRequired"));
-    if (formData.age < 2 || formData.age > 120) return setError(t("errAge"));
-    if (formData.height < 50 || formData.height > 250) return setError(t("errHeight"));
-    if (formData.weight < 3 || formData.weight > 300) return setError(t("errWeight"));
-    if (formData.chest < 50 || formData.chest > 200) return setError(t("errChest"));
-    if (formData.head < 40 || formData.head > 70) return setError(t("errHead"));
+    if (!formData.firstName || !formData.lastName)
+      return setError(t('errNameRequired'));
+    if (!formData.region) return setError(t('errRegionRequired'));
+    if (formData.age < 2 || formData.age > 120) return setError(t('errAge'));
+    if (formData.height < 50 || formData.height > 250)
+      return setError(t('errHeight'));
+    if (formData.weight < 3 || formData.weight > 300)
+      return setError(t('errWeight'));
+    if (formData.chest < 50 || formData.chest > 200)
+      return setError(t('errChest'));
+    if (formData.head < 40 || formData.head > 70) return setError(t('errHead'));
     if (requiresGuardianConsent && !formData.consentConfirmed) {
-      return setError("Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.");
+      return setError('Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.');
     }
-    if (requiresGuardianConsent && !String(formData.consentGuardianName || "").trim()) {
-      return setError("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.");
+    if (
+      requiresGuardianConsent &&
+      !String(formData.consentGuardianName || '').trim()
+    ) {
+      return setError(
+        'Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.'
+      );
     }
 
     setLoading(true);
@@ -196,10 +226,10 @@ export default function MorphoCheckPro() {
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        region: formData.region || "",
-        district: formData.district || "",
-        mahalla: formData.mahalla || "",
-        address: formData.address || "",
+        region: formData.region || '',
+        district: formData.district || '',
+        mahalla: formData.mahalla || '',
+        address: formData.address || '',
         age: Number(formData.age),
         ageMonths: Number(formData.ageMonths || 0),
         ageDays: Number(formData.ageDays || 0),
@@ -209,12 +239,19 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
-        parentsPhone: requiresGuardianConsent ? formData.parentsPhone || "" : "",
-        fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
-        motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
-        examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
-        birthDate: formData.birthDate || t("unknown"),
-        preschoolInstitution: formData.preschoolInstitution || t("unknown"),
+        parentsPhone: requiresGuardianConsent
+          ? formData.parentsPhone || ''
+          : '',
+        fatherHeight: formData.fatherHeight
+          ? Number(formData.fatherHeight)
+          : null,
+        motherHeight: formData.motherHeight
+          ? Number(formData.motherHeight)
+          : null,
+        examinationDate:
+          formData.examinationDate || new Date().toISOString().split('T')[0],
+        birthDate: formData.birthDate || t('unknown'),
+        preschoolInstitution: formData.preschoolInstitution || t('unknown'),
         shoulderLength: Number(formData.shoulderLength) || 0,
         shoulderBreadth: Number(formData.shoulderBreadth) || 0,
         shoulderCircumference: Number(formData.shoulderCircumference) || 0,
@@ -226,15 +263,22 @@ export default function MorphoCheckPro() {
         calfCircumference: Number(formData.calfCircumference) || 0,
         footLength: Number(formData.footLength) || 0,
         // Bioimpedance
-        totalBodyWater: formData.totalBodyWater !== "" ? Number(formData.totalBodyWater) : null,
-        fatPercent: formData.fatPercent !== "" ? Number(formData.fatPercent) : null,
-        fatMass: formData.fatMass !== "" ? Number(formData.fatMass) : null,
-        muscleMass: formData.muscleMass !== "" ? Number(formData.muscleMass) : null,
-        boneMass: formData.boneMass !== "" ? Number(formData.boneMass) : null,
-        acm: formData.acm !== "" ? Number(formData.acm) : null,
-        visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
-        bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
-        doctorNote: formData.doctorNote || "",
+        totalBodyWater:
+          formData.totalBodyWater !== ''
+            ? Number(formData.totalBodyWater)
+            : null,
+        fatPercent:
+          formData.fatPercent !== '' ? Number(formData.fatPercent) : null,
+        fatMass: formData.fatMass !== '' ? Number(formData.fatMass) : null,
+        muscleMass:
+          formData.muscleMass !== '' ? Number(formData.muscleMass) : null,
+        boneMass: formData.boneMass !== '' ? Number(formData.boneMass) : null,
+        acm: formData.acm !== '' ? Number(formData.acm) : null,
+        visceralFat:
+          formData.visceralFat !== '' ? Number(formData.visceralFat) : null,
+        bodyLength:
+          formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
+        doctorNote: formData.doctorNote || '',
         ...consentPayload,
       };
 
@@ -245,8 +289,8 @@ export default function MorphoCheckPro() {
         } else {
           await addToQueue(payload, lang);
         }
-        setFormData({ ...formData, firstName: "", lastName: "" });
-        setActiveTab("form");
+        setFormData({ ...formData, firstName: '', lastName: '' });
+        setActiveTab('form');
         return;
       }
 
@@ -256,13 +300,13 @@ export default function MorphoCheckPro() {
       if (editingItem) {
         await removeFromQueue(editingItem.id);
         setEditingItem(null);
-        toast.success("Corrected and synced!");
+        toast.success('Corrected and synced!');
       }
       localStorage.removeItem(FORM_DRAFT_KEY);
       setResults(raw);
-      setActiveTab("results");
+      setActiveTab('results');
     } catch (err) {
-      setError(err.message || t("serverError"));
+      setError(err.message || t('serverError'));
     } finally {
       setLoading(false);
     }
@@ -272,58 +316,58 @@ export default function MorphoCheckPro() {
     setResults(null);
     setFormData((prev) => ({
       ...prev,
-      firstName: "",
-      lastName: "",
-      birthDate: "",
-      age: "",
+      firstName: '',
+      lastName: '',
+      birthDate: '',
+      age: '',
       ageMonths: 0,
       ageDays: 0,
-      height: "",
-      weight: "",
-      chest: "",
-      waist: "",
-      head: "",
-      parentsPhone: "",
-      fatherHeight: "",
-      motherHeight: "",
-      shoulderLength: "",
-      shoulderBreadth: "",
-      shoulderCircumference: "",
-      armElbowLength: "",
-      handLength: "",
-      thighLength: "",
-      thighCircumference: "",
-      calfLength: "",
-      calfCircumference: "",
-      footLength: "",
-      totalBodyWater: "",
-      fatPercent: "",
-      fatMass: "",
-      muscleMass: "",
-      boneMass: "",
-      acm: "",
-      visceralFat: "",
-      bodyLength: "",
-      doctorNote: "",
+      height: '',
+      weight: '',
+      chest: '',
+      waist: '',
+      head: '',
+      parentsPhone: '',
+      fatherHeight: '',
+      motherHeight: '',
+      shoulderLength: '',
+      shoulderBreadth: '',
+      shoulderCircumference: '',
+      armElbowLength: '',
+      handLength: '',
+      thighLength: '',
+      thighCircumference: '',
+      calfLength: '',
+      calfCircumference: '',
+      footLength: '',
+      totalBodyWater: '',
+      fatPercent: '',
+      fatMass: '',
+      muscleMass: '',
+      boneMass: '',
+      acm: '',
+      visceralFat: '',
+      bodyLength: '',
+      doctorNote: '',
       // We keep region, district, mahalla, address, and examinationDate for faster multi-entry
     }));
-    setActiveTab("form");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setActiveTab('form');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const generatePDF = async (pdfLang) => {
     const selectedLang = pdfLang || lang;
     setLoading(true);
-    setError("");
+    setError('');
     try {
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         analysisId: results?.data?.id,
-        region: formData.region || "",
-        district: formData.district || "",
-        mahalla: formData.mahalla || "",
-        address: formData.address || "",
+        region: formData.region || '',
+        district: formData.district || '',
+        mahalla: formData.mahalla || '',
+        address: formData.address || '',
         age: Number(formData.age),
         ageMonths: Number(formData.ageMonths || 0),
         ageDays: Number(formData.ageDays || 0),
@@ -333,12 +377,19 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
-        parentsPhone: requiresGuardianConsent ? formData.parentsPhone || "" : "",
-        fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
-        motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
-        examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
-        birthDate: formData.birthDate || t("unknown"),
-        preschoolInstitution: formData.preschoolInstitution || t("unknown"),
+        parentsPhone: requiresGuardianConsent
+          ? formData.parentsPhone || ''
+          : '',
+        fatherHeight: formData.fatherHeight
+          ? Number(formData.fatherHeight)
+          : null,
+        motherHeight: formData.motherHeight
+          ? Number(formData.motherHeight)
+          : null,
+        examinationDate:
+          formData.examinationDate || new Date().toISOString().split('T')[0],
+        birthDate: formData.birthDate || t('unknown'),
+        preschoolInstitution: formData.preschoolInstitution || t('unknown'),
         shoulderLength: Number(formData.shoulderLength) || 0,
         shoulderBreadth: Number(formData.shoulderBreadth) || 0,
         shoulderCircumference: Number(formData.shoulderCircumference) || 0,
@@ -350,21 +401,28 @@ export default function MorphoCheckPro() {
         calfCircumference: Number(formData.calfCircumference) || 0,
         footLength: Number(formData.footLength) || 0,
         // Bioimpedance
-        totalBodyWater: formData.totalBodyWater !== "" ? Number(formData.totalBodyWater) : null,
-        fatPercent: formData.fatPercent !== "" ? Number(formData.fatPercent) : null,
-        fatMass: formData.fatMass !== "" ? Number(formData.fatMass) : null,
-        muscleMass: formData.muscleMass !== "" ? Number(formData.muscleMass) : null,
-        boneMass: formData.boneMass !== "" ? Number(formData.boneMass) : null,
-        acm: formData.acm !== "" ? Number(formData.acm) : null,
-        visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
-        bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
-        doctorNote: formData.doctorNote || "",
+        totalBodyWater:
+          formData.totalBodyWater !== ''
+            ? Number(formData.totalBodyWater)
+            : null,
+        fatPercent:
+          formData.fatPercent !== '' ? Number(formData.fatPercent) : null,
+        fatMass: formData.fatMass !== '' ? Number(formData.fatMass) : null,
+        muscleMass:
+          formData.muscleMass !== '' ? Number(formData.muscleMass) : null,
+        boneMass: formData.boneMass !== '' ? Number(formData.boneMass) : null,
+        acm: formData.acm !== '' ? Number(formData.acm) : null,
+        visceralFat:
+          formData.visceralFat !== '' ? Number(formData.visceralFat) : null,
+        bodyLength:
+          formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
+        doctorNote: formData.doctorNote || '',
         ...consentPayload,
       };
 
       const blob = await generatePdf(payload, selectedLang);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download = `morphocheck_${formData.firstName}_${formData.lastName}.pdf`;
       document.body.appendChild(a);
@@ -372,7 +430,7 @@ export default function MorphoCheckPro() {
       a.remove();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setError(`${t("pdfError")}: ${err.message}`);
+      setError(`${t('pdfError')}: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -381,15 +439,15 @@ export default function MorphoCheckPro() {
   const generateDOCX = async (docxLang) => {
     const selectedLang = docxLang || lang;
     setLoading(true);
-    setError("");
+    setError('');
     try {
       const payload = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        region: formData.region || "",
-        district: formData.district || "",
-        mahalla: formData.mahalla || "",
-        address: formData.address || "",
+        region: formData.region || '',
+        district: formData.district || '',
+        mahalla: formData.mahalla || '',
+        address: formData.address || '',
         age: Number(formData.age),
         ageMonths: Number(formData.ageMonths || 0),
         ageDays: Number(formData.ageDays || 0),
@@ -399,12 +457,19 @@ export default function MorphoCheckPro() {
         chest: Number(formData.chest),
         waist: Number(formData.waist || 0),
         head: Number(formData.head),
-        parentsPhone: requiresGuardianConsent ? formData.parentsPhone || "" : "",
-        fatherHeight: formData.fatherHeight ? Number(formData.fatherHeight) : null,
-        motherHeight: formData.motherHeight ? Number(formData.motherHeight) : null,
-        examinationDate: formData.examinationDate || new Date().toISOString().split("T")[0],
-        birthDate: formData.birthDate || t("unknown"),
-        preschoolInstitution: formData.preschoolInstitution || t("unknown"),
+        parentsPhone: requiresGuardianConsent
+          ? formData.parentsPhone || ''
+          : '',
+        fatherHeight: formData.fatherHeight
+          ? Number(formData.fatherHeight)
+          : null,
+        motherHeight: formData.motherHeight
+          ? Number(formData.motherHeight)
+          : null,
+        examinationDate:
+          formData.examinationDate || new Date().toISOString().split('T')[0],
+        birthDate: formData.birthDate || t('unknown'),
+        preschoolInstitution: formData.preschoolInstitution || t('unknown'),
         shoulderLength: Number(formData.shoulderLength) || 0,
         shoulderBreadth: Number(formData.shoulderBreadth) || 0,
         shoulderCircumference: Number(formData.shoulderCircumference) || 0,
@@ -416,21 +481,28 @@ export default function MorphoCheckPro() {
         calfCircumference: Number(formData.calfCircumference) || 0,
         footLength: Number(formData.footLength) || 0,
         // Bioimpedance
-        totalBodyWater: formData.totalBodyWater !== "" ? Number(formData.totalBodyWater) : null,
-        fatPercent: formData.fatPercent !== "" ? Number(formData.fatPercent) : null,
-        fatMass: formData.fatMass !== "" ? Number(formData.fatMass) : null,
-        muscleMass: formData.muscleMass !== "" ? Number(formData.muscleMass) : null,
-        boneMass: formData.boneMass !== "" ? Number(formData.boneMass) : null,
-        acm: formData.acm !== "" ? Number(formData.acm) : null,
-        visceralFat: formData.visceralFat !== "" ? Number(formData.visceralFat) : null,
-        bodyLength: formData.bodyLength !== "" ? Number(formData.bodyLength) : null,
-        doctorNote: formData.doctorNote || "",
+        totalBodyWater:
+          formData.totalBodyWater !== ''
+            ? Number(formData.totalBodyWater)
+            : null,
+        fatPercent:
+          formData.fatPercent !== '' ? Number(formData.fatPercent) : null,
+        fatMass: formData.fatMass !== '' ? Number(formData.fatMass) : null,
+        muscleMass:
+          formData.muscleMass !== '' ? Number(formData.muscleMass) : null,
+        boneMass: formData.boneMass !== '' ? Number(formData.boneMass) : null,
+        acm: formData.acm !== '' ? Number(formData.acm) : null,
+        visceralFat:
+          formData.visceralFat !== '' ? Number(formData.visceralFat) : null,
+        bodyLength:
+          formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
+        doctorNote: formData.doctorNote || '',
         ...consentPayload,
       };
 
       const blob = await generateDocx(payload, selectedLang);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
+      const a = document.createElement('a');
       a.href = url;
       a.download = `morphocheck_${formData.firstName}_${formData.lastName}.docx`;
       document.body.appendChild(a);
@@ -446,7 +518,7 @@ export default function MorphoCheckPro() {
 
   useEffect(() => {
     if (error) {
-      const t = setTimeout(() => setError(""), 5000);
+      const t = setTimeout(() => setError(''), 5000);
       return () => clearTimeout(t);
     }
   }, [error]);
@@ -454,7 +526,7 @@ export default function MorphoCheckPro() {
   return (
     <div className="mc-analysis-page">
       <div className="container my-4 mc-analysis-content">
-        {activeTab === "form" ? (
+        {activeTab === 'form' ? (
           <InputForm
             formData={formData}
             handleInputChange={handleInputChange}

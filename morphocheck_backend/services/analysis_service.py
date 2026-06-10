@@ -1,7 +1,9 @@
-from models.schemas import PatientData
-import matplotlib.pyplot as plt
 from io import BytesIO
+
+import matplotlib.pyplot as plt
 import numpy as np
+
+from models.schemas import PatientData
 
 
 def analyze_patient(data: PatientData):

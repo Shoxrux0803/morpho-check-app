@@ -1,5 +1,5 @@
-import sqlite3
 import os
+import sqlite3
 
 db_path = "morphocheck.db"
 if not os.path.exists(db_path):

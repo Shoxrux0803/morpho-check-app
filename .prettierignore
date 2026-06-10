@@ -1,11 +1,6 @@
-node_modules
 build
-dist
-.env
-*.md
-package-lock.json
-public
-assets
-# Python backend
-venv
+coverage
+.DS_Store
+*.map
+node_modules
 morphocheck_backend

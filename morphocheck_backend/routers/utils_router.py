@@ -1,7 +1,8 @@
 # morphocheck_backend/routers/utils_router.py
+import logging
+
 import httpx
 from fastapi import APIRouter, Request
-import logging
 
 router = APIRouter(tags=["Utilities"])
 logger = logging.getLogger("uvicorn.error")

@@ -9,7 +9,6 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-
 METRICS = [
     ("chest_standing_height", "Bo'y (tik)", "sm"),
     ("weight", "Vazn", "kg"),

@@ -1,6 +1,6 @@
-import React, { useMemo, useRef, useEffect, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useMemo, useRef, useEffect, useState } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 
 const vertexShader = `
 uniform float uTime;
@@ -76,8 +76,8 @@ const ParticleField = ({ isDark }) => {
 
   useEffect(() => {
     const handleScroll = () => setScroll(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const { geometry } = useMemo(() => {
@@ -88,19 +88,19 @@ const ParticleField = ({ isDark }) => {
     const colorsLight = new Float32Array(count * 3);
 
     const paletteDark = [
-      new THREE.Color("#4f46e5"), // Indigo
-      new THREE.Color("#38bdf8"), // Sky
-      new THREE.Color("#8b5cf6"), // Violet
-      new THREE.Color("#c084fc"), // Fuchsia
-      new THREE.Color("#818cf8"), // Indigo light
+      new THREE.Color('#4f46e5'), // Indigo
+      new THREE.Color('#38bdf8'), // Sky
+      new THREE.Color('#8b5cf6'), // Violet
+      new THREE.Color('#c084fc'), // Fuchsia
+      new THREE.Color('#818cf8'), // Indigo light
     ];
 
     const paletteLight = [
-      new THREE.Color("#2563eb"), // Blue
-      new THREE.Color("#0ea5e9"), // Sky Blue
-      new THREE.Color("#6366f1"), // Indigo variant
-      new THREE.Color("#ec4899"), // Pink
-      new THREE.Color("#3b82f6"), // Normal Blue
+      new THREE.Color('#2563eb'), // Blue
+      new THREE.Color('#0ea5e9'), // Sky Blue
+      new THREE.Color('#6366f1'), // Indigo variant
+      new THREE.Color('#ec4899'), // Pink
+      new THREE.Color('#3b82f6'), // Normal Blue
     ];
 
     for (let i = 0; i < count; i++) {
@@ -111,7 +111,8 @@ const ParticleField = ({ isDark }) => {
 
       positions[i * 3] = Math.cos(theta) * radius + (Math.random() - 0.5) * 5;
       positions[i * 3 + 1] = ySpread;
-      positions[i * 3 + 2] = Math.sin(theta) * radius + (Math.random() - 0.5) * 5;
+      positions[i * 3 + 2] =
+        Math.sin(theta) * radius + (Math.random() - 0.5) * 5;
 
       scales[i] = Math.random() * 2.5 + 0.5;
 
@@ -127,10 +128,10 @@ const ParticleField = ({ isDark }) => {
     }
 
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geo.setAttribute("aScale", new THREE.BufferAttribute(scales, 1));
-    geo.setAttribute("aColorDark", new THREE.BufferAttribute(colorsDark, 3));
-    geo.setAttribute("aColorLight", new THREE.BufferAttribute(colorsLight, 3));
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    geo.setAttribute('aColorDark', new THREE.BufferAttribute(colorsDark, 3));
+    geo.setAttribute('aColorLight', new THREE.BufferAttribute(colorsLight, 3));
 
     return { geometry: geo };
   }, []);
@@ -153,13 +154,14 @@ const ParticleField = ({ isDark }) => {
     materialRef.current.uniforms.uTheme.value = THREE.MathUtils.lerp(
       materialRef.current.uniforms.uTheme.value,
       targetTheme,
-      0.05,
+      0.05
     );
 
     if (pointsRef.current) {
       // Bulutning sekin aylanib turishi
       pointsRef.current.rotation.y = now * 0.04 + mouseTarget.current.x * 0.15;
-      pointsRef.current.rotation.x = scroll * 0.001 - mouseTarget.current.y * 0.15;
+      pointsRef.current.rotation.x =
+        scroll * 0.001 - mouseTarget.current.y * 0.15;
     }
   });
 
@@ -183,27 +185,31 @@ const ParticleField = ({ isDark }) => {
 };
 
 export default function DOFLinesAnimation({ theme }) {
-  const isDark = theme === "dark";
-  const bg = isDark ? "#020617" : "#f1f5f9";
-  const overlay = isDark ? "rgba(2, 6, 23, 0.85)" : "rgba(241, 245, 249, 0.8)";
+  const isDark = theme === 'dark';
+  const bg = isDark ? '#020617' : '#f1f5f9';
+  const overlay = isDark ? 'rgba(2, 6, 23, 0.85)' : 'rgba(241, 245, 249, 0.8)';
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         zIndex: 0,
-        pointerEvents: "none",
+        pointerEvents: 'none',
         background: bg,
-        transition: "background 0.5s ease-in-out",
+        transition: 'background 0.5s ease-in-out',
       }}
     >
       <Canvas
         camera={{ position: [0, 0, 30], fov: 45, near: 1, far: 200 }}
-        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: 'high-performance',
+        }}
         dpr={[1, 2]}
       >
         <ParticleField isDark={isDark} />
@@ -212,15 +218,18 @@ export default function DOFLinesAnimation({ theme }) {
       {/* Vinyetka effekti markazni ochroq, chetlarni qoramtir qiladi */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
-          background: "radial-gradient(circle at 50% 50%, transparent 0%, " + overlay + " 100%)",
-          pointerEvents: "none",
+          width: '100%',
+          height: '100%',
+          background:
+            'radial-gradient(circle at 50% 50%, transparent 0%, ' +
+            overlay +
+            ' 100%)',
+          pointerEvents: 'none',
           zIndex: 1,
-          transition: "background 0.5s ease-in-out",
+          transition: 'background 0.5s ease-in-out',
         }}
       />
     </div>

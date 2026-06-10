@@ -4,7 +4,6 @@ from typing import Any, Dict, List
 
 from services.cache_service import cache_service
 
-
 STOP_WORDS = {
     "uz": {
         "va",

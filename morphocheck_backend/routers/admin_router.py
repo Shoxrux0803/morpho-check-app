@@ -1,49 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, Request
-from models.audit import AuditLog
-from utils.audit_helper import record_audit_log
-from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, or_, asc, desc, case
-from datetime import datetime, date, timedelta
-from typing import Optional, List
-
 import logging
+from datetime import date, datetime, timedelta
 from io import BytesIO
-from openpyxl import Workbook, load_workbook
-from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from typing import List, Optional
+
 from docx import Document
-from docx.shared import Pt, Cm, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Cm, Pt, RGBColor
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi.responses import StreamingResponse
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from pydantic import BaseModel
+from sqlalchemy import asc, case, desc, func, or_
+from sqlalchemy.orm import Session, joinedload
 
-
-from utils.database import get_db
-from models.user import User
+from models.audit import AuditLog
 from models.payment import Payment
-from models.userdata import PatientAnalysis, ResearchRecord
-from routers.auth_router import (
-    get_current_user,
-    get_current_admin,
-    get_current_superadmin,
-)
 from models.schemas import (
-    UserCreate,
-    UserUpdate,
-    UserOut,
+    PatientData,
     PaymentCreate,
     PaymentOut,
-    PatientData,
+    UserCreate,
+    UserOut,
+    UserUpdate,
+)
+from models.user import User
+from models.userdata import PatientAnalysis, ResearchRecord
+from routers.auth_router import (
+    get_current_admin,
+    get_current_superadmin,
+    get_current_user,
+)
+from services.analyze_service import (
+    _split_region_and_district,
+    generate_advices,
 )
 from services.analyze_service import (
     calculate_bmi as calc_full_bmi,
-    generate_advices,
-    _split_region_and_district,
 )
-from utils.translit import lat2cyr
-from utils.security import get_password_hash
-from services.clinical_service import clinical_service
 from services.cache_service import cache_service
+from services.clinical_service import clinical_service
+from utils.audit_helper import record_audit_log
+from utils.database import get_db
+from utils.security import get_password_hash
+from utils.translit import lat2cyr
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -1798,8 +1799,8 @@ def export_deleted_docx(
         run.font.size = Pt(9)
         run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
         # Header fon — qizil
-        from docx.oxml.ns import qn
         from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
 
         tc = cell._tc
         tcPr = tc.get_or_add_tcPr()
@@ -1861,8 +1862,8 @@ def export_deleted_docx(
             run.font.size = Pt(8)
 
             # Alternating row color
-            from docx.oxml.ns import qn
             from docx.oxml import OxmlElement
+            from docx.oxml.ns import qn
 
             tc = cell._tc
             tcPr = tc.get_or_add_tcPr()

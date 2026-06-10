@@ -1,12 +1,14 @@
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+
 from models.clinical import ClinicalSetting
 from models.user import User
 from routers.auth_router import get_current_admin
-from utils.database import get_db
 from services.clinical_service import clinical_service
-from pydantic import BaseModel
+from utils.database import get_db
 
 router = APIRouter(tags=["Clinical CMS"])
 

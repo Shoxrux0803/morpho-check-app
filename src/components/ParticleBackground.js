@@ -1,14 +1,14 @@
 // src/components/ParticleBackground.jsx
-import React, { useRef, useMemo, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 
 // 1. Antigravity Particles Component
 function AntigravityParticles({ theme }) {
   const pointsRef = useRef();
   const particleCount = 5000;
   const { mouse, viewport } = useThree();
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   // Data initialization
   const [positions, initialPositions, velocities, colors] = useMemo(() => {
@@ -172,7 +172,7 @@ function AmbientFog({ theme }) {
       </bufferGeometry>
       <pointsMaterial
         size={0.02}
-        color={theme === "dark" ? "#ffffff" : "#444444"}
+        color={theme === 'dark' ? '#ffffff' : '#444444'}
         transparent
         opacity={0.1}
       />
@@ -181,39 +181,43 @@ function AmbientFog({ theme }) {
 }
 
 export default function ParticleBackground({ theme }) {
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   const bgStyle = useMemo(
     () => ({
-      position: "fixed",
+      position: 'fixed',
       top: 0,
       left: 0,
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
       zIndex: 0,
-      backgroundColor: isDark ? "#020617" : "#f8fafc",
+      backgroundColor: isDark ? '#020617' : '#f8fafc',
       backgroundImage: isDark
-        ? "radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)"
-        : "radial-gradient(circle at 50% 50%, #eff6ff 0%, #f8fafc 100%)",
+        ? 'radial-gradient(circle at 50% 50%, #0f172a 0%, #020617 100%)'
+        : 'radial-gradient(circle at 50% 50%, #eff6ff 0%, #f8fafc 100%)',
     }),
-    [isDark],
+    [isDark]
   );
 
   return (
     <div style={bgStyle}>
       <Canvas camera={{ position: [0, 0, 10], fov: 45 }}>
         <ambientLight intensity={0.4} />
-        <pointLight position={[10, 10, 10]} intensity={1} color={isDark ? "#00f2ff" : "#3b82f6"} />
+        <pointLight
+          position={[10, 10, 10]}
+          intensity={1}
+          color={isDark ? '#00f2ff' : '#3b82f6'}
+        />
         <pointLight
           position={[-10, -10, -10]}
           intensity={0.5}
-          color={isDark ? "#9333ea" : "#8b5cf6"}
+          color={isDark ? '#9333ea' : '#8b5cf6'}
         />
 
         <AntigravityParticles theme={theme} />
         <AmbientFog theme={theme} />
 
-        <fog attach="fog" args={[isDark ? "#020617" : "#f8fafc", 5, 25]} />
+        <fog attach="fog" args={[isDark ? '#020617' : '#f8fafc', 5, 25]} />
       </Canvas>
     </div>
   );

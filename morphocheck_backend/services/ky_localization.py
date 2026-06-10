@@ -8,7 +8,6 @@ import re
 import unicodedata
 from typing import Any
 
-
 KY_BMI_CATEGORIES = {
     "v_low": "Салмак жетишсиздиги (айкын)",
     "low": "Салмак жетишсиздиги",

@@ -1,6 +1,6 @@
 try:
-    from utils.database import SessionLocal
     from models.userdata import PatientAnalysis
+    from utils.database import SessionLocal
 
     db = SessionLocal()
     analyses = db.query(PatientAnalysis).all()

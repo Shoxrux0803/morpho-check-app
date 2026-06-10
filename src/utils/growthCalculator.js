@@ -1,4 +1,4 @@
-import { LMS_DATA } from "./whoLMS";
+import { LMS_DATA } from './whoLMS';
 
 /**
  * Interpolates LMS values between age points
@@ -12,7 +12,8 @@ const getLMS = (type, gender, ageInMonths) => {
   let upper = null;
 
   for (let i = 0; i < data.length; i++) {
-    if (data[i][0] === ageInMonths) return { l: data[i][1], m: data[i][2], s: data[i][3] };
+    if (data[i][0] === ageInMonths)
+      return { l: data[i][1], m: data[i][2], s: data[i][3] };
     if (data[i][0] < ageInMonths) lower = data[i];
     if (data[i][0] > ageInMonths) {
       upper = data[i];
@@ -76,7 +77,8 @@ function erf(x) {
   const a5 = 1.061405429;
   const p = 0.3275911;
   const t = 1.0 / (1.0 + p * x);
-  const y = 1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  const y =
+    1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
   return y;
 }
 
@@ -85,8 +87,8 @@ function erf(x) {
  */
 export const getZScoreStatus = (z) => {
   const absZ = Math.abs(z);
-  if (absZ < 1) return { color: "#10b981", status: "Normal", code: "normal" }; // Green
-  if (absZ < 2) return { color: "#f59e0b", status: "Monitor", code: "monitor" }; // Yellow
-  if (absZ < 3) return { color: "#ef4444", status: "Risk", code: "risk" }; // Red
-  return { color: "#991b1b", status: "Severe", code: "severe" }; // Dark Red
+  if (absZ < 1) return { color: '#10b981', status: 'Normal', code: 'normal' }; // Green
+  if (absZ < 2) return { color: '#f59e0b', status: 'Monitor', code: 'monitor' }; // Yellow
+  if (absZ < 3) return { color: '#ef4444', status: 'Risk', code: 'risk' }; // Red
+  return { color: '#991b1b', status: 'Severe', code: 'severe' }; // Dark Red
 };

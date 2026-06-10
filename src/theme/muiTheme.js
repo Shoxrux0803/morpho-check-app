@@ -1,72 +1,72 @@
 // src/theme/muiTheme.js
-import { createTheme } from "@mui/material/styles";
+import { createTheme } from '@mui/material/styles';
 
-export const THEME_VARIANTS = ["neo", "ocean", "sunset", "minimal"];
+export const THEME_VARIANTS = ['neo', 'ocean', 'sunset', 'minimal'];
 
 // Variant ranglari - oldin define qilish
-const getVariantColors = (isDark, variant = "neo") => {
+const getVariantColors = (isDark, variant = 'neo') => {
   const variants = {
     neo: {
-      primary: isDark ? "#5eead4" : "#0f766e",
-      secondary: isDark ? "#60a5fa" : "#2563eb",
-      bgDefault: isDark ? "#08111f" : "#f6faf9",
-      bgPaper: isDark ? "#101827" : "#ffffff",
-      success: isDark ? "#34d399" : "#10b981",
-      warning: isDark ? "#fbbf24" : "#d97706",
-      error: isDark ? "#f87171" : "#dc2626",
-      info: isDark ? "#60a5fa" : "#2563eb",
+      primary: isDark ? '#5eead4' : '#0f766e',
+      secondary: isDark ? '#60a5fa' : '#2563eb',
+      bgDefault: isDark ? '#08111f' : '#f6faf9',
+      bgPaper: isDark ? '#101827' : '#ffffff',
+      success: isDark ? '#34d399' : '#10b981',
+      warning: isDark ? '#fbbf24' : '#d97706',
+      error: isDark ? '#f87171' : '#dc2626',
+      info: isDark ? '#60a5fa' : '#2563eb',
       auraLight:
-        "radial-gradient(42rem 42rem at 8% -12%, rgba(15,118,110,0.13), transparent 62%), radial-gradient(34rem 34rem at 92% -18%, rgba(37,99,235,0.10), transparent 58%)",
+        'radial-gradient(42rem 42rem at 8% -12%, rgba(15,118,110,0.13), transparent 62%), radial-gradient(34rem 34rem at 92% -18%, rgba(37,99,235,0.10), transparent 58%)',
       auraDark:
-        "radial-gradient(50rem 50rem at 0% 0%, rgba(15,118,110,0.16), transparent 62%), radial-gradient(40rem 40rem at 100% 100%, rgba(37,99,235,0.10), transparent 58%)",
+        'radial-gradient(50rem 50rem at 0% 0%, rgba(15,118,110,0.16), transparent 62%), radial-gradient(40rem 40rem at 100% 100%, rgba(37,99,235,0.10), transparent 58%)',
     },
     ocean: {
-      primary: isDark ? "#64ffda" : "#0077b6",
-      secondary: isDark ? "#00e5ff" : "#00b4d8",
-      bgDefault: isDark ? "#0b132b" : "#e6f7ff",
-      bgPaper: isDark ? "#1c2541" : "#ffffff",
-      success: isDark ? "#00D1B2" : "#00B894",
-      warning: isDark ? "#FDCB6E" : "#F39C12",
-      error: isDark ? "#E84393" : "#E74C3C",
-      info: isDark ? "#74B9FF" : "#3498DB",
+      primary: isDark ? '#64ffda' : '#0077b6',
+      secondary: isDark ? '#00e5ff' : '#00b4d8',
+      bgDefault: isDark ? '#0b132b' : '#e6f7ff',
+      bgPaper: isDark ? '#1c2541' : '#ffffff',
+      success: isDark ? '#00D1B2' : '#00B894',
+      warning: isDark ? '#FDCB6E' : '#F39C12',
+      error: isDark ? '#E84393' : '#E74C3C',
+      info: isDark ? '#74B9FF' : '#3498DB',
       auraLight:
-        "radial-gradient(40rem 40rem at 0% -10%, #c1f0ff, transparent), radial-gradient(30rem 30rem at 100% -20%, #dff9ff, transparent)",
+        'radial-gradient(40rem 40rem at 0% -10%, #c1f0ff, transparent), radial-gradient(30rem 30rem at 100% -20%, #dff9ff, transparent)',
       auraDark:
-        "radial-gradient(40rem 40rem at 0% -10%, rgba(0,212,255,.08), transparent), radial-gradient(30rem 30rem at 100% -20%, rgba(100,255,218,.06), transparent)",
+        'radial-gradient(40rem 40rem at 0% -10%, rgba(0,212,255,.08), transparent), radial-gradient(30rem 30rem at 100% -20%, rgba(100,255,218,.06), transparent)',
     },
     sunset: {
-      primary: isDark ? "#ffad60" : "#ff6f61",
-      secondary: isDark ? "#ffd166" : "#ffa41b",
-      bgDefault: isDark ? "#1a1418" : "#fff7f3",
-      bgPaper: isDark ? "#22191f" : "#ffffff",
-      success: isDark ? "#00D1B2" : "#00B894",
-      warning: isDark ? "#FDCB6E" : "#F39C12",
-      error: isDark ? "#E84393" : "#E74C3C",
-      info: isDark ? "#74B9FF" : "#3498DB",
+      primary: isDark ? '#ffad60' : '#ff6f61',
+      secondary: isDark ? '#ffd166' : '#ffa41b',
+      bgDefault: isDark ? '#1a1418' : '#fff7f3',
+      bgPaper: isDark ? '#22191f' : '#ffffff',
+      success: isDark ? '#00D1B2' : '#00B894',
+      warning: isDark ? '#FDCB6E' : '#F39C12',
+      error: isDark ? '#E84393' : '#E74C3C',
+      info: isDark ? '#74B9FF' : '#3498DB',
       auraLight:
-        "radial-gradient(40rem 40rem at 10% -10%, #ffe0d6, transparent), radial-gradient(30rem 30rem at 90% -20%, #fff1c1, transparent)",
+        'radial-gradient(40rem 40rem at 10% -10%, #ffe0d6, transparent), radial-gradient(30rem 30rem at 90% -20%, #fff1c1, transparent)',
       auraDark:
-        "radial-gradient(40rem 40rem at 10% -10%, rgba(255,193,7,.08), transparent), radial-gradient(30rem 30rem at 90% -20%, rgba(255,111,97,.08), transparent)",
+        'radial-gradient(40rem 40rem at 10% -10%, rgba(255,193,7,.08), transparent), radial-gradient(30rem 30rem at 90% -20%, rgba(255,111,97,.08), transparent)',
     },
     minimal: {
-      primary: isDark ? "#c5c6c7" : "#111827",
-      secondary: isDark ? "#9ca3af" : "#6b7280",
-      bgDefault: isDark ? "#0d0d0d" : "#fafafa",
-      bgPaper: isDark ? "#121212" : "#ffffff",
-      success: isDark ? "#10B981" : "#059669",
-      warning: isDark ? "#F59E0B" : "#D97706",
-      error: isDark ? "#EF4444" : "#DC2626",
-      info: isDark ? "#3B82F6" : "#2563EB",
-      auraLight: "linear-gradient(180deg, #fff, #fafafa)",
-      auraDark: "linear-gradient(180deg, #0d0d0d, #121212)",
+      primary: isDark ? '#c5c6c7' : '#111827',
+      secondary: isDark ? '#9ca3af' : '#6b7280',
+      bgDefault: isDark ? '#0d0d0d' : '#fafafa',
+      bgPaper: isDark ? '#121212' : '#ffffff',
+      success: isDark ? '#10B981' : '#059669',
+      warning: isDark ? '#F59E0B' : '#D97706',
+      error: isDark ? '#EF4444' : '#DC2626',
+      info: isDark ? '#3B82F6' : '#2563EB',
+      auraLight: 'linear-gradient(180deg, #fff, #fafafa)',
+      auraDark: 'linear-gradient(180deg, #0d0d0d, #121212)',
     },
   };
 
   return variants[variant] || variants.neo;
 };
 
-export const makeTheme = (mode = "light", variant = "neo") => {
-  const isDark = mode === "dark";
+export const makeTheme = (mode = 'light', variant = 'neo') => {
+  const isDark = mode === 'dark';
   const colors = getVariantColors(isDark, variant);
 
   return createTheme({
@@ -113,11 +113,11 @@ export const makeTheme = (mode = "light", variant = "neo") => {
         dark: isDark ? `${colors.info}CC` : `${colors.info}CC`,
       },
       text: {
-        primary: isDark ? "#eaeef2" : "#1a1a1a",
-        secondary: isDark ? "#aab3c5" : "#555",
-        disabled: isDark ? "#6b7280" : "#9ca3af",
+        primary: isDark ? '#eaeef2' : '#1a1a1a',
+        secondary: isDark ? '#aab3c5' : '#555',
+        disabled: isDark ? '#6b7280' : '#9ca3af',
       },
-      divider: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+      divider: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
     },
     shape: {
       borderRadius: 14,
@@ -128,51 +128,51 @@ export const makeTheme = (mode = "light", variant = "neo") => {
       h1: {
         fontWeight: 800,
         letterSpacing: 0,
-        fontSize: "2.5rem",
+        fontSize: '2.5rem',
         lineHeight: 1.2,
       },
       h2: {
         fontWeight: 800,
         letterSpacing: 0,
-        fontSize: "2rem",
+        fontSize: '2rem',
         lineHeight: 1.3,
       },
       h3: {
         fontWeight: 700,
         letterSpacing: 0,
-        fontSize: "1.75rem",
+        fontSize: '1.75rem',
         lineHeight: 1.3,
       },
       h4: {
         fontWeight: 700,
-        fontSize: "1.5rem",
+        fontSize: '1.5rem',
         lineHeight: 1.4,
       },
       h5: {
         fontWeight: 600,
-        fontSize: "1.25rem",
+        fontSize: '1.25rem',
         lineHeight: 1.4,
       },
       h6: {
         fontWeight: 600,
-        fontSize: "1.125rem",
+        fontSize: '1.125rem',
         lineHeight: 1.4,
       },
       body1: {
-        fontSize: "1rem",
+        fontSize: '1rem',
         lineHeight: 1.6,
       },
       body2: {
-        fontSize: "0.875rem",
+        fontSize: '0.875rem',
         lineHeight: 1.6,
       },
       button: {
-        textTransform: "none",
+        textTransform: 'none',
         fontWeight: 600,
-        fontSize: "0.875rem",
+        fontSize: '0.875rem',
       },
       caption: {
-        fontSize: "0.75rem",
+        fontSize: '0.75rem',
         lineHeight: 1.4,
       },
     },
@@ -182,37 +182,41 @@ export const makeTheme = (mode = "light", variant = "neo") => {
         styleOverrides: {
           body: {
             backgroundImage: isDark ? colors.auraDark : colors.auraLight,
-            backgroundAttachment: "fixed",
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "cover",
-            minHeight: "100vh",
+            backgroundAttachment: 'fixed',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+            minHeight: '100vh',
             margin: 0,
             padding: 0,
             fontFamily: '"Inter Variable", "Inter", system-ui, sans-serif',
-            WebkitFontSmoothing: "antialiased",
-            MozOsxFontSmoothing: "grayscale",
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale',
           },
           html: {
-            scrollBehavior: "smooth",
+            scrollBehavior: 'smooth',
           },
-          "*": {
-            boxSizing: "border-box",
+          '*': {
+            boxSizing: 'border-box',
           },
         },
       },
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backdropFilter: "saturate(120%) blur(10px)",
-            backgroundColor: isDark ? "rgba(23, 26, 33, 0.8)" : "rgba(255, 255, 255, 0.8)",
+            backdropFilter: 'saturate(120%) blur(10px)',
+            backgroundColor: isDark
+              ? 'rgba(23, 26, 33, 0.8)'
+              : 'rgba(255, 255, 255, 0.8)',
             boxShadow: isDark
-              ? "inset 0 -1px 0 rgba(255,255,255,0.1)"
-              : "inset 0 -1px 0 rgba(0,0,0,0.06)",
-            border: "none",
-            transition: "all 0.3s ease",
+              ? 'inset 0 -1px 0 rgba(255,255,255,0.1)'
+              : 'inset 0 -1px 0 rgba(0,0,0,0.06)',
+            border: 'none',
+            transition: 'all 0.3s ease',
           },
           colorDefault: {
-            backgroundColor: isDark ? "rgba(23, 26, 33, 0.8)" : "rgba(255, 255, 255, 0.8)",
+            backgroundColor: isDark
+              ? 'rgba(23, 26, 33, 0.8)'
+              : 'rgba(255, 255, 255, 0.8)',
           },
         },
       },
@@ -224,21 +228,21 @@ export const makeTheme = (mode = "light", variant = "neo") => {
           root: ({ theme }) => ({
             borderRadius: 18,
             background: theme.palette.background.paper,
-            backdropFilter: "blur(10px)",
+            backdropFilter: 'blur(10px)',
             border:
-              theme.palette.mode === "light"
-                ? "1px solid rgba(0,0,0,0.05)"
-                : "1px solid rgba(255,255,255,0.05)",
+              theme.palette.mode === 'light'
+                ? '1px solid rgba(0,0,0,0.05)'
+                : '1px solid rgba(255,255,255,0.05)',
             boxShadow:
-              theme.palette.mode === "light"
-                ? "0 4px 20px rgba(100,100,150,.08), 0 1px 3px rgba(0,0,0,0.04)"
-                : "0 4px 20px rgba(0,0,0,.3), 0 1px 3px rgba(255,255,255,0.05)",
-            transition: "all 0.3s ease",
-            "&:hover": {
+              theme.palette.mode === 'light'
+                ? '0 4px 20px rgba(100,100,150,.08), 0 1px 3px rgba(0,0,0,0.04)'
+                : '0 4px 20px rgba(0,0,0,.3), 0 1px 3px rgba(255,255,255,0.05)',
+            transition: 'all 0.3s ease',
+            '&:hover': {
               boxShadow:
-                theme.palette.mode === "light"
-                  ? "0 8px 30px rgba(100,100,150,.12), 0 2px 6px rgba(0,0,0,0.06)"
-                  : "0 8px 30px rgba(0,0,0,.4), 0 2px 6px rgba(255,255,255,0.08)",
+                theme.palette.mode === 'light'
+                  ? '0 8px 30px rgba(100,100,150,.12), 0 2px 6px rgba(0,0,0,0.06)'
+                  : '0 8px 30px rgba(0,0,0,.4), 0 2px 6px rgba(255,255,255,0.08)',
             },
           }),
         },
@@ -248,10 +252,10 @@ export const makeTheme = (mode = "light", variant = "neo") => {
           root: ({ theme }) => ({
             borderRadius: 20,
             padding: theme.spacing(0),
-            overflow: "hidden",
-            transition: "all 0.3s ease",
-            "&:hover": {
-              transform: "translateY(-2px)",
+            overflow: 'hidden',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-2px)',
             },
           }),
         },
@@ -261,29 +265,29 @@ export const makeTheme = (mode = "light", variant = "neo") => {
           root: {
             borderRadius: 12,
             fontWeight: 600,
-            fontSize: "0.875rem",
-            padding: "10px 24px",
-            textTransform: "none",
-            transition: "all 0.3s ease",
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              transform: "translateY(-1px)",
+            fontSize: '0.875rem',
+            padding: '10px 24px',
+            textTransform: 'none',
+            transition: 'all 0.3s ease',
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              transform: 'translateY(-1px)',
             },
-            "&.Mui-disabled": {
+            '&.Mui-disabled': {
               opacity: 0.6,
             },
           },
           contained: {
-            boxShadow: "none",
-            "&:hover": {
-              boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
             },
           },
           outlined: {
-            borderWidth: "2px",
-            "&:hover": {
-              borderWidth: "2px",
+            borderWidth: '2px',
+            '&:hover': {
+              borderWidth: '2px',
             },
           },
         },
@@ -291,15 +295,15 @@ export const makeTheme = (mode = "light", variant = "neo") => {
       MuiTextField: {
         styleOverrides: {
           root: {
-            "& .MuiOutlinedInput-root": {
+            '& .MuiOutlinedInput-root': {
               borderRadius: 12,
-              transition: "all 0.3s ease",
-              "&:hover .MuiOutlinedInput-notchedOutline": {
+              transition: 'all 0.3s ease',
+              '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: colors.primary,
               },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                 borderColor: colors.primary,
-                borderWidth: "2px",
+                borderWidth: '2px',
               },
             },
           },
@@ -310,24 +314,24 @@ export const makeTheme = (mode = "light", variant = "neo") => {
           root: {
             borderRadius: 10,
             fontWeight: 500,
-            fontSize: "0.75rem",
-            height: "28px",
+            fontSize: '0.75rem',
+            height: '28px',
           },
           filled: {
-            boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
           },
         },
       },
       MuiTab: {
         styleOverrides: {
           root: {
-            textTransform: "none",
+            textTransform: 'none',
             fontWeight: 600,
-            fontSize: "0.875rem",
+            fontSize: '0.875rem',
             borderRadius: 12,
-            margin: "0 4px",
-            minHeight: "48px",
-            "&.Mui-selected": {
+            margin: '0 4px',
+            minHeight: '48px',
+            '&.Mui-selected': {
               color: colors.primary,
             },
           },
@@ -337,8 +341,8 @@ export const makeTheme = (mode = "light", variant = "neo") => {
         styleOverrides: {
           indicator: {
             backgroundColor: colors.primary,
-            height: "3px",
-            borderRadius: "3px 3px 0 0",
+            height: '3px',
+            borderRadius: '3px 3px 0 0',
           },
         },
       },
@@ -347,11 +351,15 @@ export const makeTheme = (mode = "light", variant = "neo") => {
           paper: {
             borderRadius: 20,
             background: isDark
-              ? "linear-gradient(135deg, rgba(35,35,45,0.9), rgba(25,25,35,0.9))"
-              : "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(250,250,255,0.95))",
-            backdropFilter: "blur(20px)",
-            border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(255,255,255,0.8)",
-            boxShadow: isDark ? "0 25px 50px rgba(0,0,0,0.5)" : "0 25px 50px rgba(0,0,0,0.15)",
+              ? 'linear-gradient(135deg, rgba(35,35,45,0.9), rgba(25,25,35,0.9))'
+              : 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(250,250,255,0.95))',
+            backdropFilter: 'blur(20px)',
+            border: isDark
+              ? '1px solid rgba(255,255,255,0.1)'
+              : '1px solid rgba(255,255,255,0.8)',
+            boxShadow: isDark
+              ? '0 25px 50px rgba(0,0,0,0.5)'
+              : '0 25px 50px rgba(0,0,0,0.15)',
           },
         },
       },
@@ -359,24 +367,40 @@ export const makeTheme = (mode = "light", variant = "neo") => {
         styleOverrides: {
           root: {
             borderRadius: 14,
-            backdropFilter: "blur(10px)",
-            border: "1px solid",
+            backdropFilter: 'blur(10px)',
+            border: '1px solid',
           },
           standardSuccess: {
-            backgroundColor: isDark ? "rgba(0, 209, 178, 0.1)" : "rgba(0, 184, 148, 0.1)",
-            borderColor: isDark ? "rgba(0, 209, 178, 0.3)" : "rgba(0, 184, 148, 0.3)",
+            backgroundColor: isDark
+              ? 'rgba(0, 209, 178, 0.1)'
+              : 'rgba(0, 184, 148, 0.1)',
+            borderColor: isDark
+              ? 'rgba(0, 209, 178, 0.3)'
+              : 'rgba(0, 184, 148, 0.3)',
           },
           standardError: {
-            backgroundColor: isDark ? "rgba(232, 67, 147, 0.1)" : "rgba(231, 76, 60, 0.1)",
-            borderColor: isDark ? "rgba(232, 67, 147, 0.3)" : "rgba(231, 76, 60, 0.3)",
+            backgroundColor: isDark
+              ? 'rgba(232, 67, 147, 0.1)'
+              : 'rgba(231, 76, 60, 0.1)',
+            borderColor: isDark
+              ? 'rgba(232, 67, 147, 0.3)'
+              : 'rgba(231, 76, 60, 0.3)',
           },
           standardWarning: {
-            backgroundColor: isDark ? "rgba(253, 203, 110, 0.1)" : "rgba(243, 156, 18, 0.1)",
-            borderColor: isDark ? "rgba(253, 203, 110, 0.3)" : "rgba(243, 156, 18, 0.3)",
+            backgroundColor: isDark
+              ? 'rgba(253, 203, 110, 0.1)'
+              : 'rgba(243, 156, 18, 0.1)',
+            borderColor: isDark
+              ? 'rgba(253, 203, 110, 0.3)'
+              : 'rgba(243, 156, 18, 0.3)',
           },
           standardInfo: {
-            backgroundColor: isDark ? "rgba(116, 185, 255, 0.1)" : "rgba(52, 152, 219, 0.1)",
-            borderColor: isDark ? "rgba(116, 185, 255, 0.3)" : "rgba(52, 152, 219, 0.3)",
+            backgroundColor: isDark
+              ? 'rgba(116, 185, 255, 0.1)'
+              : 'rgba(52, 152, 219, 0.1)',
+            borderColor: isDark
+              ? 'rgba(116, 185, 255, 0.3)'
+              : 'rgba(52, 152, 219, 0.3)',
           },
         },
       },
@@ -396,4 +420,4 @@ export const makeTheme = (mode = "light", variant = "neo") => {
 };
 
 // Default theme export
-export default makeTheme("light", "neo");
+export default makeTheme('light', 'neo');

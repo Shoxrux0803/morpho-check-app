@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date, datetime
 
 
 def calculate_age_precise(birth_date_str: str, exam_date_str: str = None):

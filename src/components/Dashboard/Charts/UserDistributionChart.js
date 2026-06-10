@@ -1,15 +1,22 @@
-import React from "react";
-import { Card, CardContent, Typography } from "@mui/material";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import React from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from 'recharts';
 
 const UserDistributionChart = () => {
   const data = [
-    { name: "Erkaklar", value: 65, color: "#1976d2" },
-    { name: "Ayollar", value: 35, color: "#ed6c02" },
+    { name: 'Erkaklar', value: 65, color: '#1976d2' },
+    { name: 'Ayollar', value: 35, color: '#ed6c02' },
   ];
 
   return (
-    <Card sx={{ borderRadius: 3, boxShadow: 2, height: "100%" }}>
+    <Card sx={{ borderRadius: 3, boxShadow: 2, height: '100%' }}>
       <CardContent>
         <Typography variant="h6" sx={{ mb: 2 }}>
           Foydalanuvchilar taqsimoti

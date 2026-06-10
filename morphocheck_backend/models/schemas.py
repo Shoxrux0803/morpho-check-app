@@ -1,9 +1,10 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-from typing import Optional, Literal
-from decimal import Decimal
-import math
 import datetime
+import math
 import re
+from decimal import Decimal
+from typing import Literal, Optional
+
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 CONSENT_POLICY_VERSION = "helsinki-declaration-consent-v1"
 

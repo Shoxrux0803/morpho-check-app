@@ -14,6 +14,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
 
 # ------------------------------------------------------------
@@ -34,14 +35,14 @@ load_dotenv(BACKEND_DIR / ".env")
 # 3. Barcha modellarni import qilish (autogenerate uchun zarur)
 #    MUHIM: Yangi model qo'shilsa, shu yerga ham qo'shing!
 # ------------------------------------------------------------
-from models.base import Base  # noqa: F401
-from models.user import User  # noqa: F401
-from models.userdata import PatientAnalysis, ResearchRecord  # noqa: F401
 from models.audit import AuditLog  # noqa: F401
-from models.payment import Payment  # noqa: F401
+from models.auth_device import LoginVerificationCode, TrustedLoginDevice  # noqa: F401
+from models.base import Base  # noqa: F401
 from models.chat import ChatMessage  # noqa: F401
 from models.clinical import ClinicalSetting  # noqa: F401
-from models.auth_device import LoginVerificationCode, TrustedLoginDevice  # noqa: F401
+from models.payment import Payment  # noqa: F401
+from models.user import User  # noqa: F401
+from models.userdata import PatientAnalysis, ResearchRecord  # noqa: F401
 
 # target_metadata — autogenerate uchun
 target_metadata = Base.metadata

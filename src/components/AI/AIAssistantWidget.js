@@ -1,5 +1,5 @@
 // src/components/AI/AIAssistantWidget.js
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Fab,
@@ -13,7 +13,7 @@ import {
   Zoom,
   Fade,
   Chip,
-} from "@mui/material";
+} from '@mui/material';
 import {
   SmartToy,
   Close,
@@ -22,22 +22,22 @@ import {
   InfoOutlined,
   AttachFile,
   Download,
-} from "@mui/icons-material";
-import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "react-router-dom";
-import { useTheme } from "@mui/material/styles";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import aiService from "../../services/aiService";
+} from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import aiService from '../../services/aiService';
 
 const TypewriterMessage = ({ content, onUpdate, onComplete }) => {
-  const [displayedText, setDisplayedText] = useState("");
+  const [displayedText, setDisplayedText] = useState('');
 
   useEffect(() => {
     let index = 0;
-    setDisplayedText("");
+    setDisplayedText('');
     const timer = setInterval(() => {
       index += 3; // Advance by multiple chars for smoother markdown rendering
       if (index > content.length) index = content.length;
@@ -52,39 +52,39 @@ const TypewriterMessage = ({ content, onUpdate, onComplete }) => {
   }, [content, onUpdate, onComplete]);
 
   return (
-    <Box sx={{ fontSize: "0.875rem" }}>
+    <Box sx={{ fontSize: '0.875rem' }}>
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{displayedText}</ReactMarkdown>
     </Box>
   );
 };
 
 const SMART_PROMPTS = [
-  "Bemor BMI tahlili",
+  'Bemor BMI tahlili',
   "JSST me'yorlari haqida",
   "O'sish dinamikasi",
-  "Tavsiyalar bering",
+  'Tavsiyalar bering',
 ];
 
 const AIAssistantWidget = () => {
   const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
+  const isDark = theme.palette.mode === 'dark';
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
-      role: "assistant",
+      role: 'assistant',
       content:
         "Salom! Men MorphoAI yordamchisiman. Sizga loyiha haqida ma'lumot berishim yoki tahlillarni kiritishda yordam berishim mumkin. Qanday yordam bera olaman?",
     },
   ]);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // Image Upload State
@@ -113,19 +113,19 @@ const AIAssistantWidget = () => {
   // Mutual exclusion logic
   useEffect(() => {
     const handleCloseAIChat = () => setIsOpen(false);
-    window.addEventListener("close-ai-chat", handleCloseAIChat);
-    return () => window.removeEventListener("close-ai-chat", handleCloseAIChat);
+    window.addEventListener('close-ai-chat', handleCloseAIChat);
+    return () => window.removeEventListener('close-ai-chat', handleCloseAIChat);
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      window.dispatchEvent(new CustomEvent("close-main-chat"));
+      window.dispatchEvent(new CustomEvent('close-main-chat'));
     }
   }, [isOpen]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith("image/")) {
+    if (file && file.type.startsWith('image/')) {
       setSelectedImage(URL.createObjectURL(file));
       setImageMimeType(file.type);
 
@@ -141,20 +141,23 @@ const AIAssistantWidget = () => {
     setSelectedImage(null);
     setImageBase64(null);
     setImageMimeType(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSend = async (overrideMessage = null) => {
     const textToSend =
-      overrideMessage !== null && typeof overrideMessage === "string"
+      overrideMessage !== null && typeof overrideMessage === 'string'
         ? overrideMessage
         : inputValue.trim();
     if (!textToSend && !imageBase64) return;
     if (isLoading) return;
 
-    setInputValue("");
+    setInputValue('');
 
-    const userMsg = { role: "user", content: textToSend || "Ilovadagi rasmni tahlil qiling." };
+    const userMsg = {
+      role: 'user',
+      content: textToSend || 'Ilovadagi rasmni tahlil qiling.',
+    };
     if (selectedImage) {
       userMsg.image = selectedImage; // For display only
     }
@@ -164,11 +167,13 @@ const AIAssistantWidget = () => {
     // Mock Context Data for now (in a real app, this would be fetched from Redux/Context based on the current patient)
     const contextData = {
       page: location.pathname,
-      note: "User is viewing the platform. Provide professional clinical assistance.",
+      note: 'User is viewing the platform. Provide professional clinical assistance.',
     };
 
     try {
-      const history = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
+      const history = messages
+        .slice(-10)
+        .map((m) => ({ role: m.role, content: m.content }));
 
       const response = await aiService.chat(
         userMsg.content,
@@ -176,12 +181,12 @@ const AIAssistantWidget = () => {
         history,
         contextData,
         imageBase64,
-        imageMimeType,
+        imageMimeType
       );
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: response.reply, animate: true },
+        { role: 'assistant', content: response.reply, animate: true },
       ]);
     } catch (error) {
       const detail =
@@ -191,7 +196,7 @@ const AIAssistantWidget = () => {
       setMessages((prev) => [
         ...prev,
         {
-          role: "assistant",
+          role: 'assistant',
           content: `**Uzr, xatolik yuz berdi.** ${detail}`,
           animate: true,
         },
@@ -203,7 +208,7 @@ const AIAssistantWidget = () => {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -220,29 +225,29 @@ const AIAssistantWidget = () => {
     try {
       const canvas = await html2canvas(element, {
         scale: 2,
-        backgroundColor: isDark ? "#2d2d2d" : "#ffffff",
+        backgroundColor: isDark ? '#2d2d2d' : '#ffffff',
         useCORS: true,
       });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth() - 20; // 10mm margins
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      pdf.text("MorphoCheck Pro - AI Analysis Report", 10, 10);
-      pdf.addImage(imgData, "PNG", 10, 20, pdfWidth, pdfHeight);
+      pdf.text('MorphoCheck Pro - AI Analysis Report', 10, 10);
+      pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth, pdfHeight);
       pdf.save(`MorphoAI_Report_${idx}.pdf`);
     } catch (err) {
-      console.error("PDF Export Error:", err);
+      console.error('PDF Export Error:', err);
     }
   };
 
   return (
     <Box
       sx={{
-        position: "fixed",
+        position: 'fixed',
         bottom: { xs: 92, md: 30 },
-        left: { xs: 16, md: "auto" },
-        right: { xs: "auto", md: 110 },
+        left: { xs: 16, md: 'auto' },
+        right: { xs: 'auto', md: 110 },
         zIndex: 1000,
       }}
     >
@@ -253,14 +258,16 @@ const AIAssistantWidget = () => {
           aria-label="ai-assistant"
           onClick={() => setIsOpen(!isOpen)}
           sx={{
-            boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.5)" : "0 8px 32px rgba(0,0,0,0.2)",
+            boxShadow: isDark
+              ? '0 8px 32px rgba(0,0,0,0.5)'
+              : '0 8px 32px rgba(0,0,0,0.2)',
             background: isDark
-              ? "linear-gradient(45deg, #0d47a1, #1976d2)"
-              : "linear-gradient(45deg, #1976d2, #42a5f5)",
-            "&:hover": {
-              transform: "scale(1.1) rotate(5deg)",
+              ? 'linear-gradient(45deg, #0d47a1, #1976d2)'
+              : 'linear-gradient(45deg, #1976d2, #42a5f5)',
+            '&:hover': {
+              transform: 'scale(1.1) rotate(5deg)',
             },
-            transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           }}
         >
           {isOpen ? <Close /> : <SmartToy className="floating" />}
@@ -274,33 +281,37 @@ const AIAssistantWidget = () => {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             style={{
-              position: isMobile ? "fixed" : "absolute",
+              position: isMobile ? 'fixed' : 'absolute',
               bottom: isMobile ? 16 : 80,
-              left: isMobile ? 12 : "auto",
+              left: isMobile ? 12 : 'auto',
               right: isMobile ? 12 : 0,
-              width: isMobile ? "calc(100vw - 24px)" : "420px",
-              maxWidth: isMobile ? "calc(100vw - 24px)" : "90vw",
-              borderRadius: isMobile ? "18px" : "24px",
-              marginLeft: isMobile ? 0 : "auto",
+              width: isMobile ? 'calc(100vw - 24px)' : '420px',
+              maxWidth: isMobile ? 'calc(100vw - 24px)' : '90vw',
+              borderRadius: isMobile ? '18px' : '24px',
+              marginLeft: isMobile ? 0 : 'auto',
             }}
           >
             <Paper
               elevation={24}
               sx={{
-                borderRadius: isMobile ? "18px" : "24px",
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
-                height: isMobile ? "calc(100dvh - 92px)" : "600px",
-                maxHeight: isMobile ? "calc(100dvh - 92px)" : "90vh",
-                background: isDark ? "rgba(30, 30, 30, 0.95)" : "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(12px)",
+                borderRadius: isMobile ? '18px' : '24px',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                height: isMobile ? 'calc(100dvh - 92px)' : '600px',
+                maxHeight: isMobile ? 'calc(100dvh - 92px)' : '90vh',
+                background: isDark
+                  ? 'rgba(30, 30, 30, 0.95)'
+                  : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(12px)',
                 border: isDark
-                  ? "1px solid rgba(255, 255, 255, 0.1)"
-                  : "1px solid rgba(255, 255, 255, 0.3)",
-                boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.5)" : "0 8px 32px rgba(0,0,0,0.15)",
+                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+                boxShadow: isDark
+                  ? '0 8px 32px rgba(0,0,0,0.5)'
+                  : '0 8px 32px rgba(0,0,0,0.15)',
               }}
             >
               {/* Header */}
@@ -308,16 +319,16 @@ const AIAssistantWidget = () => {
                 sx={{
                   p: 2,
                   background: isDark
-                    ? "linear-gradient(90deg, #0d47a1, #1976d2)"
-                    : "linear-gradient(90deg, #1976d2, #64b5f6)",
-                  color: "white",
-                  display: "flex",
-                  alignItems: "center",
+                    ? 'linear-gradient(90deg, #0d47a1, #1976d2)'
+                    : 'linear-gradient(90deg, #1976d2, #64b5f6)',
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 1.5,
                 }}
               >
-                <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)" }}>
-                  <AutoAwesome sx={{ color: "white" }} />
+                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}>
+                  <AutoAwesome sx={{ color: 'white' }} />
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="subtitle1" fontWeight="bold">
@@ -327,7 +338,11 @@ const AIAssistantWidget = () => {
                     Powered by Gemini 1.5
                   </Typography>
                 </Box>
-                <IconButton size="small" onClick={() => setIsOpen(false)} sx={{ color: "white" }}>
+                <IconButton
+                  size="small"
+                  onClick={() => setIsOpen(false)}
+                  sx={{ color: 'white' }}
+                >
                   <Close />
                 </IconButton>
               </Box>
@@ -337,28 +352,32 @@ const AIAssistantWidget = () => {
                 ref={scrollRef}
                 sx={{
                   flex: 1,
-                  overflowY: "auto",
+                  overflowY: 'auto',
                   p: 2,
-                  display: "flex",
-                  flexDirection: "column",
+                  display: 'flex',
+                  flexDirection: 'column',
                   gap: 2,
-                  bgcolor: isDark ? "rgba(0,0,0,0.2)" : "rgba(240, 244, 248, 0.5)",
+                  bgcolor: isDark
+                    ? 'rgba(0,0,0,0.2)'
+                    : 'rgba(240, 244, 248, 0.5)',
                 }}
               >
                 {messages.map((msg, idx) => (
                   <Box
                     key={idx}
                     sx={{
-                      alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                      maxWidth: "85%",
+                      alignSelf:
+                        msg.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '85%',
                     }}
                   >
                     <Box
                       sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
+                        display: 'flex',
+                        alignItems: 'flex-start',
                         gap: 1,
-                        flexDirection: msg.role === "user" ? "row-reverse" : "row",
+                        flexDirection:
+                          msg.role === 'user' ? 'row-reverse' : 'row',
                       }}
                     >
                       <Paper
@@ -367,53 +386,75 @@ const AIAssistantWidget = () => {
                         sx={{
                           p: 1.5,
                           borderRadius:
-                            msg.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                            msg.role === 'user'
+                              ? '18px 18px 4px 18px'
+                              : '18px 18px 18px 4px',
                           bgcolor:
-                            msg.role === "user"
+                            msg.role === 'user'
                               ? isDark
-                                ? "#1565c0"
-                                : "#1976d2"
+                                ? '#1565c0'
+                                : '#1976d2'
                               : isDark
-                                ? "#2d2d2d"
-                                : "white",
-                          color: msg.role === "user" ? "white" : isDark ? "#e0e0e0" : "#333",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                                ? '#2d2d2d'
+                                : 'white',
+                          color:
+                            msg.role === 'user'
+                              ? 'white'
+                              : isDark
+                                ? '#e0e0e0'
+                                : '#333',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                           border:
-                            msg.role === "user"
-                              ? "none"
+                            msg.role === 'user'
+                              ? 'none'
                               : isDark
-                                ? "1px solid #444"
-                                : "1px solid #e0e0e0",
-                          overflowWrap: "break-word",
-                          wordBreak: "break-word",
+                                ? '1px solid #444'
+                                : '1px solid #e0e0e0',
+                          overflowWrap: 'break-word',
+                          wordBreak: 'break-word',
                           // Styles for ReactMarkdown elements
-                          "& p": { m: 0, mb: 1 },
-                          "& p:last-child": { mb: 0 },
-                          "& strong": {
-                            color: msg.role === "user" ? "white" : isDark ? "#90caf9" : "#1565c0",
+                          '& p': { m: 0, mb: 1 },
+                          '& p:last-child': { mb: 0 },
+                          '& strong': {
+                            color:
+                              msg.role === 'user'
+                                ? 'white'
+                                : isDark
+                                  ? '#90caf9'
+                                  : '#1565c0',
                             fontWeight: 700,
                           },
-                          "& em": {
-                            color: msg.role === "user" ? "white" : isDark ? "#ce93d8" : "#7b1fa2",
-                            fontStyle: "italic",
-                          },
-                          "& ul, & ol": { mt: 0.5, mb: 1, pl: 2.5 },
-                          "& li": { mb: 0.5 },
-                          "& code": {
-                            bgcolor:
-                              msg.role === "user"
-                                ? "rgba(255,255,255,0.2)"
+                          '& em': {
+                            color:
+                              msg.role === 'user'
+                                ? 'white'
                                 : isDark
-                                  ? "rgba(255,255,255,0.1)"
-                                  : "rgba(0,0,0,0.05)",
+                                  ? '#ce93d8'
+                                  : '#7b1fa2',
+                            fontStyle: 'italic',
+                          },
+                          '& ul, & ol': { mt: 0.5, mb: 1, pl: 2.5 },
+                          '& li': { mb: 0.5 },
+                          '& code': {
+                            bgcolor:
+                              msg.role === 'user'
+                                ? 'rgba(255,255,255,0.2)'
+                                : isDark
+                                  ? 'rgba(255,255,255,0.1)'
+                                  : 'rgba(0,0,0,0.05)',
                             px: 0.5,
                             py: 0.2,
                             borderRadius: 1,
-                            fontFamily: "monospace",
+                            fontFamily: 'monospace',
                           },
-                          "& a": {
-                            color: msg.role === "user" ? "#bbdefb" : isDark ? "#64b5f6" : "#1976d2",
-                            textDecoration: "underline",
+                          '& a': {
+                            color:
+                              msg.role === 'user'
+                                ? '#bbdefb'
+                                : isDark
+                                  ? '#64b5f6'
+                                  : '#1976d2',
+                            textDecoration: 'underline',
                           },
                         }}
                       >
@@ -422,7 +463,7 @@ const AIAssistantWidget = () => {
                             <img
                               src={msg.image}
                               alt="uploaded"
-                              style={{ maxWidth: "100%", borderRadius: "8px" }}
+                              style={{ maxWidth: '100%', borderRadius: '8px' }}
                             />
                           </Box>
                         )}
@@ -432,14 +473,19 @@ const AIAssistantWidget = () => {
                             onUpdate={scrollToBottom}
                             onComplete={() => {
                               setMessages((prev) =>
-                                prev.map((m, i) => (i === idx ? { ...m, animate: false } : m)),
+                                prev.map((m, i) =>
+                                  i === idx ? { ...m, animate: false } : m
+                                )
                               );
                             }}
                           />
                         ) : (
-                          <Box sx={{ fontSize: "0.875rem" }}>
-                            {msg.role === "user" ? (
-                              <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                          <Box sx={{ fontSize: '0.875rem' }}>
+                            {msg.role === 'user' ? (
+                              <Typography
+                                variant="body2"
+                                sx={{ whiteSpace: 'pre-wrap' }}
+                              >
                                 {msg.content}
                               </Typography>
                             ) : (
@@ -451,12 +497,12 @@ const AIAssistantWidget = () => {
                         )}
                       </Paper>
 
-                      {msg.role === "assistant" && !msg.animate && idx > 0 && (
+                      {msg.role === 'assistant' && !msg.animate && idx > 0 && (
                         <Tooltip title="PDF formatida yuklab olish">
                           <IconButton
                             size="small"
                             onClick={() => exportToPDF(`msg-${idx}`, idx)}
-                            sx={{ color: isDark ? "#aaa" : "#777", mt: 1 }}
+                            sx={{ color: isDark ? '#aaa' : '#777', mt: 1 }}
                           >
                             <Download fontSize="small" />
                           </IconButton>
@@ -467,36 +513,49 @@ const AIAssistantWidget = () => {
                 ))}
                 {isLoading && (
                   <Box
-                    sx={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 1 }}
+                    sx={{
+                      alignSelf: 'flex-start',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                    }}
                   >
                     <Paper
                       sx={{
                         p: 1.5,
-                        borderRadius: "18px 18px 18px 4px",
-                        bgcolor: isDark ? "#2d2d2d" : "white",
-                        display: "flex",
+                        borderRadius: '18px 18px 18px 4px',
+                        bgcolor: isDark ? '#2d2d2d' : 'white',
+                        display: 'flex',
                         gap: 0.5,
-                        border: isDark ? "1px solid #444" : "1px solid #e0e0e0",
+                        border: isDark ? '1px solid #444' : '1px solid #e0e0e0',
                       }}
                     >
                       <motion.div
                         animate={{ opacity: [0.3, 1, 0.3] }}
                         transition={{ repeat: Infinity, duration: 1 }}
-                        style={{ color: isDark ? "#e0e0e0" : "#333" }}
+                        style={{ color: isDark ? '#e0e0e0' : '#333' }}
                       >
                         ●
                       </motion.div>
                       <motion.div
                         animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
-                        style={{ color: isDark ? "#e0e0e0" : "#333" }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          delay: 0.2,
+                        }}
+                        style={{ color: isDark ? '#e0e0e0' : '#333' }}
                       >
                         ●
                       </motion.div>
                       <motion.div
                         animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
-                        style={{ color: isDark ? "#e0e0e0" : "#333" }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 1,
+                          delay: 0.4,
+                        }}
+                        style={{ color: isDark ? '#e0e0e0' : '#333' }}
                       >
                         ●
                       </motion.div>
@@ -510,14 +569,21 @@ const AIAssistantWidget = () => {
                 sx={{
                   px: 2,
                   py: 0.5,
-                  bgcolor: isDark ? "rgba(144, 202, 249, 0.1)" : "rgba(25, 118, 210, 0.05)",
-                  display: "flex",
-                  alignItems: "center",
+                  bgcolor: isDark
+                    ? 'rgba(144, 202, 249, 0.1)'
+                    : 'rgba(25, 118, 210, 0.05)',
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: 1,
                 }}
               >
-                <InfoOutlined sx={{ fontSize: 14, color: isDark ? "#90caf9" : "#1976d2" }} />
-                <Typography variant="caption" sx={{ color: isDark ? "#90caf9" : "#1976d2" }}>
+                <InfoOutlined
+                  sx={{ fontSize: 14, color: isDark ? '#90caf9' : '#1976d2' }}
+                />
+                <Typography
+                  variant="caption"
+                  sx={{ color: isDark ? '#90caf9' : '#1976d2' }}
+                >
                   Sahifa: {location.pathname}
                 </Typography>
               </Box>
@@ -527,10 +593,10 @@ const AIAssistantWidget = () => {
                 sx={{
                   px: 2,
                   py: 1,
-                  display: "flex",
+                  display: 'flex',
                   gap: 1,
-                  overflowX: "auto",
-                  "&::-webkit-scrollbar": { display: "none" },
+                  overflowX: 'auto',
+                  '&::-webkit-scrollbar': { display: 'none' },
                 }}
               >
                 {SMART_PROMPTS.map((prompt, i) => (
@@ -541,10 +607,14 @@ const AIAssistantWidget = () => {
                     onClick={() => handleSmartPrompt(prompt)}
                     disabled={isLoading}
                     sx={{
-                      bgcolor: isDark ? "rgba(255,255,255,0.1)" : "rgba(25, 118, 210, 0.08)",
-                      color: isDark ? "#bbdefb" : "#1976d2",
-                      "&:hover": {
-                        bgcolor: isDark ? "rgba(255,255,255,0.2)" : "rgba(25, 118, 210, 0.15)",
+                      bgcolor: isDark
+                        ? 'rgba(255,255,255,0.1)'
+                        : 'rgba(25, 118, 210, 0.08)',
+                      color: isDark ? '#bbdefb' : '#1976d2',
+                      '&:hover': {
+                        bgcolor: isDark
+                          ? 'rgba(255,255,255,0.2)'
+                          : 'rgba(25, 118, 210, 0.15)',
                       },
                     }}
                   />
@@ -557,68 +627,85 @@ const AIAssistantWidget = () => {
                   px: 2,
                   py: 0.5,
                   borderTop: isDark
-                    ? "1px solid rgba(255,255,255,0.05)"
-                    : "1px solid rgba(0,0,0,0.05)",
+                    ? '1px solid rgba(255,255,255,0.05)'
+                    : '1px solid rgba(0,0,0,0.05)',
                 }}
               >
                 <Typography
                   variant="caption"
                   sx={{
-                    fontSize: "9px",
-                    color: isDark ? "#aaa" : "text.secondary",
-                    fontStyle: "italic",
-                    display: "block",
-                    textAlign: "center",
+                    fontSize: '9px',
+                    color: isDark ? '#aaa' : 'text.secondary',
+                    fontStyle: 'italic',
+                    display: 'block',
+                    textAlign: 'center',
                   }}
                 >
-                  Diqqat: AI tavsiyalari va bashoratlari faqat ma'lumot uchun. Tibbiy qarorlarni
-                  mutaxassis tasdiqlashi shart.
+                  Diqqat: AI tavsiyalari va bashoratlari faqat ma'lumot uchun.
+                  Tibbiy qarorlarni mutaxassis tasdiqlashi shart.
                 </Typography>
               </Box>
 
               {/* Image Preview Area */}
               {selectedImage && (
-                <Box sx={{ px: 2, pt: 1, position: "relative", display: "inline-block" }}>
+                <Box
+                  sx={{
+                    px: 2,
+                    pt: 1,
+                    position: 'relative',
+                    display: 'inline-block',
+                  }}
+                >
                   <Box
                     sx={{
-                      position: "relative",
-                      width: "60px",
-                      height: "60px",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                      border: isDark ? "1px solid #444" : "1px solid #ccc",
+                      position: 'relative',
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      border: isDark ? '1px solid #444' : '1px solid #ccc',
                     }}
                   >
                     <img
                       src={selectedImage}
                       alt="Preview"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
                     />
                     <IconButton
                       size="small"
                       onClick={removeImage}
                       sx={{
-                        position: "absolute",
+                        position: 'absolute',
                         top: 0,
                         right: 0,
-                        bgcolor: "rgba(0,0,0,0.5)",
-                        color: "white",
-                        "&:hover": { bgcolor: "rgba(0,0,0,0.7)" },
-                        padding: "2px",
+                        bgcolor: 'rgba(0,0,0,0.5)',
+                        color: 'white',
+                        '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
+                        padding: '2px',
                       }}
                     >
-                      <Close sx={{ fontSize: "14px" }} />
+                      <Close sx={{ fontSize: '14px' }} />
                     </IconButton>
                   </Box>
                 </Box>
               )}
 
               {/* Input Area */}
-              <Box sx={{ p: 2, pt: selectedImage ? 1 : 2, bgcolor: isDark ? "#1e1e1e" : "white" }}>
+              <Box
+                sx={{
+                  p: 2,
+                  pt: selectedImage ? 1 : 2,
+                  bgcolor: isDark ? '#1e1e1e' : 'white',
+                }}
+              >
                 <input
                   type="file"
                   accept="image/*"
-                  style={{ display: "none" }}
+                  style={{ display: 'none' }}
                   ref={fileInputRef}
                   onChange={handleFileChange}
                 />
@@ -632,21 +719,21 @@ const AIAssistantWidget = () => {
                   onKeyPress={handleKeyPress}
                   disabled={isLoading}
                   sx={{
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: "12px",
-                      bgcolor: isDark ? "#2d2d2d" : "white",
-                      "& fieldset": {
-                        borderColor: isDark ? "#444" : "rgba(0, 0, 0, 0.23)",
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '12px',
+                      bgcolor: isDark ? '#2d2d2d' : 'white',
+                      '& fieldset': {
+                        borderColor: isDark ? '#444' : 'rgba(0, 0, 0, 0.23)',
                       },
-                      "&:hover fieldset": {
-                        borderColor: isDark ? "#90caf9" : "#1976d2",
+                      '&:hover fieldset': {
+                        borderColor: isDark ? '#90caf9' : '#1976d2',
                       },
-                      "&.Mui-focused fieldset": {
-                        borderColor: isDark ? "#90caf9" : "#1976d2",
+                      '&.Mui-focused fieldset': {
+                        borderColor: isDark ? '#90caf9' : '#1976d2',
                       },
                     },
-                    "& .MuiInputBase-input": {
-                      color: isDark ? "#e0e0e0" : "inherit",
+                    '& .MuiInputBase-input': {
+                      color: isDark ? '#e0e0e0' : 'inherit',
                     },
                   }}
                   InputProps={{
@@ -654,9 +741,11 @@ const AIAssistantWidget = () => {
                       <InputAdornment position="start">
                         <IconButton
                           size="small"
-                          onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                          onClick={() =>
+                            fileInputRef.current && fileInputRef.current.click()
+                          }
                           disabled={isLoading}
-                          sx={{ color: isDark ? "#aaa" : "#777" }}
+                          sx={{ color: isDark ? '#aaa' : '#777' }}
                         >
                           <AttachFile fontSize="small" />
                         </IconButton>
@@ -667,12 +756,15 @@ const AIAssistantWidget = () => {
                         <IconButton
                           color="primary"
                           onClick={() => handleSend(null)}
-                          disabled={(!inputValue.trim() && !imageBase64) || isLoading}
+                          disabled={
+                            (!inputValue.trim() && !imageBase64) || isLoading
+                          }
                           sx={{
                             color: isDark
-                              ? (!inputValue.trim() && !imageBase64) || isLoading
-                                ? "#555"
-                                : "#90caf9"
+                              ? (!inputValue.trim() && !imageBase64) ||
+                                isLoading
+                                ? '#555'
+                                : '#90caf9'
                               : undefined,
                           }}
                         >

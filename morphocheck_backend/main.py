@@ -17,33 +17,33 @@ if sentry_dsn:
         profiles_sample_rate=1.0,
     )
 
-from fastapi import FastAPI, Depends, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
-
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from utils.rate_limit import limiter
+from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from models.base import Base
+from routers.admin_router import router as admin_router
+from routers.ai_router import router as ai_router
+from routers.analytics_router import router as analytics_router  # 3-bosqich
 
 # Routers
 from routers.analyze_router import router as analyze_router
-from routers.admin_router import router as admin_router
-from routers.pdf_router import router as pdf_router
 from routers.auth_router import router as auth_router
-from routers.clinical_router import router as clinical_router
 from routers.backup_router import router as backup_router
-from routers.research_router import router as research_router
 from routers.chat_router import router as chat_router
-from routers.ai_router import router as ai_router
+from routers.clinical_router import router as clinical_router
+from routers.pdf_router import router as pdf_router
+from routers.research_router import router as research_router
 from routers.utils_router import router as utils_router
-from routers.analytics_router import router as analytics_router  # 3-bosqich
 
 # DB init
 from utils.database import engine, get_db, init_db
-from models.base import Base
+from utils.rate_limit import limiter
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
@@ -433,6 +433,7 @@ def health(db: Session = Depends(get_db)):
 
 # ---- Global Error Handler for Observability ----
 import traceback
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 

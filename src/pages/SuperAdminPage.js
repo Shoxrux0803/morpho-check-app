@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -36,8 +36,8 @@ import {
   useTheme,
   useMediaQuery,
   Checkbox,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 import {
   Lock,
@@ -67,644 +67,727 @@ import {
   Close,
   InfoOutlined,
   MyLocation,
-} from "@mui/icons-material";
-import { useAuth } from "../contexts/AuthContext";
-import { useLanguage } from "../contexts/LanguageContext";
-import { pageT } from "../utils/pageI18n";
-import { getLocalizedLocationLabel } from "../utils/locationI18n";
-import { motion, AnimatePresence } from "framer-motion";
-import { AdminApi, ResearchApi } from "../services/api";
-import { toast } from "react-hot-toast";
-import { UZB_LOCATIONS } from "../data/uzbLocations";
-import LogoutConfirmDialog from "../components/LogoutConfirmDialog";
+} from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
+import { pageT } from '../utils/pageI18n';
+import { getLocalizedLocationLabel } from '../utils/locationI18n';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AdminApi, ResearchApi } from '../services/api';
+import { toast } from 'react-hot-toast';
+import { UZB_LOCATIONS } from '../data/uzbLocations';
+import LogoutConfirmDialog from '../components/LogoutConfirmDialog';
 
 // Components
-import SuperAdminDashboard from "../components/Dashboard/SuperAdminDashboard";
-import SuperAdminRegionalMap from "../components/Dashboard/SuperAdminRegionalMap";
-import ScientificAnalysis from "../components/Dashboard/ScientificAnalysis";
-import ClinicalCMS from "../components/Admin/ClinicalCMS";
-import AdminActivity from "../components/Admin/AdminActivity";
-import DashboardFilters from "../components/Dashboard/DashboardFilters";
+import SuperAdminDashboard from '../components/Dashboard/SuperAdminDashboard';
+import SuperAdminRegionalMap from '../components/Dashboard/SuperAdminRegionalMap';
+import ScientificAnalysis from '../components/Dashboard/ScientificAnalysis';
+import ClinicalCMS from '../components/Admin/ClinicalCMS';
+import AdminActivity from '../components/Admin/AdminActivity';
+import DashboardFilters from '../components/Dashboard/DashboardFilters';
 
 const PAGE_LABELS = {
-  uz: { scientificAnalysis: "Ilmiy Tahlil" },
-  ru: { scientificAnalysis: "Научный анализ" },
-  en: { scientificAnalysis: "Scientific Analysis" },
-  tm: { scientificAnalysis: "Ylmy analiz" },
-  tg: { scientificAnalysis: "Таҳлили илмӣ" },
-  kz: { scientificAnalysis: "Ғылыми талдау" },
-  ky: { scientificAnalysis: "Илимий талдоо" },
+  uz: { scientificAnalysis: 'Ilmiy Tahlil' },
+  ru: { scientificAnalysis: 'Научный анализ' },
+  en: { scientificAnalysis: 'Scientific Analysis' },
+  tm: { scientificAnalysis: 'Ylmy analiz' },
+  tg: { scientificAnalysis: 'Таҳлили илмӣ' },
+  kz: { scientificAnalysis: 'Ғылыми талдау' },
+  ky: { scientificAnalysis: 'Илимий талдоо' },
 };
 
-const RESEARCH_TYPE_OPTIONS = ["PhD", "DSc", "Magistrlik", "Grant loyihasi"];
+const RESEARCH_TYPE_OPTIONS = ['PhD', 'DSc', 'Magistrlik', 'Grant loyihasi'];
 
 const AUDIT_ACTION_LABELS = {
   en: {
-    create: "Create",
-    created: "Created",
-    update: "Update",
-    updated: "Updated",
-    delete: "Delete",
-    deleted: "Deleted",
-    restore: "Restore",
-    restored: "Restored",
-    login: "Login",
-    logout: "Logout",
-    backup: "Backup",
-    clear: "Clear",
-    hard_delete: "Permanent delete",
-    soft_delete: "Move to trash",
-    delete_hard: "Permanent delete",
-    delete_soft: "Move to trash",
-    download: "Download",
-    downloaded: "Downloaded",
-    export: "Export",
-    exported: "Exported",
+    create: 'Create',
+    created: 'Created',
+    update: 'Update',
+    updated: 'Updated',
+    delete: 'Delete',
+    deleted: 'Deleted',
+    restore: 'Restore',
+    restored: 'Restored',
+    login: 'Login',
+    logout: 'Logout',
+    backup: 'Backup',
+    clear: 'Clear',
+    hard_delete: 'Permanent delete',
+    soft_delete: 'Move to trash',
+    delete_hard: 'Permanent delete',
+    delete_soft: 'Move to trash',
+    download: 'Download',
+    downloaded: 'Downloaded',
+    export: 'Export',
+    exported: 'Exported',
   },
   ru: {
-    create: "Создание",
-    created: "Создано",
-    update: "Обновление",
-    updated: "Обновлено",
-    delete: "Удаление",
-    deleted: "Удалено",
-    restore: "Восстановление",
-    restored: "Восстановлено",
-    login: "Вход",
-    logout: "Выход",
-    backup: "Резервная копия",
-    clear: "Очистка",
-    hard_delete: "Полное удаление",
-    soft_delete: "Перемещение в корзину",
-    delete_hard: "Полное удаление",
-    delete_soft: "Перемещение в корзину",
-    download: "Скачивание",
-    downloaded: "Скачано",
-    export: "Экспорт",
-    exported: "Экспортировано",
+    create: 'Создание',
+    created: 'Создано',
+    update: 'Обновление',
+    updated: 'Обновлено',
+    delete: 'Удаление',
+    deleted: 'Удалено',
+    restore: 'Восстановление',
+    restored: 'Восстановлено',
+    login: 'Вход',
+    logout: 'Выход',
+    backup: 'Резервная копия',
+    clear: 'Очистка',
+    hard_delete: 'Полное удаление',
+    soft_delete: 'Перемещение в корзину',
+    delete_hard: 'Полное удаление',
+    delete_soft: 'Перемещение в корзину',
+    download: 'Скачивание',
+    downloaded: 'Скачано',
+    export: 'Экспорт',
+    exported: 'Экспортировано',
   },
   kz: {
-    create: "Құру",
-    created: "Құрылды",
-    update: "Жаңарту",
-    updated: "Жаңартылды",
-    delete: "Жою",
-    deleted: "Жойылды",
-    restore: "Қалпына келтіру",
-    restored: "Қалпына келтірілді",
-    login: "Кіру",
-    logout: "Шығу",
-    backup: "Сақтық көшірме",
-    clear: "Тазалау",
-    hard_delete: "Толық жою",
-    soft_delete: "Себетке жіберу",
-    delete_hard: "Толық жою",
-    delete_soft: "Себетке жіберу",
-    download: "Жүктеп алу",
-    downloaded: "Жүктелді",
-    export: "Экспорт",
-    exported: "Экспортталды",
+    create: 'Құру',
+    created: 'Құрылды',
+    update: 'Жаңарту',
+    updated: 'Жаңартылды',
+    delete: 'Жою',
+    deleted: 'Жойылды',
+    restore: 'Қалпына келтіру',
+    restored: 'Қалпына келтірілді',
+    login: 'Кіру',
+    logout: 'Шығу',
+    backup: 'Сақтық көшірме',
+    clear: 'Тазалау',
+    hard_delete: 'Толық жою',
+    soft_delete: 'Себетке жіберу',
+    delete_hard: 'Толық жою',
+    delete_soft: 'Себетке жіберу',
+    download: 'Жүктеп алу',
+    downloaded: 'Жүктелді',
+    export: 'Экспорт',
+    exported: 'Экспортталды',
   },
   ky: {
-    create: "Түзүү",
-    created: "Түзүлдү",
-    update: "Жаңыртуу",
-    updated: "Жаңыртылды",
-    delete: "Өчүрүү",
-    deleted: "Өчүрүлдү",
-    restore: "Калыбына келтирүү",
-    restored: "Калыбына келтирилди",
-    login: "Кирүү",
-    logout: "Чыгуу",
-    backup: "Камдык көчүрмө",
-    clear: "Тазалоо",
-    hard_delete: "Толук өчүрүү",
-    soft_delete: "Себетке жөнөтүү",
-    delete_hard: "Толук өчүрүү",
-    delete_soft: "Себетке жөнөтүү",
-    download: "Жүктөө",
-    downloaded: "Жүктөлдү",
-    export: "Экспорт",
-    exported: "Экспорттолду",
+    create: 'Түзүү',
+    created: 'Түзүлдү',
+    update: 'Жаңыртуу',
+    updated: 'Жаңыртылды',
+    delete: 'Өчүрүү',
+    deleted: 'Өчүрүлдү',
+    restore: 'Калыбына келтирүү',
+    restored: 'Калыбына келтирилди',
+    login: 'Кирүү',
+    logout: 'Чыгуу',
+    backup: 'Камдык көчүрмө',
+    clear: 'Тазалоо',
+    hard_delete: 'Толук өчүрүү',
+    soft_delete: 'Себетке жөнөтүү',
+    delete_hard: 'Толук өчүрүү',
+    delete_soft: 'Себетке жөнөтүү',
+    download: 'Жүктөө',
+    downloaded: 'Жүктөлдү',
+    export: 'Экспорт',
+    exported: 'Экспорттолду',
   },
 };
 
 const AUDIT_TARGET_LABELS_RU = {
-  Analysis: "Анализ",
-  PatientAnalysis: "Анализ пациента",
-  User: "Пользователь",
-  AuditLog: "Журнал аудита",
-  Backup: "Резервная копия",
-  PDF: "PDF-отчет",
-  DOCX: "DOCX-документ",
+  Analysis: 'Анализ',
+  PatientAnalysis: 'Анализ пациента',
+  User: 'Пользователь',
+  AuditLog: 'Журнал аудита',
+  Backup: 'Резервная копия',
+  PDF: 'PDF-отчет',
+  DOCX: 'DOCX-документ',
 };
 
 const AUDIT_TARGET_LABELS_EN = {
-  Analysis: "Analysis",
-  PatientAnalysis: "Patient analysis",
-  User: "User",
-  AuditLog: "Audit log",
-  Backup: "Backup",
-  PDF: "PDF report",
-  DOCX: "DOCX document",
+  Analysis: 'Analysis',
+  PatientAnalysis: 'Patient analysis',
+  User: 'User',
+  AuditLog: 'Audit log',
+  Backup: 'Backup',
+  PDF: 'PDF report',
+  DOCX: 'DOCX document',
 };
 
 const AUDIT_TARGET_LABELS_KZ = {
-  Analysis: "Талдау",
-  PatientAnalysis: "Пациент талдауы",
-  User: "Пайдаланушы",
-  AuditLog: "Аудит журналы",
-  Backup: "Сақтық көшірме",
-  PDF: "PDF есеп",
-  DOCX: "DOCX құжат",
+  Analysis: 'Талдау',
+  PatientAnalysis: 'Пациент талдауы',
+  User: 'Пайдаланушы',
+  AuditLog: 'Аудит журналы',
+  Backup: 'Сақтық көшірме',
+  PDF: 'PDF есеп',
+  DOCX: 'DOCX құжат',
 };
 
 const AUDIT_TARGET_LABELS_KY = {
-  Analysis: "Талдоо",
-  PatientAnalysis: "Бейтап талдоосу",
-  User: "Колдонуучу",
-  AuditLog: "Аудит журналы",
-  Backup: "Камдык көчүрмө",
-  PDF: "PDF отчет",
-  DOCX: "DOCX документ",
+  Analysis: 'Талдоо',
+  PatientAnalysis: 'Бейтап талдоосу',
+  User: 'Колдонуучу',
+  AuditLog: 'Аудит журналы',
+  Backup: 'Камдык көчүрмө',
+  PDF: 'PDF отчет',
+  DOCX: 'DOCX документ',
 };
 const AUDIT_JSON_KEY_LABELS_RU = {
-  action: "Действие",
-  target_type: "Тип объекта",
-  target_id: "ID объекта",
-  details: "Описание",
-  user_id: "ID пользователя",
-  user_name: "Пользователь",
-  user_email: "Email пользователя",
-  name: "Имя",
-  role: "Роль",
-  email: "Email",
-  old: "Было",
-  new: "Стало",
-  changes: "Изменения",
-  ids: "ID",
-  count: "Количество",
+  action: 'Действие',
+  target_type: 'Тип объекта',
+  target_id: 'ID объекта',
+  details: 'Описание',
+  user_id: 'ID пользователя',
+  user_name: 'Пользователь',
+  user_email: 'Email пользователя',
+  name: 'Имя',
+  role: 'Роль',
+  email: 'Email',
+  old: 'Было',
+  new: 'Стало',
+  changes: 'Изменения',
+  ids: 'ID',
+  count: 'Количество',
 };
 
 const AUDIT_JSON_KEY_LABELS_EN = {
-  action: "Action",
-  target_type: "Object type",
-  target_id: "Object ID",
-  details: "Details",
-  user_id: "User ID",
-  user_name: "User",
-  user_email: "User email",
-  name: "Name",
-  role: "Role",
-  email: "Email",
-  old: "Old",
-  new: "New",
-  changes: "Changes",
-  ids: "ID",
-  count: "Count",
+  action: 'Action',
+  target_type: 'Object type',
+  target_id: 'Object ID',
+  details: 'Details',
+  user_id: 'User ID',
+  user_name: 'User',
+  user_email: 'User email',
+  name: 'Name',
+  role: 'Role',
+  email: 'Email',
+  old: 'Old',
+  new: 'New',
+  changes: 'Changes',
+  ids: 'ID',
+  count: 'Count',
 };
 
 const AUDIT_JSON_KEY_LABELS_KZ = {
-  action: "Әрекет",
-  target_type: "Объект түрі",
-  target_id: "Объект ID",
-  details: "Сипаттама",
-  user_id: "Пайдаланушы ID",
-  user_name: "Пайдаланушы",
-  user_email: "Пайдаланушы email",
-  name: "Аты",
-  role: "Рөл",
-  email: "Email",
-  old: "Бұрын",
-  new: "Кейін",
-  changes: "Өзгерістер",
-  ids: "ID",
-  count: "Саны",
+  action: 'Әрекет',
+  target_type: 'Объект түрі',
+  target_id: 'Объект ID',
+  details: 'Сипаттама',
+  user_id: 'Пайдаланушы ID',
+  user_name: 'Пайдаланушы',
+  user_email: 'Пайдаланушы email',
+  name: 'Аты',
+  role: 'Рөл',
+  email: 'Email',
+  old: 'Бұрын',
+  new: 'Кейін',
+  changes: 'Өзгерістер',
+  ids: 'ID',
+  count: 'Саны',
 };
 
 const AUDIT_JSON_KEY_LABELS_KY = {
-  action: "Аракет",
-  target_type: "Объект түрү",
-  target_id: "Объект ID",
-  details: "Тавсиф",
-  user_id: "Колдонуучу ID",
-  user_name: "Колдонуучу",
-  user_email: "Колдонуучу email",
-  name: "Аты",
-  role: "Роль",
-  email: "Email",
-  old: "Мурун",
-  new: "Кийин",
-  changes: "Өзгөрүүлөр",
-  ids: "ID",
-  count: "Саны",
+  action: 'Аракет',
+  target_type: 'Объект түрү',
+  target_id: 'Объект ID',
+  details: 'Тавсиф',
+  user_id: 'Колдонуучу ID',
+  user_name: 'Колдонуучу',
+  user_email: 'Колдонуучу email',
+  name: 'Аты',
+  role: 'Роль',
+  email: 'Email',
+  old: 'Мурун',
+  new: 'Кийин',
+  changes: 'Өзгөрүүлөр',
+  ids: 'ID',
+  count: 'Саны',
 };
 const AUDIT_DETAIL_PATTERNS_RU = [
-  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Новый анализ создан: $2"],
-  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Новый пользователь создан: $1"],
-  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "Данные пользователя обновлены: $1"],
-  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "Пользователь удален: $1"],
-  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "Пользователь восстановлен: $1"],
-  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "Пользователь вошел в систему: $1"],
-  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 анализ(ов) перемещено в корзину: $2"],
+  [
+    /^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i,
+    'Новый анализ создан: $2',
+  ],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, 'Новый пользователь создан: $1'],
+  [
+    /^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i,
+    'Данные пользователя обновлены: $1',
+  ],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, 'Пользователь удален: $1'],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, 'Пользователь восстановлен: $1'],
+  [
+    /^Foydalanuvchi tizimga kirdi:\s*(.*)$/i,
+    'Пользователь вошел в систему: $1',
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i,
+    '$1 анализ(ов) перемещено в корзину: $2',
+  ],
   [
     /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
-    "$1 анализ(ов) удалено навсегда (ID: $2)",
+    '$1 анализ(ов) удалено навсегда (ID: $2)',
   ],
   [
     /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
-    "$1 анализ(ов) восстановлено из корзины (ID: $2)",
-  ],
-  [/^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i, "Анализ обновлен: $1. Изменения: $2"],
-  [
-    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
-    "Журнал аудита очищен: все ($1 записей)",
-  ],
-  [
-    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
-    "Журнал аудита очищен: $1 ($2 записей)",
-  ],
-  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Резервная копия создана: $1"],
-  [
-    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
-    "Резервная копия полностью восстановлена (замена): $1",
-  ],
-  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Резервная копия удалена: $1"],
-  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Отчет пациента (PDF) скачан: $1"],
-  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Анкета пациента (DOCX) скачана: $1"],
-];
-
-const AUDIT_DETAIL_REPLACEMENTS_RU = [
-  [/\bYangi\b/gi, "Новый"],
-  [/\bfoydalanuvchi\b/gi, "пользователь"],
-  [/\bFoydalanuvchi\b/g, "Пользователь"],
-  [/\bma'?lumotlari\b/gi, "данные"],
-  [/\bMa'?lumotlar\b/g, "Данные"],
-  [/\bMa'?lumot\b/g, "Данные"],
-  [/\bma'?lumotlar\b/gi, "данные"],
-  [/\bma'?lumot\b/gi, "данные"],
-  [/\btahlil\b/gi, "анализ"],
-  [/\bTahlil\b/g, "Анализ"],
-  [/\bBemor hisoboti\b/g, "Отчет пациента"],
-  [/\bbemor hisoboti\b/gi, "отчет пациента"],
-  [/\bBemor anketasi\b/g, "Анкета пациента"],
-  [/\bbemor anketasi\b/gi, "анкета пациента"],
-  [/\bBemor\b/g, "Пациент"],
-  [/\bbemor\b/gi, "пациент"],
-  [/\bAdmin\b/g, "Админ"],
-  [/\badmin\b/gi, "админ"],
-  [/\bIzlanuvchi\b/g, "Исследователь"],
-  [/\bizlanuvchi\b/gi, "исследователь"],
-  [/\bResearcher\b/g, "Исследователь"],
-  [/\bresearcher\b/gi, "исследователь"],
-  [/\bAnalysis\b/g, "Анализ"],
-  [/\banalysis\b/gi, "анализ"],
-  [/\bUser\b/g, "Пользователь"],
-  [/\buser\b/gi, "пользователь"],
-  [/\byaratildi\b/gi, "создано"],
-  [/\byangilandi\b/gi, "обновлено"],
-  [/\btiklandi\b/gi, "восстановлено"],
-  [/\bo'?chirildi\b/gi, "удалено"],
-  [/\bcreated\b/gi, "создано"],
-  [/\bupdated\b/gi, "обновлено"],
-  [/\bdeleted\b/gi, "удалено"],
-  [/\brestored\b/gi, "восстановлено"],
-  [/\byuklab olindi\b/gi, "скачано"],
-  [/\byuklandi\b/gi, "загружено"],
-  [/\bolindi\b/gi, "получено"],
-  [/\bsavatga yuborildi\b/gi, "перемещено в корзину"],
-  [/\bsavatdan\b/gi, "из корзины"],
-  [/\bbutunlay\b/gi, "навсегда"],
-  [/\bIDlar\b/g, "ID"],
-  [/\bBarchasi\b/g, "Все"],
-  [/\bta yozuv\b/gi, "записей"],
-  [/\bta\b/g, "шт"],
-  [/\bZaxira nusxasi\b/g, "Резервная копия"],
-  [/\bzaxira nusxasi\b/gi, "резервная копия"],
-  [/\bZaxira\b/g, "Резервная копия"],
-  [/\bzaxira\b/gi, "резервная копия"],
-  [/\bfayl\b/gi, "файл"],
-  [/\bO'?zgarishlar\b/gi, "Изменения"],
-  [/\bAlmashtirish\b/gi, "замена"],
-  [/\btizimga kirdi\b/gi, "вошел в систему"],
-];
-
-const AUDIT_DETAIL_CLEANUPS_RU = [
-  [/Новый анализ создано/gi, "Новый анализ создан"],
-  [/Новый Анализ создано/gi, "Новый анализ создан"],
-  [/Анкета пациента \(DOCX\) скачано/gi, "Анкета пациента (DOCX) скачана"],
-  [/Анкета пациента скачано/gi, "Анкета пациента скачана"],
-  [/Отчет пациента \(PDF\) скачано/gi, "Отчет пациента (PDF) скачан"],
-  [/DOCX-отчет скачано/gi, "DOCX-отчет скачан"],
-  [/\s+:/g, ":"],
-];
-
-const AUDIT_DETAIL_PATTERNS_EN = [
-  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "New analysis created: $2"],
-  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "New user created: $1"],
-  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "User data updated: $1"],
-  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "User deleted: $1"],
-  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "User restored: $1"],
-  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "User logged in: $1"],
-  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 analyses moved to trash: $2"],
-  [
-    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
-    "$1 analyses permanently deleted (ID: $2)",
-  ],
-  [
-    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
-    "$1 analyses restored from trash (ID: $2)",
-  ],
-  [/^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i, "Analysis updated: $1. Changes: $2"],
-  [
-    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
-    "Audit log cleared: all ($1 records)",
-  ],
-  [
-    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
-    "Audit log cleared: $1 ($2 records)",
-  ],
-  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Backup created: $1"],
-  [/^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i, "Backup fully restored (replace): $1"],
-  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Backup deleted: $1"],
-  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Patient report (PDF) downloaded: $1"],
-  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Patient form (DOCX) downloaded: $1"],
-];
-
-const AUDIT_DETAIL_REPLACEMENTS_EN = [
-  [/\bYangi\b/gi, "New"],
-  [/\bfoydalanuvchi\b/gi, "user"],
-  [/\bFoydalanuvchi\b/g, "User"],
-  [/\bma'?lumotlari\b/gi, "data"],
-  [/\bMa'?lumotlar\b/g, "Data"],
-  [/\bMa'?lumot\b/g, "Data"],
-  [/\bma'?lumotlar\b/gi, "data"],
-  [/\bma'?lumot\b/gi, "data"],
-  [/\btahlil\b/gi, "analysis"],
-  [/\bTahlil\b/g, "Analysis"],
-  [/\bBemor hisoboti\b/g, "Patient report"],
-  [/\bbemor hisoboti\b/gi, "patient report"],
-  [/\bBemor anketasi\b/g, "Patient form"],
-  [/\bbemor anketasi\b/gi, "patient form"],
-  [/\bBemor\b/g, "Patient"],
-  [/\bbemor\b/gi, "patient"],
-  [/\bAdmin\b/g, "Admin"],
-  [/\badmin\b/gi, "admin"],
-  [/\bIzlanuvchi\b/g, "Researcher"],
-  [/\bizlanuvchi\b/gi, "researcher"],
-  [/\bResearcher\b/g, "Researcher"],
-  [/\bresearcher\b/gi, "researcher"],
-  [/\bAnalysis\b/g, "Analysis"],
-  [/\banalysis\b/gi, "analysis"],
-  [/\bUser\b/g, "User"],
-  [/\buser\b/gi, "user"],
-  [/\byaratildi\b/gi, "created"],
-  [/\byangilandi\b/gi, "updated"],
-  [/\btiklandi\b/gi, "restored"],
-  [/\bo'?chirildi\b/gi, "deleted"],
-  [/\bcreated\b/gi, "created"],
-  [/\bupdated\b/gi, "updated"],
-  [/\bdeleted\b/gi, "deleted"],
-  [/\brestored\b/gi, "restored"],
-  [/\byuklab olindi\b/gi, "downloaded"],
-  [/\byuklandi\b/gi, "uploaded"],
-  [/\bolindi\b/gi, "received"],
-  [/\bsavatga yuborildi\b/gi, "moved to trash"],
-  [/\bsavatdan\b/gi, "from trash"],
-  [/\bbutunlay\b/gi, "permanently"],
-  [/\bIDlar\b/g, "ID"],
-  [/\bBarchasi\b/g, "All"],
-  [/\bta yozuv\b/gi, "records"],
-  [/\bta\b/g, "items"],
-  [/\bZaxira nusxasi\b/g, "Backup"],
-  [/\bzaxira nusxasi\b/gi, "backup"],
-  [/\bZaxira\b/g, "Backup"],
-  [/\bzaxira\b/gi, "backup"],
-  [/\bfayl\b/gi, "file"],
-  [/\bO'?zgarishlar\b/gi, "Changes"],
-  [/\bAlmashtirish\b/gi, "replace"],
-  [/\btizimga kirdi\b/gi, "logged in"],
-];
-
-const AUDIT_DETAIL_CLEANUPS_EN = [
-  [/New analysis created/gi, "New analysis created"],
-  [/Patient form \(DOCX\) downloaded/gi, "Patient form (DOCX) downloaded"],
-  [/Patient report \(PDF\) downloaded/gi, "Patient report (PDF) downloaded"],
-  [/\s+:/g, ":"],
-];
-
-const AUDIT_DETAIL_PATTERNS_KZ = [
-  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Жаңа талдау құрылды: $2"],
-  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Жаңа пайдаланушы құрылды: $1"],
-  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "Пайдаланушы деректері жаңартылды: $1"],
-  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "Пайдаланушы жойылды: $1"],
-  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "Пайдаланушы қалпына келтірілді: $1"],
-  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "Пайдаланушы жүйеге кірді: $1"],
-  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 талдау себетке жіберілді: $2"],
-  [
-    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
-    "$1 талдау толық жойылды (ID: $2)",
-  ],
-  [
-    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
-    "$1 талдау себеттен қалпына келтірілді (ID: $2)",
+    '$1 анализ(ов) восстановлено из корзины (ID: $2)',
   ],
   [
     /^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i,
-    "Талдау жаңартылды: $1. Өзгерістер: $2",
+    'Анализ обновлен: $1. Изменения: $2',
   ],
   [
     /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
-    "Аудит журналы тазаланды: барлығы ($1 жазба)",
+    'Журнал аудита очищен: все ($1 записей)',
   ],
   [
     /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
-    "Аудит журналы тазаланды: $1 ($2 жазба)",
+    'Журнал аудита очищен: $1 ($2 записей)',
   ],
-  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Сақтық көшірме құрылды: $1"],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, 'Резервная копия создана: $1'],
   [
     /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
-    "Сақтық көшірме толық қалпына келтірілді (ауыстыру): $1",
+    'Резервная копия полностью восстановлена (замена): $1',
   ],
-  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Сақтық көшірме жойылды: $1"],
-  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Пациент есебі (PDF) жүктеп алынды: $1"],
-  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Пациент анкетасы (DOCX) жүктеп алынды: $1"],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, 'Резервная копия удалена: $1'],
+  [
+    /^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i,
+    'Отчет пациента (PDF) скачан: $1',
+  ],
+  [
+    /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
+    'Анкета пациента (DOCX) скачана: $1',
+  ],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_RU = [
+  [/\bYangi\b/gi, 'Новый'],
+  [/\bfoydalanuvchi\b/gi, 'пользователь'],
+  [/\bFoydalanuvchi\b/g, 'Пользователь'],
+  [/\bma'?lumotlari\b/gi, 'данные'],
+  [/\bMa'?lumotlar\b/g, 'Данные'],
+  [/\bMa'?lumot\b/g, 'Данные'],
+  [/\bma'?lumotlar\b/gi, 'данные'],
+  [/\bma'?lumot\b/gi, 'данные'],
+  [/\btahlil\b/gi, 'анализ'],
+  [/\bTahlil\b/g, 'Анализ'],
+  [/\bBemor hisoboti\b/g, 'Отчет пациента'],
+  [/\bbemor hisoboti\b/gi, 'отчет пациента'],
+  [/\bBemor anketasi\b/g, 'Анкета пациента'],
+  [/\bbemor anketasi\b/gi, 'анкета пациента'],
+  [/\bBemor\b/g, 'Пациент'],
+  [/\bbemor\b/gi, 'пациент'],
+  [/\bAdmin\b/g, 'Админ'],
+  [/\badmin\b/gi, 'админ'],
+  [/\bIzlanuvchi\b/g, 'Исследователь'],
+  [/\bizlanuvchi\b/gi, 'исследователь'],
+  [/\bResearcher\b/g, 'Исследователь'],
+  [/\bresearcher\b/gi, 'исследователь'],
+  [/\bAnalysis\b/g, 'Анализ'],
+  [/\banalysis\b/gi, 'анализ'],
+  [/\bUser\b/g, 'Пользователь'],
+  [/\buser\b/gi, 'пользователь'],
+  [/\byaratildi\b/gi, 'создано'],
+  [/\byangilandi\b/gi, 'обновлено'],
+  [/\btiklandi\b/gi, 'восстановлено'],
+  [/\bo'?chirildi\b/gi, 'удалено'],
+  [/\bcreated\b/gi, 'создано'],
+  [/\bupdated\b/gi, 'обновлено'],
+  [/\bdeleted\b/gi, 'удалено'],
+  [/\brestored\b/gi, 'восстановлено'],
+  [/\byuklab olindi\b/gi, 'скачано'],
+  [/\byuklandi\b/gi, 'загружено'],
+  [/\bolindi\b/gi, 'получено'],
+  [/\bsavatga yuborildi\b/gi, 'перемещено в корзину'],
+  [/\bsavatdan\b/gi, 'из корзины'],
+  [/\bbutunlay\b/gi, 'навсегда'],
+  [/\bIDlar\b/g, 'ID'],
+  [/\bBarchasi\b/g, 'Все'],
+  [/\bta yozuv\b/gi, 'записей'],
+  [/\bta\b/g, 'шт'],
+  [/\bZaxira nusxasi\b/g, 'Резервная копия'],
+  [/\bzaxira nusxasi\b/gi, 'резервная копия'],
+  [/\bZaxira\b/g, 'Резервная копия'],
+  [/\bzaxira\b/gi, 'резервная копия'],
+  [/\bfayl\b/gi, 'файл'],
+  [/\bO'?zgarishlar\b/gi, 'Изменения'],
+  [/\bAlmashtirish\b/gi, 'замена'],
+  [/\btizimga kirdi\b/gi, 'вошел в систему'],
+];
+
+const AUDIT_DETAIL_CLEANUPS_RU = [
+  [/Новый анализ создано/gi, 'Новый анализ создан'],
+  [/Новый Анализ создано/gi, 'Новый анализ создан'],
+  [/Анкета пациента \(DOCX\) скачано/gi, 'Анкета пациента (DOCX) скачана'],
+  [/Анкета пациента скачано/gi, 'Анкета пациента скачана'],
+  [/Отчет пациента \(PDF\) скачано/gi, 'Отчет пациента (PDF) скачан'],
+  [/DOCX-отчет скачано/gi, 'DOCX-отчет скачан'],
+  [/\s+:/g, ':'],
+];
+
+const AUDIT_DETAIL_PATTERNS_EN = [
+  [
+    /^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i,
+    'New analysis created: $2',
+  ],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, 'New user created: $1'],
+  [
+    /^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i,
+    'User data updated: $1',
+  ],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, 'User deleted: $1'],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, 'User restored: $1'],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, 'User logged in: $1'],
+  [
+    /^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i,
+    '$1 analyses moved to trash: $2',
+  ],
+  [
+    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
+    '$1 analyses permanently deleted (ID: $2)',
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
+    '$1 analyses restored from trash (ID: $2)',
+  ],
+  [
+    /^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i,
+    'Analysis updated: $1. Changes: $2',
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    'Audit log cleared: all ($1 records)',
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    'Audit log cleared: $1 ($2 records)',
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, 'Backup created: $1'],
+  [
+    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
+    'Backup fully restored (replace): $1',
+  ],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, 'Backup deleted: $1'],
+  [
+    /^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i,
+    'Patient report (PDF) downloaded: $1',
+  ],
+  [
+    /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
+    'Patient form (DOCX) downloaded: $1',
+  ],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_EN = [
+  [/\bYangi\b/gi, 'New'],
+  [/\bfoydalanuvchi\b/gi, 'user'],
+  [/\bFoydalanuvchi\b/g, 'User'],
+  [/\bma'?lumotlari\b/gi, 'data'],
+  [/\bMa'?lumotlar\b/g, 'Data'],
+  [/\bMa'?lumot\b/g, 'Data'],
+  [/\bma'?lumotlar\b/gi, 'data'],
+  [/\bma'?lumot\b/gi, 'data'],
+  [/\btahlil\b/gi, 'analysis'],
+  [/\bTahlil\b/g, 'Analysis'],
+  [/\bBemor hisoboti\b/g, 'Patient report'],
+  [/\bbemor hisoboti\b/gi, 'patient report'],
+  [/\bBemor anketasi\b/g, 'Patient form'],
+  [/\bbemor anketasi\b/gi, 'patient form'],
+  [/\bBemor\b/g, 'Patient'],
+  [/\bbemor\b/gi, 'patient'],
+  [/\bAdmin\b/g, 'Admin'],
+  [/\badmin\b/gi, 'admin'],
+  [/\bIzlanuvchi\b/g, 'Researcher'],
+  [/\bizlanuvchi\b/gi, 'researcher'],
+  [/\bResearcher\b/g, 'Researcher'],
+  [/\bresearcher\b/gi, 'researcher'],
+  [/\bAnalysis\b/g, 'Analysis'],
+  [/\banalysis\b/gi, 'analysis'],
+  [/\bUser\b/g, 'User'],
+  [/\buser\b/gi, 'user'],
+  [/\byaratildi\b/gi, 'created'],
+  [/\byangilandi\b/gi, 'updated'],
+  [/\btiklandi\b/gi, 'restored'],
+  [/\bo'?chirildi\b/gi, 'deleted'],
+  [/\bcreated\b/gi, 'created'],
+  [/\bupdated\b/gi, 'updated'],
+  [/\bdeleted\b/gi, 'deleted'],
+  [/\brestored\b/gi, 'restored'],
+  [/\byuklab olindi\b/gi, 'downloaded'],
+  [/\byuklandi\b/gi, 'uploaded'],
+  [/\bolindi\b/gi, 'received'],
+  [/\bsavatga yuborildi\b/gi, 'moved to trash'],
+  [/\bsavatdan\b/gi, 'from trash'],
+  [/\bbutunlay\b/gi, 'permanently'],
+  [/\bIDlar\b/g, 'ID'],
+  [/\bBarchasi\b/g, 'All'],
+  [/\bta yozuv\b/gi, 'records'],
+  [/\bta\b/g, 'items'],
+  [/\bZaxira nusxasi\b/g, 'Backup'],
+  [/\bzaxira nusxasi\b/gi, 'backup'],
+  [/\bZaxira\b/g, 'Backup'],
+  [/\bzaxira\b/gi, 'backup'],
+  [/\bfayl\b/gi, 'file'],
+  [/\bO'?zgarishlar\b/gi, 'Changes'],
+  [/\bAlmashtirish\b/gi, 'replace'],
+  [/\btizimga kirdi\b/gi, 'logged in'],
+];
+
+const AUDIT_DETAIL_CLEANUPS_EN = [
+  [/New analysis created/gi, 'New analysis created'],
+  [/Patient form \(DOCX\) downloaded/gi, 'Patient form (DOCX) downloaded'],
+  [/Patient report \(PDF\) downloaded/gi, 'Patient report (PDF) downloaded'],
+  [/\s+:/g, ':'],
+];
+
+const AUDIT_DETAIL_PATTERNS_KZ = [
+  [
+    /^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i,
+    'Жаңа талдау құрылды: $2',
+  ],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, 'Жаңа пайдаланушы құрылды: $1'],
+  [
+    /^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i,
+    'Пайдаланушы деректері жаңартылды: $1',
+  ],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, 'Пайдаланушы жойылды: $1'],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, 'Пайдаланушы қалпына келтірілді: $1'],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, 'Пайдаланушы жүйеге кірді: $1'],
+  [
+    /^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i,
+    '$1 талдау себетке жіберілді: $2',
+  ],
+  [
+    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
+    '$1 талдау толық жойылды (ID: $2)',
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
+    '$1 талдау себеттен қалпына келтірілді (ID: $2)',
+  ],
+  [
+    /^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i,
+    'Талдау жаңартылды: $1. Өзгерістер: $2',
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    'Аудит журналы тазаланды: барлығы ($1 жазба)',
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    'Аудит журналы тазаланды: $1 ($2 жазба)',
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, 'Сақтық көшірме құрылды: $1'],
+  [
+    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
+    'Сақтық көшірме толық қалпына келтірілді (ауыстыру): $1',
+  ],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, 'Сақтық көшірме жойылды: $1'],
+  [
+    /^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i,
+    'Пациент есебі (PDF) жүктеп алынды: $1',
+  ],
+  [
+    /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
+    'Пациент анкетасы (DOCX) жүктеп алынды: $1',
+  ],
 ];
 
 const AUDIT_DETAIL_REPLACEMENTS_KZ = [
-  [/\bYangi\b/gi, "Жаңа"],
-  [/\bfoydalanuvchi\b/gi, "пайдаланушы"],
-  [/\bFoydalanuvchi\b/g, "Пайдаланушы"],
-  [/\bma'?lumotlari\b/gi, "деректері"],
-  [/\bMa'?lumotlar\b/g, "Деректер"],
-  [/\bMa'?lumot\b/g, "Дерек"],
-  [/\bma'?lumotlar\b/gi, "деректер"],
-  [/\bma'?lumot\b/gi, "дерек"],
-  [/\btahlil\b/gi, "талдау"],
-  [/\bTahlil\b/g, "Талдау"],
-  [/\bBemor hisoboti\b/g, "Пациент есебі"],
-  [/\bbemor hisoboti\b/gi, "пациент есебі"],
-  [/\bBemor anketasi\b/g, "Пациент анкетасы"],
-  [/\bbemor anketasi\b/gi, "пациент анкетасы"],
-  [/\bBemor\b/g, "Пациент"],
-  [/\bbemor\b/gi, "пациент"],
-  [/\bAdmin\b/g, "Админ"],
-  [/\badmin\b/gi, "админ"],
-  [/\bIzlanuvchi\b/g, "Зерттеуші"],
-  [/\bizlanuvchi\b/gi, "зерттеуші"],
-  [/\bResearcher\b/g, "Зерттеуші"],
-  [/\bresearcher\b/gi, "зерттеуші"],
-  [/\bAnalysis\b/g, "Талдау"],
-  [/\banalysis\b/gi, "талдау"],
-  [/\bUser\b/g, "Пайдаланушы"],
-  [/\buser\b/gi, "пайдаланушы"],
-  [/\byaratildi\b/gi, "құрылды"],
-  [/\byangilandi\b/gi, "жаңартылды"],
-  [/\btiklandi\b/gi, "қалпына келтірілді"],
-  [/\bo'?chirildi\b/gi, "жойылды"],
-  [/\bcreated\b/gi, "құрылды"],
-  [/\bupdated\b/gi, "жаңартылды"],
-  [/\bdeleted\b/gi, "жойылды"],
-  [/\brestored\b/gi, "қалпына келтірілді"],
-  [/\byuklab olindi\b/gi, "жүктеп алынды"],
-  [/\byuklandi\b/gi, "жүктелді"],
-  [/\bolindi\b/gi, "алынды"],
-  [/\bsavatga yuborildi\b/gi, "себетке жіберілді"],
-  [/\bsavatdan\b/gi, "себеттен"],
-  [/\bbutunlay\b/gi, "толық"],
-  [/\bIDlar\b/g, "ID"],
-  [/\bBarchasi\b/g, "Барлығы"],
-  [/\bta yozuv\b/gi, "жазба"],
-  [/\bta\b/g, "дана"],
-  [/\bZaxira nusxasi\b/g, "Сақтық көшірме"],
-  [/\bzaxira nusxasi\b/gi, "сақтық көшірме"],
-  [/\bZaxira\b/g, "Сақтық көшірме"],
-  [/\bzaxira\b/gi, "сақтық көшірме"],
-  [/\bfayl\b/gi, "файл"],
-  [/\bO'?zgarishlar\b/gi, "Өзгерістер"],
-  [/\bAlmashtirish\b/gi, "ауыстыру"],
-  [/\btizimga kirdi\b/gi, "жүйеге кірді"],
+  [/\bYangi\b/gi, 'Жаңа'],
+  [/\bfoydalanuvchi\b/gi, 'пайдаланушы'],
+  [/\bFoydalanuvchi\b/g, 'Пайдаланушы'],
+  [/\bma'?lumotlari\b/gi, 'деректері'],
+  [/\bMa'?lumotlar\b/g, 'Деректер'],
+  [/\bMa'?lumot\b/g, 'Дерек'],
+  [/\bma'?lumotlar\b/gi, 'деректер'],
+  [/\bma'?lumot\b/gi, 'дерек'],
+  [/\btahlil\b/gi, 'талдау'],
+  [/\bTahlil\b/g, 'Талдау'],
+  [/\bBemor hisoboti\b/g, 'Пациент есебі'],
+  [/\bbemor hisoboti\b/gi, 'пациент есебі'],
+  [/\bBemor anketasi\b/g, 'Пациент анкетасы'],
+  [/\bbemor anketasi\b/gi, 'пациент анкетасы'],
+  [/\bBemor\b/g, 'Пациент'],
+  [/\bbemor\b/gi, 'пациент'],
+  [/\bAdmin\b/g, 'Админ'],
+  [/\badmin\b/gi, 'админ'],
+  [/\bIzlanuvchi\b/g, 'Зерттеуші'],
+  [/\bizlanuvchi\b/gi, 'зерттеуші'],
+  [/\bResearcher\b/g, 'Зерттеуші'],
+  [/\bresearcher\b/gi, 'зерттеуші'],
+  [/\bAnalysis\b/g, 'Талдау'],
+  [/\banalysis\b/gi, 'талдау'],
+  [/\bUser\b/g, 'Пайдаланушы'],
+  [/\buser\b/gi, 'пайдаланушы'],
+  [/\byaratildi\b/gi, 'құрылды'],
+  [/\byangilandi\b/gi, 'жаңартылды'],
+  [/\btiklandi\b/gi, 'қалпына келтірілді'],
+  [/\bo'?chirildi\b/gi, 'жойылды'],
+  [/\bcreated\b/gi, 'құрылды'],
+  [/\bupdated\b/gi, 'жаңартылды'],
+  [/\bdeleted\b/gi, 'жойылды'],
+  [/\brestored\b/gi, 'қалпына келтірілді'],
+  [/\byuklab olindi\b/gi, 'жүктеп алынды'],
+  [/\byuklandi\b/gi, 'жүктелді'],
+  [/\bolindi\b/gi, 'алынды'],
+  [/\bsavatga yuborildi\b/gi, 'себетке жіберілді'],
+  [/\bsavatdan\b/gi, 'себеттен'],
+  [/\bbutunlay\b/gi, 'толық'],
+  [/\bIDlar\b/g, 'ID'],
+  [/\bBarchasi\b/g, 'Барлығы'],
+  [/\bta yozuv\b/gi, 'жазба'],
+  [/\bta\b/g, 'дана'],
+  [/\bZaxira nusxasi\b/g, 'Сақтық көшірме'],
+  [/\bzaxira nusxasi\b/gi, 'сақтық көшірме'],
+  [/\bZaxira\b/g, 'Сақтық көшірме'],
+  [/\bzaxira\b/gi, 'сақтық көшірме'],
+  [/\bfayl\b/gi, 'файл'],
+  [/\bO'?zgarishlar\b/gi, 'Өзгерістер'],
+  [/\bAlmashtirish\b/gi, 'ауыстыру'],
+  [/\btizimga kirdi\b/gi, 'жүйеге кірді'],
 ];
 
 const AUDIT_DETAIL_CLEANUPS_KZ = [
-  [/Жаңа талдау құрылды/gi, "Жаңа талдау құрылды"],
-  [/Пациент анкетасы \(DOCX\) жүктеп алынды/gi, "Пациент анкетасы (DOCX) жүктеп алынды"],
-  [/Пациент есебі \(PDF\) жүктеп алынды/gi, "Пациент есебі (PDF) жүктеп алынды"],
-  [/\s+:/g, ":"],
+  [/Жаңа талдау құрылды/gi, 'Жаңа талдау құрылды'],
+  [
+    /Пациент анкетасы \(DOCX\) жүктеп алынды/gi,
+    'Пациент анкетасы (DOCX) жүктеп алынды',
+  ],
+  [
+    /Пациент есебі \(PDF\) жүктеп алынды/gi,
+    'Пациент есебі (PDF) жүктеп алынды',
+  ],
+  [/\s+:/g, ':'],
 ];
 
 const AUDIT_DETAIL_PATTERNS_KY = [
-  [/^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i, "Жаңы талдоо түзүлдү: $2"],
-  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, "Жаңы колдонуучу түзүлдү: $1"],
-  [/^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i, "Колдонуучунун маалыматы жаңыртылды: $1"],
-  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, "Колдонуучу өчүрүлдү: $1"],
-  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, "Колдонуучу калыбына келтирилди: $1"],
-  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, "Колдонуучу системага кирди: $1"],
-  [/^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i, "$1 талдоо себетке жөнөтүлдү: $2"],
+  [
+    /^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i,
+    'Жаңы талдоо түзүлдү: $2',
+  ],
+  [/^Yangi foydalanuvchi yaratildi:\s*(.*)$/i, 'Жаңы колдонуучу түзүлдү: $1'],
+  [
+    /^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i,
+    'Колдонуучунун маалыматы жаңыртылды: $1',
+  ],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, 'Колдонуучу өчүрүлдү: $1'],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, 'Колдонуучу калыбына келтирилди: $1'],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, 'Колдонуучу системага кирди: $1'],
+  [
+    /^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i,
+    '$1 талдоо себетке жөнөтүлдү: $2',
+  ],
   [
     /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
-    "Аудит журналы тазаланды: баары ($1 жазуу)",
+    'Аудит журналы тазаланды: баары ($1 жазуу)',
   ],
   [
     /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
-    "Аудит журналы тазаланды: $1 ($2 жазуу)",
+    'Аудит журналы тазаланды: $1 ($2 жазуу)',
   ],
-  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, "Камдык көчүрмө түзүлдү: $1"],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, 'Камдык көчүрмө түзүлдү: $1'],
   [
     /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
-    "Камдык көчүрмө толук калыбына келтирилди (алмаштыруу): $1",
+    'Камдык көчүрмө толук калыбына келтирилди (алмаштыруу): $1',
   ],
-  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, "Камдык көчүрмө өчүрүлдү: $1"],
-  [/^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i, "Бейтап отчету (PDF) жүктөлдү: $1"],
-  [/^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i, "Бейтап анкетасы (DOCX) жүктөлдү: $1"],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, 'Камдык көчүрмө өчүрүлдү: $1'],
+  [
+    /^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i,
+    'Бейтап отчету (PDF) жүктөлдү: $1',
+  ],
+  [
+    /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
+    'Бейтап анкетасы (DOCX) жүктөлдү: $1',
+  ],
 ];
 
 const AUDIT_DETAIL_REPLACEMENTS_KY = [
-  [/\bYangi\b/gi, "Жаңы"],
-  [/\bfoydalanuvchi\b/gi, "колдонуучу"],
-  [/\bFoydalanuvchi\b/g, "Колдонуучу"],
-  [/\bma'?lumotlari\b/gi, "маалыматы"],
-  [/\bma'?lumotlar\b/gi, "маалыматтар"],
-  [/\btahlil\b/gi, "талдоо"],
-  [/\bTahlil\b/g, "Талдоо"],
-  [/\bBemor hisoboti\b/g, "Бейтап отчету"],
-  [/\bBemor anketasi\b/g, "Бейтап анкетасы"],
-  [/\bBemor\b/g, "Бейтап"],
-  [/\bAdmin\b/g, "Админ"],
-  [/\bIzlanuvchi\b/g, "Изилдөөчү"],
-  [/\bResearcher\b/g, "Изилдөөчү"],
-  [/\byaratildi\b/gi, "түзүлдү"],
-  [/\byangilandi\b/gi, "жаңыртылды"],
-  [/\btiklandi\b/gi, "калыбына келтирилди"],
-  [/\bo'?chirildi\b/gi, "өчүрүлдү"],
-  [/\byuklab olindi\b/gi, "жүктөлдү"],
-  [/\bsavatga yuborildi\b/gi, "себетке жөнөтүлдү"],
-  [/\bsavatdan\b/gi, "себеттен"],
-  [/\bbutunlay\b/gi, "толук"],
-  [/\bBarchasi\b/g, "Баары"],
-  [/\bta yozuv\b/gi, "жазуу"],
-  [/\bZaxira nusxasi\b/g, "Камдык көчүрмө"],
-  [/\bzaxira nusxasi\b/gi, "камдык көчүрмө"],
-  [/\bZaxira\b/g, "Камдык көчүрмө"],
-  [/\bzaxira\b/gi, "камдык көчүрмө"],
-  [/\bfayl\b/gi, "файл"],
-  [/\bO'?zgarishlar\b/gi, "Өзгөрүүлөр"],
-  [/\bAlmashtirish\b/gi, "алмаштыруу"],
-  [/\btizimga kirdi\b/gi, "системага кирди"],
+  [/\bYangi\b/gi, 'Жаңы'],
+  [/\bfoydalanuvchi\b/gi, 'колдонуучу'],
+  [/\bFoydalanuvchi\b/g, 'Колдонуучу'],
+  [/\bma'?lumotlari\b/gi, 'маалыматы'],
+  [/\bma'?lumotlar\b/gi, 'маалыматтар'],
+  [/\btahlil\b/gi, 'талдоо'],
+  [/\bTahlil\b/g, 'Талдоо'],
+  [/\bBemor hisoboti\b/g, 'Бейтап отчету'],
+  [/\bBemor anketasi\b/g, 'Бейтап анкетасы'],
+  [/\bBemor\b/g, 'Бейтап'],
+  [/\bAdmin\b/g, 'Админ'],
+  [/\bIzlanuvchi\b/g, 'Изилдөөчү'],
+  [/\bResearcher\b/g, 'Изилдөөчү'],
+  [/\byaratildi\b/gi, 'түзүлдү'],
+  [/\byangilandi\b/gi, 'жаңыртылды'],
+  [/\btiklandi\b/gi, 'калыбына келтирилди'],
+  [/\bo'?chirildi\b/gi, 'өчүрүлдү'],
+  [/\byuklab olindi\b/gi, 'жүктөлдү'],
+  [/\bsavatga yuborildi\b/gi, 'себетке жөнөтүлдү'],
+  [/\bsavatdan\b/gi, 'себеттен'],
+  [/\bbutunlay\b/gi, 'толук'],
+  [/\bBarchasi\b/g, 'Баары'],
+  [/\bta yozuv\b/gi, 'жазуу'],
+  [/\bZaxira nusxasi\b/g, 'Камдык көчүрмө'],
+  [/\bzaxira nusxasi\b/gi, 'камдык көчүрмө'],
+  [/\bZaxira\b/g, 'Камдык көчүрмө'],
+  [/\bzaxira\b/gi, 'камдык көчүрмө'],
+  [/\bfayl\b/gi, 'файл'],
+  [/\bO'?zgarishlar\b/gi, 'Өзгөрүүлөр'],
+  [/\bAlmashtirish\b/gi, 'алмаштыруу'],
+  [/\btizimga kirdi\b/gi, 'системага кирди'],
 ];
 
-const AUDIT_DETAIL_CLEANUPS_KY = [[/\s+:/g, ":"]];
+const AUDIT_DETAIL_CLEANUPS_KY = [[/\s+:/g, ':']];
 const formatAuditAction = (action, lang) => {
-  const value = String(action || "-");
+  const value = String(action || '-');
   const labels = AUDIT_ACTION_LABELS[lang];
   if (!labels) return value;
-  const key = value.toLowerCase().trim().replaceAll("-", "_");
+  const key = value.toLowerCase().trim().replaceAll('-', '_');
   return labels[key] || value;
 };
 
 const formatAuditTarget = (targetType, lang) => {
-  if (!targetType) return "";
+  if (!targetType) return '';
   const value = String(targetType);
-  if (lang === "en") return AUDIT_TARGET_LABELS_EN[value] || translateAuditText(value, lang);
-  if (lang === "ru") return AUDIT_TARGET_LABELS_RU[value] || translateAuditText(value, lang);
-  if (lang === "kz") return AUDIT_TARGET_LABELS_KZ[value] || translateAuditText(value, lang);
-  if (lang === "ky") return AUDIT_TARGET_LABELS_KY[value] || translateAuditText(value, lang);
+  if (lang === 'en')
+    return AUDIT_TARGET_LABELS_EN[value] || translateAuditText(value, lang);
+  if (lang === 'ru')
+    return AUDIT_TARGET_LABELS_RU[value] || translateAuditText(value, lang);
+  if (lang === 'kz')
+    return AUDIT_TARGET_LABELS_KZ[value] || translateAuditText(value, lang);
+  if (lang === 'ky')
+    return AUDIT_TARGET_LABELS_KY[value] || translateAuditText(value, lang);
   return value;
 };
 
 const formatAuditJsonValue = (value, lang) => {
-  if (value === null || value === undefined || value === "") return "-";
-  if (Array.isArray(value)) return value.map((item) => formatAuditJsonValue(item, lang)).join(", ");
-  if (typeof value === "object") return formatAuditDetails(value, lang);
+  if (value === null || value === undefined || value === '') return '-';
+  if (Array.isArray(value))
+    return value.map((item) => formatAuditJsonValue(item, lang)).join(', ');
+  if (typeof value === 'object') return formatAuditDetails(value, lang);
   const text = String(value);
-  return lang === "en" || lang === "ru" || lang === "kz" || lang === "ky"
+  return lang === 'en' || lang === 'ru' || lang === 'kz' || lang === 'ky'
     ? translateAuditText(text, lang)
     : text;
 };
 
 const translateAuditText = (text, lang) => {
   const patterns =
-    lang === "en"
+    lang === 'en'
       ? AUDIT_DETAIL_PATTERNS_EN
-      : lang === "ky"
+      : lang === 'ky'
         ? AUDIT_DETAIL_PATTERNS_KY
-        : lang === "kz"
+        : lang === 'kz'
           ? AUDIT_DETAIL_PATTERNS_KZ
           : AUDIT_DETAIL_PATTERNS_RU;
   const replacements =
-    lang === "en"
+    lang === 'en'
       ? AUDIT_DETAIL_REPLACEMENTS_EN
-      : lang === "ky"
+      : lang === 'ky'
         ? AUDIT_DETAIL_REPLACEMENTS_KY
-        : lang === "kz"
+        : lang === 'kz'
           ? AUDIT_DETAIL_REPLACEMENTS_KZ
           : AUDIT_DETAIL_REPLACEMENTS_RU;
   const cleanups =
-    lang === "en"
+    lang === 'en'
       ? AUDIT_DETAIL_CLEANUPS_EN
-      : lang === "ky"
+      : lang === 'ky'
         ? AUDIT_DETAIL_CLEANUPS_KY
-        : lang === "kz"
+        : lang === 'kz'
           ? AUDIT_DETAIL_CLEANUPS_KZ
           : AUDIT_DETAIL_CLEANUPS_RU;
 
@@ -712,39 +795,46 @@ const translateAuditText = (text, lang) => {
   if (patternMatch) return text.replace(patternMatch[0], patternMatch[1]);
   const translated = replacements.reduce(
     (result, [pattern, to]) => result.replace(pattern, to),
-    text,
+    text
   );
-  return cleanups.reduce((result, [pattern, to]) => result.replace(pattern, to), translated);
+  return cleanups.reduce(
+    (result, [pattern, to]) => result.replace(pattern, to),
+    translated
+  );
 };
 
 const formatAuditDetails = (details, lang) => {
-  if (details === null || details === undefined || details === "") return "-";
-  let text = typeof details === "string" ? details : JSON.stringify(details, null, 2);
+  if (details === null || details === undefined || details === '') return '-';
+  let text =
+    typeof details === 'string' ? details : JSON.stringify(details, null, 2);
 
   try {
-    const parsed = typeof details === "string" ? JSON.parse(details) : details;
-    if (parsed && typeof parsed === "object") {
+    const parsed = typeof details === 'string' ? JSON.parse(details) : details;
+    if (parsed && typeof parsed === 'object') {
       text = Object.entries(parsed)
         .map(([key, value]) => {
           const label =
-            lang === "en"
+            lang === 'en'
               ? AUDIT_JSON_KEY_LABELS_EN[key] || translateAuditText(key, lang)
-              : lang === "ru"
+              : lang === 'ru'
                 ? AUDIT_JSON_KEY_LABELS_RU[key] || translateAuditText(key, lang)
-                : lang === "kz"
-                  ? AUDIT_JSON_KEY_LABELS_KZ[key] || translateAuditText(key, lang)
-                  : lang === "ky"
-                    ? AUDIT_JSON_KEY_LABELS_KY[key] || translateAuditText(key, lang)
+                : lang === 'kz'
+                  ? AUDIT_JSON_KEY_LABELS_KZ[key] ||
+                    translateAuditText(key, lang)
+                  : lang === 'ky'
+                    ? AUDIT_JSON_KEY_LABELS_KY[key] ||
+                      translateAuditText(key, lang)
                     : key;
           return `${label}: ${formatAuditJsonValue(value, lang)}`;
         })
-        .join("; ");
+        .join('; ');
     }
   } catch {
     // Plain text audit details are expected too.
   }
 
-  if (lang !== "en" && lang !== "ru" && lang !== "kz" && lang !== "ky") return text;
+  if (lang !== 'en' && lang !== 'ru' && lang !== 'kz' && lang !== 'ky')
+    return text;
   return translateAuditText(text, lang);
 };
 
@@ -753,28 +843,36 @@ const GlassPaper = ({ children, sx = {} }) => (
     elevation={0}
     sx={{
       background: (theme) =>
-        theme.palette.mode === "dark" ? "rgba(30,30,40,0.7)" : "rgba(255,255,255,0.85)",
-      backdropFilter: "blur(20px)",
+        theme.palette.mode === 'dark'
+          ? 'rgba(30,30,40,0.7)'
+          : 'rgba(255,255,255,0.85)',
+      backdropFilter: 'blur(20px)',
       borderRadius: 4,
-      border: "1px solid",
+      border: '1px solid',
       borderColor: (theme) =>
-        theme.palette.mode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
-      overflow: "auto",
-      "&::-webkit-scrollbar": {
-        height: "6px",
-        width: "6px",
+        theme.palette.mode === 'dark'
+          ? 'rgba(255,255,255,0.08)'
+          : 'rgba(0,0,0,0.05)',
+      overflow: 'auto',
+      '&::-webkit-scrollbar': {
+        height: '6px',
+        width: '6px',
       },
-      "&::-webkit-scrollbar-track": {
-        background: "transparent",
+      '&::-webkit-scrollbar-track': {
+        background: 'transparent',
       },
-      "&::-webkit-scrollbar-thumb": {
+      '&::-webkit-scrollbar-thumb': {
         background: (theme) =>
-          theme.palette.mode === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)",
-        borderRadius: "10px",
+          theme.palette.mode === 'dark'
+            ? 'rgba(255,255,255,0.1)'
+            : 'rgba(0,0,0,0.1)',
+        borderRadius: '10px',
       },
-      "&::-webkit-scrollbar-thumb:hover": {
+      '&::-webkit-scrollbar-thumb:hover': {
         background: (theme) =>
-          theme.palette.mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.2)",
+          theme.palette.mode === 'dark'
+            ? 'rgba(255,255,255,0.2)'
+            : 'rgba(0,0,0,0.2)',
       },
       ...sx,
     }}
@@ -784,23 +882,25 @@ const GlassPaper = ({ children, sx = {} }) => (
 );
 
 const scrollableContentSx = {
-  width: "100%",
-  maxWidth: "100%",
+  width: '100%',
+  maxWidth: '100%',
   minWidth: 0,
-  overflowX: "auto",
-  overflowY: "visible",
-  WebkitOverflowScrolling: "touch",
+  overflowX: 'auto',
+  overflowY: 'visible',
+  WebkitOverflowScrolling: 'touch',
   pb: 1,
-  "&::-webkit-scrollbar": {
-    height: "8px",
+  '&::-webkit-scrollbar': {
+    height: '8px',
   },
-  "&::-webkit-scrollbar-track": {
-    background: "transparent",
+  '&::-webkit-scrollbar-track': {
+    background: 'transparent',
   },
-  "&::-webkit-scrollbar-thumb": {
+  '&::-webkit-scrollbar-thumb': {
     background: (theme) =>
-      theme.palette.mode === "dark" ? "rgba(255,255,255,0.14)" : "rgba(99,102,241,0.22)",
-    borderRadius: "10px",
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.14)'
+        : 'rgba(99,102,241,0.22)',
+    borderRadius: '10px',
   },
 };
 
@@ -812,17 +912,21 @@ const blurActiveElement = () => {
 
 const SuperAdminPage = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const { user, login: authLogin, logout, loading: authLoading } = useAuth();
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const pt = useCallback((key) => pageT(lang, key), [lang]);
   const [activeTab, setActiveTab] = useState(0);
-  const [loginForm, setLoginForm] = useState({ email: "", password: "", verification_code: "" });
+  const [loginForm, setLoginForm] = useState({
+    email: '',
+    password: '',
+    verification_code: '',
+  });
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState("");
+  const [loginError, setLoginError] = useState('');
   const [loginInProgress, setLoginInProgress] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
@@ -832,48 +936,49 @@ const SuperAdminPage = () => {
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [adminForm, setAdminForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "admin",
-    phone: "",
-    region: "",
-    district: "",
-    mahalla: "",
-    address: "",
-    latitude: "",
-    longitude: "",
-    research_topic: "",
-    research_type: "",
-    research_area: "",
-    scientific_supervisor: "",
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'admin',
+    phone: '',
+    region: '',
+    district: '',
+    mahalla: '',
+    address: '',
+    latitude: '',
+    longitude: '',
+    research_topic: '',
+    research_type: '',
+    research_area: '',
+    scientific_supervisor: '',
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
-  const adminMahallaValue = adminForm.mahalla || "";
+  const adminMahallaValue = adminForm.mahalla || '';
   const hasSelectedAdminMahallaOption =
-    !adminMahallaValue || mahallaOptions.some((mahalla) => mahalla.label === adminMahallaValue);
+    !adminMahallaValue ||
+    mahallaOptions.some((mahalla) => mahalla.label === adminMahallaValue);
 
   const normalizeAdminForm = (admin = {}) => ({
-    name: admin.name || "",
-    email: admin.email || "",
-    password: "",
-    confirmPassword: "",
-    role: admin.role || "admin",
-    phone: admin.phone || "",
-    region: admin.region || "",
-    district: admin.district || "",
-    mahalla: admin.mahalla || "",
-    address: admin.address || "",
-    latitude: admin.latitude ?? "",
-    longitude: admin.longitude ?? "",
-    research_topic: admin.research_topic || "",
-    research_type: admin.research_type || "",
-    research_area: admin.research_area || "",
-    scientific_supervisor: admin.scientific_supervisor || "",
+    name: admin.name || '',
+    email: admin.email || '',
+    password: '',
+    confirmPassword: '',
+    role: admin.role || 'admin',
+    phone: admin.phone || '',
+    region: admin.region || '',
+    district: admin.district || '',
+    mahalla: admin.mahalla || '',
+    address: admin.address || '',
+    latitude: admin.latitude ?? '',
+    longitude: admin.longitude ?? '',
+    research_topic: admin.research_topic || '',
+    research_type: admin.research_type || '',
+    research_area: admin.research_area || '',
+    scientific_supervisor: admin.scientific_supervisor || '',
   });
 
   // Deleted Data State
@@ -889,15 +994,15 @@ const SuperAdminPage = () => {
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [dashFilters, setDashFilters] = useState({
-    gender: "",
-    region: "",
+    gender: '',
+    region: '',
     age_min: 0,
     age_max: 100,
     bmi_min: 10,
     bmi_max: 50,
-    somatotype: "",
-    date_from: "",
-    date_to: "",
+    somatotype: '',
+    date_from: '',
+    date_to: '',
   });
   const [viewRow, setViewRow] = useState(null);
 
@@ -908,98 +1013,128 @@ const SuperAdminPage = () => {
   const [checked, setChecked] = useState(new Set());
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
   const getDeletedRowKey = (row) =>
-    row.__rowKey || `${row.__deletedSource || "analysis"}:${row.id}`;
-  const getDeletedRowCode = (row) => row.id_code || (row.id ? `#${row.id}` : "-");
+    row.__rowKey || `${row.__deletedSource || 'analysis'}:${row.id}`;
+  const getDeletedRowCode = (row) =>
+    row.id_code || (row.id ? `#${row.id}` : '-');
   const getDeletedRowPatientName = (row) =>
-    row.full_name || row.name || [row.last_name, row.first_name].filter(Boolean).join(" ") || "-";
+    row.full_name ||
+    row.name ||
+    [row.last_name, row.first_name].filter(Boolean).join(' ') ||
+    '-';
   const getDeletedByName = (row) =>
-    row.deleted_by_name || row.deleted_by?.name || row.deleted_by_email || pt("unknown");
+    row.deleted_by_name ||
+    row.deleted_by?.name ||
+    row.deleted_by_email ||
+    pt('unknown');
   const getDeletedDate = (row) => {
-    if (!row.deleted_at) return "-";
+    if (!row.deleted_at) return '-';
     const date = new Date(row.deleted_at);
-    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+    return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
   };
   const normalizeLocationName = useCallback(
-    (value = "") =>
+    (value = '') =>
       String(value)
         .toLowerCase()
         .replace(/[‘’`ʻʼ]/g, "'")
-        .replace(/\s+/g, " ")
-        .replace(" respublikasi", "")
-        .replace(" viloyati", "")
-        .replace(" tumani", "")
-        .replace(" shahri", "")
-        .replace(" mahallasi", "")
-        .replace(/[‘’ʻʼ']/g, "")
-        .replace(/\bsergeli\b/g, "sirgali")
+        .replace(/\s+/g, ' ')
+        .replace(' respublikasi', '')
+        .replace(' viloyati', '')
+        .replace(' tumani', '')
+        .replace(' shahri', '')
+        .replace(' mahallasi', '')
+        .replace(/[‘’ʻʼ']/g, '')
+        .replace(/\bsergeli\b/g, 'sirgali')
         .trim(),
-    [],
+    []
   );
   const featureLabel = useCallback(
-    (item) => item?.name_uz || item?.display_name || item?.name_en || item?.name_ru || "",
-    [],
+    (item) =>
+      item?.name_uz ||
+      item?.display_name ||
+      item?.name_en ||
+      item?.name_ru ||
+      '',
+    []
   );
   const canonicalRegionName = useCallback(
-    (value = "") => {
+    (value = '') => {
       const raw = String(value).toLowerCase();
-      if (raw.includes("toshkent")) {
-        if (raw.includes("shah") || raw.includes("city") || raw.includes("город")) {
-          return "toshkent shahri";
+      if (raw.includes('toshkent')) {
+        if (
+          raw.includes('shah') ||
+          raw.includes('city') ||
+          raw.includes('город')
+        ) {
+          return 'toshkent shahri';
         }
-        if (raw.includes("viloyat") || raw.includes("region") || raw.includes("област")) {
-          return "toshkent viloyati";
+        if (
+          raw.includes('viloyat') ||
+          raw.includes('region') ||
+          raw.includes('област')
+        ) {
+          return 'toshkent viloyati';
         }
-        return "toshkent shahri";
+        return 'toshkent shahri';
       }
       return normalizeLocationName(value);
     },
-    [normalizeLocationName],
+    [normalizeLocationName]
   );
   const locationTokens = useCallback(
-    (value = "") =>
+    (value = '') =>
       normalizeLocationName(value)
-        .split(" ")
+        .split(' ')
         .filter((part) => part && part.length > 1),
-    [normalizeLocationName],
+    [normalizeLocationName]
   );
   const locationMatches = useCallback(
-    (left = "", right = "") => {
+    (left = '', right = '') => {
       const a = normalizeLocationName(left);
       const b = normalizeLocationName(right);
       if (!a || !b) return false;
       if (a === b || a.includes(b) || b.includes(a)) return true;
       const aTokens = locationTokens(a);
       const bTokens = locationTokens(b);
-      return aTokens.length > 0 && aTokens.every((token) => bTokens.includes(token));
+      return (
+        aTokens.length > 0 && aTokens.every((token) => bTokens.includes(token))
+      );
     },
-    [locationTokens, normalizeLocationName],
+    [locationTokens, normalizeLocationName]
   );
   const findBoundaryRegion = useCallback(
     (regionName) => {
       const key = canonicalRegionName(regionName);
-      return (boundaryIndex?.levels?.["1"] || []).find(
-        (item) => canonicalRegionName(featureLabel(item)) === key,
+      return (boundaryIndex?.levels?.['1'] || []).find(
+        (item) => canonicalRegionName(featureLabel(item)) === key
       );
     },
-    [boundaryIndex, canonicalRegionName, featureLabel],
+    [boundaryIndex, canonicalRegionName, featureLabel]
   );
   const findBoundaryDistrict = useCallback(
     (districtName, regionName = adminForm.region) => {
       const region = findBoundaryRegion(regionName);
-      const sameRegionDistricts = (boundaryIndex?.levels?.["2"] || []).filter(
-        (item) => !region || String(item.parent_id) === String(region.id),
+      const sameRegionDistricts = (boundaryIndex?.levels?.['2'] || []).filter(
+        (item) => !region || String(item.parent_id) === String(region.id)
       );
       return (
-        sameRegionDistricts.find((item) => locationMatches(featureLabel(item), districtName)) ||
-        (boundaryIndex?.levels?.["2"] || []).find((item) =>
-          locationMatches(featureLabel(item), districtName),
+        sameRegionDistricts.find((item) =>
+          locationMatches(featureLabel(item), districtName)
+        ) ||
+        (boundaryIndex?.levels?.['2'] || []).find((item) =>
+          locationMatches(featureLabel(item), districtName)
         )
       );
     },
-    [adminForm.region, boundaryIndex, featureLabel, findBoundaryRegion, locationMatches],
+    [
+      adminForm.region,
+      boundaryIndex,
+      featureLabel,
+      findBoundaryRegion,
+      locationMatches,
+    ]
   );
   const parseMaybeJson = (value) => {
-    if (typeof value !== "string") return value;
+    if (typeof value !== 'string') return value;
     try {
       return JSON.parse(value);
     } catch {
@@ -1010,7 +1145,10 @@ const SuperAdminPage = () => {
     const points = [];
     const collectPoints = (coordinates) => {
       if (!Array.isArray(coordinates)) return;
-      if (typeof coordinates[0] === "number" && typeof coordinates[1] === "number") {
+      if (
+        typeof coordinates[0] === 'number' &&
+        typeof coordinates[1] === 'number'
+      ) {
         points.push(coordinates);
         return;
       }
@@ -1027,7 +1165,8 @@ const SuperAdminPage = () => {
   };
   const getLocationCenter = (item) => {
     const center = parseMaybeJson(item?.center);
-    const bbox = parseMaybeJson(item?.bbox) || getGeometryBounds(item?.geometry);
+    const bbox =
+      parseMaybeJson(item?.bbox) || getGeometryBounds(item?.geometry);
     if (Array.isArray(center) && center.length >= 2) return center;
     if (Array.isArray(bbox) && bbox.length === 4) {
       return [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2];
@@ -1056,25 +1195,29 @@ const SuperAdminPage = () => {
       Math.abs(x) <= MAX_MERCATOR &&
       Math.abs(y) <= MAX_MERCATOR;
 
-    if (isLngLatUzbekistan(rawLng, rawLat)) return { latitude: rawLat, longitude: rawLng };
-    if (isLngLatUzbekistan(rawLat, rawLng)) return { latitude: rawLng, longitude: rawLat };
+    if (isLngLatUzbekistan(rawLng, rawLat))
+      return { latitude: rawLat, longitude: rawLng };
+    if (isLngLatUzbekistan(rawLat, rawLng))
+      return { latitude: rawLng, longitude: rawLat };
 
     if (isMercator(rawLng, rawLat)) {
       const [lng, lat] = mercatorToLngLat(rawLng, rawLat);
-      if (isLngLatUzbekistan(lng, lat)) return { latitude: lat, longitude: lng };
+      if (isLngLatUzbekistan(lng, lat))
+        return { latitude: lat, longitude: lng };
     }
     if (isMercator(rawLat, rawLng)) {
       const [lng, lat] = mercatorToLngLat(rawLat, rawLng);
-      if (isLngLatUzbekistan(lng, lat)) return { latitude: lat, longitude: lng };
+      if (isLngLatUzbekistan(lng, lat))
+        return { latitude: lat, longitude: lng };
     }
 
     return null;
   }, []);
   const getGenderLabel = (gender) => {
-    if (!gender) return "-";
+    if (!gender) return '-';
     const normalized = String(gender).toLowerCase();
-    if (["male", "erkak", "boy"].includes(normalized)) return "Erkak";
-    if (["female", "ayol", "girl"].includes(normalized)) return "Ayol";
+    if (['male', 'erkak', 'boy'].includes(normalized)) return 'Erkak';
+    if (['female', 'ayol', 'girl'].includes(normalized)) return 'Ayol';
     return gender;
   };
   const getDeletedRowBmiText = (row) => {
@@ -1083,19 +1226,20 @@ const SuperAdminPage = () => {
       (row.weight && row.chest_standing_height
         ? (row.weight / Math.pow(row.chest_standing_height / 100, 2)).toFixed(1)
         : null);
-    if (!bmi) return "-";
+    if (!bmi) return '-';
     return row.bmi_status ? `${bmi} (${row.bmi_status})` : String(bmi);
   };
 
   const toggleAll = useCallback(
     (rows) => {
       const next = new Set(checked);
-      const allChecked = rows.length > 0 && rows.every((r) => checked.has(getDeletedRowKey(r)));
+      const allChecked =
+        rows.length > 0 && rows.every((r) => checked.has(getDeletedRowKey(r)));
       if (allChecked) rows.forEach((r) => next.delete(getDeletedRowKey(r)));
       else rows.forEach((r) => next.add(getDeletedRowKey(r)));
       setChecked(next);
     },
-    [checked],
+    [checked]
   );
 
   const toggleOne = useCallback(
@@ -1105,28 +1249,30 @@ const SuperAdminPage = () => {
       else next.add(id);
       setChecked(next);
     },
-    [checked],
+    [checked]
   );
 
   const handleBulkRestore = async () => {
     if (checked.size === 0) return;
     try {
-      const selectedRows = deletedData.filter((row) => checked.has(getDeletedRowKey(row)));
+      const selectedRows = deletedData.filter((row) =>
+        checked.has(getDeletedRowKey(row))
+      );
       const analysisIds = selectedRows
-        .filter((row) => row.__deletedSource !== "research")
+        .filter((row) => row.__deletedSource !== 'research')
         .map((row) => row.id);
       const researchIds = selectedRows
-        .filter((row) => row.__deletedSource === "research")
+        .filter((row) => row.__deletedSource === 'research')
         .map((row) => row.id);
 
       if (analysisIds.length) await AdminApi.analyses.restore(analysisIds);
       for (const id of researchIds) await ResearchApi.restore(id);
 
-      toast.success(pt("restoredMany"));
+      toast.success(pt('restoredMany'));
       setChecked(new Set());
       fetchDeletedAnalyses();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error('Xatolik: ' + err.message);
     }
   };
 
@@ -1141,13 +1287,15 @@ const SuperAdminPage = () => {
   // Keyboard shortcut for deletion
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Delete" || e.code === "Delete" || e.key === "Backspace") {
+      if (e.key === 'Delete' || e.code === 'Delete' || e.key === 'Backspace') {
         const el = document.activeElement;
         const tag = el.tagName.toUpperCase();
         const isTextInput =
-          (tag === "INPUT" &&
-            !["checkbox", "radio", "range", "button", "submit"].includes(el.type)) ||
-          tag === "TEXTAREA" ||
+          (tag === 'INPUT' &&
+            !['checkbox', 'radio', 'range', 'button', 'submit'].includes(
+              el.type
+            )) ||
+          tag === 'TEXTAREA' ||
           el.isContentEditable;
 
         if (isTextInput) return;
@@ -1157,18 +1305,18 @@ const SuperAdminPage = () => {
         }
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [checked.size, activeTab, handleBulkHardDelete]);
 
   useEffect(() => {
     let mounted = true;
-    fetch("/maps/admin-boundaries/index.json")
+    fetch('/maps/admin-boundaries/index.json')
       .then((response) => response.json())
       .then((data) => {
         if (mounted) setBoundaryIndex(data);
       })
-      .catch((error) => console.warn("Boundary index load error:", error));
+      .catch((error) => console.warn('Boundary index load error:', error));
     return () => {
       mounted = false;
     };
@@ -1179,11 +1327,12 @@ const SuperAdminPage = () => {
     const districtName = adminForm.district;
     setMahallaOptions([]);
     setMahallaLoading(false);
-    if (!districtName || !boundaryIndex?.levels?.["2"]) return undefined;
+    if (!districtName || !boundaryIndex?.levels?.['2']) return undefined;
     const district = findBoundaryDistrict(districtName, adminForm.region);
     const path =
       district &&
-      (boundaryIndex.files?.["3"]?.[String(district.id)] || `level3/${district.id}.geojson`);
+      (boundaryIndex.files?.['3']?.[String(district.id)] ||
+        `level3/${district.id}.geojson`);
     if (!path) return undefined;
     setMahallaLoading(true);
     fetch(`/maps/admin-boundaries/${path}`)
@@ -1200,20 +1349,28 @@ const SuperAdminPage = () => {
               label: featureLabel(feature.properties),
             }))
             .filter((item) => item.label)
-            .sort((a, b) => a.label.localeCompare(b.label, lang === "kz" ? "kk" : lang)),
+            .sort((a, b) =>
+              a.label.localeCompare(b.label, lang === 'kz' ? 'kk' : lang)
+            )
         );
       })
-      .catch((error) => console.warn("Mahalla layer load error:", error))
+      .catch((error) => console.warn('Mahalla layer load error:', error))
       .finally(() => {
         if (mounted) setMahallaLoading(false);
       });
     return () => {
       mounted = false;
     };
-  }, [adminForm.district, adminForm.region, boundaryIndex, featureLabel, findBoundaryDistrict]);
+  }, [
+    adminForm.district,
+    adminForm.region,
+    boundaryIndex,
+    featureLabel,
+    findBoundaryDistrict,
+  ]);
 
   useEffect(() => {
-    if (user?.role === "superadmin") {
+    if (user?.role === 'superadmin') {
       if (activeTab === 0 || activeTab === 1) {
         fetchDashboardStats(dashFilters);
         fetchAdmins();
@@ -1238,7 +1395,7 @@ const SuperAdminPage = () => {
       const data = await AdminApi.stats(filters);
       setStats(data);
     } catch (err) {
-      console.error("Failed to fetch dashboard stats:", err);
+      console.error('Failed to fetch dashboard stats:', err);
     } finally {
       setStatsLoading(false);
     }
@@ -1247,7 +1404,7 @@ const SuperAdminPage = () => {
   const setAdminPinFromBoundary = () => {
     const center = resolveAdminBoundaryCenter();
     if (!center) {
-      toast.error(pt("locationNotFound"));
+      toast.error(pt('locationNotFound'));
       return;
     }
     setAdminForm((current) => ({
@@ -1255,13 +1412,18 @@ const SuperAdminPage = () => {
       longitude: Number(center[0]).toFixed(6),
       latitude: Number(center[1]).toFixed(6),
     }));
-    toast.success(pt("pinSelectedCenter"));
+    toast.success(pt('pinSelectedCenter'));
   };
 
   const setAdminFormWithBoundaryCenter = (patch, options = {}) => {
     const nextForm = { ...adminForm, ...patch };
-    const selectedMahalla = mahallaOptions.find((item) => item.label === nextForm.mahalla);
-    const selectedDistrict = findBoundaryDistrict(nextForm.district, nextForm.region);
+    const selectedMahalla = mahallaOptions.find(
+      (item) => item.label === nextForm.mahalla
+    );
+    const selectedDistrict = findBoundaryDistrict(
+      nextForm.district,
+      nextForm.region
+    );
     const selectedRegion = findBoundaryRegion(nextForm.region);
     const preferredBoundary =
       options.preferMahalla && selectedMahalla
@@ -1289,8 +1451,13 @@ const SuperAdminPage = () => {
   };
 
   const resolveAdminBoundaryCenter = () => {
-    const selectedMahalla = mahallaOptions.find((item) => item.label === adminForm.mahalla);
-    const selectedDistrict = findBoundaryDistrict(adminForm.district, adminForm.region);
+    const selectedMahalla = mahallaOptions.find(
+      (item) => item.label === adminForm.mahalla
+    );
+    const selectedDistrict = findBoundaryDistrict(
+      adminForm.district,
+      adminForm.region
+    );
     const selectedRegion = findBoundaryRegion(adminForm.region);
     return (
       getLocationCenter(selectedMahalla) ||
@@ -1301,7 +1468,7 @@ const SuperAdminPage = () => {
 
   const useCurrentLocationForAdmin = () => {
     if (!navigator.geolocation) {
-      toast.error(pt("geolocationUnsupported"));
+      toast.error(pt('geolocationUnsupported'));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -1311,10 +1478,10 @@ const SuperAdminPage = () => {
           latitude: position.coords.latitude.toFixed(6),
           longitude: position.coords.longitude.toFixed(6),
         }));
-        toast.success(pt("currentLocationFetched"));
+        toast.success(pt('currentLocationFetched'));
       },
-      () => toast.error(pt("geolocationDenied")),
-      { enableHighAccuracy: true, timeout: 12000 },
+      () => toast.error(pt('geolocationDenied')),
+      { enableHighAccuracy: true, timeout: 12000 }
     );
   };
 
@@ -1324,7 +1491,7 @@ const SuperAdminPage = () => {
       const data = await AdminApi.users.list();
       setAdmins(data);
     } catch (err) {
-      console.error("Failed to fetch admins:", err);
+      console.error('Failed to fetch admins:', err);
     } finally {
       setAdminsLoading(false);
     }
@@ -1338,43 +1505,49 @@ const SuperAdminPage = () => {
         ResearchApi.deletedList(),
       ]);
 
-      if (analysisResult.status === "rejected") {
-        console.error("Failed to fetch deleted analyses:", analysisResult.reason);
+      if (analysisResult.status === 'rejected') {
+        console.error(
+          'Failed to fetch deleted analyses:',
+          analysisResult.reason
+        );
       }
-      if (researchResult.status === "rejected") {
-        console.error("Failed to fetch deleted research records:", researchResult.reason);
+      if (researchResult.status === 'rejected') {
+        console.error(
+          'Failed to fetch deleted research records:',
+          researchResult.reason
+        );
       }
 
       const analysisRows =
-        analysisResult.status === "fulfilled"
+        analysisResult.status === 'fulfilled'
           ? (analysisResult.value.items || [])
               .filter((i) => i.is_deleted)
               .map((i) => ({
                 ...i,
                 deleted_by_name: getDeletedByName(i),
-                __deletedSource: "analysis",
+                __deletedSource: 'analysis',
                 __rowKey: `analysis:${i.id}`,
               }))
           : [];
       const researchRows =
-        researchResult.status === "fulfilled"
+        researchResult.status === 'fulfilled'
           ? (researchResult.value || [])
               .filter((i) => i.is_deleted)
               .map((i) => ({
                 ...i,
                 deleted_by_name: getDeletedByName(i),
-                __deletedSource: "research",
+                __deletedSource: 'research',
                 __rowKey: `research:${i.id}`,
               }))
           : [];
 
       setDeletedData(
         [...analysisRows, ...researchRows].sort(
-          (a, b) => new Date(b.deleted_at || 0) - new Date(a.deleted_at || 0),
-        ),
+          (a, b) => new Date(b.deleted_at || 0) - new Date(a.deleted_at || 0)
+        )
       );
     } catch (err) {
-      console.error("Failed to fetch deleted analyses:", err);
+      console.error('Failed to fetch deleted analyses:', err);
     } finally {
       setDeletedLoading(false);
     }
@@ -1385,7 +1558,7 @@ const SuperAdminPage = () => {
       const data = await AdminApi.users.deletedList();
       setDeletedAdmins((data || []).filter((u) => u.is_deleted));
     } catch (err) {
-      console.error("Failed to fetch deleted admins:", err);
+      console.error('Failed to fetch deleted admins:', err);
     } finally {
       setDeletedLoading(false);
     }
@@ -1397,7 +1570,7 @@ const SuperAdminPage = () => {
       const data = await AdminApi.auditLogs.list({ page_size: 100 });
       setAuditLogs(data.items || []);
     } catch (err) {
-      console.error("Failed to fetch audit logs:", err);
+      console.error('Failed to fetch audit logs:', err);
     } finally {
       setAuditLoading(false);
     }
@@ -1409,7 +1582,7 @@ const SuperAdminPage = () => {
       const data = await AdminApi.backup.list();
       setBackups(data.items || []);
     } catch (err) {
-      console.error("Failed to fetch backups:", err);
+      console.error('Failed to fetch backups:', err);
     } finally {
       setBackupLoading(false);
     }
@@ -1417,22 +1590,24 @@ const SuperAdminPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoginError("");
+    setLoginError('');
     setLoginInProgress(true);
     try {
       const profile = await authLogin(loginForm);
       if (profile.requires_verification) {
         setRequiresVerification(true);
-        setLoginError(profile.message || "Emailga yuborilgan tasdiqlash kodini kiriting.");
+        setLoginError(
+          profile.message || 'Emailga yuborilgan tasdiqlash kodini kiriting.'
+        );
         return;
       }
-      if (profile.role === "researcher") {
-        navigate("/researcher", { replace: true });
-      } else if (profile.role !== "superadmin" && profile.role !== "admin") {
-        navigate("/");
+      if (profile.role === 'researcher') {
+        navigate('/researcher', { replace: true });
+      } else if (profile.role !== 'superadmin' && profile.role !== 'admin') {
+        navigate('/');
       }
     } catch (err) {
-      setLoginError(err.message || pt("errorPrefix"));
+      setLoginError(err.message || pt('errorPrefix'));
     } finally {
       setLoginInProgress(false);
     }
@@ -1442,40 +1617,49 @@ const SuperAdminPage = () => {
     // Validation
     if (adminForm.password) {
       if (adminForm.password !== adminForm.confirmPassword) {
-        toast.error(pt("passwordsNoMatch"));
+        toast.error(pt('passwordsNoMatch'));
         return;
       }
       if (adminForm.password.length < 6) {
-        toast.error(`${pt("password")} 6+`);
+        toast.error(`${pt('password')} 6+`);
         return;
       }
     } else if (!currentAdmin) {
       // New admin must have a password
-      toast.error(pt("password"));
+      toast.error(pt('password'));
       return;
     }
 
     try {
       const { confirmPassword, ...payload } = adminForm;
-      ["research_topic", "research_type", "research_area", "scientific_supervisor"].forEach(
-        (key) => {
-          if (payload[key]) payload[key] = payload[key].trim();
-          if (payload[key] === "") payload[key] = null;
-        },
-      );
+      [
+        'research_topic',
+        'research_type',
+        'research_area',
+        'scientific_supervisor',
+      ].forEach((key) => {
+        if (payload[key]) payload[key] = payload[key].trim();
+        if (payload[key] === '') payload[key] = null;
+      });
       const latMissing =
-        payload.latitude === "" || payload.latitude === null || payload.latitude === undefined;
+        payload.latitude === '' ||
+        payload.latitude === null ||
+        payload.latitude === undefined;
       const lngMissing =
-        payload.longitude === "" || payload.longitude === null || payload.longitude === undefined;
+        payload.longitude === '' ||
+        payload.longitude === null ||
+        payload.longitude === undefined;
       if (latMissing !== lngMissing) {
-        toast.error("Aniq pin uchun latitude va longitude ikkisi ham kiritilishi kerak");
+        toast.error(
+          'Aniq pin uchun latitude va longitude ikkisi ham kiritilishi kerak'
+        );
         return;
       }
       const normalizedPair =
-        payload.latitude !== "" &&
+        payload.latitude !== '' &&
         payload.latitude !== null &&
         payload.latitude !== undefined &&
-        payload.longitude !== "" &&
+        payload.longitude !== '' &&
         payload.longitude !== null &&
         payload.longitude !== undefined
           ? normalizeCoordinatePair(payload.latitude, payload.longitude)
@@ -1484,8 +1668,12 @@ const SuperAdminPage = () => {
         payload.latitude = normalizedPair.latitude;
         payload.longitude = normalizedPair.longitude;
       }
-      ["latitude", "longitude"].forEach((key) => {
-        if (payload[key] === "" || payload[key] === null || payload[key] === undefined) {
+      ['latitude', 'longitude'].forEach((key) => {
+        if (
+          payload[key] === '' ||
+          payload[key] === null ||
+          payload[key] === undefined
+        ) {
           delete payload[key];
         } else {
           payload[key] = Number(payload[key]);
@@ -1497,83 +1685,87 @@ const SuperAdminPage = () => {
         if (!payload.password) delete payload.password;
 
         await AdminApi.users.update(currentAdmin.id, payload);
-        toast.success(pt("updated"));
+        toast.success(pt('updated'));
       } else {
         // UserCreate needs password_confirm
         payload.password_confirm = confirmPassword;
         await AdminApi.users.create(payload);
-        toast.success(pt("newAdmin"));
+        toast.success(pt('newAdmin'));
       }
       setAdminDialogOpen(false);
       fetchAdmins();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error('Xatolik: ' + err.message);
     }
   };
 
   const handleDeleteAdmin = async (id) => {
-    if (window.confirm(pt("adminDeleteConfirm"))) {
+    if (window.confirm(pt('adminDeleteConfirm'))) {
       try {
         const deleteUser = AdminApi.users.delete || AdminApi.users.remove;
         await deleteUser(id);
         fetchAdmins();
         fetchDeletedAdmins();
-        toast.success(pt("adminDeleted"));
+        toast.success(pt('adminDeleted'));
       } catch (err) {
-        toast.error("Xatolik: " + err.message);
+        toast.error('Xatolik: ' + err.message);
       }
     }
   };
 
   const handleRestoreAnalysis = async (rowOrId) => {
     const row =
-      typeof rowOrId === "object"
+      typeof rowOrId === 'object'
         ? rowOrId
-        : deletedData.find((item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId);
+        : deletedData.find(
+            (item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId
+          );
     if (!row) return;
 
     try {
-      if (row.__deletedSource === "research") {
+      if (row.__deletedSource === 'research') {
         await ResearchApi.restore(row.id);
       } else {
         await AdminApi.analyses.restore([row.id]);
       }
-      toast.success(pt("dataRestored"));
+      toast.success(pt('dataRestored'));
       fetchDeletedAnalyses();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error('Xatolik: ' + err.message);
     }
   };
 
   const handleRestoreAdmin = async (id) => {
     try {
       await AdminApi.users.restore(id);
-      toast.success(pt("adminRestored"));
+      toast.success(pt('adminRestored'));
       fetchDeletedAdmins();
       fetchAdmins();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error('Xatolik: ' + err.message);
     }
   };
 
   const handleHardDeleteAnalysis = async (rowOrId) => {
     const row =
-      typeof rowOrId === "object"
+      typeof rowOrId === 'object'
         ? rowOrId
-        : deletedData.find((item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId);
+        : deletedData.find(
+            (item) => item.id === rowOrId || getDeletedRowKey(item) === rowOrId
+          );
     if (!row) return;
 
-    if (window.confirm(pt("hardDeleteDataConfirm"))) {
+    if (window.confirm(pt('hardDeleteDataConfirm'))) {
       try {
-        if (row.__deletedSource === "research") {
+        if (row.__deletedSource === 'research') {
           await ResearchApi.hardDelete(row.id);
         } else {
           await AdminApi.analyses.hardDelete([row.id]);
         }
-        toast.success(pt("hardDeleted"));
+        toast.success(pt('hardDeleted'));
         fetchDeletedAnalyses();
       } catch (err) {
-        toast.error("Xatolik: " + err.message);
+        toast.error('Xatolik: ' + err.message);
       }
     }
   };
@@ -1582,23 +1774,25 @@ const SuperAdminPage = () => {
     setBackupLoading(true);
     try {
       await AdminApi.backup.create();
-      toast.success(pt("createBackup"));
+      toast.success(pt('createBackup'));
       fetchBackups();
     } catch (err) {
-      toast.error("Xatolik: " + err.message);
+      toast.error('Xatolik: ' + err.message);
     } finally {
       setBackupLoading(false);
     }
   };
 
   const handleRestoreBackup = async (filename) => {
-    if (window.confirm(pt("backupRestoreConfirm").replace("{filename}", filename))) {
+    if (
+      window.confirm(pt('backupRestoreConfirm').replace('{filename}', filename))
+    ) {
       setBackupLoading(true);
       try {
         await AdminApi.backup.restore(filename);
-        toast.success(pt("restoredSuccessfully"));
+        toast.success(pt('restoredSuccessfully'));
       } catch (err) {
-        toast.error("Xatolik: " + err.message);
+        toast.error('Xatolik: ' + err.message);
       } finally {
         setBackupLoading(false);
       }
@@ -1606,39 +1800,44 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteBackup = async (filename) => {
-    if (window.confirm(`${pt("delete")}: ${filename}?`)) {
+    if (window.confirm(`${pt('delete')}: ${filename}?`)) {
       try {
         await AdminApi.backup.delete(filename);
-        toast.success(pt("fileDeleted"));
+        toast.success(pt('fileDeleted'));
         fetchBackups();
       } catch (err) {
-        toast.error("Xatolik: " + err.message);
+        toast.error('Xatolik: ' + err.message);
       }
     }
   };
 
   const handleClearAudit = async () => {
-    if (window.confirm(pt("clearAuditConfirm"))) {
+    if (window.confirm(pt('clearAuditConfirm'))) {
       try {
         await AdminApi.auditLogs.clear();
-        toast.success(pt("auditCleared"));
+        toast.success(pt('auditCleared'));
         fetchAuditLogs();
       } catch (err) {
-        toast.error("Xatolik: " + err.message);
+        toast.error('Xatolik: ' + err.message);
       }
     }
   };
 
   if (authLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="50vh"
+      >
         <CircularProgress />
       </Box>
     );
   }
 
   // LOGIN SCREEN
-  if (!user || user.role !== "superadmin") {
+  if (!user || user.role !== 'superadmin') {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <motion.div
@@ -1646,24 +1845,24 @@ const SuperAdminPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <GlassPaper sx={{ p: 4, position: "relative", overflow: "visible" }}>
+          <GlassPaper sx={{ p: 4, position: 'relative', overflow: 'visible' }}>
             <Box
               sx={{
-                position: "absolute",
+                position: 'absolute',
                 top: -40,
-                left: "50%",
-                transform: "translateX(-50%)",
+                left: '50%',
+                transform: 'translateX(-50%)',
                 width: 80,
                 height: 80,
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #0f766e 0%, #2563eb 100%)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                boxShadow: "0 8px 32px rgba(15, 118, 110, 0.24)",
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 8px 32px rgba(15, 118, 110, 0.24)',
               }}
             >
-              <Lock sx={{ color: "white", fontSize: 40 }} />
+              <Lock sx={{ color: 'white', fontSize: 40 }} />
             </Box>
 
             <Box textAlign="center" mt={4} mb={4}>
@@ -1671,7 +1870,7 @@ const SuperAdminPage = () => {
                 Super Admin
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {pt("superLoginSubtitle")}
+                {pt('superLoginSubtitle')}
               </Typography>
             </Box>
 
@@ -1685,10 +1884,12 @@ const SuperAdminPage = () => {
               <Stack spacing={3}>
                 <TextField
                   fullWidth
-                  label={pt("emailOrLogin")}
+                  label={pt('emailOrLogin')}
                   variant="outlined"
                   value={loginForm.email}
-                  onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  onChange={(e) =>
+                    setLoginForm({ ...loginForm, email: e.target.value })
+                  }
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -1699,11 +1900,13 @@ const SuperAdminPage = () => {
                 />
                 <TextField
                   fullWidth
-                  label={pt("password")}
-                  type={showPassword ? "text" : "password"}
+                  label={pt('password')}
+                  type={showPassword ? 'text' : 'password'}
                   variant="outlined"
                   value={loginForm.password}
-                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  onChange={(e) =>
+                    setLoginForm({ ...loginForm, password: e.target.value })
+                  }
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
@@ -1712,7 +1915,10 @@ const SuperAdminPage = () => {
                     ),
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
@@ -1726,9 +1932,12 @@ const SuperAdminPage = () => {
                     variant="outlined"
                     value={loginForm.verification_code}
                     onChange={(e) =>
-                      setLoginForm({ ...loginForm, verification_code: e.target.value })
+                      setLoginForm({
+                        ...loginForm,
+                        verification_code: e.target.value,
+                      })
                     }
-                    inputProps={{ inputMode: "numeric", maxLength: 6 }}
+                    inputProps={{ inputMode: 'numeric', maxLength: 6 }}
                   />
                 )}
                 <Button
@@ -1740,13 +1949,17 @@ const SuperAdminPage = () => {
                   sx={{
                     py: 1.5,
                     borderRadius: 2,
-                    boxShadow: "0 8px 16px rgba(15, 118, 110, 0.22)",
-                    fontSize: "1rem",
+                    boxShadow: '0 8px 16px rgba(15, 118, 110, 0.22)',
+                    fontSize: '1rem',
                     fontWeight: 700,
-                    textTransform: "none",
+                    textTransform: 'none',
                   }}
                 >
-                  {loginInProgress ? <CircularProgress size={24} color="inherit" /> : pt("login")}
+                  {loginInProgress ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    pt('login')
+                  )}
                 </Button>
               </Stack>
             </Box>
@@ -1767,19 +1980,23 @@ const SuperAdminPage = () => {
               onFilterChange={setDashFilters}
               onReset={() =>
                 setDashFilters({
-                  gender: "",
-                  region: "",
+                  gender: '',
+                  region: '',
                   age_min: 0,
                   age_max: 100,
                   bmi_min: 10,
                   bmi_max: 50,
-                  somatotype: "",
-                  date_from: "",
-                  date_to: "",
+                  somatotype: '',
+                  date_from: '',
+                  date_to: '',
                 })
               }
             />
-            <SuperAdminDashboard stats={stats} statsLoading={statsLoading} admins={admins} />
+            <SuperAdminDashboard
+              stats={stats}
+              statsLoading={statsLoading}
+              admins={admins}
+            />
           </Box>
         );
       case 1:
@@ -1790,15 +2007,15 @@ const SuperAdminPage = () => {
               onFilterChange={setDashFilters}
               onReset={() =>
                 setDashFilters({
-                  gender: "",
-                  region: "",
+                  gender: '',
+                  region: '',
                   age_min: 0,
                   age_max: 100,
                   bmi_min: 10,
                   bmi_max: 50,
-                  somatotype: "",
-                  date_from: "",
-                  date_to: "",
+                  somatotype: '',
+                  date_from: '',
+                  date_to: '',
                 })
               }
             />
@@ -1807,20 +2024,26 @@ const SuperAdminPage = () => {
         );
 
       case 2:
-        return <SuperAdminRegionalMap stats={stats} statsLoading={statsLoading} admins={admins} />;
+        return (
+          <SuperAdminRegionalMap
+            stats={stats}
+            statsLoading={statsLoading}
+            admins={admins}
+          />
+        );
 
       case 3:
         return (
           <Stack spacing={3}>
             <Box
               display="flex"
-              flexDirection={{ xs: "column", sm: "row" }}
+              flexDirection={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
-              alignItems={{ xs: "flex-start", sm: "center" }}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
               gap={2}
             >
               <Typography variant="h4" fontWeight={800}>
-                {pt("adminManagement")}
+                {pt('adminManagement')}
               </Typography>
               <Button
                 variant="contained"
@@ -1834,20 +2057,28 @@ const SuperAdminPage = () => {
                 }}
                 sx={{ borderRadius: 2 }}
               >
-                {pt("newAdmin")}
+                {pt('newAdmin')}
               </Button>
             </Box>
 
-            <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
-              <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}>
-                <TableHead sx={{ bgcolor: "rgba(0,0,0,0.02)" }}>
+            <TableContainer
+              component={GlassPaper}
+              sx={{ mt: 2, overflow: 'auto' }}
+            >
+              <Table
+                size="small"
+                sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}
+              >
+                <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("name")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('name')}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("role")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("phone")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('role')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('phone')}
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      {pt("actions")}
+                      {pt('actions')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -1862,8 +2093,18 @@ const SuperAdminPage = () => {
                     admins.map((admin) => (
                       <TableRow key={admin.id} hover>
                         <TableCell>
-                          <Stack direction="row" spacing={1.5} alignItems="center">
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.light" }}>
+                          <Stack
+                            direction="row"
+                            spacing={1.5}
+                            alignItems="center"
+                          >
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: 'primary.light',
+                              }}
+                            >
                               {admin.name.charAt(0)}
                             </Avatar>
                             <Typography variant="body2" fontWeight={600}>
@@ -1876,13 +2117,19 @@ const SuperAdminPage = () => {
                           <Chip
                             label={admin.role.toUpperCase()}
                             size="small"
-                            color={admin.role === "superadmin" ? "error" : "primary"}
+                            color={
+                              admin.role === 'superadmin' ? 'error' : 'primary'
+                            }
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell>{admin.phone || "-"}</TableCell>
+                        <TableCell>{admin.phone || '-'}</TableCell>
                         <TableCell align="right">
-                          <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="flex-end"
+                          >
                             <IconButton
                               size="small"
                               onClick={() => {
@@ -1890,12 +2137,18 @@ const SuperAdminPage = () => {
                                 setCurrentAdmin(admin);
                                 const normalizedPair = normalizeCoordinatePair(
                                   admin.latitude,
-                                  admin.longitude,
+                                  admin.longitude
                                 );
                                 setAdminForm({
                                   ...normalizeAdminForm(admin),
-                                  latitude: normalizedPair?.latitude ?? admin.latitude ?? "",
-                                  longitude: normalizedPair?.longitude ?? admin.longitude ?? "",
+                                  latitude:
+                                    normalizedPair?.latitude ??
+                                    admin.latitude ??
+                                    '',
+                                  longitude:
+                                    normalizedPair?.longitude ??
+                                    admin.longitude ??
+                                    '',
                                 });
                                 setShowAdminPassword(false);
                                 setAdminDialogOpen(true);
@@ -1924,9 +2177,13 @@ const SuperAdminPage = () => {
       case 4:
         return (
           <Stack spacing={3}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
               <Typography variant="h4" fontWeight={800}>
-                {pt("deletedData")}
+                {pt('deletedData')}
               </Typography>
               {checked.size > 0 && (
                 <Stack direction="row" spacing={2}>
@@ -1936,7 +2193,7 @@ const SuperAdminPage = () => {
                     startIcon={<Refresh />}
                     onClick={handleBulkRestore}
                   >
-                    {pt("restore")} ({checked.size})
+                    {pt('restore')} ({checked.size})
                   </Button>
                   <Button
                     variant="contained"
@@ -1944,32 +2201,48 @@ const SuperAdminPage = () => {
                     startIcon={<DeleteForever />}
                     onClick={handleBulkHardDelete}
                   >
-                    {pt("hardDelete")} ({checked.size})
+                    {pt('hardDelete')} ({checked.size})
                   </Button>
                 </Stack>
               )}
             </Box>
-            <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
-              <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 700, lg: 1000 } }}>
+            <TableContainer
+              component={GlassPaper}
+              sx={{ mt: 2, overflow: 'auto' }}
+            >
+              <Table
+                size="small"
+                sx={{ minWidth: { xs: 300, sm: 500, md: 700, lg: 1000 } }}
+              >
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ width: 40 }}>
                       <Checkbox
                         size="small"
-                        indeterminate={checked.size > 0 && checked.size < deletedData.length}
+                        indeterminate={
+                          checked.size > 0 && checked.size < deletedData.length
+                        }
                         checked={
                           deletedData.length > 0 &&
-                          deletedData.every((r) => checked.has(getDeletedRowKey(r)))
+                          deletedData.every((r) =>
+                            checked.has(getDeletedRowKey(r))
+                          )
                         }
                         onChange={() => toggleAll(deletedData)}
                       />
                     </TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>ID Kod</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("patient")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("deletedBy")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("deletedAt")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('patient')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('deletedBy')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('deletedAt')}
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      {pt("actions")}
+                      {pt('actions')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -1983,7 +2256,7 @@ const SuperAdminPage = () => {
                   ) : deletedData.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
-                        {pt("empty")}
+                        {pt('empty')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -1993,10 +2266,10 @@ const SuperAdminPage = () => {
                         hover
                         onClick={() => toggleOne(getDeletedRowKey(item))}
                         sx={{
-                          cursor: "pointer",
+                          cursor: 'pointer',
                           bgcolor: checked.has(getDeletedRowKey(item))
-                            ? "rgba(15,118,110,0.08)"
-                            : "inherit",
+                            ? 'rgba(15,118,110,0.08)'
+                            : 'inherit',
                         }}
                       >
                         <TableCell onClick={(e) => e.stopPropagation()}>
@@ -2006,12 +2279,23 @@ const SuperAdminPage = () => {
                             onChange={() => toggleOne(getDeletedRowKey(item))}
                           />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>{getDeletedRowCode(item)}</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold' }}>
+                          {getDeletedRowCode(item)}
+                        </TableCell>
                         <TableCell>{getDeletedRowPatientName(item)}</TableCell>
                         <TableCell>
-                          <Stack direction="row" spacing={1} alignItems="center">
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            alignItems="center"
+                          >
                             <Avatar
-                              sx={{ width: 24, height: 24, fontSize: 10, bgcolor: "error.main" }}
+                              sx={{
+                                width: 24,
+                                height: 24,
+                                fontSize: 10,
+                                bgcolor: 'error.main',
+                              }}
                             >
                               {getDeletedByName(item).charAt(0).toUpperCase()}
                             </Avatar>
@@ -2021,9 +2305,16 @@ const SuperAdminPage = () => {
                           </Stack>
                         </TableCell>
                         <TableCell>{getDeletedDate(item)}</TableCell>
-                        <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                          <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Tooltip title={pt("detailsTitle")}>
+                        <TableCell
+                          align="right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="flex-end"
+                          >
+                            <Tooltip title={pt('detailsTitle')}>
                               <IconButton
                                 size="small"
                                 color="info"
@@ -2035,7 +2326,7 @@ const SuperAdminPage = () => {
                                 <Visibility />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title={pt("restore")}>
+                            <Tooltip title={pt('restore')}>
                               <IconButton
                                 size="small"
                                 color="success"
@@ -2044,7 +2335,7 @@ const SuperAdminPage = () => {
                                 <Refresh />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title={pt("hardDelete")}>
+                            <Tooltip title={pt('hardDelete')}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -2063,18 +2354,26 @@ const SuperAdminPage = () => {
             </TableContainer>
 
             <Typography variant="h5" fontWeight={700} sx={{ mt: 4, mb: 2 }}>
-              {pt("deletedAdminsResearchers")}
+              {pt('deletedAdminsResearchers')}
             </Typography>
-            <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
-              <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}>
+            <TableContainer
+              component={GlassPaper}
+              sx={{ mt: 2, overflow: 'auto' }}
+            >
+              <Table
+                size="small"
+                sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("name")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('name')}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("role")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("deletedAt")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('role')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('deletedAt')}
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      {pt("actions")}
+                      {pt('actions')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -2088,15 +2387,25 @@ const SuperAdminPage = () => {
                   ) : deletedAdmins.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
-                        {pt("empty")}
+                        {pt('empty')}
                       </TableCell>
                     </TableRow>
                   ) : (
                     deletedAdmins.map((item) => (
                       <TableRow key={item.id} hover>
                         <TableCell>
-                          <Stack direction="row" spacing={1.5} alignItems="center">
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: "warning.light" }}>
+                          <Stack
+                            direction="row"
+                            spacing={1.5}
+                            alignItems="center"
+                          >
+                            <Avatar
+                              sx={{
+                                width: 32,
+                                height: 32,
+                                bgcolor: 'warning.light',
+                              }}
+                            >
                               {item.name.charAt(0)}
                             </Avatar>
                             <Typography variant="body2" fontWeight={600}>
@@ -2106,13 +2415,19 @@ const SuperAdminPage = () => {
                         </TableCell>
                         <TableCell>{item.email}</TableCell>
                         <TableCell>
-                          <Chip label={item.role.toUpperCase()} size="small" variant="outlined" />
+                          <Chip
+                            label={item.role.toUpperCase()}
+                            size="small"
+                            variant="outlined"
+                          />
                         </TableCell>
                         <TableCell>
-                          {item.deleted_at ? new Date(item.deleted_at).toLocaleString() : "-"}
+                          {item.deleted_at
+                            ? new Date(item.deleted_at).toLocaleString()
+                            : '-'}
                         </TableCell>
                         <TableCell align="right">
-                          <Tooltip title={pt("restore")}>
+                          <Tooltip title={pt('restore')}>
                             <IconButton
                               size="small"
                               color="success"
@@ -2134,25 +2449,41 @@ const SuperAdminPage = () => {
         return (
           <Stack spacing={3}>
             <Typography variant="h4" fontWeight={800}>
-              {pt("security")}
+              {pt('security')}
             </Typography>
-            <GlassPaper sx={{ p: { xs: 2, md: 4 }, maxWidth: 600, width: "100%" }}>
+            <GlassPaper
+              sx={{ p: { xs: 2, md: 4 }, maxWidth: 600, width: '100%' }}
+            >
               <Typography variant="h6" gutterBottom>
-                {pt("changePassword")}
+                {pt('changePassword')}
               </Typography>
-              <TextField fullWidth label={pt("currentPassword")} type="password" margin="normal" />
-              <TextField fullWidth label={pt("newPassword")} type="password" margin="normal" />
               <TextField
                 fullWidth
-                label={pt("confirmNewPassword")}
+                label={pt('currentPassword')}
+                type="password"
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label={pt('newPassword')}
+                type="password"
+                margin="normal"
+              />
+              <TextField
+                fullWidth
+                label={pt('confirmNewPassword')}
                 type="password"
                 margin="normal"
               />
               <Button
                 variant="contained"
-                sx={{ mt: 3, borderRadius: 2, width: { xs: "100%", sm: "auto" } }}
+                sx={{
+                  mt: 3,
+                  borderRadius: 2,
+                  width: { xs: '100%', sm: 'auto' },
+                }}
               >
-                {pt("update")}
+                {pt('update')}
               </Button>
             </GlassPaper>
           </Stack>
@@ -2162,13 +2493,13 @@ const SuperAdminPage = () => {
           <Stack spacing={3}>
             <Box
               display="flex"
-              flexDirection={{ xs: "column", sm: "row" }}
+              flexDirection={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
-              alignItems={{ xs: "flex-start", sm: "center" }}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
               gap={2}
             >
               <Typography variant="h4" fontWeight={800}>
-                {pt("auditLog")}
+                {pt('auditLog')}
               </Typography>
               <Button
                 startIcon={<Delete />}
@@ -2176,17 +2507,27 @@ const SuperAdminPage = () => {
                 variant="outlined"
                 onClick={handleClearAudit}
               >
-                {pt("clear")}
+                {pt('clear')}
               </Button>
             </Box>
-            <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
-              <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 700, lg: 850 } }}>
+            <TableContainer
+              component={GlassPaper}
+              sx={{ mt: 2, overflow: 'auto' }}
+            >
+              <Table
+                size="small"
+                sx={{ minWidth: { xs: 300, sm: 500, md: 700, lg: 850 } }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("time")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("user")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("action")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("object")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('time')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('user')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('action')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('object')}
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -2202,7 +2543,7 @@ const SuperAdminPage = () => {
                         <TableCell variant="caption">
                           {new Date(log.created_at).toLocaleString()}
                         </TableCell>
-                        <TableCell>{log.user_email || "System"}</TableCell>
+                        <TableCell>{log.user_email || 'System'}</TableCell>
                         <TableCell>
                           <Chip
                             label={formatAuditAction(log.action, lang)}
@@ -2210,12 +2551,15 @@ const SuperAdminPage = () => {
                             variant="outlined"
                           />
                         </TableCell>
-                        <TableCell sx={{ wordBreak: "break-word" }}>
+                        <TableCell sx={{ wordBreak: 'break-word' }}>
                           <Stack spacing={0.25}>
                             {log.target_type && (
-                              <Typography variant="caption" color="text.secondary">
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
                                 {formatAuditTarget(log.target_type, lang)}
-                                {log.target_id ? ` #${log.target_id}` : ""}
+                                {log.target_id ? ` #${log.target_id}` : ''}
                               </Typography>
                             )}
                             <Typography variant="body2">
@@ -2236,13 +2580,13 @@ const SuperAdminPage = () => {
           <Stack spacing={3}>
             <Box
               display="flex"
-              flexDirection={{ xs: "column", sm: "row" }}
+              flexDirection={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
-              alignItems={{ xs: "flex-start", sm: "center" }}
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
               gap={2}
             >
               <Typography variant="h4" fontWeight={800}>
-                {pt("backupsTitle")}
+                {pt('backupsTitle')}
               </Typography>
               <Button
                 startIcon={<CloudUpload />}
@@ -2250,18 +2594,26 @@ const SuperAdminPage = () => {
                 onClick={handleCreateBackup}
                 disabled={backupLoading}
               >
-                {pt("createBackup")}
+                {pt('createBackup')}
               </Button>
             </Box>
-            <TableContainer component={GlassPaper} sx={{ mt: 2, overflow: "auto" }}>
-              <Table size="small" sx={{ minWidth: { xs: 300, sm: 500, md: 700 } }}>
+            <TableContainer
+              component={GlassPaper}
+              sx={{ mt: 2, overflow: 'auto' }}
+            >
+              <Table
+                size="small"
+                sx={{ minWidth: { xs: 300, sm: 500, md: 700 } }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("filename")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("size")}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt("time")}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('filename')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('size')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>{pt('time')}</TableCell>
                     <TableCell sx={{ fontWeight: 700 }} align="right">
-                      {pt("actions")}
+                      {pt('actions')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -2278,12 +2630,23 @@ const SuperAdminPage = () => {
                       <TableRow key={b.filename} hover>
                         <TableCell fontWeight="bold">{b.filename}</TableCell>
                         <TableCell>
-                          {((b.size_bytes || b.size || 0) / 1024 / 1024).toFixed(2)} MB
+                          {(
+                            (b.size_bytes || b.size || 0) /
+                            1024 /
+                            1024
+                          ).toFixed(2)}{' '}
+                          MB
                         </TableCell>
-                        <TableCell>{new Date(b.created_at).toLocaleString()}</TableCell>
+                        <TableCell>
+                          {new Date(b.created_at).toLocaleString()}
+                        </TableCell>
                         <TableCell align="right">
-                          <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Tooltip title={pt("restore")}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            justifyContent="flex-end"
+                          >
+                            <Tooltip title={pt('restore')}>
                               <IconButton
                                 color="primary"
                                 onClick={() => handleRestoreBackup(b.filename)}
@@ -2291,7 +2654,7 @@ const SuperAdminPage = () => {
                                 <Refresh />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title={pt("delete")}>
+                            <Tooltip title={pt('delete')}>
                               <IconButton
                                 color="error"
                                 onClick={() => handleDeleteBackup(b.filename)}
@@ -2318,46 +2681,48 @@ const SuperAdminPage = () => {
     }
   };
 
-  const isDark = theme.palette.mode === "dark";
+  const isDark = theme.palette.mode === 'dark';
 
   return (
-    <Box sx={{ bgcolor: "background.default", minHeight: "100vh", pb: 10 }}>
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 10 }}>
       <Container
         maxWidth={false}
         sx={{
           py: 4,
           pr: { xs: 1.5, sm: 2, md: 4 },
-          pl: { xs: 1.5, sm: 2, md: "356px" },
-          maxWidth: "100%",
+          pl: { xs: 1.5, sm: 2, md: '356px' },
+          maxWidth: '100%',
         }}
       >
         <Stack direction="column" spacing={3} alignItems="stretch">
           {/* Sidebar Tabs */}
           <Box
             sx={{
-              width: { xs: "100%", md: 300 },
+              width: { xs: '100%', md: 300 },
               minWidth: { md: 300 },
               maxWidth: { md: 300 },
               flexShrink: 0,
-              position: { md: "fixed" },
+              position: { md: 'fixed' },
               top: { md: 96 },
               left: { md: 32 },
               zIndex: { md: 10 },
-              height: { md: "calc(100vh - 120px)" },
+              height: { md: 'calc(100vh - 120px)' },
             }}
           >
             <GlassPaper
               sx={{
                 p: 2,
-                display: { md: "flex" },
-                flexDirection: { md: "column" },
-                height: { md: "100%" },
-                overflow: { md: "hidden" },
-                border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.12)" : "rgba(100,116,139,0.12)",
+                display: { md: 'flex' },
+                flexDirection: { md: 'column' },
+                height: { md: '100%' },
+                overflow: { md: 'hidden' },
+                border: '1px solid',
+                borderColor: isDark
+                  ? 'rgba(255,255,255,0.12)'
+                  : 'rgba(100,116,139,0.12)',
                 boxShadow: isDark
-                  ? "0 8px 32px rgba(0,0,0,0.4)"
-                  : "0 8px 32px rgba(100,116,139,0.08)",
+                  ? '0 8px 32px rgba(0,0,0,0.4)'
+                  : '0 8px 32px rgba(100,116,139,0.08)',
               }}
             >
               <Box p={2} mb={2} textAlign="center">
@@ -2365,9 +2730,9 @@ const SuperAdminPage = () => {
                   sx={{
                     width: 64,
                     height: 64,
-                    margin: "0 auto 16px",
-                    bgcolor: "primary.main",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    margin: '0 auto 16px',
+                    bgcolor: 'primary.main',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                   }}
                 >
                   SA
@@ -2376,44 +2741,48 @@ const SuperAdminPage = () => {
                   {user.name}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {pt("adminManagement")}
+                  {pt('adminManagement')}
                 </Typography>
               </Box>
 
               <Tabs
-                orientation={isMobile ? "horizontal" : "vertical"}
+                orientation={isMobile ? 'horizontal' : 'vertical'}
                 variant="scrollable"
                 scrollButtons="auto"
                 value={activeTab}
                 onChange={(e, v) => setActiveTab(v)}
                 sx={{
-                  flex: { md: "1 1 auto" },
+                  flex: { md: '1 1 auto' },
                   minHeight: { md: 0 },
-                  overflow: { md: "hidden" },
-                  "& .MuiTabs-scroller": {
-                    overflowY: { md: "auto !important" },
-                    overflowX: { xs: "auto", md: "hidden" },
+                  overflow: { md: 'hidden' },
+                  '& .MuiTabs-scroller': {
+                    overflowY: { md: 'auto !important' },
+                    overflowX: { xs: 'auto', md: 'hidden' },
                     pr: { md: 0.5 },
                   },
-                  "& .MuiTabs-indicator": { display: "none" },
-                  "& .MuiTab-root": {
+                  '& .MuiTabs-indicator': { display: 'none' },
+                  '& .MuiTab-root': {
                     borderRadius: 2,
                     mb: { xs: 0, md: 0.5 },
                     mr: { xs: 1, md: 0 },
-                    alignItems: { xs: "center", md: "flex-start" },
-                    textAlign: { xs: "center", md: "left" },
+                    alignItems: { xs: 'center', md: 'flex-start' },
+                    textAlign: { xs: 'center', md: 'left' },
                     minHeight: { xs: 48, md: 44 },
-                    textTransform: "none",
+                    textTransform: 'none',
                     fontWeight: 600,
-                    fontSize: "0.85rem",
-                    transition: "all 0.2s",
-                    color: "text.secondary",
-                    "&.Mui-selected": {
-                      bgcolor: isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(15, 118, 110, 0.08)",
-                      color: "primary.main",
+                    fontSize: '0.85rem',
+                    transition: 'all 0.2s',
+                    color: 'text.secondary',
+                    '&.Mui-selected': {
+                      bgcolor: isDark
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(15, 118, 110, 0.08)',
+                      color: 'primary.main',
                     },
-                    "&:hover": {
-                      bgcolor: isDark ? "rgba(255, 255, 255, 0.03)" : "rgba(0, 0, 0, 0.04)",
+                    '&:hover': {
+                      bgcolor: isDark
+                        ? 'rgba(255, 255, 255, 0.03)'
+                        : 'rgba(0, 0, 0, 0.04)',
                     },
                   },
                 }}
@@ -2421,7 +2790,7 @@ const SuperAdminPage = () => {
                 <Tab
                   icon={<Dashboard sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("dashboard")}
+                  label={pt('dashboard')}
                 />
                 <Tab
                   icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
@@ -2431,42 +2800,42 @@ const SuperAdminPage = () => {
                 <Tab
                   icon={<Place sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("regionalMap")}
+                  label={pt('regionalMap')}
                 />
                 <Tab
                   icon={<People sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("admins")}
+                  label={pt('admins')}
                 />
                 <Tab
                   icon={<RestoreFromTrash sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("deleted")}
+                  label={pt('deleted')}
                 />
                 <Tab
                   icon={<Security sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("security")}
+                  label={pt('security')}
                 />
                 <Tab
                   icon={<History sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("auditLog")}
+                  label={pt('auditLog')}
                 />
                 <Tab
                   icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("backup")}
+                  label={pt('backup')}
                 />
                 <Tab
                   icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("clinicalCms")}
+                  label={pt('clinicalCms')}
                 />
                 <Tab
                   icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
                   iconPosition="start"
-                  label={pt("topChart")}
+                  label={pt('topChart')}
                 />
               </Tabs>
 
@@ -2474,7 +2843,9 @@ const SuperAdminPage = () => {
                 mt={2}
                 pt={2}
                 borderTop={
-                  isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.05)"
+                  isDark
+                    ? '1px solid rgba(255,255,255,0.08)'
+                    : '1px solid rgba(0,0,0,0.05)'
                 }
               >
                 <Button
@@ -2485,9 +2856,9 @@ const SuperAdminPage = () => {
                     blurActiveElement();
                     setLogoutDialogOpen(true);
                   }}
-                  sx={{ borderRadius: 2, justifyContent: "flex-start", px: 2 }}
+                  sx={{ borderRadius: 2, justifyContent: 'flex-start', px: 2 }}
                 >
-                  {pt("logout")}
+                  {pt('logout')}
                 </Button>
               </Box>
             </GlassPaper>
@@ -2497,7 +2868,7 @@ const SuperAdminPage = () => {
           <Box
             sx={{
               ...scrollableContentSx,
-              width: "100%",
+              width: '100%',
             }}
           >
             <AnimatePresence mode="wait">
@@ -2511,7 +2882,10 @@ const SuperAdminPage = () => {
                 <Box
                   sx={{
                     minWidth: {
-                      xs: activeTab === 0 || activeTab === 1 || activeTab === 2 ? 720 : 0,
+                      xs:
+                        activeTab === 0 || activeTab === 1 || activeTab === 2
+                          ? 720
+                          : 0,
                       md: 0,
                     },
                   }}
@@ -2530,29 +2904,39 @@ const SuperAdminPage = () => {
           fullWidth
         >
           <DialogTitle sx={{ fontWeight: 800 }}>
-            {currentAdmin ? pt("adminEdit") : pt("addAdmin")}
+            {currentAdmin ? pt('adminEdit') : pt('addAdmin')}
           </DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField
-                label={pt("fullName")}
+                label={pt('fullName')}
                 fullWidth
                 value={adminForm.name}
-                onChange={(e) => setAdminForm({ ...adminForm, name: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, name: e.target.value })
+                }
               />
               <TextField
                 label="Email"
                 fullWidth
                 value={adminForm.email}
-                onChange={(e) => setAdminForm({ ...adminForm, email: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, email: e.target.value })
+                }
               />
 
               <TextField
-                label={currentAdmin ? `${pt("newPassword")} (${pt("optional")})` : pt("password")}
-                type={showAdminPassword ? "text" : "password"}
+                label={
+                  currentAdmin
+                    ? `${pt('newPassword')} (${pt('optional')})`
+                    : pt('password')
+                }
+                type={showAdminPassword ? 'text' : 'password'}
                 fullWidth
                 value={adminForm.password}
-                onChange={(e) => setAdminForm({ ...adminForm, password: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, password: e.target.value })
+                }
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
@@ -2568,20 +2952,25 @@ const SuperAdminPage = () => {
               />
 
               <TextField
-                label={pt("confirmPassword")}
-                type={showAdminPassword ? "text" : "password"}
+                label={pt('confirmPassword')}
+                type={showAdminPassword ? 'text' : 'password'}
                 fullWidth
                 value={adminForm.confirmPassword}
-                onChange={(e) => setAdminForm({ ...adminForm, confirmPassword: e.target.value })}
+                onChange={(e) =>
+                  setAdminForm({
+                    ...adminForm,
+                    confirmPassword: e.target.value,
+                  })
+                }
                 error={
                   adminForm.password !== adminForm.confirmPassword &&
-                  adminForm.confirmPassword !== ""
+                  adminForm.confirmPassword !== ''
                 }
                 helperText={
                   adminForm.password !== adminForm.confirmPassword &&
-                  adminForm.confirmPassword !== ""
-                    ? pt("passwordsNoMatch")
-                    : ""
+                  adminForm.confirmPassword !== ''
+                    ? pt('passwordsNoMatch')
+                    : ''
                 }
                 InputProps={{
                   endAdornment: (
@@ -2598,45 +2987,58 @@ const SuperAdminPage = () => {
               />
 
               <FormControl fullWidth>
-                <InputLabel>{pt("role")}</InputLabel>
+                <InputLabel>{pt('role')}</InputLabel>
                 <Select
                   value={adminForm.role}
-                  label={pt("role")}
-                  onChange={(e) => setAdminForm({ ...adminForm, role: e.target.value })}
+                  label={pt('role')}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, role: e.target.value })
+                  }
                 >
                   <MenuItem value="admin">Administrator</MenuItem>
                   <MenuItem value="superadmin">Super Administrator</MenuItem>
-                  <MenuItem value="researcher">{pt("researcher")}</MenuItem>
+                  <MenuItem value="researcher">{pt('researcher')}</MenuItem>
                 </Select>
               </FormControl>
-              {adminForm.role === "researcher" && (
+              {adminForm.role === 'researcher' && (
                 <Stack spacing={2}>
                   <TextField
-                    label={pt("researchTopic")}
+                    label={pt('researchTopic')}
                     fullWidth
                     multiline
                     minRows={2}
-                    value={adminForm.research_topic || ""}
-                    onChange={(e) => setAdminForm({ ...adminForm, research_topic: e.target.value })}
+                    value={adminForm.research_topic || ''}
+                    onChange={(e) =>
+                      setAdminForm({
+                        ...adminForm,
+                        research_topic: e.target.value,
+                      })
+                    }
                   />
                   <TextField
-                    label={pt("scientificSupervisor")}
+                    label={pt('scientificSupervisor')}
                     fullWidth
-                    value={adminForm.scientific_supervisor || ""}
+                    value={adminForm.scientific_supervisor || ''}
                     onChange={(e) =>
-                      setAdminForm({ ...adminForm, scientific_supervisor: e.target.value })
+                      setAdminForm({
+                        ...adminForm,
+                        scientific_supervisor: e.target.value,
+                      })
                     }
                   />
                   <FormControl fullWidth>
-                    <InputLabel>{pt("researchType")}</InputLabel>
+                    <InputLabel>{pt('researchType')}</InputLabel>
                     <Select
-                      value={adminForm.research_type || ""}
-                      label={pt("researchType")}
+                      value={adminForm.research_type || ''}
+                      label={pt('researchType')}
                       onChange={(e) =>
-                        setAdminForm({ ...adminForm, research_type: e.target.value })
+                        setAdminForm({
+                          ...adminForm,
+                          research_type: e.target.value,
+                        })
                       }
                     >
-                      <MenuItem value="">{pt("notSelected")}</MenuItem>
+                      <MenuItem value="">{pt('notSelected')}</MenuItem>
                       {RESEARCH_TYPE_OPTIONS.map((type) => (
                         <MenuItem key={type} value={type}>
                           {type}
@@ -2645,17 +3047,22 @@ const SuperAdminPage = () => {
                     </Select>
                   </FormControl>
                   <FormControl fullWidth>
-                    <InputLabel>{pt("researchArea")}</InputLabel>
+                    <InputLabel>{pt('researchArea')}</InputLabel>
                     <Select
-                      value={adminForm.research_area || ""}
-                      label={pt("researchArea")}
+                      value={adminForm.research_area || ''}
+                      label={pt('researchArea')}
                       onChange={(e) =>
-                        setAdminForm({ ...adminForm, research_area: e.target.value })
+                        setAdminForm({
+                          ...adminForm,
+                          research_area: e.target.value,
+                        })
                       }
                     >
-                      <MenuItem value="">{pt("notSelected")}</MenuItem>
+                      <MenuItem value="">{pt('notSelected')}</MenuItem>
                       {adminForm.research_area &&
-                        !Object.keys(UZB_LOCATIONS).includes(adminForm.research_area) && (
+                        !Object.keys(UZB_LOCATIONS).includes(
+                          adminForm.research_area
+                        ) && (
                           <MenuItem value={adminForm.research_area}>
                             {adminForm.research_area}
                           </MenuItem>
@@ -2670,26 +3077,28 @@ const SuperAdminPage = () => {
                 </Stack>
               )}
               <TextField
-                label={pt("phone")}
+                label={pt('phone')}
                 fullWidth
-                value={adminForm.phone || ""}
-                onChange={(e) => setAdminForm({ ...adminForm, phone: e.target.value })}
+                value={adminForm.phone || ''}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, phone: e.target.value })
+                }
               />
               <FormControl fullWidth>
-                <InputLabel>{pt("region")}</InputLabel>
+                <InputLabel>{pt('region')}</InputLabel>
                 <Select
-                  value={adminForm.region || ""}
-                  label={pt("region")}
+                  value={adminForm.region || ''}
+                  label={pt('region')}
                   onChange={(e) =>
                     setAdminForm({
                       ...adminForm,
                       region: e.target.value,
-                      district: "",
-                      mahalla: "",
+                      district: '',
+                      mahalla: '',
                     })
                   }
                 >
-                  <MenuItem value="">{pt("allGlobal")}</MenuItem>
+                  <MenuItem value="">{pt('allGlobal')}</MenuItem>
                   {Object.keys(UZB_LOCATIONS).map((r) => (
                     <MenuItem key={r} value={r}>
                       {getLocalizedLocationLabel(r, lang, 1)}
@@ -2698,18 +3107,20 @@ const SuperAdminPage = () => {
                 </Select>
               </FormControl>
               <FormControl fullWidth disabled={!adminForm.region}>
-                <InputLabel>{pt("districtCity")}</InputLabel>
+                <InputLabel>{pt('districtCity')}</InputLabel>
                 <Select
-                  value={adminForm.district || ""}
-                  label={pt("districtCity")}
+                  value={adminForm.district || ''}
+                  label={pt('districtCity')}
                   onChange={(e) =>
                     setAdminFormWithBoundaryCenter(
-                      { district: e.target.value, mahalla: "" },
-                      { preferDistrict: true },
+                      { district: e.target.value, mahalla: '' },
+                      { preferDistrict: true }
                     )
                   }
                 >
-                  {!adminForm.region && <MenuItem value="">{pt("chooseRegionFirst")}</MenuItem>}
+                  {!adminForm.region && (
+                    <MenuItem value="">{pt('chooseRegionFirst')}</MenuItem>
+                  )}
                   {(UZB_LOCATIONS[adminForm.region] || []).map((district) => (
                     <MenuItem key={district} value={district}>
                       {getLocalizedLocationLabel(district, lang, 2)}
@@ -2717,21 +3128,26 @@ const SuperAdminPage = () => {
                   ))}
                 </Select>
               </FormControl>
-              <FormControl fullWidth disabled={!adminForm.district || mahallaLoading}>
-                <InputLabel>{pt("mahalla")}</InputLabel>
+              <FormControl
+                fullWidth
+                disabled={!adminForm.district || mahallaLoading}
+              >
+                <InputLabel>{pt('mahalla')}</InputLabel>
                 <Select
                   value={adminMahallaValue}
-                  label={pt("mahalla")}
+                  label={pt('mahalla')}
                   onChange={(e) =>
                     setAdminFormWithBoundaryCenter(
                       { mahalla: e.target.value },
-                      { preferMahalla: true, fillFallbackCenter: true },
+                      { preferMahalla: true, fillFallbackCenter: true }
                     )
                   }
                 >
-                  {mahallaLoading && <MenuItem value="">{pt("mahallasLoading")}</MenuItem>}
+                  {mahallaLoading && (
+                    <MenuItem value="">{pt('mahallasLoading')}</MenuItem>
+                  )}
                   {!mahallaLoading && mahallaOptions.length === 0 && (
-                    <MenuItem value="">{pt("mahallaNotFound")}</MenuItem>
+                    <MenuItem value="">{pt('mahallaNotFound')}</MenuItem>
                   )}
                   {!hasSelectedAdminMahallaOption && (
                     <MenuItem value={adminMahallaValue}>
@@ -2739,60 +3155,79 @@ const SuperAdminPage = () => {
                     </MenuItem>
                   )}
                   {mahallaOptions.map((mahalla) => (
-                    <MenuItem key={mahalla.boundary_id || mahalla.id} value={mahalla.label}>
+                    <MenuItem
+                      key={mahalla.boundary_id || mahalla.id}
+                      value={mahalla.label}
+                    >
                       {getLocalizedLocationLabel(mahalla.label, lang, 3)}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
               <TextField
-                label={pt("address")}
+                label={pt('address')}
                 fullWidth
-                value={adminForm.address || ""}
-                onChange={(e) => setAdminForm({ ...adminForm, address: e.target.value })}
-                helperText={pt("addressCoordinateHelp")}
+                value={adminForm.address || ''}
+                onChange={(e) =>
+                  setAdminForm({ ...adminForm, address: e.target.value })
+                }
+                helperText={pt('addressCoordinateHelp')}
               />
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <TextField
                   label="Latitude"
                   type="number"
                   fullWidth
-                  value={adminForm.latitude ?? ""}
-                  onChange={(e) => setAdminForm({ ...adminForm, latitude: e.target.value })}
+                  value={adminForm.latitude ?? ''}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, latitude: e.target.value })
+                  }
                 />
                 <TextField
                   label="Longitude"
                   type="number"
                   fullWidth
-                  value={adminForm.longitude ?? ""}
-                  onChange={(e) => setAdminForm({ ...adminForm, longitude: e.target.value })}
+                  value={adminForm.longitude ?? ''}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, longitude: e.target.value })
+                  }
                 />
               </Stack>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                 <Button
                   variant="outlined"
                   startIcon={<Place />}
                   onClick={setAdminPinFromBoundary}
                   disabled={!adminForm.region}
-                  sx={{ borderRadius: 1.5, textTransform: "none", fontWeight: 800 }}
+                  sx={{
+                    borderRadius: 1.5,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                  }}
                 >
-                  {pt("pinRegionCenter")}
+                  {pt('pinRegionCenter')}
                 </Button>
                 <Button
                   variant="contained"
                   startIcon={<MyLocation />}
                   onClick={useCurrentLocationForAdmin}
-                  sx={{ borderRadius: 1.5, textTransform: "none", fontWeight: 800 }}
+                  sx={{
+                    borderRadius: 1.5,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                  }}
                 >
-                  {pt("getCurrentLocation")}
+                  {pt('getCurrentLocation')}
                 </Button>
               </Stack>
             </Stack>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setAdminDialogOpen(false)}>{pt("cancel")}</Button>
+            <Button onClick={() => setAdminDialogOpen(false)}>
+              {pt('cancel')}
+            </Button>
             <Button variant="contained" onClick={handleAdminAction}>
-              {pt("save")}
+              {pt('save')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -2811,35 +3246,35 @@ const SuperAdminPage = () => {
           onClose={() => setDeleteConfirmOpen(false)}
           PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
         >
-          <DialogTitle sx={{ fontWeight: 800 }}>{pt("hardDelete")}</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>{pt('hardDelete')}</DialogTitle>
           <DialogContent>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              {pt("selectedPermanentDelete").replace("{count}", checked.size)}
+              {pt('selectedPermanentDelete').replace('{count}', checked.size)}
             </Typography>
             <Box
               sx={{
                 bgcolor: (theme) =>
-                  theme.palette.mode === "dark"
-                    ? "rgba(211, 47, 47, 0.15)"
-                    : "rgba(211, 47, 47, 0.05)",
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(211, 47, 47, 0.15)'
+                    : 'rgba(211, 47, 47, 0.05)',
                 p: 2,
                 borderRadius: 2,
-                border: "1px solid",
-                borderColor: "error.light",
+                border: '1px solid',
+                borderColor: 'error.light',
               }}
             >
               <Typography
                 variant="caption"
                 color="error.dark"
-                sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
               >
-                <DeleteForever fontSize="small" /> {pt("irreversibleWarning")}
+                <DeleteForever fontSize="small" /> {pt('irreversibleWarning')}
               </Typography>
             </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, gap: 1 }}>
             <Button onClick={() => setDeleteConfirmOpen(false)} color="inherit">
-              {pt("cancel")}
+              {pt('cancel')}
             </Button>
             <Button
               variant="contained"
@@ -2848,19 +3283,21 @@ const SuperAdminPage = () => {
                 setDeleteConfirmLoading(true);
                 try {
                   const selectedRows = deletedData.filter((row) =>
-                    checked.has(getDeletedRowKey(row)),
+                    checked.has(getDeletedRowKey(row))
                   );
                   const analysisIds = selectedRows
-                    .filter((row) => row.__deletedSource !== "research")
+                    .filter((row) => row.__deletedSource !== 'research')
                     .map((row) => row.id);
                   const researchIds = selectedRows
-                    .filter((row) => row.__deletedSource === "research")
+                    .filter((row) => row.__deletedSource === 'research')
                     .map((row) => row.id);
 
-                  if (analysisIds.length) await AdminApi.analyses.hardDelete(analysisIds);
-                  for (const id of researchIds) await ResearchApi.hardDelete(id);
+                  if (analysisIds.length)
+                    await AdminApi.analyses.hardDelete(analysisIds);
+                  for (const id of researchIds)
+                    await ResearchApi.hardDelete(id);
 
-                  toast.success(pt("selectedDataDeleted"));
+                  toast.success(pt('selectedDataDeleted'));
                   setChecked(new Set());
                   setDeleteConfirmOpen(false);
                   fetchDeletedAnalyses();
@@ -2875,7 +3312,7 @@ const SuperAdminPage = () => {
               {deleteConfirmLoading ? (
                 <CircularProgress size={20} color="inherit" />
               ) : (
-                pt("yesHardDelete")
+                pt('yesHardDelete')
               )}
             </Button>
           </DialogActions>
@@ -2890,9 +3327,13 @@ const SuperAdminPage = () => {
             PaperProps={{ sx: { borderRadius: 3 } }}
           >
             <DialogTitle>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Typography variant="h6" fontWeight="bold">
-                  {pt("deletedDetails")}
+                  {pt('deletedDetails')}
                 </Typography>
                 <IconButton onClick={() => setViewRow(null)} size="small">
                   <Close />
@@ -2902,7 +3343,7 @@ const SuperAdminPage = () => {
             <DialogContent dividers>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+                  <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">
                       ID Kod
                     </Typography>
@@ -2912,9 +3353,9 @@ const SuperAdminPage = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+                  <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">
-                      {pt("patient")}
+                      {pt('patient')}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
                       {getDeletedRowPatientName(viewRow)}
@@ -2922,21 +3363,24 @@ const SuperAdminPage = () => {
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+                  <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">
-                      {pt("ageGender")}
+                      {pt('ageGender')}
                     </Typography>
                     <Typography variant="body1">
-                      {viewRow.age ? `${viewRow.age} yosh` : "-"} / {getGenderLabel(viewRow.gender)}
+                      {viewRow.age ? `${viewRow.age} yosh` : '-'} /{' '}
+                      {getGenderLabel(viewRow.gender)}
                     </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+                  <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                     <Typography variant="caption" color="text.secondary">
                       BMI
                     </Typography>
-                    <Typography variant="body1">{getDeletedRowBmiText(viewRow)}</Typography>
+                    <Typography variant="body1">
+                      {getDeletedRowBmiText(viewRow)}
+                    </Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -2944,16 +3388,16 @@ const SuperAdminPage = () => {
                     sx={{
                       p: 2,
                       bgcolor: (theme) =>
-                        theme.palette.mode === "dark"
-                          ? "rgba(211, 47, 47, 0.1)"
-                          : "rgba(211, 47, 47, 0.05)",
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(211, 47, 47, 0.1)'
+                          : 'rgba(211, 47, 47, 0.05)',
                       borderRadius: 2,
-                      border: "1px solid",
-                      borderColor: "error.light",
+                      border: '1px solid',
+                      borderColor: 'error.light',
                     }}
                   >
                     <Typography variant="caption" color="error.dark">
-                      {pt("deletedBy")}
+                      {pt('deletedBy')}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
                       {getDeletedByName(viewRow)}
@@ -2965,30 +3409,39 @@ const SuperAdminPage = () => {
                     sx={{
                       p: 2,
                       bgcolor: (theme) =>
-                        theme.palette.mode === "dark"
-                          ? "rgba(211, 47, 47, 0.1)"
-                          : "rgba(211, 47, 47, 0.05)",
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(211, 47, 47, 0.1)'
+                          : 'rgba(211, 47, 47, 0.05)',
                       borderRadius: 2,
-                      border: "1px solid",
-                      borderColor: "error.light",
+                      border: '1px solid',
+                      borderColor: 'error.light',
                     }}
                   >
                     <Typography variant="caption" color="error.dark">
-                      {pt("deletedAt")}
+                      {pt('deletedAt')}
                     </Typography>
-                    <Typography variant="body1">{getDeletedDate(viewRow)}</Typography>
+                    <Typography variant="body1">
+                      {getDeletedDate(viewRow)}
+                    </Typography>
                   </Box>
                 </Grid>
-                {(viewRow.region || viewRow.settlement || viewRow.school_name) && (
+                {(viewRow.region ||
+                  viewRow.settlement ||
+                  viewRow.school_name) && (
                   <Grid item xs={12}>
-                    <Box sx={{ p: 2, bgcolor: "action.hover", borderRadius: 2 }}>
+                    <Box
+                      sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}
+                    >
                       <Typography variant="caption" color="text.secondary">
-                        {pt("locationInstitution")}
+                        {pt('locationInstitution')}
                       </Typography>
                       <Typography variant="body1">
-                        {[viewRow.region || viewRow.settlement, viewRow.school_name]
+                        {[
+                          viewRow.region || viewRow.settlement,
+                          viewRow.school_name,
+                        ]
                           .filter(Boolean)
-                          .join(" / ")}
+                          .join(' / ')}
                       </Typography>
                     </Box>
                   </Grid>
@@ -3005,7 +3458,7 @@ const SuperAdminPage = () => {
                   setViewRow(null);
                 }}
               >
-                {pt("restore")}
+                {pt('restore')}
               </Button>
               <Button
                 variant="outlined"
@@ -3016,10 +3469,10 @@ const SuperAdminPage = () => {
                   setViewRow(null);
                 }}
               >
-                {pt("hardDelete")}
+                {pt('hardDelete')}
               </Button>
               <Button onClick={() => setViewRow(null)} color="inherit">
-                {pt("close")}
+                {pt('close')}
               </Button>
             </DialogActions>
           </Dialog>

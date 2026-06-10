@@ -1,7 +1,8 @@
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestClassifier
 import random
+
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression
 
 # Dummy Data and Models Initialization
 _height_model = LinearRegression()

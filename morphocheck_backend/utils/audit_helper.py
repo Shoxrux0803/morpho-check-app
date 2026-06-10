@@ -1,8 +1,10 @@
 # morphocheck_backend/utils/audit_helper.py
-from sqlalchemy.orm import Session
-from models.audit import AuditLog
-from fastapi import Request
 from typing import Optional
+
+from fastapi import Request
+from sqlalchemy.orm import Session
+
+from models.audit import AuditLog
 
 
 def record_audit_log(

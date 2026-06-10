@@ -1,10 +1,11 @@
 import io
+
 from docx import Document
-from docx.shared import Pt, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_ALIGN_VERTICAL
-from docx.oxml.ns import qn
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt
 
 
 def _set_cell_font(

@@ -1,8 +1,9 @@
-from sqlalchemy.orm import Session
-from models.clinical import ClinicalSetting
-from typing import Dict, Any
 import time
+from typing import Any, Dict
 
+from sqlalchemy.orm import Session
+
+from models.clinical import ClinicalSetting
 from services.cache_service import cache_service
 
 

@@ -5,7 +5,9 @@ Hypertable mavjudligini tekshirish, continuous aggregate refresh va boshqalar.
 """
 
 import logging
+
 from sqlalchemy import text
+
 from utils.database import engine
 
 logger = logging.getLogger(__name__)

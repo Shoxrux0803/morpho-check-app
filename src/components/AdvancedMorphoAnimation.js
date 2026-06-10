@@ -1,13 +1,13 @@
 // src/components/AdvancedMorphoAnimation.js
-import React, { useRef, useMemo, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import * as THREE from "three";
+import React, { useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 
 // A Custom ShaderMaterial for points that fades based on depth to simulate DOF
 const PointDOFShaderMaterial = {
   uniforms: {
     uTime: { value: 0 },
-    uColor: { value: new THREE.Color("#ffffff") },
+    uColor: { value: new THREE.Color('#ffffff') },
     uFocus: { value: 5.0 },
     uAperture: { value: 0.1 },
     uMaxDistance: { value: 15.0 },
@@ -50,7 +50,7 @@ const PointDOFShaderMaterial = {
 // Custom Shader for Lines
 const LineDOFShaderMaterial = {
   uniforms: {
-    uColor: { value: new THREE.Color("#ffffff") },
+    uColor: { value: new THREE.Color('#ffffff') },
     uFocus: { value: 5.0 },
   },
   vertexShader: `
@@ -106,7 +106,10 @@ const DofNetwork = ({ isDark }) => {
 
   // Max lines = N * (N - 1) / 2
   const maxLines = (particleCount * (particleCount - 1)) / 2;
-  const linePositions = useMemo(() => new Float32Array(maxLines * 6), [maxLines]);
+  const linePositions = useMemo(
+    () => new Float32Array(maxLines * 6),
+    [maxLines]
+  );
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -187,7 +190,10 @@ const DofNetwork = ({ isDark }) => {
     camera.lookAt(0, 0, 0);
   });
 
-  const materialColor = useMemo(() => new THREE.Color(isDark ? "#ffffff" : "#0f172a"), [isDark]);
+  const materialColor = useMemo(
+    () => new THREE.Color(isDark ? '#ffffff' : '#0f172a'),
+    [isDark]
+  );
 
   return (
     <group>
@@ -240,37 +246,40 @@ const DofNetwork = ({ isDark }) => {
 };
 
 export default function AdvancedMorphoAnimation({ theme }) {
-  const isDark = theme === "dark";
+  const isDark = theme === 'dark';
 
   return (
     <div
       style={{
-        position: "fixed",
+        position: 'fixed',
         top: 0,
         left: 0,
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         zIndex: 0,
-        pointerEvents: "none",
-        background: isDark ? "#000000" : "#f1f5f9", // Deep black for max contrast on dark mode
+        pointerEvents: 'none',
+        background: isDark ? '#000000' : '#f1f5f9', // Deep black for max contrast on dark mode
       }}
     >
-      <Canvas camera={{ position: [0, 0, 8], fov: 60 }} gl={{ antialias: true, alpha: true }}>
+      <Canvas
+        camera={{ position: [0, 0, 8], fov: 60 }}
+        gl={{ antialias: true, alpha: true }}
+      >
         <DofNetwork isDark={isDark} />
       </Canvas>
 
       {/* Premium Vignette & Texture */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
+          width: '100%',
+          height: '100%',
           background: `radial-gradient(circle at 50% 50%, transparent 0%, ${
-            isDark ? "rgb(0, 0, 0)" : "rgba(255, 255, 255, 0.5)"
+            isDark ? 'rgb(0, 0, 0)' : 'rgba(255, 255, 255, 0.5)'
           } 150%)`,
-          pointerEvents: "none",
+          pointerEvents: 'none',
           zIndex: 1,
         }}
       />
@@ -278,15 +287,16 @@ export default function AdvancedMorphoAnimation({ theme }) {
       {/* Subtle Noise Grain Overlay */}
       <div
         style={{
-          position: "absolute",
+          position: 'absolute',
           top: 0,
           left: 0,
-          width: "100%",
-          height: "100%",
-          backgroundImage: "url('https://grainy-gradients.vercel.app/noise.svg')",
+          width: '100%',
+          height: '100%',
+          backgroundImage:
+            "url('https://grainy-gradients.vercel.app/noise.svg')",
           opacity: 0.05,
           zIndex: 2,
-          pointerEvents: "none",
+          pointerEvents: 'none',
         }}
       />
     </div>

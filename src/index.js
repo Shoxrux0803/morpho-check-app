@@ -1,39 +1,39 @@
 // src/index.js
-import React from "react";
-import { createRoot } from "react-dom/client";
-import App from "./App";
-import reportWebVitals from "./reportWebVitals";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App';
+import reportWebVitals from './reportWebVitals';
 
 // CSS (importlar hammasi tepada)
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "./styles/motion.css";
-import "./index.css";
-import "@fontsource-variable/inter";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './styles/motion.css';
+import './index.css';
+import '@fontsource-variable/inter';
 
 // Tema util + MUI provider — ham importlar qatorida
-import { applyTheme, getStoredTheme } from "./utils/theme";
-import ThemeProviderMUI from "./providers/ThemeProviderMUI";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import { applyTheme, getStoredTheme } from './utils/theme';
+import ThemeProviderMUI from './providers/ThemeProviderMUI';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const installDevConsoleNoiseFilter = () => {
-  if (process.env.NODE_ENV !== "development") return;
+  if (process.env.NODE_ENV !== 'development') return;
 
   const ignoredMessages = [
-    "React Router Future Flag Warning",
-    "MUI Grid: The `item` prop has been removed",
-    "MUI Grid: The `xs` prop has been removed",
-    "MUI Grid: The `sm` prop has been removed",
-    "MUI Grid: The `md` prop has been removed",
-    "MUI Grid: The `lg` prop has been removed",
+    'React Router Future Flag Warning',
+    'MUI Grid: The `item` prop has been removed',
+    'MUI Grid: The `xs` prop has been removed',
+    'MUI Grid: The `sm` prop has been removed',
+    'MUI Grid: The `md` prop has been removed',
+    'MUI Grid: The `lg` prop has been removed',
   ];
 
   const shouldIgnore = (args) =>
     ignoredMessages.some((message) =>
-      args.some((arg) => typeof arg === "string" && arg.includes(message)),
+      args.some((arg) => typeof arg === 'string' && arg.includes(message))
     );
 
-  ["warn", "error"].forEach((level) => {
+  ['warn', 'error'].forEach((level) => {
     const original = console[level];
     console[level] = (...args) => {
       if (shouldIgnore(args)) return;
@@ -46,13 +46,13 @@ const installDevConsoleNoiseFilter = () => {
 installDevConsoleNoiseFilter();
 applyTheme(getStoredTheme());
 
-const root = createRoot(document.getElementById("root"));
+const root = createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <ThemeProviderMUI>
       <App />
     </ThemeProviderMUI>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
 
 reportWebVitals();
