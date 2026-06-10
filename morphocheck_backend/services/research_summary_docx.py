@@ -264,6 +264,56 @@ METRIC_LABELS["ru"] = {
     "dynamometry": "Динамометрия",
 }
 
+SUMMARY_I18N["en"] = {
+    **SUMMARY_I18N["uz"],
+    "title": "MORPHOCHECK SCIENTIFIC-STATISTICAL DOCX REPORT",
+    "report_date": "Report date",
+    "summary": "1. General summary",
+    "scope": "Scope",
+    "all_researchers": "All researchers data",
+    "researcher_scope": "Data related to researcher",
+    "researcher": "Researcher",
+    "total_records": "Total records",
+    "age_range": "Age range",
+    "avg_age": "Average age",
+    "active_filters": "Active filters",
+    "none": "None",
+    "indicator": "Indicator",
+    "value": "Value",
+    "demographics": "2. Demographic infographics",
+    "gender": "Gender",
+    "region": "Region",
+    "visual_share": "Visual share",
+    "stats": "3. Automatic statistical analysis tables",
+    "z_group": "BMI Z-score group",
+    "groups": "4. Analysis by groups",
+    "male_n": "Male N",
+    "male_mean": "Male mean",
+    "female_n": "Female N",
+    "female_mean": "Female mean",
+    "diff": "Difference",
+    "share": "Share",
+    "correlation": "5. Correlation and regression",
+    "model": "Model",
+    "not_enough": "Not enough data",
+    "equation": "Weight = {intercept} + {slope} x Height",
+    "note_title": "6. Scientific comment",
+    "note": "Report generated automatically. Tables present descriptive statistics, t-test by gender, ANOVA by regions, correlation matrix, and height-weight regression model.",
+    "years": "years",
+}
+
+METRIC_LABELS["en"] = {
+    "chest_standing_height": "Height (standing)",
+    "weight": "Weight",
+    "bmi": "BMI",
+    "chest_circumference_pause": "Chest circumference",
+    "waist_circumference": "Waist circumference",
+    "head_circumference": "Head circumference",
+    "thigh_circumference": "Thigh circumference",
+    "calf_circumference": "Calf circumference",
+    "dynamometry": "Dynamometry",
+}
+
 def _tr(lang, key):
     return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(key, SUMMARY_I18N["uz"].get(key, key))
 
@@ -318,6 +368,8 @@ def _gender_label(gender, lang="uz"):
             return "Духтар/Зан"
         if lang == "ky":
             return "Кыз/Аял"
+        if lang == "en":
+            return "Girl/Female"
         return "Qiz/Ayol"
     if "boy" in value or "erkak" in value or "o'g" in value or "og" in value or "male" in value:
         if lang == "tm":
@@ -326,6 +378,8 @@ def _gender_label(gender, lang="uz"):
             return "Писар/Мард"
         if lang == "ky":
             return "Эркек/Бала"
+        if lang == "en":
+            return "Boy/Male"
         return "O'g'il/Erkak"
     if lang == "tm":
         return "Namalum"
@@ -333,6 +387,8 @@ def _gender_label(gender, lang="uz"):
         return "Номаълум"
     if lang == "ky":
         return "Белгисиз"
+    if lang == "en":
+        return "Unknown"
     return "Noma'lum"
 
 
@@ -482,8 +538,10 @@ def _build_stats(records, lang="uz"):
             gender_name = _gender_label(getattr(record, "gender", None), lang)
             if value is not None and gender_name != _gender_label(None, lang):
                 groups[gender_name].append(value)
-        male = groups["Oglan/Erkak" if lang == "tm" else ("Писар/Мард" if lang == "tg" else "O'g'il/Erkak")]
-        female = groups["Gyz/Ayal" if lang == "tm" else ("Духтар/Зан" if lang == "tg" else "Qiz/Ayol")]
+        male_label = _gender_label("boy", lang)
+        female_label = _gender_label("girl", lang)
+        male = groups[male_label]
+        female = groups[female_label]
         row = {"label": _metric_label(key, label, lang), "unit": unit, "male_n": len(male), "female_n": len(female)}
         if len(male) >= 2 and len(female) >= 2:
             m1 = _mean(male)

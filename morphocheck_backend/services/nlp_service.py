@@ -47,9 +47,14 @@ VOCABULARY_EXPANSIONS = {
         "maslahat": ["рекомендация", "руководство", "указание"],
     },
     "en": {
-        "analysis": ["assessment", "evaluation", "screening"],
-        "health": ["wellbeing", "condition", "fitness"],
-        "weight": ["body mass", "mass", "load"],
+        "tahlil": ["analysis", "evaluation", "assessment"],
+        "sog'liq": ["health", "wellbeing", "condition"],
+        "sogliq": ["health", "wellbeing", "condition"],
+        "vazn": ["weight", "body mass", "mass"],
+        "bo'y": ["height", "stature", "body length"],
+        "boy": ["height", "stature", "body length"],
+        "rivojlanish": ["development", "growth dynamics", "adaptation"],
+        "maslahat": ["advice", "recommendation", "guideline"],
     },
     "kz": {},
 }

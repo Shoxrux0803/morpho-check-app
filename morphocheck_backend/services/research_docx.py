@@ -585,6 +585,101 @@ LABELS["tm"] = {
     "fat_iliac": "d. yanbas suyegi ustunde",
     "fat_pop": "e. dyz yzy cunkurlygynda",
 }
+
+LABELS["en"] = {
+    **LABELS["uz"],
+    "title": "Research Card",
+    "fio": "Full Name", 
+    "school": "Institution Name (school, kindergarten)", 
+    "settlement": "Settlement",
+    "birth_place": "Place of birth (city, region)", 
+    "birth_date": "Year, month, and day of birth",
+    "father_nat": "Father's nationality", 
+    "mother_nat": "mother's",
+    "living_since": "Since when the subject lives in this area", 
+    "enrolled": "Date of enrollment in school (kindergarten)",
+    "living_cond": "Living conditions", 
+    "labor_regime": "Labor regime",
+    "past_illnesses": "Past illnesses", 
+    "children_count": "Total number of children in family",
+    "child_order": "Child's birth order", 
+    "feeding_a": "Feeding: a) natural",
+    "feeding_b": "b) artificial", 
+    "marriage_a": "Parents' marriage: a) close relative",
+    "marriage_b": "b) distant relative", 
+    "mother_health": "According to mother (healthy or)",
+    "measure_results": "Measurement Results", 
+    "date_col": "Date", 
+    "indicator": "Indicator",
+    "gender": "Child's gender",
+    "cat_phys": "I. Indicators of physical development", 
+    "lower_leg": "1. Lower limb",
+    "lower_leg_len": "Lower limb length", 
+    "spina": "a. Point of anterior superior iliac spine",
+    "symph": "b. Point on the upper edge of pubic symphysis", 
+    "tibiale_title": "2.",
+    "tibiale": "a. Upper middle point on the tibial tuberosity",
+    "pelvic": "3. Pelvic width", 
+    "thigh_l": "4. Thigh length", 
+    "thigh_c": "5. Thigh circumference",
+    "calf_l": "6. Calf length", 
+    "calf_c": "7. Calf circumference", 
+    "foot_l": "8. Foot length",
+    "teeth": "9. Number of teeth", 
+    "menstr": "10. Onset of menstruation",
+    "cat_skull": "II. Determination of skull shape", 
+    "skull_long": "1. Longitudinal diameter",
+    "skull_trans": "2. Transverse dimension", 
+    "head_circ": "3. Head circumference",
+    "forehead": "4. Transverse dimension of the forehead", 
+    "skull_height": "5. Height or vertical diameter",
+    "skull_base_title": "Determination of skull base size", 
+    "skull_base_l": "1. Skull base length", 
+    "skull_base_w": "2. Skull base width",
+    "cat_face": "Face", 
+    "face_biz": "1. Bizygomatic diameter", 
+    "face_big": "2. Bigonial diameter",
+    "face_morph": "3. Morphological face height", 
+    "face_phys": "4. Physiognomic face height",
+    "nose_h": "5. Nose height", 
+    "nose_w": "6. Nose width", 
+    "outer_oc": "7. Outer canthal width",
+    "inner_oc": "8. Inner canthal width", 
+    "lips_h": "9. Height of the mucous part of both lips", 
+    "mouth_w": "10. Mouth width",
+    "cat_chest": "Chest", 
+    "height_body": "1. Body length", 
+    "height_stand": "1. Standing height", 
+    "height_sit": "2. Sitting height",
+    "weight": "2. Weight", 
+    "trunk_l": "3. Trunk length", 
+    "torso_l": "4. Torso length",
+    "chest_p": "5. Chest circumference (pause)", 
+    "chest_i": "- at full inspiration", 
+    "chest_e": "- at full expiration",
+    "waist": "6. Waist circumference", 
+    "abd_c": "7. Abdominal circumference", 
+    "upper_s": "8. Upper segment length",
+    "chest_td": "9. Transverse chest diameter", 
+    "chest_ad": "10. Anteroposterior diameter",
+    "chest_h": "11. Chest height", 
+    "cat_arm": "Upper limb",
+    "arm_l": "1. Upper limb length", 
+    "shoulder_l": "2. Shoulder length", 
+    "shoulder_w": "3. Shoulder width",
+    "arm_circ": "4. Shoulder circumference", 
+    "arm_circ_rest": "a) at rest", 
+    "arm_circ_flex": "b) tensed",
+    "forearm_l": "5. Forearm length", 
+    "hand_l": "6. Hand length", 
+    "dynamo": "7. Dynamometry",
+    "fat_title": "8. Subcutaneous fat thickness", 
+    "fat_tri": "a. over triceps", 
+    "fat_bi": "b. over biceps",
+    "fat_sub": "c. under inferior angle of scapula", 
+    "fat_iliac": "d. over iliac crest", 
+    "fat_pop": "e. in popliteal fossa"
+}
 def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     if lang not in LABELS: lang = "ru"
     L = LABELS[lang]
@@ -631,6 +726,8 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
                 res = "Эркек бала"
             elif lang == "tg":
                 res = "Писарбача"
+            elif lang == "en":
+                res = "Boy"
             else:
                 res = "Мальчик"
         elif v_low in ["girl", "ayol"]:
@@ -642,6 +739,8 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
                 res = "Кыз бала"
             elif lang == "tg":
                 res = "Духтарча"
+            elif lang == "en":
+                res = "Girl"
             else:
                 res = "Девочка"
         
