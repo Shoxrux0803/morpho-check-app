@@ -31,3 +31,6 @@ clickhouse-driver
 pytest
 pytest-asyncio
 httpx
+
+# Monitoring
+sentry-sdk[fastapi]
