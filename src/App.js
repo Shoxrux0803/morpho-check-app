@@ -71,6 +71,58 @@ function ScrollToTop() {
   return null;
 }
 
+// Loading komponenti — barcha Wrapper komponentlaridan oldin e'lon qilinadi
+const PageLoader = () => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="container py-5 text-center"
+    style={{
+      minHeight: "60vh",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <motion.div
+      animate={{
+        rotate: 360,
+        scale: [1, 1.1, 1],
+      }}
+      transition={{
+        rotate: {
+          duration: 1,
+          repeat: Infinity,
+          ease: "linear",
+        },
+        scale: {
+          duration: 0.8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        },
+      }}
+      style={{
+        width: "50px",
+        height: "50px",
+        border: "3px solid #f3f3f3",
+        borderTop: "3px solid #0f766e",
+        borderRadius: "50%",
+        marginBottom: "1rem",
+      }}
+    />
+    <motion.p
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="text-muted"
+    >
+      Yuklanmoqda...
+    </motion.p>
+  </motion.div>
+);
+
 // Role-based Admin Wrapper (Data Dashboard)
 const AdminWrapper = () => {
   const { user, loading } = useAuth();
@@ -229,57 +281,6 @@ function AnimatedRoutes() {
   );
 }
 
-// Loading komponenti
-const PageLoader = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    className="container py-5 text-center"
-    style={{
-      minHeight: "60vh",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <motion.div
-      animate={{
-        rotate: 360,
-        scale: [1, 1.1, 1],
-      }}
-      transition={{
-        rotate: {
-          duration: 1,
-          repeat: Infinity,
-          ease: "linear",
-        },
-        scale: {
-          duration: 0.8,
-          repeat: Infinity,
-          ease: "easeInOut",
-        },
-      }}
-      style={{
-        width: "50px",
-        height: "50px",
-        border: "3px solid #f3f3f3",
-        borderTop: "3px solid #0f766e",
-        borderRadius: "50%",
-        marginBottom: "1rem",
-      }}
-    />
-    <motion.p
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="text-muted"
-    >
-      Yuklanmoqda...
-    </motion.p>
-  </motion.div>
-);
 
 export default function App() {
   const BASENAME = process.env.REACT_APP_BASENAME || "/";

@@ -757,15 +757,12 @@ def update_analysis(
         )
         
         return to_dict_analysis(rec)
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-        
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        db.rollback()
-        print(f"CRITICAL ERROR in update_analysis: {e}")
+        logger.exception("CRITICAL ERROR in update_analysis: %s", e)
         raise HTTPException(status_code=500, detail=f"Ma'lumotni yangilashda xatolik: {str(e)}")
 
 

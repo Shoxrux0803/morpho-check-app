@@ -39,8 +39,6 @@ class ChatMessageOut(BaseModel):
     class Config:
         from_attributes = True
 
-router = APIRouter(tags=["Chat"])
-
 # Typing status storage: {user_id: {"name": str, "timestamp": datetime}}
 typing_statuses: Dict[int, dict] = {}
 ALLOWED_UPLOAD_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx"}
@@ -77,7 +75,7 @@ def _hydrate_messages(db: Session, messages: List[ChatMessage]) -> List[ChatMess
 
     results = []
     for m in messages:
-        out = ChatMessageOut.from_orm(m)
+        out = ChatMessageOut.model_validate(m)
         out.sender_name = users.get(m.sender_id, "User")
 
         parent = parents.get(m.reply_to_id)
@@ -140,7 +138,7 @@ def send_message(
     db.refresh(new_msg)
     
     # Add sender name for the response
-    res = ChatMessageOut.from_orm(new_msg)
+    res = ChatMessageOut.model_validate(new_msg)
     res.sender_name = current_user.name
     
     # If it's a reply, get original sender name and content

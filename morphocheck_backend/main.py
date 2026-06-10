@@ -43,10 +43,26 @@ from models.auth_device import LoginVerificationCode, TrustedLoginDevice
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Jadval(lar) mavjud bo'lmasa yaratadi + ulanishni tekshiradi
+    init_db(lambda: Base.metadata.create_all(bind=engine))
+    ensure_schema_updates()
+    # 2-bosqich: TimescaleDB hypertable larni tekshirish va yaratish
+    try:
+        from utils.timescale import ensure_hypertables
+        ensure_hypertables()
+    except Exception as _ts_err:
+        print(f"[STARTUP] TimescaleDB: {_ts_err}")
+    yield
+
 app = FastAPI(
     title="MorphoCheck Pro API",
     description="Antropometrik tahlil, tavsiyalar va PDF hisoboti",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
@@ -123,17 +139,6 @@ if not os.path.exists(UPLOAD_DIR):
 
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-@app.on_event("startup")
-def on_startup():
-    # Jadval(lar) mavjud bo'lmasa yaratadi + ulanishni tekshiradi
-    init_db(lambda: Base.metadata.create_all(bind=engine))
-    ensure_schema_updates()
-    # 2-bosqich: TimescaleDB hypertable larni tekshirish va yaratish
-    try:
-        from utils.timescale import ensure_hypertables
-        ensure_hypertables()
-    except Exception as _ts_err:
-        print(f"[STARTUP] TimescaleDB: {_ts_err}")
 
 def ensure_schema_updates():
     """Small additive schema fixes for deployments without Alembic migrations.
