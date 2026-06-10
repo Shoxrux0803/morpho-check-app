@@ -1,7 +1,8 @@
 # morphocheck_backend/models/user.py
 
 from sqlalchemy import Column, Float, Integer, String, DateTime, func, Index
-from .base import Base   # shu papkadan Base ni olish uchun
+from .base import Base  # shu papkadan Base ni olish uchun
+
 
 class User(Base):
     __tablename__ = "users"
@@ -23,15 +24,21 @@ class User(Base):
     scientific_supervisor = Column(String(200), nullable=True)
     role = Column(String(30), default="user", index=True)  # "user" yoki "admin"
     created_at = Column(DateTime, server_default=func.now())
-    
+
     # --- Activity & Performance ---
     last_active_at = Column(DateTime, nullable=True, index=True)
-    last_form_open_at = Column(DateTime, nullable=True) # Qachon forma ochganini bilish uchun
-    total_entry_time_seconds = Column(Integer, default=0) # Jami sarflangan vaqt (sekundda)
-    completed_entries_count = Column(Integer, default=0) # Jami kiritilgan ma'lumotlar soni (stats uchun)
+    last_form_open_at = Column(
+        DateTime, nullable=True
+    )  # Qachon forma ochganini bilish uchun
+    total_entry_time_seconds = Column(
+        Integer, default=0
+    )  # Jami sarflangan vaqt (sekundda)
+    completed_entries_count = Column(
+        Integer, default=0
+    )  # Jami kiritilgan ma'lumotlar soni (stats uchun)
 
     # --- Soft Delete ---
-    is_deleted = Column(Integer, default=0, index=True) # 0=Active, 1=Deleted
+    is_deleted = Column(Integer, default=0, index=True)  # 0=Active, 1=Deleted
     deleted_at = Column(DateTime, nullable=True)
     deleted_by_id = Column(Integer, nullable=True)
 

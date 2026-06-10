@@ -158,7 +158,6 @@ _T = {
         "en": "The adaptation process is slightly slowed. Focus on strengthening immunity, hardening procedures and proper rest.",
         "kz": "Бейімделу процесі сәл баяулады. Иммунитетті нығайтуға, шынықтыру рәсімдеріне және дұрыс демалысқа назар аударыңыз.",
     },
-
     "adv_hmai_ok": {
         "uz": "{sub_pos} tashqi muhitga moslashuv me'yorda. Hozirgi sog'lom turmush tarzini {v_keep}.",
         "ru": "Адаптация к внешней среде в норме. Продолжайте вести здоровый образ жизни.",
@@ -349,14 +348,42 @@ def _t(key: str, lang: str, **kwargs) -> str:
 def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
     gender = (gender or "").strip().lower()
     boys_heights = {
-        2: 87.8, 3: 96.1, 4: 103.3, 5: 110.0, 6: 116.0, 7: 121.7, 8: 127.3, 9: 132.6,
-        10: 137.8, 11: 143.1, 12: 149.1, 13: 156.0, 14: 163.8, 15: 170.1, 16: 173.4,
-        17: 175.2, 18: 176.1
+        2: 87.8,
+        3: 96.1,
+        4: 103.3,
+        5: 110.0,
+        6: 116.0,
+        7: 121.7,
+        8: 127.3,
+        9: 132.6,
+        10: 137.8,
+        11: 143.1,
+        12: 149.1,
+        13: 156.0,
+        14: 163.8,
+        15: 170.1,
+        16: 173.4,
+        17: 175.2,
+        18: 176.1,
     }
     girls_heights = {
-        2: 86.4, 3: 95.1, 4: 102.7, 5: 109.4, 6: 115.1, 7: 120.8, 8: 126.6, 9: 132.5,
-        10: 138.6, 11: 145.0, 12: 151.2, 13: 157.1, 14: 160.4, 15: 162.1, 16: 163.1,
-        17: 163.5, 18: 163.7
+        2: 86.4,
+        3: 95.1,
+        4: 102.7,
+        5: 109.4,
+        6: 115.1,
+        7: 120.8,
+        8: 126.6,
+        9: 132.5,
+        10: 138.6,
+        11: 145.0,
+        12: 151.2,
+        13: 157.1,
+        14: 160.4,
+        15: 162.1,
+        16: 163.1,
+        17: 163.5,
+        18: 163.7,
     }
 
     if age <= 21:
@@ -373,16 +400,42 @@ def get_fm_percent_norm(age: int, gender: str) -> tuple:
     is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
 
     boys_fm = {
-        2: (12, 21), 3: (12, 21), 4: (12, 21), 5: (11, 20), 6: (11, 20),
-        7: (10, 20), 8: (10, 20), 9: (10, 21), 10: (11, 22), 11: (11, 23),
-        12: (11, 23), 13: (11, 23), 14: (11, 23), 15: (11, 23), 16: (11, 23),
-        17: (11, 23), 18: (11, 23)
+        2: (12, 21),
+        3: (12, 21),
+        4: (12, 21),
+        5: (11, 20),
+        6: (11, 20),
+        7: (10, 20),
+        8: (10, 20),
+        9: (10, 21),
+        10: (11, 22),
+        11: (11, 23),
+        12: (11, 23),
+        13: (11, 23),
+        14: (11, 23),
+        15: (11, 23),
+        16: (11, 23),
+        17: (11, 23),
+        18: (11, 23),
     }
     girls_fm = {
-        2: (13, 23), 3: (13, 23), 4: (13, 23), 5: (13, 23), 6: (13, 23),
-        7: (12, 24), 8: (12, 24), 9: (13, 25), 10: (14, 26), 11: (15, 27),
-        12: (16, 28), 13: (17, 29), 14: (18, 30), 15: (19, 31), 16: (20, 32),
-        17: (20, 32), 18: (21, 33)
+        2: (13, 23),
+        3: (13, 23),
+        4: (13, 23),
+        5: (13, 23),
+        6: (13, 23),
+        7: (12, 24),
+        8: (12, 24),
+        9: (13, 25),
+        10: (14, 26),
+        11: (15, 27),
+        12: (16, 28),
+        13: (17, 29),
+        14: (18, 30),
+        15: (19, 31),
+        16: (20, 32),
+        17: (20, 32),
+        18: (21, 33),
     }
 
     table = boys_fm if is_male else girls_fm
@@ -440,54 +493,136 @@ def get_visceral_norm(age: int) -> tuple:
 
 def get_ecological_factor(m: Dict[str, Any]) -> float:
     """Yashash hududiga asoslangan ekologik koeffitsientni (E) aniqlaydi."""
-    if not m: return 1.05
+    if not m:
+        return 1.05
     region = str(m.get("region", "")).lower()
     district = str(m.get("district", "")).lower()
     address = str(m.get("address", "")).lower()
     combined = f"{region} {district} {address}"
-    
+
     # Shahar (Urban)
-    is_city = any(k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город"))
+    is_city = any(
+        k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город")
+    )
     if is_city:
         return 1.00
-        
+
     # Cho'l - yarim cho'l
-    if any(k in region for k in ("navoi", "навои", "buxor", "бухор", "xorazm", "хоразм", "qoraqalpoq", "қорақалпоқ", "karakalpak")):
+    if any(
+        k in region
+        for k in (
+            "navoi",
+            "навои",
+            "buxor",
+            "бухор",
+            "xorazm",
+            "хоразм",
+            "qoraqalpoq",
+            "қорақалпоқ",
+            "karakalpak",
+        )
+    ):
         return 1.10
-        
+
     # Tog'
-    if any(k in region for k in ("toshkent", "тошкент", "namangan", "наманган", "samarqand", "самарқанд", "andijon", "андижон", "farg'ona", "фарғона", "fargona")):
+    if any(
+        k in region
+        for k in (
+            "toshkent",
+            "тошкент",
+            "namangan",
+            "наманган",
+            "samarqand",
+            "самарқанд",
+            "andijon",
+            "андижон",
+            "farg'ona",
+            "фарғона",
+            "fargona",
+        )
+    ):
         return 1.15
-        
+
     # Dasht (Jizzax, Sirdaryo, Qashqadaryo, Surxondaryo va default qishloq/tumanlar)
     return 1.05
 
+
 def get_centile_from_z(z: float) -> str:
     """Z-score asosida WHO sentil intervalini qaytaradi."""
-    if z is None: return ""
-    if z < -1.88: return "< 3"
-    elif z < -1.04: return "3 - 15"
-    elif z < 1.04: return "15 - 85"
-    elif z < 1.88: return "85 - 97"
-    else: return "> 97"
+    if z is None:
+        return ""
+    if z < -1.88:
+        return "< 3"
+    elif z < -1.04:
+        return "3 - 15"
+    elif z < 1.04:
+        return "15 - 85"
+    elif z < 1.88:
+        return "85 - 97"
+    else:
+        return "> 97"
+
 
 def get_corridor_from_z(z: float, lang: str) -> str:
     """Z-score asosida sog'lomlik yo'lagini quaytaradi."""
-    if z is None: return ""
+    if z is None:
+        return ""
     corridors = {
-        "uz": ["Juda kam vazn (<3-sentil)", "Kam vazn (3-15-sentil)", "Me'yor (15-85-sentil)", "Ortiqcha vazn (85-97-sentil)", "Semizlik (>97-sentil)"],
-        "ru": ["Крайний дефицит массы (<3-центиль)", "Дефицит массы (3-15-центиль)", "Норма (15-85-центиль)", "Избыточная масса (85-97-центиль)", "Ожирение (>97-центиль)"],
-        "en": ["Severe underweight (<3rd centile)", "Underweight (3rd-15th centile)", "Normal (15th-85th centile)", "Overweight (85th-97th centile)", "Obesity (>97th centile)"],
-        "tg": ["Камвазнии шадид (<3-сентил)", "Камвазнӣ (3-15-сентил)", "Меъёр (15-85-сентил)", "Вазни зиёдатӣ (85-97-сентил)", "Фарбеҳӣ (>97-сентил)"],
-        "ky": ["Өтө төмөн салмак (<3-сентиль)", "Төмөн салмак (3-15-сентиль)", "Норма (15-85-сентиль)", "Ашыкча салмак (85-97-сентиль)", "Семирүү (>97-сентиль)"],
-        "kz": ["Салмақтың өте төмендігі (<3-центиль)", "Салмақ тапшылығы (3-15-центиль)", "Норма (15-85-центиль)", "Артық салмақ (85-97-центиль)", "Семіздік (>97-центиль)"]
+        "uz": [
+            "Juda kam vazn (<3-sentil)",
+            "Kam vazn (3-15-sentil)",
+            "Me'yor (15-85-sentil)",
+            "Ortiqcha vazn (85-97-sentil)",
+            "Semizlik (>97-sentil)",
+        ],
+        "ru": [
+            "Крайний дефицит массы (<3-центиль)",
+            "Дефицит массы (3-15-центиль)",
+            "Норма (15-85-центиль)",
+            "Избыточная масса (85-97-центиль)",
+            "Ожирение (>97-центиль)",
+        ],
+        "en": [
+            "Severe underweight (<3rd centile)",
+            "Underweight (3rd-15th centile)",
+            "Normal (15th-85th centile)",
+            "Overweight (85th-97th centile)",
+            "Obesity (>97th centile)",
+        ],
+        "tg": [
+            "Камвазнии шадид (<3-сентил)",
+            "Камвазнӣ (3-15-сентил)",
+            "Меъёр (15-85-сентил)",
+            "Вазни зиёдатӣ (85-97-сентил)",
+            "Фарбеҳӣ (>97-сентил)",
+        ],
+        "ky": [
+            "Өтө төмөн салмак (<3-сентиль)",
+            "Төмөн салмак (3-15-сентиль)",
+            "Норма (15-85-сентиль)",
+            "Ашыкча салмак (85-97-сентиль)",
+            "Семирүү (>97-сентиль)",
+        ],
+        "kz": [
+            "Салмақтың өте төмендігі (<3-центиль)",
+            "Салмақ тапшылығы (3-15-центиль)",
+            "Норма (15-85-центиль)",
+            "Артық салмақ (85-97-центиль)",
+            "Семіздік (>97-центиль)",
+        ],
     }
     texts = corridors.get(lang, corridors["uz"])
-    if z < -1.88: return texts[0]
-    elif z < -1.04: return texts[1]
-    elif z < 1.04: return texts[2]
-    elif z < 1.88: return texts[3]
-    else: return texts[4]
+    if z < -1.88:
+        return texts[0]
+    elif z < -1.04:
+        return texts[1]
+    elif z < 1.04:
+        return texts[2]
+    elif z < 1.88:
+        return texts[3]
+    else:
+        return texts[4]
+
 
 def calculate_detailed_indices(
     age: int,
@@ -497,7 +632,7 @@ def calculate_detailed_indices(
     bmi: float,
     manual_data: Dict[str, Any] = None,
     lang: str = "uz",
-    all_settings: Dict[str, Any] = None
+    all_settings: Dict[str, Any] = None,
 ) -> Dict[str, Any]:
     # Dinamik tarjimalar uchun yordamchi
     def _local_t(key, l, **kwargs):
@@ -508,7 +643,7 @@ def calculate_detailed_indices(
             if s_key not in all_settings:
                 # Keyni o'zini qidiramiz (adv_ bilan boshlangan bo'lishi mumkin)
                 s_key = key
-            
+
             val = all_settings.get(s_key)
             if val and isinstance(val, dict):
                 text = val.get(l) or val.get("uz", key)
@@ -518,7 +653,7 @@ def calculate_detailed_indices(
                     except (KeyError, IndexError, ValueError) as exc:
                         text = f"{text} (format xatosi: {exc})"
                 return report_text(text, l)
-        
+
         # Fallback to hardcoded _T
         return _t(key, l, **kwargs)
 
@@ -527,64 +662,112 @@ def calculate_detailed_indices(
     m = manual_data or {}
 
     # Tilga qarab murojaat shakli
-    is_adult = (age >= 21)
+    is_adult = age >= 21
 
     # Har bir til uchun addressing so'zlari
     _ADDR = {
         "uz": {
             "child": {
-                "sub_pos": "Bolada", "sub_pos_nom": "Bola", "sub_pos_lc": "bolada",
-                "sub_loc": "Bolaning", "sub_loc_lc": "bolaning",
-                "sub_term": "farzandingizning", "sub_term_cap": "Farzandingizning",
-                "sub_to": "bolaga", "v_suffix": "bering", "v_keep": "davom ettiring",
+                "sub_pos": "Bolada",
+                "sub_pos_nom": "Bola",
+                "sub_pos_lc": "bolada",
+                "sub_loc": "Bolaning",
+                "sub_loc_lc": "bolaning",
+                "sub_term": "farzandingizning",
+                "sub_term_cap": "Farzandingizning",
+                "sub_to": "bolaga",
+                "v_suffix": "bering",
+                "v_keep": "davom ettiring",
             },
             "adult": {
-                "sub_pos": "Sizda", "sub_pos_nom": "Siz", "sub_pos_lc": "sizda",
-                "sub_loc": "Sizning", "sub_loc_lc": "sizning",
-                "sub_term": "o'zingizning", "sub_term_cap": "O'zingizning",
-                "sub_to": "sizga", "v_suffix": "iste'mol qiling", "v_keep": "davom ettiring",
+                "sub_pos": "Sizda",
+                "sub_pos_nom": "Siz",
+                "sub_pos_lc": "sizda",
+                "sub_loc": "Sizning",
+                "sub_loc_lc": "sizning",
+                "sub_term": "o'zingizning",
+                "sub_term_cap": "O'zingizning",
+                "sub_to": "sizga",
+                "v_suffix": "iste'mol qiling",
+                "v_keep": "davom ettiring",
             },
         },
         "ru": {
             "child": {
-                "sub_pos": "У ребёнка", "sub_pos_nom": "Ребёнок", "sub_pos_lc": "у ребёнка",
-                "sub_loc": "У ребёнка", "sub_loc_lc": "ребёнка",
-                "sub_term": "вашего ребёнка", "sub_term_cap": "Вашего ребёнка",
-                "sub_to": "ребёнку", "v_suffix": "употребляйте", "v_keep": "продолжайте",
+                "sub_pos": "У ребёнка",
+                "sub_pos_nom": "Ребёнок",
+                "sub_pos_lc": "у ребёнка",
+                "sub_loc": "У ребёнка",
+                "sub_loc_lc": "ребёнка",
+                "sub_term": "вашего ребёнка",
+                "sub_term_cap": "Вашего ребёнка",
+                "sub_to": "ребёнку",
+                "v_suffix": "употребляйте",
+                "v_keep": "продолжайте",
             },
             "adult": {
-                "sub_pos": "У вас", "sub_pos_nom": "Вы", "sub_pos_lc": "у вас",
-                "sub_loc": "У вас", "sub_loc_lc": "вас",
-                "sub_term": "вашего", "sub_term_cap": "Вашего",
-                "sub_to": "вам", "v_suffix": "употребляйте", "v_keep": "продолжайте",
+                "sub_pos": "У вас",
+                "sub_pos_nom": "Вы",
+                "sub_pos_lc": "у вас",
+                "sub_loc": "У вас",
+                "sub_loc_lc": "вас",
+                "sub_term": "вашего",
+                "sub_term_cap": "Вашего",
+                "sub_to": "вам",
+                "v_suffix": "употребляйте",
+                "v_keep": "продолжайте",
             },
         },
         "en": {
             "child": {
-                "sub_pos": "The child has", "sub_pos_nom": "The child", "sub_pos_lc": "the child has",
-                "sub_loc": "The child's", "sub_loc_lc": "the child's",
-                "sub_term": "your child's", "sub_term_cap": "Your child's",
-                "sub_to": "the child", "v_suffix": "consume", "v_keep": "continue",
+                "sub_pos": "The child has",
+                "sub_pos_nom": "The child",
+                "sub_pos_lc": "the child has",
+                "sub_loc": "The child's",
+                "sub_loc_lc": "the child's",
+                "sub_term": "your child's",
+                "sub_term_cap": "Your child's",
+                "sub_to": "the child",
+                "v_suffix": "consume",
+                "v_keep": "continue",
             },
             "adult": {
-                "sub_pos": "You have", "sub_pos_nom": "You", "sub_pos_lc": "you have",
-                "sub_loc": "Your", "sub_loc_lc": "your",
-                "sub_term": "your own", "sub_term_cap": "Your own",
-                "sub_to": "you", "v_suffix": "consume", "v_keep": "continue",
+                "sub_pos": "You have",
+                "sub_pos_nom": "You",
+                "sub_pos_lc": "you have",
+                "sub_loc": "Your",
+                "sub_loc_lc": "your",
+                "sub_term": "your own",
+                "sub_term_cap": "Your own",
+                "sub_to": "you",
+                "v_suffix": "consume",
+                "v_keep": "continue",
             },
         },
         "kz": {
             "child": {
-                "sub_pos": "Балада", "sub_pos_nom": "Бала", "sub_pos_lc": "балада",
-                "sub_loc": "Баланың", "sub_loc_lc": "баланың",
-                "sub_term": "балаңыздың", "sub_term_cap": "Балаңыздың",
-                "sub_to": "балаға", "v_suffix": "қолданыңыз", "v_keep": "жалғастырыңыз",
+                "sub_pos": "Балада",
+                "sub_pos_nom": "Бала",
+                "sub_pos_lc": "балада",
+                "sub_loc": "Баланың",
+                "sub_loc_lc": "баланың",
+                "sub_term": "балаңыздың",
+                "sub_term_cap": "Балаңыздың",
+                "sub_to": "балаға",
+                "v_suffix": "қолданыңыз",
+                "v_keep": "жалғастырыңыз",
             },
             "adult": {
-                "sub_pos": "Сізде", "sub_pos_nom": "Сіз", "sub_pos_lc": "сізде",
-                "sub_loc": "Сіздің", "sub_loc_lc": "сіздің",
-                "sub_term": "өзіңіздің", "sub_term_cap": "Өзіңіздің",
-                "sub_to": "сізге", "v_suffix": "қолданыңыз", "v_keep": "жалғастырыңыз",
+                "sub_pos": "Сізде",
+                "sub_pos_nom": "Сіз",
+                "sub_pos_lc": "сізде",
+                "sub_loc": "Сіздің",
+                "sub_loc_lc": "сіздің",
+                "sub_term": "өзіңіздің",
+                "sub_term_cap": "Өзіңіздің",
+                "sub_to": "сізге",
+                "v_suffix": "қолданыңыз",
+                "v_keep": "жалғастырыңыз",
             },
         },
     }
@@ -593,22 +776,55 @@ def calculate_detailed_indices(
     addr = addr_lang["adult"] if is_adult else addr_lang["child"]
     fmt = dict(addr)
 
-
     # 1. Ideal ko'rsatkichlar
     ideal_h = get_ideal_height_by_age_and_gender(age, gender_norm)
     if age <= 21:
         if is_male:
             boys_weights = {
-                2: 12.0, 3: 14.3, 4: 16.3, 5: 18.3, 6: 20.5, 7: 22.9, 8: 25.6, 9: 28.5,
-                10: 31.9, 11: 35.6, 12: 39.9, 13: 45.3, 14: 50.8, 15: 56.5, 16: 61.5,
-                17: 66.0, 18: 70.3, 19: 72.0, 20: 74.0, 21: 75.0
+                2: 12.0,
+                3: 14.3,
+                4: 16.3,
+                5: 18.3,
+                6: 20.5,
+                7: 22.9,
+                8: 25.6,
+                9: 28.5,
+                10: 31.9,
+                11: 35.6,
+                12: 39.9,
+                13: 45.3,
+                14: 50.8,
+                15: 56.5,
+                16: 61.5,
+                17: 66.0,
+                18: 70.3,
+                19: 72.0,
+                20: 74.0,
+                21: 75.0,
             }
             ideal_w = boys_weights.get(age, 70.0)
         else:
             girls_weights = {
-                2: 11.5, 3: 13.9, 4: 15.7, 5: 17.6, 6: 19.7, 7: 22.0, 8: 24.5, 9: 27.2,
-                10: 30.1, 11: 33.4, 12: 37.0, 13: 41.1, 14: 45.3, 15: 49.1, 16: 52.1,
-                17: 54.4, 18: 56.0, 19: 57.0, 20: 58.0, 21: 59.0
+                2: 11.5,
+                3: 13.9,
+                4: 15.7,
+                5: 17.6,
+                6: 19.7,
+                7: 22.0,
+                8: 24.5,
+                9: 27.2,
+                10: 30.1,
+                11: 33.4,
+                12: 37.0,
+                13: 41.1,
+                14: 45.3,
+                15: 49.1,
+                16: 52.1,
+                17: 54.4,
+                18: 56.0,
+                19: 57.0,
+                20: 58.0,
+                21: 59.0,
             }
             ideal_w = girls_weights.get(age, 55.0)
     else:
@@ -715,7 +931,11 @@ def calculate_detailed_indices(
         # Interpolating body trunk length standard deviation proportionally from height
         ideal_body_len = ideal_h * 0.45  # approximation of trunk ratio
         sd_body_len = sd_h * 0.45
-        z_body_length = round((float(body_length) - ideal_body_len) / sd_body_len, 2) if sd_body_len > 0 else 0
+        z_body_length = (
+            round((float(body_length) - ideal_body_len) / sd_body_len, 2)
+            if sd_body_len > 0
+            else 0
+        )
 
     z_w = round((weight - ideal_w) / sd_w, 2) if sd_w > 0 else 0
     z_bmi = round((bmi - ideal_bmi) / sd_bmi, 2) if sd_bmi > 0 else 0
@@ -799,14 +1019,14 @@ def calculate_detailed_indices(
         morph_type_key = "giperstenik"
     else:
         morph_type_key = "normostenik"
-    
+
     morphological_type = _local_t(morph_type_key, lang)
 
     if -1.0 <= z_h <= 1.0:
         bio_age_key = "mos"
     else:
         bio_age_key = "mos_emas"
-    
+
     biological_age_status = _local_t(bio_age_key, lang)
 
     secular_trend_key = "mavjud" if z_h > 1.0 else "yo'q"
@@ -872,7 +1092,6 @@ def calculate_detailed_indices(
     else:
         advice.append(_local_t("adv_soma_normo", lang, **fmt))
 
-
     # Bioimpedance
     fm_p = (fm / weight) * 100 if weight > 0 else 0
     if fm_p > high_fm:
@@ -931,5 +1150,5 @@ def calculate_detailed_indices(
         "biological_age_status_key": bio_age_key,
         "secular_trend": secular_trend,
         "secular_trend_key": secular_trend_key,
-        "advice": advice
+        "advice": advice,
     }

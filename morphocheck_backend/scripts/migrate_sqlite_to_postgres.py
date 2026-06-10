@@ -34,11 +34,10 @@ sys.path.insert(0, str(ROOT))
 
 # .env ni yuklash
 from dotenv import load_dotenv
+
 load_dotenv(ROOT / ".env")
 
-import sqlalchemy as sa
 from sqlalchemy import create_engine, inspect, text
-from sqlalchemy.orm import sessionmaker
 
 # ─── Jadval tartibi (FK bog'liqlik bo'yicha) ───────────────────────────────
 # users birinchi — boshqalar unga referens qiladi
@@ -61,6 +60,7 @@ BOOLEAN_COLUMNS: dict[str, list[str]] = {
 }
 
 # ─── Asosiy migratsiya ─────────────────────────────────────────────────────
+
 
 def get_tables_in_sqlite(sqlite_engine) -> list[str]:
     """SQLite dagi barcha jadvallarni qaytaradi."""
@@ -94,7 +94,9 @@ def migrate_table(
     pg_tables = pg_inspector.get_table_names()
     if table_name not in pg_tables:
         if verbose:
-            print(f"  ⚠️  '{table_name}' PostgreSQL da yo'q — avval jadvallarni yarating (init_db)")
+            print(
+                f"  ⚠️  '{table_name}' PostgreSQL da yo'q — avval jadvallarni yarating (init_db)"
+            )
         return 0
 
     # Ustunlar kesishmasini topish (ikkalasida ham mavjud bo'lganlar)
@@ -116,16 +118,17 @@ def migrate_table(
 
     with sqlite_engine.connect() as sqlite_conn:
         # Jami qatorlar soni
-        total = sqlite_conn.execute(
-            text(f"SELECT COUNT(*) FROM {table_name}")
-        ).scalar() or 0
+        total = (
+            sqlite_conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
+            or 0
+        )
 
         if verbose:
             print(f"   SQLite qatorlar: {total}")
 
         if total == 0:
             if verbose:
-                print(f"   ✅  Bo'sh jadval — o'tkazildi")
+                print("   ✅  Bo'sh jadval — o'tkazildi")
             return 0
 
         cols_sql = ", ".join(f'"{c}"' for c in common_cols)
@@ -140,7 +143,9 @@ def migrate_table(
 
         while True:
             rows = sqlite_conn.execute(
-                text(f"SELECT {cols_sql} FROM {table_name} LIMIT {batch_size} OFFSET {offset}")
+                text(
+                    f"SELECT {cols_sql} FROM {table_name} LIMIT {batch_size} OFFSET {offset}"
+                )
             ).fetchall()
 
             if not rows:
@@ -180,7 +185,8 @@ def reset_sequences(pg_engine, verbose: bool = True):
 
     with pg_engine.begin() as conn:
         # Barcha seriya (SERIAL / BIGSERIAL) ustunlarni topish
-        result = conn.execute(text("""
+        result = conn.execute(
+            text("""
             SELECT
                 t.table_name,
                 c.column_name,
@@ -192,16 +198,19 @@ def reset_sequences(pg_engine, verbose: bool = True):
             WHERE t.table_schema = 'public'
               AND t.table_type = 'BASE TABLE'
               AND c.column_default LIKE 'nextval%'
-        """)).fetchall()
+        """)
+        ).fetchall()
 
         for table_name, column_name, seq_name in result:
             if not seq_name:
                 continue
             try:
-                conn.execute(text(
-                    f"SELECT setval('{seq_name}', "
-                    f"COALESCE((SELECT MAX({column_name}) FROM {table_name}), 0) + 1, false)"
-                ))
+                conn.execute(
+                    text(
+                        f"SELECT setval('{seq_name}', "
+                        f"COALESCE((SELECT MAX({column_name}) FROM {table_name}), 0) + 1, false)"
+                    )
+                )
                 if verbose:
                     print(f"   ✅  {table_name}.{column_name} sequence yangilandi")
             except Exception as e:
@@ -257,15 +266,19 @@ def main():
         help="PostgreSQL URL (default: .env dagi DATABASE_URL)",
     )
     parser.add_argument(
-        "--batch", type=int, default=500,
+        "--batch",
+        type=int,
+        default=500,
         help="Har bir o'tishda nechta qator (default: 500)",
     )
     parser.add_argument(
-        "--no-verify", action="store_true",
+        "--no-verify",
+        action="store_true",
         help="Tekshirishni o'tkazib yuborish",
     )
     parser.add_argument(
-        "--tables", nargs="*",
+        "--tables",
+        nargs="*",
         help="Faqat shu jadvallarni ko'chirish (bo'sh = hammasi)",
     )
     args = parser.parse_args()
@@ -320,19 +333,14 @@ def main():
     print("\n🏗️   PostgreSQL da jadvallar yaratish...")
     try:
         from models.base import Base
-        from models.user import User
-        from models.userdata import PatientAnalysis, ResearchRecord
-        from models.chat import ChatMessage
-        from models.audit import AuditLog
-        from models.payment import Payment
-        from models.clinical import ClinicalSetting
-        from models.auth_device import LoginVerificationCode, TrustedLoginDevice
 
         Base.metadata.create_all(bind=pg_engine)
         print("   ✅  Jadvallar tayyor")
     except Exception as e:
         print(f"   ⚠️  Jadval yaratishda xatolik: {e}")
-        print("   💡  Backend avval ishga tushirilgan bo'lsa, jadvallar allaqachon mavjud")
+        print(
+            "   💡  Backend avval ishga tushirilgan bo'lsa, jadvallar allaqachon mavjud"
+        )
 
     # Ko'chirish
     tables_to_migrate = args.tables if args.tables else TABLE_ORDER
@@ -353,6 +361,7 @@ def main():
         except Exception as e:
             print(f"\n  ❌  {table} ko'chirishda xatolik: {e}")
             import traceback
+
             traceback.print_exc()
 
     # Sequence yangilash
@@ -368,7 +377,7 @@ def main():
     elapsed = (datetime.now() - start_time).total_seconds()
 
     print("\n" + "=" * 60)
-    print(f"  ✅  Migratsiya yakunlandi!")
+    print("  ✅  Migratsiya yakunlandi!")
     print(f"  Jami ko'chirilgan: {total_migrated} qator")
     print(f"  Vaqt: {elapsed:.1f} sekund")
     print("=" * 60)

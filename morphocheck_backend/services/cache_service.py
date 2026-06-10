@@ -71,7 +71,9 @@ class CacheService:
         if not redis_url:
             return None
         try:
-            client = redis.Redis.from_url(redis_url, socket_connect_timeout=1, socket_timeout=1)
+            client = redis.Redis.from_url(
+                redis_url, socket_connect_timeout=1, socket_timeout=1
+            )
             client.ping()
             self._redis_client = client
             return client

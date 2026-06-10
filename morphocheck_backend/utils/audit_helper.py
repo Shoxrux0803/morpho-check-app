@@ -4,6 +4,7 @@ from models.audit import AuditLog
 from fastapi import Request
 from typing import Optional
 
+
 def record_audit_log(
     db: Session,
     user_id: Optional[int],
@@ -11,7 +12,7 @@ def record_audit_log(
     target_type: Optional[str] = None,
     target_id: Optional[int] = None,
     details: Optional[str] = None,
-    request: Optional[Request] = None
+    request: Optional[Request] = None,
 ):
     """
     Saves an audit log entry to the database.
@@ -35,9 +36,9 @@ def record_audit_log(
         target_type=target_type,
         target_id=target_id,
         details=details,
-        ip_address=ip_address
+        ip_address=ip_address,
     )
-    
+
     db.add(log_entry)
     try:
         db.commit()

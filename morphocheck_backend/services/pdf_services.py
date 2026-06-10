@@ -1,4 +1,11 @@
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image,
+)
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -15,7 +22,11 @@ from utils.translit import lat2cyr
 
 __all__ = ["generate_pdf_report"]
 
-LOGO_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'src', 'assets', 'morphocheck-logo.png'))
+LOGO_PATH = os.path.abspath(
+    os.path.join(
+        os.path.dirname(__file__), "..", "..", "src", "assets", "morphocheck-logo.png"
+    )
+)
 
 # ---------------------------------------------------------------------------
 # Til lug'atlari
@@ -35,7 +46,6 @@ PDF_LABELS = {
         "address": "Manzil:",
         "id_code": "ID kod:",
         "parents_phone": "Ota-ona telefon raqami:",
-
         "male": "Erkak",
         "female": "Ayol",
         "results_section": "TAHLILNING ASOSIY NATIJALARI",
@@ -103,7 +113,6 @@ PDF_LABELS = {
         "address": "Адрес:",
         "id_code": "ID код:",
         "parents_phone": "Телефон родителей:",
-
         "male": "Мужской",
         "female": "Женский",
         "results_section": "ОСНОВНЫЕ РЕЗУЛЬТАТЫ АНАЛИЗА",
@@ -172,7 +181,6 @@ PDF_LABELS = {
         "address": "Address:",
         "id_code": "ID Code:",
         "parents_phone": "Parent phone:",
-
         "male": "Male",
         "female": "Female",
         "results_section": "MAIN ANALYSIS RESULTS",
@@ -240,7 +248,6 @@ PDF_LABELS = {
         "mahalla": "Махалля:",
         "address": "Мекенжай:",
         "id_code": "ID коды:",
-
         "male": "Ер",
         "female": "Әйел",
         "results_section": "ТАЛДАУДЫҢ НЕГІЗГІ НӘТИЖЕЛЕРІ",
@@ -366,25 +373,33 @@ PDF_LABELS["ky"] = {
     "thigh_ratio": "Сан пропорциясы",
     "thigh_note": "Бойго салыштырмалуу",
 }
+
+
 def setup_font():
     try:
-        font_path = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'DejaVuSans.ttf')
-        pdfmetrics.registerFont(TTFont('DejaVu', font_path))
-        return 'DejaVu'
+        font_path = os.path.join(
+            os.path.dirname(__file__), "..", "fonts", "DejaVuSans.ttf"
+        )
+        pdfmetrics.registerFont(TTFont("DejaVu", font_path))
+        return "DejaVu"
     except Exception as e:
         print(f"Shrift ulashda xatolik: {e}")
-        return 'Helvetica'
+        return "Helvetica"
 
 
 def create_header():
     drawing = Drawing(400, 1)
-    drawing.add(Line(0, 0, 400, 0, strokeColor=colors.HexColor("#3498db"), strokeWidth=2))
+    drawing.add(
+        Line(0, 0, 400, 0, strokeColor=colors.HexColor("#3498db"), strokeWidth=2)
+    )
     return drawing
 
 
 def create_divider():
     drawing = Drawing(400, 1)
-    drawing.add(Line(0, 0, 400, 0, strokeColor=colors.HexColor("#bdc3c7"), strokeWidth=1))
+    drawing.add(
+        Line(0, 0, 400, 0, strokeColor=colors.HexColor("#bdc3c7"), strokeWidth=1)
+    )
     return drawing
 
 
@@ -407,7 +422,9 @@ def draw_watermark(canvas, doc):
         img_height = 5.4 * inch
         x = (page_width - img_width) / 2
         y = (page_height - img_height) / 2 - 0.15 * inch
-        canvas.drawImage(LOGO_PATH, x, y, width=img_width, height=img_height, mask='auto')
+        canvas.drawImage(
+            LOGO_PATH, x, y, width=img_width, height=img_height, mask="auto"
+        )
     canvas.restoreState()
 
 
@@ -541,9 +558,11 @@ PDF_LABELS["tm"] = {
     "qr_title": "QR kod",
     "qr_hint": "Yazgyny acmak ucin skan ediň",
 }
-def generate_pdf_file(data: dict, lang: str = 'uz'):
+
+
+def generate_pdf_file(data: dict, lang: str = "uz"):
     # Til lug'atini olish (topilmasa UZ)
-    L = PDF_LABELS.get(lang, PDF_LABELS['uz'])
+    L = PDF_LABELS.get(lang, PDF_LABELS["uz"])
     fallback_extra = {
         "uz": {
             "doctor_note": "Shifokor izohi:",
@@ -585,29 +604,29 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         rightMargin=30,
         leftMargin=30,
         topMargin=40,
-        bottomMargin=40
+        bottomMargin=40,
     )
 
     styles = getSampleStyleSheet()
     font_name = setup_font()
 
-    styles['Normal'].fontName = font_name
-    styles['Heading2'].fontName = font_name
+    styles["Normal"].fontName = font_name
+    styles["Heading2"].fontName = font_name
 
     title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Title'],
+        "CustomTitle",
+        parent=styles["Title"],
         fontSize=16,
         alignment=1,
         spaceAfter=14,
         fontName=font_name,
         textColor=colors.HexColor("#2c3e50"),
-        borderPadding=10
+        borderPadding=10,
     )
 
     brand_style = ParagraphStyle(
-        'BrandTitle',
-        parent=styles['Normal'],
+        "BrandTitle",
+        parent=styles["Normal"],
         fontSize=18,
         leading=20,
         fontName=font_name,
@@ -616,8 +635,8 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     )
 
     section_title_style = ParagraphStyle(
-        'SectionTitle',
-        parent=styles['Heading2'],
+        "SectionTitle",
+        parent=styles["Heading2"],
         fontSize=14,
         spaceBefore=15,
         spaceAfter=10,
@@ -625,39 +644,45 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         textColor=colors.HexColor("#34495e"),
         backColor=colors.HexColor("#ecf0f1"),
         borderPadding=5,
-        leftIndent=10
+        leftIndent=10,
     )
 
     highlight_style = ParagraphStyle(
-        'Highlight',
-        parent=styles['Normal'],
+        "Highlight",
+        parent=styles["Normal"],
         fontSize=10,
         fontName=font_name,
         textColor=colors.HexColor("#7f8c8d"),
-        alignment=0
+        alignment=0,
     )
 
     elements = []
 
     if os.path.exists(LOGO_PATH):
-        logo_image = Image(LOGO_PATH, width=0.72*inch, height=0.72*inch)
+        logo_image = Image(LOGO_PATH, width=0.72 * inch, height=0.72 * inch)
         brand_table = Table(
-            [[
-                logo_image,
-                Paragraph(
-                    "<b>MorphoCheck Pro</b><br/><font size='9' color='#64748b'>Clinical anthropometric analysis</font>",
-                    brand_style,
-                ),
-            ]],
-            colWidths=[0.9*inch, 5.2*inch],
+            [
+                [
+                    logo_image,
+                    Paragraph(
+                        "<b>MorphoCheck Pro</b><br/><font size='9' color='#64748b'>Clinical anthropometric analysis</font>",
+                        brand_style,
+                    ),
+                ]
+            ],
+            colWidths=[0.9 * inch, 5.2 * inch],
         )
-        brand_table.setStyle(TableStyle([
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
-            ('TOPPADDING', (0, 0), (-1, -1), 0),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ]))
+        brand_table.setStyle(
+            TableStyle(
+                [
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                    ("TOPPADDING", (0, 0), (-1, -1), 0),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
         elements.append(brand_table)
 
     # Sarlavha
@@ -671,11 +696,11 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             return data.get(key_snake, data.get(key_camel, default))
         return getattr(data, key_snake, getattr(data, key_camel, default))
 
-    first_name = gv('first_name', 'firstName', '')
-    last_name = gv('last_name', 'lastName', '')
-    age_y = gv('age', 'age', 0)
-    age_m = gv('age_months', 'ageMonths', 0)
-    age_d = gv('age_days', 'ageDays', 0)
+    first_name = gv("first_name", "firstName", "")
+    last_name = gv("last_name", "lastName", "")
+    age_y = gv("age", "age", 0)
+    age_m = gv("age_months", "ageMonths", 0)
+    age_d = gv("age_days", "ageDays", 0)
 
     # Ensure integers
     try:
@@ -691,26 +716,27 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     except (TypeError, ValueError):
         age_d = 0
 
-    gender = gv('gender', 'gender', '')
-    birth_date = gv('birth_date', 'birthDate', '')
-    examination_date = gv('examination_date', 'examinationDate', '')
-    preschool_institution = gv('preschool_institution', 'preschoolInstitution', '')
-    region = gv('region', 'region', '')
-    district = gv('district', 'district', '')
-    mahalla = gv('mahalla', 'mahalla', '')
-    address = gv('address', 'address', '')
-    id_code_val = gv('id_code', 'idCode', '')
-    parents_phone = gv('parents_phone', 'parentsPhone', '')
-    doctor_note = gv('doctor_note', 'doctorNote', '')
-    record_url = gv('record_url', 'recordUrl', '')
+    gender = gv("gender", "gender", "")
+    birth_date = gv("birth_date", "birthDate", "")
+    examination_date = gv("examination_date", "examinationDate", "")
+    preschool_institution = gv("preschool_institution", "preschoolInstitution", "")
+    region = gv("region", "region", "")
+    district = gv("district", "district", "")
+    mahalla = gv("mahalla", "mahalla", "")
+    address = gv("address", "address", "")
+    id_code_val = gv("id_code", "idCode", "")
+    parents_phone = gv("parents_phone", "parentsPhone", "")
+    doctor_note = gv("doctor_note", "doctorNote", "")
+    record_url = gv("record_url", "recordUrl", "")
 
     # Sana formatini o'zgartirish (YYYY-MM-DD -> DD.MM.YYYY)
     def format_date_str(d_str):
-        if not d_str or not isinstance(d_str, str): return d_str
+        if not d_str or not isinstance(d_str, str):
+            return d_str
         try:
             # Agar format YYYY-MM-DD bo'lsa
-            if len(d_str) == 10 and d_str[4] == '-' and d_str[7] == '-':
-                parts = d_str.split('-')
+            if len(d_str) == 10 and d_str[4] == "-" and d_str[7] == "-":
+                parts = d_str.split("-")
                 return f"{parts[2]}.{parts[1]}.{parts[0]}"
         except (IndexError, TypeError, ValueError):
             return d_str
@@ -733,123 +759,195 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         age_str += f", {age_d} {L.get('unit_day', 'kun')}"
 
     gender_lower = (gender or "").lower()
-    gender_text = L["male"] if ("erkak" in gender_lower or "o'g'il" in gender_lower or "male" in gender_lower) else L["female"]
+    gender_text = (
+        L["male"]
+        if (
+            "erkak" in gender_lower
+            or "o'g'il" in gender_lower
+            or "male" in gender_lower
+        )
+        else L["female"]
+    )
 
     personal_info_data = [
         [L["full_name"], f"{first_name} {last_name}"],
         [L["age"], age_str],
         [L["gender"], gender_text],
-        [L["birth_date"], birth_date or '-'],
-        [L["exam_date"], examination_date or '-'],
+        [L["birth_date"], birth_date or "-"],
+        [L["exam_date"], examination_date or "-"],
         [L["institution"], localize_value(preschool_institution, transliterate=True)],
         [L["region"], localize_value(region, transliterate=True)],
         [L["district"], localize_value(district, transliterate=True)],
         [L["mahalla"], localize_value(mahalla, transliterate=True)],
         [L["address"], localize_value(address, transliterate=True)],
-        [L.get("parents_phone", "Parents' phone:"), parents_phone or '-'],
-        [L["id_code"], id_code_val or '-'],
+        [L.get("parents_phone", "Parents' phone:"), parents_phone or "-"],
+        [L["id_code"], id_code_val or "-"],
     ]
 
-
-    personal_table = Table(personal_info_data, colWidths=[2.5*inch, 3.5*inch])
-    personal_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('FONTNAME', (0, 0), (-1, -1), font_name),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#f8f9fa")),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#e9ecef")),
-        ('PADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
+    personal_table = Table(personal_info_data, colWidths=[2.5 * inch, 3.5 * inch])
+    personal_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("FONTNAME", (0, 0), (-1, -1), font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 10),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8f9fa")),
+                ("GRID", (0, 0), (-1, -1), 1, colors.HexColor("#e9ecef")),
+                ("PADDING", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
     elements.append(personal_table)
     elements.append(Spacer(1, 20))
 
     if doctor_note:
         note_table = Table(
-            [[
-                Paragraph(f"<b>{L['doctor_note']}</b>", styles['Normal']),
-                Paragraph(str(doctor_note), styles['Normal']),
-            ]],
-            colWidths=[1.6*inch, 4.4*inch],
+            [
+                [
+                    Paragraph(f"<b>{L['doctor_note']}</b>", styles["Normal"]),
+                    Paragraph(str(doctor_note), styles["Normal"]),
+                ]
+            ],
+            colWidths=[1.6 * inch, 4.4 * inch],
         )
-        note_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), font_name),
-            ('FONTSIZE', (0, 0), (-1, -1), 9),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#fff7ed")),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#fed7aa")),
-            ('PADDING', (0, 0), (-1, -1), 7),
-        ]))
+        note_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fff7ed")),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#fed7aa")),
+                    ("PADDING", (0, 0), (-1, -1), 7),
+                ]
+            )
+        )
         elements.append(note_table)
         elements.append(Spacer(1, 16))
 
     # Tahlil natijalari
     elements.append(Paragraph(L["results_section"], section_title_style))
 
-    analysis_data_dict = data.get('analysis', {}) if isinstance(data, dict) else getattr(data, 'analysis', {})
+    analysis_data_dict = (
+        data.get("analysis", {})
+        if isinstance(data, dict)
+        else getattr(data, "analysis", {})
+    )
 
     analysis_table_data = [
         [L["indicator"], L["value"], L["note"]],
-        [L["bmi_label"], f"{analysis_data_dict.get('bmi', 0):.1f}", report_text(analysis_data_dict.get('bmi_category', ''), lang)],
-        [L["somatotype"], report_text(analysis_data_dict.get('somatotype', ''), lang), L["somatotype_note"]],
-        [L["ideal_weight"],
-         f"{analysis_data_dict.get('ideal_weight_range', {}).get('min', 0)} - {analysis_data_dict.get('ideal_weight_range', {}).get('max', 0)} kg",
-         L["ideal_weight_note"]],
-        [L["weight_diff"], f"{analysis_data_dict.get('weight_diff', 0):.1f} kg", L["weight_diff_note"]],
+        [
+            L["bmi_label"],
+            f"{analysis_data_dict.get('bmi', 0):.1f}",
+            report_text(analysis_data_dict.get("bmi_category", ""), lang),
+        ],
+        [
+            L["somatotype"],
+            report_text(analysis_data_dict.get("somatotype", ""), lang),
+            L["somatotype_note"],
+        ],
+        [
+            L["ideal_weight"],
+            f"{analysis_data_dict.get('ideal_weight_range', {}).get('min', 0)} - {analysis_data_dict.get('ideal_weight_range', {}).get('max', 0)} kg",
+            L["ideal_weight_note"],
+        ],
+        [
+            L["weight_diff"],
+            f"{analysis_data_dict.get('weight_diff', 0):.1f} kg",
+            L["weight_diff_note"],
+        ],
     ]
 
-    shoulder_length_val = data.get('shoulder_length', 0) if isinstance(data, dict) else getattr(data, 'shoulder_length', 0)
+    shoulder_length_val = (
+        data.get("shoulder_length", 0)
+        if isinstance(data, dict)
+        else getattr(data, "shoulder_length", 0)
+    )
     try:
         is_deep_analysis = float(shoulder_length_val) > 0
     except (TypeError, ValueError):
         is_deep_analysis = False
 
-    detailed = analysis_data_dict.get('indices', {})
+    detailed = analysis_data_dict.get("indices", {})
     if detailed and is_deep_analysis:
-        analysis_table_data.append([L["hmai"], f"{detailed.get('hmai', '')}", report_text(detailed.get('hmai_desc', ''), lang)])
-        analysis_table_data.append([L["mii"], f"{detailed.get('mii', '')}", report_text(detailed.get('mii_desc', ''), lang)])
-        analysis_table_data.append([L["adi"], f"{detailed.get('adi', '')}", report_text(detailed.get('adi_desc', ''), lang)])
+        analysis_table_data.append(
+            [
+                L["hmai"],
+                f"{detailed.get('hmai', '')}",
+                report_text(detailed.get("hmai_desc", ""), lang),
+            ]
+        )
+        analysis_table_data.append(
+            [
+                L["mii"],
+                f"{detailed.get('mii', '')}",
+                report_text(detailed.get("mii_desc", ""), lang),
+            ]
+        )
+        analysis_table_data.append(
+            [
+                L["adi"],
+                f"{detailed.get('adi', '')}",
+                report_text(detailed.get("adi_desc", ""), lang),
+            ]
+        )
 
     if is_deep_analysis:
-        shoulder_ratio = analysis_data_dict.get('shoulder_ratio', 0)
+        shoulder_ratio = analysis_data_dict.get("shoulder_ratio", 0)
         if shoulder_ratio:
-            analysis_table_data.append([L["shoulder_ratio"], f"{shoulder_ratio}%", L["shoulder_note"]])
+            analysis_table_data.append(
+                [L["shoulder_ratio"], f"{shoulder_ratio}%", L["shoulder_note"]]
+            )
 
-        thigh_ratio = analysis_data_dict.get('thigh_ratio', 0)
+        thigh_ratio = analysis_data_dict.get("thigh_ratio", 0)
         if thigh_ratio:
-            analysis_table_data.append([L["thigh_ratio"], f"{thigh_ratio}%", L["thigh_note"]])
+            analysis_table_data.append(
+                [L["thigh_ratio"], f"{thigh_ratio}%", L["thigh_note"]]
+            )
 
-    col_widths = [2.0*inch, 1.3*inch, 3.1*inch]
+    col_widths = [2.0 * inch, 1.3 * inch, 3.1 * inch]
 
     formatted_analysis_data = []
     for row in analysis_table_data:
-        formatted_analysis_data.append([
-            Paragraph(str(row[0]), styles['Normal']),
-            Paragraph(str(row[1]), styles['Normal']),
-            Paragraph(str(row[2]), styles['Normal']),
-        ])
+        formatted_analysis_data.append(
+            [
+                Paragraph(str(row[0]), styles["Normal"]),
+                Paragraph(str(row[1]), styles["Normal"]),
+                Paragraph(str(row[2]), styles["Normal"]),
+            ]
+        )
 
     t_analysis = Table(formatted_analysis_data, colWidths=col_widths)
-    t_analysis.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#3498db")),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME', (0, 0), (-1, 0), font_name),
-        ('FONTSIZE', (0, 0), (-1, 0), 11),
-        ('FONTNAME', (0, 1), (-1, -1), font_name),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#dee2e6")),
-        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8f9fa")]),
-        ('PADDING', (0, 0), (-1, -1), 6),
-    ]))
+    t_analysis.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#3498db")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("FONTNAME", (0, 0), (-1, 0), font_name),
+                ("FONTSIZE", (0, 0), (-1, 0), 11),
+                ("FONTNAME", (0, 1), (-1, -1), font_name),
+                ("FONTSIZE", (0, 1), (-1, -1), 9),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("GRID", (0, 0), (-1, -1), 1, colors.HexColor("#dee2e6")),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -1),
+                    [colors.white, colors.HexColor("#f8f9fa")],
+                ),
+                ("PADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
     elements.append(t_analysis)
     elements.append(Spacer(1, 25))
 
     # BMI holati
-    bmi_value = analysis_data_dict.get('bmi', 0)
+    bmi_value = analysis_data_dict.get("bmi", 0)
     if bmi_value < 18.5:
         bmi_status = L["bmi_underweight"]
         bmi_color = "#3498db"
@@ -864,7 +962,7 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         bmi_color = "#e74c3c"
 
     # BMI kategoriyasi tilga moslab
-    bmi_val_raw = analysis_data_dict.get('bmi', 0)
+    bmi_val_raw = analysis_data_dict.get("bmi", 0)
     if bmi_val_raw is None:
         bmi_val_raw = 0
     bmi_cat_float = float(bmi_val_raw)
@@ -882,95 +980,155 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["recommendation"], bmi_cat_text],
     ]
 
-    bmi_table = Table(bmi_info, colWidths=[2*inch, 4*inch])
-    bmi_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(bmi_color)),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
-        ('FONTNAME', (0, 0), (-1, -1), font_name),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('PADDING', (0, 0), (-1, -1), 8),
-        ('BORDER', (0, 0), (-1, -1), 1, colors.white),
-    ]))
+    bmi_table = Table(bmi_info, colWidths=[2 * inch, 4 * inch])
+    bmi_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(bmi_color)),
+                ("TEXTCOLOR", (0, 0), (-1, -1), colors.white),
+                ("FONTNAME", (0, 0), (-1, -1), font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 10),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("PADDING", (0, 0), (-1, -1), 8),
+                ("BORDER", (0, 0), (-1, -1), 1, colors.white),
+            ]
+        )
+    )
     elements.append(bmi_table)
     elements.append(Spacer(1, 20))
 
     # AI Bashoratlari bo'limi
-    ai_preds = data.get('ai_predictions', {}) if isinstance(data, dict) else getattr(data, 'ai_predictions', {})
+    ai_preds = (
+        data.get("ai_predictions", {})
+        if isinstance(data, dict)
+        else getattr(data, "ai_predictions", {})
+    )
     if ai_preds:
-        elements.append(Paragraph(L.get("ai_title", "PROGNOSTIK TAHLIL VA XAVFLAR (AI YORDAMIDA)"), section_title_style))
-        
+        elements.append(
+            Paragraph(
+                L.get("ai_title", "PROGNOSTIK TAHLIL VA XAVFLAR (AI YORDAMIDA)"),
+                section_title_style,
+            )
+        )
+
         # 1. 18 Yoshdagi Taxminiy Bo'y (faqat 18 yoshdan kichiklar uchun)
         try:
             current_age = int(float(age_y))
         except (TypeError, ValueError):
             current_age = 0
-            
+
         if current_age < 18:
-            adult_height = ai_preds.get('adult_height_prediction', 0)
+            adult_height = ai_preds.get("adult_height_prediction", 0)
             ai_height_info = [
-                [Paragraph(f"<b>{L.get('ai_adult_height', '18 yoshdagi taxminiy bo\'y:')}</b>", styles['Normal']), Paragraph(f"<b>{adult_height} sm</b>", styles['Normal'])]
+                [
+                    Paragraph(
+                        f"<b>{L.get('ai_adult_height', "18 yoshdagi taxminiy bo'y:")}</b>",
+                        styles["Normal"],
+                    ),
+                    Paragraph(f"<b>{adult_height} sm</b>", styles["Normal"]),
+                ]
             ]
-            
-            t_ai_height = Table(ai_height_info, colWidths=[3.5*inch, 2.5*inch])
-            t_ai_height.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), font_name),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#f4ecf7")),
-                ('PADDING', (0, 0), (-1, -1), 8),
-                ('BORDER', (0, 0), (-1, -1), 1, colors.HexColor("#d2b4de")),
-            ]))
+
+            t_ai_height = Table(ai_height_info, colWidths=[3.5 * inch, 2.5 * inch])
+            t_ai_height.setStyle(
+                TableStyle(
+                    [
+                        ("FONTNAME", (0, 0), (-1, -1), font_name),
+                        ("FONTSIZE", (0, 0), (-1, -1), 10),
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f4ecf7")),
+                        ("PADDING", (0, 0), (-1, -1), 8),
+                        ("BORDER", (0, 0), (-1, -1), 1, colors.HexColor("#d2b4de")),
+                    ]
+                )
+            )
             elements.append(t_ai_height)
             elements.append(Spacer(1, 10))
-        
+
         # 2. Xavflar
-        risks = ai_preds.get('risks', {})
+        risks = ai_preds.get("risks", {})
         ai_risks_data = [
-            [Paragraph(f"<b>{L.get('ai_risk_type', 'Xavf turi')}</b>", styles['Normal']), Paragraph(f"<b>{L.get('ai_probability', 'Ehtimollik (%)')}</b>", styles['Normal'])]
+            [
+                Paragraph(
+                    f"<b>{L.get('ai_risk_type', 'Xavf turi')}</b>", styles["Normal"]
+                ),
+                Paragraph(
+                    f"<b>{L.get('ai_probability', 'Ehtimollik (%)')}</b>",
+                    styles["Normal"],
+                ),
+            ]
         ]
-        
+
         risk_labels = [
-            (L.get("risk_obesity", "Semizlik (Obesity)"), risks.get('obesity_risk', 0)),
-            (L.get("risk_metabolic", "Metabolik Sindrom"), risks.get('metabolic_syndrome_risk', 0)),
-            (L.get("risk_musculoskeletal", "Tayanch-harakat tizimi buzilishlari"), risks.get('musculoskeletal_risk', 0))
+            (L.get("risk_obesity", "Semizlik (Obesity)"), risks.get("obesity_risk", 0)),
+            (
+                L.get("risk_metabolic", "Metabolik Sindrom"),
+                risks.get("metabolic_syndrome_risk", 0),
+            ),
+            (
+                L.get("risk_musculoskeletal", "Tayanch-harakat tizimi buzilishlari"),
+                risks.get("musculoskeletal_risk", 0),
+            ),
         ]
-        
+
         for label, val in risk_labels:
             color = "#e74c3c" if val > 50 else ("#f39c12" if val > 25 else "#2ecc71")
-            val_para = Paragraph(f"<font color='{color}'><b>{val}%</b></font>", styles['Normal'])
-            ai_risks_data.append([Paragraph(label, styles['Normal']), val_para])
-            
-        t_ai_risks = Table(ai_risks_data, colWidths=[4.2*inch, 1.8*inch])
-        t_ai_risks.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), font_name),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#ecf0f1")),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#fdfefe")),
-            ('PADDING', (0, 0), (-1, -1), 6),
-        ]))
+            val_para = Paragraph(
+                f"<font color='{color}'><b>{val}%</b></font>", styles["Normal"]
+            )
+            ai_risks_data.append([Paragraph(label, styles["Normal"]), val_para])
+
+        t_ai_risks = Table(ai_risks_data, colWidths=[4.2 * inch, 1.8 * inch])
+        t_ai_risks.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 10),
+                    ("GRID", (0, 0), (-1, -1), 1, colors.HexColor("#ecf0f1")),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#fdfefe")),
+                    ("PADDING", (0, 0), (-1, -1), 6),
+                ]
+            )
+        )
         elements.append(t_ai_risks)
         elements.append(Spacer(1, 20))
 
     # AI Parent Tips (NEW)
-    ai_tips = data.get('ai_parent_tips', []) if isinstance(data, dict) else getattr(data, 'ai_parent_tips', [])
+    ai_tips = (
+        data.get("ai_parent_tips", [])
+        if isinstance(data, dict)
+        else getattr(data, "ai_parent_tips", [])
+    )
     if ai_tips:
-        elements.append(Paragraph(L.get("ai_parent_tips_title", "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR"), section_title_style))
-        
+        elements.append(
+            Paragraph(
+                L.get(
+                    "ai_parent_tips_title",
+                    "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR",
+                ),
+                section_title_style,
+            )
+        )
+
         import html
+
         tips_data = []
         for tip in ai_tips:
             # Escape HTML characters to prevent ReportLab Paragraph errors
             safe_tip = html.escape(report_text(tip, lang))
-            tips_data.append([Paragraph(f"• {safe_tip}", styles['Normal'])])
-            
-        t_tips = Table(tips_data, colWidths=[6.0*inch])
-        t_tips.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), font_name),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#e8f8f5")),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('BORDER', (0, 0), (-1, -1), 1, colors.HexColor("#a3e4d7")),
-        ]))
+            tips_data.append([Paragraph(f"• {safe_tip}", styles["Normal"])])
+
+        t_tips = Table(tips_data, colWidths=[6.0 * inch])
+        t_tips.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 10),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#e8f8f5")),
+                    ("PADDING", (0, 0), (-1, -1), 8),
+                    ("BORDER", (0, 0), (-1, -1), 1, colors.HexColor("#a3e4d7")),
+                ]
+            )
+        )
         elements.append(t_tips)
         elements.append(Spacer(1, 20))
 
@@ -988,7 +1146,11 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
     elements.append(Paragraph(section_title, section_title_style))
 
     # 1. Structured Advices (Specialist, Nutrition, Activity, Checkups)
-    advices_dict = data.get('advices', {}) if isinstance(data, dict) else getattr(data, 'advices', {})
+    advices_dict = (
+        data.get("advices", {})
+        if isinstance(data, dict)
+        else getattr(data, "advices", {})
+    )
     if advices_dict:
         advice_categories = [
             ("sport", L.get("adv_sport", "Sports orientation")),
@@ -997,37 +1159,48 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
             ("activity", L.get("adv_activity", "Activity")),
             ("checkups", L.get("adv_checkups", "Checkups")),
         ]
-        
+
         cat_elements = []
         for key, title in advice_categories:
             val = advices_dict.get(key)
             if val and val != "—":
-                cat_elements.append([
-                    Paragraph(f"<b>{title}:</b>", styles['Normal']),
-                    Paragraph(report_text(val, lang), styles['Normal'])
-                ])
-        
+                cat_elements.append(
+                    [
+                        Paragraph(f"<b>{title}:</b>", styles["Normal"]),
+                        Paragraph(report_text(val, lang), styles["Normal"]),
+                    ]
+                )
+
         if cat_elements:
-            cat_table = Table(cat_elements, colWidths=[1.8*inch, 4.2*inch])
-            cat_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), font_name),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#d5dbdb")),
-                ('PADDING', (0, 0), (-1, -1), 6),
-                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#f4f6f7")),
-            ]))
+            cat_table = Table(cat_elements, colWidths=[1.8 * inch, 4.2 * inch])
+            cat_table.setStyle(
+                TableStyle(
+                    [
+                        ("FONTNAME", (0, 0), (-1, -1), font_name),
+                        ("FONTSIZE", (0, 0), (-1, -1), 9),
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#d5dbdb")),
+                        ("PADDING", (0, 0), (-1, -1), 6),
+                        ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f4f6f7")),
+                    ]
+                )
+            )
             elements.append(cat_table)
             elements.append(Spacer(1, 15))
 
     # 2. Detailed advice list (from Bioimpedance/Indices)
-    detailed = analysis_data_dict.get('indices', {})
-    advice_list = detailed.get('advice', [])
+    detailed = analysis_data_dict.get("indices", {})
+    advice_list = detailed.get("advice", [])
 
     if advice_list:
-        elements.append(Paragraph(L.get("detailed_advices_label", "QO'SHIMCHA KO'RSATMALAR:"), styles['Normal']))
+        elements.append(
+            Paragraph(
+                L.get("detailed_advices_label", "QO'SHIMCHA KO'RSATMALAR:"),
+                styles["Normal"],
+            )
+        )
         elements.append(Spacer(1, 5))
-        
+
         advice_elements = []
         for item in advice_list:
             # Avoid showing items already present in categorized advice
@@ -1037,23 +1210,27 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
                 if item_clean in str(v):
                     already_shown = True
                     break
-            
+
             if not already_shown:
-                p = Paragraph(report_text(item, lang), styles['Normal'])
-                bullet_p = Paragraph("•", styles['Normal'])
+                p = Paragraph(report_text(item, lang), styles["Normal"])
+                bullet_p = Paragraph("•", styles["Normal"])
                 advice_elements.append([bullet_p, p])
 
         if advice_elements:
-            advice_table = Table(advice_elements, colWidths=[0.2*inch, 5.8*inch])
-            advice_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), font_name),
-                ('FONTSIZE', (0, 0), (-1, -1), 9),
-                ('PADDING', (0, 0), (-1, -1), 4),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ]))
+            advice_table = Table(advice_elements, colWidths=[0.2 * inch, 5.8 * inch])
+            advice_table.setStyle(
+                TableStyle(
+                    [
+                        ("FONTNAME", (0, 0), (-1, -1), font_name),
+                        ("FONTSIZE", (0, 0), (-1, -1), 9),
+                        ("PADDING", (0, 0), (-1, -1), 4),
+                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                    ]
+                )
+            )
             elements.append(advice_table)
     else:
-        elements.append(Paragraph(L["no_advice"], styles['Normal']))
+        elements.append(Paragraph(L["no_advice"], styles["Normal"]))
     elements.append(Spacer(1, 30))
 
     # Yakuniy qism
@@ -1065,33 +1242,43 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["report_number"], f"MCP-{datetime.datetime.now().strftime('%Y%m%d%H%M')}"],
     ]
 
-    footer_table = Table(footer_data, colWidths=[2*inch, 4*inch])
-    footer_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), font_name),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('PADDING', (0, 0), (-1, -1), 4),
-    ]))
+    footer_table = Table(footer_data, colWidths=[2 * inch, 4 * inch])
+    footer_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("PADDING", (0, 0), (-1, -1), 4),
+            ]
+        )
+    )
     elements.append(footer_table)
     if record_url or id_code_val:
         qr_value = record_url or f"MorphoCheck record: {id_code_val}"
         qr_table = Table(
-            [[
-                create_qr_drawing(qr_value),
-                Paragraph(
-                    f"<b>{L['qr_title']}</b><br/>{L['qr_hint']}<br/><font size='8'>{qr_value}</font>",
-                    styles['Normal'],
-                ),
-            ]],
-            colWidths=[1.2*inch, 4.8*inch],
+            [
+                [
+                    create_qr_drawing(qr_value),
+                    Paragraph(
+                        f"<b>{L['qr_title']}</b><br/>{L['qr_hint']}<br/><font size='8'>{qr_value}</font>",
+                        styles["Normal"],
+                    ),
+                ]
+            ],
+            colWidths=[1.2 * inch, 4.8 * inch],
         )
-        qr_table.setStyle(TableStyle([
-            ('FONTNAME', (0, 0), (-1, -1), font_name),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#dbeafe")),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#eff6ff")),
-            ('PADDING', (0, 0), (-1, -1), 8),
-        ]))
+        qr_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dbeafe")),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#eff6ff")),
+                    ("PADDING", (0, 0), (-1, -1), 8),
+                ]
+            )
+        )
         elements.append(Spacer(1, 10))
         elements.append(qr_table)
     elements.append(Spacer(1, 25))
@@ -1103,26 +1290,27 @@ def generate_pdf_file(data: dict, lang: str = 'uz'):
         [L["doctor_sign"], L["patient_sign"]],
     ]
 
-    signature_table = Table(signature_table_data, colWidths=[2.5*inch, 2.5*inch])
-    signature_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), font_name),
-        ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
+    signature_table = Table(signature_table_data, colWidths=[2.5 * inch, 2.5 * inch])
+    signature_table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, -1), font_name),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
     elements.append(signature_table)
 
     elements.append(Spacer(1, 10))
-    elements.append(Paragraph(
-        f"<i>{L['confidential']}</i>",
-        highlight_style
-    ))
+    elements.append(Paragraph(f"<i>{L['confidential']}</i>", highlight_style))
 
     doc.build(elements, onFirstPage=draw_watermark, onLaterPages=draw_watermark)
     buffer.seek(0)
     return buffer
 
 
-def generate_pdf_report(data: dict, lang: str = 'uz'):
+def generate_pdf_report(data: dict, lang: str = "uz"):
     """PDF hisobotini yaratish"""
     return generate_pdf_file(data, lang=lang)

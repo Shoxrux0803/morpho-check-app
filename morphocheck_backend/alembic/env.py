@@ -27,23 +27,25 @@ sys.path.insert(0, str(BACKEND_DIR))
 # 2. .env faylini yuklash
 # ------------------------------------------------------------
 from dotenv import load_dotenv
+
 load_dotenv(BACKEND_DIR / ".env")
 
 # ------------------------------------------------------------
 # 3. Barcha modellarni import qilish (autogenerate uchun zarur)
 #    MUHIM: Yangi model qo'shilsa, shu yerga ham qo'shing!
 # ------------------------------------------------------------
-from models.base import Base          # noqa: F401
-from models.user import User          # noqa: F401
+from models.base import Base  # noqa: F401
+from models.user import User  # noqa: F401
 from models.userdata import PatientAnalysis, ResearchRecord  # noqa: F401
-from models.audit import AuditLog     # noqa: F401
-from models.payment import Payment    # noqa: F401
-from models.chat import ChatMessage   # noqa: F401
+from models.audit import AuditLog  # noqa: F401
+from models.payment import Payment  # noqa: F401
+from models.chat import ChatMessage  # noqa: F401
 from models.clinical import ClinicalSetting  # noqa: F401
 from models.auth_device import LoginVerificationCode, TrustedLoginDevice  # noqa: F401
 
 # target_metadata — autogenerate uchun
 target_metadata = Base.metadata
+
 
 # ------------------------------------------------------------
 # 4. DATABASE_URL ni .env dan o'qish
@@ -76,6 +78,7 @@ if config.config_file_name is not None:
 
 # DATABASE_URL ni dinamik o'rnatish
 config.set_main_option("sqlalchemy.url", _get_database_url())
+
 
 # ------------------------------------------------------------
 # 5. Offline migration (SQL fayl generatsiya)

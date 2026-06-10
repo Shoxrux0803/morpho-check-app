@@ -4,6 +4,7 @@ Analytics Dashboard API Router
 /api/analytics/* — barcha endpoint lar
 Faqat admin va superadmin uchun.
 """
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional

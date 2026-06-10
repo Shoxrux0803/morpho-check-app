@@ -477,18 +477,18 @@ DOCX_LABELS = {
         "consultant": "Консультант",
         "sig_date": "Қолтаңба / Күні",
         "doctor_parent": "Маман / Ата-ана",
-    }
+    },
 }
-
 
 
 # ---------------------------------------------------------------------------
 # Kalit nomi normalizator (camelCase → snake_case)
 # ---------------------------------------------------------------------------
 
+
 def _to_snake(name: str) -> str:
     """'examinationDate' → 'examination_date'"""
-    s = re.sub(r'([A-Z])', r'_\1', name).lower().lstrip('_')
+    s = re.sub(r"([A-Z])", r"_\1", name).lower().lstrip("_")
     return s
 
 
@@ -499,13 +499,11 @@ def _normalize_data(raw: dict) -> dict:
     """
     result = {}
     for k, v in raw.items():
-        result[k] = v                   # original (camelCase yoki snake_case)
+        result[k] = v  # original (camelCase yoki snake_case)
         snake = _to_snake(k)
         if snake != k:
-            result[snake] = v           # snake_case varianti ham qo'shiladi
+            result[snake] = v  # snake_case varianti ham qo'shiladi
     return result
-
-
 
 
 def _val(data: dict, snake_key: str, default: str = "") -> str:
@@ -526,14 +524,14 @@ def _val(data: dict, snake_key: str, default: str = "") -> str:
 # Soddalashtirilgan BMI-for-age referans jadvali (WHO, bolalar uchun)
 # Format: age (yil) → [P3, P15, P50, P85, P97]  erkak uchun (qizlar uchun ≈ bir xil)
 _BMI_CENTILE_BOYS = {
-    2:  [13.4, 14.4, 16.0, 17.8, 19.7],
-    3:  [13.1, 14.0, 15.5, 17.2, 18.9],
-    4:  [12.8, 13.7, 15.2, 16.8, 18.5],
-    5:  [12.7, 13.6, 15.1, 16.8, 18.6],
-    6:  [12.7, 13.6, 15.2, 17.0, 19.1],
-    7:  [12.7, 13.7, 15.4, 17.4, 19.8],
-    8:  [12.8, 13.9, 15.7, 17.9, 20.6],
-    9:  [13.0, 14.1, 16.1, 18.5, 21.5],
+    2: [13.4, 14.4, 16.0, 17.8, 19.7],
+    3: [13.1, 14.0, 15.5, 17.2, 18.9],
+    4: [12.8, 13.7, 15.2, 16.8, 18.5],
+    5: [12.7, 13.6, 15.1, 16.8, 18.6],
+    6: [12.7, 13.6, 15.2, 17.0, 19.1],
+    7: [12.7, 13.7, 15.4, 17.4, 19.8],
+    8: [12.8, 13.9, 15.7, 17.9, 20.6],
+    9: [13.0, 14.1, 16.1, 18.5, 21.5],
     10: [13.2, 14.4, 16.5, 19.1, 22.4],
     11: [13.5, 14.8, 17.1, 19.8, 23.3],
     12: [13.9, 15.2, 17.7, 20.5, 24.1],
@@ -546,14 +544,14 @@ _BMI_CENTILE_BOYS = {
 }
 
 _BMI_CENTILE_GIRLS = {
-    2:  [13.3, 14.2, 15.7, 17.4, 19.2],
-    3:  [13.0, 13.9, 15.4, 17.1, 18.9],
-    4:  [12.7, 13.6, 15.2, 16.9, 18.8],
-    5:  [12.6, 13.6, 15.2, 17.0, 19.1],
-    6:  [12.6, 13.6, 15.3, 17.3, 19.6],
-    7:  [12.7, 13.7, 15.5, 17.7, 20.2],
-    8:  [12.8, 13.9, 15.8, 18.2, 20.9],
-    9:  [13.0, 14.2, 16.2, 18.7, 21.6],
+    2: [13.3, 14.2, 15.7, 17.4, 19.2],
+    3: [13.0, 13.9, 15.4, 17.1, 18.9],
+    4: [12.7, 13.6, 15.2, 16.9, 18.8],
+    5: [12.6, 13.6, 15.2, 17.0, 19.1],
+    6: [12.6, 13.6, 15.3, 17.3, 19.6],
+    7: [12.7, 13.7, 15.5, 17.7, 20.2],
+    8: [12.8, 13.9, 15.8, 18.2, 20.9],
+    9: [13.0, 14.2, 16.2, 18.7, 21.6],
     10: [13.2, 14.5, 16.6, 19.3, 22.3],
     11: [13.5, 14.9, 17.1, 19.9, 23.0],
     12: [13.9, 15.3, 17.6, 20.5, 23.8],
@@ -571,9 +569,15 @@ def _calc_centile(bmi: float, age: int, gender: str) -> str:
     if not bmi or age < 2 or age > 18:
         return ""
     gender = (gender or "").lower()
-    table = _BMI_CENTILE_GIRLS if ("ayol" in gender or "qiz" in gender or "girl" in gender) else _BMI_CENTILE_BOYS
+    table = (
+        _BMI_CENTILE_GIRLS
+        if ("ayol" in gender or "qiz" in gender or "girl" in gender)
+        else _BMI_CENTILE_BOYS
+    )
     age_key = min(max(age, 2), 18)
-    refs = table.get(age_key, table.get(min(table.keys(), key=lambda x: abs(x - age_key))))
+    refs = table.get(
+        age_key, table.get(min(table.keys(), key=lambda x: abs(x - age_key)))
+    )
     if not refs:
         return ""
     p3, p15, p50, p85, p97 = refs
@@ -596,9 +600,15 @@ def _calc_health_corridor(bmi: float, age: int, gender: str) -> str:
     if not bmi or age < 2 or age > 18:
         return ""
     gender = (gender or "").lower()
-    table = _BMI_CENTILE_GIRLS if ("ayol" in gender or "qiz" in gender) else _BMI_CENTILE_BOYS
+    table = (
+        _BMI_CENTILE_GIRLS
+        if ("ayol" in gender or "qiz" in gender)
+        else _BMI_CENTILE_BOYS
+    )
     age_key = min(max(age, 2), 18)
-    refs = table.get(age_key, table.get(min(table.keys(), key=lambda x: abs(x - age_key))))
+    refs = table.get(
+        age_key, table.get(min(table.keys(), key=lambda x: abs(x - age_key)))
+    )
     if not refs:
         return ""
     p3, p15, p50, p85, p97 = refs
@@ -622,14 +632,14 @@ def _dev_level(z_score_raw) -> tuple:
     try:
         z = float(z_score_raw)
     except (TypeError, ValueError):
-        return (True, False, False)   # default: yoshga mos
+        return (True, False, False)  # default: yoshga mos
 
     if z < -2.0:
-        return (False, True, False)   # Orqada qolgan
+        return (False, True, False)  # Orqada qolgan
     elif z > 2.0:
-        return (False, False, True)   # Oldinda
+        return (False, False, True)  # Oldinda
     else:
-        return (True, False, False)   # Yoshga mos
+        return (True, False, False)  # Yoshga mos
 
 
 # ---------------------------------------------------------------------------
@@ -832,45 +842,45 @@ DOCX_LABELS["tg"] = {
 
 _Z_EVAL_LABELS = {
     "uz": {
-        "very_low":  "Жуда паст (< -2 SD)",
-        "low":       "Паст (-2 … -1 SD)",
-        "normal":    "Меъёрда (-1 … +1 SD)",
-        "high":      "Юқори (+1 … +2 SD)",
+        "very_low": "Жуда паст (< -2 SD)",
+        "low": "Паст (-2 … -1 SD)",
+        "normal": "Меъёрда (-1 … +1 SD)",
+        "high": "Юқори (+1 … +2 SD)",
         "very_high": "Жуда юқори (> +2 SD)",
     },
     "ru": {
-        "very_low":  "Очень низкий (< -2 SD)",
-        "low":       "Низкий (-2 … -1 SD)",
-        "normal":    "Норма (-1 … +1 SD)",
-        "high":      "Высокий (+1 … +2 SD)",
+        "very_low": "Очень низкий (< -2 SD)",
+        "low": "Низкий (-2 … -1 SD)",
+        "normal": "Норма (-1 … +1 SD)",
+        "high": "Высокий (+1 … +2 SD)",
         "very_high": "Очень высокий (> +2 SD)",
     },
     "en": {
-        "very_low":  "Very low (< -2 SD)",
-        "low":       "Low (-2 … -1 SD)",
-        "normal":    "Normal (-1 … +1 SD)",
-        "high":      "High (+1 … +2 SD)",
+        "very_low": "Very low (< -2 SD)",
+        "low": "Low (-2 … -1 SD)",
+        "normal": "Normal (-1 … +1 SD)",
+        "high": "High (+1 … +2 SD)",
         "very_high": "Very high (> +2 SD)",
     },
     "kz": {
-        "very_low":  "Өте төмен (< -2 SD)",
-        "low":       "Төмен (-2 … -1 SD)",
-        "normal":    "Норма (-1 … +1 SD)",
-        "high":      "Жоғары (+1 … +2 SD)",
+        "very_low": "Өте төмен (< -2 SD)",
+        "low": "Төмен (-2 … -1 SD)",
+        "normal": "Норма (-1 … +1 SD)",
+        "high": "Жоғары (+1 … +2 SD)",
         "very_high": "Өте жоғары (> +2 SD)",
     },
     "ky": {
-        "very_low":  "Өтө төмөн (< -2 SD)",
-        "low":       "Төмөн (-2 … -1 SD)",
-        "normal":    "Нормада (-1 … +1 SD)",
-        "high":      "Жогору (+1 … +2 SD)",
+        "very_low": "Өтө төмөн (< -2 SD)",
+        "low": "Төмөн (-2 … -1 SD)",
+        "normal": "Нормада (-1 … +1 SD)",
+        "high": "Жогору (+1 … +2 SD)",
         "very_high": "Өтө жогору (> +2 SD)",
     },
     "tg": {
-        "very_low":  "Хеле паст (< -2 SD)",
-        "low":       "Паст (-2 … -1 SD)",
-        "normal":    "Меъёр (-1 … +1 SD)",
-        "high":      "Баланд (+1 … +2 SD)",
+        "very_low": "Хеле паст (< -2 SD)",
+        "low": "Паст (-2 … -1 SD)",
+        "normal": "Меъёр (-1 … +1 SD)",
+        "high": "Баланд (+1 … +2 SD)",
         "very_high": "Хеле баланд (> +2 SD)",
     },
 }
@@ -899,46 +909,46 @@ def _z_eval(z_raw, lang: str = "uz") -> str:
 
 _CENTILE_EVAL = {
     "uz": {
-        "< 3":   "Жуда паст (< 3-сентил)",
-        "3 - 15":  "Паст (3–15-сентил)",
+        "< 3": "Жуда паст (< 3-сентил)",
+        "3 - 15": "Паст (3–15-сентил)",
         "15 - 85": "Меъёр (15–85-сентил)",
         "85 - 97": "Юқори (85–97-сентил)",
-        "> 97":  "Жуда юқори (> 97-сентил)",
+        "> 97": "Жуда юқори (> 97-сентил)",
     },
     "ru": {
-        "< 3":   "Очень низкий (< 3-го центиля)",
-        "3 - 15":  "Низкий (3–15-й центиль)",
+        "< 3": "Очень низкий (< 3-го центиля)",
+        "3 - 15": "Низкий (3–15-й центиль)",
         "15 - 85": "Норма (15–85-й центиль)",
         "85 - 97": "Высокий (85–97-й центиль)",
-        "> 97":  "Очень высокий (> 97-го центиля)",
+        "> 97": "Очень высокий (> 97-го центиля)",
     },
     "en": {
-        "< 3":   "Very low (< 3rd centile)",
-        "3 - 15":  "Low (3rd–15th centile)",
+        "< 3": "Very low (< 3rd centile)",
+        "3 - 15": "Low (3rd–15th centile)",
         "15 - 85": "Normal (15th–85th centile)",
         "85 - 97": "High (85th–97th centile)",
-        "> 97":  "Very high (> 97th centile)",
+        "> 97": "Very high (> 97th centile)",
     },
     "kz": {
-        "< 3":   "Өте төмен (< 3-центиль)",
-        "3 - 15":  "Төмен (3–15-центиль)",
+        "< 3": "Өте төмен (< 3-центиль)",
+        "3 - 15": "Төмен (3–15-центиль)",
         "15 - 85": "Норма (15–85-центиль)",
         "85 - 97": "Жоғары (85–97-центиль)",
-        "> 97":  "Өте жоғары (> 97-центиль)",
+        "> 97": "Өте жоғары (> 97-центиль)",
     },
     "ky": {
-        "< 3":   "Өтө төмөн (< 3-сентиль)",
-        "3 - 15":  "Төмөн (3-15-сентиль)",
+        "< 3": "Өтө төмөн (< 3-сентиль)",
+        "3 - 15": "Төмөн (3-15-сентиль)",
         "15 - 85": "Норма (15-85-сентиль)",
         "85 - 97": "Жогору (85-97-сентиль)",
-        "> 97":  "Өтө жогору (> 97-сентиль)",
+        "> 97": "Өтө жогору (> 97-сентиль)",
     },
     "tg": {
-        "< 3":   "Хеле паст (< 3-сентил)",
-        "3 - 15":  "Паст (3-15-сентил)",
+        "< 3": "Хеле паст (< 3-сентил)",
+        "3 - 15": "Паст (3-15-сентил)",
         "15 - 85": "Меъёр (15-85-сентил)",
         "85 - 97": "Баланд (85-97-сентил)",
-        "> 97":  "Хеле баланд (> 97-сентил)",
+        "> 97": "Хеле баланд (> 97-сентил)",
     },
 }
 
@@ -965,8 +975,14 @@ REPORT_HEADER_TEXT = "FFFFFF"
 REPORT_BODY_TEXT = "111111"
 
 
-def _set_cell_font(cell, text: str, bold: bool = False, size: int = 8,
-                   align=WD_ALIGN_PARAGRAPH.LEFT, color: str = REPORT_BODY_TEXT):
+def _set_cell_font(
+    cell,
+    text: str,
+    bold: bool = False,
+    size: int = 8,
+    align=WD_ALIGN_PARAGRAPH.LEFT,
+    color: str = REPORT_BODY_TEXT,
+):
     cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
     para = cell.paragraphs[0]
     para.alignment = align
@@ -1028,13 +1044,20 @@ def _set_cell_borders(cell, color: str = REPORT_BORDER, size: str = "6"):
         element.set(qn("w:color"), color)
 
 
-def _set_cell_margins(cell, top: int = 10, start: int = 45, bottom: int = 10, end: int = 45):
+def _set_cell_margins(
+    cell, top: int = 10, start: int = 45, bottom: int = 10, end: int = 45
+):
     tc_pr = cell._tc.get_or_add_tcPr()
     margins = tc_pr.first_child_found_in("w:tcMar")
     if margins is None:
         margins = OxmlElement("w:tcMar")
         tc_pr.append(margins)
-    for margin, value in (("top", top), ("start", start), ("bottom", bottom), ("end", end)):
+    for margin, value in (
+        ("top", top),
+        ("start", start),
+        ("bottom", bottom),
+        ("end", end),
+    ):
         element = margins.find(qn(f"w:{margin}"))
         if element is None:
             element = OxmlElement(f"w:{margin}")
@@ -1066,22 +1089,24 @@ def _style_report_table(table, number_cols=(0,), header_rows: int = 1):
                 _shade_cell(cell, REPORT_INDEX_FILL)
                 _set_cell_text_color(cell, REPORT_HEADER_TEXT)
             else:
-                _shade_cell(cell, REPORT_ROW_FILL_A if row_idx % 2 else REPORT_ROW_FILL_B)
+                _shade_cell(
+                    cell, REPORT_ROW_FILL_A if row_idx % 2 else REPORT_ROW_FILL_B
+                )
                 _set_cell_text_color(cell, REPORT_BODY_TEXT)
 
 
 def _set_table_full_width(table):
     table.autofit = True
-    tblPr = table._element.xpath('w:tblPr')
+    tblPr = table._element.xpath("w:tblPr")
     if tblPr:
-        tblW = tblPr[0].xpath('w:tblW')
+        tblW = tblPr[0].xpath("w:tblW")
         if not tblW:
-            tblW = OxmlElement('w:tblW')
+            tblW = OxmlElement("w:tblW")
             tblPr[0].append(tblW)
         else:
             tblW = tblW[0]
-        tblW.set(qn('w:w'), '5000')
-        tblW.set(qn('w:type'), 'pct')
+        tblW.set(qn("w:w"), "5000")
+        tblW.set(qn("w:type"), "pct")
 
 
 def _add_bold_centered_title(doc, text: str, size: int = 11) -> None:
@@ -1220,6 +1245,8 @@ DOCX_LABELS["tm"] = {
     "cm": "sm",
     "kg": "kg",
 }
+
+
 def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # Barcha kalitlarni normallashtirish (camelCase → snake_case ham qo'shiladi)
     data = _normalize_data(raw_data)
@@ -1238,34 +1265,36 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     doc = Document()
 
     for section in doc.sections:
-        section.top_margin    = Cm(0.45)
+        section.top_margin = Cm(0.45)
         section.bottom_margin = Cm(0.45)
-        section.left_margin   = Cm(0.8)
-        section.right_margin  = Cm(0.6)
+        section.left_margin = Cm(0.8)
+        section.right_margin = Cm(0.6)
 
     style = doc.styles["Normal"]
     style.font.name = "Times New Roman"
     style.font.size = Pt(8)
 
     # O'zgaruvchilar - Common fields extraction moved here to avoid NameError
-    exam_date  = _val(data, "examination_date")
+    exam_date = _val(data, "examination_date")
     birth_date = _val(data, "birth_date")
-    age_val    = _val(data, "age")
-    age_m      = _val(data, "age_months", "0")
-    age_d      = _val(data, "age_days", "0")
+    age_val = _val(data, "age")
+    age_m = _val(data, "age_months", "0")
+    age_d = _val(data, "age_days", "0")
     gender_raw = _val(data, "gender").lower()
-    preschool  = LP(_val(data, "preschool_institution"))
+    preschool = LP(_val(data, "preschool_institution"))
     region_raw = _val(data, "region").lower()
     district_s = _val(data, "district").lower()
     mahalla_s = _val(data, "mahalla").lower()
-    address_s  = _val(data, "address").lower()
+    address_s = _val(data, "address").lower()
     parents_phone = _val(data, "parents_phone")
-    
+
     region_val = LP(_val(data, "region"))
     district_val = LP(_val(data, "district"))
     mahalla_val = LP(_val(data, "mahalla"))
     address_val = LP(_val(data, "address"))
-    full_address = ", ".join(filter(None, [region_val, district_val, mahalla_val, address_val]))
+    full_address = ", ".join(
+        filter(None, [region_val, district_val, mahalla_val, address_val])
+    )
 
     # SARLAVHA
     age_val_int = 0
@@ -1296,52 +1325,74 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     t1.style = "Table Grid"
     _set_table_full_width(t1)
 
-    _set_cell_font(t1.cell(0, 0), L("no"),         bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-    _set_cell_font(t1.cell(0, 1), L("indicator"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-    _set_cell_font(t1.cell(0, 2), L("data_col"),  bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+    _set_cell_font(
+        t1.cell(0, 0), L("no"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+    )
+    _set_cell_font(
+        t1.cell(0, 1),
+        L("indicator"),
+        bold=True,
+        size=9,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+    )
+    _set_cell_font(
+        t1.cell(0, 2), L("data_col"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+    )
     for c in range(3):
         _shade_cell(t1.cell(0, c))
 
     # Жинси checkbox
-    is_boy   = any(k in gender_raw for k in ("erkak", "o'g'il", "ogil", "ўғил", "male", "ер"))
-    boy_box  = _checkbox(is_boy)
+    is_boy = any(
+        k in gender_raw for k in ("erkak", "o'g'il", "ogil", "ўғил", "male", "ер")
+    )
+    boy_box = _checkbox(is_boy)
     girl_box = _checkbox(not is_boy)
 
     # Яшаш ҳудуди checkbox
     combined = f"{region_raw} {district_s} {mahalla_s} {address_s}"
-    is_city     = any(k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город"))
-    city_box    = _checkbox(is_city)
+    is_city = any(
+        k in combined for k in ("shahar", "shahri", "шаҳар", "city", "қала", "город")
+    )
+    city_box = _checkbox(is_city)
     village_box = _checkbox(not is_city)
 
-    #Age string
+    # Age string
     age_str = f"{age_val} {L('age_suffix')}" if age_val else ""
     if age_m != "0" or age_d != "0":
         age_str += f", {age_m} {L('age_months')}, {age_d} {L('age_days')}"
 
-    full_name_raw = _val(data, "full_name") or data.get("name") or f"{_val(data, 'first_name')} {_val(data, 'last_name')}".strip()
+    full_name_raw = (
+        _val(data, "full_name")
+        or data.get("name")
+        or f"{_val(data, 'first_name')} {_val(data, 'last_name')}".strip()
+    )
     full_name_val = LP(str(full_name_raw)) if full_name_raw else ""
-    id_code_val   = _val(data, "id_code")
-    
+    id_code_val = _val(data, "id_code")
+
     name_label = L("name_label_child") if age_val_int < 21 else L("name_label_adult")
     age_label = L("age_label_child") if age_val_int < 21 else L("age_label_adult")
-    
+
     rows_i = [
-        ("1", name_label,       full_name_val),
-        ("2", L("id_code"),             id_code_val),
-        ("3", L("exam_date"),              exam_date),
-        ("4", age_label,                 age_str),
-        ("5", L("gender"),                        f"{boy_box} {L('male')}    {girl_box} {L('female')}"),
-        ("6", L("birth_date"),              birth_date),
-        ("7", L("area_type"),                  f"{city_box} {L('city')}    {village_box} {L('village')}"),
-        ("8", L("institution"),        LP(preschool)),
-        ("9", L("address"),                 full_address),
-        ("10", L("parents_phone"),              parents_phone),
+        ("1", name_label, full_name_val),
+        ("2", L("id_code"), id_code_val),
+        ("3", L("exam_date"), exam_date),
+        ("4", age_label, age_str),
+        ("5", L("gender"), f"{boy_box} {L('male')}    {girl_box} {L('female')}"),
+        ("6", L("birth_date"), birth_date),
+        (
+            "7",
+            L("area_type"),
+            f"{city_box} {L('city')}    {village_box} {L('village')}",
+        ),
+        ("8", L("institution"), LP(preschool)),
+        ("9", L("address"), full_address),
+        ("10", L("parents_phone"), parents_phone),
     ]
 
     for i, (num, label, val) in enumerate(rows_i, start=1):
-        _set_cell_font(t1.cell(i, 0), num,   size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t1.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t1.cell(i, 1), label, size=9)
-        _set_cell_font(t1.cell(i, 2), val,   size=9)
+        _set_cell_font(t1.cell(i, 2), val, size=9)
 
     _set_col_width(t1, 0, 1.0)
     _set_col_width(t1, 1, 6.5)
@@ -1357,42 +1408,52 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     t2.style = "Table Grid"
     _set_table_full_width(t2)
 
-    headers2 = [L("no"), L("indicator"), L("unit"), L("value"), L("indicator"), L("unit"), L("value")]
+    headers2 = [
+        L("no"),
+        L("indicator"),
+        L("unit"),
+        L("value"),
+        L("indicator"),
+        L("unit"),
+        L("value"),
+    ]
     for c, h in enumerate(headers2):
-        _set_cell_font(t2.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(
+            t2.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+        )
         _shade_cell(t2.cell(0, c))
 
     left_metrics = [
-        ("1",  L("height"),         L("cm"), _fmt(_val(data, "height"))),
-        ("2",  L("weight"),            L("kg"), _fmt(_val(data, "weight"))),
-        ("3",  L("head"),          L("cm"), _fmt(_val(data, "head"))),
-        ("4",  L("chest"),       L("cm"), _fmt(_val(data, "chest"))),
-        ("5",  L("waist"),          L("cm"), _fmt(_val(data, "waist"))),
-        ("6",  L("sh_len"),         L("cm"), _fmt(_val(data, "shoulder_length"))),
-        ("7",  L("sh_br"),         L("cm"), _fmt(_val(data, "shoulder_breadth"))),
-        ("8",  L("sh_circ"),         L("cm"), _fmt(_val(data, "shoulder_circumference"))),
-        ("9",  L("arm_elb"), L("cm"), _fmt(_val(data, "arm_elbow_length"))),
-        ("10", L("hand"),    L("cm"), _fmt(_val(data, "hand_length"))),
+        ("1", L("height"), L("cm"), _fmt(_val(data, "height"))),
+        ("2", L("weight"), L("kg"), _fmt(_val(data, "weight"))),
+        ("3", L("head"), L("cm"), _fmt(_val(data, "head"))),
+        ("4", L("chest"), L("cm"), _fmt(_val(data, "chest"))),
+        ("5", L("waist"), L("cm"), _fmt(_val(data, "waist"))),
+        ("6", L("sh_len"), L("cm"), _fmt(_val(data, "shoulder_length"))),
+        ("7", L("sh_br"), L("cm"), _fmt(_val(data, "shoulder_breadth"))),
+        ("8", L("sh_circ"), L("cm"), _fmt(_val(data, "shoulder_circumference"))),
+        ("9", L("arm_elb"), L("cm"), _fmt(_val(data, "arm_elbow_length"))),
+        ("10", L("hand"), L("cm"), _fmt(_val(data, "hand_length"))),
     ]
 
     right_metrics = [
-        (L("thigh_len"),        L("cm"), _fmt(_val(data, "thigh_length"))),
-        (L("thigh_circ"),        L("cm"), _fmt(_val(data, "thigh_circumference"))),
-        (L("calf_len"),     L("cm"), _fmt(_val(data, "calf_length"))),
-        (L("calf_circ"),     L("cm"), _fmt(_val(data, "calf_circumference"))),
+        (L("thigh_len"), L("cm"), _fmt(_val(data, "thigh_length"))),
+        (L("thigh_circ"), L("cm"), _fmt(_val(data, "thigh_circumference"))),
+        (L("calf_len"), L("cm"), _fmt(_val(data, "calf_length"))),
+        (L("calf_circ"), L("cm"), _fmt(_val(data, "calf_circumference"))),
         (L("foot"), L("cm"), _fmt(_val(data, "foot_length"))),
-        (L("body_len"),       L("cm"), _fmt(_val(data, "body_length"))),
+        (L("body_len"), L("cm"), _fmt(_val(data, "body_length"))),
     ]
 
     for i, (num, label, unit, qiymat) in enumerate(left_metrics, start=1):
-        _set_cell_font(t2.cell(i, 0), num,    size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t2.cell(i, 1), label,  size=9)
-        _set_cell_font(t2.cell(i, 2), unit,   size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t2.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t2.cell(i, 1), label, size=9)
+        _set_cell_font(t2.cell(i, 2), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t2.cell(i, 3), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     for i, (label, unit, qiymat) in enumerate(right_metrics, start=1):
-        _set_cell_font(t2.cell(i, 4), label,  size=9)
-        _set_cell_font(t2.cell(i, 5), unit,   size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t2.cell(i, 4), label, size=9)
+        _set_cell_font(t2.cell(i, 5), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t2.cell(i, 6), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     _set_col_width(t2, 0, 0.8)
@@ -1423,28 +1484,32 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     except (TypeError, ValueError):
         age_int = 0
 
-    bmi_str    = f"{bmi_f:.1f}" if bmi_f else ""
-    bmi_cat    = LP(ky_text(analysis.get("bmi_category", "") or "", lang))
+    bmi_str = f"{bmi_f:.1f}" if bmi_f else ""
+    bmi_cat = LP(ky_text(analysis.get("bmi_category", "") or "", lang))
     zscore_str = f"{z_val:.2f}" if z_val else ""
 
     detailed = analysis.get("indices", {})
 
     # Centil va sog'lomlik yo'lagini indices orqali olamiz
-    centil_str  = detailed.get("centile", "")
-    corridor    = LP(ky_text(detailed.get("corridor", ""), lang))
+    centil_str = detailed.get("centile", "")
+    corridor = LP(ky_text(detailed.get("corridor", ""), lang))
 
     z_h_str = f"{detailed.get('z_h', 0):.2f}"
     z_w_str = f"{detailed.get('z_w', 0):.2f}"
     z_bmi_str = f"{detailed.get('z_bmi', 0):.2f}"
-    
-    z_body_length_str = f"{detailed.get('z_body_length', 0):.2f}" if detailed.get("z_body_length") is not None else ""
-    
+
+    z_body_length_str = (
+        f"{detailed.get('z_body_length', 0):.2f}"
+        if detailed.get("z_body_length") is not None
+        else ""
+    )
+
     hmai_val = detailed.get("hmai", 0)
     hmai_desc = LP(ky_text(detailed.get("hmai_desc", ""), lang))
-    
+
     mii_val = detailed.get("mii", 0)
     mii_desc = LP(ky_text(detailed.get("mii_desc", ""), lang))
-    
+
     adi_val = detailed.get("adi", 0)
     adi_desc = LP(ky_text(detailed.get("adi_desc", ""), lang))
 
@@ -1457,27 +1522,34 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     headers3 = [L("no"), L("indicator"), L("value"), L("eval")]
     for c, h in enumerate(headers3):
-        _set_cell_font(t3.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(
+            t3.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+        )
         _shade_cell(t3.cell(0, c))
 
     indices = [
-        ("1",  L("bmi_label"),    bmi_str,           bmi_cat),
-        ("2",  L("height_age_z"), z_h_str,           _z_eval(z_h_str, lang)),
-        ("3",  L("weight_age_z"), z_w_str,           _z_eval(z_w_str, lang)),
-        ("4",  L("bmi_age_z"),    z_bmi_str,         _z_eval(z_bmi_str, lang)),
-        ("5",  L("body_len_z"),   z_body_length_str, _z_eval(z_body_length_str, lang) if z_body_length_str else ""),
-        ("6",  L("centile"),      centil_str,        _centile_eval(centil_str, lang)),
-        ("7",  L("corridor"),     corridor,          ""),
-        ("8",  L("hmai_label"),   f"{hmai_val}",     hmai_desc),
-        ("9",  L("mii_label"),    f"{mii_val}",      mii_desc),
-        ("10", L("adi_label"),    f"{adi_val}",      adi_desc),
-        ("11", L("mcri_label"),   f"{mcri_val}",     mcri_desc),
+        ("1", L("bmi_label"), bmi_str, bmi_cat),
+        ("2", L("height_age_z"), z_h_str, _z_eval(z_h_str, lang)),
+        ("3", L("weight_age_z"), z_w_str, _z_eval(z_w_str, lang)),
+        ("4", L("bmi_age_z"), z_bmi_str, _z_eval(z_bmi_str, lang)),
+        (
+            "5",
+            L("body_len_z"),
+            z_body_length_str,
+            _z_eval(z_body_length_str, lang) if z_body_length_str else "",
+        ),
+        ("6", L("centile"), centil_str, _centile_eval(centil_str, lang)),
+        ("7", L("corridor"), corridor, ""),
+        ("8", L("hmai_label"), f"{hmai_val}", hmai_desc),
+        ("9", L("mii_label"), f"{mii_val}", mii_desc),
+        ("10", L("adi_label"), f"{adi_val}", adi_desc),
+        ("11", L("mcri_label"), f"{mcri_val}", mcri_desc),
     ]
 
     for i, (num, label, m_val, baholash) in enumerate(indices, start=1):
-        _set_cell_font(t3.cell(i, 0), num,      size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t3.cell(i, 1), label,    size=9)
-        _set_cell_font(t3.cell(i, 2), m_val,    size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t3.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t3.cell(i, 1), label, size=9)
+        _set_cell_font(t3.cell(i, 2), m_val, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t3.cell(i, 3), baholash, size=9)
 
     _set_col_width(t3, 0, 0.8)
@@ -1497,27 +1569,71 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     headers4 = [L("no"), L("indicator"), L("unit"), L("value"), L("norm")]
     for c, h in enumerate(headers4):
-        _set_cell_font(t4.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(
+            t4.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+        )
         _shade_cell(t4.cell(0, c))
 
     bio_results = analysis.get("indices", {})
-    
+
     bio_rows = [
-        ("1", L("tbw"),   "%",  f"{bio_results.get('tbw_percent', '')}", f"{bio_results.get('tbw_norm', '')}"),
-        ("2", L("fm_p"),   "%",  f"{bio_results.get('fm_percent', '')}",  f"{bio_results.get('fm_norm', '')}"),
-        ("3", L("fm_kg"),    L("kg"), f"{bio_results.get('fm', '')}",          f"{bio_results.get('fm_kg_norm', '')}"),
-        ("4", L("muscle"),          L("kg"), f"{bio_results.get('muscle_mass', '')}", f"{bio_results.get('muscle_norm', '')}"),
-        ("5", L("bone"),   L("kg"), f"{bio_results.get('bone_mass', '')}",   f"{bio_results.get('bone_norm', '')}"),
-        ("6", L("acm"),  "%",  f"{bio_results.get('acm_percent', '')}", f"{bio_results.get('acm_norm', '')}"),
-        ("7", L("visceral"),  "—",  f"{bio_results.get('visceral_fat', '')}", f"{bio_results.get('visceral_norm', '')}"),
+        (
+            "1",
+            L("tbw"),
+            "%",
+            f"{bio_results.get('tbw_percent', '')}",
+            f"{bio_results.get('tbw_norm', '')}",
+        ),
+        (
+            "2",
+            L("fm_p"),
+            "%",
+            f"{bio_results.get('fm_percent', '')}",
+            f"{bio_results.get('fm_norm', '')}",
+        ),
+        (
+            "3",
+            L("fm_kg"),
+            L("kg"),
+            f"{bio_results.get('fm', '')}",
+            f"{bio_results.get('fm_kg_norm', '')}",
+        ),
+        (
+            "4",
+            L("muscle"),
+            L("kg"),
+            f"{bio_results.get('muscle_mass', '')}",
+            f"{bio_results.get('muscle_norm', '')}",
+        ),
+        (
+            "5",
+            L("bone"),
+            L("kg"),
+            f"{bio_results.get('bone_mass', '')}",
+            f"{bio_results.get('bone_norm', '')}",
+        ),
+        (
+            "6",
+            L("acm"),
+            "%",
+            f"{bio_results.get('acm_percent', '')}",
+            f"{bio_results.get('acm_norm', '')}",
+        ),
+        (
+            "7",
+            L("visceral"),
+            "—",
+            f"{bio_results.get('visceral_fat', '')}",
+            f"{bio_results.get('visceral_norm', '')}",
+        ),
     ]
 
     for i, (num, label, unit, qiymat, norma) in enumerate(bio_rows, start=1):
-        _set_cell_font(t4.cell(i, 0), num,    size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t4.cell(i, 1), label,  size=9)
-        _set_cell_font(t4.cell(i, 2), unit,   size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t4.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t4.cell(i, 1), label, size=9)
+        _set_cell_font(t4.cell(i, 2), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t4.cell(i, 3), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t4.cell(i, 4), norma,  size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t4.cell(i, 4), norma, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
 
     _set_col_width(t4, 0, 0.8)
     _set_col_width(t4, 1, 6.0)
@@ -1540,7 +1656,9 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     headers5 = [L("no"), L("indicator"), L("value")]
     for c, h in enumerate(headers5):
-        _set_cell_font(t5.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(
+            t5.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+        )
         _shade_cell(t5.cell(0, c))
 
     dev_text = (
@@ -1569,15 +1687,15 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     )
 
     morph_rows = [
-        ("1", L("dev_level"),   dev_text),
-        ("2", L("morph_type"),             morph_type_text),
-        ("3", L("bio_age_match"),       bio_age_text),
-        ("4", L("secular"),  secular_trend_text),
+        ("1", L("dev_level"), dev_text),
+        ("2", L("morph_type"), morph_type_text),
+        ("3", L("bio_age_match"), bio_age_text),
+        ("4", L("secular"), secular_trend_text),
     ]
 
     for i, (num, label, result) in enumerate(morph_rows, start=1):
-        _set_cell_font(t5.cell(i, 0), num,    size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t5.cell(i, 1), label,  size=9)
+        _set_cell_font(t5.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(t5.cell(i, 1), label, size=9)
         _set_cell_font(t5.cell(i, 2), result, size=9)
 
     _set_col_width(t5, 0, 0.8)
@@ -1585,14 +1703,10 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     _set_col_width(t5, 2, 7.2)
     _style_report_table(t5)
 
-
     # -----------------------------------------------------------------------
     # VI. ЭТИК РОЗИЛИК ВА ИМЗОЛАР
     # -----------------------------------------------------------------------
-    _section_head_paragraph(
-        doc,
-        L("section_6")
-    )
+    _section_head_paragraph(doc, L("section_6"))
 
     t7 = doc.add_table(rows=5, cols=2)
     t7.style = "Table Grid"
@@ -1600,16 +1714,17 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
 
     headers7 = [L("doctor_parent"), L("sig_date")]
     for c, h in enumerate(headers7):
-        _set_cell_font(t7.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_cell_font(
+            t7.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+        )
         _shade_cell(t7.cell(0, c))
 
     for i, label in enumerate(
-        [L("parent"), L("nurse"),
-         L("specialists"), L("consultant")],
+        [L("parent"), L("nurse"), L("specialists"), L("consultant")],
         start=1,
     ):
         _set_cell_font(t7.cell(i, 0), label, size=9)
-        _set_cell_font(t7.cell(i, 1), "",    size=9)
+        _set_cell_font(t7.cell(i, 1), "", size=9)
 
     _set_col_width(t7, 0, 9.5)
     _set_col_width(t7, 1, 5.5)

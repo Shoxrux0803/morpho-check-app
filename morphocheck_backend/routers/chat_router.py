@@ -1,6 +1,6 @@
 # morphocheck_backend/routers/chat_router.py
 
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 from typing import List, Optional, Dict
 from datetime import datetime, timedelta
@@ -10,17 +10,19 @@ import uuid
 from utils.database import get_db
 from models.chat import ChatMessage
 from models.user import User
-from routers.auth_router import get_current_user, get_current_superadmin
+from routers.auth_router import get_current_user
 from pydantic import BaseModel
 
 router = APIRouter(tags=["Chat"])
 
+
 class ChatMessageCreate(BaseModel):
     recipient_id: Optional[int] = None
     content: str
-    message_type: str = "direct" # "direct" or "broadcast"
+    message_type: str = "direct"  # "direct" or "broadcast"
     reply_to_id: Optional[int] = None
     file_url: Optional[str] = None
+
 
 class ChatMessageOut(BaseModel):
     id: int
@@ -39,13 +41,26 @@ class ChatMessageOut(BaseModel):
     class Config:
         from_attributes = True
 
+
 # Typing status storage: {user_id: {"name": str, "timestamp": datetime}}
 typing_statuses: Dict[int, dict] = {}
-ALLOWED_UPLOAD_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf", ".doc", ".docx", ".xls", ".xlsx"}
+ALLOWED_UPLOAD_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".webp",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+}
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
 
 def _active_user_filter():
     return User.is_deleted == 0
+
 
 def _validate_chat_file_url(file_url: Optional[str]) -> Optional[str]:
     if not file_url:
@@ -57,6 +72,7 @@ def _validate_chat_file_url(file_url: Optional[str]) -> Optional[str]:
     if basename != normalized.rsplit("/", 1)[-1] or not basename:
         raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
     return normalized
+
 
 def _hydrate_messages(db: Session, messages: List[ChatMessage]) -> List[ChatMessageOut]:
     sender_ids = {m.sender_id for m in messages}
@@ -86,11 +102,12 @@ def _hydrate_messages(db: Session, messages: List[ChatMessage]) -> List[ChatMess
         results.append(out)
     return results
 
+
 @router.post("/send", response_model=ChatMessageOut)
 def send_message(
-    msg: ChatMessageCreate, 
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    msg: ChatMessageCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     msg.content = (msg.content or "").strip()
     if not msg.content and not msg.file_url:
@@ -100,30 +117,36 @@ def send_message(
     if msg.message_type not in {"direct", "broadcast"}:
         raise HTTPException(status_code=400, detail="Noto'g'ri xabar turi")
     if msg.message_type == "broadcast" and current_user.role != "superadmin":
-        raise HTTPException(status_code=403, detail="Only Superadmin can send broadcast messages")
-    
+        raise HTTPException(
+            status_code=403, detail="Only Superadmin can send broadcast messages"
+        )
+
     if msg.message_type == "broadcast":
         msg.recipient_id = None
     elif not msg.recipient_id and current_user.role != "superadmin":
         # Find first superadmin to send message to
-        superadmin = db.query(User).filter(
-            User.role == "superadmin",
-            _active_user_filter()
-        ).first()
+        superadmin = (
+            db.query(User)
+            .filter(User.role == "superadmin", _active_user_filter())
+            .first()
+        )
         if superadmin:
             msg.recipient_id = superadmin.id
         else:
             # Fallback if no superadmin found (should not happen normally)
             raise HTTPException(status_code=503, detail="Super admin topilmadi")
     elif msg.recipient_id:
-        recipient = db.query(User).filter(
-            User.id == msg.recipient_id,
-            _active_user_filter()
-        ).first()
+        recipient = (
+            db.query(User)
+            .filter(User.id == msg.recipient_id, _active_user_filter())
+            .first()
+        )
         if not recipient:
             raise HTTPException(status_code=404, detail="Qabul qiluvchi topilmadi")
         if current_user.role != "superadmin" and recipient.role != "superadmin":
-            raise HTTPException(status_code=403, detail="Faqat super admin bilan yozish mumkin")
+            raise HTTPException(
+                status_code=403, detail="Faqat super admin bilan yozish mumkin"
+            )
 
     new_msg = ChatMessage(
         sender_id=current_user.id,
@@ -131,16 +154,16 @@ def send_message(
         content=msg.content,
         message_type=msg.message_type,
         reply_to_id=msg.reply_to_id,
-        file_url=_validate_chat_file_url(msg.file_url)
+        file_url=_validate_chat_file_url(msg.file_url),
     )
     db.add(new_msg)
     db.commit()
     db.refresh(new_msg)
-    
+
     # Add sender name for the response
     res = ChatMessageOut.model_validate(new_msg)
     res.sender_name = current_user.name
-    
+
     # If it's a reply, get original sender name and content
     if msg.reply_to_id:
         parent = db.query(ChatMessage).filter(ChatMessage.id == msg.reply_to_id).first()
@@ -151,25 +174,27 @@ def send_message(
 
     return res
 
+
 @router.get("/my-messages", response_model=List[ChatMessageOut])
 def get_my_messages(
     message_type: Optional[str] = None,
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     # Get messages to me OR messages FROM me OR broadcast messages
     query = db.query(ChatMessage).filter(
-        (ChatMessage.recipient_id == current_user.id) | 
-        (ChatMessage.sender_id == current_user.id) |
-        (ChatMessage.message_type == "broadcast")
+        (ChatMessage.recipient_id == current_user.id)
+        | (ChatMessage.sender_id == current_user.id)
+        | (ChatMessage.message_type == "broadcast")
     )
-    
+
     if message_type:
         query = query.filter(ChatMessage.message_type == message_type)
-        
+
     messages = query.order_by(ChatMessage.created_at.desc()).limit(100).all()
-    
+
     return _hydrate_messages(db, messages)
+
 
 class ConversationOut(BaseModel):
     user_id: int
@@ -180,56 +205,80 @@ class ConversationOut(BaseModel):
     unread_count: int
     is_last_message_mine: bool
 
+
 @router.get("/conversations", response_model=List[ConversationOut])
 def get_conversations(
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     # Determine which users should be visible to current_user
     if current_user.role == "superadmin":
         # Superadmin sees only active admins and researchers
-        visible_users = db.query(User).filter(
-            User.id != current_user.id,
-            User.role.in_(["admin", "researcher"]),
-            _active_user_filter()
-        ).all()
+        visible_users = (
+            db.query(User)
+            .filter(
+                User.id != current_user.id,
+                User.role.in_(["admin", "researcher"]),
+                _active_user_filter(),
+            )
+            .all()
+        )
     else:
         # Regular users and Admins ONLY see active Superadmins
-        visible_users = db.query(User).filter(
-            User.role == "superadmin",
-            _active_user_filter()
-        ).all()
-    
+        visible_users = (
+            db.query(User)
+            .filter(User.role == "superadmin", _active_user_filter())
+            .all()
+        )
+
     results = []
     for user_obj in visible_users:
         # Get last message between current_user and user_obj
-        last_msg = db.query(ChatMessage).filter(
-            ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == user_obj.id)) |
-            ((ChatMessage.sender_id == user_obj.id) & (ChatMessage.recipient_id == current_user.id))
-        ).order_by(ChatMessage.created_at.desc()).first()
-        
+        last_msg = (
+            db.query(ChatMessage)
+            .filter(
+                (
+                    (ChatMessage.sender_id == current_user.id)
+                    & (ChatMessage.recipient_id == user_obj.id)
+                )
+                | (
+                    (ChatMessage.sender_id == user_obj.id)
+                    & (ChatMessage.recipient_id == current_user.id)
+                )
+            )
+            .order_by(ChatMessage.created_at.desc())
+            .first()
+        )
+
         # Unread count (messages FROM them TO me)
-        unread = db.query(ChatMessage).filter(
-            ChatMessage.sender_id == user_obj.id,
-            ChatMessage.recipient_id == current_user.id,
-            ChatMessage.is_read == False
-        ).count()
-        
+        unread = (
+            db.query(ChatMessage)
+            .filter(
+                ChatMessage.sender_id == user_obj.id,
+                ChatMessage.recipient_id == current_user.id,
+                ChatMessage.is_read == False,
+            )
+            .count()
+        )
+
         # Only show in list if either:
         # 1. They are a superadmin (everyone sees superadmins)
         # 2. CURRENT user is a superadmin (superadmin sees everyone)
         # 3. There is an existing conversation (should be covered by above but for safety)
-        
-        results.append({
-            "user_id": user_obj.id,
-            "user_name": user_obj.name,
-            "user_role": user_obj.role,
-            "last_message": last_msg.content if last_msg else None,
-            "last_message_time": last_msg.created_at if last_msg else None,
-            "unread_count": unread,
-            "is_last_message_mine": last_msg.sender_id == current_user.id if last_msg else False
-        })
-    
+
+        results.append(
+            {
+                "user_id": user_obj.id,
+                "user_name": user_obj.name,
+                "user_role": user_obj.role,
+                "last_message": last_msg.content if last_msg else None,
+                "last_message_time": last_msg.created_at if last_msg else None,
+                "unread_count": unread,
+                "is_last_message_mine": last_msg.sender_id == current_user.id
+                if last_msg
+                else False,
+            }
+        )
+
     # Sort by: unread count first, then last message time, then name
     # We use a custom sort key
     def sort_key(x):
@@ -243,126 +292,148 @@ def get_conversations(
     results.sort(key=sort_key, reverse=True)
     return results
 
+
 @router.get("/history/{user_id}", response_model=List[ChatMessageOut])
 def get_chat_history(
     user_id: int,
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     # For superadmin, get history with user_id
     # For normal user, they can only see history with superadmin (user_id must be superadmin or self)
-    target_user = db.query(User).filter(
-        User.id == user_id,
-        _active_user_filter()
-    ).first()
+    target_user = (
+        db.query(User).filter(User.id == user_id, _active_user_filter()).first()
+    )
     if not target_user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     if current_user.role == "superadmin":
         if target_user.role not in ["admin", "researcher"]:
-            raise HTTPException(status_code=403, detail="Bu foydalanuvchi chat ro'yxatida mavjud emas")
+            raise HTTPException(
+                status_code=403, detail="Bu foydalanuvchi chat ro'yxatida mavjud emas"
+            )
     elif target_user.role != "superadmin":
-        raise HTTPException(status_code=403, detail="Faqat super admin bilan yozish mumkin")
+        raise HTTPException(
+            status_code=403, detail="Faqat super admin bilan yozish mumkin"
+        )
 
-    messages = db.query(ChatMessage).filter(
-        ((ChatMessage.sender_id == current_user.id) & (ChatMessage.recipient_id == user_id)) |
-        ((ChatMessage.sender_id == user_id) & (ChatMessage.recipient_id == current_user.id))
-    ).order_by(ChatMessage.created_at.asc()).all()
-    
+    messages = (
+        db.query(ChatMessage)
+        .filter(
+            (
+                (ChatMessage.sender_id == current_user.id)
+                & (ChatMessage.recipient_id == user_id)
+            )
+            | (
+                (ChatMessage.sender_id == user_id)
+                & (ChatMessage.recipient_id == current_user.id)
+            )
+        )
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+
     return _hydrate_messages(db, messages)
+
 
 @router.post("/mark-read/{message_id}")
 def mark_as_read(
-    message_id: int, 
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    message_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     msg = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
     if not msg:
         raise HTTPException(status_code=404, detail="Message not found")
-    
+
     if msg.recipient_id == current_user.id or msg.message_type == "broadcast":
         msg.is_read = True
         db.commit()
         return {"status": "success"}
-    
+
     raise HTTPException(status_code=403, detail="Not authorized")
+
 
 @router.post("/mark-all-read")
 def mark_all_as_read(
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     db.query(ChatMessage).filter(
-        ChatMessage.recipient_id == current_user.id,
-        ChatMessage.is_read == False
+        ChatMessage.recipient_id == current_user.id, ChatMessage.is_read == False
     ).update({"is_read": True})
     db.commit()
     return {"status": "success"}
+
 
 @router.post("/mark-read/user/{user_id}")
 def mark_user_messages_read(
     user_id: int,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     db.query(ChatMessage).filter(
         ChatMessage.recipient_id == current_user.id,
         ChatMessage.sender_id == user_id,
-        ChatMessage.is_read == False
+        ChatMessage.is_read == False,
     ).update({"is_read": True})
     db.commit()
     return {"status": "success"}
 
+
 @router.post("/upload")
 async def upload_chat_file(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user)
+    file: UploadFile = File(...), current_user: User = Depends(get_current_user)
 ):
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in ALLOWED_UPLOAD_EXTENSIONS:
-        raise HTTPException(status_code=400, detail="Bu turdagi faylga ruxsat berilmagan")
+        raise HTTPException(
+            status_code=400, detail="Bu turdagi faylga ruxsat berilmagan"
+        )
 
     content = await file.read()
     if len(content) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=413, detail="Fayl hajmi 10 MB dan oshmasligi kerak")
+        raise HTTPException(
+            status_code=413, detail="Fayl hajmi 10 MB dan oshmasligi kerak"
+        )
     if not content:
         raise HTTPException(status_code=400, detail="Bo'sh fayl yuklanmaydi")
 
     UPLOAD_DIR = os.path.join("uploads", "chat")
     if not os.path.exists(UPLOAD_DIR):
         os.makedirs(UPLOAD_DIR)
-    
+
     unique_filename = f"{uuid.uuid4()}{file_ext}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
-    
+
     with open(file_path, "wb") as buffer:
         buffer.write(content)
-        
+
     return {"file_url": f"/uploads/chat/{unique_filename}"}
 
+
 @router.post("/typing")
-def update_typing_status(
-    current_user: User = Depends(get_current_user)
-):
+def update_typing_status(current_user: User = Depends(get_current_user)):
     typing_statuses[current_user.id] = {
         "name": current_user.name,
-        "timestamp": datetime.now()
+        "timestamp": datetime.now(),
     }
     return {"status": "ok"}
 
+
 @router.get("/typing-status")
-def get_typing_status(
-    current_user: User = Depends(get_current_user)
-):
+def get_typing_status(current_user: User = Depends(get_current_user)):
     # Remove expired statuses (older than 3 seconds)
     now = datetime.now()
-    expired = [uid for uid, status in typing_statuses.items() if (now - status["timestamp"]) > timedelta(seconds=3)]
+    expired = [
+        uid
+        for uid, status in typing_statuses.items()
+        if (now - status["timestamp"]) > timedelta(seconds=3)
+    ]
     for uid in expired:
         del typing_statuses[uid]
-        
+
     # Return list of typing users (excluding self)
     return [
-        {"id": uid, "name": status["name"]} 
-        for uid, status in typing_statuses.items() 
+        {"id": uid, "name": status["name"]}
+        for uid, status in typing_statuses.items()
         if uid != current_user.id
     ]

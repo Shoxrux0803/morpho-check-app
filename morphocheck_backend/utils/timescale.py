@@ -3,8 +3,8 @@
 TimescaleDB yordamchi funksiyalar.
 Hypertable mavjudligini tekshirish, continuous aggregate refresh va boshqalar.
 """
+
 import logging
-from typing import Optional
 from sqlalchemy import text
 from utils.database import engine
 
@@ -15,9 +15,9 @@ def is_timescaledb_available() -> bool:
     """TimescaleDB extension o'rnatilganligini tekshiradi."""
     try:
         with engine.connect() as conn:
-            result = conn.execute(text(
-                "SELECT COUNT(*) FROM pg_extension WHERE extname = 'timescaledb'"
-            )).scalar()
+            result = conn.execute(
+                text("SELECT COUNT(*) FROM pg_extension WHERE extname = 'timescaledb'")
+            ).scalar()
             return bool(result)
     except Exception:
         return False
@@ -27,10 +27,12 @@ def get_hypertables() -> list[str]:
     """Mavjud hypertablelar ro'yxatini qaytaradi."""
     try:
         with engine.connect() as conn:
-            rows = conn.execute(text(
-                "SELECT hypertable_name FROM timescaledb_information.hypertables "
-                "ORDER BY hypertable_name"
-            )).fetchall()
+            rows = conn.execute(
+                text(
+                    "SELECT hypertable_name FROM timescaledb_information.hypertables "
+                    "ORDER BY hypertable_name"
+                )
+            ).fetchall()
             return [r[0] for r in rows]
     except Exception as e:
         logger.debug("get_hypertables xatosi: %s", e)
@@ -67,19 +69,23 @@ def ensure_hypertables():
 
             try:
                 # Jadval mavjudligini tekshirish
-                exists = conn.execute(text(
-                    f"SELECT COUNT(*) FROM information_schema.tables "
-                    f"WHERE table_schema='public' AND table_name='{table_name}'"
-                )).scalar()
+                exists = conn.execute(
+                    text(
+                        f"SELECT COUNT(*) FROM information_schema.tables "
+                        f"WHERE table_schema='public' AND table_name='{table_name}'"
+                    )
+                ).scalar()
 
                 if not exists:
                     logger.debug("%s jadvali hali yaratilmagan", table_name)
                     continue
 
-                conn.execute(text(
-                    f"SELECT create_hypertable('{table_name}', '{time_column}', "
-                    f"if_not_exists => TRUE, migrate_data => TRUE)"
-                ))
+                conn.execute(
+                    text(
+                        f"SELECT create_hypertable('{table_name}', '{time_column}', "
+                        f"if_not_exists => TRUE, migrate_data => TRUE)"
+                    )
+                )
                 logger.info("✅ %s → hypertable (column: %s)", table_name, time_column)
 
             except Exception as e:
@@ -94,22 +100,29 @@ def get_timescale_stats() -> dict:
     try:
         with engine.connect() as conn:
             # Jami chunklar soni
-            chunks = conn.execute(text(
-                "SELECT COUNT(*) FROM timescaledb_information.chunks"
-            )).scalar() or 0
+            chunks = (
+                conn.execute(
+                    text("SELECT COUNT(*) FROM timescaledb_information.chunks")
+                ).scalar()
+                or 0
+            )
 
             # Hypertablelar
-            hypertables = conn.execute(text(
-                "SELECT hypertable_name, num_chunks, compression_enabled "
-                "FROM timescaledb_information.hypertables"
-            )).fetchall()
+            hypertables = conn.execute(
+                text(
+                    "SELECT hypertable_name, num_chunks, compression_enabled "
+                    "FROM timescaledb_information.hypertables"
+                )
+            ).fetchall()
 
             # Disk hajmi
-            size_info = conn.execute(text(
-                "SELECT hypertable_name, "
-                "pg_size_pretty(hypertable_size(format('%I', hypertable_name)::regclass)) AS size "
-                "FROM timescaledb_information.hypertables"
-            )).fetchall()
+            size_info = conn.execute(
+                text(
+                    "SELECT hypertable_name, "
+                    "pg_size_pretty(hypertable_size(format('%I', hypertable_name)::regclass)) AS size "
+                    "FROM timescaledb_information.hypertables"
+                )
+            ).fetchall()
 
             return {
                 "available": True,

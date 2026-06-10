@@ -1,14 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Header, Query, File, UploadFile, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, Request
 from models.audit import AuditLog
 from utils.audit_helper import record_audit_log
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, or_, asc, desc, cast, Date, case
+from sqlalchemy import func, or_, asc, desc, case
 from datetime import datetime, date, timedelta
 from typing import Optional, List
 
-import os
 import logging
-import numpy as np
 from io import BytesIO
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -22,12 +20,20 @@ from docx.enum.table import WD_ALIGN_VERTICAL
 
 from utils.database import get_db
 from models.user import User
-from models.payment import Payment 
+from models.payment import Payment
 from models.userdata import PatientAnalysis, ResearchRecord
-from routers.auth_router import get_current_user, get_current_admin, get_current_superadmin
+from routers.auth_router import (
+    get_current_user,
+    get_current_admin,
+    get_current_superadmin,
+)
 from models.schemas import (
-    UserCreate, UserUpdate, UserOut,
-    PaymentCreate, PaymentOut, PatientData
+    UserCreate,
+    UserUpdate,
+    UserOut,
+    PaymentCreate,
+    PaymentOut,
+    PatientData,
 )
 from services.analyze_service import (
     calculate_bmi as calc_full_bmi,
@@ -55,6 +61,7 @@ def split_name(full: Optional[str]) -> tuple[str, str]:
         return parts[0], ""
     return parts[0], " ".join(parts[1:])
 
+
 def calc_bmi(weight_kg: Optional[float], height_cm: Optional[float]) -> Optional[float]:
     try:
         if not weight_kg or not height_cm:
@@ -69,7 +76,12 @@ def calc_bmi(weight_kg: Optional[float], height_cm: Optional[float]) -> Optional
 
 def normalize_analysis_gender(value: Optional[str]) -> str:
     gender = (value or "").strip().lower()
-    if gender in {"ayol", "female", "f", "qiz", "girl"} or "ayol" in gender or "female" in gender or "qiz" in gender:
+    if (
+        gender in {"ayol", "female", "f", "qiz", "girl"}
+        or "ayol" in gender
+        or "female" in gender
+        or "qiz" in gender
+    ):
         return "ayol"
     return "erkak"
 
@@ -111,10 +123,14 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
         motherHeight=rec.mother_height,
         parentsPhone=rec.parents_phone,
         consentConfirmed=bool(getattr(rec, "consent_confirmed", 0)),
-        consentGuardianName=getattr(rec, "consent_guardian_name", None) or "Stored record",
-        consentGuardianRelationship=getattr(rec, "consent_guardian_relationship", None) or "guardian",
-        consentGuardianPhone=getattr(rec, "consent_guardian_phone", None) or rec.parents_phone,
-        consentPolicyVersion=getattr(rec, "consent_policy_version", None) or "helsinki-declaration-consent-v1",
+        consentGuardianName=getattr(rec, "consent_guardian_name", None)
+        or "Stored record",
+        consentGuardianRelationship=getattr(rec, "consent_guardian_relationship", None)
+        or "guardian",
+        consentGuardianPhone=getattr(rec, "consent_guardian_phone", None)
+        or rec.parents_phone,
+        consentPolicyVersion=getattr(rec, "consent_policy_version", None)
+        or "helsinki-declaration-consent-v1",
         shoulderLength=float(rec.shoulder_length or 0.0),
         shoulderBreadth=float(rec.shoulder_breadth or 0.0),
         shoulderCircumference=float(rec.shoulder_circumference or 0.0),
@@ -137,27 +153,39 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
     )
 
 
-def recalculate_analysis_fields(rec: PatientAnalysis, db: Session, lang: str = "uz") -> dict:
+def recalculate_analysis_fields(
+    rec: PatientAnalysis, db: Session, lang: str = "uz"
+) -> dict:
     all_settings = clinical_service.get_all_settings(db)
-    analysis = calc_full_bmi(build_patient_data_from_analysis(rec), all_settings=all_settings, lang=lang)
+    analysis = calc_full_bmi(
+        build_patient_data_from_analysis(rec), all_settings=all_settings, lang=lang
+    )
     rec.bmi = float(analysis["bmi"])
     rec.z_score = float(analysis["z_score"])
     rec.somatotype = str(analysis["somatotype"])
     return analysis
 
+
 def bmi_status_by_age(bmi: Optional[float], age: Optional[int]) -> str:
     if bmi is None or age is None:
         return "-"
     if age >= 20:
-        if bmi < 18.5: return "Ozg‘in"
-        if bmi < 25:   return "Normal"
-        if bmi < 30:   return "Ortiqcha"
+        if bmi < 18.5:
+            return "Ozg‘in"
+        if bmi < 25:
+            return "Normal"
+        if bmi < 30:
+            return "Ortiqcha"
         return "Semizlik"
     # 2–19: soddalashtirilgan (keyinchalik WHO Z-score bilan almashtirasiz)
-    if bmi < 12: return "Ozg‘in?"
-    if bmi < 18: return "Normal?"
-    if bmi < 22: return "Ortiqcha?"
+    if bmi < 12:
+        return "Ozg‘in?"
+    if bmi < 18:
+        return "Normal?"
+    if bmi < 22:
+        return "Ortiqcha?"
     return "Semizlik?"
+
 
 def to_dict_analysis(row: PatientAnalysis) -> dict:
     first_name, last_name = split_name(getattr(row, "name", None))
@@ -191,25 +219,37 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "parents_phone": getattr(row, "parents_phone", None),
         "consent_confirmed": bool(getattr(row, "consent_confirmed", 0)),
         "consent_guardian_name": getattr(row, "consent_guardian_name", None),
-        "consent_guardian_relationship": getattr(row, "consent_guardian_relationship", None),
+        "consent_guardian_relationship": getattr(
+            row, "consent_guardian_relationship", None
+        ),
         "consent_guardian_phone": getattr(row, "consent_guardian_phone", None),
         "consent_confirmed_at": getattr(row, "consent_confirmed_at", None),
         "consent_policy_version": getattr(row, "consent_policy_version", None),
     }
     # Agar modelda mavjud bo'lsa: region, yelka, oyoq uzunliklari va hk
     extra_fields = (
-        "region", "district", "mahalla", "address",
-        "examination_date", "birth_date", "preschool_institution",
-        "shoulder_length", "shoulder_breadth", "shoulder_circumference",
-        "arm_elbow_length", "hand_length",
-        "thigh_length", "thigh_circumference",
-        "calf_length", "calf_circumference",
-        "foot_length"
+        "region",
+        "district",
+        "mahalla",
+        "address",
+        "examination_date",
+        "birth_date",
+        "preschool_institution",
+        "shoulder_length",
+        "shoulder_breadth",
+        "shoulder_circumference",
+        "arm_elbow_length",
+        "hand_length",
+        "thigh_length",
+        "thigh_circumference",
+        "calf_length",
+        "calf_circumference",
+        "foot_length",
     )
     for extra in extra_fields:
         if hasattr(row, extra):
             payload[extra] = getattr(row, extra)
-    
+
     # Add creator name if requested
     payload["created_by_id"] = getattr(row, "created_by_id", None)
     if hasattr(row, "created_by") and row.created_by:
@@ -224,14 +264,32 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         payload["deleted_by_name"] = row.deleted_by.name
     else:
         payload["deleted_by_name"] = None
-        
+
     return payload
 
-USER_LOCATION_FIELDS = ("region", "district", "mahalla", "address", "latitude", "longitude")
+
+USER_LOCATION_FIELDS = (
+    "region",
+    "district",
+    "mahalla",
+    "address",
+    "latitude",
+    "longitude",
+)
+
 
 def clean_user_payload(data: dict, preserve_empty_location: bool = False) -> dict:
     cleaned = dict(data)
-    for key in ("name", "email", "phone", "role", "region", "district", "mahalla", "address"):
+    for key in (
+        "name",
+        "email",
+        "phone",
+        "role",
+        "region",
+        "district",
+        "mahalla",
+        "address",
+    ):
         if key in cleaned and isinstance(cleaned[key], str):
             cleaned[key] = cleaned[key].strip()
 
@@ -257,8 +315,13 @@ def clean_user_payload(data: dict, preserve_empty_location: bool = False) -> dic
 
     return cleaned
 
+
 # ------------------ USERS ----------------------
-@router.get("/users", response_model=List[UserOut], dependencies=[Depends(get_current_superadmin)])
+@router.get(
+    "/users",
+    response_model=List[UserOut],
+    dependencies=[Depends(get_current_superadmin)],
+)
 def list_users(
     db: Session = Depends(get_db),
     q: Optional[str] = Query(None),
@@ -268,7 +331,9 @@ def list_users(
     query = db.query(User).filter(User.is_deleted == 0)
     if q:
         like = f"%{q}%"
-        query = query.filter(or_(User.name.ilike(like), User.email.ilike(like), User.phone.ilike(like)))
+        query = query.filter(
+            or_(User.name.ilike(like), User.email.ilike(like), User.phone.ilike(like))
+        )
     items = (
         query.order_by(User.id.desc())
         .offset((page - 1) * page_size)
@@ -277,7 +342,12 @@ def list_users(
     )
     return items
 
-@router.get("/users/deleted", response_model=List[UserOut], dependencies=[Depends(get_current_superadmin)])
+
+@router.get(
+    "/users/deleted",
+    response_model=List[UserOut],
+    dependencies=[Depends(get_current_superadmin)],
+)
 def list_deleted_users(db: Session = Depends(get_db)):
     return (
         db.query(User)
@@ -286,36 +356,39 @@ def list_deleted_users(db: Session = Depends(get_db)):
         .all()
     )
 
+
 @router.post("/users", response_model=UserOut)
 def create_user(
-    payload: UserCreate, 
-    request: Request, 
-    db: Session = Depends(get_db), 
-    current_admin: User = Depends(get_current_superadmin)
+    payload: UserCreate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_superadmin),
 ):
     # Check if email exists
     if payload.email:
         existing_user = db.query(User).filter(User.email == payload.email).first()
         if existing_user:
-            raise HTTPException(400, "Ushbu email bilan foydalanuvchi allaqachon mavjud.")
-            
+            raise HTTPException(
+                400, "Ushbu email bilan foydalanuvchi allaqachon mavjud."
+            )
+
     user_data = clean_user_payload(payload.model_dump(exclude_unset=True))
-    
+
     # Hash password if provided
     if "password" in user_data:
         password = user_data.pop("password")
         if password:
             user_data["hashed_password"] = get_password_hash(password)
-            
+
     # Remove password_confirm before DB model creation
     if "password_confirm" in user_data:
         user_data.pop("password_confirm")
-            
+
     user = User(**user_data)
     db.add(user)
     db.commit()
     db.refresh(user)
-    
+
     # Audit Log
     record_audit_log(
         db=db,
@@ -324,37 +397,50 @@ def create_user(
         target_type="User",
         target_id=user.id,
         details=f"Yangi foydalanuvchi yaratildi: {user.name} ({user.role})",
-        request=request
+        request=request,
     )
-    
+
     return user
 
-@router.get("/users/{user_id}", response_model=UserOut, dependencies=[Depends(get_current_superadmin)])
+
+@router.get(
+    "/users/{user_id}",
+    response_model=UserOut,
+    dependencies=[Depends(get_current_superadmin)],
+)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
     return user
 
+
 @router.put("/users/{user_id}", response_model=UserOut)
 def update_user(
-    user_id: int, 
-    payload: UserUpdate, 
-    request: Request, 
+    user_id: int,
+    payload: UserUpdate,
+    request: Request,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_superadmin)
+    current_admin: User = Depends(get_current_superadmin),
 ):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
-        
-    update_data = clean_user_payload(payload.model_dump(exclude_unset=True), preserve_empty_location=True)
-    
+
+    update_data = clean_user_payload(
+        payload.model_dump(exclude_unset=True), preserve_empty_location=True
+    )
+
     # Check if new email conflicts with other users
     if "email" in update_data and update_data["email"] != user.email:
-        existing_user = db.query(User).filter(User.email == update_data["email"]).first()
+        existing_user = (
+            db.query(User).filter(User.email == update_data["email"]).first()
+        )
         if existing_user:
-            raise HTTPException(400, "Ushbu email allaqachon boshqa foydalanuvchi tomonidan band etilgan.")
+            raise HTTPException(
+                400,
+                "Ushbu email allaqachon boshqa foydalanuvchi tomonidan band etilgan.",
+            )
 
     if "password" in update_data:
         password = update_data.pop("password")
@@ -363,10 +449,10 @@ def update_user(
 
     for k, v in update_data.items():
         setattr(user, k, v)
-        
+
     db.commit()
     db.refresh(user)
-    
+
     # Audit Log
     record_audit_log(
         db=db,
@@ -375,27 +461,28 @@ def update_user(
         target_type="User",
         target_id=user.id,
         details=f"Foydalanuvchi ma'lumotlari yangilandi: {user.name}",
-        request=request
+        request=request,
     )
-    
+
     return user
+
 
 @router.delete("/users/{user_id}")
 def delete_user(
-    user_id: int, 
-    request: Request, 
+    user_id: int,
+    request: Request,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_superadmin)
+    current_admin: User = Depends(get_current_superadmin),
 ):
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(404, "User not found")
-    
+
     user.is_deleted = 1
     user.deleted_at = datetime.utcnow()
     user.deleted_by_id = current_admin.id
     db.commit()
-    
+
     # Audit Log
     record_audit_log(
         db=db,
@@ -404,17 +491,18 @@ def delete_user(
         target_type="User",
         target_id=user_id,
         details=f"Foydalanuvchi o'chirildi: {user.name}",
-        request=request
+        request=request,
     )
-    
+
     return {"status": "deleted"}
+
 
 @router.post("/users/{user_id}/restore", response_model=UserOut)
 def restore_user(
     user_id: int,
     request: Request,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_superadmin)
+    current_admin: User = Depends(get_current_superadmin),
 ):
     user = db.get(User, user_id)
     if not user:
@@ -433,10 +521,11 @@ def restore_user(
         target_type="User",
         target_id=user_id,
         details=f"Foydalanuvchi tiklandi: {user.name}",
-        request=request
+        request=request,
     )
 
     return user
+
 
 # ---------------- ANALYSES ---------------------
 @router.get("/analyses")
@@ -462,7 +551,7 @@ def list_analyses(
         # Oddiy admin: faqat o'z ma'lumotlari + o'chirilmaganlar
         base = base.filter(
             PatientAnalysis.created_by_id == current_user.id,
-            PatientAnalysis.is_deleted == 0
+            PatientAnalysis.is_deleted == 0,
         )
     else:
         # Super admin: barcha ma'lumotlar
@@ -512,47 +601,51 @@ def list_analyses(
     if col is not None:
         base = base.order_by(asc(col) if sort_dir == "asc" else desc(col))
 
-    base = base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by))
+    base = base.options(
+        joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by)
+    )
 
     items_db = base.offset(max(0, (page - 1) * page_size)).limit(page_size).all()
     items = [to_dict_analysis(r) for r in items_db]
     return {"items": items, "total": int(total)}
 
+
 @router.get("/analyses/{analysis_id}")
 def get_analysis(
-    analysis_id: int, 
+    analysis_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
 ):
     rec = db.get(PatientAnalysis, analysis_id)
     if not rec:
         raise HTTPException(404, "Analysis not found")
-    
+
     # Ownership Check
     if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
         raise HTTPException(403, "Ushbu ma'lumotni ko'rishga huquqingiz yo'q")
-        
+
     return to_dict_analysis(rec)
+
 
 class AdminDeleteRequestModel(BaseModel):
     ids: List[int]
 
+
 @router.delete("/analyses")
 def delete_analyses(
-    payload: AdminDeleteRequestModel, 
+    payload: AdminDeleteRequestModel,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
 ):
-    """Soft delete: ma'lumot DB dan o'chirmaydi, is_deleted=1 deb belgilaydi.
-    """
+    """Soft delete: ma'lumot DB dan o'chirmaydi, is_deleted=1 deb belgilaydi."""
     if not payload.ids:
         return {"deleted": 0}
     try:
         q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
         if current_user.role != "superadmin":
             q = q.filter(PatientAnalysis.created_by_id == current_user.id)
-        
+
         records = q.all()
         count = 0
         names = []
@@ -562,19 +655,19 @@ def delete_analyses(
             rec.deleted_at = datetime.utcnow()
             count += 1
             names.append(rec.name)
-        
+
         db.commit()
-        
+
         if count > 0:
             record_audit_log(
                 db=db,
                 user_id=current_user.id,
                 action="DELETE_SOFT",
                 target_type="PatientAnalysis",
-                details=f"{count} ta tahlil savatga yuborildi: {', '.join(names[:3])}{'...' if len(names)>3 else ''}",
-                request=request
+                details=f"{count} ta tahlil savatga yuborildi: {', '.join(names[:3])}{'...' if len(names) > 3 else ''}",
+                request=request,
             )
-            
+
         return {"deleted": count}
     except Exception as e:
         db.rollback()
@@ -586,7 +679,7 @@ def hard_delete_analyses(
     payload: AdminDeleteRequestModel,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin)
+    current_user: User = Depends(get_current_superadmin),
 ):
     """Haqiqiy o'chirish — faqat super admin. DB dan butunlay o'chiradi."""
     if not payload.ids:
@@ -595,7 +688,7 @@ def hard_delete_analyses(
         q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
         deleted = q.delete(synchronize_session=False)
         db.commit()
-        
+
         if deleted:
             record_audit_log(
                 db=db,
@@ -603,9 +696,9 @@ def hard_delete_analyses(
                 action="DELETE_HARD",
                 target_type="PatientAnalysis",
                 details=f"{deleted} ta tahlil butunlay o'chirildi (IDlar: {payload.ids[:5]})",
-                request=request
+                request=request,
             )
-            
+
         return {"deleted": int(deleted or 0)}
     except Exception as e:
         db.rollback()
@@ -617,21 +710,20 @@ def restore_analyses(
     payload: AdminDeleteRequestModel,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin)
+    current_user: User = Depends(get_current_superadmin),
 ):
     """O'chirilgan ma'lumotni tiklash — faqat super admin."""
     if not payload.ids:
         return {"restored": 0}
     try:
         q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
-        count = q.update({
-            "is_deleted": 0,
-            "deleted_by_id": None,
-            "deleted_at": None
-        }, synchronize_session=False)
-        
+        count = q.update(
+            {"is_deleted": 0, "deleted_by_id": None, "deleted_at": None},
+            synchronize_session=False,
+        )
+
         db.commit()
-        
+
         if count:
             record_audit_log(
                 db=db,
@@ -639,36 +731,37 @@ def restore_analyses(
                 action="RESTORE",
                 target_type="PatientAnalysis",
                 details=f"{count} ta tahlil savatdan tiklandi (IDlar: {payload.ids[:5]})",
-                request=request
+                request=request,
             )
-            
+
         return {"restored": int(count)}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"DB error: {e}")
 
+
 @router.put("/analyses/{analysis_id}")
 def update_analysis(
-    analysis_id: int, 
-    payload: dict, 
+    analysis_id: int,
+    payload: dict,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
 ):
     try:
         rec = db.get(PatientAnalysis, analysis_id)
         if not rec:
             raise HTTPException(404, "Analysis not found")
-            
+
         # Ownership Check
         if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
             raise HTTPException(403, "Ushbu ma'lumotni o'zgartirishga huquqingiz yo'q")
-            
+
         old_name = rec.name
-        
+
         # ... logic for update (kept as is) ...
         # (Actually I need to keep the code here to avoid broken endpoint)
-        
+
         # 1. Ismni yangilash
         first_name = payload.get("firstName")
         last_name = payload.get("lastName")
@@ -688,24 +781,55 @@ def update_analysis(
 
         # 3. Barcha o'lchovlarni yangilash
         fields_to_update = [
-            "age", "age_months", "age_days", "gender", "height", "weight", "chest", "waist", "head",
-            "shoulder_length", "shoulder_breadth", "shoulder_circumference",
-            "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
-            "calf_length", "calf_circumference", "foot_length", "body_length",
-            "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat",
-            "mahalla", "address", "examination_date", "birth_date", "preschool_institution", "ai_recommendations",
-            "parents_phone", "doctor_note", "consent_guardian_name",
-            "consent_guardian_relationship", "consent_guardian_phone",
-            "consent_policy_version"
+            "age",
+            "age_months",
+            "age_days",
+            "gender",
+            "height",
+            "weight",
+            "chest",
+            "waist",
+            "head",
+            "shoulder_length",
+            "shoulder_breadth",
+            "shoulder_circumference",
+            "arm_elbow_length",
+            "hand_length",
+            "thigh_length",
+            "thigh_circumference",
+            "calf_length",
+            "calf_circumference",
+            "foot_length",
+            "body_length",
+            "total_body_water",
+            "fat_percent",
+            "fat_mass",
+            "muscle_mass",
+            "bone_mass",
+            "acm",
+            "visceral_fat",
+            "mahalla",
+            "address",
+            "examination_date",
+            "birth_date",
+            "preschool_institution",
+            "ai_recommendations",
+            "parents_phone",
+            "doctor_note",
+            "consent_guardian_name",
+            "consent_guardian_relationship",
+            "consent_guardian_phone",
+            "consent_policy_version",
         ]
-        
+
         changes = []
         for f in fields_to_update:
             camel_f = "".join(x.capitalize() or "_" for x in f.split("_"))
-            camel_f = camel_f[0].lower() + camel_f[1:] 
+            camel_f = camel_f[0].lower() + camel_f[1:]
             val = payload.get(camel_f)
-            if val is None: val = payload.get(f)
-                
+            if val is None:
+                val = payload.get(f)
+
             if val is not None:
                 old_val = getattr(rec, f)
                 if str(old_val) != str(val):
@@ -713,7 +837,9 @@ def update_analysis(
                 setattr(rec, f, val)
 
         if "consent_confirmed" in payload or "consentConfirmed" in payload:
-            consent_value = payload.get("consent_confirmed", payload.get("consentConfirmed"))
+            consent_value = payload.get(
+                "consent_confirmed", payload.get("consentConfirmed")
+            )
             old_val = bool(getattr(rec, "consent_confirmed", 0))
             new_val = bool(consent_value)
             rec.consent_confirmed = 1 if new_val else 0
@@ -741,21 +867,26 @@ def update_analysis(
                 f"Sport: {advices.get('sport', '')}"
             )
         except Exception as exc:
-            logger.warning("Updated analysis recalculation failed for id=%s: %s", rec.id, exc, exc_info=True)
+            logger.warning(
+                "Updated analysis recalculation failed for id=%s: %s",
+                rec.id,
+                exc,
+                exc_info=True,
+            )
 
         db.commit()
         db.refresh(rec)
-        
+
         record_audit_log(
             db=db,
             user_id=current_user.id,
             action="UPDATE",
             target_type="PatientAnalysis",
             target_id=rec.id,
-            details=f"Tahlil yangilandi: {rec.name}. O'zgarishlar: {', '.join(changes[:3])}{'...' if len(changes)>3 else ''}",
-            request=request
+            details=f"Tahlil yangilandi: {rec.name}. O'zgarishlar: {', '.join(changes[:3])}{'...' if len(changes) > 3 else ''}",
+            request=request,
         )
-        
+
         return to_dict_analysis(rec)
     except HTTPException:
         db.rollback()
@@ -763,7 +894,9 @@ def update_analysis(
     except Exception as e:
         db.rollback()
         logger.exception("CRITICAL ERROR in update_analysis: %s", e)
-        raise HTTPException(status_code=500, detail=f"Ma'lumotni yangilashda xatolik: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Ma'lumotni yangilashda xatolik: {str(e)}"
+        )
 
 
 # ---------------- PAYMENTS ---------------------
@@ -778,9 +911,9 @@ def list_payments(
     q = db.query(Payment)
     if user_id:
         q = q.filter(Payment.user_id == user_id)
-        
-    # Ownership Filter for payments if needed? 
-    # Current request focuses on Admin panel data (analyses). 
+
+    # Ownership Filter for payments if needed?
+    # Current request focuses on Admin panel data (analyses).
     # Keep payments as is for now or filter by related analyses creator?
     # Usually payments are global for superadmin, but if we want to filter:
     # if current_user.role == "admin":
@@ -793,13 +926,17 @@ def list_payments(
     )
     return items
 
-@router.post("/payments", response_model=PaymentOut, dependencies=[Depends(verify_admin)])
+
+@router.post(
+    "/payments", response_model=PaymentOut, dependencies=[Depends(verify_admin)]
+)
 def create_payment(payload: PaymentCreate, db: Session = Depends(get_db)):
     p = Payment(**payload.model_dump(exclude_unset=True))
     db.add(p)
     db.commit()
     db.refresh(p)
     return p
+
 
 # ----------------- STATS ----------------------
 @router.get("/stats")
@@ -812,11 +949,11 @@ def stats(
     region: Optional[str] = Query(None),
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
-    somatotype: Optional[str] = Query(None)
+    somatotype: Optional[str] = Query(None),
 ):
     # Base count of users (only for superadmin?)
     total_users = db.query(func.count(User.id)).scalar() or 0
-    
+
     # Filter analyses stats by ownership and exclusion of deleted records
     analysis_q = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 0)
     if current_user.role != "superadmin":
@@ -824,7 +961,9 @@ def stats(
 
     # Apply Filters
     if gender:
-        analysis_q = analysis_q.filter(func.lower(PatientAnalysis.gender) == gender.lower())
+        analysis_q = analysis_q.filter(
+            func.lower(PatientAnalysis.gender) == gender.lower()
+        )
     if age_min is not None:
         analysis_q = analysis_q.filter(PatientAnalysis.age >= age_min)
     if age_max is not None:
@@ -839,36 +978,67 @@ def stats(
     if date_to:
         end_dt = datetime.combine(date_to, datetime.max.time())
         analysis_q = analysis_q.filter(PatientAnalysis.created_at <= end_dt)
-        
-    total_analyses = analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
+
+    total_analyses = (
+        analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
+    )
     total_revenue = db.query(func.coalesce(func.sum(Payment.amount), 0)).scalar() or 0
-    
+
     # Combined Query for Distribution Stats (Optimization)
     today_start = datetime.combine(date.today(), datetime.min.time())
     week_start = today_start - timedelta(days=today_start.weekday())
     prev_week_start = week_start - timedelta(days=7)
-    current_month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
-    
+    current_month_start = datetime.combine(
+        date.today().replace(day=1), datetime.min.time()
+    )
+
     dist_stats = analysis_q.with_entities(
         func.count(case(((PatientAnalysis.bmi < 18.5), 1))).label("bmi_underweight"),
-        func.count(case(((PatientAnalysis.bmi >= 18.5) & (PatientAnalysis.bmi < 25), 1))).label("bmi_normal"),
-        func.count(case(((PatientAnalysis.bmi >= 25) & (PatientAnalysis.bmi < 30), 1))).label("bmi_overweight"),
+        func.count(
+            case(((PatientAnalysis.bmi >= 18.5) & (PatientAnalysis.bmi < 25), 1))
+        ).label("bmi_normal"),
+        func.count(
+            case(((PatientAnalysis.bmi >= 25) & (PatientAnalysis.bmi < 30), 1))
+        ).label("bmi_overweight"),
         func.count(case(((PatientAnalysis.bmi >= 30), 1))).label("bmi_obese"),
         func.count(case(((PatientAnalysis.age <= 6), 1))).label("age_0_6"),
-        func.count(case(((PatientAnalysis.age > 6) & (PatientAnalysis.age <= 12), 1))).label("age_7_12"),
-        func.count(case(((PatientAnalysis.age > 12) & (PatientAnalysis.age <= 18), 1))).label("age_13_18"),
+        func.count(
+            case(((PatientAnalysis.age > 6) & (PatientAnalysis.age <= 12), 1))
+        ).label("age_7_12"),
+        func.count(
+            case(((PatientAnalysis.age > 12) & (PatientAnalysis.age <= 18), 1))
+        ).label("age_13_18"),
         func.count(case(((PatientAnalysis.age > 18), 1))).label("age_18_plus"),
-        func.count(case(((PatientAnalysis.created_at >= today_start), 1))).label("today_count"),
-        func.count(case(((PatientAnalysis.created_at >= week_start), 1))).label("week_count"),
-        func.count(case(((PatientAnalysis.created_at >= prev_week_start) & (PatientAnalysis.created_at < week_start), 1))).label("prev_week_count"),
-        func.count(case(((PatientAnalysis.created_at >= current_month_start), 1))).label("monthly_count"),
-        func.avg(PatientAnalysis.bmi).label("avg_bmi")
+        func.count(case(((PatientAnalysis.created_at >= today_start), 1))).label(
+            "today_count"
+        ),
+        func.count(case(((PatientAnalysis.created_at >= week_start), 1))).label(
+            "week_count"
+        ),
+        func.count(
+            case(
+                (
+                    (PatientAnalysis.created_at >= prev_week_start)
+                    & (PatientAnalysis.created_at < week_start),
+                    1,
+                )
+            )
+        ).label("prev_week_count"),
+        func.count(
+            case(((PatientAnalysis.created_at >= current_month_start), 1))
+        ).label("monthly_count"),
+        func.avg(PatientAnalysis.bmi).label("avg_bmi"),
     ).first()
 
     if not dist_stats:
         avg_bmi = 0
         bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
-        age_groups = [{"name": "0-6", "value": 0}, {"name": "7-12", "value": 0}, {"name": "13-18", "value": 0}, {"name": "18+", "value": 0}]
+        age_groups = [
+            {"name": "0-6", "value": 0},
+            {"name": "7-12", "value": 0},
+            {"name": "13-18", "value": 0},
+            {"name": "18+", "value": 0},
+        ]
         today_analyses = 0
         weekly_analyses = 0
         previous_week_analyses = 0
@@ -893,21 +1063,37 @@ def stats(
         monthly_analyses = dist_stats.monthly_count or 0
 
     if previous_week_analyses:
-        weekly_growth_pct = round(((weekly_analyses - previous_week_analyses) / previous_week_analyses) * 100, 1)
+        weekly_growth_pct = round(
+            ((weekly_analyses - previous_week_analyses) / previous_week_analyses) * 100,
+            1,
+        )
     else:
         weekly_growth_pct = 100.0 if weekly_analyses else 0.0
 
     # Somatotype Average Approximation (for Radar Chart)
-    avg_fat = analysis_q.with_entities(func.avg(PatientAnalysis.fat_percent)).scalar() or 20
+    avg_fat = (
+        analysis_q.with_entities(func.avg(PatientAnalysis.fat_percent)).scalar() or 20
+    )
     # Use NULLIF to prevent ZeroDivisionError
-    avg_muscle = analysis_q.with_entities(
-        func.avg(PatientAnalysis.muscle_mass / func.nullif(PatientAnalysis.weight, 0))
-    ).scalar() or 0.4
-    
+    avg_muscle = (
+        analysis_q.with_entities(
+            func.avg(
+                PatientAnalysis.muscle_mass / func.nullif(PatientAnalysis.weight, 0)
+            )
+        ).scalar()
+        or 0.4
+    )
+
     # Ectomorphy approximation using Reciprocal Ponderal Index (RPI) = height / weight^(1/3)
-    rpi_avg = analysis_q.with_entities(
-        func.avg(PatientAnalysis.height / func.nullif(func.pow(PatientAnalysis.weight, 1.0/3.0), 0))
-    ).scalar() or 40
+    rpi_avg = (
+        analysis_q.with_entities(
+            func.avg(
+                PatientAnalysis.height
+                / func.nullif(func.pow(PatientAnalysis.weight, 1.0 / 3.0), 0)
+            )
+        ).scalar()
+        or 40
+    )
 
     somato_avg = {
         "endomorph": min(7, max(1, (avg_fat / 5))),
@@ -927,9 +1113,19 @@ def stats(
             gender_map["noma'lum"] += int(c)
             continue
         gl = g.lower()
-        is_male = gl in ['erkak', 'male', 'boy', 'm', 'male'] or "o'g'il" in gl or "о'ғил" in gl or 'муж' in gl
-        is_female = gl in ['ayol', 'female', 'girl', 'f'] or 'qiz' in gl or 'қиз' in gl or 'жен' in gl
-        
+        is_male = (
+            gl in ["erkak", "male", "boy", "m", "male"]
+            or "o'g'il" in gl
+            or "о'ғил" in gl
+            or "муж" in gl
+        )
+        is_female = (
+            gl in ["ayol", "female", "girl", "f"]
+            or "qiz" in gl
+            or "қиз" in gl
+            or "жен" in gl
+        )
+
         if is_male:
             gender_map["erkak"] += int(c)
         elif is_female:
@@ -939,7 +1135,9 @@ def stats(
 
     # Somatotype Distribution
     somatotype_counts = (
-        analysis_q.with_entities(PatientAnalysis.somatotype, func.count(PatientAnalysis.id))
+        analysis_q.with_entities(
+            PatientAnalysis.somatotype, func.count(PatientAnalysis.id)
+        )
         .group_by(PatientAnalysis.somatotype)
         .all()
     )
@@ -951,13 +1149,27 @@ def stats(
         .group_by(PatientAnalysis.region)
         .all()
     )
-    regional_data = [{"region": r or "Noma'lum", "count": int(c)} for r, c in regional_counts]
+    regional_data = [
+        {"region": r or "Noma'lum", "count": int(c)} for r, c in regional_counts
+    ]
 
     risk_region_counts = (
         analysis_q.with_entities(
             PatientAnalysis.region,
             func.count(PatientAnalysis.id).label("total"),
-            func.count(case((((PatientAnalysis.z_score > 2) | (PatientAnalysis.z_score < -2) | (PatientAnalysis.bmi >= 30) | (PatientAnalysis.bmi < 18.5)), 1))).label("risk_count"),
+            func.count(
+                case(
+                    (
+                        (
+                            (PatientAnalysis.z_score > 2)
+                            | (PatientAnalysis.z_score < -2)
+                            | (PatientAnalysis.bmi >= 30)
+                            | (PatientAnalysis.bmi < 18.5)
+                        ),
+                        1,
+                    )
+                )
+            ).label("risk_count"),
         )
         .group_by(PatientAnalysis.region)
         .all()
@@ -981,20 +1193,28 @@ def stats(
     try:
         trend_counts = (
             analysis_q.with_entities(
-                func.strftime('%Y-%m', PatientAnalysis.created_at).label("month"),
+                func.strftime("%Y-%m", PatientAnalysis.created_at).label("month"),
                 func.count(PatientAnalysis.id),
-                func.avg(PatientAnalysis.bmi).label("avg_bmi")
+                func.avg(PatientAnalysis.bmi).label("avg_bmi"),
             )
             .group_by("month")
             .order_by("month")
             .all()
         )
         monthly_trend = [
-            {"month": str(m) if m else "Noma'lum", "count": int(c), "avg_bmi": float(b or 0)} 
+            {
+                "month": str(m) if m else "Noma'lum",
+                "count": int(c),
+                "avg_bmi": float(b or 0),
+            }
             for m, c, b in trend_counts
         ][-12:]
-        
-        monthly_avg = sum(item["count"] for item in monthly_trend) / len(monthly_trend) if monthly_trend else 0
+
+        monthly_avg = (
+            sum(item["count"] for item in monthly_trend) / len(monthly_trend)
+            if monthly_trend
+            else 0
+        )
     except Exception as e:
         logger.error(f"Monthly trend error: {e}")
         monthly_trend = []
@@ -1003,9 +1223,9 @@ def stats(
     # --- 🔬 Advanced Scientific Analysis & Risk Groups ---
     # Optimized: SQL-level aggregations to avoid loading all rows into Python
     # Cache key: based on user role + filters (5 min TTL for stats)
-    _has_filters = any([
-        gender, age_min, age_max, region, date_from, date_to, somatotype
-    ])
+    _has_filters = any(
+        [gender, age_min, age_max, region, date_from, date_to, somatotype]
+    )
     _sci_cache_key = None
     bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
     bmi_histogram = []
@@ -1016,7 +1236,10 @@ def stats(
     if not _has_filters:
         _sci_cache_key = cache_service.make_key(
             "admin_sci_stats",
-            {"role": current_user.role, "uid": current_user.id if current_user.role != "superadmin" else 0}
+            {
+                "role": current_user.role,
+                "uid": current_user.id if current_user.role != "superadmin" else 0,
+            },
         )
         _cached = cache_service.get_json(_sci_cache_key)
         if _cached:
@@ -1029,39 +1252,88 @@ def stats(
 
     if _sci_cache_key or _has_filters:
         # SQL-level BMI distribution (much faster than Python loop)
-        from sqlalchemy import literal_column
         sci_agg = analysis_q.with_entities(
             # Child/adult BMI dist using SQL CASE
-            func.count(case((
-                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score < -2), 1))).label("c_under"),
-            func.count(case((
-                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score.between(-2, 1)), 1))).label("c_normal"),
-            func.count(case((
-                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score.between(1, 2)), 1))).label("c_over"),
-            func.count(case((
-                (PatientAnalysis.age < 19) & (PatientAnalysis.z_score > 2), 1))).label("c_obese"),
-            func.count(case((
-                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi < 18.5), 1))).label("a_under"),
-            func.count(case((
-                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi.between(18.5, 24.99)), 1))).label("a_normal"),
-            func.count(case((
-                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi.between(25, 29.99)), 1))).label("a_over"),
-            func.count(case((
-                (PatientAnalysis.age >= 19) & (PatientAnalysis.bmi >= 30), 1))).label("a_obese"),
+            func.count(
+                case(((PatientAnalysis.age < 19) & (PatientAnalysis.z_score < -2), 1))
+            ).label("c_under"),
+            func.count(
+                case(
+                    (
+                        (PatientAnalysis.age < 19)
+                        & (PatientAnalysis.z_score.between(-2, 1)),
+                        1,
+                    )
+                )
+            ).label("c_normal"),
+            func.count(
+                case(
+                    (
+                        (PatientAnalysis.age < 19)
+                        & (PatientAnalysis.z_score.between(1, 2)),
+                        1,
+                    )
+                )
+            ).label("c_over"),
+            func.count(
+                case(((PatientAnalysis.age < 19) & (PatientAnalysis.z_score > 2), 1))
+            ).label("c_obese"),
+            func.count(
+                case(((PatientAnalysis.age >= 19) & (PatientAnalysis.bmi < 18.5), 1))
+            ).label("a_under"),
+            func.count(
+                case(
+                    (
+                        (PatientAnalysis.age >= 19)
+                        & (PatientAnalysis.bmi.between(18.5, 24.99)),
+                        1,
+                    )
+                )
+            ).label("a_normal"),
+            func.count(
+                case(
+                    (
+                        (PatientAnalysis.age >= 19)
+                        & (PatientAnalysis.bmi.between(25, 29.99)),
+                        1,
+                    )
+                )
+            ).label("a_over"),
+            func.count(
+                case(((PatientAnalysis.age >= 19) & (PatientAnalysis.bmi >= 30), 1))
+            ).label("a_obese"),
             # BMI histogram (SQL)
             func.count(case(((PatientAnalysis.bmi < 16), 1))).label("h_lt16"),
-            func.count(case(((PatientAnalysis.bmi.between(16, 18.49)), 1))).label("h_16_18"),
-            func.count(case(((PatientAnalysis.bmi.between(18.5, 24.99)), 1))).label("h_18_25"),
-            func.count(case(((PatientAnalysis.bmi.between(25, 29.99)), 1))).label("h_25_30"),
-            func.count(case(((PatientAnalysis.bmi.between(30, 34.99)), 1))).label("h_30_35"),
-            func.count(case(((PatientAnalysis.bmi.between(35, 39.99)), 1))).label("h_35_40"),
+            func.count(case(((PatientAnalysis.bmi.between(16, 18.49)), 1))).label(
+                "h_16_18"
+            ),
+            func.count(case(((PatientAnalysis.bmi.between(18.5, 24.99)), 1))).label(
+                "h_18_25"
+            ),
+            func.count(case(((PatientAnalysis.bmi.between(25, 29.99)), 1))).label(
+                "h_25_30"
+            ),
+            func.count(case(((PatientAnalysis.bmi.between(30, 34.99)), 1))).label(
+                "h_30_35"
+            ),
+            func.count(case(((PatientAnalysis.bmi.between(35, 39.99)), 1))).label(
+                "h_35_40"
+            ),
             func.count(case(((PatientAnalysis.bmi >= 40), 1))).label("h_gt40"),
             # Z-score bins
             func.count(case(((PatientAnalysis.z_score < -2), 1))).label("z_lt_m2"),
-            func.count(case(((PatientAnalysis.z_score.between(-2, -1)), 1))).label("z_m2_m1"),
-            func.count(case(((PatientAnalysis.z_score.between(-1, 0)), 1))).label("z_m1_0"),
-            func.count(case(((PatientAnalysis.z_score.between(0, 1)), 1))).label("z_0_p1"),
-            func.count(case(((PatientAnalysis.z_score.between(1, 2)), 1))).label("z_p1_p2"),
+            func.count(case(((PatientAnalysis.z_score.between(-2, -1)), 1))).label(
+                "z_m2_m1"
+            ),
+            func.count(case(((PatientAnalysis.z_score.between(-1, 0)), 1))).label(
+                "z_m1_0"
+            ),
+            func.count(case(((PatientAnalysis.z_score.between(0, 1)), 1))).label(
+                "z_0_p1"
+            ),
+            func.count(case(((PatientAnalysis.z_score.between(1, 2)), 1))).label(
+                "z_p1_p2"
+            ),
             func.count(case(((PatientAnalysis.z_score > 2), 1))).label("z_gt_p2"),
             # Percentiles via aggregate stats
             func.min(PatientAnalysis.bmi).label("bmi_min"),
@@ -1084,43 +1356,102 @@ def stats(
                 "obese": (sci_agg.c_obese or 0) + (sci_agg.a_obese or 0),
             }
             bmi_histogram = [
-                {"range": "<16",     "count": int(sci_agg.h_lt16 or 0)},
+                {"range": "<16", "count": int(sci_agg.h_lt16 or 0)},
                 {"range": "16-18.5", "count": int(sci_agg.h_16_18 or 0)},
                 {"range": "18.5-25", "count": int(sci_agg.h_18_25 or 0)},
-                {"range": "25-30",   "count": int(sci_agg.h_25_30 or 0)},
-                {"range": "30-35",   "count": int(sci_agg.h_30_35 or 0)},
-                {"range": "35-40",   "count": int(sci_agg.h_35_40 or 0)},
-                {"range": ">40",     "count": int(sci_agg.h_gt40 or 0)},
+                {"range": "25-30", "count": int(sci_agg.h_25_30 or 0)},
+                {"range": "30-35", "count": int(sci_agg.h_30_35 or 0)},
+                {"range": "35-40", "count": int(sci_agg.h_35_40 or 0)},
+                {"range": ">40", "count": int(sci_agg.h_gt40 or 0)},
             ]
             total_n = int(sci_agg.total_n or 1)
             z_score_dist = [
-                {"category": "< -2 SD",        "count": int(sci_agg.z_lt_m2 or 0), "pct": round((sci_agg.z_lt_m2 or 0)/total_n*100,1), "zscore": -2.5},
-                {"category": "-2 SD — -1 SD", "count": int(sci_agg.z_m2_m1 or 0), "pct": round((sci_agg.z_m2_m1 or 0)/total_n*100,1), "zscore": -1.5},
-                {"category": "-1 SD — 0",     "count": int(sci_agg.z_m1_0 or 0),  "pct": round((sci_agg.z_m1_0 or 0)/total_n*100,1),  "zscore": -0.5},
-                {"category": "0 — +1 SD",      "count": int(sci_agg.z_0_p1 or 0),  "pct": round((sci_agg.z_0_p1 or 0)/total_n*100,1),  "zscore": 0.5},
-                {"category": "+1 SD — +2 SD", "count": int(sci_agg.z_p1_p2 or 0), "pct": round((sci_agg.z_p1_p2 or 0)/total_n*100,1), "zscore": 1.5},
-                {"category": "> +2 SD (Risk)","count": int(sci_agg.z_gt_p2 or 0), "pct": round((sci_agg.z_gt_p2 or 0)/total_n*100,1), "zscore": 2.5},
+                {
+                    "category": "< -2 SD",
+                    "count": int(sci_agg.z_lt_m2 or 0),
+                    "pct": round((sci_agg.z_lt_m2 or 0) / total_n * 100, 1),
+                    "zscore": -2.5,
+                },
+                {
+                    "category": "-2 SD — -1 SD",
+                    "count": int(sci_agg.z_m2_m1 or 0),
+                    "pct": round((sci_agg.z_m2_m1 or 0) / total_n * 100, 1),
+                    "zscore": -1.5,
+                },
+                {
+                    "category": "-1 SD — 0",
+                    "count": int(sci_agg.z_m1_0 or 0),
+                    "pct": round((sci_agg.z_m1_0 or 0) / total_n * 100, 1),
+                    "zscore": -0.5,
+                },
+                {
+                    "category": "0 — +1 SD",
+                    "count": int(sci_agg.z_0_p1 or 0),
+                    "pct": round((sci_agg.z_0_p1 or 0) / total_n * 100, 1),
+                    "zscore": 0.5,
+                },
+                {
+                    "category": "+1 SD — +2 SD",
+                    "count": int(sci_agg.z_p1_p2 or 0),
+                    "pct": round((sci_agg.z_p1_p2 or 0) / total_n * 100, 1),
+                    "zscore": 1.5,
+                },
+                {
+                    "category": "> +2 SD (Risk)",
+                    "count": int(sci_agg.z_gt_p2 or 0),
+                    "pct": round((sci_agg.z_gt_p2 or 0) / total_n * 100, 1),
+                    "zscore": 2.5,
+                },
             ]
             # Approximate percentiles from min/avg/max (SQL doesn't have native percentile)
             # For accurate percentiles, a separate sampled query is done only when needed
             bmi_avg2 = float(sci_agg.bmi_avg2 or 0)
             percentile_data = [
-                {"percentile": "P10",  "bmi": round(float(sci_agg.bmi_min or 0)*1.05, 1),  "height": round(float(sci_agg.h_min or 0)*1.05, 1),  "weight": round(float(sci_agg.w_min or 0)*1.05, 1)},
-                {"percentile": "P25",  "bmi": round(bmi_avg2*0.92, 1),  "height": round(float(sci_agg.h_avg or 0)*0.96, 1), "weight": round(float(sci_agg.w_avg or 0)*0.85, 1)},
-                {"percentile": "P50",  "bmi": round(bmi_avg2, 1),        "height": round(float(sci_agg.h_avg or 0), 1),        "weight": round(float(sci_agg.w_avg or 0), 1)},
-                {"percentile": "P75",  "bmi": round(bmi_avg2*1.08, 1),  "height": round(float(sci_agg.h_avg or 0)*1.04, 1), "weight": round(float(sci_agg.w_avg or 0)*1.15, 1)},
-                {"percentile": "P90",  "bmi": round(float(sci_agg.bmi_max or 0)*0.95, 1), "height": round(float(sci_agg.h_max or 0)*0.95, 1), "weight": round(float(sci_agg.w_max or 0)*0.95, 1)},
+                {
+                    "percentile": "P10",
+                    "bmi": round(float(sci_agg.bmi_min or 0) * 1.05, 1),
+                    "height": round(float(sci_agg.h_min or 0) * 1.05, 1),
+                    "weight": round(float(sci_agg.w_min or 0) * 1.05, 1),
+                },
+                {
+                    "percentile": "P25",
+                    "bmi": round(bmi_avg2 * 0.92, 1),
+                    "height": round(float(sci_agg.h_avg or 0) * 0.96, 1),
+                    "weight": round(float(sci_agg.w_avg or 0) * 0.85, 1),
+                },
+                {
+                    "percentile": "P50",
+                    "bmi": round(bmi_avg2, 1),
+                    "height": round(float(sci_agg.h_avg or 0), 1),
+                    "weight": round(float(sci_agg.w_avg or 0), 1),
+                },
+                {
+                    "percentile": "P75",
+                    "bmi": round(bmi_avg2 * 1.08, 1),
+                    "height": round(float(sci_agg.h_avg or 0) * 1.04, 1),
+                    "weight": round(float(sci_agg.w_avg or 0) * 1.15, 1),
+                },
+                {
+                    "percentile": "P90",
+                    "bmi": round(float(sci_agg.bmi_max or 0) * 0.95, 1),
+                    "height": round(float(sci_agg.h_max or 0) * 0.95, 1),
+                    "weight": round(float(sci_agg.w_max or 0) * 0.95, 1),
+                },
             ]
 
         # Cache for 5 minutes if no filters applied
         if _sci_cache_key:
-            cache_service.set_json(_sci_cache_key, {
-                "bmi_dist": bmi_dist,
-                "bmi_histogram": bmi_histogram,
-                "percentile_data": percentile_data,
-                "z_score_dist": z_score_dist,
-                "corr_matrix": corr_matrix,
-            }, ttl_seconds=300)
+            cache_service.set_json(
+                _sci_cache_key,
+                {
+                    "bmi_dist": bmi_dist,
+                    "bmi_histogram": bmi_histogram,
+                    "percentile_data": percentile_data,
+                    "z_score_dist": z_score_dist,
+                    "corr_matrix": corr_matrix,
+                },
+                ttl_seconds=300,
+            )
 
     return {
         "total_users": int(total_users),
@@ -1144,9 +1475,8 @@ def stats(
         "bmi_histogram": bmi_histogram,
         "percentile_data": percentile_data,
         "z_score_distribution": z_score_dist,
-        "correlation_matrix": corr_matrix
+        "correlation_matrix": corr_matrix,
     }
-
 
 
 # ----------------- EXPORT XLSX ------------------
@@ -1164,11 +1494,11 @@ def export_analyses_xlsx(
     lang: Optional[str] = Query("uz"),
 ):
     base = db.query(PatientAnalysis)
-    
+
     # Ownership Filter
     if current_user.role != "superadmin":
         base = base.filter(PatientAnalysis.created_by_id == current_user.id)
-        
+
     if q:
         like = f"%{q}%"
         base = base.filter(PatientAnalysis.name.ilike(like))
@@ -1187,25 +1517,40 @@ def export_analyses_xlsx(
     if region:
         base = base.filter(PatientAnalysis.region == region)
 
-    rows_db = base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by)).order_by(PatientAnalysis.created_at.desc()).all()
+    rows_db = (
+        base.options(
+            joinedload(PatientAnalysis.created_by),
+            joinedload(PatientAnalysis.deleted_by),
+        )
+        .order_by(PatientAnalysis.created_at.desc())
+        .all()
+    )
 
     wb = Workbook()
     ws = wb.active
     ws.title = "Analyses"
 
     from utils.i18n_export import get_admin_headers
+
     headers = get_admin_headers(lang)
 
     # Header styling
-    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="3498DB", end_color="3498DB", fill_type="solid"
+    )
     header_font = Font(color="FFFFFF", bold=True)
-    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
 
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header)
         cell.fill = header_fill
         cell.font = header_font
-        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.alignment = Alignment(horizontal="center", vertical="center")
         cell.border = border
 
     # Fetch settings for calculations
@@ -1235,7 +1580,7 @@ def export_analyses_xlsx(
             "ru": ("г.", "м.", "д."),
             "en": ("y.", "m.", "d."),
             "kk": ("ж.", "а.", "к."),
-            "tg": ("с.", "м.", "р.")
+            "tg": ("с.", "м.", "р."),
         }
         y_label, m_label, d_label = age_labels.get(lang, ("й.", "о.", "к."))
         if lang in ["uz", "en", "kk", "tg"]:
@@ -1253,8 +1598,10 @@ def export_analyses_xlsx(
             age_str += f", {age_d} {d_label}"
 
         from services.ky_localization import report_text
+
         def _fmt(val):
-            if not val: return "-"
+            if not val:
+                return "-"
             val_str = str(val)
             # Apply language-specific localization first
             localized = report_text(val_str, lang)
@@ -1302,18 +1649,20 @@ def export_analyses_xlsx(
             r.body_length or 0,
             r.parents_phone or "-",
         ]
-        
+
         # Barcha string qiymatlarni lat2cyr orqali o'girish shart emas —
         # sarlavhalar allaqachon kirill yozuvida
 
         for col_num, val in enumerate(vals, 1):
             cell = ws.cell(row=row_idx, column=col_num, value=val)
-            cell.alignment = Alignment(horizontal='left', vertical='center')
+            cell.alignment = Alignment(horizontal="left", vertical="center")
             cell.border = border
             # Alt rows styling (zebra)
             if row_idx % 2 == 0:
-                cell.fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
-        
+                cell.fill = PatternFill(
+                    start_color="F2F2F2", end_color="F2F2F2", fill_type="solid"
+                )
+
         row_idx += 1
 
     # Avto-column width
@@ -1327,7 +1676,7 @@ def export_analyses_xlsx(
                 continue
             if cell_length > max_length:
                 max_length = cell_length
-        adjusted_width = (max_length + 2)
+        adjusted_width = max_length + 2
         ws.column_dimensions[column].width = adjusted_width
 
     output = BytesIO()
@@ -1338,7 +1687,7 @@ def export_analyses_xlsx(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -1353,16 +1702,17 @@ def list_deleted_analyses(
     """
     Faqat super admin: barcha soft-deleted ma'lumotlarni ro'yxati.
     """
-    base = db.query(PatientAnalysis).filter(
-        (PatientAnalysis.is_deleted == 1)
-    )
+    base = db.query(PatientAnalysis).filter((PatientAnalysis.is_deleted == 1))
     if q:
         like = f"%{q}%"
         base = base.filter(PatientAnalysis.name.ilike(like))
 
     total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
     items_db = (
-        base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by))
+        base.options(
+            joinedload(PatientAnalysis.created_by),
+            joinedload(PatientAnalysis.deleted_by),
+        )
         .order_by(desc(PatientAnalysis.deleted_at))
         .offset(max(0, (page - 1) * page_size))
         .limit(page_size)
@@ -1385,7 +1735,14 @@ def export_deleted_docx(
         like = f"%{q}%"
         base = base.filter(PatientAnalysis.name.ilike(like))
 
-    rows_db = base.options(joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by)).order_by(desc(PatientAnalysis.deleted_at)).all()
+    rows_db = (
+        base.options(
+            joinedload(PatientAnalysis.created_by),
+            joinedload(PatientAnalysis.deleted_by),
+        )
+        .order_by(desc(PatientAnalysis.deleted_at))
+        .all()
+    )
 
     doc = Document()
 
@@ -1410,15 +1767,20 @@ def export_deleted_docx(
 
     # Jadval sarlavhalari
     headers = [
-        "№", "ID Kod", "F.I.Sh.", "Jins", "Yosh",
-        "Viloyat / Tuman", "Bo'y (sm)", "Vazn (kg)", "BMI",
-        "Somatotip", "O'chirgan Admin", "O'chirilgan Sana"
+        "№",
+        "ID Kod",
+        "F.I.Sh.",
+        "Jins",
+        "Yosh",
+        "Viloyat / Tuman",
+        "Bo'y (sm)",
+        "Vazn (kg)",
+        "BMI",
+        "Somatotip",
+        "O'chirgan Admin",
+        "O'chirilgan Sana",
     ]
-    col_widths_cm = [
-        0.8, 2.0, 3.5, 1.5, 1.2,
-        3.0, 1.5, 1.5, 1.5,
-        2.5, 3.0, 3.0
-    ]
+    col_widths_cm = [0.8, 2.0, 3.5, 1.5, 1.2, 3.0, 1.5, 1.5, 1.5, 2.5, 3.0, 3.0]
 
     table = doc.add_table(rows=1, cols=len(headers))
     table.style = "Table Grid"
@@ -1438,6 +1800,7 @@ def export_deleted_docx(
         # Header fon — qizil
         from docx.oxml.ns import qn
         from docx.oxml import OxmlElement
+
         tc = cell._tc
         tcPr = tc.get_or_add_tcPr()
         shd = OxmlElement("w:shd")
@@ -1449,7 +1812,9 @@ def export_deleted_docx(
     # Ma'lumot satrlari
     for idx, r in enumerate(rows_db, 1):
         row_cells = table.add_row().cells
-        bmi_val = getattr(r, "bmi", None) or calc_bmi(getattr(r, "weight", None), getattr(r, "height", None))
+        bmi_val = getattr(r, "bmi", None) or calc_bmi(
+            getattr(r, "weight", None), getattr(r, "height", None)
+        )
         bmi_str = f"{round(bmi_val, 1)}" if bmi_val else "-"
 
         age_str = f"{r.age} y."
@@ -1457,10 +1822,14 @@ def export_deleted_docx(
             age_str += f" {r.age_months} oy"
 
         deleted_at_str = (
-            r.deleted_at.strftime("%Y-%m-%d %H:%M") if getattr(r, "deleted_at", None) else "-"
+            r.deleted_at.strftime("%Y-%m-%d %H:%M")
+            if getattr(r, "deleted_at", None)
+            else "-"
         )
         deleted_by_str = (
-            r.deleted_by.name if (hasattr(r, "deleted_by") and r.deleted_by) else "Noma'lum"
+            r.deleted_by.name
+            if (hasattr(r, "deleted_by") and r.deleted_by)
+            else "Noma'lum"
         )
         region_str = f"{r.region or '-'} / {getattr(r, 'district', '') or '-'}"
 
@@ -1485,13 +1854,16 @@ def export_deleted_docx(
             cell = row_cells[i]
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             para = cell.paragraphs[0]
-            para.alignment = WD_ALIGN_PARAGRAPH.CENTER if i != 2 else WD_ALIGN_PARAGRAPH.LEFT
+            para.alignment = (
+                WD_ALIGN_PARAGRAPH.CENTER if i != 2 else WD_ALIGN_PARAGRAPH.LEFT
+            )
             run = para.add_run(val)
             run.font.size = Pt(8)
 
             # Alternating row color
             from docx.oxml.ns import qn
             from docx.oxml import OxmlElement
+
             tc = cell._tc
             tcPr = tc.get_or_add_tcPr()
             shd = OxmlElement("w:shd")
@@ -1519,11 +1891,12 @@ def export_deleted_docx(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
 # ----------------- BULK IMPORT / TEMPLATE ------------------
+
 
 @router.get("/export-template")
 def export_template():
@@ -1535,40 +1908,107 @@ def export_template():
     # Sarlavhalar (Lotin yozuvida, import qilish oson bo'lishi uchun)
     # Ammo userga tushunarli bo'lishi uchun Kirillda ham qoldirish mumkin.
     # Biz Lotin (field name) + Izoh (Kirill) kombinatsiyasini ishlatamiz.
-    
+
     headers = [
-        "first_name (Ism) *", "last_name (Familiya) *", "gender (erkak/ayol) *", 
-        "age (Yosh) *", "age_months (Yosh oylar)", "age_days (Yosh kunlar)",
-        "id_code (ID kod)", "region (Viloyat) *", "district (Tuman)", "mahalla", "address (Manzil)",
-        "height (Bo'y, sm) *", "weight (Vazn, kg) *", "chest (Ko'krak qafasi, sm) *",
-        "waist (Bel aylanasi, sm) *", "hip (Son/dumba aylanasi, sm)", "head (Bosh aylanasi, sm) *",
-        "birth_date (Tug'ilgan sana: YYYY-MM-DD)", "examination_date (Sana: YYYY-MM-DD)", 
-        "preschool_institution (Muassasa)", "parents_phone", "father_height", "mother_height",
+        "first_name (Ism) *",
+        "last_name (Familiya) *",
+        "gender (erkak/ayol) *",
+        "age (Yosh) *",
+        "age_months (Yosh oylar)",
+        "age_days (Yosh kunlar)",
+        "id_code (ID kod)",
+        "region (Viloyat) *",
+        "district (Tuman)",
+        "mahalla",
+        "address (Manzil)",
+        "height (Bo'y, sm) *",
+        "weight (Vazn, kg) *",
+        "chest (Ko'krak qafasi, sm) *",
+        "waist (Bel aylanasi, sm) *",
+        "hip (Son/dumba aylanasi, sm)",
+        "head (Bosh aylanasi, sm) *",
+        "birth_date (Tug'ilgan sana: YYYY-MM-DD)",
+        "examination_date (Sana: YYYY-MM-DD)",
+        "preschool_institution (Muassasa)",
+        "parents_phone",
+        "father_height",
+        "mother_height",
         "doctor_note",
-        "shoulder_length", "shoulder_breadth", "shoulder_circumference",
-        "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
-        "calf_length", "calf_circumference", "foot_length", "body_length",
-        "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+        "shoulder_length",
+        "shoulder_breadth",
+        "shoulder_circumference",
+        "arm_elbow_length",
+        "hand_length",
+        "thigh_length",
+        "thigh_circumference",
+        "calf_length",
+        "calf_circumference",
+        "foot_length",
+        "body_length",
+        "total_body_water",
+        "fat_percent",
+        "fat_mass",
+        "muscle_mass",
+        "bone_mass",
+        "acm",
+        "visceral_fat",
     ]
 
-    header_fill = PatternFill(start_color="2ECC71", end_color="2ECC71", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="2ECC71", end_color="2ECC71", fill_type="solid"
+    )
     header_font = Font(color="FFFFFF", bold=True)
-    
+
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header)
         cell.fill = header_fill
         cell.font = header_font
-        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.alignment = Alignment(horizontal="center", vertical="center")
 
     # Namuna qator
     sample = [
-        "Ali", "Valiyev", "erkak", 10, 5, 12,
-        "MC-001", "Toshkent", "Yunusobod", "Minor", "Amir Temur ko'chasi",
-        140.5, 35.2, 70, 65, 72, 52,
-        "2014-05-10", "2024-05-10", "123-maktab", "+998901234567", 172, 164,
+        "Ali",
+        "Valiyev",
+        "erkak",
+        10,
+        5,
+        12,
+        "MC-001",
+        "Toshkent",
+        "Yunusobod",
+        "Minor",
+        "Amir Temur ko'chasi",
+        140.5,
+        35.2,
+        70,
+        65,
+        72,
+        52,
+        "2014-05-10",
+        "2024-05-10",
+        "123-maktab",
+        "+998901234567",
+        172,
+        164,
         "Sog'lom",
-        15, 30, 25, 20, 15, 40, 35, 25, 20, 22, 135,
-        None, None, None, None, None, None, None
+        15,
+        30,
+        25,
+        20,
+        15,
+        40,
+        35,
+        25,
+        20,
+        22,
+        135,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
     ]
     for col_num, val in enumerate(sample, 1):
         ws.cell(row=2, column=col_num, value=val)
@@ -1579,7 +2019,9 @@ def export_template():
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=morphocheck_template.xlsx"}
+        headers={
+            "Content-Disposition": "attachment; filename=morphocheck_template.xlsx"
+        },
     )
 
 
@@ -1587,10 +2029,10 @@ def export_template():
 async def import_analyses_xlsx(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
 ):
     """Excel orqali ommaviy ma'lumot yuklash."""
-    if not file.filename.endswith(('.xlsx', '.xls')):
+    if not file.filename.endswith((".xlsx", ".xls")):
         raise HTTPException(400, "Faqat Excel fayllari (.xlsx, .xls) qabul qilinadi.")
 
     contents = await file.read()
@@ -1599,16 +2041,48 @@ async def import_analyses_xlsx(
 
     # Field mapping (header index -> field name)
     field_map = {
-        0: "first_name", 1: "last_name", 2: "gender", 3: "age", 4: "age_months", 5: "age_days",
-        6: "id_code", 7: "region", 8: "district", 9: "mahalla", 10: "address",
-        11: "height", 12: "weight", 13: "chest", 14: "waist", 15: "hip", 16: "head",
-        17: "birth_date", 18: "examination_date", 19: "preschool_institution",
-        20: "parents_phone", 21: "father_height", 22: "mother_height", 23: "doctor_note",
-        24: "shoulder_length", 25: "shoulder_breadth", 26: "shoulder_circumference",
-        27: "arm_elbow_length", 28: "hand_length", 29: "thigh_length", 30: "thigh_circumference",
-        31: "calf_length", 32: "calf_circumference", 33: "foot_length", 34: "body_length",
-        35: "total_body_water", 36: "fat_percent", 37: "fat_mass", 38: "muscle_mass", 39: "bone_mass",
-        40: "acm", 41: "visceral_fat"
+        0: "first_name",
+        1: "last_name",
+        2: "gender",
+        3: "age",
+        4: "age_months",
+        5: "age_days",
+        6: "id_code",
+        7: "region",
+        8: "district",
+        9: "mahalla",
+        10: "address",
+        11: "height",
+        12: "weight",
+        13: "chest",
+        14: "waist",
+        15: "hip",
+        16: "head",
+        17: "birth_date",
+        18: "examination_date",
+        19: "preschool_institution",
+        20: "parents_phone",
+        21: "father_height",
+        22: "mother_height",
+        23: "doctor_note",
+        24: "shoulder_length",
+        25: "shoulder_breadth",
+        26: "shoulder_circumference",
+        27: "arm_elbow_length",
+        28: "hand_length",
+        29: "thigh_length",
+        30: "thigh_circumference",
+        31: "calf_length",
+        32: "calf_circumference",
+        33: "foot_length",
+        34: "body_length",
+        35: "total_body_water",
+        36: "fat_percent",
+        37: "fat_mass",
+        38: "muscle_mass",
+        39: "bone_mass",
+        40: "acm",
+        41: "visceral_fat",
     }
 
     imported_count = 0
@@ -1622,12 +2096,14 @@ async def import_analyses_xlsx(
         return "" if v is None else str(v)
 
     def add_import_error(row, field, message, value=None):
-        errors.append({
-            "row": row,
-            "field": field,
-            "message": message,
-            "value": safe_cell_value(value)
-        })
+        errors.append(
+            {
+                "row": row,
+                "field": field,
+                "message": message,
+                "value": safe_cell_value(value),
+            }
+        )
 
     def is_blank(v):
         return v is None or str(v).strip() == ""
@@ -1638,34 +2114,42 @@ async def import_analyses_xlsx(
         if isinstance(v, (int, float)):
             return True
         try:
-            float(str(v).strip().replace(',', '.'))
+            float(str(v).strip().replace(",", "."))
             return True
         except Exception:
             return False
 
     def format_val(v, default=0.0):
-        if v is None or v == "": return default
-        if isinstance(v, (int, float)): return float(v)
+        if v is None or v == "":
+            return default
+        if isinstance(v, (int, float)):
+            return float(v)
         try:
-            ts = str(v).strip().replace(',', '.')
-            if not ts or ts.lower() == 'nan': return default
+            ts = str(v).strip().replace(",", ".")
+            if not ts or ts.lower() == "nan":
+                return default
             return float(ts)
         except (TypeError, ValueError):
             return default
 
     def format_int(v, default=0):
-        if v is None or v == "": return default
-        if isinstance(v, int): return v
-        if isinstance(v, float): return int(v)
+        if v is None or v == "":
+            return default
+        if isinstance(v, int):
+            return v
+        if isinstance(v, float):
+            return int(v)
         try:
-            ts = str(v).strip().split('.')[0] # handle '10.0' as string
-            if not ts: return default
+            ts = str(v).strip().split(".")[0]  # handle '10.0' as string
+            if not ts:
+                return default
             return int(ts)
         except (TypeError, ValueError):
             return default
 
     def format_date(v, default=""):
-        if not v: return default
+        if not v:
+            return default
         if isinstance(v, (datetime, date)):
             return v.strftime("%Y-%m-%d")
         return str(v).strip()
@@ -1673,14 +2157,15 @@ async def import_analyses_xlsx(
     # Skip header (row 1)
     for row_idx, row in enumerate(ws.iter_rows(min_row=2), 2):
         row_values = [cell.value for cell in row]
-        if not any(row_values): continue # Bo'sh qator
+        if not any(row_values):
+            continue  # Bo'sh qator
 
         try:
             data = {}
             for col_idx, field in field_map.items():
                 if col_idx < len(row_values):
                     data[field] = row_values[col_idx]
-            
+
             row_errors = []
             required_fields = {
                 "first_name": "Ism majburiy.",
@@ -1707,28 +2192,81 @@ async def import_analyses_xlsx(
                 or "female" in gender_raw
             )
             if gender_raw and not valid_gender:
-                row_errors.append(("gender", "Jins 'erkak' yoki 'ayol' bo'lishi kerak.", data.get("gender")))
+                row_errors.append(
+                    (
+                        "gender",
+                        "Jins 'erkak' yoki 'ayol' bo'lishi kerak.",
+                        data.get("gender"),
+                    )
+                )
 
             numeric_fields = [
-                "age", "age_months", "age_days", "height", "weight", "chest", "waist", "hip", "head",
-                "father_height", "mother_height",
-                "shoulder_length", "shoulder_breadth", "shoulder_circumference",
-                "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
-                "calf_length", "calf_circumference", "foot_length", "body_length",
-                "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+                "age",
+                "age_months",
+                "age_days",
+                "height",
+                "weight",
+                "chest",
+                "waist",
+                "hip",
+                "head",
+                "father_height",
+                "mother_height",
+                "shoulder_length",
+                "shoulder_breadth",
+                "shoulder_circumference",
+                "arm_elbow_length",
+                "hand_length",
+                "thigh_length",
+                "thigh_circumference",
+                "calf_length",
+                "calf_circumference",
+                "foot_length",
+                "body_length",
+                "total_body_water",
+                "fat_percent",
+                "fat_mass",
+                "muscle_mass",
+                "bone_mass",
+                "acm",
+                "visceral_fat",
             ]
             for field in numeric_fields:
-                if not is_blank(data.get(field)) and not is_number_like(data.get(field)):
-                    row_errors.append((field, "Raqam formatida bo'lishi kerak.", data.get(field)))
+                if not is_blank(data.get(field)) and not is_number_like(
+                    data.get(field)
+                ):
+                    row_errors.append(
+                        (field, "Raqam formatida bo'lishi kerak.", data.get(field))
+                    )
 
-            if is_number_like(data.get("age")) and not (0 <= format_int(data.get("age"), -1) <= 19):
-                row_errors.append(("age", "Yosh 0 dan 19 gacha bo'lishi kerak.", data.get("age")))
+            if is_number_like(data.get("age")) and not (
+                0 <= format_int(data.get("age"), -1) <= 19
+            ):
+                row_errors.append(
+                    ("age", "Yosh 0 dan 19 gacha bo'lishi kerak.", data.get("age"))
+                )
 
-            if is_number_like(data.get("height")) and not (30 <= format_val(data.get("height"), 0) <= 250):
-                row_errors.append(("height", "Bo'y 30-250 sm oralig'ida bo'lishi kerak.", data.get("height")))
+            if is_number_like(data.get("height")) and not (
+                30 <= format_val(data.get("height"), 0) <= 250
+            ):
+                row_errors.append(
+                    (
+                        "height",
+                        "Bo'y 30-250 sm oralig'ida bo'lishi kerak.",
+                        data.get("height"),
+                    )
+                )
 
-            if is_number_like(data.get("weight")) and not (1 <= format_val(data.get("weight"), 0) <= 250):
-                row_errors.append(("weight", "Vazn 1-250 kg oralig'ida bo'lishi kerak.", data.get("weight")))
+            if is_number_like(data.get("weight")) and not (
+                1 <= format_val(data.get("weight"), 0) <= 250
+            ):
+                row_errors.append(
+                    (
+                        "weight",
+                        "Vazn 1-250 kg oralig'ida bo'lishi kerak.",
+                        data.get("weight"),
+                    )
+                )
 
             if row_errors:
                 skipped_count += 1
@@ -1739,18 +2277,22 @@ async def import_analyses_xlsx(
             # Convert types
             full_name = f"{data['first_name']} {data['last_name']}".strip()
             gender = str(data.get("gender") or "erkak").lower()
-            if "ayol" in gender or "fem" in gender: gender = "ayol"
-            else: gender = "erkak"
+            if "ayol" in gender or "fem" in gender:
+                gender = "ayol"
+            else:
+                gender = "erkak"
 
             # Check existing record (full match by name and birth_date/region if available)
             existing = db.query(PatientAnalysis).filter(
                 PatientAnalysis.name == full_name,
                 PatientAnalysis.created_by_id == current_user.id,
-                PatientAnalysis.is_deleted == 0
+                PatientAnalysis.is_deleted == 0,
             )
             if data.get("birth_date"):
-                existing = existing.filter(PatientAnalysis.birth_date == str(data["birth_date"]))
-            
+                existing = existing.filter(
+                    PatientAnalysis.birth_date == str(data["birth_date"])
+                )
+
             rec = existing.first()
             is_new = False
             if not rec:
@@ -1776,19 +2318,35 @@ async def import_analyses_xlsx(
             rec.head = format_val(data.get("head"), 0.0)
             rec.hip = format_val(data.get("hip"), 0.0)
             rec.birth_date = format_date(data.get("birth_date"), "")
-            rec.examination_date = format_date(data.get("examination_date"), datetime.now().strftime("%Y-%m-%d"))
+            rec.examination_date = format_date(
+                data.get("examination_date"), datetime.now().strftime("%Y-%m-%d")
+            )
             rec.preschool_institution = str(data.get("preschool_institution") or "")
             rec.parents_phone = str(data.get("parents_phone") or "").strip() or None
             rec.father_height = format_val(data.get("father_height"), None)
             rec.mother_height = format_val(data.get("mother_height"), None)
             rec.doctor_note = str(data.get("doctor_note") or "").strip() or None
-            
+
             # Bio fields
             bio_fields = [
-                "shoulder_length", "shoulder_breadth", "shoulder_circumference",
-                "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
-                "calf_length", "calf_circumference", "foot_length", "body_length",
-                "total_body_water", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm", "visceral_fat"
+                "shoulder_length",
+                "shoulder_breadth",
+                "shoulder_circumference",
+                "arm_elbow_length",
+                "hand_length",
+                "thigh_length",
+                "thigh_circumference",
+                "calf_length",
+                "calf_circumference",
+                "foot_length",
+                "body_length",
+                "total_body_water",
+                "fat_percent",
+                "fat_mass",
+                "muscle_mass",
+                "bone_mass",
+                "acm",
+                "visceral_fat",
             ]
             for bf in bio_fields:
                 val = data.get(bf)
@@ -1806,7 +2364,7 @@ async def import_analyses_xlsx(
                 bio_data=analysis["indices"],
                 lang="uz",
             )
-            
+
             rec.recommendations = (
                 f"General: {advices.get('general', '')}; "
                 f"Nutrition: {advices.get('nutrition', '')}; "
@@ -1824,7 +2382,9 @@ async def import_analyses_xlsx(
 
         except Exception as e:
             skipped_count += 1
-            add_import_error(row_idx, "row", f"Qatorni import qilishda xatolik: {str(e)}")
+            add_import_error(
+                row_idx, "row", f"Qatorni import qilishda xatolik: {str(e)}"
+            )
 
     try:
         db.commit()
@@ -1832,18 +2392,21 @@ async def import_analyses_xlsx(
         db.rollback()
         logger.error(f"Excel import DB commit error: {commit_err}")
         # Agar commit fail qilsa, error qaytaramiz (500 o'rniga tushunarli matn)
-        raise HTTPException(status_code=500, detail=f"Ma'lumotlarni saqlashda xatolik: {commit_err}")
-        
+        raise HTTPException(
+            status_code=500, detail=f"Ma'lumotlarni saqlashda xatolik: {commit_err}"
+        )
+
     return {
         "status": "success",
         "imported": imported_count,
         "updated": updated_count,
         "skipped": skipped_count,
-        "errors": errors
+        "errors": errors,
     }
 
+
 # ----------------- AUDIT LOGS ------------------
-from models.schemas import AuditLogOut
+
 
 @router.get("/audit-logs", response_model=dict)
 def list_audit_logs(
@@ -1852,25 +2415,25 @@ def list_audit_logs(
     page: int = 1,
     page_size: int = 50,
     action: Optional[str] = Query(None),
-    user_id: Optional[int] = Query(None)
+    user_id: Optional[int] = Query(None),
 ):
     """Faqat Super Admin uchun: tizimdagi barcha loglarni ko'rish."""
     query = db.query(AuditLog)
-    
+
     if action:
         query = query.filter(AuditLog.action == action)
     if user_id:
         query = query.filter(AuditLog.user_id == user_id)
-        
+
     total = query.count()
-    
+
     logs_db = (
         query.order_by(AuditLog.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
     )
-    
+
     # Map to schema with user names
     items = []
     for log in logs_db:
@@ -1883,141 +2446,174 @@ def list_audit_logs(
             "details": log.details,
             "ip_address": log.ip_address,
             "created_at": log.created_at,
-            "user_name": log.user.name if log.user else "Mehmon"
+            "user_name": log.user.name if log.user else "Mehmon",
         }
         items.append(item)
-        
+
     return {"items": items, "total": total}
+
 
 # ----------------- ADMIN ACTIVITY -----------------
 
+
 @router.post("/activity/ping-form-start")
 def ping_form_start(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """Admin forma ochganini belgilash (vaqtni hisoblash uchun)."""
     current_user.last_form_open_at = datetime.utcnow()
     db.commit()
     return {"status": "ok"}
 
+
 @router.get("/activity", response_model=dict)
 def get_admin_activity(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin)
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_superadmin)
 ):
     """Faqat Super Admin uchun: barcha adminlar va izlanuvchilar faolligini ko'rish."""
     # Adminlar va Researcherlarni olamiz
     users = db.query(User).filter(User.role.in_(["admin", "researcher"])).all()
-    
+
     now = datetime.utcnow()
     today_start = datetime.combine(date.today(), datetime.min.time())
     week_start = today_start - timedelta(days=date.today().weekday())
     month_start = datetime.combine(date.today().replace(day=1), datetime.min.time())
-    
+
     result = []
     for u in users:
         # Status calculation
         status = "offline"
         is_typing = False
-        
+
         if u.last_active_at:
             diff = (now - u.last_active_at).total_seconds()
-            if diff < 60: # 1 minut
+            if diff < 60:  # 1 minut
                 status = "online"
                 # Agar oxirgi faollik juda yaqin bo'lsa va forma ochiq bo'lsa
                 if u.last_form_open_at:
-                   is_typing = True
-            elif diff < 300: # 5 minut
+                    is_typing = True
+            elif diff < 300:  # 5 minut
                 status = "online"
-            elif diff < 900: # 15 minut
+            elif diff < 900:  # 15 minut
                 status = "away"
-        
+
         # Stats based on role
         if u.role == "researcher":
             model_class = ResearchRecord
         else:
             model_class = PatientAnalysis
 
-        stats_today = db.query(func.count(model_class.id)).filter(
-            model_class.created_by_id == u.id,
-            model_class.created_at >= today_start,
-            model_class.is_deleted == 0
-        ).scalar() or 0
+        stats_today = (
+            db.query(func.count(model_class.id))
+            .filter(
+                model_class.created_by_id == u.id,
+                model_class.created_at >= today_start,
+                model_class.is_deleted == 0,
+            )
+            .scalar()
+            or 0
+        )
 
-        stats_week = db.query(func.count(model_class.id)).filter(
-            model_class.created_by_id == u.id,
-            model_class.created_at >= week_start,
-            model_class.is_deleted == 0
-        ).scalar() or 0
-        
-        stats_month = db.query(func.count(model_class.id)).filter(
-            model_class.created_by_id == u.id,
-            model_class.created_at >= month_start,
-            model_class.is_deleted == 0
-        ).scalar() or 0
+        stats_week = (
+            db.query(func.count(model_class.id))
+            .filter(
+                model_class.created_by_id == u.id,
+                model_class.created_at >= week_start,
+                model_class.is_deleted == 0,
+            )
+            .scalar()
+            or 0
+        )
 
-        total_entries = db.query(func.count(model_class.id)).filter(
-            model_class.created_by_id == u.id,
-            model_class.is_deleted == 0
-        ).scalar() or 0
-        
+        stats_month = (
+            db.query(func.count(model_class.id))
+            .filter(
+                model_class.created_by_id == u.id,
+                model_class.created_at >= month_start,
+                model_class.is_deleted == 0,
+            )
+            .scalar()
+            or 0
+        )
+
+        total_entries = (
+            db.query(func.count(model_class.id))
+            .filter(model_class.created_by_id == u.id, model_class.is_deleted == 0)
+            .scalar()
+            or 0
+        )
+
         # Avg time
         avg_time = 0
         if u.completed_entries_count and u.completed_entries_count > 0:
-            avg_time = round((u.total_entry_time_seconds or 0) / u.completed_entries_count, 1)
+            avg_time = round(
+                (u.total_entry_time_seconds or 0) / u.completed_entries_count, 1
+            )
         elif total_entries > 1:
-            first_entry_at = db.query(func.min(model_class.created_at)).filter(
-                model_class.created_by_id == u.id,
-                model_class.is_deleted == 0
-            ).scalar()
-            last_entry_at = db.query(func.max(model_class.created_at)).filter(
-                model_class.created_by_id == u.id,
-                model_class.is_deleted == 0
-            ).scalar()
+            first_entry_at = (
+                db.query(func.min(model_class.created_at))
+                .filter(model_class.created_by_id == u.id, model_class.is_deleted == 0)
+                .scalar()
+            )
+            last_entry_at = (
+                db.query(func.max(model_class.created_at))
+                .filter(model_class.created_by_id == u.id, model_class.is_deleted == 0)
+                .scalar()
+            )
             if first_entry_at and last_entry_at and last_entry_at > first_entry_at:
-                avg_time = round((last_entry_at - first_entry_at).total_seconds() / (total_entries - 1), 1)
-            
+                avg_time = round(
+                    (last_entry_at - first_entry_at).total_seconds()
+                    / (total_entries - 1),
+                    1,
+                )
+
         # Most active hour
         most_active_hour = None
         try:
             # SQLite uchun strftime ishlatamiz
-            hour_query = db.query(
-                func.strftime('%H', model_class.created_at).label("hour"),
-                func.count(model_class.id).label("count")
-            ).filter(
-                model_class.created_by_id == u.id,
-                model_class.is_deleted == 0
-            ).group_by("hour").order_by(desc("count")).first()
-            
+            hour_query = (
+                db.query(
+                    func.strftime("%H", model_class.created_at).label("hour"),
+                    func.count(model_class.id).label("count"),
+                )
+                .filter(model_class.created_by_id == u.id, model_class.is_deleted == 0)
+                .group_by("hour")
+                .order_by(desc("count"))
+                .first()
+            )
+
             if hour_query:
                 most_active_hour = f"{hour_query.hour}:00"
         except Exception as exc:
-            logger.warning("Unable to calculate most active hour for user %s: %s", u.id, exc)
+            logger.warning(
+                "Unable to calculate most active hour for user %s: %s", u.id, exc
+            )
 
-        result.append({
-            "id": u.id,
-            "name": u.name,
-            "email": u.email,
-            "role": u.role,
-            "region": u.region,
-            "district": getattr(u, "district", None),
-            "mahalla": getattr(u, "mahalla", None),
-            "address": getattr(u, "address", None),
-            "latitude": getattr(u, "latitude", None),
-            "longitude": getattr(u, "longitude", None),
-            "status": status,
-            "is_typing": is_typing,
-            "last_active_at": u.last_active_at,
-            "stats_today": stats_today,
-            "stats_week": stats_week,
-            "stats_month": stats_month,
-            "avg_entry_time": avg_time,
-            "avg_entry_minutes": round(avg_time / 60, 1) if avg_time else 0,
-            "most_active_hour": most_active_hour,
-            "total_entries": total_entries
-        })
-        
+        result.append(
+            {
+                "id": u.id,
+                "name": u.name,
+                "email": u.email,
+                "role": u.role,
+                "region": u.region,
+                "district": getattr(u, "district", None),
+                "mahalla": getattr(u, "mahalla", None),
+                "address": getattr(u, "address", None),
+                "latitude": getattr(u, "latitude", None),
+                "longitude": getattr(u, "longitude", None),
+                "status": status,
+                "is_typing": is_typing,
+                "last_active_at": u.last_active_at,
+                "stats_today": stats_today,
+                "stats_week": stats_week,
+                "stats_month": stats_month,
+                "avg_entry_time": avg_time,
+                "avg_entry_minutes": round(avg_time / 60, 1) if avg_time else 0,
+                "most_active_hour": most_active_hour,
+                "total_entries": total_entries,
+            }
+        )
+
     return {"items": result}
 
 
@@ -2028,46 +2624,54 @@ def list_audit_logs(
     current_user: User = Depends(get_current_superadmin),
     page: int = 1,
     page_size: int = 50,
-    action: Optional[str] = Query(None)
+    action: Optional[str] = Query(None),
 ):
     query = db.query(AuditLog).options(joinedload(AuditLog.user))
-    
+
     if action:
         query = query.filter(AuditLog.action == action)
-        
+
     total = query.count()
-    logs_db = query.order_by(desc(AuditLog.created_at)).offset((page - 1) * page_size).limit(page_size).all()
-    
+    logs_db = (
+        query.order_by(desc(AuditLog.created_at))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
     items = []
     for log in logs_db:
-        items.append({
-            "id": log.id,
-            "user_id": log.user_id,
-            "user_name": log.user.name if log.user else "Noma'lum",
-            "action": log.action,
-            "target_type": log.target_type,
-            "target_id": log.target_id,
-            "details": log.details,
-            "ip_address": log.ip_address,
-            "created_at": log.created_at
-        })
-        
+        items.append(
+            {
+                "id": log.id,
+                "user_id": log.user_id,
+                "user_name": log.user.name if log.user else "Noma'lum",
+                "action": log.action,
+                "target_type": log.target_type,
+                "target_id": log.target_id,
+                "details": log.details,
+                "ip_address": log.ip_address,
+                "created_at": log.created_at,
+            }
+        )
+
     return {"items": items, "total": total}
+
 
 @router.delete("/audit-logs/clear")
 def clear_audit_logs(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_superadmin),
-    action: Optional[str] = Query(None)
+    action: Optional[str] = Query(None),
 ):
     query = db.query(AuditLog)
     if action and action != "ALL":
         query = query.filter(AuditLog.action == action)
-        
+
     count = query.delete(synchronize_session=False)
     db.commit()
-    
+
     # After deleting, we must record that an admin cleared the logs
     record_audit_log(
         db=db,
@@ -2075,8 +2679,7 @@ def clear_audit_logs(
         action="DELETE_HARD",
         target_type="AuditLog",
         details=f"Audit jurnali tozalandi: {action or 'Barchasi'} ({count} ta yozuv)",
-        request=request
+        request=request,
     )
-    
-    return {"deleted": count}
 
+    return {"deleted": count}

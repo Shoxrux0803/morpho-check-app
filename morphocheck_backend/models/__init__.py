@@ -19,5 +19,5 @@ __all__ = [
     "LoginVerificationCode",
     "TrustedLoginDevice",
     "ClinicalSetting",
-    "ChatMessage"
+    "ChatMessage",
 ]

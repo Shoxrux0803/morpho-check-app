@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Request, HTTPException, Query, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -66,11 +67,13 @@ async def generate_pdf_endpoint(
     request: Request,
     request_data: PatientData,
     lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     try:
         # Yoshni qayta hisoblash (umumiy xatoni to'g'irlash uchun)
-        y, m, d = calculate_age_precise(request_data.birth_date, request_data.examination_date)
+        y, m, d = calculate_age_precise(
+            request_data.birth_date, request_data.examination_date
+        )
         if y is not None:
             request_data.age = y
             request_data.age_months = m
@@ -86,7 +89,7 @@ async def generate_pdf_endpoint(
             gender_norm,
             all_settings,
             bio_data=analysis.get("indices"),
-            lang=lang
+            lang=lang,
         )
 
         data_dict = request_data.model_dump(by_alias=False)
@@ -96,7 +99,9 @@ async def generate_pdf_endpoint(
             data_dict["id_code"] = generate_region_based_id(db, clean_region)
         qr_id = data_dict.get("analysis_id") or data_dict.get("analysisId")
         if qr_id:
-            data_dict["record_url"] = _frontend_base_url(request) + f"/admin?analysis_id={qr_id}"
+            data_dict["record_url"] = (
+                _frontend_base_url(request) + f"/admin?analysis_id={qr_id}"
+            )
 
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
@@ -111,27 +116,33 @@ async def generate_pdf_endpoint(
             "bmi": float(analysis["bmi"]),
             "z_score": float(analysis["z_score"]),
             "somatotype": str(analysis["somatotype"]),
-            "father_height": float(request_data.father_height) if request_data.father_height else None,
-            "mother_height": float(request_data.mother_height) if request_data.mother_height else None
+            "father_height": float(request_data.father_height)
+            if request_data.father_height
+            else None,
+            "mother_height": float(request_data.mother_height)
+            if request_data.mother_height
+            else None,
         }
         data_dict["ai_predictions"] = get_ml_predictions(ml_data)
-        
+
         # Add AI Parent Tips
         data_dict["ai_parent_tips"] = generate_parent_tips(
             {
                 "age": int(request_data.age),
                 "gender": gender_norm,
                 "bmi": float(analysis["bmi"]),
-                "z_score": float(analysis["z_score"])
+                "z_score": float(analysis["z_score"]),
             },
             data_dict["ai_predictions"],
-            lang=lang
+            lang=lang,
         )
 
-        buffer = generate_pdf_file(data_dict, lang=lang)
+        buffer = await asyncio.to_thread(generate_pdf_file, data_dict, lang=lang)
 
         if not isinstance(buffer, BytesIO):
-            raise HTTPException(status_code=500, detail="PDF generatsiyasi noto'g'ri formatda")
+            raise HTTPException(
+                status_code=500, detail="PDF generatsiyasi noto'g'ri formatda"
+            )
 
         buffer.seek(0)
         return StreamingResponse(
@@ -147,21 +158,27 @@ async def generate_pdf_endpoint(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         import traceback
+
         print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"PDF generatsiyasida xato: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"PDF generatsiyasida xato: {str(e)}"
+        )
 
 
 @router.get(
     "/report-by-id/{patient_id}",
     response_description="Admin panel uchun ID bo'yicha PDF hisobot",
-    responses={200: {"content": {"application/pdf": {}}}, 404: {"description": "Bemor topilmadi"}},
+    responses={
+        200: {"content": {"application/pdf": {}}},
+        404: {"description": "Bemor topilmadi"},
+    },
 )
 async def generate_pdf_by_id_endpoint(
     patient_id: int,
     request: Request,
     lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda PDF qaytaradi."""
     from services.indices_service import calculate_detailed_indices
@@ -170,7 +187,9 @@ async def generate_pdf_by_id_endpoint(
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
     if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q")
+        raise HTTPException(
+            status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q"
+        )
 
     try:
         name_parts = (rec.name or "").split(" ", 1)
@@ -199,7 +218,16 @@ async def generate_pdf_by_id_endpoint(
         actual_days = d if y is not None else (rec.age_days or 0)
 
         all_settings = clinical_service.get_all_settings(db)
-        detailed = calculate_detailed_indices(actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang, all_settings=all_settings)
+        detailed = calculate_detailed_indices(
+            actual_age,
+            rec.gender or "",
+            h,
+            w,
+            bmi_val,
+            manual_bio,
+            lang=lang,
+            all_settings=all_settings,
+        )
 
         ideal_range = get_bmi_range_by_age_and_gender(actual_age, rec.gender or "")
         min_w = round(ideal_range["min"] * h2, 1)
@@ -208,12 +236,17 @@ async def generate_pdf_by_id_endpoint(
 
         # Localize BMI category
         bmi_cat_key = "normal"
-        if bmi_val < 16.0: bmi_cat_key = "v_low"
-        elif bmi_val < 18.5: bmi_cat_key = "low"
-        elif bmi_val < 25: bmi_cat_key = "normal"
-        elif bmi_val < 30: bmi_cat_key = "overweight"
-        else: bmi_cat_key = "obese"
-        
+        if bmi_val < 16.0:
+            bmi_cat_key = "v_low"
+        elif bmi_val < 18.5:
+            bmi_cat_key = "low"
+        elif bmi_val < 25:
+            bmi_cat_key = "normal"
+        elif bmi_val < 30:
+            bmi_cat_key = "overweight"
+        else:
+            bmi_cat_key = "obese"
+
         cat_info = BMI_CATEGORIES.get(bmi_cat_key, BMI_CATEGORIES.get("normal", {}))
         bmi_category_localized = cat_info.get(lang, cat_info.get("uz", "Noma'lum"))
 
@@ -228,7 +261,9 @@ async def generate_pdf_by_id_endpoint(
             "ideal_weight_range": {"min": min_w, "max": max_w},
             "weight_diff": round(w - ideal_w, 1),
             "z_score": rec.z_score or 0,
-            "shoulder_ratio": round((sh_breadth / h) * 100, 1) if h > 0 and sh_breadth else 0,
+            "shoulder_ratio": round((sh_breadth / h) * 100, 1)
+            if h > 0 and sh_breadth
+            else 0,
             "thigh_ratio": round((th_circ / h) * 100, 1) if h > 0 and th_circ else 0,
             "indices": detailed,
         }
@@ -240,9 +275,8 @@ async def generate_pdf_by_id_endpoint(
             (rec.gender or "").lower(),
             all_settings,
             bio_data=analysis["indices"],
-            lang=lang
+            lang=lang,
         )
-
 
         report_data = {
             "first_name": first_name,
@@ -276,25 +310,25 @@ async def generate_pdf_by_id_endpoint(
             "z_score": float(analysis["z_score"]),
             "somatotype": str(analysis["somatotype"]),
             "father_height": float(rec.father_height) if rec.father_height else None,
-            "mother_height": float(rec.mother_height) if rec.mother_height else None
+            "mother_height": float(rec.mother_height) if rec.mother_height else None,
         }
         report_data["ai_predictions"] = get_ml_predictions(ml_data)
-        
+
         # Add AI Parent Tips
         report_data["ai_parent_tips"] = generate_parent_tips(
             {
                 "age": int(actual_age),
                 "gender": (rec.gender or "").lower(),
                 "bmi": float(analysis["bmi"]),
-                "z_score": float(analysis["z_score"])
+                "z_score": float(analysis["z_score"]),
             },
             report_data["ai_predictions"],
-            lang=lang
+            lang=lang,
         )
 
-        buffer = generate_pdf_file(report_data, lang=lang)
+        buffer = await asyncio.to_thread(generate_pdf_file, report_data, lang)
         buffer.seek(0)
-        
+
         if current_user:
             record_audit_log(
                 db=db,
@@ -303,9 +337,9 @@ async def generate_pdf_by_id_endpoint(
                 target_type="PatientAnalysis",
                 target_id=rec.id,
                 details=f"Bemor hisoboti (PDF) yuklab olindi: {rec.name}",
-                request=request
+                request=request,
             )
-            
+
         return StreamingResponse(
             content=buffer,
             media_type="application/pdf",
@@ -316,6 +350,7 @@ async def generate_pdf_by_id_endpoint(
         )
     except Exception as e:
         import traceback
+
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"PDF yaratishda xato: {str(e)}")
 
@@ -338,7 +373,7 @@ async def generate_docx_by_id_endpoint(
     request: Request,
     lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_admin),
 ):
     """Admin panel: DB dan bemor topib, tanlangan tilda DOCX (anketa) qaytaradi."""
     from services.indices_service import calculate_detailed_indices
@@ -347,7 +382,9 @@ async def generate_docx_by_id_endpoint(
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
     if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q")
+        raise HTTPException(
+            status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q"
+        )
 
     try:
         name_parts = (rec.name or "").split(" ", 1)
@@ -375,7 +412,9 @@ async def generate_docx_by_id_endpoint(
         actual_months = m if y is not None else (rec.age_months or 0)
         actual_days = d if y is not None else (rec.age_days or 0)
 
-        detailed = calculate_detailed_indices(actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang)
+        detailed = calculate_detailed_indices(
+            actual_age, rec.gender or "", h, w, bmi_val, manual_bio, lang=lang
+        )
 
         ideal_range = get_bmi_range_by_age_and_gender(actual_age, rec.gender or "")
         min_w = round(ideal_range["min"] * h2, 1)
@@ -384,12 +423,17 @@ async def generate_docx_by_id_endpoint(
 
         # Localize BMI category
         bmi_cat_key = "normal"
-        if bmi_val < 16.0: bmi_cat_key = "v_low"
-        elif bmi_val < 18.5: bmi_cat_key = "low"
-        elif bmi_val < 25: bmi_cat_key = "normal"
-        elif bmi_val < 30: bmi_cat_key = "overweight"
-        else: bmi_cat_key = "obese"
-        
+        if bmi_val < 16.0:
+            bmi_cat_key = "v_low"
+        elif bmi_val < 18.5:
+            bmi_cat_key = "low"
+        elif bmi_val < 25:
+            bmi_cat_key = "normal"
+        elif bmi_val < 30:
+            bmi_cat_key = "overweight"
+        else:
+            bmi_cat_key = "obese"
+
         cat_info = BMI_CATEGORIES.get(bmi_cat_key, BMI_CATEGORIES.get("normal", {}))
         bmi_category_localized = cat_info.get(lang, cat_info.get("uz", "Noma'lum"))
 
@@ -404,7 +448,9 @@ async def generate_docx_by_id_endpoint(
             "ideal_weight_range": {"min": min_w, "max": max_w},
             "weight_diff": round(w - ideal_w, 1),
             "z_score": rec.z_score or 0,
-            "shoulder_ratio": round((sh_breadth / h) * 100, 1) if h > 0 and sh_breadth else 0,
+            "shoulder_ratio": round((sh_breadth / h) * 100, 1)
+            if h > 0 and sh_breadth
+            else 0,
             "thigh_ratio": round((th_circ / h) * 100, 1) if h > 0 and th_circ else 0,
             "indices": detailed,
         }
@@ -431,16 +477,28 @@ async def generate_docx_by_id_endpoint(
 
         # Barcha qo'shimcha ko'rsatkichlarni report_data'ga o'tkazamiz (DOCX uchun kerak)
         for col in [
-            "height", "weight", "head", "chest", "waist", "shoulder_length", 
-            "shoulder_breadth", "shoulder_circumference", "arm_elbow_length", 
-            "hand_length", "thigh_length", "thigh_circumference", "calf_length", 
-            "calf_circumference", "foot_length", "body_length"
+            "height",
+            "weight",
+            "head",
+            "chest",
+            "waist",
+            "shoulder_length",
+            "shoulder_breadth",
+            "shoulder_circumference",
+            "arm_elbow_length",
+            "hand_length",
+            "thigh_length",
+            "thigh_circumference",
+            "calf_length",
+            "calf_circumference",
+            "foot_length",
+            "body_length",
         ]:
             report_data[col] = getattr(rec, col, 0) or 0
 
-        buffer = generate_docx_report(report_data, lang=lang)
+        buffer = await asyncio.to_thread(generate_docx_report, report_data, lang)
         buffer.seek(0)
-        
+
         if current_user:
             record_audit_log(
                 db=db,
@@ -449,9 +507,9 @@ async def generate_docx_by_id_endpoint(
                 target_type="PatientAnalysis",
                 target_id=rec.id,
                 details=f"Bemor anketasi (DOCX) yuklab olindi: {rec.name}",
-                request=request
+                request=request,
             )
-            
+
         return StreamingResponse(
             content=buffer,
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -462,6 +520,7 @@ async def generate_docx_by_id_endpoint(
         )
     except Exception as e:
         import traceback
+
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"DOCX yaratishda xato: {str(e)}")
 
@@ -471,7 +530,7 @@ async def generate_consent_docx_endpoint(
     payload: ConsentDocxRequest,
     lang: str = Query(default="uz", description="Til: uz, ru, en, kz, ky, tg"),
 ):
-    buffer = generate_consent_docx(payload.model_dump(), lang=lang)
+    buffer = await asyncio.to_thread(generate_consent_docx, payload.model_dump(), lang)
     return StreamingResponse(
         content=buffer,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -494,17 +553,23 @@ async def generate_consent_docx_by_id_endpoint(
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
     if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q")
+        raise HTTPException(
+            status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q"
+        )
 
     data = {
         "child_name": rec.name or "",
         "guardian_name": getattr(rec, "consent_guardian_name", None) or "",
-        "guardian_relationship": getattr(rec, "consent_guardian_relationship", None) or "",
-        "guardian_phone": getattr(rec, "consent_guardian_phone", None) or rec.parents_phone or "",
+        "guardian_relationship": getattr(rec, "consent_guardian_relationship", None)
+        or "",
+        "guardian_phone": getattr(rec, "consent_guardian_phone", None)
+        or rec.parents_phone
+        or "",
         "confirmed_at": str(getattr(rec, "consent_confirmed_at", None) or ""),
-        "consent_policy_version": getattr(rec, "consent_policy_version", None) or "helsinki-declaration-consent-v1",
+        "consent_policy_version": getattr(rec, "consent_policy_version", None)
+        or "helsinki-declaration-consent-v1",
     }
-    buffer = generate_consent_docx(data, lang=lang)
+    buffer = await asyncio.to_thread(generate_consent_docx, data, lang)
     if current_user:
         record_audit_log(
             db=db,
@@ -541,7 +606,7 @@ async def generate_consent_docx_by_id_endpoint(
 async def generate_docx_endpoint(
     request_data: PatientData,
     lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Kiritilgan ma'lumotlardan kirillcha DOCX anketasi yaratib yuklaydi.
@@ -558,11 +623,11 @@ async def generate_docx_endpoint(
             gender_norm,
             all_settings,
             bio_data=analysis["indices"],
-            lang=lang
+            lang=lang,
         )
-        
+
         data_dict = request_data.model_dump(by_alias=False)
-        
+
         # Ensure ID code is present
         if not data_dict.get("id_code"):
             clean_region = (data_dict.get("region") or "").strip()
@@ -571,10 +636,12 @@ async def generate_docx_endpoint(
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
 
-        buffer = generate_docx_report(data_dict, lang=lang)
+        buffer = await asyncio.to_thread(generate_docx_report, data_dict, lang)
 
         if not isinstance(buffer, BytesIO):
-            raise HTTPException(status_code=500, detail="DOCX generatsiyasi noto'g'ri formatda")
+            raise HTTPException(
+                status_code=500, detail="DOCX generatsiyasi noto'g'ri formatda"
+            )
 
         buffer.seek(0)
         return StreamingResponse(
@@ -590,5 +657,8 @@ async def generate_docx_endpoint(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         import traceback
+
         print(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"DOCX generatsiyasida xato: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"DOCX generatsiyasida xato: {str(e)}"
+        )

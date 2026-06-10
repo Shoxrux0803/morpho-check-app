@@ -3,6 +3,7 @@ import os
 
 db_path = "d:/BOT/morpho-check-app/morphocheck_backend/morphocheck.db"
 
+
 def run_migration():
     if not os.path.exists(db_path):
         print(f"Database not found at {db_path}. Skipping.")
@@ -50,6 +51,7 @@ def run_migration():
     conn.commit()
     conn.close()
     print("Migration completed successfully.")
+
 
 if __name__ == "__main__":
     run_migration()

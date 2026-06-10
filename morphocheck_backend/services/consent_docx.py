@@ -261,13 +261,50 @@ def generate_consent_docx(data: dict, lang: str = "uz") -> io.BytesIO:
     table = doc.add_table(rows=0, cols=2)
     table.style = "Table Grid"
     _add_label_value(table, c["child"], _full_name(data))
-    _add_label_value(table, c["guardian"], data.get("guardian_name") or data.get("consent_guardian_name") or data.get("consentGuardianName"))
-    _add_label_value(table, c["relationship"], data.get("guardian_relationship") or data.get("consent_guardian_relationship") or data.get("consentGuardianRelationship"))
-    _add_label_value(table, c["phone"], data.get("guardian_phone") or data.get("consent_guardian_phone") or data.get("consentGuardianPhone") or data.get("parents_phone") or data.get("parentsPhone"))
-    _add_label_value(table, c["date"], str(data.get("confirmed_at") or data.get("consent_confirmed_at") or datetime.utcnow().strftime("%Y-%m-%d")))
-    _add_label_value(table, c["policy"], data.get("consent_policy_version") or data.get("consentPolicyVersion") or "helsinki-declaration-consent-v1")
+    _add_label_value(
+        table,
+        c["guardian"],
+        data.get("guardian_name")
+        or data.get("consent_guardian_name")
+        or data.get("consentGuardianName"),
+    )
+    _add_label_value(
+        table,
+        c["relationship"],
+        data.get("guardian_relationship")
+        or data.get("consent_guardian_relationship")
+        or data.get("consentGuardianRelationship"),
+    )
+    _add_label_value(
+        table,
+        c["phone"],
+        data.get("guardian_phone")
+        or data.get("consent_guardian_phone")
+        or data.get("consentGuardianPhone")
+        or data.get("parents_phone")
+        or data.get("parentsPhone"),
+    )
+    _add_label_value(
+        table,
+        c["date"],
+        str(
+            data.get("confirmed_at")
+            or data.get("consent_confirmed_at")
+            or datetime.utcnow().strftime("%Y-%m-%d")
+        ),
+    )
+    _add_label_value(
+        table,
+        c["policy"],
+        data.get("consent_policy_version")
+        or data.get("consentPolicyVersion")
+        or "helsinki-declaration-consent-v1",
+    )
 
-    for title_key, text_key in (("standard", "standard_text"), ("consent", "consent_text")):
+    for title_key, text_key in (
+        ("standard", "standard_text"),
+        ("consent", "consent_text"),
+    ):
         doc.add_paragraph()
         heading = doc.add_paragraph()
         run = heading.add_run(c[title_key])
@@ -293,7 +330,9 @@ def generate_consent_docx(data: dict, lang: str = "uz") -> io.BytesIO:
     sig_table.cell(0, 0).text = c["signature"]
     sig_table.cell(0, 1).text = "____________________________"
     sig_table.cell(1, 0).text = c["system"]
-    sig_table.cell(1, 1).text = f"MorphoCheck | {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
+    sig_table.cell(
+        1, 1
+    ).text = f"MorphoCheck | {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
 
     buffer = io.BytesIO()
     doc.save(buffer)

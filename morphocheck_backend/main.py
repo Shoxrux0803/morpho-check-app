@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 from dotenv import load_dotenv
 
@@ -18,12 +17,11 @@ if sentry_dsn:
         profiles_sample_rate=1.0,
     )
 
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -46,14 +44,11 @@ from routers.analytics_router import router as analytics_router  # 3-bosqich
 # DB init
 from utils.database import engine, get_db, init_db
 from models.base import Base
-from models.user import User
-from models.userdata import PatientAnalysis
-from models.chat import ChatMessage
-from models.auth_device import LoginVerificationCode, TrustedLoginDevice
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
 from contextlib import asynccontextmanager
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -63,10 +58,12 @@ async def lifespan(app: FastAPI):
     # 2-bosqich: TimescaleDB hypertable larni tekshirish va yaratish
     try:
         from utils.timescale import ensure_hypertables
+
         ensure_hypertables()
     except Exception as _ts_err:
         print(f"[STARTUP] TimescaleDB: {_ts_err}")
     yield
+
 
 app = FastAPI(
     title="MorphoCheck Pro API",
@@ -78,15 +75,20 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         if request.url.scheme == "https":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Permissions-Policy"] = (
+            "camera=(), microphone=(), geolocation=()"
+        )
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             "img-src 'self' data: blob:; "
@@ -96,7 +98,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
         return response
 
+
 app.add_middleware(SecurityHeadersMiddleware)
+
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -107,6 +111,7 @@ async def log_requests(request: Request, call_next):
     if debug:
         print(f"[DEBUG] Response status: {response.status_code}")
     return response
+
 
 # CORS sozlamalari
 _origins = os.getenv("CORS_ORIGINS", "")
@@ -171,7 +176,11 @@ def ensure_schema_updates():
         if not set(columns).issubset(existing_columns):
             return
         column_sql = ", ".join(columns)
-        conn.execute(text(f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_sql})"))
+        conn.execute(
+            text(
+                f"CREATE INDEX IF NOT EXISTS {index_name} ON {table_name} ({column_sql})"
+            )
+        )
 
     def _drop_index(conn, index_name: str):
         """PostgreSQL da tablename talab qilinmaydi, SQLite ham shu."""
@@ -198,14 +207,16 @@ def ensure_schema_updates():
         if is_pg:
             # PostgreSQL: ADD COLUMN IF NOT EXISTS
             with engine.begin() as conn:
-                conn.execute(text(
-                    f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {pg_type}"
-                ))
+                conn.execute(
+                    text(
+                        f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {pg_type}"
+                    )
+                )
         else:
             with engine.begin() as conn:
-                conn.execute(text(
-                    f"ALTER TABLE {table_name} ADD COLUMN {column_name} {pg_type}"
-                ))
+                conn.execute(
+                    text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {pg_type}")
+                )
 
     # -- patient_analysis ustunlari --
     if "patient_analysis" in table_names:
@@ -252,25 +263,101 @@ def ensure_schema_updates():
     with engine.begin() as conn:
         indexes = [
             ("patient_analysis", "ix_patient_analysis_is_deleted", ("is_deleted",)),
-            ("patient_analysis", "ix_patient_analysis_created_by_id", ("created_by_id",)),
-            ("patient_analysis", "ix_patient_analysis_deleted_created", ("is_deleted", "created_at")),
-            ("patient_analysis", "ix_patient_analysis_owner_active_created", ("created_by_id", "is_deleted", "created_at")),
-            ("patient_analysis", "ix_patient_analysis_deleted_deleted_at", ("is_deleted", "deleted_at")),
-            ("patient_analysis", "ix_patient_analysis_region_active_created", ("region", "is_deleted", "created_at")),
-            ("patient_analysis", "ix_patient_analysis_gender_age_active", ("gender", "age", "is_deleted")),
-            ("patient_analysis", "ix_patient_analysis_consent_active", ("consent_confirmed", "is_deleted")),
-            ("patient_analysis", "ix_patient_analysis_child_history", ("name", "birth_date", "gender", "is_deleted", "created_at")),
-            ("research_records", "ix_research_records_deleted_created", ("is_deleted", "created_at")),
-            ("research_records", "ix_research_records_owner_active_id", ("created_by_id", "is_deleted", "id")),
-            ("research_records", "ix_research_records_active_exam_id", ("is_deleted", "examination_date", "id")),
-            ("research_records", "ix_research_records_owner_exam", ("created_by_id", "examination_date")),
-            ("research_records", "ix_research_records_gender_active", ("gender", "is_deleted")),
-            ("research_records", "ix_research_records_feeding_active", ("feeding_type", "is_deleted")),
-            ("research_records", "ix_research_records_marriage_active", ("parents_marriage", "is_deleted")),
-            ("research_records", "ix_research_records_consent_active", ("consent_confirmed", "is_deleted")),
-            ("chat_messages", "ix_chat_messages_sender_recipient_created", ("sender_id", "recipient_id", "created_at")),
-            ("chat_messages", "ix_chat_messages_recipient_sender_read", ("recipient_id", "sender_id", "is_read")),
-            ("chat_messages", "ix_chat_messages_type_created", ("message_type", "created_at")),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_created_by_id",
+                ("created_by_id",),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_deleted_created",
+                ("is_deleted", "created_at"),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_owner_active_created",
+                ("created_by_id", "is_deleted", "created_at"),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_deleted_deleted_at",
+                ("is_deleted", "deleted_at"),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_region_active_created",
+                ("region", "is_deleted", "created_at"),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_gender_age_active",
+                ("gender", "age", "is_deleted"),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_consent_active",
+                ("consent_confirmed", "is_deleted"),
+            ),
+            (
+                "patient_analysis",
+                "ix_patient_analysis_child_history",
+                ("name", "birth_date", "gender", "is_deleted", "created_at"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_deleted_created",
+                ("is_deleted", "created_at"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_owner_active_id",
+                ("created_by_id", "is_deleted", "id"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_active_exam_id",
+                ("is_deleted", "examination_date", "id"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_owner_exam",
+                ("created_by_id", "examination_date"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_gender_active",
+                ("gender", "is_deleted"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_feeding_active",
+                ("feeding_type", "is_deleted"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_marriage_active",
+                ("parents_marriage", "is_deleted"),
+            ),
+            (
+                "research_records",
+                "ix_research_records_consent_active",
+                ("consent_confirmed", "is_deleted"),
+            ),
+            (
+                "chat_messages",
+                "ix_chat_messages_sender_recipient_created",
+                ("sender_id", "recipient_id", "created_at"),
+            ),
+            (
+                "chat_messages",
+                "ix_chat_messages_recipient_sender_read",
+                ("recipient_id", "sender_id", "is_read"),
+            ),
+            (
+                "chat_messages",
+                "ix_chat_messages_type_created",
+                ("message_type", "created_at"),
+            ),
             ("audit_logs", "ix_audit_logs_action_created", ("action", "created_at")),
             ("audit_logs", "ix_audit_logs_user_created", ("user_id", "created_at")),
             ("audit_logs", "ix_audit_logs_target", ("target_type", "target_id")),
@@ -286,9 +373,11 @@ def ensure_schema_updates():
         null_val = "FALSE" if is_pg else "0"
         for table_name in ("patient_analysis", "research_records", "users"):
             if table_name in table_names and "is_deleted" in _columns(table_name):
-                conn.execute(text(
-                    f"UPDATE {table_name} SET is_deleted = {null_val} WHERE is_deleted IS NULL"
-                ))
+                conn.execute(
+                    text(
+                        f"UPDATE {table_name} SET is_deleted = {null_val} WHERE is_deleted IS NULL"
+                    )
+                )
 
         # Eski indekslarni olib tashlash
         for index_name in (
@@ -310,60 +399,72 @@ def ensure_schema_updates():
         # ANALYZE — PostgreSQL va SQLite da ishlaydi
         conn.execute(text("ANALYZE"))
 
+
 # ---- Routers (barchasi /api/ ostida) ----
 app.include_router(analyze_router, prefix=f"{API_PREFIX}/analyze", tags=["Tahlil"])
-app.include_router(admin_router,  prefix=f"{API_PREFIX}/admin",   tags=["Admin"])
-app.include_router(pdf_router,    prefix=f"{API_PREFIX}/pdf",     tags=["PDF Hisobot"])
-app.include_router(clinical_router, prefix=f"{API_PREFIX}/clinical", tags=["Klinik CMS"])
-app.include_router(backup_router, prefix=f"{API_PREFIX}/backup",  tags=["Zaxira (Backup)"])
-app.include_router(research_router, prefix=f"{API_PREFIX}/research", tags=["Izlanuvchi"])
-app.include_router(chat_router,     prefix=f"{API_PREFIX}/chat",     tags=["Chat"])
-app.include_router(ai_router,       prefix=f"{API_PREFIX}/ai",       tags=["AI Assistant"])
-app.include_router(utils_router,    prefix=f"{API_PREFIX}/utils",    tags=["Utilities"])
-app.include_router(analytics_router, prefix=f"{API_PREFIX}/analytics", tags=["Analytics Dashboard"])  # 3-bosqich
-app.include_router(auth_router,   prefix=f"{API_PREFIX}")
+app.include_router(admin_router, prefix=f"{API_PREFIX}/admin", tags=["Admin"])
+app.include_router(pdf_router, prefix=f"{API_PREFIX}/pdf", tags=["PDF Hisobot"])
+app.include_router(
+    clinical_router, prefix=f"{API_PREFIX}/clinical", tags=["Klinik CMS"]
+)
+app.include_router(
+    backup_router, prefix=f"{API_PREFIX}/backup", tags=["Zaxira (Backup)"]
+)
+app.include_router(
+    research_router, prefix=f"{API_PREFIX}/research", tags=["Izlanuvchi"]
+)
+app.include_router(chat_router, prefix=f"{API_PREFIX}/chat", tags=["Chat"])
+app.include_router(ai_router, prefix=f"{API_PREFIX}/ai", tags=["AI Assistant"])
+app.include_router(utils_router, prefix=f"{API_PREFIX}/utils", tags=["Utilities"])
+app.include_router(
+    analytics_router, prefix=f"{API_PREFIX}/analytics", tags=["Analytics Dashboard"]
+)  # 3-bosqich
+app.include_router(auth_router, prefix=f"{API_PREFIX}")
+
 
 # Sog'liqni tekshirish
 @app.get(f"{API_PREFIX}/health", tags=["Service"])
 def health(db: Session = Depends(get_db)):
     from sqlalchemy import text
+
     db.execute(text("SELECT 1"))
     return {"status": "ok"}
+
 
 # ---- Global Error Handler for Observability ----
 import traceback
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     # Log detailed error to console/logs
-    print("="*50)
+    print("=" * 50)
     print(f"[ERROR] {request.method} {request.url}")
     print(f"Detail: {str(exc)}")
     traceback.print_exc()
-    print("="*50)
-    
+    print("=" * 50)
+
     # Return generic but helpful message to client
     return JSONResponse(
         status_code=500,
-        content={
-            "status": "error",
-            "message": "Serverda ichki xatolik yuz berdi."
-        }
+        content={"status": "error", "message": "Serverda ichki xatolik yuz berdi."},
     )
+
 
 # Endpoints are now handled via specialized routers
 
 if __name__ == "__main__":
     import uvicorn
+
     _debug = os.getenv("DEBUG", "false").lower() == "true"
     _workers = int(os.getenv("UVICORN_WORKERS", "1"))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=int(os.getenv("PORT", 8000)),
-        reload=_debug,                         # faqat dev rejimida reload
-        workers=_workers if not _debug else 1, # production uchun ko'p worker
-        access_log=_debug,                     # log faqat debug rejimida
+        reload=_debug,  # faqat dev rejimida reload
+        workers=_workers if not _debug else 1,  # production uchun ko'p worker
+        access_log=_debug,  # log faqat debug rejimida
     )

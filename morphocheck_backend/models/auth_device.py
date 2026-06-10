@@ -1,4 +1,12 @@
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+    func,
+)
 
 from .base import Base
 
@@ -15,7 +23,9 @@ class TrustedLoginDevice(Base):
     last_used_at = Column(DateTime, nullable=True)
 
     __table_args__ = (
-        UniqueConstraint("user_id", "device_id_hash", name="uq_trusted_device_user_hash"),
+        UniqueConstraint(
+            "user_id", "device_id_hash", name="uq_trusted_device_user_hash"
+        ),
     )
 
 

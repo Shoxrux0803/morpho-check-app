@@ -48,7 +48,9 @@ def analyze_full(
     current_user: Optional[User] = Depends(get_optional_user),
 ):
     try:
-        return analyze_and_store(data, db, request, lang=lang, current_user=current_user)
+        return analyze_and_store(
+            data, db, request, lang=lang, current_user=current_user
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -95,7 +97,9 @@ def generate_pdf_by_patient_id(
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
     if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q")
+        raise HTTPException(
+            status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q"
+        )
 
     try:
         report_data = build_pdf_report_data_by_id(patient_id, db, lang=lang)

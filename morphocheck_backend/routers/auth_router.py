@@ -88,10 +88,14 @@ def _send_verification_email(to_email: str, code: str):
 
 
 def _is_trusted_device(db: Session, user_id: int, device_hash: str) -> bool:
-    trusted = db.query(TrustedLoginDevice).filter(
-        TrustedLoginDevice.user_id == user_id,
-        TrustedLoginDevice.device_id_hash == device_hash,
-    ).first()
+    trusted = (
+        db.query(TrustedLoginDevice)
+        .filter(
+            TrustedLoginDevice.user_id == user_id,
+            TrustedLoginDevice.device_id_hash == device_hash,
+        )
+        .first()
+    )
     if trusted:
         trusted.last_used_at = datetime.utcnow()
         return True
@@ -114,14 +118,22 @@ def _store_verification_code(db: Session, user_id: int, device_hash: str, code: 
 
 
 def _verify_device_code(db: Session, user_id: int, device_hash: str, code: str):
-    record = db.query(LoginVerificationCode).filter(
-        LoginVerificationCode.user_id == user_id,
-        LoginVerificationCode.device_id_hash == device_hash,
-    ).first()
+    record = (
+        db.query(LoginVerificationCode)
+        .filter(
+            LoginVerificationCode.user_id == user_id,
+            LoginVerificationCode.device_id_hash == device_hash,
+        )
+        .first()
+    )
     if not record or record.expires_at < datetime.utcnow():
-        raise HTTPException(status_code=400, detail="Tasdiqlash kodi eskirgan yoki topilmadi")
+        raise HTTPException(
+            status_code=400, detail="Tasdiqlash kodi eskirgan yoki topilmadi"
+        )
     if record.attempts >= 5:
-        raise HTTPException(status_code=400, detail="Tasdiqlash kodi urinishlari tugadi")
+        raise HTTPException(
+            status_code=400, detail="Tasdiqlash kodi urinishlari tugadi"
+        )
     if not verify_password(code.strip(), record.code_hash):
         record.attempts += 1
         raise HTTPException(status_code=400, detail="Tasdiqlash kodi noto'g'ri")
@@ -129,10 +141,14 @@ def _verify_device_code(db: Session, user_id: int, device_hash: str, code: str):
 
 
 def _trust_device(db: Session, user_id: int, device_hash: str, request: Request):
-    existing = db.query(TrustedLoginDevice).filter(
-        TrustedLoginDevice.user_id == user_id,
-        TrustedLoginDevice.device_id_hash == device_hash,
-    ).first()
+    existing = (
+        db.query(TrustedLoginDevice)
+        .filter(
+            TrustedLoginDevice.user_id == user_id,
+            TrustedLoginDevice.device_id_hash == device_hash,
+        )
+        .first()
+    )
     if existing:
         existing.last_used_at = datetime.utcnow()
         return
@@ -146,6 +162,7 @@ def _trust_device(db: Session, user_id: int, device_hash: str, request: Request)
         )
     )
 
+
 def _validate_active_user(user: User):
     if getattr(user, "is_deleted", 0) == 1:
         raise HTTPException(
@@ -154,7 +171,10 @@ def _validate_active_user(user: User):
         )
     return user
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -167,35 +187,44 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-        
+
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
     _validate_active_user(user)
-    
+
     # Update activity
     from datetime import datetime
+
     user.last_active_at = datetime.utcnow()
     try:
         db.commit()
     except Exception:
         db.rollback()
-        
+
     return user
+
 
 def get_current_admin(current_user: User = Depends(get_current_user)):
     if current_user.role not in ["admin", "superadmin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Ushbu amal uchun huquqingiz yetarli emas (faqat adminlar uchun)"
+            detail="Ushbu amal uchun huquqingiz yetarli emas (faqat adminlar uchun)",
         )
     return current_user
 
-def get_optional_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)), db: Session = Depends(get_db)):
+
+def get_optional_user(
+    token: str = Depends(
+        OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+    ),
+    db: Session = Depends(get_db),
+):
     if not token:
         return None
     try:
         from jose import jwt, JWTError
+
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email:
@@ -206,13 +235,15 @@ def get_optional_user(token: str = Depends(OAuth2PasswordBearer(tokenUrl="/api/a
         return None
     return None
 
+
 def get_current_superadmin(current_user: User = Depends(get_current_user)):
     if current_user.role != "superadmin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Faqat Super Admin ushbu amalni bajara oladi"
+            detail="Faqat Super Admin ushbu amalni bajara oladi",
         )
     return current_user
+
 
 @router.post("/register", response_model=UserOut)
 @limiter.limit("5/minute")
@@ -220,44 +251,52 @@ def register(request: Request, user_in: UserRegister, db: Session = Depends(get_
     email = user_in.email.strip().lower()
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
-        raise HTTPException(status_code=400, detail="Ushbu email bilan ro'yxatdan o'tilgan.")
-    
+        raise HTTPException(
+            status_code=400, detail="Ushbu email bilan ro'yxatdan o'tilgan."
+        )
+
     new_user = User(
         name=user_in.name,
         email=email,
         hashed_password=get_password_hash(user_in.password),
         phone=user_in.phone,
         region=user_in.region,
-        role="user"
+        role="user",
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
 
+
 @router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
 def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
     # Login (email) yoki Ism (name) bo'yicha qidirish
     login_value = user_in.email.strip().lower()
-    user = db.query(User).filter(
-        or_(
-            User.email == login_value,
-            User.name == user_in.email.strip()
-        )
-    ).first()
+    user = (
+        db.query(User)
+        .filter(or_(User.email == login_value, User.name == user_in.email.strip()))
+        .first()
+    )
 
     if not user:
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
-        
+
     if not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
     _validate_active_user(user)
 
     # Superadmin qurilma tekshiruvi: email env dan o'qiladi va superadmin bo'lsa ishga tushadi
-    if user.role == "superadmin" and SUPERADMIN_EMAIL and (user.email or "").lower() == SUPERADMIN_EMAIL:
+    if (
+        user.role == "superadmin"
+        and SUPERADMIN_EMAIL
+        and (user.email or "").lower() == SUPERADMIN_EMAIL
+    ):
         if not user_in.device_id:
-            raise HTTPException(status_code=400, detail="Qurilma identifikatori topilmadi")
+            raise HTTPException(
+                status_code=400, detail="Qurilma identifikatori topilmadi"
+            )
         device_hash = _hash_value(user_in.device_id.strip())
         if not _is_trusted_device(db, user.id, device_hash):
             verification_code = (user_in.verification_code or "").strip()
@@ -272,11 +311,9 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
                 }
             _verify_device_code(db, user.id, device_hash, verification_code)
             _trust_device(db, user.id, device_hash, request)
-    
-    access_token = create_access_token(
-        data={"sub": user.email, "role": user.role}
-    )
-    
+
+    access_token = create_access_token(data={"sub": user.email, "role": user.role})
+
     # Success Login Logging
     record_audit_log(
         db=db,
@@ -285,10 +322,11 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
         target_type="User",
         target_id=user.id,
         details=f"Foydalanuvchi tizimga kirdi: {user.email or user.name}",
-        request=request
+        request=request,
     )
-    
+
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.get("/me", response_model=UserOut)
 def read_users_me(current_user: User = Depends(get_current_user)):

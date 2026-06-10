@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 import os
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
 import secrets
 
@@ -16,6 +16,7 @@ if len(SECRET_KEY) < 32:
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
         return pwd_context.verify(plain_password, hashed_password)
@@ -23,8 +24,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         # Catching all exceptions to prevent 500 error from malformed hashes
         return False
 
+
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

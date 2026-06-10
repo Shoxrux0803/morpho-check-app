@@ -6,11 +6,12 @@ Analytics Service — Ikki manbadan ma'lumot to'plash:
 
 Dashboard uchun statistika, tendensiyalar va somatotip taqsimoti.
 """
+
 import logging
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import func, text, cast, Date
+from sqlalchemy import func
 
 from models.userdata import PatientAnalysis, ResearchRecord
 from models.user import User
@@ -22,6 +23,7 @@ def _try_clickhouse():
     """ClickHouse mavjudligini tekshiradi."""
     try:
         from utils.clickhouse import clickhouse_available, query_clickhouse
+
         if clickhouse_available():
             return query_clickhouse
         return None
@@ -30,6 +32,7 @@ def _try_clickhouse():
 
 
 # ─── Dashboard Overview ──────────────────────────────────────────────────────
+
 
 def get_dashboard_overview(db: Session, user: Optional[User] = None) -> dict:
     """
@@ -53,7 +56,7 @@ def get_dashboard_overview(db: Session, user: Optional[User] = None) -> dict:
     prev_month_start = prev_month_end.replace(day=1, hour=0, minute=0, second=0)
     last_month = base.filter(
         PatientAnalysis.created_at >= prev_month_start,
-        PatientAnalysis.created_at <= prev_month_end
+        PatientAnalysis.created_at <= prev_month_end,
     ).count()
 
     # O'rtacha ko'rsatkichlar
@@ -66,10 +69,14 @@ def get_dashboard_overview(db: Session, user: Optional[User] = None) -> dict:
     ).first()
 
     # Jins taqsimoti
-    gender_stats = base.with_entities(
-        PatientAnalysis.gender,
-        func.count(PatientAnalysis.id).label("count"),
-    ).group_by(PatientAnalysis.gender).all()
+    gender_stats = (
+        base.with_entities(
+            PatientAnalysis.gender,
+            func.count(PatientAnalysis.id).label("count"),
+        )
+        .group_by(PatientAnalysis.gender)
+        .all()
+    )
 
     # Tadqiqot yozuvlari
     research_base = db.query(ResearchRecord).filter(ResearchRecord.is_deleted == 0)
@@ -84,10 +91,11 @@ def get_dashboard_overview(db: Session, user: Optional[User] = None) -> dict:
         total_users = db.query(User).filter(User.is_deleted == 0).count()
         # 30 kun ichida faol
         since_30d = now - timedelta(days=30)
-        active_users = db.query(User).filter(
-            User.is_deleted == 0,
-            User.last_active_at >= since_30d
-        ).count()
+        active_users = (
+            db.query(User)
+            .filter(User.is_deleted == 0, User.last_active_at >= since_30d)
+            .count()
+        )
 
     return {
         "total_analyses": total,
@@ -111,6 +119,7 @@ def get_dashboard_overview(db: Session, user: Optional[User] = None) -> dict:
 
 
 # ─── BMI Taqsimoti ───────────────────────────────────────────────────────────
+
 
 def get_bmi_distribution(
     db: Session,
@@ -151,6 +160,7 @@ def get_bmi_distribution(
 
 
 # ─── Vaqt Tendensiyasi ───────────────────────────────────────────────────────
+
 
 def get_trend_data(
     db: Session,
@@ -195,12 +205,17 @@ def _trend_from_postgres(
 
     base = base.filter(PatientAnalysis.created_at >= since)
 
-    rows = base.with_entities(
-        func.date_trunc(trunc, PatientAnalysis.created_at).label("bucket"),
-        func.count(PatientAnalysis.id).label("count"),
-        func.avg(PatientAnalysis.bmi).label("avg_bmi"),
-        func.avg(PatientAnalysis.age).label("avg_age"),
-    ).group_by("bucket").order_by("bucket").all()
+    rows = (
+        base.with_entities(
+            func.date_trunc(trunc, PatientAnalysis.created_at).label("bucket"),
+            func.count(PatientAnalysis.id).label("count"),
+            func.avg(PatientAnalysis.bmi).label("avg_bmi"),
+            func.avg(PatientAnalysis.age).label("avg_age"),
+        )
+        .group_by("bucket")
+        .order_by("bucket")
+        .all()
+    )
 
     return [
         {
@@ -250,6 +265,7 @@ def _trend_from_clickhouse(ch_query, period: str, metric: str) -> list[dict]:
 
 # ─── Viloyat Statistikasi ─────────────────────────────────────────────────────
 
+
 def get_region_stats(db: Session, user: Optional[User] = None) -> list[dict]:
     """Viloyatlar bo'yicha statistika (xarita uchun)."""
     base = db.query(PatientAnalysis).filter(
@@ -259,12 +275,17 @@ def get_region_stats(db: Session, user: Optional[User] = None) -> list[dict]:
     if user and user.role not in ("superadmin",):
         base = base.filter(PatientAnalysis.created_by_id == user.id)
 
-    rows = base.with_entities(
-        PatientAnalysis.region,
-        func.count(PatientAnalysis.id).label("count"),
-        func.avg(PatientAnalysis.bmi).label("avg_bmi"),
-        func.avg(PatientAnalysis.z_score).label("avg_z_score"),
-    ).group_by(PatientAnalysis.region).order_by(func.count(PatientAnalysis.id).desc()).all()
+    rows = (
+        base.with_entities(
+            PatientAnalysis.region,
+            func.count(PatientAnalysis.id).label("count"),
+            func.avg(PatientAnalysis.bmi).label("avg_bmi"),
+            func.avg(PatientAnalysis.z_score).label("avg_z_score"),
+        )
+        .group_by(PatientAnalysis.region)
+        .order_by(func.count(PatientAnalysis.id).desc())
+        .all()
+    )
 
     return [
         {
@@ -279,6 +300,7 @@ def get_region_stats(db: Session, user: Optional[User] = None) -> list[dict]:
 
 # ─── Somatotip Taqsimoti ─────────────────────────────────────────────────────
 
+
 def get_somatotype_distribution(
     db: Session,
     user: Optional[User] = None,
@@ -288,11 +310,15 @@ def get_somatotype_distribution(
     if user and user.role not in ("superadmin",):
         base = base.filter(PatientAnalysis.created_by_id == user.id)
 
-    rows = base.with_entities(
-        PatientAnalysis.somatotype,
-        PatientAnalysis.gender,
-        func.count(PatientAnalysis.id).label("count"),
-    ).group_by(PatientAnalysis.somatotype, PatientAnalysis.gender).all()
+    rows = (
+        base.with_entities(
+            PatientAnalysis.somatotype,
+            PatientAnalysis.gender,
+            func.count(PatientAnalysis.id).label("count"),
+        )
+        .group_by(PatientAnalysis.somatotype, PatientAnalysis.gender)
+        .all()
+    )
 
     return [
         {"somatotype": r.somatotype, "gender": r.gender, "count": int(r.count or 0)}
@@ -303,20 +329,22 @@ def get_somatotype_distribution(
 
 # ─── Age Distribution ─────────────────────────────────────────────────────────
 
+
 def get_age_distribution(db: Session, user: Optional[User] = None) -> list[dict]:
     """Yosh guruhlari bo'yicha taqsimot."""
     base = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 0)
     if user and user.role not in ("superadmin",):
         base = base.filter(PatientAnalysis.created_by_id == user.id)
 
-    rows = base.with_entities(PatientAnalysis.age, func.count().label("count")).group_by(
-        PatientAnalysis.age
-    ).order_by(PatientAnalysis.age).all()
+    rows = (
+        base.with_entities(PatientAnalysis.age, func.count().label("count"))
+        .group_by(PatientAnalysis.age)
+        .order_by(PatientAnalysis.age)
+        .all()
+    )
 
     # Guruhlar: 0-3, 4-6, 7-10, 11-14, 15-17, 18+
-    groups = {
-        "0-3": 0, "4-6": 0, "7-10": 0, "11-14": 0, "15-17": 0, "18+": 0
-    }
+    groups = {"0-3": 0, "4-6": 0, "7-10": 0, "11-14": 0, "15-17": 0, "18+": 0}
     for age, count in rows:
         if age is None:
             continue
@@ -338,6 +366,7 @@ def get_age_distribution(db: Session, user: Optional[User] = None) -> list[dict]
 
 
 # ─── Yordamchi funksiyalar ────────────────────────────────────────────────────
+
 
 def _round(value, ndigits: int = 2) -> Optional[float]:
     if value is None:

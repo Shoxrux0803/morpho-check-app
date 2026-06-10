@@ -3,6 +3,7 @@ import os
 
 db_path = "d:/BOT/morpho-check-app/morphocheck_backend/morphocheck.db"
 
+
 def apply_final_optimizations():
     if not os.path.exists(db_path):
         print(f"Baza topilmadi: {db_path}")
@@ -22,8 +23,12 @@ def apply_final_optimizations():
 
     # 2. Yetishmayotgan indekslarni qo'shish
     indices_to_add = [
-        ("ix_patient_analysis_examination_date", "patient_analysis", "examination_date"),
-        ("ix_patient_analysis_birth_date", "patient_analysis", "birth_date")
+        (
+            "ix_patient_analysis_examination_date",
+            "patient_analysis",
+            "examination_date",
+        ),
+        ("ix_patient_analysis_birth_date", "patient_analysis", "birth_date"),
     ]
 
     for idx_name, table, col in indices_to_add:
@@ -42,6 +47,7 @@ def apply_final_optimizations():
     conn.commit()
     conn.close()
     print("\n--- BARCHA AMALLAR BAJARILDI ---")
+
 
 if __name__ == "__main__":
     apply_final_optimizations()

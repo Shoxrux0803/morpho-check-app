@@ -20,7 +20,20 @@ STOP_WORDS = {
         "bo'lgan",
         "bo'ladi",
     },
-    "ru": {"и", "или", "с", "для", "также", "это", "этот", "а", "в", "на", "который", "будет"},
+    "ru": {
+        "и",
+        "или",
+        "с",
+        "для",
+        "также",
+        "это",
+        "этот",
+        "а",
+        "в",
+        "на",
+        "который",
+        "будет",
+    },
     "en": {"and", "or", "for", "the", "a", "an", "is", "are", "with", "to", "of", "in"},
     "kz": set(),
 }
@@ -75,13 +88,19 @@ def analyze_text(text: str, lang: str = "uz") -> Dict[str, Any]:
         cached["cache"] = "hit"
         return cached
 
-    tokens = [_normalize_token(match.group(0)) for match in TOKEN_PATTERN.finditer(text or "")]
+    tokens = [
+        _normalize_token(match.group(0)) for match in TOKEN_PATTERN.finditer(text or "")
+    ]
     tokens = [token for token in tokens if token]
     stop_words = STOP_WORDS[normalized_lang]
     keywords = [token for token in tokens if token not in stop_words and len(token) > 1]
     frequencies = Counter(keywords)
-    top_terms = [{"term": term, "count": count} for term, count in frequencies.most_common(12)]
-    expansions = expand_vocabulary([item["term"] for item in top_terms], normalized_lang)
+    top_terms = [
+        {"term": term, "count": count} for term, count in frequencies.most_common(12)
+    ]
+    expansions = expand_vocabulary(
+        [item["term"] for item in top_terms], normalized_lang
+    )
 
     result = {
         "lang": normalized_lang,

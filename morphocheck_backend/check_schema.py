@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine, inspect
-import os
 
 db_url = "sqlite:///morphocheck.db"
 engine = create_engine(db_url)

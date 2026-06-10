@@ -14,10 +14,10 @@ from services.research_summary_docx import generate_research_summary_docx
 from services.consent_docx import generate_consent_docx
 from services.indices_service import calculate_detailed_indices
 import pandas as pd
+import asyncio
 import io
 import urllib.parse
 import calendar
-import re
 from jose import JWTError, jwt
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
@@ -27,30 +27,91 @@ from utils.security import ALGORITHM, SECRET_KEY
 router = APIRouter(tags=["Researcher"])
 
 RESEARCH_IMPORT_FIELDS = [
-    "full_name", "school_name", "settlement", "birth_place", "birth_date", "gender",
-    "father_nationality", "mother_nationality", "living_since", "enrolled_date",
-    "living_conditions", "labor_regime", "past_illnesses", "children_count", "child_order",
-    "feeding_type", "parents_marriage", "mother_health_status", "parents_phone",
+    "full_name",
+    "school_name",
+    "settlement",
+    "birth_place",
+    "birth_date",
+    "gender",
+    "father_nationality",
+    "mother_nationality",
+    "living_since",
+    "enrolled_date",
+    "living_conditions",
+    "labor_regime",
+    "past_illnesses",
+    "children_count",
+    "child_order",
+    "feeding_type",
+    "parents_marriage",
+    "mother_health_status",
+    "parents_phone",
     "examination_date",
     "lower_leg_total",
-    "lower_leg_spina_iliaca", "lower_leg_symphysion", "lower_leg_length", "tibiale_height",
-    "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
-    "calf_circumference", "foot_length", "teeth_count", "menstruation_start",
-    "skull_longitudinal", "skull_transverse", "head_circumference", "forehead_transverse",
-    "skull_height", "skull_base_length", "skull_base_width", "face_bizygomatic",
-    "face_bigonial", "face_morphological_height", "face_physiognomic_height", "nose_height",
-    "nose_width", "outer_canthal_width", "inner_canthal_width", "lips_mucosa_height",
-    "mouth_width", "chest_standing_height", "chest_sitting_height", "weight",
-    "trunk_length", "torso_length", "chest_circumference_pause",
-    "chest_circumference_inhale", "chest_circumference_exhale", "waist_circumference",
-    "abdomen_circumference", "upper_segment_length", "chest_transverse_diameter",
-    "chest_anteroposterior_diameter", "chest_height", "arm_length", "shoulder_length",
-    "shoulder_width", "arm_circumference_total", "shoulder_circumference_rest",
-    "shoulder_circumference_flexed", "forearm_length", "hand_length", "dynamometry",
-    "fat_triceps", "fat_biceps", "fat_subscapular", "fat_iliac", "fat_popliteal",
-    "father_height", "mother_height",
-    "consent_confirmed", "consent_guardian_name", "consent_guardian_relationship",
-    "consent_guardian_phone", "consent_policy_version",
+    "lower_leg_spina_iliaca",
+    "lower_leg_symphysion",
+    "lower_leg_length",
+    "tibiale_height",
+    "pelvic_width",
+    "thigh_length",
+    "thigh_circumference",
+    "calf_length",
+    "calf_circumference",
+    "foot_length",
+    "teeth_count",
+    "menstruation_start",
+    "skull_longitudinal",
+    "skull_transverse",
+    "head_circumference",
+    "forehead_transverse",
+    "skull_height",
+    "skull_base_length",
+    "skull_base_width",
+    "face_bizygomatic",
+    "face_bigonial",
+    "face_morphological_height",
+    "face_physiognomic_height",
+    "nose_height",
+    "nose_width",
+    "outer_canthal_width",
+    "inner_canthal_width",
+    "lips_mucosa_height",
+    "mouth_width",
+    "chest_standing_height",
+    "chest_sitting_height",
+    "weight",
+    "trunk_length",
+    "torso_length",
+    "chest_circumference_pause",
+    "chest_circumference_inhale",
+    "chest_circumference_exhale",
+    "waist_circumference",
+    "abdomen_circumference",
+    "upper_segment_length",
+    "chest_transverse_diameter",
+    "chest_anteroposterior_diameter",
+    "chest_height",
+    "arm_length",
+    "shoulder_length",
+    "shoulder_width",
+    "arm_circumference_total",
+    "shoulder_circumference_rest",
+    "shoulder_circumference_flexed",
+    "forearm_length",
+    "hand_length",
+    "dynamometry",
+    "fat_triceps",
+    "fat_biceps",
+    "fat_subscapular",
+    "fat_iliac",
+    "fat_popliteal",
+    "father_height",
+    "mother_height",
+    "consent_confirmed",
+    "consent_guardian_name",
+    "consent_guardian_relationship",
+    "consent_guardian_phone",
+    "consent_policy_version",
 ]
 
 RESEARCH_IMPORT_ALIASES = {
@@ -140,78 +201,210 @@ RESEARCH_IMPORT_ALIASES = {
 }
 
 RESEARCH_EXPORT_FIELD_ORDER = [
-    "created_at", "id", "full_name", "school_name", "settlement", "birth_place", "birth_date",
-    "gender", "father_nationality", "mother_nationality", "living_since", "enrolled_date",
-    "living_conditions", "labor_regime", "past_illnesses", "children_count", "child_order",
-    "feeding_type", "parents_marriage", "mother_health_status", "examination_date",
-    "lower_leg_total", "lower_leg_spina_iliaca", "lower_leg_symphysion",
-    "lower_leg_length", "tibiale_height", "pelvic_width", "thigh_length", "thigh_circumference", "calf_length",
-    "calf_circumference", "foot_length", "teeth_count", "menstruation_start",
-    "skull_longitudinal", "skull_transverse", "head_circumference", "forehead_transverse",
-    "skull_height", "skull_base_length", "skull_base_width", "face_bizygomatic",
-    "face_bigonial", "face_morphological_height", "face_physiognomic_height", "nose_height",
-    "nose_width", "outer_canthal_width", "inner_canthal_width", "lips_mucosa_height",
-    "mouth_width", "chest_standing_height", "chest_sitting_height", "weight", "trunk_length",
-    "torso_length", "chest_circumference_pause", "chest_circumference_inhale",
-    "chest_circumference_exhale", "waist_circumference", "abdomen_circumference",
-    "upper_segment_length", "chest_transverse_diameter", "chest_anteroposterior_diameter",
-    "chest_height", "arm_length", "shoulder_length", "shoulder_width",
-    "shoulder_circumference_rest", "shoulder_circumference_flexed", "forearm_length",
-    "hand_length", "dynamometry", "fat_triceps", "fat_biceps", "fat_subscapular",
-    "fat_iliac", "fat_popliteal",
+    "created_at",
+    "id",
+    "full_name",
+    "school_name",
+    "settlement",
+    "birth_place",
+    "birth_date",
+    "gender",
+    "father_nationality",
+    "mother_nationality",
+    "living_since",
+    "enrolled_date",
+    "living_conditions",
+    "labor_regime",
+    "past_illnesses",
+    "children_count",
+    "child_order",
+    "feeding_type",
+    "parents_marriage",
+    "mother_health_status",
+    "examination_date",
+    "lower_leg_total",
+    "lower_leg_spina_iliaca",
+    "lower_leg_symphysion",
+    "lower_leg_length",
+    "tibiale_height",
+    "pelvic_width",
+    "thigh_length",
+    "thigh_circumference",
+    "calf_length",
+    "calf_circumference",
+    "foot_length",
+    "teeth_count",
+    "menstruation_start",
+    "skull_longitudinal",
+    "skull_transverse",
+    "head_circumference",
+    "forehead_transverse",
+    "skull_height",
+    "skull_base_length",
+    "skull_base_width",
+    "face_bizygomatic",
+    "face_bigonial",
+    "face_morphological_height",
+    "face_physiognomic_height",
+    "nose_height",
+    "nose_width",
+    "outer_canthal_width",
+    "inner_canthal_width",
+    "lips_mucosa_height",
+    "mouth_width",
+    "chest_standing_height",
+    "chest_sitting_height",
+    "weight",
+    "trunk_length",
+    "torso_length",
+    "chest_circumference_pause",
+    "chest_circumference_inhale",
+    "chest_circumference_exhale",
+    "waist_circumference",
+    "abdomen_circumference",
+    "upper_segment_length",
+    "chest_transverse_diameter",
+    "chest_anteroposterior_diameter",
+    "chest_height",
+    "arm_length",
+    "shoulder_length",
+    "shoulder_width",
+    "shoulder_circumference_rest",
+    "shoulder_circumference_flexed",
+    "forearm_length",
+    "hand_length",
+    "dynamometry",
+    "fat_triceps",
+    "fat_biceps",
+    "fat_subscapular",
+    "fat_iliac",
+    "fat_popliteal",
 ]
 RESEARCH_EXPORT_HEADERS = [
-    "Сана", "ID", "Ф.И.Ш.", "Мактаб/Муассаса", "Аҳоли пункти", "Туғилган жойи",
-    "Туғилган санаси", "Отасининг миллати", "Онасининг миллати", "Қачондан бери яшайди",
-    "Рўйхатга олинган сана", "Яшаш шароити", "Меҳнат режими", "Ўтказилган касалликлар",
-    "Болалар сони", "Бола нечанчи", "Озиқланиш тури", "Ота-она никоҳи", "Она соғлиғи",
-    "Текширув санаси", "Отасининг бўйи (см)", "Онасининг бўйи (см)",
-    "Олд юқори ёнбош ўсимтасидан (см)", "Қовуқ устидан (см)", "Болдир баландлиги (см)",
-    "Чанноқ кенглиги (см)", "Сон узунлиги (см)", "Сон айланаси (см)",
-    "Болдир узунлиги (см)", "Болдир айланаси (см)", "Оёқ кафти узунлиги (см)",
-    "Тишлар сони", "Ҳайз бошланиши", "Бош суяги бўйлама (см)",
-    "Бош суяги кўндаланг (см)", "Бош айланаси (см)", "Пешона кўндаланг (см)",
-    "Бош суяги баландлиги (см)", "Бош суяги асоси узунлиги (см)",
-    "Бош суяги асоси кенглиги (см)", "Юз кенглиги (см)", "Пастки жағ кенглиги (см)",
-    "Юз морфологик баландлиги (см)", "Юз физиогномик баландлиги (см)",
-    "Бурун баландлиги (см)", "Бурун кенглиги (см)", "Кўз ташқи бурчаклари (см)",
-    "Кўз ички бурчаклари (см)", "Лаблар шиллиқ қавати (см)", "Оғиз кенглиги (см)",
-    "Бўйи (тик) (см)", "Бўйи (ўтирган) (см)", "Вазн (кг)", "Гавда узунлиги (см)",
-    "Тана узунлиги (см)", "Кўкрак айланаси (пауза) (см)",
-    "Кўкрак айланаси (нафас) (см)", "Кўкрак айланаси (чиқариш) (см)",
-    "Бел айланаси (см)", "Қорин айланаси (см)", "Юқори сегмент узунлиги (см)",
-    "Кўкрак кўндаланг (см)", "Кўкрак олд-орқа (см)", "Кўкрак баландлиги (см)",
-    "Қўл узунлиги (см)", "Елка узунлиги (см)", "Елка кенглиги (см)",
-    "Елка айланаси (тинч) (см)", "Елка айланаси (букилган) (см)",
-    "Билак узунлиги (см)", "Қўл кафти узунлиги (см)", "Динамометрия (кг)",
-    "Трицепс ёғ (мм)", "Бицепс ёғ (мм)", "Курак ости ёғ (мм)", "Ёнбош ёғ (мм)",
+    "Сана",
+    "ID",
+    "Ф.И.Ш.",
+    "Мактаб/Муассаса",
+    "Аҳоли пункти",
+    "Туғилган жойи",
+    "Туғилган санаси",
+    "Отасининг миллати",
+    "Онасининг миллати",
+    "Қачондан бери яшайди",
+    "Рўйхатга олинган сана",
+    "Яшаш шароити",
+    "Меҳнат режими",
+    "Ўтказилган касалликлар",
+    "Болалар сони",
+    "Бола нечанчи",
+    "Озиқланиш тури",
+    "Ота-она никоҳи",
+    "Она соғлиғи",
+    "Текширув санаси",
+    "Отасининг бўйи (см)",
+    "Онасининг бўйи (см)",
+    "Олд юқори ёнбош ўсимтасидан (см)",
+    "Қовуқ устидан (см)",
+    "Болдир баландлиги (см)",
+    "Чанноқ кенглиги (см)",
+    "Сон узунлиги (см)",
+    "Сон айланаси (см)",
+    "Болдир узунлиги (см)",
+    "Болдир айланаси (см)",
+    "Оёқ кафти узунлиги (см)",
+    "Тишлар сони",
+    "Ҳайз бошланиши",
+    "Бош суяги бўйлама (см)",
+    "Бош суяги кўндаланг (см)",
+    "Бош айланаси (см)",
+    "Пешона кўндаланг (см)",
+    "Бош суяги баландлиги (см)",
+    "Бош суяги асоси узунлиги (см)",
+    "Бош суяги асоси кенглиги (см)",
+    "Юз кенглиги (см)",
+    "Пастки жағ кенглиги (см)",
+    "Юз морфологик баландлиги (см)",
+    "Юз физиогномик баландлиги (см)",
+    "Бурун баландлиги (см)",
+    "Бурун кенглиги (см)",
+    "Кўз ташқи бурчаклари (см)",
+    "Кўз ички бурчаклари (см)",
+    "Лаблар шиллиқ қавати (см)",
+    "Оғиз кенглиги (см)",
+    "Бўйи (тик) (см)",
+    "Бўйи (ўтирган) (см)",
+    "Вазн (кг)",
+    "Гавда узунлиги (см)",
+    "Тана узунлиги (см)",
+    "Кўкрак айланаси (пауза) (см)",
+    "Кўкрак айланаси (нафас) (см)",
+    "Кўкрак айланаси (чиқариш) (см)",
+    "Бел айланаси (см)",
+    "Қорин айланаси (см)",
+    "Юқори сегмент узунлиги (см)",
+    "Кўкрак кўндаланг (см)",
+    "Кўкрак олд-орқа (см)",
+    "Кўкрак баландлиги (см)",
+    "Қўл узунлиги (см)",
+    "Елка узунлиги (см)",
+    "Елка кенглиги (см)",
+    "Елка айланаси (тинч) (см)",
+    "Елка айланаси (букилган) (см)",
+    "Билак узунлиги (см)",
+    "Қўл кафти узунлиги (см)",
+    "Динамометрия (кг)",
+    "Трицепс ёғ (мм)",
+    "Бицепс ёғ (мм)",
+    "Курак ости ёғ (мм)",
+    "Ёнбош ёғ (мм)",
     "Тизза ости ёғ (мм)",
 ]
 
 INTEGER_IMPORT_FIELDS = {"children_count", "child_order", "teeth_count"}
 FLOAT_IMPORT_FIELDS = {
-    field for field in RESEARCH_IMPORT_FIELDS
-    if field not in INTEGER_IMPORT_FIELDS and field not in {
-        "full_name", "school_name", "settlement", "birth_place", "birth_date", "gender",
-        "father_nationality", "mother_nationality", "living_since", "enrolled_date",
-        "living_conditions", "labor_regime", "past_illnesses", "feeding_type",
-        "parents_marriage", "mother_health_status", "parents_phone", "examination_date",
-        "menstruation_start", "consent_guardian_name", "consent_guardian_relationship",
-        "consent_guardian_phone", "consent_policy_version",
+    field
+    for field in RESEARCH_IMPORT_FIELDS
+    if field not in INTEGER_IMPORT_FIELDS
+    and field
+    not in {
+        "full_name",
+        "school_name",
+        "settlement",
+        "birth_place",
+        "birth_date",
+        "gender",
+        "father_nationality",
+        "mother_nationality",
+        "living_since",
+        "enrolled_date",
+        "living_conditions",
+        "labor_regime",
+        "past_illnesses",
+        "feeding_type",
+        "parents_marriage",
+        "mother_health_status",
+        "parents_phone",
+        "examination_date",
+        "menstruation_start",
+        "consent_guardian_name",
+        "consent_guardian_relationship",
+        "consent_guardian_phone",
+        "consent_policy_version",
     }
 }
 
 
 def get_research_import_headers() -> List[str]:
     return [
-        RESEARCH_TEMPLATE_LABELS.get(field, field)
-        for field in RESEARCH_IMPORT_FIELDS
+        RESEARCH_TEMPLATE_LABELS.get(field, field) for field in RESEARCH_IMPORT_FIELDS
     ]
 
 
 def get_research_xlsx_styles():
     return {
-        "header_fill": PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid"),
+        "header_fill": PatternFill(
+            start_color="3498DB", end_color="3498DB", fill_type="solid"
+        ),
         "header_font": Font(color="FFFFFF", bold=True),
         "border": Border(
             left=Side(style="thin"),
@@ -222,6 +415,7 @@ def get_research_xlsx_styles():
         "center_align": Alignment(horizontal="center", vertical="center"),
         "left_align": Alignment(horizontal="left", vertical="center"),
     }
+
 
 RESEARCH_TEMPLATE_LABELS = {
     "full_name": "F.I.SH",
@@ -284,19 +478,13 @@ def research_record_to_dict(record: ResearchRecord) -> dict:
         for column in ResearchRecord.__table__.columns
     }
     payload["created_by_name"] = (
-        record.created_by.name
-        if getattr(record, "created_by", None)
-        else None
+        record.created_by.name if getattr(record, "created_by", None) else None
     )
     payload["created_by_email"] = (
-        record.created_by.email
-        if getattr(record, "created_by", None)
-        else None
+        record.created_by.email if getattr(record, "created_by", None) else None
     )
     payload["deleted_by_name"] = (
-        record.deleted_by.name
-        if getattr(record, "deleted_by", None)
-        else None
+        record.deleted_by.name if getattr(record, "deleted_by", None) else None
     )
     return payload
 
@@ -518,11 +706,15 @@ def get_research_index_value_label(group: str, key: str, lang: str):
 
 
 def get_research_child_age_export_header(lang: str):
-    return RESEARCH_CHILD_AGE_EXPORT_LABELS.get(lang, RESEARCH_CHILD_AGE_EXPORT_LABELS["uz"])
+    return RESEARCH_CHILD_AGE_EXPORT_LABELS.get(
+        lang, RESEARCH_CHILD_AGE_EXPORT_LABELS["uz"]
+    )
 
 
 def get_research_age_group_export_header(lang: str):
-    return RESEARCH_AGE_GROUP_EXPORT_LABELS.get(lang, RESEARCH_AGE_GROUP_EXPORT_LABELS["uz"])
+    return RESEARCH_AGE_GROUP_EXPORT_LABELS.get(
+        lang, RESEARCH_AGE_GROUP_EXPORT_LABELS["uz"]
+    )
 
 
 def _parse_research_date(value):
@@ -605,7 +797,9 @@ def _calculate_research_age(record: ResearchRecord) -> Optional[int]:
     return parts[0]
 
 
-def build_research_index_export_values(record: ResearchRecord, lang: str = "uz") -> dict:
+def build_research_index_export_values(
+    record: ResearchRecord, lang: str = "uz"
+) -> dict:
     height = float(record.chest_standing_height or 0)
     weight = float(record.weight or 0)
     age = _calculate_research_age(record)
@@ -636,8 +830,12 @@ def build_research_index_export_values(record: ResearchRecord, lang: str = "uz")
         "z_bmi": detailed.get("z_bmi"),
         "z_body_length": detailed.get("z_body_length"),
         "centile": centile,
-        "corridor": get_research_index_value_label("corridor", centile, normalize_export_lang(lang)),
-        "morphological_type": get_research_index_value_label("morphological_type", morph_type_key, normalize_export_lang(lang)),
+        "corridor": get_research_index_value_label(
+            "corridor", centile, normalize_export_lang(lang)
+        ),
+        "morphological_type": get_research_index_value_label(
+            "morphological_type", morph_type_key, normalize_export_lang(lang)
+        ),
         "hmai": detailed.get("hmai"),
         "mii": detailed.get("mii"),
         "adi": detailed.get("adi"),
@@ -671,9 +869,9 @@ def apply_research_filters(
     if search:
         like = f"%{search}%"
         query = query.filter(
-            ResearchRecord.full_name.ilike(like) |
-            ResearchRecord.school_name.ilike(like) |
-            ResearchRecord.settlement.ilike(like)
+            ResearchRecord.full_name.ilike(like)
+            | ResearchRecord.school_name.ilike(like)
+            | ResearchRecord.settlement.ilike(like)
         )
     if full_name:
         query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
@@ -682,8 +880,8 @@ def apply_research_filters(
     if settlement:
         s = settlement.strip()
         query = query.filter(
-            (ResearchRecord.settlement.ilike(f"%{s}%")) |
-            (ResearchRecord.birth_place.ilike(f"%{s}%"))
+            (ResearchRecord.settlement.ilike(f"%{s}%"))
+            | (ResearchRecord.birth_place.ilike(f"%{s}%"))
         )
     if feeding_type:
         query = query.filter(ResearchRecord.feeding_type == feeding_type)
@@ -705,18 +903,18 @@ def apply_research_filters(
         gender_norm = gender.strip().lower()
         if gender_norm in ["erkak", "male", "boy", "o'g'il", "ogil"]:
             query = query.filter(
-                (ResearchRecord.gender.ilike("%erkak%")) |
-                (ResearchRecord.gender.ilike("%male%")) |
-                (ResearchRecord.gender.ilike("%boy%")) |
-                (ResearchRecord.gender.ilike("%o'g%")) |
-                (ResearchRecord.gender.ilike("%og%"))
+                (ResearchRecord.gender.ilike("%erkak%"))
+                | (ResearchRecord.gender.ilike("%male%"))
+                | (ResearchRecord.gender.ilike("%boy%"))
+                | (ResearchRecord.gender.ilike("%o'g%"))
+                | (ResearchRecord.gender.ilike("%og%"))
             )
         elif gender_norm in ["ayol", "female", "girl", "qiz"]:
             query = query.filter(
-                (ResearchRecord.gender.ilike("%ayol%")) |
-                (ResearchRecord.gender.ilike("%female%")) |
-                (ResearchRecord.gender.ilike("%girl%")) |
-                (ResearchRecord.gender.ilike("%qiz%"))
+                (ResearchRecord.gender.ilike("%ayol%"))
+                | (ResearchRecord.gender.ilike("%female%"))
+                | (ResearchRecord.gender.ilike("%girl%"))
+                | (ResearchRecord.gender.ilike("%qiz%"))
             )
         else:
             query = query.filter(func.lower(ResearchRecord.gender) == gender_norm)
@@ -726,7 +924,7 @@ def apply_research_filters(
 def get_current_researcher_or_superadmin(
     request: Request,
     accessToken: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     # 1. Tokenni aniqlash (Header yoki Query Param)
     token = accessToken
@@ -742,7 +940,9 @@ def get_current_researcher_or_superadmin(
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise HTTPException(status_code=401, detail="Could not validate credentials")
+            raise HTTPException(
+                status_code=401, detail="Could not validate credentials"
+            )
     except JWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
 
@@ -751,12 +951,16 @@ def get_current_researcher_or_superadmin(
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     if getattr(user, "is_deleted", 0) == 1:
-        raise HTTPException(status_code=403, detail="Foydalanuvchi bloklangan yoki o'chirilgan")
+        raise HTTPException(
+            status_code=403, detail="Foydalanuvchi bloklangan yoki o'chirilgan"
+        )
 
     # 4. Roli bo'yicha tekshirish
     if user.role not in ["researcher", "superadmin"]:
-        raise HTTPException(status_code=403, detail="Sizda ushbu amalni bajarish uchun ruxsat yo'q.")
-    
+        raise HTTPException(
+            status_code=403, detail="Sizda ushbu amalni bajarish uchun ruxsat yo'q."
+        )
+
     # Update activity — 5 daqiqada bir marta (har so'rovda commit qilmaslik)
     _now = datetime.utcnow()
     _last = getattr(user, "last_active_at", None)
@@ -774,13 +978,14 @@ def get_current_researcher_or_superadmin(
 #  STATIC PATHS — MUST BE BEFORE /{record_id}
 # ═══════════════════════════════════════════════
 
+
 @router.get("/deleted/list")
 def list_deleted_research(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
     paginated: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """O'chirilgan yozuvlar ro'yxati — faqat superadmin"""
     if current_user.role != "superadmin":
@@ -819,7 +1024,7 @@ def export_research_xlsx(
     age_max: Optional[int] = Query(None),
     lang: Optional[str] = Query("uz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """XLSX Export - Advanced version with styling and Cyrillic headers"""
     export_lang = normalize_export_lang(lang)
@@ -852,14 +1057,32 @@ def export_research_xlsx(
         if age_min is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25 >= age_min
+                (
+                    func.julianday(
+                        func.coalesce(
+                            ResearchRecord.examination_date,
+                            func.strftime("%Y-%m-%d", "now"),
+                        )
+                    )
+                    - func.julianday(ResearchRecord.birth_date)
+                )
+                / 365.25
+                >= age_min,
             )
         if age_max is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25 <= age_max
+                (
+                    func.julianday(
+                        func.coalesce(
+                            ResearchRecord.examination_date,
+                            func.strftime("%Y-%m-%d", "now"),
+                        )
+                    )
+                    - func.julianday(ResearchRecord.birth_date)
+                )
+                / 365.25
+                <= age_max,
             )
 
     # Export limit: xotira uchun maksimal 10000 yozuv
@@ -896,71 +1119,128 @@ def export_research_xlsx(
         (get_research_header(export_lang, "child_order"), "child_order"),
         (get_research_header(export_lang, "feeding_type"), "feeding_type"),
         (get_research_header(export_lang, "parents_marriage"), "parents_marriage"),
-        (get_research_header(export_lang, "mother_health_status"), "mother_health_status"),
+        (
+            get_research_header(export_lang, "mother_health_status"),
+            "mother_health_status",
+        ),
         (get_research_header(export_lang, "examination_date"), "examination_date"),
-        
         # I Показатели физического развития
         (get_research_header(export_lang, "lower_leg_total"), "lower_leg_total"),
-        (get_research_header(export_lang, "lower_leg_spina_iliaca"), "lower_leg_spina_iliaca"),
-        (get_research_header(export_lang, "lower_leg_symphysion"), "lower_leg_symphysion"),
+        (
+            get_research_header(export_lang, "lower_leg_spina_iliaca"),
+            "lower_leg_spina_iliaca",
+        ),
+        (
+            get_research_header(export_lang, "lower_leg_symphysion"),
+            "lower_leg_symphysion",
+        ),
         (get_research_header(export_lang, "lower_leg_length"), "lower_leg_length"),
         (get_research_header(export_lang, "tibiale_height"), "tibiale_height"),
         (get_research_header(export_lang, "pelvic_width"), "pelvic_width"),
         (get_research_header(export_lang, "thigh_length"), "thigh_length"),
-        (get_research_header(export_lang, "thigh_circumference"), "thigh_circumference"),
+        (
+            get_research_header(export_lang, "thigh_circumference"),
+            "thigh_circumference",
+        ),
         (get_research_header(export_lang, "calf_length"), "calf_length"),
         (get_research_header(export_lang, "calf_circumference"), "calf_circumference"),
         (get_research_header(export_lang, "foot_length"), "foot_length"),
         (get_research_header(export_lang, "teeth_count"), "teeth_count"),
         (get_research_header(export_lang, "menstruation_start"), "menstruation_start"),
-
         # II Определение формы черепа
         (get_research_header(export_lang, "skull_longitudinal"), "skull_longitudinal"),
         (get_research_header(export_lang, "skull_transverse"), "skull_transverse"),
         (get_research_header(export_lang, "head_circumference"), "head_circumference"),
-        (get_research_header(export_lang, "forehead_transverse"), "forehead_transverse"),
+        (
+            get_research_header(export_lang, "forehead_transverse"),
+            "forehead_transverse",
+        ),
         (get_research_header(export_lang, "skull_height"), "skull_height"),
         (get_research_header(export_lang, "skull_base_length"), "skull_base_length"),
         (get_research_header(export_lang, "skull_base_width"), "skull_base_width"),
-
         # Лицо
         (get_research_header(export_lang, "face_bizygomatic"), "face_bizygomatic"),
         (get_research_header(export_lang, "face_bigonial"), "face_bigonial"),
-        (get_research_header(export_lang, "face_morphological_height"), "face_morphological_height"),
-        (get_research_header(export_lang, "face_physiognomic_height"), "face_physiognomic_height"),
+        (
+            get_research_header(export_lang, "face_morphological_height"),
+            "face_morphological_height",
+        ),
+        (
+            get_research_header(export_lang, "face_physiognomic_height"),
+            "face_physiognomic_height",
+        ),
         (get_research_header(export_lang, "nose_height"), "nose_height"),
         (get_research_header(export_lang, "nose_width"), "nose_width"),
-        (get_research_header(export_lang, "outer_canthal_width"), "outer_canthal_width"),
-        (get_research_header(export_lang, "inner_canthal_width"), "inner_canthal_width"),
+        (
+            get_research_header(export_lang, "outer_canthal_width"),
+            "outer_canthal_width",
+        ),
+        (
+            get_research_header(export_lang, "inner_canthal_width"),
+            "inner_canthal_width",
+        ),
         (get_research_header(export_lang, "lips_mucosa_height"), "lips_mucosa_height"),
         (get_research_header(export_lang, "mouth_width"), "mouth_width"),
-
         # Грудь
-        (get_research_header(export_lang, "chest_standing_height"), "chest_standing_height"),
-        (get_research_header(export_lang, "chest_sitting_height"), "chest_sitting_height"),
+        (
+            get_research_header(export_lang, "chest_standing_height"),
+            "chest_standing_height",
+        ),
+        (
+            get_research_header(export_lang, "chest_sitting_height"),
+            "chest_sitting_height",
+        ),
         (get_research_header(export_lang, "weight"), "weight"),
         (get_research_header(export_lang, "trunk_length"), "trunk_length"),
         (get_research_header(export_lang, "torso_length"), "torso_length"),
-        (get_research_header(export_lang, "chest_circumference_pause"), "chest_circumference_pause"),
-        (get_research_header(export_lang, "chest_circumference_inhale"), "chest_circumference_inhale"),
-        (get_research_header(export_lang, "chest_circumference_exhale"), "chest_circumference_exhale"),
-        (get_research_header(export_lang, "waist_circumference"), "waist_circumference"),
-        (get_research_header(export_lang, "abdomen_circumference"), "abdomen_circumference"),
-        (get_research_header(export_lang, "upper_segment_length"), "upper_segment_length"),
-        (get_research_header(export_lang, "chest_transverse_diameter"), "chest_transverse_diameter"),
-        (get_research_header(export_lang, "chest_anteroposterior_diameter"), "chest_anteroposterior_diameter"),
+        (
+            get_research_header(export_lang, "chest_circumference_pause"),
+            "chest_circumference_pause",
+        ),
+        (
+            get_research_header(export_lang, "chest_circumference_inhale"),
+            "chest_circumference_inhale",
+        ),
+        (
+            get_research_header(export_lang, "chest_circumference_exhale"),
+            "chest_circumference_exhale",
+        ),
+        (
+            get_research_header(export_lang, "waist_circumference"),
+            "waist_circumference",
+        ),
+        (
+            get_research_header(export_lang, "abdomen_circumference"),
+            "abdomen_circumference",
+        ),
+        (
+            get_research_header(export_lang, "upper_segment_length"),
+            "upper_segment_length",
+        ),
+        (
+            get_research_header(export_lang, "chest_transverse_diameter"),
+            "chest_transverse_diameter",
+        ),
+        (
+            get_research_header(export_lang, "chest_anteroposterior_diameter"),
+            "chest_anteroposterior_diameter",
+        ),
         (get_research_header(export_lang, "chest_height"), "chest_height"),
-
         # Верхняя конечность
         (get_research_header(export_lang, "arm_length"), "arm_length"),
         (get_research_header(export_lang, "shoulder_length"), "shoulder_length"),
         (get_research_header(export_lang, "shoulder_width"), "shoulder_width"),
-        (get_research_header(export_lang, "shoulder_circumference_rest"), "shoulder_circumference_rest"),
-        (get_research_header(export_lang, "shoulder_circumference_flexed"), "shoulder_circumference_flexed"),
+        (
+            get_research_header(export_lang, "shoulder_circumference_rest"),
+            "shoulder_circumference_rest",
+        ),
+        (
+            get_research_header(export_lang, "shoulder_circumference_flexed"),
+            "shoulder_circumference_flexed",
+        ),
         (get_research_header(export_lang, "forearm_length"), "forearm_length"),
         (get_research_header(export_lang, "hand_length"), "hand_length"),
         (get_research_header(export_lang, "dynamometry"), "dynamometry"),
-
         # Толщина подкожно-жировой клетчатки
         (get_research_header(export_lang, "fat_triceps"), "fat_triceps"),
         (get_research_header(export_lang, "fat_biceps"), "fat_biceps"),
@@ -970,18 +1250,32 @@ def export_research_xlsx(
     ]
 
     if current_user.role == "superadmin":
-        headers_map.insert(2, (get_research_header(export_lang, "created_by_name"), "created_by_name"))
-        headers_map.insert(3, (get_research_header(export_lang, "created_by_email"), "created_by_email"))
+        headers_map.insert(
+            2, (get_research_header(export_lang, "created_by_name"), "created_by_name")
+        )
+        headers_map.insert(
+            3,
+            (get_research_header(export_lang, "created_by_email"), "created_by_email"),
+        )
 
     headers_map.extend(get_research_index_export_headers(export_lang))
 
     # Style definitions
-    header_fill = PatternFill(start_color="3498DB", end_color="3498DB", fill_type="solid")
+    header_fill = PatternFill(
+        start_color="3498DB", end_color="3498DB", fill_type="solid"
+    )
     header_font = Font(color="FFFFFF", bold=True)
-    zebra_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
-    border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-    center_align = Alignment(horizontal='center', vertical='center')
-    left_align = Alignment(horizontal='left', vertical='center')
+    zebra_fill = PatternFill(
+        start_color="F2F2F2", end_color="F2F2F2", fill_type="solid"
+    )
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+    center_align = Alignment(horizontal="center", vertical="center")
+    left_align = Alignment(horizontal="left", vertical="center")
 
     # Writing headers
     for col_num, (header_text, _) in enumerate(headers_map, 1):
@@ -1007,12 +1301,12 @@ def export_research_xlsx(
                 val = index_values[field_name]
             else:
                 val = getattr(record, field_name)
-            
+
             # Special formatting
             if field_name == "created_at":
                 display_val = val.strftime("%Y-%m-%d %H:%M") if val else "-"
             elif field_name == "id":
-                display_val = val # ID o'zgarmasin
+                display_val = val  # ID o'zgarmasin
             elif field_name == "gender":
                 display_val = format_research_gender_for_xlsx(val)
             elif field_name == "created_by_email":
@@ -1021,6 +1315,7 @@ def export_research_xlsx(
                 display_val = val if val is not None else "-"
             elif isinstance(val, str):
                 from services.ky_localization import report_text
+
                 localized = report_text(val, export_lang) if val else "-"
                 if export_lang in ["en", "tm"]:
                     display_val = localized
@@ -1030,11 +1325,11 @@ def export_research_xlsx(
                 display_val = "-"
             else:
                 display_val = val
-            
+
             cell = ws.cell(row=row_num, column=col_num, value=display_val)
             cell.alignment = left_align
             cell.border = border
-            
+
             # Zebra rows
             if row_num % 2 == 0:
                 cell.fill = zebra_fill
@@ -1055,12 +1350,12 @@ def export_research_xlsx(
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
-    
+
     filename = f"research_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -1077,9 +1372,19 @@ def normalize_import_header(value) -> str:
     text = str(value or "").strip().lower()
     text = text.replace("*", " ")
     for old, new in {
-        "ў": "o", "ӯ": "o", "ғ": "g", "қ": "q", "ҳ": "h",
-        "й": "y", "ё": "yo", "я": "ya", "ю": "yu",
-        "'": " ", "`": " ", "’": " ", "_": " ",
+        "ў": "o",
+        "ӯ": "o",
+        "ғ": "g",
+        "қ": "q",
+        "ҳ": "h",
+        "й": "y",
+        "ё": "yo",
+        "я": "ya",
+        "ю": "yu",
+        "'": " ",
+        "`": " ",
+        "’": " ",
+        "_": " ",
     }.items():
         text = text.replace(old, new)
     keep = []
@@ -1150,7 +1455,7 @@ def map_import_headers(headers: List[str]) -> dict:
             *RESEARCH_EXPORT_FIELD_ORDER[2:],
         ]
 
-    for index, field in enumerate(export_order[:len(headers)]):
+    for index, field in enumerate(export_order[: len(headers)]):
         if field in field_set:
             mapped[index] = field
     return mapped
@@ -1230,17 +1535,21 @@ async def import_research_xlsx(
     target_user = current_user
     if researcher_id is not None:
         if current_user.role != "superadmin":
-            raise HTTPException(status_code=403, detail="Researcherni tanlash faqat superadmin uchun")
+            raise HTTPException(
+                status_code=403, detail="Researcherni tanlash faqat superadmin uchun"
+            )
         target_user = db.get(User, researcher_id)
         if not target_user or target_user.role != "researcher":
             raise HTTPException(status_code=404, detail="Researcher topilmadi")
 
     try:
         contents = await file.read()
-        wb = load_workbook(io.BytesIO(contents), data_only=True)
+        wb = await asyncio.to_thread(load_workbook, io.BytesIO(contents), data_only=True)
         ws = wb.active
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Excel fayl o'qilmadi: {exc}") from exc
+        raise HTTPException(
+            status_code=400, detail=f"Excel fayl o'qilmadi: {exc}"
+        ) from exc
 
     rows = list(ws.iter_rows(values_only=True))
     if not rows:
@@ -1249,7 +1558,9 @@ async def import_research_xlsx(
     headers = [str(value or "").strip() for value in rows[0]]
     column_map = map_import_headers(headers)
     if not column_map:
-        raise HTTPException(status_code=400, detail="Import uchun mos ustunlar topilmadi")
+        raise HTTPException(
+            status_code=400, detail="Import uchun mos ustunlar topilmadi"
+        )
 
     skipped = 0
     errors = []
@@ -1277,7 +1588,9 @@ async def import_research_xlsx(
             skipped += 1
             continue
         if not payload.get("full_name"):
-            errors.append({"row": row_number, "errors": ["F.I.SH ustuni to'ldirilishi kerak"]})
+            errors.append(
+                {"row": row_number, "errors": ["F.I.SH ustuni to'ldirilishi kerak"]}
+            )
             continue
         if row_errors:
             errors.append({"row": row_number, "errors": row_errors})
@@ -1297,11 +1610,15 @@ async def import_research_xlsx(
         )
 
     if not records:
-        raise HTTPException(status_code=400, detail="Import qilish uchun ma'lumot topilmadi")
+        raise HTTPException(
+            status_code=400, detail="Import qilish uchun ma'lumot topilmadi"
+        )
 
     try:
         db.add_all(records)
-        target_user.completed_entries_count = (target_user.completed_entries_count or 0) + len(records)
+        target_user.completed_entries_count = (
+            target_user.completed_entries_count or 0
+        ) + len(records)
         db.commit()
     except Exception as exc:
         db.rollback()
@@ -1332,7 +1649,7 @@ def list_research_records(
     page_size: int = Query(20, ge=1, le=200),
     paginated: bool = Query(False),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     query = (
         db.query(ResearchRecord)
@@ -1349,11 +1666,11 @@ def list_research_records(
     if search:
         like = f"%{search}%"
         query = query.filter(
-            ResearchRecord.full_name.ilike(like) |
-            ResearchRecord.school_name.ilike(like) |
-            ResearchRecord.settlement.ilike(like)
+            ResearchRecord.full_name.ilike(like)
+            | ResearchRecord.school_name.ilike(like)
+            | ResearchRecord.settlement.ilike(like)
         )
-    
+
     # Specific demographic filters
     if full_name:
         query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
@@ -1362,14 +1679,14 @@ def list_research_records(
     if settlement:
         s = settlement.strip()
         query = query.filter(
-            (ResearchRecord.settlement.ilike(f"%{s}%")) |
-            (ResearchRecord.birth_place.ilike(f"%{s}%"))
+            (ResearchRecord.settlement.ilike(f"%{s}%"))
+            | (ResearchRecord.birth_place.ilike(f"%{s}%"))
         )
     if feeding_type:
         query = query.filter(ResearchRecord.feeding_type == feeding_type)
     if parents_marriage:
         query = query.filter(ResearchRecord.parents_marriage == parents_marriage)
-    
+
     # Biometric filters
     if weight_min is not None:
         query = query.filter(ResearchRecord.weight >= weight_min)
@@ -1390,46 +1707,69 @@ def list_research_records(
         gender_norm = gender.strip().lower()
         if gender_norm in ["erkak", "male", "boy", "o'g'il", "ogil"]:
             query = query.filter(
-                (ResearchRecord.gender.ilike("%erkak%")) |
-                (ResearchRecord.gender.ilike("%male%")) |
-                (ResearchRecord.gender.ilike("%boy%")) |
-                (ResearchRecord.gender.ilike("%o'g%")) |
-                (ResearchRecord.gender.ilike("%og%"))
+                (ResearchRecord.gender.ilike("%erkak%"))
+                | (ResearchRecord.gender.ilike("%male%"))
+                | (ResearchRecord.gender.ilike("%boy%"))
+                | (ResearchRecord.gender.ilike("%o'g%"))
+                | (ResearchRecord.gender.ilike("%og%"))
             )
         elif gender_norm in ["ayol", "female", "girl", "qiz"]:
             query = query.filter(
-                (ResearchRecord.gender.ilike("%ayol%")) |
-                (ResearchRecord.gender.ilike("%female%")) |
-                (ResearchRecord.gender.ilike("%girl%")) |
-                (ResearchRecord.gender.ilike("%qiz%"))
+                (ResearchRecord.gender.ilike("%ayol%"))
+                | (ResearchRecord.gender.ilike("%female%"))
+                | (ResearchRecord.gender.ilike("%girl%"))
+                | (ResearchRecord.gender.ilike("%qiz%"))
             )
         else:
             query = query.filter(func.lower(ResearchRecord.gender) == gender_norm)
 
     # Age filter — endi SQL orqali (Python loop o'rniga)
     if age_min is not None or age_max is not None:
-        from sqlalchemy import text as sa_text
         # SQLite: julianday(exam_date) - julianday(birth_date) = kunlar soni
         # Yil: / 365.25
         # NULL bo'lsa chiqarib tashlash
-        age_expr = (
-            func.cast(
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25,
-                func.cast(0.0, type_=None).__class__
+        age_expr = func.cast(
+            (
+                func.julianday(
+                    func.coalesce(
+                        ResearchRecord.examination_date,
+                        func.strftime("%Y-%m-%d", "now"),
+                    )
+                )
+                - func.julianday(ResearchRecord.birth_date)
             )
+            / 365.25,
+            func.cast(0.0, type_=None).__class__,
         )
         if age_min is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25 >= age_min
+                (
+                    func.julianday(
+                        func.coalesce(
+                            ResearchRecord.examination_date,
+                            func.strftime("%Y-%m-%d", "now"),
+                        )
+                    )
+                    - func.julianday(ResearchRecord.birth_date)
+                )
+                / 365.25
+                >= age_min,
             )
         if age_max is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25 <= age_max
+                (
+                    func.julianday(
+                        func.coalesce(
+                            ResearchRecord.examination_date,
+                            func.strftime("%Y-%m-%d", "now"),
+                        )
+                    )
+                    - func.julianday(ResearchRecord.birth_date)
+                )
+                / 365.25
+                <= age_max,
             )
 
     total = query.order_by(None).count()
@@ -1453,7 +1793,7 @@ def export_dataset_for_analysis(
     settlement: Optional[str] = Query(None),
     researcher_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """
     Advanced export for statistical analysis (SPSS/Python).
@@ -1470,16 +1810,16 @@ def export_dataset_for_analysis(
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
     elif researcher_id:
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
-    
+
     if settlement:
         s = settlement.strip()
         query = query.filter(
-            (ResearchRecord.settlement.ilike(f"%{s}%")) |
-            (ResearchRecord.birth_place.ilike(f"%{s}%"))
+            (ResearchRecord.settlement.ilike(f"%{s}%"))
+            | (ResearchRecord.birth_place.ilike(f"%{s}%"))
         )
     if gender:
         query = query.filter(ResearchRecord.gender == gender)
-    
+
     records = query.all()
 
     # Filtered and Processed Data
@@ -1493,58 +1833,74 @@ def export_dataset_for_analysis(
             age = round((e_date - b_date).days / 365.25, 2)
         except (TypeError, ValueError):
             age = None
-        
-        if age_min is not None and (age is None or age < age_min): continue
-        if age_max is not None and (age is None or age > age_max): continue
+
+        if age_min is not None and (age is None or age < age_min):
+            continue
+        if age_max is not None and (age is None or age > age_max):
+            continue
 
         # Encoding categories
         # Gender: 0=Boy, 1=Girl
         gender_code = 0 if r.gender == "Boy" else 1
-        if not r.gender: gender_code = -1
-        
+        if not r.gender:
+            gender_code = -1
+
         # Feeding: 0=Natural, 1=Artificial
         feeding_code = 0 if "Tabiiy" in (r.feeding_type or "") else 1
-        
-        # Marriage: 0=Non-relative, 1=Distant, 2=Close
-        marriage_code = 2 if "Yaqin" in (r.parents_marriage or "") else 1 if "Uzoq" in (r.parents_marriage or "") else 0
 
-        dataset.append({
-            "id": r.id,
-            "full_name": r.full_name,
-            "age_years": age,
-            "age_group": calculate_research_age_group(r),
-            "gender": r.gender,
-            "gender_code": gender_code,
-            "settlement": r.settlement,
-            "school": r.school_name,
-            "weight": r.weight,
-            "height": r.chest_standing_height,
-            "bmi": round(r.weight / ((r.chest_standing_height/100)**2), 2) if r.weight and r.chest_standing_height else None,
-            "feeding_code": feeding_code,
-            "marriage_code": marriage_code,
-            "head_circ": r.head_circumference,
-            "waist_circ": r.waist_circumference,
-            "chest_circ": r.chest_circumference_pause,
-            "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else None
-        })
+        # Marriage: 0=Non-relative, 1=Distant, 2=Close
+        marriage_code = (
+            2
+            if "Yaqin" in (r.parents_marriage or "")
+            else 1
+            if "Uzoq" in (r.parents_marriage or "")
+            else 0
+        )
+
+        dataset.append(
+            {
+                "id": r.id,
+                "full_name": r.full_name,
+                "age_years": age,
+                "age_group": calculate_research_age_group(r),
+                "gender": r.gender,
+                "gender_code": gender_code,
+                "settlement": r.settlement,
+                "school": r.school_name,
+                "weight": r.weight,
+                "height": r.chest_standing_height,
+                "bmi": round(r.weight / ((r.chest_standing_height / 100) ** 2), 2)
+                if r.weight and r.chest_standing_height
+                else None,
+                "feeding_code": feeding_code,
+                "marriage_code": marriage_code,
+                "head_circ": r.head_circumference,
+                "waist_circ": r.waist_circumference,
+                "chest_circ": r.chest_circumference_pause,
+                "created_at": r.created_at.strftime("%Y-%m-%d")
+                if r.created_at
+                else None,
+            }
+        )
 
     if not dataset:
-        raise HTTPException(status_code=404, detail="Filterga mos ma'lumotlar topilmadi")
+        raise HTTPException(
+            status_code=404, detail="Filterga mos ma'lumotlar topilmadi"
+        )
 
     df = pd.DataFrame(dataset)
-    
+
     # Save to Excel
     buf = io.BytesIO()
-    df.to_excel(buf, index=False, engine='openpyxl')
+    df.to_excel(buf, index=False, engine="openpyxl")
     buf.seek(0)
 
     filename = f"dataset_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
-
 
 
 # ═══════════════════════════════════════════════
@@ -1570,7 +1926,7 @@ def export_research_summary_docx(
     age_max: Optional[int] = Query(None),
     lang: Optional[str] = Query("uz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     export_lang = normalize_export_lang(lang)
     query = (
@@ -1601,20 +1957,40 @@ def export_research_summary_docx(
         if age_min is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25 >= age_min
+                (
+                    func.julianday(
+                        func.coalesce(
+                            ResearchRecord.examination_date,
+                            func.strftime("%Y-%m-%d", "now"),
+                        )
+                    )
+                    - func.julianday(ResearchRecord.birth_date)
+                )
+                / 365.25
+                >= age_min,
             )
         if age_max is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
-                (func.julianday(func.coalesce(ResearchRecord.examination_date, func.strftime('%Y-%m-%d', 'now')))
-                 - func.julianday(ResearchRecord.birth_date)) / 365.25 <= age_max
+                (
+                    func.julianday(
+                        func.coalesce(
+                            ResearchRecord.examination_date,
+                            func.strftime("%Y-%m-%d", "now"),
+                        )
+                    )
+                    - func.julianday(ResearchRecord.birth_date)
+                )
+                / 365.25
+                <= age_max,
             )
 
     records = query.order_by(ResearchRecord.id.desc()).limit(5000).all()
 
     if not records:
-        raise HTTPException(status_code=404, detail="Filterga mos ma'lumotlar topilmadi")
+        raise HTTPException(
+            status_code=404, detail="Filterga mos ma'lumotlar topilmadi"
+        )
 
     researcher = None
     if researcher_id:
@@ -1653,7 +2029,9 @@ def export_research_summary_docx(
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        },
     )
 
 
@@ -1661,17 +2039,19 @@ def export_research_summary_docx(
 def create_research_record(
     payload: ResearchRecordCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     record = ResearchRecord(**payload.model_dump(exclude_unset=True))
     record.created_by_id = current_user.id
     if record.consent_confirmed and not record.consent_confirmed_at:
         record.consent_confirmed_at = datetime.utcnow()
     db.add(record)
-    
+
     # Update user stats
-    current_user.completed_entries_count = (current_user.completed_entries_count or 0) + 1
-    
+    current_user.completed_entries_count = (
+        current_user.completed_entries_count or 0
+    ) + 1
+
     db.commit()
     db.refresh(record)
 
@@ -1679,6 +2059,7 @@ def create_research_record(
     try:
         from utils.clickhouse import insert_research_event
         from routers.research_router import research_record_to_dict
+
         insert_research_event(research_record_to_dict(record))
     except Exception:
         pass
@@ -1690,11 +2071,12 @@ def create_research_record(
 #  DYNAMIC PATHS — AFTER STATIC PATHS
 # ═══════════════════════════════════════════════
 
+
 @router.get("/{record_id}", response_model=ResearchRecordOut)
 def get_research_record(
     record_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
@@ -1709,7 +2091,7 @@ def update_research_record(
     record_id: int,
     payload: ResearchRecordCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
@@ -1730,7 +2112,7 @@ def update_research_record(
 def delete_research_record(
     record_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """Soft delete"""
     record = db.get(ResearchRecord, record_id)
@@ -1750,7 +2132,7 @@ def delete_research_record(
 def hard_delete_research_record(
     record_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Hard delete — faqat superadmin"""
     if current_user.role != "superadmin":
@@ -1767,7 +2149,7 @@ def hard_delete_research_record(
 def restore_research_record(
     record_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Restore soft-deleted record — faqat superadmin"""
     if current_user.role != "superadmin":
@@ -1787,7 +2169,7 @@ def download_research_docx(
     record_id: int,
     lang: str = Query("ru"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """DOCX hisobot yuklab olish"""
     record = db.get(ResearchRecord, record_id)
@@ -1802,7 +2184,9 @@ def download_research_docx(
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        },
     )
 
 
@@ -1811,7 +2195,7 @@ def download_research_consent_docx(
     record_id: int,
     lang: str = Query("uz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_researcher_or_superadmin)
+    current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
@@ -1822,15 +2206,21 @@ def download_research_consent_docx(
     data = {
         "child_name": record.full_name or "",
         "guardian_name": getattr(record, "consent_guardian_name", None) or "",
-        "guardian_relationship": getattr(record, "consent_guardian_relationship", None) or "",
-        "guardian_phone": getattr(record, "consent_guardian_phone", None) or record.parents_phone or "",
+        "guardian_relationship": getattr(record, "consent_guardian_relationship", None)
+        or "",
+        "guardian_phone": getattr(record, "consent_guardian_phone", None)
+        or record.parents_phone
+        or "",
         "confirmed_at": str(getattr(record, "consent_confirmed_at", None) or ""),
-        "consent_policy_version": getattr(record, "consent_policy_version", None) or "helsinki-declaration-consent-v1",
+        "consent_policy_version": getattr(record, "consent_policy_version", None)
+        or "helsinki-declaration-consent-v1",
     }
     buf = generate_consent_docx(data, lang=lang)
     encoded_filename = urllib.parse.quote(f"Research_consent_{record.id}_{lang}.docx")
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"}
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        },
     )

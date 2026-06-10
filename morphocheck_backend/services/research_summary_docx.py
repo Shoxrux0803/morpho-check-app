@@ -314,8 +314,11 @@ METRIC_LABELS["en"] = {
     "dynamometry": "Dynamometry",
 }
 
+
 def _tr(lang, key):
-    return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(key, SUMMARY_I18N["uz"].get(key, key))
+    return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(
+        key, SUMMARY_I18N["uz"].get(key, key)
+    )
 
 
 def _metric_label(key, label, lang):
@@ -371,7 +374,13 @@ def _gender_label(gender, lang="uz"):
         if lang == "en":
             return "Girl/Female"
         return "Qiz/Ayol"
-    if "boy" in value or "erkak" in value or "o'g" in value or "og" in value or "male" in value:
+    if (
+        "boy" in value
+        or "erkak" in value
+        or "o'g" in value
+        or "og" in value
+        or "male" in value
+    ):
         if lang == "tm":
             return "Oglan/Erkek"
         if lang == "tg":
@@ -398,7 +407,9 @@ def _age(record):
         return None
     try:
         b_date = datetime.strptime(str(birth_date), "%Y-%m-%d")
-        exam_raw = getattr(record, "examination_date", None) or datetime.now().strftime("%Y-%m-%d")
+        exam_raw = getattr(record, "examination_date", None) or datetime.now().strftime(
+            "%Y-%m-%d"
+        )
         e_date = datetime.strptime(str(exam_raw), "%Y-%m-%d")
         years = (e_date - b_date).days / 365.25
         return years if years >= 0 else None
@@ -480,7 +491,13 @@ def _t_test_p_value(t_value, df):
 
 
 def _f_test_p_value(f_value, df1, df2):
-    if f_value is None or not math.isfinite(f_value) or f_value < 0 or df1 <= 0 or df2 <= 0:
+    if (
+        f_value is None
+        or not math.isfinite(f_value)
+        or f_value < 0
+        or df1 <= 0
+        or df2 <= 0
+    ):
         return None
     x = (df1 * f_value) / (df1 * f_value + df2)
     return min(1, max(0, 1 - _regularized_beta(x, df1 / 2, df2 / 2)))
@@ -525,7 +542,9 @@ def _build_stats(records, lang="uz"):
                 "p75": _percentile(values, 0.75),
                 "p95": _percentile(values, 0.95),
                 "z_low": len([v for v in values if sd and (v - avg) / sd < -2]),
-                "z_normal": len([v for v in values if not sd or abs((v - avg) / sd) <= 2]),
+                "z_normal": len(
+                    [v for v in values if not sd or abs((v - avg) / sd) <= 2]
+                ),
                 "z_high": len([v for v in values if sd and (v - avg) / sd > 2]),
             }
         )
@@ -542,7 +561,12 @@ def _build_stats(records, lang="uz"):
         female_label = _gender_label("girl", lang)
         male = groups[male_label]
         female = groups[female_label]
-        row = {"label": _metric_label(key, label, lang), "unit": unit, "male_n": len(male), "female_n": len(female)}
+        row = {
+            "label": _metric_label(key, label, lang),
+            "unit": unit,
+            "male_n": len(male),
+            "female_n": len(female),
+        }
         if len(male) >= 2 and len(female) >= 2:
             m1 = _mean(male)
             m2 = _mean(female)
@@ -570,7 +594,11 @@ def _build_stats(records, lang="uz"):
         name = (
             getattr(record, "settlement", None)
             or getattr(record, "birth_place", None)
-            or ("Namalum" if lang == "tm" else ("Номаълум" if lang == "tg" else "Noma'lum"))
+            or (
+                "Namalum"
+                if lang == "tm"
+                else ("Номаълум" if lang == "tg" else "Noma'lum")
+            )
         )
         value = _metric_value(record, "bmi")
         if value is not None:
@@ -584,8 +612,12 @@ def _build_stats(records, lang="uz"):
     region = {"groups": []}
     if len(eligible) >= 2 and len(all_region_values) >= 4:
         grand_mean = _mean(all_region_values)
-        ss_between = sum(len(values) * (_mean(values) - grand_mean) ** 2 for _, values in eligible)
-        ss_within = sum(sum((v - _mean(values)) ** 2 for v in values) for _, values in eligible)
+        ss_between = sum(
+            len(values) * (_mean(values) - grand_mean) ** 2 for _, values in eligible
+        )
+        ss_within = sum(
+            sum((v - _mean(values)) ** 2 for v in values) for _, values in eligible
+        )
         df_between = len(eligible) - 1
         df_within = len(all_region_values) - len(eligible)
         ms_within = ss_within / df_within if df_within else 0
@@ -594,7 +626,9 @@ def _build_stats(records, lang="uz"):
             {
                 "f": f_value,
                 "p": _f_test_p_value(f_value, df_between, df_within),
-                "eta_squared": ss_between / (ss_between + ss_within) if ss_between + ss_within else None,
+                "eta_squared": ss_between / (ss_between + ss_within)
+                if ss_between + ss_within
+                else None,
                 "df_between": df_between,
                 "df_within": df_within,
             }
@@ -615,14 +649,25 @@ def _build_stats(records, lang="uz"):
                     (_metric_value(record, key_a), _metric_value(record, key_b))
                     for record in records
                 ]
-                values.append(_pearson([(x, y) for x, y in pairs if x is not None and y is not None]))
+                values.append(
+                    _pearson(
+                        [(x, y) for x, y in pairs if x is not None and y is not None]
+                    )
+                )
         correlation.append({"label": label_a, "values": values})
 
     pairs = [
-        (_metric_value(record, "chest_standing_height"), _metric_value(record, "weight"))
+        (
+            _metric_value(record, "chest_standing_height"),
+            _metric_value(record, "weight"),
+        )
         for record in records
     ]
-    pairs = [(height, weight) for height, weight in pairs if height is not None and weight is not None]
+    pairs = [
+        (height, weight)
+        for height, weight in pairs
+        if height is not None and weight is not None
+    ]
     regression = {"n": len(pairs)}
     if len(pairs) >= 3:
         xs = [p[0] for p in pairs]
@@ -648,13 +693,22 @@ def _build_stats(records, lang="uz"):
             }
         )
 
-    genders = Counter(_gender_label(getattr(record, "gender", None), lang) for record in records)
+    genders = Counter(
+        _gender_label(getattr(record, "gender", None), lang) for record in records
+    )
     settlements = Counter(
-        str(getattr(record, "settlement", None) or getattr(record, "birth_place", None) or "Noma'lum").strip()
+        str(
+            getattr(record, "settlement", None)
+            or getattr(record, "birth_place", None)
+            or "Noma'lum"
+        ).strip()
         or "Noma'lum"
         for record in records
     )
-    schools = Counter(str(getattr(record, "school_name", None) or "Noma'lum").strip() or "Noma'lum" for record in records)
+    schools = Counter(
+        str(getattr(record, "school_name", None) or "Noma'lum").strip() or "Noma'lum"
+        for record in records
+    )
     ages = [_age(record) for record in records]
     ages = [value for value in ages if value is not None]
 
@@ -672,7 +726,9 @@ def _build_stats(records, lang="uz"):
     }
 
 
-def _set_cell_text(cell, text, bold=False, size=9, align=WD_ALIGN_PARAGRAPH.LEFT, fill=None, color=None):
+def _set_cell_text(
+    cell, text, bold=False, size=9, align=WD_ALIGN_PARAGRAPH.LEFT, fill=None, color=None
+):
     paragraph = cell.paragraphs[0]
     paragraph.clear()
     paragraph.alignment = align
@@ -691,7 +747,9 @@ def _set_cell_text(cell, text, bold=False, size=9, align=WD_ALIGN_PARAGRAPH.LEFT
 
 def _heading(doc, text, level=1):
     paragraph = doc.add_paragraph()
-    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER if level == 1 else WD_ALIGN_PARAGRAPH.LEFT
+    paragraph.alignment = (
+        WD_ALIGN_PARAGRAPH.CENTER if level == 1 else WD_ALIGN_PARAGRAPH.LEFT
+    )
     run = paragraph.add_run(text)
     run.bold = True
     run.font.name = "Times New Roman"
@@ -717,7 +775,12 @@ def _table(doc, headers, rows, widths=None):
     for row in rows:
         cells = table.add_row().cells
         for index, value in enumerate(row):
-            _set_cell_text(cells[index], value, size=8, align=WD_ALIGN_PARAGRAPH.CENTER if index else WD_ALIGN_PARAGRAPH.LEFT)
+            _set_cell_text(
+                cells[index],
+                value,
+                size=8,
+                align=WD_ALIGN_PARAGRAPH.CENTER if index else WD_ALIGN_PARAGRAPH.LEFT,
+            )
     if widths:
         for col_idx, width in enumerate(widths):
             for cell in table.columns[col_idx].cells:
@@ -738,7 +801,9 @@ def _p_label(value):
     return "<0.001" if value < 0.001 else f"{value:.3f}"
 
 
-def generate_research_summary_docx(records, current_user=None, researcher=None, filters=None, lang="uz"):
+def generate_research_summary_docx(
+    records, current_user=None, researcher=None, filters=None, lang="uz"
+):
     stats = _build_stats(records, lang=lang)
     doc = Document()
     for section in doc.sections:
@@ -754,11 +819,23 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
     _heading(doc, _tr(lang, "title"), 1)
     subtitle = doc.add_paragraph()
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    subtitle.add_run(f"{_tr(lang, 'report_date')}: {datetime.now().strftime('%Y-%m-%d %H:%M')}").font.size = Pt(9)
+    subtitle.add_run(
+        f"{_tr(lang, 'report_date')}: {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    ).font.size = Pt(9)
 
-    owner_name = getattr(researcher, "name", None) or getattr(current_user, "name", None) or "-"
-    owner_email = getattr(researcher, "email", None) or getattr(current_user, "email", None) or "-"
-    scope = _tr(lang, "all_researchers") if getattr(current_user, "role", "") == "superadmin" and researcher is None else _tr(lang, "researcher_scope")
+    owner_name = (
+        getattr(researcher, "name", None) or getattr(current_user, "name", None) or "-"
+    )
+    owner_email = (
+        getattr(researcher, "email", None)
+        or getattr(current_user, "email", None)
+        or "-"
+    )
+    scope = (
+        _tr(lang, "all_researchers")
+        if getattr(current_user, "role", "") == "superadmin" and researcher is None
+        else _tr(lang, "researcher_scope")
+    )
 
     _heading(doc, _tr(lang, "summary"), 2)
     ages = stats["ages"]
@@ -766,11 +843,27 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
         [_tr(lang, "scope"), scope],
         [_tr(lang, "researcher"), f"{owner_name} ({owner_email})"],
         [_tr(lang, "total_records"), stats["count"]],
-        [_tr(lang, "age_range"), f"{_fmt(min(ages), 1)} - {_fmt(max(ages), 1)} {_tr(lang, 'years')}" if ages else "-"],
-        [_tr(lang, "avg_age"), f"{_fmt(_mean(ages), 1)} {_tr(lang, 'years')}" if ages else "-"],
-        [_tr(lang, "active_filters"), ", ".join(f"{k}={v}" for k, v in (filters or {}).items() if v not in (None, "")) or _tr(lang, "none")],
+        [
+            _tr(lang, "age_range"),
+            f"{_fmt(min(ages), 1)} - {_fmt(max(ages), 1)} {_tr(lang, 'years')}"
+            if ages
+            else "-",
+        ],
+        [
+            _tr(lang, "avg_age"),
+            f"{_fmt(_mean(ages), 1)} {_tr(lang, 'years')}" if ages else "-",
+        ],
+        [
+            _tr(lang, "active_filters"),
+            ", ".join(
+                f"{k}={v}" for k, v in (filters or {}).items() if v not in (None, "")
+            )
+            or _tr(lang, "none"),
+        ],
     ]
-    _table(doc, [_tr(lang, "indicator"), _tr(lang, "value")], summary_rows, widths=[5, 11])
+    _table(
+        doc, [_tr(lang, "indicator"), _tr(lang, "value")], summary_rows, widths=[5, 11]
+    )
 
     _heading(doc, _tr(lang, "demographics"), 2)
     total = max(stats["count"], 1)
@@ -778,13 +871,23 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
         [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
         for name, count in stats["genders"].most_common()
     ]
-    _table(doc, [_tr(lang, "gender"), "N", "%", _tr(lang, "visual_share")], gender_rows or [["-", "-", "-", "-"]], widths=[4, 2, 2, 8])
+    _table(
+        doc,
+        [_tr(lang, "gender"), "N", "%", _tr(lang, "visual_share")],
+        gender_rows or [["-", "-", "-", "-"]],
+        widths=[4, 2, 2, 8],
+    )
 
     settlement_rows = [
         [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
         for name, count in stats["settlements"].most_common(10)
     ]
-    _table(doc, [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")], settlement_rows or [["-", "-", "-", "-"]], widths=[6, 2, 2, 7])
+    _table(
+        doc,
+        [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")],
+        settlement_rows or [["-", "-", "-", "-"]],
+        widths=[6, 2, 2, 7],
+    )
 
     _heading(doc, _tr(lang, "stats"), 2)
     descriptive_rows = []
@@ -799,16 +902,41 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
                 f"{_fmt(item.get('p5'))} / {_fmt(item.get('p25'))} / {_fmt(item.get('p75'))} / {_fmt(item.get('p95'))}",
             ]
         )
-    _table(doc, [_tr(lang, "indicator"), "N", "Mean +/- SD", "Median", "Min-Max", "P5/P25/P75/P95"], descriptive_rows)
+    _table(
+        doc,
+        [
+            _tr(lang, "indicator"),
+            "N",
+            "Mean +/- SD",
+            "Median",
+            "Min-Max",
+            "P5/P25/P75/P95",
+        ],
+        descriptive_rows,
+    )
 
     bmi = next((item for item in stats["descriptive"] if item["key"] == "bmi"), None)
     if bmi:
         z_rows = [
-            ["Z < -2", bmi.get("z_low", 0), _bar(bmi.get("z_low", 0), max(bmi.get("n", 0), 1))],
-            ["-2 <= Z <= 2", bmi.get("z_normal", 0), _bar(bmi.get("z_normal", 0), max(bmi.get("n", 0), 1))],
-            ["Z > 2", bmi.get("z_high", 0), _bar(bmi.get("z_high", 0), max(bmi.get("n", 0), 1))],
+            [
+                "Z < -2",
+                bmi.get("z_low", 0),
+                _bar(bmi.get("z_low", 0), max(bmi.get("n", 0), 1)),
+            ],
+            [
+                "-2 <= Z <= 2",
+                bmi.get("z_normal", 0),
+                _bar(bmi.get("z_normal", 0), max(bmi.get("n", 0), 1)),
+            ],
+            [
+                "Z > 2",
+                bmi.get("z_high", 0),
+                _bar(bmi.get("z_high", 0), max(bmi.get("n", 0), 1)),
+            ],
         ]
-        _table(doc, [_tr(lang, "z_group"), "N", "Infografika"], z_rows, widths=[5, 2, 9])
+        _table(
+            doc, [_tr(lang, "z_group"), "N", "Infografika"], z_rows, widths=[5, 2, 9]
+        )
 
     _heading(doc, _tr(lang, "groups"), 2)
     gender_analysis_rows = [
@@ -826,16 +954,35 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
     ]
     _table(
         doc,
-        [_tr(lang, "indicator"), _tr(lang, "male_n"), _tr(lang, "male_mean"), _tr(lang, "female_n"), _tr(lang, "female_mean"), _tr(lang, "diff"), "p", "Effect"],
+        [
+            _tr(lang, "indicator"),
+            _tr(lang, "male_n"),
+            _tr(lang, "male_mean"),
+            _tr(lang, "female_n"),
+            _tr(lang, "female_mean"),
+            _tr(lang, "diff"),
+            "p",
+            "Effect",
+        ],
         gender_analysis_rows,
     )
 
     region = stats["region"]
     region_rows = [
-        [row["name"], row["n"], _fmt(row["mean"]), _fmt(row["sd"]), _bar(row["n"], total)]
+        [
+            row["name"],
+            row["n"],
+            _fmt(row["mean"]),
+            _fmt(row["sd"]),
+            _bar(row["n"], total),
+        ]
         for row in region["groups"]
     ]
-    _table(doc, [_tr(lang, "region"), "N", "BMI mean", "SD", _tr(lang, "share")], region_rows or [["-", "-", "-", "-", "-"]])
+    _table(
+        doc,
+        [_tr(lang, "region"), "N", "BMI mean", "SD", _tr(lang, "share")],
+        region_rows or [["-", "-", "-", "-", "-"]],
+    )
     doc.add_paragraph(
         f"ANOVA: F={_fmt(region.get('f'))}; p={_p_label(region.get('p'))}; eta^2={_fmt(region.get('eta_squared'), 3)}"
     )
@@ -843,21 +990,33 @@ def generate_research_summary_docx(records, current_user=None, researcher=None, 
     _heading(doc, _tr(lang, "correlation"), 2)
     corr_headers = [""] + [metric[1] for metric in ANALYSIS_METRICS]
     corr_rows = [
-        [row["label"]] + [_fmt(value, 2) if value is not None else "-" for value in row["values"]]
+        [row["label"]]
+        + [_fmt(value, 2) if value is not None else "-" for value in row["values"]]
         for row in stats["correlation"]
     ]
     _table(doc, corr_headers, corr_rows)
 
     regression = stats["regression"]
     equation = (
-        _tr(lang, "equation").format(intercept=_fmt(regression.get('intercept')), slope=_fmt(regression.get('slope'), 3))
+        _tr(lang, "equation").format(
+            intercept=_fmt(regression.get("intercept")),
+            slope=_fmt(regression.get("slope"), 3),
+        )
         if regression.get("intercept") is not None
         else _tr(lang, "not_enough")
     )
     _table(
         doc,
         [_tr(lang, "model"), "N", "R", "R2", "p"],
-        [[equation, regression.get("n", 0), _fmt(regression.get("r"), 3), _fmt(regression.get("r2"), 3), _p_label(regression.get("p"))]],
+        [
+            [
+                equation,
+                regression.get("n", 0),
+                _fmt(regression.get("r"), 3),
+                _fmt(regression.get("r2"), 3),
+                _p_label(regression.get("p")),
+            ]
+        ],
         widths=[8, 2, 2, 2, 2],
     )
 

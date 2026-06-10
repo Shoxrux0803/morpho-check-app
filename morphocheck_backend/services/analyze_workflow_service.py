@@ -27,7 +27,9 @@ from utils.audit_helper import record_audit_log
 from utils.clickhouse import insert_analysis_event  # ClickHouse sync
 
 
-def store_raw_analysis(data: Dict[str, Any], db: Session, current_user: User) -> PatientAnalysis:
+def store_raw_analysis(
+    data: Dict[str, Any], db: Session, current_user: User
+) -> PatientAnalysis:
     rec = PatientAnalysis(**data)
     rec.created_by_id = current_user.id
     db.add(rec)
@@ -36,7 +38,9 @@ def store_raw_analysis(data: Dict[str, Any], db: Session, current_user: User) ->
     return rec
 
 
-def _ml_payload(data: PatientData, analysis: Dict[str, Any], gender_norm: str) -> Dict[str, Any]:
+def _ml_payload(
+    data: PatientData, analysis: Dict[str, Any], gender_norm: str
+) -> Dict[str, Any]:
     return {
         "age": int(data.age),
         "gender": gender_norm,
@@ -53,8 +57,12 @@ def _analysis_cache_payload(data: PatientData, lang: str) -> Dict[str, Any]:
     return {"lang": lang, "patient": data.model_dump(mode="json", by_alias=True)}
 
 
-def build_fast_analysis_context(data: PatientData, db: Session, lang: str = "uz") -> Dict[str, Any]:
-    cache_key = cache_service.make_key("analysis:fast-context:v1", _analysis_cache_payload(data, lang))
+def build_fast_analysis_context(
+    data: PatientData, db: Session, lang: str = "uz"
+) -> Dict[str, Any]:
+    cache_key = cache_service.make_key(
+        "analysis:fast-context:v1", _analysis_cache_payload(data, lang)
+    )
     cached = cache_service.get_json(cache_key)
     if cached is not None:
         return cached
@@ -71,7 +79,9 @@ def build_fast_analysis_context(data: PatientData, db: Session, lang: str = "uz"
         bio_data=analysis["indices"],
         lang=lang,
     )
-    ml_predictions = get_ml_predictions(_ml_payload(data, analysis, gender_norm), lang=lang)
+    ml_predictions = get_ml_predictions(
+        _ml_payload(data, analysis, gender_norm), lang=lang
+    )
     ai_tips = generate_parent_tips(
         patient_data={
             "age": int(data.age),
@@ -158,8 +168,12 @@ def analyze_and_store(
         doctor_note=(data.doctor_note or "").strip() or None,
         consent_confirmed=1 if data.consent_confirmed else 0,
         consent_guardian_name=(data.consent_guardian_name or "").strip() or None,
-        consent_guardian_relationship=(data.consent_guardian_relationship or "").strip() or None,
-        consent_guardian_phone=(data.consent_guardian_phone or data.parents_phone or "").strip() or None,
+        consent_guardian_relationship=(data.consent_guardian_relationship or "").strip()
+        or None,
+        consent_guardian_phone=(
+            data.consent_guardian_phone or data.parents_phone or ""
+        ).strip()
+        or None,
         consent_confirmed_at=datetime.utcnow() if data.consent_confirmed else None,
         consent_policy_version=data.consent_policy_version,
         recommendations=(
@@ -202,6 +216,7 @@ def analyze_and_store(
     # ClickHouse ga ma'lumot jo'natish (analytics uchun)
     try:
         from routers.admin_router import to_dict_analysis
+
         insert_analysis_event(to_dict_analysis(rec))
     except Exception:
         pass
@@ -249,7 +264,9 @@ def analyze_and_store(
     }
 
 
-def build_pdf_report_data(data: PatientData, db: Session, lang: str = "uz") -> Dict[str, Any]:
+def build_pdf_report_data(
+    data: PatientData, db: Session, lang: str = "uz"
+) -> Dict[str, Any]:
     fast_context = build_fast_analysis_context(data, db, lang=lang)
     analysis = fast_context["analysis"]
     ai_preds = fast_context["ml_predictions"]
@@ -299,7 +316,9 @@ class _StoredAnalysisData(BaseModel):
     visceral_fat: Optional[float] = None
 
 
-def build_pdf_report_data_by_id(patient_id: int, db: Session, lang: str = "uz") -> Dict[str, Any]:
+def build_pdf_report_data_by_id(
+    patient_id: int, db: Session, lang: str = "uz"
+) -> Dict[str, Any]:
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
@@ -428,7 +447,10 @@ def build_pdf_report_data_by_id(patient_id: int, db: Session, lang: str = "uz") 
         "parents_phone": rec.parents_phone or "",
         "consent_confirmed": bool(getattr(rec, "consent_confirmed", 0)),
         "consent_guardian_name": getattr(rec, "consent_guardian_name", None) or "",
-        "consent_guardian_relationship": getattr(rec, "consent_guardian_relationship", None) or "",
+        "consent_guardian_relationship": getattr(
+            rec, "consent_guardian_relationship", None
+        )
+        or "",
         "consent_guardian_phone": getattr(rec, "consent_guardian_phone", None) or "",
         "consent_confirmed_at": getattr(rec, "consent_confirmed_at", None),
         "consent_policy_version": getattr(rec, "consent_policy_version", None) or "",

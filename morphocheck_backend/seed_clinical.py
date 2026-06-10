@@ -1,5 +1,3 @@
-import os
-import json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.base import Base
@@ -7,12 +5,15 @@ from models.clinical import ClinicalSetting
 
 # DB connection
 SQLALCHEMY_DATABASE_URL = "sqlite:///./morphocheck.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 def seed_clinical_settings():
     db = SessionLocal()
-    
+
     # 1. BMI Categories (from analyze_router.py)
     bmi_cats = {
         "v_low": {
@@ -43,7 +44,7 @@ def seed_clinical_settings():
             "uz": "Semizlik",
             "ru": "Ожирение",
             "en": "Obesity",
-        }
+        },
     }
 
     # 2. Advice Templates (from analyze_router.py)
@@ -65,7 +66,7 @@ def seed_clinical_settings():
             "ru": "Выявлен избыточный вес. В будущем это может негативно сказаться на здоровье.",
             "en": "Excess weight was identified. This may negatively affect health in the future.",
             "kz": "Артық салмақ анықталды. Бұл болашақта денсаулыққа кері әсер етуі мүмкін.",
-        }
+        },
         # ... (qolganlarini ham qo'shish mumkin, lekin misol uchun shular yetarli)
     }
 
@@ -94,7 +95,7 @@ def seed_clinical_settings():
             "ru": "гиперстенический",
             "en": "hypersthenic",
             "kz": "гиперстеникалық",
-        }
+        },
     }
 
     def add_or_update(key, category, label, value):
@@ -104,7 +105,9 @@ def seed_clinical_settings():
             existing.label = label
             existing.category = category
         else:
-            new_set = ClinicalSetting(key=key, category=category, label=label, value_json=value)
+            new_set = ClinicalSetting(
+                key=key, category=category, label=label, value_json=value
+            )
             db.add(new_set)
 
     # Seed BMI Categories
@@ -120,11 +123,12 @@ def seed_clinical_settings():
         add_or_update(f"interp_{k}", "interpretations", f"Interpretation: {k}", v)
 
     # Add numeric standards example
-    add_or_update("std_bmi_adult", "standards", "Adult BMI Standards", {
-        "underweight": 18.5,
-        "normal": 24.9,
-        "overweight": 29.9
-    })
+    add_or_update(
+        "std_bmi_adult",
+        "standards",
+        "Adult BMI Standards",
+        {"underweight": 18.5, "normal": 24.9, "overweight": 29.9},
+    )
 
     try:
         db.commit()
@@ -134,6 +138,7 @@ def seed_clinical_settings():
         print(f"Error seeding: {e}")
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     # Avval jadvallarni yaratish (agar yo'q bo'lsa)

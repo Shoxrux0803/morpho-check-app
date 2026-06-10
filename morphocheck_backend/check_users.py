@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = 'morphocheck.db'
+db_path = "morphocheck.db"
 if not os.path.exists(db_path):
     print(f"Database not found at {db_path}")
     exit(1)

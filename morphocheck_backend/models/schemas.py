@@ -1,11 +1,12 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-from typing import Optional, List, Literal
+from typing import Optional, Literal
 from decimal import Decimal
 import math
 import datetime
 import re
 
 CONSENT_POLICY_VERSION = "helsinki-declaration-consent-v1"
+
 
 class PatientData(BaseModel):
     first_name: str = Field(..., alias="firstName", min_length=1, max_length=80)
@@ -17,11 +18,15 @@ class PatientData(BaseModel):
 
     examination_date: str = Field(..., alias="examinationDate")
     birth_date: str = Field("Noma'lum", alias="birthDate")
-    preschool_institution: str = Field("Noma'lum", alias="preschoolInstitution", max_length=180)
+    preschool_institution: str = Field(
+        "Noma'lum", alias="preschoolInstitution", max_length=180
+    )
 
     shoulder_length: float = Field(0.0, alias="shoulderLength", ge=0, le=80)
     shoulder_breadth: float = Field(0.0, alias="shoulderBreadth", ge=0, le=80)
-    shoulder_circumference: float = Field(0.0, alias="shoulderCircumference", ge=0, le=120)
+    shoulder_circumference: float = Field(
+        0.0, alias="shoulderCircumference", ge=0, le=120
+    )
     arm_elbow_length: float = Field(0.0, alias="armElbowLength", ge=0, le=80)
     hand_length: float = Field(0.0, alias="handLength", ge=0, le=40)
     thigh_length: float = Field(0.0, alias="thighLength", ge=0, le=100)
@@ -48,12 +53,22 @@ class PatientData(BaseModel):
     mother_height: Optional[float] = Field(None, alias="motherHeight", ge=120, le=230)
     parents_phone: Optional[str] = Field(None, alias="parentsPhone", max_length=50)
     consent_confirmed: bool = Field(False, alias="consentConfirmed")
-    consent_guardian_name: Optional[str] = Field(None, alias="consentGuardianName", max_length=255)
-    consent_guardian_relationship: Optional[str] = Field(None, alias="consentGuardianRelationship", max_length=100)
-    consent_guardian_phone: Optional[str] = Field(None, alias="consentGuardianPhone", max_length=50)
-    consent_policy_version: str = Field(CONSENT_POLICY_VERSION, alias="consentPolicyVersion", max_length=50)
+    consent_guardian_name: Optional[str] = Field(
+        None, alias="consentGuardianName", max_length=255
+    )
+    consent_guardian_relationship: Optional[str] = Field(
+        None, alias="consentGuardianRelationship", max_length=100
+    )
+    consent_guardian_phone: Optional[str] = Field(
+        None, alias="consentGuardianPhone", max_length=50
+    )
+    consent_policy_version: str = Field(
+        CONSENT_POLICY_VERSION, alias="consentPolicyVersion", max_length=50
+    )
 
-    total_body_water: Optional[float] = Field(None, alias="totalBodyWater", ge=0, le=100)
+    total_body_water: Optional[float] = Field(
+        None, alias="totalBodyWater", ge=0, le=100
+    )
     fat_percent: Optional[float] = Field(None, alias="fatPercent", ge=0, le=80)
     fat_mass: Optional[float] = Field(None, alias="fatMass", ge=0, le=200)
     muscle_mass: Optional[float] = Field(None, alias="muscleMass", ge=0, le=200)
@@ -67,10 +82,19 @@ class PatientData(BaseModel):
         extra = "forbid"
 
     @field_validator(
-        "first_name", "last_name", "region", "district", "mahalla", "address",
-        "preschool_institution", "parents_phone", "doctor_note",
-        "consent_guardian_name", "consent_guardian_relationship",
-        "consent_guardian_phone", "consent_policy_version",
+        "first_name",
+        "last_name",
+        "region",
+        "district",
+        "mahalla",
+        "address",
+        "preschool_institution",
+        "parents_phone",
+        "doctor_note",
+        "consent_guardian_name",
+        "consent_guardian_relationship",
+        "consent_guardian_phone",
+        "consent_policy_version",
         mode="before",
     )
     @classmethod
@@ -83,12 +107,31 @@ class PatientData(BaseModel):
         return cleaned or None
 
     @field_validator(
-        "height", "weight", "chest", "waist", "head", "shoulder_length",
-        "shoulder_breadth", "shoulder_circumference", "arm_elbow_length",
-        "hand_length", "thigh_length", "thigh_circumference", "calf_length",
-        "calf_circumference", "foot_length", "body_length", "father_height",
-        "mother_height", "total_body_water", "fat_percent", "fat_mass",
-        "muscle_mass", "bone_mass", "acm", "visceral_fat",
+        "height",
+        "weight",
+        "chest",
+        "waist",
+        "head",
+        "shoulder_length",
+        "shoulder_breadth",
+        "shoulder_circumference",
+        "arm_elbow_length",
+        "hand_length",
+        "thigh_length",
+        "thigh_circumference",
+        "calf_length",
+        "calf_circumference",
+        "foot_length",
+        "body_length",
+        "father_height",
+        "mother_height",
+        "total_body_water",
+        "fat_percent",
+        "fat_mass",
+        "muscle_mass",
+        "bone_mass",
+        "acm",
+        "visceral_fat",
     )
     @classmethod
     def finite_number(cls, v):
@@ -122,7 +165,12 @@ class PatientData(BaseModel):
     @classmethod
     def validate_dates(cls, v, info):
         value = (v or "").strip()
-        if info.field_name == "birth_date" and value in {"", "Noma'lum", "unknown", "Unknown"}:
+        if info.field_name == "birth_date" and value in {
+            "",
+            "Noma'lum",
+            "unknown",
+            "Unknown",
+        }:
             return "Noma'lum"
         try:
             datetime.date.fromisoformat(value[:10])
@@ -143,13 +191,19 @@ class PatientData(BaseModel):
             raise ValueError(f"Majburiy maydonlar bo'sh: {', '.join(missing)}")
 
         if self.age == 0 and not self.age_months and not self.age_days:
-            raise ValueError("Yosh, oy yoki kunlardan kamida biri 0 dan katta bo'lishi kerak")
+            raise ValueError(
+                "Yosh, oy yoki kunlardan kamida biri 0 dan katta bo'lishi kerak"
+            )
 
         requires_guardian_consent = int(self.age or 0) < 18
         if requires_guardian_consent and not self.consent_confirmed:
-            raise ValueError("Bola ma'lumotlarini qayta ishlash uchun vasiyning roziligi tasdiqlanishi kerak")
+            raise ValueError(
+                "Bola ma'lumotlarini qayta ishlash uchun vasiyning roziligi tasdiqlanishi kerak"
+            )
         if requires_guardian_consent and not self.consent_guardian_name:
-            raise ValueError("Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak")
+            raise ValueError(
+                "Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak"
+            )
 
         exam = datetime.date.fromisoformat(self.examination_date[:10])
         if exam > datetime.date.today():
@@ -160,18 +214,27 @@ class PatientData(BaseModel):
             raise ValueError("BMI amaliy diapazondan tashqarida")
         if self.chest < self.height * 0.25 or self.chest > self.height * 1.05:
             raise ValueError("Ko'krak aylanasi bo'yga nisbatan mos emas")
-        if self.waist and (self.waist < self.height * 0.20 or self.waist > self.height * 1.20):
+        if self.waist and (
+            self.waist < self.height * 0.20 or self.waist > self.height * 1.20
+        ):
             raise ValueError("Bel aylanasi bo'yga nisbatan mos emas")
         if self.head < self.height * 0.20 or self.head > self.height * 0.70:
             raise ValueError("Bosh aylanasi bo'yga nisbatan mos emas")
         if self.birth_date != "Noma'lum":
             birth = datetime.date.fromisoformat(self.birth_date[:10])
             if birth > exam:
-                raise ValueError("Tug'ilgan sana ko'rik sanasidan keyin bo'lishi mumkin emas")
-            actual_age = exam.year - birth.year - ((exam.month, exam.day) < (birth.month, birth.day))
+                raise ValueError(
+                    "Tug'ilgan sana ko'rik sanasidan keyin bo'lishi mumkin emas"
+                )
+            actual_age = (
+                exam.year
+                - birth.year
+                - ((exam.month, exam.day) < (birth.month, birth.day))
+            )
             if abs(actual_age - int(self.age)) > 1:
                 raise ValueError("Yosh tug'ilgan sana va ko'rik sanasiga mos emas")
         return self
+
 
 class AnalysisResult(BaseModel):
     z_score: float
@@ -181,6 +244,7 @@ class AnalysisResult(BaseModel):
     ideal_weight: float
     weight_diff: float
 
+
 class Advices(BaseModel):
     general: str
     specialist: str
@@ -189,10 +253,12 @@ class Advices(BaseModel):
     checkups: str
     sport: Optional[str] = None
 
+
 class FullReportRequest(BaseModel):
     patient_data: PatientData
     analysis: AnalysisResult
     advices: Advices
+
 
 class UserDataCreate(BaseModel):
     full_name: str
@@ -212,6 +278,7 @@ class UserDataCreate(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class UserCreate(BaseModel):
     name: str
@@ -238,11 +305,11 @@ class UserCreate(BaseModel):
             return v
         if len(v) < 8:
             raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
-        if not re.search(r'[A-Z]', v):
+        if not re.search(r"[A-Z]", v):
             raise ValueError("Parolda kamida 1 ta katta harf bo'lishi kerak")
-        if not re.search(r'[a-z]', v):
+        if not re.search(r"[a-z]", v):
             raise ValueError("Parolda kamida 1 ta kichik harf bo'lishi kerak")
-        if not re.search(r'[0-9]', v):
+        if not re.search(r"[0-9]", v):
             raise ValueError("Parolda kamida 1 ta raqam bo'lishi kerak")
         return v
 
@@ -253,6 +320,7 @@ class UserCreate(BaseModel):
         if self.role not in {"user", "admin", "superadmin", "researcher"}:
             raise ValueError("Noto'g'ri foydalanuvchi roli")
         return self
+
 
 class UserRegister(BaseModel):
     name: str
@@ -267,11 +335,11 @@ class UserRegister(BaseModel):
     def validate_password_strength(cls, v):
         if len(v) < 8:
             raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
-        if not re.search(r'[A-Z]', v):
+        if not re.search(r"[A-Z]", v):
             raise ValueError("Parolda kamida 1 ta katta harf bo'lishi kerak")
-        if not re.search(r'[a-z]', v):
+        if not re.search(r"[a-z]", v):
             raise ValueError("Parolda kamida 1 ta kichik harf bo'lishi kerak")
-        if not re.search(r'[0-9]', v):
+        if not re.search(r"[0-9]", v):
             raise ValueError("Parolda kamida 1 ta raqam bo'lishi kerak")
         return v
 
@@ -281,17 +349,20 @@ class UserRegister(BaseModel):
             raise ValueError("Parollar mos emas")
         return self
 
+
 class UserLogin(BaseModel):
     email: str
     password: str
     device_id: Optional[str] = None
     verification_code: Optional[str] = None
 
+
 class Token(BaseModel):
     access_token: Optional[str] = None
     token_type: Optional[str] = None
     requires_verification: bool = False
     message: Optional[str] = None
+
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
@@ -317,11 +388,11 @@ class UserUpdate(BaseModel):
             return v
         if len(v) < 8:
             raise ValueError("Parol kamida 8 ta belgidan iborat bo'lishi kerak")
-        if not re.search(r'[A-Z]', v):
+        if not re.search(r"[A-Z]", v):
             raise ValueError("Parolda kamida 1 ta katta harf bo'lishi kerak")
-        if not re.search(r'[a-z]', v):
+        if not re.search(r"[a-z]", v):
             raise ValueError("Parolda kamida 1 ta kichik harf bo'lishi kerak")
-        if not re.search(r'[0-9]', v):
+        if not re.search(r"[0-9]", v):
             raise ValueError("Parolda kamida 1 ta raqam bo'lishi kerak")
         return v
 
@@ -331,6 +402,7 @@ class UserUpdate(BaseModel):
         if v is not None and v not in {"user", "admin", "superadmin", "researcher"}:
             raise ValueError("Noto'g'ri foydalanuvchi roli")
         return v
+
 
 class UserOut(BaseModel):
     id: int
@@ -351,8 +423,10 @@ class UserOut(BaseModel):
     is_deleted: Optional[int] = 0
     deleted_at: Optional[datetime.datetime] = None
     deleted_by_id: Optional[int] = None
+
     class Config:
         from_attributes = True
+
 
 class PaymentCreate(BaseModel):
     user_id: Optional[int] = None
@@ -362,6 +436,7 @@ class PaymentCreate(BaseModel):
     status: Optional[str] = "paid"
     description: Optional[str] = None
 
+
 class PaymentOut(BaseModel):
     id: int
     user_id: Optional[int]
@@ -370,8 +445,10 @@ class PaymentOut(BaseModel):
     method: Optional[str]
     status: str
     description: Optional[str]
+
     class Config:
         from_attributes = True
+
 
 class AuditLogOut(BaseModel):
     id: int
@@ -383,18 +460,19 @@ class AuditLogOut(BaseModel):
     ip_address: Optional[str]
     created_at: datetime.datetime
     user_name: Optional[str] = None
-    
+
     class Config:
         from_attributes = True
+
 
 class AnalysisInput(BaseModel):
     age: int
     gender: Literal["erkak", "ayol"]
     height: float  # sm
     weight: float  # kg
-    chest: float   # sm
-    head: float    # sm
-    
+    chest: float  # sm
+    head: float  # sm
+
     # Bioimpedance
     total_body_water: Optional[float] = None
     fat_percent: Optional[float] = None
@@ -421,43 +499,84 @@ class AnalysisInput(BaseModel):
 
         def band(age):
             if age >= 20:
-                return dict(height=(130,220), weight=(30,250), head=(52,64), chest=(75,140), bmi=(14,60))
+                return dict(
+                    height=(130, 220),
+                    weight=(30, 250),
+                    head=(52, 64),
+                    chest=(75, 140),
+                    bmi=(14, 60),
+                )
             if age >= 15:
-                return dict(height=(145,200), weight=(35,120), head=(52,61), chest=(70,110), bmi=(12,38))
+                return dict(
+                    height=(145, 200),
+                    weight=(35, 120),
+                    head=(52, 61),
+                    chest=(70, 110),
+                    bmi=(12, 38),
+                )
             if age >= 10:
-                return dict(height=(125,175), weight=(24,70),  head=(50,58), chest=(58,90),  bmi=(12,38))
+                return dict(
+                    height=(125, 175),
+                    weight=(24, 70),
+                    head=(50, 58),
+                    chest=(58, 90),
+                    bmi=(12, 38),
+                )
             if age >= 5:
-                return dict(height=(100,145), weight=(14,40),  head=(48,55), chest=(52,72),  bmi=(12,38))
-            return dict(height=(85,115),  weight=(10,22),  head=(46,52), chest=(48,62),  bmi=(12,38))
+                return dict(
+                    height=(100, 145),
+                    weight=(14, 40),
+                    head=(48, 55),
+                    chest=(52, 72),
+                    bmi=(12, 38),
+                )
+            return dict(
+                height=(85, 115),
+                weight=(10, 22),
+                head=(46, 52),
+                chest=(48, 62),
+                bmi=(12, 38),
+            )
 
         b = band(age)
         errs = []
-        if not (b["height"][0] <= h <= b["height"][1]): errs.append(f"Bo‘y {b['height'][0]}–{b['height'][1]} sm.")
-        if not (b["weight"][0] <= w <= b["weight"][1]): errs.append(f"Vazn {b['weight'][0]}–{b['weight'][1]} kg.")
-        if not (b["head"][0]   <= head <= b["head"][1]): errs.append(f"Bosh aylanasi {b['head'][0]}–{b['head'][1]} sm.")
-        if not (b["chest"][0]  <= chest<= b["chest"][1]): errs.append(f"Ko‘krak aylanasi {b['chest'][0]}–{b['chest'][1]} sm.")
+        if not (b["height"][0] <= h <= b["height"][1]):
+            errs.append(f"Bo‘y {b['height'][0]}–{b['height'][1]} sm.")
+        if not (b["weight"][0] <= w <= b["weight"][1]):
+            errs.append(f"Vazn {b['weight'][0]}–{b['weight'][1]} kg.")
+        if not (b["head"][0] <= head <= b["head"][1]):
+            errs.append(f"Bosh aylanasi {b['head'][0]}–{b['head'][1]} sm.")
+        if not (b["chest"][0] <= chest <= b["chest"][1]):
+            errs.append(f"Ko‘krak aylanasi {b['chest'][0]}–{b['chest'][1]} sm.")
 
-        bmi = w / ((h/100)**2) if h>0 else None
+        bmi = w / ((h / 100) ** 2) if h > 0 else None
         if bmi is None or not (b["bmi"][0] <= bmi <= b["bmi"][1]):
             errs.append(f"BMI {b['bmi'][0]}–{b['bmi'][1]} oralig‘ida bo‘lishi kerak.")
 
-        if h>0:
-            chest_min = 0.45*h
-            chest_max = 0.9*h
+        if h > 0:
+            chest_min = 0.45 * h
+            chest_max = 0.9 * h
             if not (chest_min <= chest <= chest_max):
-                errs.append(f"Ko‘krak aylanasi bo‘yga nisbatan taxminiy {round(chest_min)}–{round(chest_max)} sm oralig‘ida bo‘lishi kerak.")
+                errs.append(
+                    f"Ko‘krak aylanasi bo‘yga nisbatan taxminiy {round(chest_min)}–{round(chest_max)} sm oralig‘ida bo‘lishi kerak."
+                )
             if age >= 20:
                 if not (52 <= head <= 64):
-                    errs.append("Kattalarda bosh aylanasi odatda 52–64 sm oralig‘ida bo‘ladi.")
+                    errs.append(
+                        "Kattalarda bosh aylanasi odatda 52–64 sm oralig‘ida bo‘ladi."
+                    )
             else:
-                head_min = 0.27*h
-                head_max = 0.40*h
+                head_min = 0.27 * h
+                head_max = 0.40 * h
                 if not (head_min <= head <= head_max):
-                    errs.append(f"Bosh aylanasi bo‘yga nisbatan taxminiy {round(head_min)}–{round(head_max)} sm.")
+                    errs.append(
+                        f"Bosh aylanasi bo‘yga nisbatan taxminiy {round(head_min)}–{round(head_max)} sm."
+                    )
 
         if errs:
             raise ValueError(" / ".join(errs))
         return self
+
 
 class ResearchRecordCreate(BaseModel):
     full_name: Optional[str] = None
@@ -552,6 +671,7 @@ class ResearchRecordCreate(BaseModel):
     fat_subscapular: Optional[float] = None
     fat_iliac: Optional[float] = None
     fat_popliteal: Optional[float] = None
+
 
 class ResearchRecordOut(ResearchRecordCreate):
     id: int

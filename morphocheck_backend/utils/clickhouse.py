@@ -3,9 +3,10 @@
 ClickHouse ulanish va yozish utility.
 Analytics ma'lumotlarini PostgreSQL dan ClickHouse ga sinxronlash uchun.
 """
+
 import os
 import logging
-from typing import Any, Optional
+from typing import Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ def get_clickhouse_client():
 
     try:
         from clickhouse_driver import Client
+
         _clickhouse_client = Client(
             host=CLICKHOUSE_HOST,
             port=9000,  # Native protocol
@@ -41,10 +43,14 @@ def get_clickhouse_client():
                 "max_block_size": 10000,
             },
         )
-        logger.info("ClickHouse ga ulandi: %s:%s/%s", CLICKHOUSE_HOST, 9000, CLICKHOUSE_DB)
+        logger.info(
+            "ClickHouse ga ulandi: %s:%s/%s", CLICKHOUSE_HOST, 9000, CLICKHOUSE_DB
+        )
         return _clickhouse_client
     except ImportError:
-        logger.warning("clickhouse_driver o'rnatilmagan. ClickHouse analytics o'chirilgan.")
+        logger.warning(
+            "clickhouse_driver o'rnatilmagan. ClickHouse analytics o'chirilgan."
+        )
         return None
     except Exception as e:
         logger.warning("ClickHouse ulanish xatosi: %s", e)
@@ -178,6 +184,7 @@ def query_clickhouse(sql: str, params: dict | None = None) -> list[dict]:
 
 
 # ─── Yordamchi funksiyalar ──────────────────────────────────────────────────
+
 
 def _to_datetime(value) -> datetime:
     if isinstance(value, datetime):

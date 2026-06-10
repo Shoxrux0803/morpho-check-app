@@ -21,6 +21,7 @@ os.makedirs(BACKUP_DIR, exist_ok=True)
 
 BACKUP_FILENAME_RE = re.compile(r"^backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}\.db$")
 
+
 def get_safe_backup_path(filename: str) -> str:
     if not BACKUP_FILENAME_RE.fullmatch(filename):
         raise HTTPException(status_code=400, detail="Noto'g'ri zaxira fayl nomi")
@@ -30,6 +31,7 @@ def get_safe_backup_path(filename: str) -> str:
         raise HTTPException(status_code=400, detail="Noto'g'ri zaxira fayl yo'li")
     return backup_path
 
+
 @router.get("/")
 def list_backups(current_user: User = Depends(get_current_superadmin)):
     backups = []
@@ -38,25 +40,28 @@ def list_backups(current_user: User = Depends(get_current_superadmin)):
             if BACKUP_FILENAME_RE.fullmatch(f):
                 path = os.path.join(BACKUP_DIR, f)
                 stat = os.stat(path)
-                backups.append({
-                    "filename": f,
-                    "size_bytes": stat.st_size,
-                    "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat()
-                })
+                backups.append(
+                    {
+                        "filename": f,
+                        "size_bytes": stat.st_size,
+                        "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                    }
+                )
     # Sort descending by created_at
     backups.sort(key=lambda x: x["created_at"], reverse=True)
     return {"items": backups}
+
 
 @router.post("/create")
 def create_backup(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin)
+    current_user: User = Depends(get_current_superadmin),
 ):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     backup_filename = f"backup_{timestamp}.db"
     backup_path = os.path.join(BACKUP_DIR, backup_filename)
-    
+
     try:
         # Xavfsiz SQLite backup funksiyasi (bazani bloklamaydi)
         source = sqlite3.connect(DB_PATH)
@@ -65,9 +70,9 @@ def create_backup(
             source.backup(dest)
         dest.close()
         source.close()
-        
+
         stat = os.stat(backup_path)
-        
+
         record_audit_log(
             db=db,
             user_id=current_user.id,
@@ -75,17 +80,18 @@ def create_backup(
             target_type="Backup",
             target_id=None,
             details=f"Zaxira nusxasi yaratildi: {backup_filename}",
-            request=request
+            request=request,
         )
-        
+
         return {
             "status": "success",
             "filename": backup_filename,
             "size_bytes": stat.st_size,
-            "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat()
+            "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/restore/{filename}")
 def restore_backup(
@@ -93,12 +99,12 @@ def restore_backup(
     request: Request,
     mode: str = "replace",  # 'replace' yoki 'merge'
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin)
+    current_user: User = Depends(get_current_superadmin),
 ):
     backup_path = get_safe_backup_path(filename)
     if not os.path.exists(backup_path):
         raise HTTPException(status_code=404, detail="Zaxira topilmadi")
-        
+
     try:
         if mode == "replace":
             # Xavfsiz restore (to'liq almashtirish)
@@ -109,33 +115,38 @@ def restore_backup(
             dest.close()
             source.close()
             details = f"Zaxira to'liq tiklandi (Almashtirish): {filename}"
-            
+
         elif mode == "merge":
             # Merge: faqat yangi ma'lumotlarni qo'shish, mavjudlariga tegmaslik
             dest = sqlite3.connect(DB_PATH)
             escaped_backup_path = backup_path.replace("'", "''")
             dest.execute(f"ATTACH DATABASE '{escaped_backup_path}' AS backup_db")
-            
+
             # Asosiy jadvallar
             tables = [
-                "users", "patient_analyses", "audit_logs", 
-                "payments", "clinical_settings"
+                "users",
+                "patient_analyses",
+                "audit_logs",
+                "payments",
+                "clinical_settings",
             ]
-            
+
             for table in tables:
                 try:
-                    dest.execute(f"INSERT OR IGNORE INTO {table} SELECT * FROM backup_db.{table}")
+                    dest.execute(
+                        f"INSERT OR IGNORE INTO {table} SELECT * FROM backup_db.{table}"
+                    )
                 except Exception as e:
                     print(f"Merge error for table {table}: {e}")
                     pass
-            
+
             dest.commit()
             dest.execute("DETACH DATABASE backup_db")
             dest.close()
             details = f"Zaxira ma'lumotlari joriy bazaga qo'shildi (Merge): {filename}"
         else:
             raise HTTPException(status_code=400, detail="Noto'g'ri restore rejimi")
-            
+
         record_audit_log(
             db=db,
             user_id=current_user.id,
@@ -143,27 +154,29 @@ def restore_backup(
             target_type="Backup",
             target_id=None,
             details=details,
-            request=request
+            request=request,
         )
         db.commit()
-            
+
         return {"status": "success", "message": details}
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.delete("/{filename}")
 def delete_backup(
     filename: str,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin)
+    current_user: User = Depends(get_current_superadmin),
 ):
     backup_path = get_safe_backup_path(filename)
     if not os.path.exists(backup_path):
         raise HTTPException(status_code=404, detail="Zaxira topilmadi")
-        
+
     try:
         os.remove(backup_path)
         record_audit_log(
@@ -173,7 +186,7 @@ def delete_backup(
             target_type="Backup",
             target_id=None,
             details=f"Zaxira nusxasi o'chirildi: {filename}",
-            request=request
+            request=request,
         )
         return {"status": "success"}
     except Exception as e:

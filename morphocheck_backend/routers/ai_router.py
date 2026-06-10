@@ -26,6 +26,7 @@ GEMINI_MODELS = [
     "gemini-pro-latest",
 ]
 
+
 def get_gemini_model(model_name: str):
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -37,6 +38,7 @@ def get_gemini_model(model_name: str):
         print(f"[AI ERROR] Failed to configure {model_name}: {str(e)}")
         return None
 
+
 async def generate_with_fallback(contents):
     """Tries multiple Gemini models until one succeeds."""
     last_error = "No models attempted"
@@ -45,13 +47,18 @@ async def generate_with_fallback(contents):
             print(f"[AI INFO] Attempting generation with {model_name}...")
             model = get_gemini_model(model_name)
             response = model.generate_content(contents)
-            if response and getattr(response, "candidates", None) and response.candidates:
+            if (
+                response
+                and getattr(response, "candidates", None)
+                and response.candidates
+            ):
                 return response, model_name
         except Exception as e:
             last_error = str(e)
             print(f"[AI WARNING] {model_name} failed: {last_error}")
             continue
     raise Exception(f"All Gemini models failed. Last error: {last_error}")
+
 
 class ChatRequest(BaseModel):
     message: str
@@ -61,19 +68,24 @@ class ChatRequest(BaseModel):
     image_data: Optional[str] = None
     image_mime_type: Optional[str] = None
 
+
 class PredictParamsRequest(BaseModel):
     age: int
     gender: str
     target_form: str
 
+
 class TextAnalysisRequest(BaseModel):
     text: str
     lang: str = "uz"
 
+
 @router.post("/chat")
 async def ai_chat(req: ChatRequest, current_user: User = Depends(get_current_user)):
     try:
-        context_data_str = json.dumps(req.context_data) if req.context_data else "None provided"
+        context_data_str = (
+            json.dumps(req.context_data) if req.context_data else "None provided"
+        )
         system_prompt = f"You are MorphoAI Assistant. Context: {req.context_page}. Data: {context_data_str}"
         contents = [system_prompt, req.message]
         response, model_name = await generate_with_fallback(contents)
@@ -85,16 +97,22 @@ async def ai_chat(req: ChatRequest, current_user: User = Depends(get_current_use
         if "API_KEY_INVALID" in error_text or "API Key not found" in error_text:
             detail = "Gemini API kaliti noto'g'ri yoki faol emas. GEMINI_API_KEY ni yangilang."
         elif "GEMINI_API_KEY is missing" in error_text:
-            detail = "Gemini API kaliti topilmadi. GEMINI_API_KEY ni .env faylga qo'shing."
+            detail = (
+                "Gemini API kaliti topilmadi. GEMINI_API_KEY ni .env faylga qo'shing."
+            )
         raise HTTPException(status_code=503, detail=detail)
 
+
 @router.post("/predict-params")
-async def predict_params(req: PredictParamsRequest, current_user: User = Depends(get_current_user)):
+async def predict_params(
+    req: PredictParamsRequest, current_user: User = Depends(get_current_user)
+):
     """
     Returns typical (normative) anthropometric parameters instantly using templates.
     """
     try:
         from services.norms_service import get_typical_params
+
         params = get_typical_params(req.age, req.gender, req.target_form)
         print(f"[AI INFO] Fast Template Prediction for {req.age}yo {req.gender}")
         return {"params": params}
@@ -102,11 +120,15 @@ async def predict_params(req: PredictParamsRequest, current_user: User = Depends
         print(f"[AI PREDICT ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail="Error predicting parameters")
 
+
 @router.post("/analyze-text")
-async def analyze_text_fast(req: TextAnalysisRequest, current_user: User = Depends(get_current_user)):
+async def analyze_text_fast(
+    req: TextAnalysisRequest, current_user: User = Depends(get_current_user)
+):
     if not req.text or not req.text.strip():
         raise HTTPException(status_code=400, detail="Matn bo'sh bo'lmasligi kerak.")
     return analyze_text(req.text, lang=req.lang)
+
 
 @router.post("/generate-parent-tips")
 async def ai_parent_tips(req: Dict, current_user: User = Depends(get_current_user)):
@@ -116,5 +138,5 @@ async def ai_parent_tips(req: Dict, current_user: User = Depends(get_current_use
         lang = req.get("lang", "uz")
         tips = generate_parent_tips(patient_data, ml_predictions, lang=lang)
         return {"tips": tips}
-    except Exception as e:
+    except Exception:
         return {"tips": []}

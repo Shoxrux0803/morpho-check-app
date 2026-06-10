@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any
+from typing import Dict, Any
 from models.clinical import ClinicalSetting
 from models.user import User
 from routers.auth_router import get_current_admin
@@ -10,24 +10,26 @@ from pydantic import BaseModel
 
 router = APIRouter(tags=["Clinical CMS"])
 
+
 class SettingUpdate(BaseModel):
     value_json: Dict[str, Any]
     label: str = None
 
+
 @router.get("/settings")
 def get_clinical_settings(
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin)
+    db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)
 ):
     """Barcha klinik sozlamalarni qaytaradi."""
     settings = db.query(ClinicalSetting).order_by(ClinicalSetting.category).all()
     return settings
 
+
 @router.get("/settings/{key}")
 def get_setting_by_key(
     key: str,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin)
+    current_admin: User = Depends(get_current_admin),
 ):
     """Kalit bo'yicha bitta sozlamani qaytaradi."""
     setting = db.query(ClinicalSetting).filter(ClinicalSetting.key == key).first()
@@ -35,12 +37,13 @@ def get_setting_by_key(
         raise HTTPException(status_code=404, detail="Sozlama topilmadi")
     return setting
 
+
 @router.put("/settings/{key}")
 def update_clinical_setting(
     key: str,
     data: SettingUpdate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin)
+    current_admin: User = Depends(get_current_admin),
 ):
     """Sozlamani yangilaydi (faqat Adminlar uchun)."""
     # Xavfsizlik: faqat superadmin ruxsatini qo'shish mumkin
@@ -57,11 +60,12 @@ def update_clinical_setting(
 
     db.commit()
     db.refresh(setting)
-    
+
     # Keshni yangilaymiz
     clinical_service.clear_cache()
-    
+
     return {"message": "Sozlama muvaffaqiyatli yangilandi", "key": key}
+
 
 @router.post("/refresh-cache")
 def refresh_cache(current_admin: User = Depends(get_current_admin)):

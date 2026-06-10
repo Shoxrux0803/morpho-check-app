@@ -12,12 +12,18 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.userdata import PatientAnalysis
 from services.indices_service import calculate_detailed_indices
-from services.ky_localization import KY_BMI_CATEGORIES, KZ_BMI_CATEGORIES, TM_BMI_CATEGORIES, report_text
+from services.ky_localization import (
+    KY_BMI_CATEGORIES,
+    KZ_BMI_CATEGORIES,
+    TM_BMI_CATEGORIES,
+    report_text,
+)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 _MOJIBAKE_EMOJI_PREFIX_RE = re.compile(r"^(?:рџ\S*\s*)+")
+
 
 # ---------------------------
 # Yordamchi funksiyalar
@@ -29,21 +35,21 @@ def setup_font() -> str:
     """
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        font_path = os.path.join(base_dir, 'fonts', 'DejaVuSans.ttf')
+        font_path = os.path.join(base_dir, "fonts", "DejaVuSans.ttf")
 
         if not os.path.exists(font_path):
             # fallback
-            available_fonts = ['Helvetica-Bold', 'Helvetica', 'Times-Roman', 'Courier']
+            available_fonts = ["Helvetica-Bold", "Helvetica", "Times-Roman", "Courier"]
             for font in available_fonts:
                 if font in pdfmetrics.getRegisteredFontNames():
                     return font
-            return 'Helvetica'
+            return "Helvetica"
 
-        pdfmetrics.registerFont(TTFont('DejaVu', font_path))
-        return 'DejaVu'
+        pdfmetrics.registerFont(TTFont("DejaVu", font_path))
+        return "DejaVu"
     except Exception as e:
         logger.warning(f"Font sozlashda xato: {str(e)}")
-        return 'Helvetica'
+        return "Helvetica"
 
 
 def get_bmi_range_by_age_and_gender(age: int, gender: str) -> Dict[str, float]:
@@ -66,14 +72,40 @@ def get_ideal_weight_by_age_and_gender(age: int, height: float, gender: str) -> 
 
     # 3вЂ“18 yosh oralig'i uchun WHO ga yaqin mos jadval
     boys_weights = {
-        3: 14.3, 4: 16.3, 5: 18.3, 6: 20.5, 7: 22.9, 8: 25.6, 9: 28.5,
-        10: 31.9, 11: 35.6, 12: 39.9, 13: 45.3, 14: 50.8, 15: 56.5, 16: 61.5,
-        17: 66.0, 18: 70.3
+        3: 14.3,
+        4: 16.3,
+        5: 18.3,
+        6: 20.5,
+        7: 22.9,
+        8: 25.6,
+        9: 28.5,
+        10: 31.9,
+        11: 35.6,
+        12: 39.9,
+        13: 45.3,
+        14: 50.8,
+        15: 56.5,
+        16: 61.5,
+        17: 66.0,
+        18: 70.3,
     }
     girls_weights = {
-        3: 13.9, 4: 15.7, 5: 17.6, 6: 19.7, 7: 22.0, 8: 24.5, 9: 27.2,
-        10: 30.1, 11: 33.4, 12: 37.0, 13: 41.1, 14: 45.3, 15: 49.1, 16: 52.1,
-        17: 54.4, 18: 56.0
+        3: 13.9,
+        4: 15.7,
+        5: 17.6,
+        6: 19.7,
+        7: 22.0,
+        8: 24.5,
+        9: 27.2,
+        10: 30.1,
+        11: 33.4,
+        12: 37.0,
+        13: 41.1,
+        14: 45.3,
+        15: 49.1,
+        16: 52.1,
+        17: 54.4,
+        18: 56.0,
     }
 
     if age <= 18:
@@ -93,15 +125,14 @@ def get_ideal_weight_by_age_and_gender(age: int, height: float, gender: str) -> 
         bmi_target = 25.0
 
     height_m = height / 100
-    return round(bmi_target * (height_m ** 2), 1)
-
+    return round(bmi_target * (height_m**2), 1)
 
 
 def generate_region_based_id(db: Session, region: str) -> str:
     """Viloyatga bog'langan ketma-ket ID generatsiya qilish: {VILOYAT_KODI}-{tartib}"""
     # Normallashtirish: bo'shliqlarni olib tashlash va bir xil formatga keltirish
     region_norm = (region or "").strip()
-    
+
     # Prifikslar xaritasi (Lotin va Kirill variantlari uchun)
     prefixes = {
         # Lotin
@@ -135,45 +166,52 @@ def generate_region_based_id(db: Session, region: str) -> str:
         "РЎРёСЂРґР°СЂС‘": "SIR",
         "РЎСѓСЂС…РѕРЅРґР°СЂС‘": "SUR",
         "ТљР°С€Т›Р°РґР°СЂС‘": "QAS",
-        "РќР°РІРѕРёР№": "NAV"
+        "РќР°РІРѕРёР№": "NAV",
     }
-    
+
     prefix = prefixes.get(region_norm)
     if not prefix:
         # Katta-kichik harfga sezgirlikni kamaytirish va substring qidirish
         for reg_name, pref in prefixes.items():
-            if reg_name.lower() in region_norm.lower() or region_norm.lower() in reg_name.lower():
+            if (
+                reg_name.lower() in region_norm.lower()
+                or region_norm.lower() in reg_name.lower()
+            ):
                 prefix = pref
                 break
-                
+
     if not prefix:
         # Agar xaritada bo'lmasa, birinchi 3 ta harfni olamiz
-        from utils.translit import lat2cyr
-        # Hammasini lotinga o'girib keyin prefix olish xavfsizroq bo'lishi mumkin, 
+        # Hammasini lotinga o'girib keyin prefix olish xavfsizroq bo'lishi mumkin,
         # lekin hozircha oddiyroq yo'l:
         clean_name = "".join(filter(str.isalnum, region_norm))
         if clean_name:
             prefix = clean_name[:3].upper()
         else:
             prefix = "UNK"
-            
+
     # Mavjud yozuvlar sonini hisoblash (prefix bo'yicha emas, aynan shu region bo'yicha)
     # Normallashtirilgan qidiruv: region nomi prefix bilan bog'liq bo'lgan barcha yozuvlarni sanaydi
     # Yoki shunchaki barcha Prefix-ID larni sanash (Prefix-XXXXX)
     # counts based on Prefix-ID
-    count = db.query(PatientAnalysis).filter(PatientAnalysis.id_code.like(f"{prefix}-%")).count()
-    
+    count = (
+        db.query(PatientAnalysis)
+        .filter(PatientAnalysis.id_code.like(f"{prefix}-%"))
+        .count()
+    )
+
     return f"{prefix}-{count + 1:05d}"
 
 
-
-def calculate_bmi(data: PatientData, all_settings: Dict[str, Any], lang: str = "uz") -> dict:
+def calculate_bmi(
+    data: PatientData, all_settings: Dict[str, Any], lang: str = "uz"
+) -> dict:
     """РҐРёСЃРѕР±Р»Р°С€Р»Р°СЂ РІР° РґРёР°РіРЅРѕР· (Z-score Р±РёР»Р°РЅ)."""
     age = int(data.age)
     gender = (data.gender or "").lower()
     height = float(data.height)
     weight = float(data.weight)
-    
+
     h2 = (height / 100.0) ** 2
     if h2 <= 0:
         raise ValueError("РќРµРєРѕСЂСЂРµРєС‚РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ СЂРѕСЃС‚Р°.")
@@ -193,24 +231,42 @@ def calculate_bmi(data: PatientData, all_settings: Dict[str, Any], lang: str = "
         "region": data.region,
         "district": data.district,
         "mahalla": data.mahalla,
-        "address": data.address
+        "address": data.address,
     }
-    
-    detailed = calculate_detailed_indices(age, gender, height, weight, bmi, manual_bio, lang=lang, all_settings=all_settings)
-    
+
+    detailed = calculate_detailed_indices(
+        age,
+        gender,
+        height,
+        weight,
+        bmi,
+        manual_bio,
+        lang=lang,
+        all_settings=all_settings,
+    )
+
     # РљР°С‚РµРіРѕСЂРёСЏ РРњРў РЅР° РѕСЃРЅРѕРІРµ Z-score (РґР»СЏ РґРµС‚РµР№) РёР»Рё СЃС‚Р°РЅРґР°СЂС‚РѕРІ Р’РћР— (РґР»СЏ РІР·СЂРѕСЃР»С‹С…)
     z_bmi = detailed.get("z_bmi", 0)
     if age < 19:
-        if z_bmi < -2: bmi_category = _get_bmi_cat("v_low", lang, all_settings)
-        elif z_bmi < -1: bmi_category = _get_bmi_cat("low", lang, all_settings)
-        elif z_bmi <= 1: bmi_category = _get_bmi_cat("normal", lang, all_settings)
-        elif z_bmi <= 2: bmi_category = _get_bmi_cat("overweight", lang, all_settings)
-        else: bmi_category = _get_bmi_cat("obese", lang, all_settings)
+        if z_bmi < -2:
+            bmi_category = _get_bmi_cat("v_low", lang, all_settings)
+        elif z_bmi < -1:
+            bmi_category = _get_bmi_cat("low", lang, all_settings)
+        elif z_bmi <= 1:
+            bmi_category = _get_bmi_cat("normal", lang, all_settings)
+        elif z_bmi <= 2:
+            bmi_category = _get_bmi_cat("overweight", lang, all_settings)
+        else:
+            bmi_category = _get_bmi_cat("obese", lang, all_settings)
     else:
-        if bmi < 18.5: bmi_category = _get_bmi_cat("low", lang, all_settings)
-        elif bmi < 25: bmi_category = _get_bmi_cat("normal", lang, all_settings)
-        elif bmi < 30: bmi_category = _get_bmi_cat("overweight", lang, all_settings)
-        else: bmi_category = _get_bmi_cat("obese", lang, all_settings)
+        if bmi < 18.5:
+            bmi_category = _get_bmi_cat("low", lang, all_settings)
+        elif bmi < 25:
+            bmi_category = _get_bmi_cat("normal", lang, all_settings)
+        elif bmi < 30:
+            bmi_category = _get_bmi_cat("overweight", lang, all_settings)
+        else:
+            bmi_category = _get_bmi_cat("obese", lang, all_settings)
 
     ideal_weight = get_ideal_weight_by_age_and_gender(age, height, gender)
     bmi_rng = get_bmi_range_by_age_and_gender(age, gender)
@@ -225,9 +281,13 @@ def calculate_bmi(data: PatientData, all_settings: Dict[str, Any], lang: str = "
         "z_score": z_bmi,
         "somatotype": detailed.get("morphological_type", "normostenik"),
         "bmi_category": bmi_category,
-        "shoulder_ratio": round((float(data.shoulder_breadth or 0) / height) * 100, 1) if height > 0 else 0,
-        "thigh_ratio": round((float(data.thigh_circumference or 0) / height) * 100, 1) if height > 0 else 0,
-        "indices": detailed
+        "shoulder_ratio": round((float(data.shoulder_breadth or 0) / height) * 100, 1)
+        if height > 0
+        else 0,
+        "thigh_ratio": round((float(data.thigh_circumference or 0) / height) * 100, 1)
+        if height > 0
+        else 0,
+        "indices": detailed,
     }
 
 
@@ -236,6 +296,7 @@ def _z_to_percentile(z: Optional[float]) -> Optional[int]:
         return None
     # Abramowitz-Stegun approximation through math.erf.
     import math
+
     return int(round(0.5 * (1 + math.erf(float(z) / math.sqrt(2))) * 100))
 
 
@@ -278,7 +339,9 @@ def _risk_from_z(z: Optional[float]) -> Dict[str, str]:
     }
 
 
-def build_growth_standards(data: PatientData, analysis: Dict[str, Any]) -> Dict[str, Any]:
+def build_growth_standards(
+    data: PatientData, analysis: Dict[str, Any]
+) -> Dict[str, Any]:
     indices = analysis.get("indices", {}) or {}
     bmi = analysis.get("bmi")
     height = float(data.height)
@@ -293,9 +356,24 @@ def build_growth_standards(data: PatientData, analysis: Dict[str, Any]) -> Dict[
     chest_sd = max(2.5, chest_expected * 0.08)
 
     metrics = {
-        "height": {"label": "Bo'y", "value": height, "unit": "sm", "z_score": indices.get("z_h")},
-        "weight": {"label": "Vazn", "value": weight, "unit": "kg", "z_score": indices.get("z_w")},
-        "bmi": {"label": "BMI", "value": bmi, "unit": "", "z_score": indices.get("z_bmi")},
+        "height": {
+            "label": "Bo'y",
+            "value": height,
+            "unit": "sm",
+            "z_score": indices.get("z_h"),
+        },
+        "weight": {
+            "label": "Vazn",
+            "value": weight,
+            "unit": "kg",
+            "z_score": indices.get("z_w"),
+        },
+        "bmi": {
+            "label": "BMI",
+            "value": bmi,
+            "unit": "",
+            "z_score": indices.get("z_bmi"),
+        },
         "head": {
             "label": "Bosh aylanasi",
             "value": head,
@@ -306,7 +384,9 @@ def build_growth_standards(data: PatientData, analysis: Dict[str, Any]) -> Dict[
             "label": "Ko'krak aylanasi",
             "value": chest,
             "unit": "sm",
-            "z_score": round((chest - chest_expected) / chest_sd, 2) if chest_sd else None,
+            "z_score": round((chest - chest_expected) / chest_sd, 2)
+            if chest_sd
+            else None,
         },
     }
 
@@ -315,7 +395,9 @@ def build_growth_standards(data: PatientData, analysis: Dict[str, Any]) -> Dict[
         metric["risk"] = _risk_from_z(metric.get("z_score"))
 
     worst_rank = {"unknown": 0, "green": 1, "yellow": 2, "red": 3}
-    worst = max(metrics.values(), key=lambda item: worst_rank.get(item["risk"]["level"], 0))
+    worst = max(
+        metrics.values(), key=lambda item: worst_rank.get(item["risk"]["level"], 0)
+    )
     return {
         "source": "WHO LMS + mahalliy skrining diapazonlari",
         "metrics": metrics,
@@ -323,7 +405,9 @@ def build_growth_standards(data: PatientData, analysis: Dict[str, Any]) -> Dict[
     }
 
 
-def build_progress_tracking(db: Session, rec: PatientAnalysis, full_name: str) -> Dict[str, Any]:
+def build_progress_tracking(
+    db: Session, rec: PatientAnalysis, full_name: str
+) -> Dict[str, Any]:
     query = db.query(PatientAnalysis).filter(
         PatientAnalysis.id != rec.id,
         PatientAnalysis.is_deleted == 0,
@@ -334,7 +418,9 @@ def build_progress_tracking(db: Session, rec: PatientAnalysis, full_name: str) -
     if rec.gender:
         query = query.filter(PatientAnalysis.gender == rec.gender)
 
-    previous = query.order_by(PatientAnalysis.created_at.desc(), PatientAnalysis.id.desc()).first()
+    previous = query.order_by(
+        PatientAnalysis.created_at.desc(), PatientAnalysis.id.desc()
+    ).first()
     if not previous:
         return {
             "has_history": False,
@@ -359,7 +445,13 @@ def build_progress_tracking(db: Session, rec: PatientAnalysis, full_name: str) -
         old = getattr(previous, field, None)
         delta = round(float(current or 0) - float(old or 0), 1)
         monthly = round(delta / months, 2) if months and months > 0 else None
-        return {"current": current, "previous": old, "delta": delta, "monthly_delta": monthly, "unit": unit}
+        return {
+            "current": current,
+            "previous": old,
+            "delta": delta,
+            "monthly_delta": monthly,
+            "unit": unit,
+        }
 
     changes = {
         "height": _change("height", "sm"),
@@ -370,7 +462,12 @@ def build_progress_tracking(db: Session, rec: PatientAnalysis, full_name: str) -
     }
 
     height_monthly = changes["height"]["monthly_delta"]
-    if months is not None and height_monthly is not None and months >= 2 and height_monthly < 0.25:
+    if (
+        months is not None
+        and height_monthly is not None
+        and months >= 2
+        and height_monthly < 0.25
+    ):
         trend = "Bo'y o'sishi sekinlashgan, qayta nazorat tavsiya etiladi."
         trend_level = "yellow"
     elif changes["weight"]["delta"] < -1:
@@ -411,7 +508,9 @@ def build_progress_tracking(db: Session, rec: PatientAnalysis, full_name: str) -
     }
 
 
-def _split_region_and_district(region: Optional[str], district: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+def _split_region_and_district(
+    region: Optional[str], district: Optional[str]
+) -> Tuple[Optional[str], Optional[str]]:
     """
     Agar district bo'sh bo'lsa, region "Viloyat, Tuman" ko'rinishida kelgan bo'lishi mumkin.
     Shunda avtomatik ikkiga ajratamiz.
@@ -469,10 +568,11 @@ _BMI_CAT_I18N = {
         "tm": TM_BMI_CATEGORIES["obese"],
         "ru": "РћР¶РёСЂРµРЅРёРµ",
         "en": "Obesity",
-    }
+    },
 }
 
 BMI_CATEGORIES = _BMI_CAT_I18N
+
 
 def _get_bmi_cat(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
     # Key: 'bmi_cat_normal', 'bmi_cat_low', etc.
@@ -502,98 +602,97 @@ _ADVICE_I18N = {
         "uz": "Sizning jismoniy rivojlanishingiz me'yorida. Salomatlikni saqlashda davom eting.",
         "ru": "Р’Р°С€Рµ С„РёР·РёС‡РµСЃРєРѕРµ СЂР°Р·РІРёС‚РёРµ РІ РЅРѕСЂРјРµ. РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ РїРѕРґРґРµСЂР¶РёРІР°С‚СЊ Р·РґРѕСЂРѕРІСЊРµ.",
         "en": "Your physical development is normal. Continue to maintain your health.",
-        "kz": "РЎС–Р·РґС–ТЈ С„РёР·РёРєР°Р»С‹Т› РґР°РјСѓС‹ТЈС‹Р· Т›Р°Р»С‹РїС‚С‹. Р”РµРЅСЃР°СѓР»С‹Т“С‹ТЈС‹Р·РґС‹ СЃР°Т›С‚Р°СѓРґС‹ Р¶Р°Р»Т“Р°СЃС‚С‹СЂС‹ТЈС‹Р·."
+        "kz": "РЎС–Р·РґС–ТЈ С„РёР·РёРєР°Р»С‹Т› РґР°РјСѓС‹ТЈС‹Р· Т›Р°Р»С‹РїС‚С‹. Р”РµРЅСЃР°СѓР»С‹Т“С‹ТЈС‹Р·РґС‹ СЃР°Т›С‚Р°СѓРґС‹ Р¶Р°Р»Т“Р°СЃС‚С‹СЂС‹ТЈС‹Р·.",
     },
     "default_specialist": {
         "uz": "Doimiy nazorat zarur emas. Yillik tibbiy ko'rikdan o'tib turing.",
         "ru": "РџРѕСЃС‚РѕСЏРЅРЅРѕРµ РЅР°Р±Р»СЋРґРµРЅРёРµ РЅРµ С‚СЂРµР±СѓРµС‚СЃСЏ. РџСЂРѕС…РѕРґРёС‚Рµ РµР¶РµРіРѕРґРЅС‹Р№ РјРµРґРѕСЃРјРѕС‚СЂ.",
         "en": "No constant supervision required. Undergo an annual medical check-up.",
-        "kz": "РўТ±СЂР°Т›С‚С‹ Р±Р°Т›С‹Р»Р°Сѓ Т›Р°Р¶РµС‚ РµРјРµСЃ. Р–С‹Р» СЃР°Р№С‹РЅТ“С‹ РјРµРґРёС†РёРЅР°Р»С‹Т› С‚РµРєСЃРµСЂСѓРґРµРЅ У©С‚С–ТЈС–Р·."
+        "kz": "РўТ±СЂР°Т›С‚С‹ Р±Р°Т›С‹Р»Р°Сѓ Т›Р°Р¶РµС‚ РµРјРµСЃ. Р–С‹Р» СЃР°Р№С‹РЅТ“С‹ РјРµРґРёС†РёРЅР°Р»С‹Т› С‚РµРєСЃРµСЂСѓРґРµРЅ У©С‚С–ТЈС–Р·.",
     },
     "default_nutrition": {
         "uz": "Sog'lom va muvozanatli ovqatlanish tartibiga rioya qiling.",
         "ru": "РЎРѕР±Р»СЋРґР°Р№С‚Рµ Р·РґРѕСЂРѕРІРѕРµ Рё СЃР±Р°Р»Р°РЅСЃРёСЂРѕРІР°РЅРЅРѕРµ РїРёС‚Р°РЅРёРµ.",
         "en": "Follow a healthy and balanced diet.",
-        "kz": "РЎР°Р»Р°СѓР°С‚С‚С‹ Р¶У™РЅРµ С‚РµТЈРіРµСЂС–РјРґС– С‚Р°РјР°Т›С‚Р°РЅСѓ СЂРµР¶РёРјС–РЅ СЃР°Т›С‚Р°ТЈС‹Р·."
+        "kz": "РЎР°Р»Р°СѓР°С‚С‚С‹ Р¶У™РЅРµ С‚РµТЈРіРµСЂС–РјРґС– С‚Р°РјР°Т›С‚Р°РЅСѓ СЂРµР¶РёРјС–РЅ СЃР°Т›С‚Р°ТЈС‹Р·.",
     },
     "default_activity": {
         "uz": "Yoshga mos ravishda kundalik jismoniy faollikni ta'minlang.",
         "ru": "РћР±РµСЃРїРµС‡СЊС‚Рµ РµР¶РµРґРЅРµРІРЅСѓСЋ С„РёР·РёС‡РµСЃРєСѓСЋ Р°РєС‚РёРІРЅРѕСЃС‚СЊ РІ СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРё СЃ РІРѕР·СЂР°СЃС‚РѕРј.",
         "en": "Ensure daily physical activity appropriate for age.",
-        "kz": "Р–Р°СЃС‹РЅР° СЃУ™Р№РєРµСЃ РєТЇРЅРґРµР»С–РєС‚С– С„РёР·РёРєР°Р»С‹Т› Р±РµР»СЃРµРЅРґС–Р»С–РєС‚С– Т›Р°РјС‚Р°РјР°СЃС‹Р· РµС‚С–ТЈС–Р·."
+        "kz": "Р–Р°СЃС‹РЅР° СЃУ™Р№РєРµСЃ РєТЇРЅРґРµР»С–РєС‚С– С„РёР·РёРєР°Р»С‹Т› Р±РµР»СЃРµРЅРґС–Р»С–РєС‚С– Т›Р°РјС‚Р°РјР°СЃС‹Р· РµС‚С–ТЈС–Р·.",
     },
     "default_checkups": {
         "uz": "Rejali profilaktik ko'riklar yetarli.",
         "ru": "Р”РѕСЃС‚Р°С‚РѕС‡РЅРѕ РїР»Р°РЅРѕРІС‹С… РїСЂРѕС„РёР»Р°РєС‚РёС‡РµСЃРєРёС… РѕСЃРјРѕС‚СЂРѕРІ.",
         "en": "Routine preventive check-ups are sufficient.",
-        "kz": "Р–РѕСЃРїР°СЂР»С‹ РїСЂРѕС„РёР»Р°РєС‚РёРєР°Р»С‹Т› С‚РµРєСЃРµСЂСѓР»РµСЂ Р¶РµС‚РєС–Р»С–РєС‚С–."
+        "kz": "Р–РѕСЃРїР°СЂР»С‹ РїСЂРѕС„РёР»Р°РєС‚РёРєР°Р»С‹Т› С‚РµРєСЃРµСЂСѓР»РµСЂ Р¶РµС‚РєС–Р»С–РєС‚С–.",
     },
-
     # Low BMI (Underweight)
     "low_bmi_general": {
         "uz": "Tana vazni yetishmasligi (vazn tanqisligi) aniqlandi. Diqqat qaratish lozim.",
         "ru": "Р’С‹СЏРІР»РµРЅ РґРµС„РёС†РёС‚ РјР°СЃСЃС‹ С‚РµР»Р°. РўСЂРµР±СѓРµС‚СЃСЏ РІРЅРёРјР°РЅРёРµ Рє Р·РґРѕСЂРѕРІСЊСЋ.",
         "en": "Underweight (weight deficiency) identified. Attention is required.",
-        "kz": "РЎР°Р»РјР°Т› Р¶РµС‚С–СЃРїРµСѓС€С–Р»С–РіС– (СЃР°Р»РјР°Т› С‚Р°РїС€С‹Р»С‹Т“С‹) Р°РЅС‹Т›С‚Р°Р»РґС‹. РљУ©ТЈС–Р» Р±У©Р»Сѓ Т›Р°Р¶РµС‚."
+        "kz": "РЎР°Р»РјР°Т› Р¶РµС‚С–СЃРїРµСѓС€С–Р»С–РіС– (СЃР°Р»РјР°Т› С‚Р°РїС€С‹Р»С‹Т“С‹) Р°РЅС‹Т›С‚Р°Р»РґС‹. РљУ©ТЈС–Р» Р±У©Р»Сѓ Т›Р°Р¶РµС‚.",
     },
     "low_bmi_specialist": {
         "uz": "рџ‘ЁвЂЌвљ•пёЏ Pediatr yoki parhezshunos (dietolog) ko'rigi tavsiya etiladi. Vazn yetishmasligi sabablarini aniqlash zarur.",
         "ru": "рџ‘ЁвЂЌвљ•пёЏ Р РµРєРѕРјРµРЅРґСѓРµС‚СЃСЏ РєРѕРЅСЃСѓР»СЊС‚Р°С†РёСЏ РїРµРґРёР°С‚СЂР° РёР»Рё РґРёРµС‚РѕР»РѕРіР° РґР»СЏ РІС‹СЏРІР»РµРЅРёСЏ РїСЂРёС‡РёРЅ РґРµС„РёС†РёС‚Р° РјР°СЃСЃС‹ С‚РµР»Р°.",
         "en": "рџ‘ЁвЂЌвљ•пёЏ Consultation with a pediatrician or nutritionist is recommended to identify the causes of underweight.",
         "tg": "Муоинаи педиатр ё диетолог тавсия мешавад. Сабабҳои камвазниро муайян кардан зарур аст.",
-        "kz": "рџ‘ЁвЂЌвљ•пёЏ РЎР°Р»РјР°Т› Р¶РµС‚С–СЃРїРµСѓС€С–Р»С–РіС–nin СЃРµР±РµРїС‚РµСЂС–РЅ Р°РЅС‹Т›С‚Р°Сѓ ТЇС€С–РЅ РїРµРґРёР°С‚СЂ РЅРµРјРµСЃРµ РґРёРµС‚РѕР»РѕРіС‚С‹ТЈ РєРµТЈРµСЃС– Т±СЃС‹РЅС‹Р»Р°РґС‹."
+        "kz": "рџ‘ЁвЂЌвљ•пёЏ РЎР°Р»РјР°Т› Р¶РµС‚С–СЃРїРµСѓС€С–Р»С–РіС–nin СЃРµР±РµРїС‚РµСЂС–РЅ Р°РЅС‹Т›С‚Р°Сѓ ТЇС€С–РЅ РїРµРґРёР°С‚СЂ РЅРµРјРµСЃРµ РґРёРµС‚РѕР»РѕРіС‚С‹ТЈ РєРµТЈРµСЃС– Т±СЃС‹РЅС‹Р»Р°РґС‹.",
     },
     "low_bmi_nutrition": {
         "uz": "рџЌЋ Yuqori kaloriyali va oqsillarga boy ovqatlanish tartibiga o'ting. Kuniga 5-6 marta kichik porsiyalarda ovqatlaning.",
         "ru": "рџЌЋ РџРµСЂРµР№РґРёС‚Рµ РЅР° РІС‹СЃРѕРєРѕРєР°Р»РѕСЂРёР№РЅРѕРµ РїРёС‚Р°РЅРёРµ, Р±РѕРіР°С‚РѕРµ Р±РµР»РєР°РјРё. РџРёС‚Р°Р№С‚РµСЃСЊ 5-6 СЂР°Р· РІ РґРµРЅСЊ РЅРµР±РѕР»СЊС€РёРјРё РїРѕСЂС†РёСЏРјРё.",
         "en": "рџЍЋ Switch to a high-calorie, protein-rich diet. Eat 5-6 times a day in small portions.",
         "tg": "Ба ғизои серкалория ва аз сафеда бой гузаред. Дар як рӯз 5-6 маротиба бо порсияҳои хурд ғизо гиред.",
-        "kz": "рџЌЋ РђТ›СѓС‹Р·Т“Р° Р±Р°Р№ Р¶РѕТ“Р°СЂС‹ РєР°Р»РѕСЂРёСЏР»С‹ РґРёРµС‚Р°Т“Р° РєУ©С€С–ТЈС–Р·. РљТЇРЅС–РЅРµ 5-6 СЂРµС‚ Р°Р· РїРѕСЂС†РёСЏРјРµРЅ С‚Р°РјР°Т›С‚Р°РЅС‹ТЈС‹Р·."
+        "kz": "рџЌЋ РђТ›СѓС‹Р·Т“Р° Р±Р°Р№ Р¶РѕТ“Р°СЂС‹ РєР°Р»РѕСЂРёСЏР»С‹ РґРёРµС‚Р°Т“Р° РєУ©С€С–ТЈС–Р·. РљТЇРЅС–РЅРµ 5-6 СЂРµС‚ Р°Р· РїРѕСЂС†РёСЏРјРµРЅ С‚Р°РјР°Т›С‚Р°РЅС‹ТЈС‹Р·.",
     },
     "low_bmi_activity": {
         "uz": "рџЏѓ Kuchli kardio mashqlarni kamaytirib, mushak massasini oshirishga qaratilgan mashqlarni bajaring.",
         "ru": "рџЏѓ РЈРјРµРЅСЊС€РёС‚Рµ РёРЅС‚РµРЅСЃРёРІРЅС‹Рµ РєР°СЂРґРёРѕРЅР°РіСЂСѓР·РєРё, СЃРѕСЃСЂРµРґРѕС‚РѕС‡СЊС‚РµСЃСЊ РЅР° СѓРїСЂР°Р¶РЅРµРЅРёСЏС… РґР»СЏ РЅР°Р±РѕСЂР° РјС‹С€РµС‡РЅРѕР№ РјР°СЃСЃС‹.",
         "en": "рџЏѓ Reduce intense cardio, focus on exercises to build muscle mass.",
         "tg": "Машқҳои пуршиддати кардиоро кам карда, машқҳои афзоиши массаи мушакҳоро иҷро кунед.",
-        "kz": "рџЏѓ ТљР°СЂТ›С‹РЅРґС‹ РєР°СЂРґРёРѕ Р¶Р°С‚С‚С‹Т“СѓР»Р°СЂС‹РЅ Р°Р·Р°Р№С‚С‹Рї, Р±Т±Р»С€С‹Т›РµС‚ РјР°СЃСЃР°СЃС‹РЅ Р°СЂС‚С‚С‹СЂСѓТ“Р° Р±Р°Т“С‹С‚С‚Р°Р»Т“Р°РЅ Р¶Р°С‚С‚С‹Т“СѓР»Р°СЂТ“Р° РЅР°Р·Р°СЂ Р°СѓРґР°СЂС‹ТЈС‹Р·."
+        "kz": "рџЏѓ ТљР°СЂТ›С‹РЅРґС‹ РєР°СЂРґРёРѕ Р¶Р°С‚С‚С‹Т“СѓР»Р°СЂС‹РЅ Р°Р·Р°Р№С‚С‹Рї, Р±Т±Р»С€С‹Т›РµС‚ РјР°СЃСЃР°СЃС‹РЅ Р°СЂС‚С‚С‹СЂСѓТ“Р° Р±Р°Т“С‹С‚С‚Р°Р»Т“Р°РЅ Р¶Р°С‚С‚С‹Т“СѓР»Р°СЂТ“Р° РЅР°Р·Р°СЂ Р°СѓРґР°СЂС‹ТЈС‹Р·.",
     },
     "low_bmi_checkups": {
         "uz": "рџЏҐ Qon tahlili (gemoglobin), gormonal fon va oshqozon-ichak tizimi tekshiruvidan o'tish tavsiya etiladi.",
         "ru": "рџЏҐ Р РµРєРѕРјРµРЅРґСѓРµС‚СЃСЏ СЃРґР°С‚СЊ Р°РЅР°Р»РёР· РєСЂРѕРІРё (РіРµРјРѕРіР»РѕР±РёРЅ), РїСЂРѕРІРµСЂРёС‚СЊ РіРѕСЂРјРѕРЅР°Р»СЊРЅС‹Р№ С„РѕРЅ Рё Р–РљРў.",
         "en": "рџЏҐ Blood test (hemoglobin), hormonal profile, and gastrointestinal check-up are recommended.",
         "tg": "Гузаронидани таҳлили хун (гемоглобин), санҷиши заминаи гормонӣ ва низоми меъдаю рӯда тавсия мешавад.",
-        "kz": "рџЏҐ ТљР°РЅ Р°РЅР°Р»РёР·С–РЅ (РіРµРјРѕРіР»РѕР±РёРЅ) С‚Р°РїСЃС‹СЂСѓ, РіРѕСЂРјРѕРЅР°Р»РґС‹ С„РѕРЅ РјРµРЅ Р°СЃТ›Р°Р·Р°РЅ-С–С€РµРє Р¶РѕР»РґР°СЂС‹РЅ С‚РµРєСЃРµСЂСѓ Т±СЃС‹РЅС‹Р»Р°РґС‹."
+        "kz": "рџЏҐ ТљР°РЅ Р°РЅР°Р»РёР·С–РЅ (РіРµРјРѕРіР»РѕР±РёРЅ) С‚Р°РїСЃС‹СЂСѓ, РіРѕСЂРјРѕРЅР°Р»РґС‹ С„РѕРЅ РјРµРЅ Р°СЃТ›Р°Р·Р°РЅ-С–С€РµРє Р¶РѕР»РґР°СЂС‹РЅ С‚РµРєСЃРµСЂСѓ Т±СЃС‹РЅС‹Р»Р°РґС‹.",
     },
     "high_bmi_general": {
         "uz": "Ortiqcha tana vazni aniqlandi. Bu kelajakda salomatlikka salbiy ta'sir qilishi mumkin.",
         "ru": "Р’С‹СЏРІР»РµРЅ РёР·Р±С‹С‚РѕС‡РЅС‹Р№ РІРµСЃ. Р’ Р±СѓРґСѓС‰РµРј СЌС‚Рѕ РјРѕР¶РµС‚ РЅРµРіР°С‚РёРІРЅРѕ СЃРєР°Р·Р°С‚СЊСЃСЏ РЅР° Р·РґРѕСЂРѕРІСЊРµ.",
         "en": "Excess weight identified. This may negatively affect health in the future.",
-        "kz": "РђСЂС‚С‹Т› СЃР°Р»РјР°Т› Р°РЅС‹Т›С‚Р°Р»РґС‹. Р‘Т±Р» Р±РѕР»Р°С€Р°Т›С‚Р° РґРµРЅСЃР°СѓР»С‹Т›Т›Р° РєРµСЂС– У™СЃРµСЂ РµС‚СѓС– РјТЇРјРєС–РЅ."
+        "kz": "РђСЂС‚С‹Т› СЃР°Р»РјР°Т› Р°РЅС‹Т›С‚Р°Р»РґС‹. Р‘Т±Р» Р±РѕР»Р°С€Р°Т›С‚Р° РґРµРЅСЃР°СѓР»С‹Т›Т›Р° РєРµСЂС– У™СЃРµСЂ РµС‚СѓС– РјТЇРјРєС–РЅ.",
     },
     "high_bmi_specialist": {
         "uz": "рџ‘ЁвЂЌвљ•пёЏ Endokrinolog va parhezshunos ko'rigidan o'tish maqsadga muvofiq.",
         "ru": "рџ‘ЁвЂЌвљ•пёЏ Р¦РµР»РµСЃРѕРѕР±СЂР°Р·РЅРѕ РїСЂРѕР№С‚Рё РєРѕРЅСЃСѓР»СЊС‚Р°С†РёСЋ СЌРЅРґРѕРєСЂРёРЅРѕР»РѕРіР° Рё РґРёРµС‚РѕР»РѕРіР°.",
         "en": "рџ‘ЁвЂЌвљ•пёЏ It is advisable to consult an endocrinologist and dietitian.",
-        "kz": "рџ‘ЁвЂЌвљ•пёЏ Р­РЅРґРѕРєСЂРёРЅРѕР»РѕРі РїРµРЅ РґРёРµС‚РѕР»РѕРі РєРµТЈРµСЃС–РЅРµРЅ У©С‚Сѓ РјР°Т›СЃР°С‚Т›Р° СЃР°Р№."
+        "kz": "рџ‘ЁвЂЌвљ•пёЏ Р­РЅРґРѕРєСЂРёРЅРѕР»РѕРі РїРµРЅ РґРёРµС‚РѕР»РѕРі РєРµТЈРµСЃС–РЅРµРЅ У©С‚Сѓ РјР°Т›СЃР°С‚Т›Р° СЃР°Р№.",
     },
     "high_bmi_nutrition": {
         "uz": "рџЌЋ Ratsionda shakar va tez hazm bo'luvchi uglevodlarni cheklang. Ko'proq sabzavotlar iste'mol qiling.",
         "ru": "рџЌЋ РћРіСЂР°РЅРёС‡СЊС‚Рµ СЃР°С…Р°СЂ Рё Р±С‹СЃС‚СЂС‹Рµ СѓРіР»РµРІРѕРґС‹ РІ СЂР°С†РёРѕРЅРµ. РЈРїРѕС‚СЂРµР±Р»СЏР№С‚Рµ Р±РѕР»СЊС€Рµ РѕРІРѕС‰РµР№.",
         "en": "рџЌЋ Limit sugar and fast carbohydrates in your diet. Consume more vegetables.",
-        "kz": "рџЌЋ Р Р°С†РёРѕРЅРґР°Т“С‹ Т›Р°РЅС‚ РїРµРЅ С‚РµР· Т›РѕСЂС‹С‚С‹Р»Р°С‚С‹РЅ РєУ©РјС–СЂСЃСѓР»Р°СЂРґС‹ С€РµРєС‚РµТЈС–Р·. РљУ©Р±С–СЂРµРє РєУ©РєУ©РЅС–СЃС‚РµСЂРґС– С‚Т±С‚С‹РЅС‹ТЈС‹Р·."
+        "kz": "рџЌЋ Р Р°С†РёРѕРЅРґР°Т“С‹ Т›Р°РЅС‚ РїРµРЅ С‚РµР· Т›РѕСЂС‹С‚С‹Р»Р°С‚С‹РЅ РєУ©РјС–СЂСЃСѓР»Р°СЂРґС‹ С€РµРєС‚РµТЈС–Р·. РљУ©Р±С–СЂРµРє РєУ©РєУ©РЅС–СЃС‚РµСЂРґС– С‚Т±С‚С‹РЅС‹ТЈС‹Р·.",
     },
     "high_bmi_activity": {
         "uz": "рџЏѓ Kundalik piyoda yurish va suzish kabi aerob mashqlarni ko'paytiring.",
         "ru": "рџЏѓ РЈРІРµР»РёС‡СЊС‚Рµ Р°СЌСЂРѕР±РЅС‹Рµ РЅР°РіСЂСѓР·РєРё, С‚Р°РєРёРµ РєР°Рє РµР¶РµРґРЅРµРІРЅС‹Рµ РїСЂРѕРіСѓР»РєРё Рё РїР»Р°РІР°РЅРёРµ.",
         "en": "рџЏѓ Increase aerobic activities such as daily walking and swimming.",
-        "kz": "рџЏѓ РљТЇРЅРґРµР»С–РєС‚С– СЃРµСЂСѓРµРЅРґРµСѓ Р¶У™РЅРµ Р¶ТЇР·Сѓ СЃРёСЏТ›С‚С‹ Р°СЌСЂРѕР±С‚С‹ Р¶Р°С‚С‚С‹Т“СѓР»Р°СЂРґС‹ РєУ©Р±РµР№С‚С–ТЈС–Р·."
+        "kz": "рџЏѓ РљТЇРЅРґРµР»С–РєС‚С– СЃРµСЂСѓРµРЅРґРµСѓ Р¶У™РЅРµ Р¶ТЇР·Сѓ СЃРёСЏТ›С‚С‹ Р°СЌСЂРѕР±С‚С‹ Р¶Р°С‚С‚С‹Т“СѓР»Р°СЂРґС‹ РєУ©Р±РµР№С‚С–ТЈС–Р·.",
     },
     "high_bmi_checkups": {
         "uz": "рџЏҐ Qondagi qand miqdori va lipid profilini tekshirish tavsiya etiladi.",
         "ru": "рџЏҐ Р РµРєРѕРјРµРЅРґСѓРµС‚СЃСЏ РїСЂРѕРІРµСЂРёС‚СЊ СѓСЂРѕРІРµРЅСЊ СЃР°С…Р°СЂР° РІ РєСЂРѕРІРё Рё Р»РёРїРёРґРЅС‹Р№ РїСЂРѕС„РёР»СЊ.",
         "en": "рџЏҐ It is recommended to check blood sugar levels and lipid profile.",
-        "kz": "рџЏҐ ТљР°РЅРґР°Т“С‹ Т›Р°РЅС‚ РјУ©Р»С€РµСЂС–РЅ Р¶У™РЅРµ Р»РёРїРёРґС‚С–Рє РїСЂРѕС„РёР»СЊРґС– С‚РµРєСЃРµСЂСѓ Т±СЃС‹РЅС‹Р»Р°РґС‹."
-    }
+        "kz": "рџЏҐ ТљР°РЅРґР°Т“С‹ Т›Р°РЅС‚ РјУ©Р»С€РµСЂС–РЅ Р¶У™РЅРµ Р»РёРїРёРґС‚С–Рє РїСЂРѕС„РёР»СЊРґС– С‚РµРєСЃРµСЂСѓ Т±СЃС‹РЅС‹Р»Р°РґС‹.",
+    },
 }
 
 
@@ -601,14 +700,14 @@ def _ai(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
     """Maslahat lug'atidan matnni oladi. Agar sozlamalarda bo'lmasa, _ADVICE_I18N dan oladi."""
     setting_key = f"adv_{key}"
     val = all_settings.get(setting_key, {})
-    
+
     # 1. Database settings (override)
     res = val.get(lang)
     if not res:
         res = val.get("uz")
     if res:
         return report_text(_clean_advice_text(res), lang)
-        
+
     # 2. Local dictionary fallback
     local_val = _ADVICE_I18N.get(key, {})
     res = local_val.get(lang)
@@ -616,7 +715,7 @@ def _ai(key: str, lang: str, all_settings: Dict[str, Any]) -> str:
         res = local_val.get("uz")
     if res:
         return report_text(_clean_advice_text(res), lang)
-        
+
     # 3. Final fallback to key itself
     return key
 
@@ -674,7 +773,8 @@ _SPORT_I18N = {
             "Спортивная ориентация (примерно): {primary}. Дополнительные направления: {secondary}. "
             "Причина: {reasons}. При окончательном выборе следует учитывать интерес ребёнка, оценку тренера и разрешение врача."
         ),
-    },    "kz": {
+    },
+    "kz": {
         "sports": {
             "swimming": "жүзу",
             "athletics": "жеңіл атлетика",
@@ -696,7 +796,8 @@ _SPORT_I18N = {
             "Спортқа бағыттау (шамамен): {primary}. Қосымша бағыттар: {secondary}. "
             "Себебі: {reasons}. Соңғы таңдауда баланың қызығушылығы, жаттықтырушы бағасы және дәрігер рұқсаты ескерілсін."
         ),
-    },    "en": {
+    },
+    "en": {
         "sports": {
             "swimming": "swimming",
             "athletics": "athletics",
@@ -817,72 +918,203 @@ def _build_sport_recommendation(
 # Kalit so'zlar til bo'yicha (bio_data advice larini guruhlash uchun)
 _KW = {
     "nutrition": {
-        "uz": ["shirinlik", "ovqat", "suv", "oqsil", "ratsion", "iste'mol", "parhez", "yog'", "vitamin", "kalori", "sabzavot", "meva", "taom"],
-        "ru": ["СЃР»Р°РґРє", "РїРёС‚Р°РЅРё", "РІРѕРґ", "Р±РµР»РѕРє", "СЂР°С†РёРѕРЅ", "РїРѕС‚СЂРµР±Р»", "РґРёРµС‚", "Р¶РёСЂ", "РІРёС‚Р°РјРёРЅ", "РєР°Р»РѕСЂРё", "РѕРІРѕС‰", "С„СЂСѓРєС‚", "РїРёС‰"],
-        "en": ["sweet", "food", "water", "protein", "diet", "consum", "fat", "vitamin", "calori", "vegetabl", "fruit", "nutri"],
-        "kz": ["С‚У™С‚С‚С–", "С‚Р°РјР°Т›", "СЃСѓ", "Р°Т›СѓС‹Р·", "СЂР°С†РёРѕРЅ", "С‚Т±С‚С‹РЅ", "РїР°СЂhez", "РјР°Р№", "РґУ™СЂСѓРјРµРЅ", "РєР°Р»РѕСЂРё", "РєУ©РєУ©РЅС–СЃ", "Р¶РµРјС–СЃ"],
+        "uz": [
+            "shirinlik",
+            "ovqat",
+            "suv",
+            "oqsil",
+            "ratsion",
+            "iste'mol",
+            "parhez",
+            "yog'",
+            "vitamin",
+            "kalori",
+            "sabzavot",
+            "meva",
+            "taom",
+        ],
+        "ru": [
+            "СЃР»Р°РґРє",
+            "РїРёС‚Р°РЅРё",
+            "РІРѕРґ",
+            "Р±РµР»РѕРє",
+            "СЂР°С†РёРѕРЅ",
+            "РїРѕС‚СЂРµР±Р»",
+            "РґРёРµС‚",
+            "Р¶РёСЂ",
+            "РІРёС‚Р°РјРёРЅ",
+            "РєР°Р»РѕСЂРё",
+            "РѕРІРѕС‰",
+            "С„СЂСѓРєС‚",
+            "РїРёС‰",
+        ],
+        "en": [
+            "sweet",
+            "food",
+            "water",
+            "protein",
+            "diet",
+            "consum",
+            "fat",
+            "vitamin",
+            "calori",
+            "vegetabl",
+            "fruit",
+            "nutri",
+        ],
+        "kz": [
+            "С‚У™С‚С‚С–",
+            "С‚Р°РјР°Т›",
+            "СЃСѓ",
+            "Р°Т›СѓС‹Р·",
+            "СЂР°С†РёРѕРЅ",
+            "С‚Т±С‚С‹РЅ",
+            "РїР°СЂhez",
+            "РјР°Р№",
+            "РґУ™СЂСѓРјРµРЅ",
+            "РєР°Р»РѕСЂРё",
+            "РєУ©РєУ©РЅС–СЃ",
+            "Р¶РµРјС–СЃ",
+        ],
     },
     "specialist": {
-        "uz": ["pediatr", "endokrinolog", "mutaxassis", "ko'rig", "maslahat", "shifokor", "dРѕktor"],
-        "ru": ["РїРµРґРёР°С‚СЂ", "СЌРЅРґРѕРєСЂРёРЅРѕР»РѕРі", "СЃРїРµС†РёР°Р»РёСЃС‚", "РєРѕРЅСЃСѓР»СЊС‚Р°С†", "РІСЂР°С‡", "РґРѕРєС‚РѕСЂ"],
-        "en": ["pediatr", "endocrinolog", "specialist", "consult", "doctor", "physician"],
-        "kz": ["РїРµРґРёР°С‚СЂ", "СЌРЅРґРѕРєСЂРёРЅРѕР»РѕРі", "РјР°РјР°РЅ", "РєРµТЈРµСЃ", "РґУ™СЂС–РіРµСЂ"],
+        "uz": [
+            "pediatr",
+            "endokrinolog",
+            "mutaxassis",
+            "ko'rig",
+            "maslahat",
+            "shifokor",
+            "dРѕktor",
+        ],
+        "ru": [
+            "РїРµРґРёР°С‚СЂ",
+            "СЌРЅРґРѕРєСЂРёРЅРѕР»РѕРі",
+            "СЃРїРµС†РёР°Р»РёСЃС‚",
+            "РєРѕРЅСЃСѓР»СЊС‚Р°С†",
+            "РІСЂР°С‡",
+            "РґРѕРєС‚РѕСЂ",
+        ],
+        "en": [
+            "pediatr",
+            "endocrinolog",
+            "specialist",
+            "consult",
+            "doctor",
+            "physician",
+        ],
+        "kz": [
+            "РїРµРґРёР°С‚СЂ",
+            "СЌРЅРґРѕРєСЂРёРЅРѕР»РѕРі",
+            "РјР°РјР°РЅ",
+            "РєРµТЈРµСЃ",
+            "РґУ™СЂС–РіРµСЂ",
+        ],
     },
     "activity": {
-        "uz": ["mashq", "sport", "faollik", "harakat", "badantarbiya", "jismoniy", "yugurish", "suzish", "gimnastika"],
-        "ru": ["СѓРїСЂР°Р¶РЅРµРЅ", "СЃРїРѕСЂС‚", "Р°РєС‚РёРІРЅРѕСЃС‚", "РґРІРёР¶РµРЅ", "С„РёР·РёС‡РµСЃРє", "Р±РµРі", "РїР»Р°РІР°РЅРё", "РіРёРјРЅР°СЃС‚РёРє"],
-        "en": ["exercise", "sport", "activit", "movement", "physical", "running", "swimming", "gymnastic"],
-        "kz": ["Р¶Р°С‚С‚С‹Т“Сѓ", "СЃРїРѕСЂС‚", "Р±РµР»СЃРµРЅРґС–", "Т›РѕР·Т“Р°Р»С‹СЃ", "РґРµРЅРµ", "Р¶ТЇРіС–СЂСѓ", "Р¶ТЇР·Сѓ"],
+        "uz": [
+            "mashq",
+            "sport",
+            "faollik",
+            "harakat",
+            "badantarbiya",
+            "jismoniy",
+            "yugurish",
+            "suzish",
+            "gimnastika",
+        ],
+        "ru": [
+            "СѓРїСЂР°Р¶РЅРµРЅ",
+            "СЃРїРѕСЂС‚",
+            "Р°РєС‚РёРІРЅРѕСЃС‚",
+            "РґРІРёР¶РµРЅ",
+            "С„РёР·РёС‡РµСЃРє",
+            "Р±РµРі",
+            "РїР»Р°РІР°РЅРё",
+            "РіРёРјРЅР°СЃС‚РёРє",
+        ],
+        "en": [
+            "exercise",
+            "sport",
+            "activit",
+            "movement",
+            "physical",
+            "running",
+            "swimming",
+            "gymnastic",
+        ],
+        "kz": [
+            "Р¶Р°С‚С‚С‹Т“Сѓ",
+            "СЃРїРѕСЂС‚",
+            "Р±РµР»СЃРµРЅРґС–",
+            "Т›РѕР·Т“Р°Р»С‹СЃ",
+            "РґРµРЅРµ",
+            "Р¶ТЇРіС–СЂСѓ",
+            "Р¶ТЇР·Сѓ",
+        ],
     },
     "checkups": {
         "uz": ["tahlil", "tekshiruv", "nazorat"],
-        "ru": ["Р°РЅР°Р»РёР·", "РѕР±СЃР»РµРґРѕРІР°РЅ", "РєРѕРЅС‚СЂРѕР»", "РјРѕРЅРёС‚РѕСЂРёРЅРі"],
+        "ru": [
+            "Р°РЅР°Р»РёР·",
+            "РѕР±СЃР»РµРґРѕРІР°РЅ",
+            "РєРѕРЅС‚СЂРѕР»",
+            "РјРѕРЅРёС‚РѕСЂРёРЅРі",
+        ],
         "en": ["test", "check", "monitor", "examination", "lab"],
         "kz": ["С‚Р°Р»РґР°Сѓ", "С‚РµРєСЃРµСЂСѓ", "Р±Р°Т›С‹Р»Р°Сѓ"],
     },
 }
 
 
-def generate_advices(bmi: float, weight_diff: float, age: int, gender: str, all_settings: Dict[str, Any], bio_data: dict = None, lang: str = "uz") -> Dict[str, str]:
+def generate_advices(
+    bmi: float,
+    weight_diff: float,
+    age: int,
+    gender: str,
+    all_settings: Dict[str, Any],
+    bio_data: dict = None,
+    lang: str = "uz",
+) -> Dict[str, str]:
     bmi_range = get_bmi_range_by_age_and_gender(age, gender)
 
     res = {
-        "general":    _ai("default_general",    lang, all_settings),
-        "specialist": _ai("default_specialist",  lang, all_settings),
-        "nutrition":  _ai("default_nutrition",   lang, all_settings),
-        "activity":   _ai("default_activity",    lang, all_settings),
-        "checkups":   _ai("default_checkups",    lang, all_settings),
-        "sport":      _build_sport_recommendation(bmi, bmi_range, bio_data, lang),
+        "general": _ai("default_general", lang, all_settings),
+        "specialist": _ai("default_specialist", lang, all_settings),
+        "nutrition": _ai("default_nutrition", lang, all_settings),
+        "activity": _ai("default_activity", lang, all_settings),
+        "checkups": _ai("default_checkups", lang, all_settings),
+        "sport": _build_sport_recommendation(bmi, bmi_range, bio_data, lang),
     }
 
     # 1. BMI based advice
     if bmi < bmi_range["min"]:
-        res["general"]    = _ai("low_bmi_general",    lang, all_settings)
+        res["general"] = _ai("low_bmi_general", lang, all_settings)
         res["specialist"] = _ai("low_bmi_specialist", lang, all_settings)
-        res["nutrition"]  = _ai("low_bmi_nutrition",  lang, all_settings)
-        res["activity"]   = _ai("low_bmi_activity",   lang, all_settings)
-        res["checkups"]   = _ai("low_bmi_checkups",   lang, all_settings)
+        res["nutrition"] = _ai("low_bmi_nutrition", lang, all_settings)
+        res["activity"] = _ai("low_bmi_activity", lang, all_settings)
+        res["checkups"] = _ai("low_bmi_checkups", lang, all_settings)
     elif bmi > bmi_range["max"]:
-        res["general"]    = _ai("high_bmi_general",    lang, all_settings)
+        res["general"] = _ai("high_bmi_general", lang, all_settings)
         res["specialist"] = _ai("high_bmi_specialist", lang, all_settings)
-        res["nutrition"]  = _ai("high_bmi_nutrition",  lang, all_settings)
-        res["activity"]   = _ai("high_bmi_activity",   lang, all_settings)
-        res["checkups"]   = _ai("high_bmi_checkups",   lang, all_settings)
+        res["nutrition"] = _ai("high_bmi_nutrition", lang, all_settings)
+        res["activity"] = _ai("high_bmi_activity", lang, all_settings)
+        res["checkups"] = _ai("high_bmi_checkups", lang, all_settings)
 
     # 2. Bioimpedance and Indices based advice (from bio_data)
     if bio_data:
         raw_advices = bio_data.get("advice", [])
-        kw_lang = all_settings.get("keywords", {}) # keywords settings modelda bo'lsa
+        kw_lang = all_settings.get("keywords", {})  # keywords settings modelda bo'lsa
         # Agar keywords settingda bo'lmasa fallback _KW (hozircha shunday qolishi mumkin)
         if not kw_lang:
             kw_lang = _KW
-            
+
         defv = {
-            "general":    _ai("default_general",   lang, all_settings),
+            "general": _ai("default_general", lang, all_settings),
             "specialist": _ai("default_specialist", lang, all_settings),
-            "nutrition":  _ai("default_nutrition",  lang, all_settings),
-            "activity":   _ai("default_activity",   lang, all_settings),
-            "checkups":   _ai("default_checkups",   lang, all_settings),
+            "nutrition": _ai("default_nutrition", lang, all_settings),
+            "activity": _ai("default_activity", lang, all_settings),
+            "checkups": _ai("default_checkups", lang, all_settings),
         }
 
         for adv in raw_advices:

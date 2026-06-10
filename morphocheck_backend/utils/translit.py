@@ -157,7 +157,11 @@ def lat2cyr(text: str) -> str:
         for key in keys:
             part = chunk[: len(key)]
             if part.lower() == key:
-                if key == "yo" and len(chunk) > 2 and chunk[2] in {"'", "`", "ʻ", "‘", "’", "ʼ"}:
+                if (
+                    key == "yo"
+                    and len(chunk) > 2
+                    and chunk[2] in {"'", "`", "ʻ", "‘", "’", "ʼ"}
+                ):
                     continue
                 result.append(_match_case(part, LATIN_MULTI[key]))
                 i += len(key)
