@@ -20,7 +20,7 @@ STOP_WORDS = {
         "bo'lgan",
         "bo'ladi",
     },
-    "ru": set(),
+    "ru": {"и", "или", "с", "для", "также", "это", "этот", "а", "в", "на", "который", "будет"},
     "en": {"and", "or", "for", "the", "a", "an", "is", "are", "with", "to", "of", "in"},
     "kz": set(),
 }
@@ -36,7 +36,16 @@ VOCABULARY_EXPANSIONS = {
         "rivojlanish": ["o'sish dinamikasi", "taraqqiyot", "adaptatsiya"],
         "maslahat": ["tavsiya", "yo'riqnoma", "ko'rsatma"],
     },
-    "ru": {},
+    "ru": {
+        "tahlil": ["анализ", "оценка", "обследование"],
+        "sog'liq": ["здоровье", "состояние организма", "благополучие"],
+        "sogliq": ["здоровье", "состояние организма", "благополучие"],
+        "vazn": ["вес", "масса", "масса тела"],
+        "bo'y": ["длина тела", "рост", "статура"],
+        "boy": ["длина тела", "рост", "статура"],
+        "rivojlanish": ["динамика роста", "развитие", "адаптация"],
+        "maslahat": ["рекомендация", "руководство", "указание"],
+    },
     "en": {
         "analysis": ["assessment", "evaluation", "screening"],
         "health": ["wellbeing", "condition", "fitness"],

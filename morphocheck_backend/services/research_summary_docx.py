@@ -214,6 +214,56 @@ METRIC_LABELS["tm"] = {
     "calf_circumference": "Boldur aylawy",
     "dynamometry": "Dinamometriya",
 }
+SUMMARY_I18N["ru"] = {
+    **SUMMARY_I18N["uz"],
+    "title": "MORPHOCHECK НАУЧНО-СТАТИСТИЧЕСКИЙ ОТЧЕТ DOCX",
+    "report_date": "Дата отчета",
+    "summary": "1. Общая сводка",
+    "scope": "Охват",
+    "all_researchers": "Данные всех исследователей",
+    "researcher_scope": "Данные, относящиеся к исследователю",
+    "researcher": "Исследователь",
+    "total_records": "Всего записей",
+    "age_range": "Возрастной диапазон",
+    "avg_age": "Средний возраст",
+    "active_filters": "Активные фильтры",
+    "none": "Нет",
+    "indicator": "Показатель",
+    "value": "Значение",
+    "demographics": "2. Демографическая инфографика",
+    "gender": "Пол",
+    "region": "Регион",
+    "visual_share": "Визуальная доля",
+    "stats": "3. Таблицы автоматического статистического анализа",
+    "z_group": "Группа BMI Z-score",
+    "groups": "4. Анализ в разрезе групп",
+    "male_n": "Мужской N",
+    "male_mean": "Мужской mean",
+    "female_n": "Женский N",
+    "female_mean": "Женский mean",
+    "diff": "Разница",
+    "share": "Доля",
+    "correlation": "5. Корреляция и регрессия",
+    "model": "Модель",
+    "not_enough": "Недостаточно данных",
+    "equation": "Вес = {intercept} + {slope} x Рост",
+    "note_title": "6. Научный комментарий",
+    "note": "Отчет сформирован автоматически. В таблицах представлены описательная статистика, t-тест по полу, ANOVA по регионам, матрица корреляции и регрессионная модель рост-вес.",
+    "years": "лет",
+}
+
+METRIC_LABELS["ru"] = {
+    "chest_standing_height": "Рост (стоя)",
+    "weight": "Вес",
+    "bmi": "BMI",
+    "chest_circumference_pause": "Окружность грудной клетки",
+    "waist_circumference": "Окружность талии",
+    "head_circumference": "Окружность головы",
+    "thigh_circumference": "Окружность бедра",
+    "calf_circumference": "Окружность голени",
+    "dynamometry": "Динамометрия",
+}
+
 def _tr(lang, key):
     return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(key, SUMMARY_I18N["uz"].get(key, key))
 
