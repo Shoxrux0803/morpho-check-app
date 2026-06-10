@@ -28,7 +28,8 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-SUPERADMIN_EMAIL = "ortiqovshoxrux1996@gmail.com"
+# Superadmin emaili .env faylidan o'qiladi — hech qachon kodga yozilmasin!
+SUPERADMIN_EMAIL = (os.getenv("MORPHOCHECK_SUPERADMIN_EMAIL") or "").strip().lower()
 VERIFICATION_TTL_MINUTES = int(os.getenv("LOGIN_VERIFICATION_TTL_MINUTES", "10"))
 
 
@@ -253,7 +254,8 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
     _validate_active_user(user)
 
-    if user.role == "superadmin" and (user.email or "").lower() == SUPERADMIN_EMAIL:
+    # Superadmin qurilma tekshiruvi: email env dan o'qiladi va superadmin bo'lsa ishga tushadi
+    if user.role == "superadmin" and SUPERADMIN_EMAIL and (user.email or "").lower() == SUPERADMIN_EMAIL:
         if not user_in.device_id:
             raise HTTPException(status_code=400, detail="Qurilma identifikatori topilmadi")
         device_hash = _hash_value(user_in.device_id.strip())
