@@ -91,6 +91,38 @@ const REGION_LABELS_TM = {
   "surxondaryo viloyati": "Surhanderya welayaty",
 };
 
+const REGION_LABELS_TG = {
+  "toshkent shahri": "шаҳри Тошканд",
+  toshkent: "вилояти Тошканд",
+  "toshkent viloyati": "вилояти Тошканд",
+  qoraqalpogiston: "Ҷумҳурии Қарақалпоғистон",
+  "qoraqalpog'iston": "Ҷумҳурии Қарақалпоғистон",
+  "qoraqalpog'iston respublikasi": "Ҷумҳурии Қарақалпоғистон",
+  andijon: "вилояти Андиҷон",
+  "andijon viloyati": "вилояти Андиҷон",
+  buxoro: "вилояти Бухоро",
+  "buxoro viloyati": "вилояти Бухоро",
+  fargona: "вилояти Фарғона",
+  "farg'ona": "вилояти Фарғона",
+  "farg'ona viloyati": "вилояти Фарғона",
+  jizzax: "вилояти Ҷиззах",
+  "jizzax viloyati": "вилояти Ҷиззах",
+  xorazm: "вилояти Хоразм",
+  "xorazm viloyati": "вилояти Хоразм",
+  namangan: "вилояти Наманган",
+  "namangan viloyati": "вилояти Наманган",
+  navoiy: "вилояти Навоӣ",
+  "navoiy viloyati": "вилояти Навоӣ",
+  qashqadaryo: "вилояти Қашқадарё",
+  "qashqadaryo viloyati": "вилояти Қашқадарё",
+  samarqand: "вилояти Самарқанд",
+  "samarqand viloyati": "вилояти Самарқанд",
+  sirdaryo: "вилояти Сирдарё",
+  "sirdaryo viloyati": "вилояти Сирдарё",
+  surxondaryo: "вилояти Сурхондарё",
+  "surxondaryo viloyati": "вилояти Сурхондарё",
+};
+
 export const getLocalizedLocationLabel = (value, lang, level = 1) => {
   if (!value) return "-";
   const key = normalizeLocationKey(value);
@@ -106,6 +138,17 @@ export const getLocalizedLocationLabel = (value, lang, level = 1) => {
     if (/viloyati$/i.test(value) || level === 1) return `${ascii} welayaty`;
     if (/tumani$/i.test(value) || level === 2) return `${ascii} etraby`;
     if (/mahallasi$/i.test(value) || level === 3) return `${clean} mahallasy`;
+    return clean;
+  }
+
+  if (lang === "tg") {
+    const clean = stripUzSuffix(value);
+    const ascii = transliterateUzToAscii(value);
+    if (REGION_LABELS_TG[key]) return REGION_LABELS_TG[key];
+    if (key === "toshkent shahri" || /shahri$/i.test(value)) return `шаҳри ${ascii}`;
+    if (/respublikasi$/i.test(value)) return `Ҷумҳурии ${ascii}`;
+    if (/viloyati$/i.test(value) || level === 1) return `вилояти ${ascii}`;
+    if (/tumani$/i.test(value) || level === 2) return `ноҳияи ${ascii}`;
     return clean;
   }
 
