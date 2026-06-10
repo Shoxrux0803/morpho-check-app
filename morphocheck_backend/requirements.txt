@@ -26,3 +26,8 @@ boto3
 alembic
 # ClickHouse (3-bosqich: Analytics)
 clickhouse-driver
+
+# Testing
+pytest
+pytest-asyncio
+httpx
