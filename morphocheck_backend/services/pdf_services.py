@@ -1021,12 +1021,10 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
 
         if current_age < 18:
             adult_height = ai_preds.get("adult_height_prediction", 0)
+            adult_height_label = L.get("ai_adult_height", "18 yoshdagi taxminiy bo'y:")
             ai_height_info = [
                 [
-                    Paragraph(
-                        f"<b>{L.get('ai_adult_height', '18 yoshdagi taxminiy bo\\'y:')}</b>",
-                        styles["Normal"],
-                    ),
+                    Paragraph(f"<b>{adult_height_label}</b>", styles["Normal"]),
                     Paragraph(f"<b>{adult_height} sm</b>", styles["Normal"]),
                 ]
             ]
