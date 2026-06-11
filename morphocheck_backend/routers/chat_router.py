@@ -15,6 +15,7 @@ from routers.auth_router import get_current_user
 from utils.database import get_db
 
 router = APIRouter(tags=["Chat"])
+ALLOWED_REACTIONS = {"👍", "❤️", "🙌", "😁", "😊"}
 
 
 class ChatMessageCreate(BaseModel):
@@ -38,6 +39,7 @@ class ChatMessageOut(BaseModel):
     reply_to_content: Optional[str] = None
     reply_to_sender: Optional[str] = None
     file_url: Optional[str] = None
+    reaction: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -205,6 +207,10 @@ class ConversationOut(BaseModel):
     last_message_time: Optional[datetime] = None
     unread_count: int
     is_last_message_mine: bool
+
+
+class ChatReactionUpdate(BaseModel):
+    reaction: Optional[str] = None
 
 
 @router.get("/conversations", response_model=List[ConversationOut])
@@ -378,6 +384,38 @@ def mark_user_messages_read(
     ).update({"is_read": True})
     db.commit()
     return {"status": "success"}
+
+
+@router.post("/react/{message_id}", response_model=ChatMessageOut)
+def react_to_message(
+    message_id: int,
+    payload: ChatReactionUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    msg = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+    reaction = payload.reaction
+    if reaction is not None:
+        reaction = reaction.strip()
+        if reaction not in ALLOWED_REACTIONS:
+            raise HTTPException(status_code=400, detail="Noto'g'ri reaksiya")
+
+    is_participant = (
+        msg.sender_id == current_user.id or msg.recipient_id == current_user.id
+    )
+    if msg.message_type == "broadcast":
+        is_participant = True
+    if not is_participant:
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    msg.reaction = None if msg.reaction == reaction else reaction
+    db.commit()
+    db.refresh(msg)
+
+    return _hydrate_messages(db, [msg])[0]
 
 
 @router.post("/upload")

@@ -115,6 +115,17 @@ export const chatService = {
     return response.data;
   },
 
+  reactToMessage: async (messageId, reaction) => {
+    const response = await axios.post(
+      `${API_BASE_URL}/chat/react/${messageId}`,
+      { reaction },
+      {
+        headers: getAuthHeader(),
+      }
+    );
+    return response.data;
+  },
+
   getUsersForSuperadmin: async () => {
     const response = await axios.get(`${API_BASE_URL}/admin/users`, {
       params: { page_size: 100 },

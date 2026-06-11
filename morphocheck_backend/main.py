@@ -268,6 +268,10 @@ def ensure_schema_updates():
         ]:
             _add_column_if_missing("users", col, typ)
 
+    # -- chat_messages ustunlari --
+    if "chat_messages" in table_names:
+        _add_column_if_missing("chat_messages", "reaction", "VARCHAR(8)")
+
     with engine.begin() as conn:
         indexes = [
             ("patient_analysis", "ix_patient_analysis_is_deleted", ("is_deleted",)),

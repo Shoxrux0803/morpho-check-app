@@ -26,6 +26,7 @@ class ChatMessage(Base):
     reply_to_id = Column(Integer, ForeignKey("chat_messages.id"), nullable=True)
     content = Column(Text, nullable=False)
     file_url = Column(Text, nullable=True)
+    reaction = Column(String(8), nullable=True)
     message_type = Column(
         String(50), default="direct", index=True
     )  # "direct" or "broadcast"

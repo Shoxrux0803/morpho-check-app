@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { chatService } from '../../services/chatService';
 import { toast } from 'react-hot-toast';
 import { useThemeMode } from '../../providers/ThemeProviderMUI';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const VIEWS = {
   LIST: 'LIST',
@@ -11,9 +12,12 @@ const VIEWS = {
   BROADCAST: 'BROADCAST',
 };
 
+const MESSAGE_REACTIONS = ['👍', '❤️', '🙌', '😁', '😊'];
+
 const ChatWidget = () => {
   const { user } = useAuth();
   const { mode } = useThemeMode();
+  const { t } = useLanguage();
   const isDark = mode === 'dark';
 
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +52,7 @@ const ChatWidget = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
 
   const API_BASE = (
     process.env.REACT_APP_API_URL || 'http://localhost:8000/api'
@@ -59,14 +64,21 @@ const ChatWidget = () => {
 
   const isAdmin = user?.role === 'superadmin';
 
-  const quickPhrases = isAdmin
-    ? [
-        'Xush kelibsiz!',
-        'Muammo hal qilindi',
-        'Hisobot tayyor',
-        'Tushunarlimi?',
-      ]
-    : ['Yordam kerak', 'Xatolik bor', 'Hisobotni tekshiring', 'Rahmat!'];
+  const quickPhrases = useMemo(() => {
+    return isAdmin
+      ? [
+          t('quickPhraseWelcome'),
+          t('quickPhraseSolved'),
+          t('quickPhraseReady'),
+          t('quickPhraseClear'),
+        ]
+      : [
+          t('quickPhraseNeedHelp'),
+          t('quickPhraseError'),
+          t('quickPhraseCheck'),
+          t('quickPhraseThanks'),
+        ];
+  }, [isAdmin, t]);
 
   const scrollToBottom = (behavior = 'auto') => {
     if (messagesEndRef.current) {
@@ -249,7 +261,7 @@ const ChatWidget = () => {
       setReplyingTo(null);
       setTimeout(fetchMessages, 300);
     } catch (error) {
-      toast.error('Xabar yuborishda xatolik');
+      toast.error(t('errorSendingMessage'));
     }
   };
 
@@ -265,9 +277,9 @@ const ChatWidget = () => {
     setIsUploading(true);
     try {
       const { file_url } = await chatService.uploadFile(file);
-      await handleSend(`Fayl: ${file.name}`, file_url);
+      await handleSend(`${t('filePrefix')}: ${file.name}`, file_url);
     } catch (error) {
-      toast.error('Fayl yuklashda xatolik');
+      toast.error(t('errorUploadingFile'));
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -300,6 +312,37 @@ const ChatWidget = () => {
     typingTimeoutRef.current = setTimeout(() => {
       typingTimeoutRef.current = null;
     }, 2000);
+  };
+
+  const handleReaction = async (messageId, reaction) => {
+    if (!messageId) return;
+
+    const currentReaction = messages.find(
+      (msg) => msg.id === messageId
+    )?.reaction;
+    const nextReaction = currentReaction === reaction ? null : reaction;
+
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId ? { ...msg, reaction: nextReaction } : msg
+      )
+    );
+
+    try {
+      const updated = await chatService.reactToMessage(messageId, reaction);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, reaction: updated.reaction } : msg
+        )
+      );
+    } catch (error) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, reaction: currentReaction } : msg
+        )
+      );
+      toast.error(t('errorSendingMessage'));
+    }
   };
 
   const filteredConversations = conversations.filter((c) =>
@@ -409,19 +452,19 @@ const ChatWidget = () => {
                       <i className="bi bi-megaphone-fill"></i>
                     )}
                     {currentView === VIEWS.LIST
-                      ? 'Xabarlar'
-                      : selectedUser?.name || 'Chat'}
+                      ? t('messages')
+                      : selectedUser?.name || t('chat')}
                   </h6>
                   {currentView === VIEWS.CHAT && (
                     <div style={{ fontSize: '10px', opacity: 0.8 }}>
                       {typingUsers.some((u) => u.id === selectedUser?.id)
-                        ? 'yozmoqda...'
-                        : 'onlayn'}
+                        ? t('typing')
+                        : t('online')}
                     </div>
                   )}
                   {currentView === VIEWS.BROADCAST && (
                     <div style={{ fontSize: '10px', opacity: 0.8 }}>
-                      Hamma uchun ochiq e'lon
+                      {t('broadcastDesc')}
                     </div>
                   )}
                 </div>
@@ -480,7 +523,7 @@ const ChatWidget = () => {
                           type="text"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder="Qidirish..."
+                          placeholder={t('searchPlaceholder')}
                           style={{
                             width: '100%',
                             background: isDark ? '#333' : '#fff',
@@ -499,7 +542,7 @@ const ChatWidget = () => {
                     <div
                       onClick={() => {
                         setCurrentView(VIEWS.BROADCAST);
-                        setSelectedUser({ name: 'Hammaga xabar' });
+                        setSelectedUser({ name: t('broadcastToAll') });
                       }}
                       style={{
                         padding: '12px 20px',
@@ -539,10 +582,10 @@ const ChatWidget = () => {
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: '700', fontSize: '14px' }}>
-                          E'lonlar (Broadcast)
+                          {t('broadcastTitle')}
                         </div>
                         <div style={{ fontSize: '12px', color: '#888' }}>
-                          Barcha foydalanuvchilarga xabar
+                          {t('broadcastDesc')}
                         </div>
                       </div>
                     </div>
@@ -559,7 +602,9 @@ const ChatWidget = () => {
                           className="bi bi-chat-dots"
                           style={{ fontSize: '40px', opacity: 0.2 }}
                         ></i>
-                        <p style={{ marginTop: '10px' }}>Xabarlar topilmadi</p>
+                        <p style={{ marginTop: '10px' }}>
+                          {t('noMessagesFound')}
+                        </p>
                       </div>
                     ) : (
                       filteredConversations.map((conv, idx) => (
@@ -686,7 +731,7 @@ const ChatWidget = () => {
                                       marginRight: '4px',
                                     }}
                                   >
-                                    Siz:
+                                    {t('you')}
                                   </span>
                                 )}
                                 {conv.last_message}
@@ -744,7 +789,7 @@ const ChatWidget = () => {
                           style={{ fontSize: '48px' }}
                         ></i>
                         <div style={{ fontWeight: '700', marginTop: '10px' }}>
-                          Faylni shu yerga tashlang
+                          {t('dropFileHere')}
                         </div>
                       </div>
                     )}
@@ -756,162 +801,317 @@ const ChatWidget = () => {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           key={msg.id || i}
+                          onMouseEnter={() => setHoveredMessageId(msg.id)}
+                          onMouseLeave={() => setHoveredMessageId(null)}
                           style={{
-                            marginBottom: '15px',
+                            marginBottom: msg.reaction ? '24px' : '15px',
                             textAlign:
                               msg.sender_id === user.id ? 'right' : 'left',
+                            position: 'relative',
+                            zIndex: hoveredMessageId === msg.id ? 50 : 1,
                           }}
                         >
                           <div
                             style={{
                               display: 'inline-block',
-                              padding: '10px 15px',
-                              borderRadius:
+                              alignItems: 'center',
+                              justifyContent:
                                 msg.sender_id === user.id
-                                  ? '18px 18px 4px 18px'
-                                  : '18px 18px 18px 4px',
-                              background:
-                                msg.sender_id === user.id
-                                  ? currentView === VIEWS.BROADCAST
-                                    ? '#ff9500'
-                                    : '#0f766e'
-                                  : isDark
-                                    ? '#333'
-                                    : '#fff',
-                              color:
-                                msg.sender_id === user.id
-                                  ? '#fff'
-                                  : isDark
-                                    ? '#eee'
-                                    : '#333',
-                              maxWidth: '80%',
-                              boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                              fontSize: '14px',
+                                  ? 'flex-end'
+                                  : 'flex-start',
+                              maxWidth: '100%',
                               position: 'relative',
-                              textAlign: 'left',
                             }}
                           >
-                            {msg.file_url && (
-                              <div
-                                style={{
-                                  marginBottom: '8px',
-                                  maxWidth: '100%',
-                                }}
-                              >
-                                {isImage(msg.file_url) ? (
-                                  <a
-                                    href={`${API_BASE}${msg.file_url}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    <img
-                                      src={`${API_BASE}${msg.file_url}`}
-                                      alt="file"
-                                      style={{
-                                        maxWidth: '100%',
-                                        borderRadius: '12px',
-                                        border: isDark
-                                          ? '1px solid #444'
-                                          : '1px solid #eee',
-                                      }}
-                                    />
-                                  </a>
-                                ) : (
-                                  <div
-                                    style={{
-                                      background: isDark
-                                        ? 'rgba(255,255,255,0.05)'
-                                        : 'rgba(0,0,0,0.03)',
-                                      padding: '12px',
-                                      borderRadius: '12px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '12px',
-                                      border: isDark
-                                        ? '1px solid rgba(255,255,255,0.1)'
-                                        : '1px solid rgba(0,0,0,0.05)',
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: '40px',
-                                        height: '40px',
-                                        borderRadius: '10px',
-                                        background:
-                                          msg.sender_id === user.id
-                                            ? 'rgba(255,255,255,0.2)'
-                                            : '#0f766e',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        color: '#fff',
-                                        fontSize: '20px',
-                                      }}
-                                    >
-                                      <i
-                                        className={`bi ${getFileIcon(msg.file_url)}`}
-                                      ></i>
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                      <div
-                                        style={{
-                                          fontSize: '13px',
-                                          fontWeight: '600',
-                                          whiteSpace: 'nowrap',
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          color:
-                                            msg.sender_id === user.id
-                                              ? '#fff'
-                                              : isDark
-                                                ? '#eee'
-                                                : '#333',
-                                        }}
-                                      >
-                                        {msg.content.replace('Fayl: ', '')}
-                                      </div>
-                                      <a
-                                        href={`${API_BASE}${msg.file_url}`}
-                                        download
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        style={{
-                                          fontSize: '11px',
-                                          color:
-                                            msg.sender_id === user.id
-                                              ? 'rgba(255,255,255,0.8)'
-                                              : '#0f766e',
-                                          textDecoration: 'none',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '4px',
-                                          marginTop: '2px',
-                                        }}
-                                      >
-                                        <i className="bi bi-download"></i>{' '}
-                                        Yuklab olish
-                                      </a>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            {msg.content}
                             <div
                               style={{
-                                fontSize: '9px',
-                                opacity: 0.6,
-                                marginTop: '4px',
-                                textAlign: 'right',
+                                display: 'inline-block',
+                                padding: '10px 15px',
+                                borderRadius:
+                                  msg.sender_id === user.id
+                                    ? '18px 18px 4px 18px'
+                                    : '18px 18px 18px 4px',
+                                background:
+                                  msg.sender_id === user.id
+                                    ? currentView === VIEWS.BROADCAST
+                                      ? '#ff9500'
+                                      : '#0f766e'
+                                    : isDark
+                                      ? '#333'
+                                      : '#fff',
+                                color:
+                                  msg.sender_id === user.id
+                                    ? '#fff'
+                                    : isDark
+                                      ? '#eee'
+                                      : '#333',
+                                maxWidth: '80%',
+                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                fontSize: '14px',
+                                position: 'relative',
+                                textAlign: 'left',
                               }}
                             >
-                              {formatTime(msg.created_at)}
-                              {msg.sender_id === user.id && (
-                                <i
-                                  className={`bi bi-check2${msg.is_read ? '-all' : ''} ms-1`}
-                                ></i>
+                              {msg.file_url && (
+                                <div
+                                  style={{
+                                    marginBottom: '8px',
+                                    maxWidth: '100%',
+                                  }}
+                                >
+                                  {isImage(msg.file_url) ? (
+                                    <a
+                                      href={`${API_BASE}${msg.file_url}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      <img
+                                        src={`${API_BASE}${msg.file_url}`}
+                                        alt="file"
+                                        style={{
+                                          maxWidth: '100%',
+                                          borderRadius: '12px',
+                                          border: isDark
+                                            ? '1px solid #444'
+                                            : '1px solid #eee',
+                                        }}
+                                      />
+                                    </a>
+                                  ) : (
+                                    <div
+                                      style={{
+                                        background: isDark
+                                          ? 'rgba(255,255,255,0.05)'
+                                          : 'rgba(0,0,0,0.03)',
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        border: isDark
+                                          ? '1px solid rgba(255,255,255,0.1)'
+                                          : '1px solid rgba(0,0,0,0.05)',
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          width: '40px',
+                                          height: '40px',
+                                          borderRadius: '10px',
+                                          background:
+                                            msg.sender_id === user.id
+                                              ? 'rgba(255,255,255,0.2)'
+                                              : '#0f766e',
+                                          display: 'flex',
+                                          justifyContent: 'center',
+                                          alignItems: 'center',
+                                          color: '#fff',
+                                          fontSize: '20px',
+                                        }}
+                                      >
+                                        <i
+                                          className={`bi ${getFileIcon(msg.file_url)}`}
+                                        ></i>
+                                      </div>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div
+                                          style={{
+                                            fontSize: '13px',
+                                            fontWeight: '600',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            color:
+                                              msg.sender_id === user.id
+                                                ? '#fff'
+                                                : isDark
+                                                  ? '#eee'
+                                                  : '#333',
+                                          }}
+                                        >
+                                          {msg.content.replace(
+                                            /^(Fayl|File|Файл|Файлды|Fayly|Dosya|Файлдар):\s*/i,
+                                            ''
+                                          )}
+                                        </div>
+                                        <a
+                                          href={`${API_BASE}${msg.file_url}`}
+                                          download
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          style={{
+                                            fontSize: '11px',
+                                            color:
+                                              msg.sender_id === user.id
+                                                ? 'rgba(255,255,255,0.8)'
+                                                : '#0f766e',
+                                            textDecoration: 'none',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            marginTop: '2px',
+                                          }}
+                                        >
+                                          <i className="bi bi-download"></i>{' '}
+                                          {t('download')}
+                                        </a>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {msg.content}
+                              <div
+                                style={{
+                                  fontSize: '9px',
+                                  opacity: 0.6,
+                                  marginTop: '4px',
+                                  textAlign: 'right',
+                                }}
+                              >
+                                {formatTime(msg.created_at)}
+                                {msg.sender_id === user.id && (
+                                  <i
+                                    className={`bi bi-check2${msg.is_read ? '-all' : ''} ms-1`}
+                                  ></i>
+                                )}
+                              </div>
+                              {msg.reaction && (
+                                <div
+                                  style={{
+                                    position: 'absolute',
+                                    right:
+                                      msg.sender_id === user.id
+                                        ? '8px'
+                                        : 'auto',
+                                    left:
+                                      msg.sender_id === user.id
+                                        ? 'auto'
+                                        : '8px',
+                                    bottom: '-18px',
+                                    minWidth: '28px',
+                                    height: '24px',
+                                    borderRadius: '14px',
+                                    background: isDark ? '#242424' : '#fff',
+                                    border: isDark
+                                      ? '1px solid rgba(255,255,255,0.12)'
+                                      : '1px solid rgba(15,23,42,0.1)',
+                                    boxShadow: '0 6px 14px rgba(15,23,42,0.16)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '14px',
+                                    lineHeight: 1,
+                                  }}
+                                >
+                                  {msg.reaction}
+                                </div>
                               )}
                             </div>
+                            <AnimatePresence>
+                              {hoveredMessageId === msg.id && (
+                                <motion.div
+                                  initial={{
+                                    opacity: 0,
+                                    x: msg.sender_id === user.id ? 8 : -8,
+                                    scale: 0.9,
+                                    filter: 'blur(4px)',
+                                  }}
+                                  animate={{
+                                    opacity: 1,
+                                    x: 0,
+                                    scale: 1,
+                                    filter: 'blur(0px)',
+                                  }}
+                                  exit={{
+                                    opacity: 0,
+                                    x: msg.sender_id === user.id ? 6 : -6,
+                                    scale: 0.92,
+                                    filter: 'blur(4px)',
+                                  }}
+                                  transition={{
+                                    type: 'spring',
+                                    stiffness: 420,
+                                    damping: 28,
+                                    mass: 0.7,
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    top: '0',
+                                    right:
+                                      msg.sender_id === user.id
+                                        ? 'calc(100% + 8px)'
+                                        : 'auto',
+                                    left:
+                                      msg.sender_id === user.id
+                                        ? 'auto'
+                                        : 'calc(100% + 8px)',
+                                    zIndex: 100,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '3px',
+                                    padding: '3px',
+                                    borderRadius: '18px',
+                                    background: isDark
+                                      ? 'rgba(32,32,32,0.94)'
+                                      : 'rgba(255,255,255,0.96)',
+                                    border: isDark
+                                      ? '1px solid rgba(255,255,255,0.12)'
+                                      : '1px solid rgba(15,23,42,0.1)',
+                                    boxShadow:
+                                      '0 12px 28px rgba(15,23,42,0.18)',
+                                    backdropFilter: 'blur(14px)',
+                                  }}
+                                >
+                                  {MESSAGE_REACTIONS.map((reaction, index) => (
+                                    <motion.button
+                                      key={`${msg.id || i}-${reaction}`}
+                                      type="button"
+                                      onClick={() =>
+                                        handleReaction(msg.id, reaction)
+                                      }
+                                      title={reaction}
+                                      initial={{ opacity: 0, y: 6, scale: 0.8 }}
+                                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                                      transition={{
+                                        delay: index * 0.025,
+                                        type: 'spring',
+                                        stiffness: 520,
+                                        damping: 24,
+                                      }}
+                                      whileHover={{ scale: 1.16 }}
+                                      whileTap={{ scale: 0.92 }}
+                                      style={{
+                                        width: '30px',
+                                        height: '30px',
+                                        borderRadius: '50%',
+                                        border:
+                                          msg.reaction === reaction
+                                            ? '1px solid #0f766e'
+                                            : '1px solid transparent',
+                                        background:
+                                          msg.reaction === reaction
+                                            ? isDark
+                                              ? 'rgba(20,184,166,0.24)'
+                                              : 'rgba(15,118,110,0.12)'
+                                            : 'transparent',
+                                        cursor: msg.id ? 'pointer' : 'default',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '15px',
+                                        lineHeight: 1,
+                                        padding: 0,
+                                      }}
+                                      disabled={!msg.id}
+                                    >
+                                      {reaction}
+                                    </motion.button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         </motion.div>
                       ))}
@@ -954,8 +1154,8 @@ const ChatWidget = () => {
                           onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                           placeholder={
                             currentView === VIEWS.BROADCAST
-                              ? 'Barcha foydalanuvchilarga xabar yozing...'
-                              : 'Xabar yozing...'
+                              ? t('typeMessageAll')
+                              : t('typeMessage')
                           }
                           style={{
                             flex: 1,
