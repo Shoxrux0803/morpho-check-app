@@ -1196,6 +1196,9 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
                 res = "Girl"
             else:
                 res = "Девочка"
+        else:
+            from services.ky_localization import report_text
+            res = report_text(res, lang)
 
         import re
 

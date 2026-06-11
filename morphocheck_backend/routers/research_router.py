@@ -491,17 +491,52 @@ def research_record_to_dict(record: ResearchRecord) -> dict:
     return payload
 
 
-def format_research_gender_for_xlsx(value) -> str:
+def format_research_gender_for_xlsx(value, lang="uz") -> str:
     gender = str(value or "").strip().lower()
-    if gender in {"boy", "o'g'il", "ogil", "o'g'il bola", "ogil bola"}:
-        return "Ўғил бола"
-    if gender in {"girl", "qiz", "qiz bola"}:
-        return "Қиз бола"
-    if gender in {"erkak", "male"}:
-        return "Эркак"
-    if gender in {"ayol", "female"}:
-        return "Аёл"
-    return lat2cyr(str(value)) if value else "-"
+    is_male = gender in {"boy", "o'g'il", "ogil", "o'g'il bola", "ogil bola", "male", "erkak", "ўғил бола", "ўғил"}
+    is_female = gender in {"girl", "qiz", "qiz bola", "female", "ayol", "қиз бола", "қиз"}
+    
+    if is_male:
+        if lang == "tr":
+            return "Erkek"
+        elif lang == "tm":
+            return "Oglan"
+        elif lang == "en":
+            return "Male"
+        elif lang == "ru":
+            return "\u041c\u0430\u043b\u044c\u0447\u0438\u043a"  # Мальчик
+        elif lang == "kz":
+            return "\u04b0\u043b \u0431\u0430\u043b\u0430"  # Ұл бала
+        elif lang == "ky":
+            return "\u042d\u0440\u043a\u0435\u043a \u0431\u0430\u043b\u0430"  # Эркек бала
+        elif lang == "tg":
+            return "\u041f\u0438\u0441\u0430\u0440\u0431\u0430\u0447\u0430"  # Писарбача
+        else:
+            return "\u040e\u0493\u0438\u043b \u0431\u043e\u043b\u0430"  # Ўғил бола
+            
+    if is_female:
+        if lang == "tr":
+            return "K\u0131z"
+        elif lang == "tm":
+            return "Gyz"
+        elif lang == "en":
+            return "Female"
+        elif lang == "ru":
+            return "\u0414\u0435\u0432\u043e\u0447\u043a\u0430"  # Девочка
+        elif lang == "kz":
+            return "\u049a\u044b\u0437 \u0431\u0430\u043b\u0430"  # Қыз бала
+        elif lang == "ky":
+            return "\u041a\u044b\u0437 \u0431\u0430\u043b\u0430"  # Кыз бала
+        elif lang == "tg":
+            return "\u0414\u0443\u0445\u0442\u0430\u0440\u0431\u0430\u0447\u0430"  # Духтарбача
+        else:
+            return "\u049a\u0438\u0437 \u0431\u043e\u043b\u0430"  # Қиз бола
+            
+    if not value:
+        return "-"
+    if lang == "uz":
+        return lat2cyr(str(value))
+    return str(value)
 
 
 RESEARCH_INDEX_EXPORT_FIELDS = [
@@ -576,6 +611,48 @@ RESEARCH_INDEX_EXPORT_LABELS = {
         "adi": "ADI",
         "mcri": "MCRI",
     },
+    "tr": {
+        "tvi": "BMI",
+        "z_h": "Boy-yas z-score",
+        "z_w": "Kilo-yas z-score",
+        "z_bmi": "BMI-yas z-score",
+        "z_body_length": "Vucut uzunlugu z-score",
+        "centile": "Persentil araligi",
+        "corridor": "Saglik koridoru",
+        "morphological_type": "Somatotip",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
+    "tm": {
+        "tvi": "BMI",
+        "z_h": "Boy-yas z-score",
+        "z_w": "Agram-yas z-score",
+        "z_bmi": "BMI-yas z-score",
+        "z_body_length": "Beden uzynlygy z-score",
+        "centile": "Persentil aralygy",
+        "corridor": "Saglyk koridory",
+        "morphological_type": "Somatotip",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
+    "ky": {
+        "tvi": "BMI",
+        "z_h": "Бой-жаш z-score",
+        "z_w": "Салмак-жаш z-score",
+        "z_bmi": "BMI-жаш z-score",
+        "z_body_length": "Дене узундугу z-score",
+        "centile": "Центилдик интервал",
+        "corridor": "Ден соолук коридору",
+        "morphological_type": "Соматотип",
+        "hmai": "HMAI",
+        "mii": "MII",
+        "adi": "ADI",
+        "mcri": "MCRI",
+    },
 }
 
 RESEARCH_CHILD_AGE_EXPORT_LABELS = {
@@ -583,6 +660,9 @@ RESEARCH_CHILD_AGE_EXPORT_LABELS = {
     "ru": "Возраст на дату обследования",
     "en": "Age at examination",
     "kz": "Тексеру күніндегі жасы",
+    "tr": "Muayene tarihindeki yas",
+    "tm": "Barlag senesindaki yasy",
+    "ky": "Текшерүү күнүндөгү жашы",
 }
 
 RESEARCH_AGE_GROUP_EXPORT_LABELS = {
@@ -590,6 +670,9 @@ RESEARCH_AGE_GROUP_EXPORT_LABELS = {
     "ru": "Vozrastnaya gruppa",
     "en": "Age group",
     "kz": "Jas toby",
+    "tr": "Yas grubu",
+    "tm": "Yas toparlary",
+    "ky": "Жаш тобу",
 }
 
 RESEARCH_CHILD_AGE_UNITS = {
@@ -597,6 +680,9 @@ RESEARCH_CHILD_AGE_UNITS = {
     "ru": ("г.", "мес.", "дн."),
     "en": ("years", "months", "days"),
     "kz": ("жас", "ай", "күн"),
+    "tr": ("yas", "ay", "gun"),
+    "tm": ("yas", "ay", "gun"),
+    "ky": ("жаш", "ай", "күн"),
 }
 
 RESEARCH_INDEX_VALUE_LABELS = {
@@ -629,6 +715,27 @@ RESEARCH_INDEX_VALUE_LABELS = {
             "85 - 97": "Артық салмақ (85-97-центиль)",
             "> 97": "Семіздік (>97-центиль)",
         },
+        "tr": {
+            "< 3": "Cok zayif (<3. persentil)",
+            "3 - 15": "Zayif (3-15. persentil)",
+            "15 - 85": "Normal (15-85. persentil)",
+            "85 - 97": "Fazla kilolu (85-97. persentil)",
+            "> 97": "Obezite (>97. persentil)",
+        },
+        "tm": {
+            "< 3": "Pes agram (<3-persentil)",
+            "3 - 15": "Agram yetmezciligi (3-15-persentil)",
+            "15 - 85": "Kada (15-85-persentil)",
+            "85 - 97": "Artyk agram (85-97-persentil)",
+            "> 97": "Semizlik (>97-persentil)",
+        },
+        "ky": {
+            "< 3": "Өтө аз салмак (<3-центиль)",
+            "3 - 15": "Салмак жетишсиздиги (3-15-центиль)",
+            "15 - 85": "Норма (15-85-центиль)",
+            "85 - 97": "Ашыкча салмак (85-97-центиль)",
+            "> 97": "Семирүү (>97-центиль)",
+        },
     },
     "morphological_type": {
         "uz": {
@@ -647,6 +754,21 @@ RESEARCH_INDEX_VALUE_LABELS = {
             "giperstenik": "Hypersthenic",
         },
         "kz": {
+            "astenik": "Астеник",
+            "normostenik": "Нормостеник",
+            "giperstenik": "Гиперстеник",
+        },
+        "tr": {
+            "astenik": "Astenik",
+            "normostenik": "Normostenik",
+            "giperstenik": "Hiperstenik",
+        },
+        "tm": {
+            "astenik": "Astenik",
+            "normostenik": "Normostenik",
+            "giperstenik": "Hiperstenik",
+        },
+        "ky": {
             "astenik": "Астеник",
             "normostenik": "Нормостеник",
             "giperstenik": "Гиперстеник",
@@ -698,6 +820,8 @@ def get_research_index_export_headers(lang: str):
 
 def normalize_export_lang(lang: Optional[str]) -> str:
     value = (lang or "uz").strip().lower()
+    if value == "kk":
+        return "kz"
     return value if value in RESEARCH_INDEX_EXPORT_LABELS else "uz"
 
 
@@ -845,6 +969,103 @@ def build_research_index_export_values(
     }
 
 
+def filter_by_parents_marriage(query, val: str):
+    import re
+    val_norm = val.strip().lower()
+    val_norm = re.sub(r"\s*\(.*?\)", "", val_norm).strip()
+    
+    if val_norm in ["qarindosh emas", "notrelative", "not relative", "not_relative", "неродственный", "хеш нест", "туыс емес", "garyndash dal", "akraba degil"]:
+        return query.filter(
+            ResearchRecord.parents_marriage.ilike("%qarindosh emas%")
+            | ResearchRecord.parents_marriage.ilike("%қариндош эмас%")
+            | ResearchRecord.parents_marriage.ilike("%қариндош емас%")
+            | ResearchRecord.parents_marriage.ilike("%кариндош эмас%")
+            | ResearchRecord.parents_marriage.ilike("%кариндош емас%")
+            | ResearchRecord.parents_marriage.ilike("%неродственный%")
+            | ResearchRecord.parents_marriage.ilike("%not%relat%")
+            | ResearchRecord.parents_marriage.ilike("%туыс емес%")
+            | ResearchRecord.parents_marriage.ilike("%хеш нест%")
+            | ResearchRecord.parents_marriage.ilike("%garyndash dal%")
+            | ResearchRecord.parents_marriage.ilike("%akraba degil%")
+        )
+    elif val_norm in ["yaqin qarindosh", "closerelative", "close relative", "close_relative", "близкородственный", "родственный", "хеши наздик", "жақын туыс", "жакын тууган", "yakin garyndash", "yakyn garyndas", "yakin akraba"]:
+        return query.filter(
+            ResearchRecord.parents_marriage.ilike("%yaqin qarindosh%")
+            | ResearchRecord.parents_marriage.ilike("%яқин қариндош%")
+            | ResearchRecord.parents_marriage.ilike("%якин кариндош%")
+            | ResearchRecord.parents_marriage.ilike("%близкородственный%")
+            | ResearchRecord.parents_marriage.ilike("%родственный%")
+            | ResearchRecord.parents_marriage.ilike("%close%relat%")
+            | ResearchRecord.parents_marriage.ilike("%жақын туыс%")
+            | ResearchRecord.parents_marriage.ilike("%жакын тууган%")
+            | ResearchRecord.parents_marriage.ilike("%хеши наздик%")
+            | ResearchRecord.parents_marriage.ilike("%yakin garyndash%")
+            | ResearchRecord.parents_marriage.ilike("%yakyn garynda%")
+            | ResearchRecord.parents_marriage.ilike("%yakin akraba%")
+        )
+    elif val_norm in ["uzoq qarindosh", "distantrelative", "distant relative", "distant_relative", "дальнородственный", "дальнеродственный", "хеши дур", "алыс туыс", "алыс тууган", "uzak garyndash", "uzak akraba"]:
+        return query.filter(
+            ResearchRecord.parents_marriage.ilike("%uzoq qarindosh%")
+            | ResearchRecord.parents_marriage.ilike("%узоқ қариндош%")
+            | ResearchRecord.parents_marriage.ilike("%узок кариндош%")
+            | ResearchRecord.parents_marriage.ilike("%дальнородственный%")
+            | ResearchRecord.parents_marriage.ilike("%дальнеродственный%")
+            | ResearchRecord.parents_marriage.ilike("%distant%relat%")
+            | ResearchRecord.parents_marriage.ilike("%алыс туыс%")
+            | ResearchRecord.parents_marriage.ilike("%алыс тууган%")
+            | ResearchRecord.parents_marriage.ilike("%хеши дур%")
+            | ResearchRecord.parents_marriage.ilike("%uzak garyndash%")
+            | ResearchRecord.parents_marriage.ilike("%uzak akraba%")
+        )
+    else:
+        return query.filter(ResearchRecord.parents_marriage.ilike(f"%{val_norm}%"))
+
+
+def filter_by_feeding_type(query, val: str):
+    import re
+    val_norm = val.strip().lower()
+    val_norm = re.sub(r"\s*\(.*?\)", "", val_norm).strip()
+    
+    if val_norm in ["tabiiy", "natural", "естественное", "табигый", "табиӣ", "табиғи", "tebigy", "dogal"]:
+        return query.filter(
+            ResearchRecord.feeding_type.ilike("%tabiiy%")
+            | ResearchRecord.feeding_type.ilike("%табиий%")
+            | ResearchRecord.feeding_type.ilike("%естествен%")
+            | ResearchRecord.feeding_type.ilike("%natural%")
+            | ResearchRecord.feeding_type.ilike("%табигый%")
+            | ResearchRecord.feeding_type.ilike("%табиӣ%")
+            | ResearchRecord.feeding_type.ilike("%табиғи%")
+            | ResearchRecord.feeding_type.ilike("%tebigy%")
+            | ResearchRecord.feeding_type.ilike("%dogal%")
+        )
+    elif val_norm in ["sun'iy", "suniy", "artificial", "искусственное", "жасалма", "сунъӣ", "жасанды", "suny", "yapay"]:
+        return query.filter(
+            ResearchRecord.feeding_type.ilike("%sun'iy%")
+            | ResearchRecord.feeding_type.ilike("%suniy%")
+            | ResearchRecord.feeding_type.ilike("%сунъий%")
+            | ResearchRecord.feeding_type.ilike("%искусствен%")
+            | ResearchRecord.feeding_type.ilike("%artificial%")
+            | ResearchRecord.feeding_type.ilike("%жасалма%")
+            | ResearchRecord.feeding_type.ilike("%сунъӣ%")
+            | ResearchRecord.feeding_type.ilike("%жасанды%")
+            | ResearchRecord.feeding_type.ilike("%suny%")
+            | ResearchRecord.feeding_type.ilike("%yapay%")
+        )
+    elif val_norm in ["aralash", "mixed", "смешанное", "аралаш", "омехта", "аралас", "garyszyk", "karisik"]:
+        return query.filter(
+            ResearchRecord.feeding_type.ilike("%aralash%")
+            | ResearchRecord.feeding_type.ilike("%аралаш%")
+            | ResearchRecord.feeding_type.ilike("%смешан%")
+            | ResearchRecord.feeding_type.ilike("%mixed%")
+            | ResearchRecord.feeding_type.ilike("%омехта%")
+            | ResearchRecord.feeding_type.ilike("%аралас%")
+            | ResearchRecord.feeding_type.ilike("%garyszyk%")
+            | ResearchRecord.feeding_type.ilike("%karisik%")
+        )
+    else:
+        return query.filter(ResearchRecord.feeding_type.ilike(f"%{val_norm}%"))
+
+
 def apply_research_filters(
     query,
     current_user: User,
@@ -886,9 +1107,9 @@ def apply_research_filters(
             | (ResearchRecord.birth_place.ilike(f"%{s}%"))
         )
     if feeding_type:
-        query = query.filter(ResearchRecord.feeding_type == feeding_type)
+        query = filter_by_feeding_type(query, feeding_type)
     if parents_marriage:
-        query = query.filter(ResearchRecord.parents_marriage == parents_marriage)
+        query = filter_by_parents_marriage(query, parents_marriage)
     if weight_min is not None:
         query = query.filter(ResearchRecord.weight >= weight_min)
     if weight_max is not None:
@@ -1310,7 +1531,7 @@ def export_research_xlsx(
             elif field_name == "id":
                 display_val = val  # ID o'zgarmasin
             elif field_name == "gender":
-                display_val = format_research_gender_for_xlsx(val)
+                display_val = format_research_gender_for_xlsx(val, export_lang)
             elif field_name == "created_by_email":
                 display_val = val if val else "-"
             elif field_name in {"child_age", "age_group"} or field_name in index_values:
@@ -1319,10 +1540,10 @@ def export_research_xlsx(
                 from services.ky_localization import report_text
 
                 localized = report_text(val, export_lang) if val else "-"
-                if export_lang in ["en", "tr", "tm"]:
-                    display_val = localized
-                else:
+                if export_lang == "uz":
                     display_val = lat2cyr(localized) if localized != "-" else "-"
+                else:
+                    display_val = localized
             elif val is None:
                 display_val = "-"
             else:
@@ -1687,9 +1908,9 @@ def list_research_records(
             | (ResearchRecord.birth_place.ilike(f"%{s}%"))
         )
     if feeding_type:
-        query = query.filter(ResearchRecord.feeding_type == feeding_type)
+        query = filter_by_feeding_type(query, feeding_type)
     if parents_marriage:
-        query = query.filter(ResearchRecord.parents_marriage == parents_marriage)
+        query = filter_by_parents_marriage(query, parents_marriage)
 
     # Biometric filters
     if weight_min is not None:

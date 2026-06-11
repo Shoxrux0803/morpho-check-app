@@ -1606,8 +1606,8 @@ def export_analyses_xlsx(
             val_str = str(val)
             # Apply language-specific localization first
             localized = report_text(val_str, lang)
-            # English and Turkmen use Latin alphabet
-            if lang in ["en", "tm"]:
+            # English, Turkmen, and Turkish use Latin alphabet
+            if lang in ["en", "tm", "tr"]:
                 return localized
             # Others use Cyrillic
             return lat2cyr(localized)

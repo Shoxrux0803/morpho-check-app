@@ -60,18 +60,18 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
 
   // Feeding type options
   const feedingOptions = [
-    { value: 'Tabiiy (естественном вскармливании)', label: t('natural') },
-    { value: "Sun'iy (искусственном вскармливании)", label: t('artificial') },
+    { value: 'Tabiiy', label: t('natural') },
+    { value: "Sun'iy", label: t('artificial') },
   ];
 
   // Parents marriage options
   const marriageOptions = [
-    { value: 'Yaqin qarindosh (близкородственный)', label: t('closeRelative') },
+    { value: 'Yaqin qarindosh', label: t('closeRelative') },
     {
-      value: 'Uzoq qarindosh (дальнородственный)',
+      value: 'Uzoq qarindosh',
       label: t('distantRelative'),
     },
-    { value: 'Qarindosh emas (неродственный)', label: t('notRelative') },
+    { value: 'Qarindosh emas', label: t('notRelative') },
   ];
 
   const handleClear = () => {
