@@ -760,7 +760,90 @@ def tm_text(value: Any, lang: str = "uz") -> str:
     return text
 
 
+_TR_REPLACEMENTS = [
+    (r"Noma'?lum", "Bilinmiyor"),
+    (r"Ma'?lumot yo'?q", "Veri yok"),
+    (r"Toshkent shahri", "Taskent sehri"),
+    (r"\bshahri\b", "sehri"),
+    (r"\bshahar\b", "sehir"),
+    (r"\bviloyati\b", "bolgesi"),
+    (r"\bviloyat\b", "bolge"),
+    (r"\btumani\b", "ilcesi"),
+    (r"\btuman\b", "ilce"),
+    (r"\bmahalla\b", "mahalle"),
+    (r"Vazn yetishmovchiligi \(yaqqol\)", "Belirgin dusuk kilo"),
+    (r"Vazn yetishmovchiligi", "Dusuk kilo"),
+    (r"Ortiqcha vazn", "Fazla kilo"),
+    (r"Semizlik", "Obezite"),
+    (r"Me'?yor \(15[-–]85[-–]sentil\)", "Normal (15-85 persentil)"),
+    (r"Me'?yor", "Normal"),
+    (r"Tavsiya etilgan oraliq", "Onerilen aralik"),
+    (r"Idealdan og'?ish", "Ideale gore sapma"),
+    (r"Somatotip", "Somatotip"),
+    (r"\bmos_emas\b", "uygun degil"),
+    (r"\bmos\b", "uygun"),
+    (r"\bmavjud\b", "var"),
+    (r"\byoq\b", "yok"),
+    (r"muhitga nisbatan optimal morfologik moslashuv", "cevreye gore optimal morfolojik uyum"),
+    (r"akseleratsiya / yuqori morfologik rivojlanish", "akselerasyon / yuksek morfolojik gelisim"),
+    (r"moslashuv stresi yoki rivojlanishning sekinlashishi", "uyum stresi veya gelisimin yavaslamasi"),
+    (r"normal o'?rtacha morfologik muvozanat", "normal ortalama morfolojik denge"),
+    (r"somatik komponentlarning yuqori integratsiyasi", "somatik bilesenlerin yuksek entegrasyonu"),
+    (r"past morfologik nomutanosiblik", "dusuk morfolojik uyumsuzluk"),
+    (r"uyg'?un rivojlanish", "uyumlu gelisim"),
+    (r"o'?rtacha nomutanosiblik", "orta uyumsuzluk"),
+    (r"yuqori darajadagi nomutanosiblik", "yuksek duzeyde uyumsuzluk"),
+    (r"morfologik-kompozitsion xavf past", "morfolojik-kompozisyonel risk dusuk"),
+    (r"morfologik-kompozitsion xavf o'?rtacha", "morfolojik-kompozisyonel risk orta"),
+    (r"morfologik-kompozitsion xavf yuqori", "morfolojik-kompozisyonel risk yuksek"),
+    (r"Xavf past", "Risk dusuk"),
+    (r"Xavf o'?rtacha", "Risk orta"),
+    (r"Xavf yuqori", "Risk yuksek"),
+    (r"Sportga yo'?naltirish \(taxminiy\)", "Spor yonlendirmesi (tahmini)"),
+    (r"Qo'?shimcha yo'?nalishlar", "Ek yonler"),
+    (r"\bSabab\b", "Neden"),
+    (r"tana ko'?rsatkichlari muvozanatli", "vucut gostergeleri dengeli"),
+    (r"yengil vazn va nisbatan nozik tana tuzilishi", "hafif kilo ve nispeten ince vucut yapisi"),
+    (r"morfologik uyg'?unlik yaxshi", "morfolojik uyum iyi"),
+    (
+        r"Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin",
+        "Son secimde cocugun ilgisi, antrenor degerlendirmesi ve doktor izni dikkate alinsin",
+    ),
+    (r"Pediatr yoki parhezshunos \(dietolog\) ko'?rigi tavsiya etiladi", "Pediatri veya diyetisyen muayenesi onerilir"),
+    (r"Vazn yetishmasligi sabablarini aniqlash zarur", "Dusuk kilonun nedenleri belirlenmelidir"),
+    (r"Yuqori kaloriyali va oqsillarga boy ovqatlanish tartibiga o'?ting", "Yuksek kalorili ve protein acisindan zengin beslenme duzenine gecin"),
+    (r"Kuniga 5-6 marta kichik porsiyalarda ovqatlaning", "Gunde 5-6 kez kucuk porsiyonlarla beslenin"),
+    (r"Bolada normostenik tip: uyg'?un rivojlanmoqda", "Cocukta normostenik tip: uyumlu gelisiyor"),
+    (r"Holatni saqlash uchun muvozanatli ovqatlanish rejimiga amal qiling", "Durumu korumak icin dengeli beslenme duzenine uyun"),
+    (
+        r"Kuchli kardio mashqlarni kamaytirib, mushak massasini oshirishga qaratilgan mashqlarni bajaring",
+        "Yogun kardiyo egzersizlerini azaltip kas kutlesini artirmaya yonelik egzersizler yapin",
+    ),
+    (
+        r"Qon tahlili \(gemoglobin\), gormonal fon va oshqozon-ichak tizimi tekshiruvidan o'?tish tavsiya etiladi",
+        "Kan testi (hemoglobin), hormonal durum ve gastrointestinal sistem kontrolu onerilir",
+    ),
+    (r"Toza suv ichish rejimini nazorat qiling", "Temiz su icme duzenini izleyin"),
+    (r"yengil atletika", "atletizm"),
+    (r"suzish", "yuzme"),
+]
+
+
+def tr_text(value: Any, lang: str = "uz") -> str:
+    if value is None:
+        return ""
+    text = str(value)
+    if lang != "tr" or not text:
+        return text
+    text = _strip_leading_icons(_ICON_PREFIX_RE.sub("", _fix_mojibake(text)))
+    for pattern, replacement in _TR_REPLACEMENTS:
+        text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+    return text
+
+
 def report_text(value: Any, lang: str = "uz") -> str:
+    if lang == "tr":
+        return tr_text(value, lang)
     if lang == "tm":
         return tm_text(value, lang)
     if lang == "tg":

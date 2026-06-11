@@ -72,6 +72,7 @@ const guidelinesLabels = {
   uz: { label: 'Yordam', tooltip: "Vizual yo'riqnomalar" },
   ru: { label: 'Помощь', tooltip: 'Визуальные инструкции' },
   en: { label: 'Help', tooltip: 'Visual guidelines' },
+  tr: { label: 'Yardim', tooltip: 'Gorsel kilavuzlar' },
   tg: { label: 'Ёрӣ', tooltip: 'Дастурҳои визуалӣ' },
   kz: { label: 'Көмек', tooltip: 'Көрнекі нұсқаулықтар' },
   ky: { label: 'Жардам', tooltip: 'Визуалдык колдонмолор' },

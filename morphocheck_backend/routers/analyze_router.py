@@ -43,7 +43,7 @@ def analyze_and_store_raw(
 def analyze_full(
     data: PatientData,
     request: Request,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
 ):
@@ -65,7 +65,7 @@ def analyze_full(
 @router.post("/pdf-report", tags=["PDF Hisobot"])
 def generate_pdf_report_endpoint(
     data: PatientData,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
 ):
     try:
@@ -89,7 +89,7 @@ def generate_pdf_report_endpoint(
 @router.get("/pdf-by-id/{patient_id}", tags=["PDF Hisobot"])
 def generate_pdf_by_patient_id(
     patient_id: int,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):

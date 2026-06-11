@@ -1022,6 +1022,100 @@ LABELS["en"] = {
     "fat_pop": "e. in popliteal fossa",
 }
 
+LABELS["tr"] = {
+    **LABELS["en"],
+    "title": "Arastirma Karti",
+    "fio": "Ad soyad",
+    "school": "Kurum adi (okul, anaokulu)",
+    "settlement": "Yerlesim yeri",
+    "birth_place": "Dogum yeri (sehir, bolge)",
+    "birth_date": "Dogum yili, ayi ve gunu",
+    "father_nat": "Babanin milliyeti",
+    "mother_nat": "annenin",
+    "living_since": "Denek bu bolgede ne zamandan beri yasiyor",
+    "enrolled": "Okula (anaokuluna) kayit tarihi",
+    "living_cond": "Yasam kosullari",
+    "labor_regime": "Calisma/aktivite rejimi",
+    "past_illnesses": "Gecirilmis hastaliklar",
+    "children_count": "Ailedeki toplam cocuk sayisi",
+    "child_order": "Cocugun dogum sirasi",
+    "feeding_a": "Beslenme: a) dogal",
+    "feeding_b": "b) yapay",
+    "marriage_a": "Ebeveyn akrabaligi: a) yakin akraba",
+    "marriage_b": "b) uzak akraba",
+    "mother_health": "Anne beyanina gore (saglikli veya)",
+    "measure_results": "Olcum Sonuclari",
+    "date_col": "Tarih",
+    "indicator": "Gosterge",
+    "gender": "Cocugun cinsiyeti",
+    "cat_phys": "I. Fiziksel gelisim gostergeleri",
+    "lower_leg": "1. Alt ekstremite",
+    "lower_leg_len": "Alt ekstremite uzunlugu",
+    "spina": "a. Spina iliaca anterior superior noktasi",
+    "symph": "b. Pubik simfizin ust kenar noktasi",
+    "tibiale": "a. Tibial tuberositas uzerindeki ust orta nokta",
+    "pelvic": "3. Pelvis genisligi",
+    "thigh_l": "4. Uyluk uzunlugu",
+    "thigh_c": "5. Uyluk cevresi",
+    "calf_l": "6. Baldir uzunlugu",
+    "calf_c": "7. Baldir cevresi",
+    "foot_l": "8. Ayak uzunlugu",
+    "teeth": "9. Dis sayisi",
+    "menstr": "10. Menstruasyon baslangici",
+    "cat_skull": "II. Kafatasi seklinin belirlenmesi",
+    "skull_long": "1. Uzunlamasina cap",
+    "skull_trans": "2. Enine olcu",
+    "head_circ": "3. Bas cevresi",
+    "forehead": "4. Alnin enine olcusu",
+    "skull_height": "5. Yukseklik veya vertikal cap",
+    "skull_base_title": "Kafatasi tabani olcusunun belirlenmesi",
+    "skull_base_l": "1. Kafatasi tabani uzunlugu",
+    "skull_base_w": "2. Kafatasi tabani genisligi",
+    "cat_face": "Yuz",
+    "face_biz": "1. Bizigomatik cap",
+    "face_big": "2. Bigonial cap",
+    "face_morph": "3. Morfolojik yuz yuksekligi",
+    "face_phys": "4. Fizyonomik yuz yuksekligi",
+    "nose_h": "5. Burun yuksekligi",
+    "nose_w": "6. Burun genisligi",
+    "outer_oc": "7. Dis kantal genislik",
+    "inner_oc": "8. Ic kantal genislik",
+    "lips_h": "9. Dudak mukozal bolum yuksekligi",
+    "mouth_w": "10. Agiz genisligi",
+    "cat_chest": "Gogus",
+    "height_body": "1. Vucut uzunlugu",
+    "height_stand": "1. Ayakta boy",
+    "height_sit": "2. Oturarak boy",
+    "weight": "2. Vucut agirligi",
+    "trunk_l": "3. Govde uzunlugu",
+    "torso_l": "4. Torso uzunlugu",
+    "chest_p": "5. Gogus cevresi (pauz)",
+    "chest_i": "- tam inspirasyonda",
+    "chest_e": "- tam ekspirasyonda",
+    "waist": "6. Bel cevresi",
+    "abd_c": "7. Karin cevresi",
+    "upper_s": "8. Ust segment uzunlugu",
+    "chest_td": "9. Gogusun enine capi",
+    "chest_ad": "10. On-arka cap",
+    "chest_h": "11. Gogus kafesi yuksekligi",
+    "cat_arm": "Ust ekstremite",
+    "arm_l": "1. Ust ekstremite uzunlugu",
+    "shoulder_l": "2. Omuz uzunlugu",
+    "shoulder_w": "3. Omuz genisligi",
+    "arm_circ": "4. Kol cevresi",
+    "arm_circ_rest": "a) dinlenmede",
+    "arm_circ_flex": "b) gerili durumda",
+    "forearm_l": "5. Onkol uzunlugu",
+    "hand_l": "6. El uzunlugu",
+    "dynamo": "7. Dinamometri",
+    "fat_title": "8. Deri alti yag kalinligi",
+    "fat_tri": "a. triseps uzerinde",
+    "fat_bi": "b. biseps uzerinde",
+    "fat_sub": "c. skapulanin alt acisi altinda",
+    "fat_iliac": "d. iliak krest uzerinde",
+    "fat_pop": "e. popliteal fossada",
+}
+
 
 def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
     if lang not in LABELS:
@@ -1075,6 +1169,8 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
         if v_low in ["boy", "erkak"]:
             if lang == "uz":
                 res = "O'g'il bola"
+            elif lang == "tr":
+                res = "Erkek cocuk"
             elif lang == "tm":
                 res = "Oglan/Erkek"
             elif lang == "ky":
@@ -1088,6 +1184,8 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
         elif v_low in ["girl", "ayol"]:
             if lang == "uz":
                 res = "Qiz bola"
+            elif lang == "tr":
+                res = "Kiz cocuk"
             elif lang == "tm":
                 res = "Gyz/Ayal"
             elif lang == "ky":

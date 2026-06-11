@@ -90,6 +90,7 @@ const PAGE_LABELS = {
   uz: { scientificAnalysis: 'Ilmiy Tahlil' },
   ru: { scientificAnalysis: 'Научный анализ' },
   en: { scientificAnalysis: 'Scientific Analysis' },
+  tr: { scientificAnalysis: 'Bilimsel Analiz' },
   tm: { scientificAnalysis: 'Ylmy analiz' },
   tg: { scientificAnalysis: 'Таҳлили илмӣ' },
   kz: { scientificAnalysis: 'Ғылыми талдау' },
@@ -120,6 +121,28 @@ const AUDIT_ACTION_LABELS = {
     downloaded: 'Downloaded',
     export: 'Export',
     exported: 'Exported',
+  },
+  tr: {
+    create: 'Olustur',
+    created: 'Olusturuldu',
+    update: 'Guncelle',
+    updated: 'Guncellendi',
+    delete: 'Sil',
+    deleted: 'Silindi',
+    restore: 'Geri yukle',
+    restored: 'Geri yuklendi',
+    login: 'Giris',
+    logout: 'Cikis',
+    backup: 'Yedek',
+    clear: 'Temizle',
+    hard_delete: 'Kalici silme',
+    soft_delete: 'Cope tasima',
+    delete_hard: 'Kalici silme',
+    delete_soft: 'Cope tasima',
+    download: 'Indirme',
+    downloaded: 'Indirildi',
+    export: 'Disa aktar',
+    exported: 'Disa aktarildi',
   },
   ru: {
     create: 'Создание',
@@ -209,6 +232,16 @@ const AUDIT_TARGET_LABELS_EN = {
   DOCX: 'DOCX document',
 };
 
+const AUDIT_TARGET_LABELS_TR = {
+  Analysis: 'Analiz',
+  PatientAnalysis: 'Hasta analizi',
+  User: 'Kullanici',
+  AuditLog: 'Denetim gunlugu',
+  Backup: 'Yedek',
+  PDF: 'PDF raporu',
+  DOCX: 'DOCX belgesi',
+};
+
 const AUDIT_TARGET_LABELS_KZ = {
   Analysis: 'Талдау',
   PatientAnalysis: 'Пациент талдауы',
@@ -262,6 +295,24 @@ const AUDIT_JSON_KEY_LABELS_EN = {
   changes: 'Changes',
   ids: 'ID',
   count: 'Count',
+};
+
+const AUDIT_JSON_KEY_LABELS_TR = {
+  action: 'Islem',
+  target_type: 'Nesne turu',
+  target_id: 'Nesne ID',
+  details: 'Ayrintilar',
+  user_id: 'Kullanici ID',
+  user_name: 'Kullanici',
+  user_email: 'Kullanici email',
+  name: 'Ad',
+  role: 'Rol',
+  email: 'Email',
+  old: 'Eski',
+  new: 'Yeni',
+  changes: 'Degisiklikler',
+  ids: 'ID',
+  count: 'Sayi',
 };
 
 const AUDIT_JSON_KEY_LABELS_KZ = {
@@ -535,6 +586,124 @@ const AUDIT_DETAIL_CLEANUPS_EN = [
   [/\s+:/g, ':'],
 ];
 
+const AUDIT_DETAIL_PATTERNS_TR = [
+  [
+    /^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i,
+    'Yeni analiz olusturuldu: $2',
+  ],
+  [
+    /^Yangi foydalanuvchi yaratildi:\s*(.*)$/i,
+    'Yeni kullanici olusturuldu: $1',
+  ],
+  [
+    /^Foydalanuvchi ma'?lumotlari yangilandi:\s*(.*)$/i,
+    'Kullanici verileri guncellendi: $1',
+  ],
+  [/^Foydalanuvchi o'?chirildi:\s*(.*)$/i, 'Kullanici silindi: $1'],
+  [/^Foydalanuvchi tiklandi:\s*(.*)$/i, 'Kullanici geri yuklendi: $1'],
+  [/^Foydalanuvchi tizimga kirdi:\s*(.*)$/i, 'Kullanici sisteme girdi: $1'],
+  [
+    /^(\d+)\s*ta tahlil savatga yuborildi:\s*(.*)$/i,
+    '$1 analiz cope tasindi: $2',
+  ],
+  [
+    /^(\d+)\s*ta tahlil butunlay o'?chirildi \(IDlar:\s*(.*)\)$/i,
+    '$1 analiz kalici silindi (ID: $2)',
+  ],
+  [
+    /^(\d+)\s*ta tahlil savatdan tiklandi \(IDlar:\s*(.*)\)$/i,
+    '$1 analiz copten geri yuklendi (ID: $2)',
+  ],
+  [
+    /^Tahlil yangilandi:\s*(.*?)\.\s*O'?zgarishlar:\s*(.*)$/i,
+    'Analiz guncellendi: $1. Degisiklikler: $2',
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*Barchasi\s*\((\d+)\s*ta yozuv\)$/i,
+    'Denetim gunlugu temizlendi: tumu ($1 kayit)',
+  ],
+  [
+    /^Audit jurnali tozalandi:\s*(.*?)\s*\((\d+)\s*ta yozuv\)$/i,
+    'Denetim gunlugu temizlendi: $1 ($2 kayit)',
+  ],
+  [/^Zaxira nusxasi yaratildi:\s*(.*)$/i, 'Yedek olusturuldu: $1'],
+  [
+    /^Zaxira to'?liq tiklandi \(Almashtirish\):\s*(.*)$/i,
+    'Yedek tamamen geri yuklendi (degistir): $1',
+  ],
+  [/^Zaxira nusxasi o'?chirildi:\s*(.*)$/i, 'Yedek silindi: $1'],
+  [
+    /^Bemor hisoboti \(PDF\) yuklab olindi:\s*(.*)$/i,
+    'Hasta raporu (PDF) indirildi: $1',
+  ],
+  [
+    /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
+    'Hasta formu (DOCX) indirildi: $1',
+  ],
+];
+
+const AUDIT_DETAIL_REPLACEMENTS_TR = [
+  [/\bYangi\b/gi, 'Yeni'],
+  [/\bfoydalanuvchi\b/gi, 'kullanici'],
+  [/\bFoydalanuvchi\b/g, 'Kullanici'],
+  [/\bma'?lumotlari\b/gi, 'verileri'],
+  [/\bMa'?lumotlar\b/g, 'Veriler'],
+  [/\bMa'?lumot\b/g, 'Veri'],
+  [/\bma'?lumotlar\b/gi, 'veriler'],
+  [/\bma'?lumot\b/gi, 'veri'],
+  [/\btahlil\b/gi, 'analiz'],
+  [/\bTahlil\b/g, 'Analiz'],
+  [/\bBemor hisoboti\b/g, 'Hasta raporu'],
+  [/\bbemor hisoboti\b/gi, 'hasta raporu'],
+  [/\bBemor anketasi\b/g, 'Hasta formu'],
+  [/\bbemor anketasi\b/gi, 'hasta formu'],
+  [/\bBemor\b/g, 'Hasta'],
+  [/\bbemor\b/gi, 'hasta'],
+  [/\bAdmin\b/g, 'Admin'],
+  [/\badmin\b/gi, 'admin'],
+  [/\bIzlanuvchi\b/g, 'Arastirmaci'],
+  [/\bizlanuvchi\b/gi, 'arastirmaci'],
+  [/\bResearcher\b/g, 'Arastirmaci'],
+  [/\bresearcher\b/gi, 'arastirmaci'],
+  [/\bAnalysis\b/g, 'Analiz'],
+  [/\banalysis\b/gi, 'analiz'],
+  [/\bUser\b/g, 'Kullanici'],
+  [/\buser\b/gi, 'kullanici'],
+  [/\byaratildi\b/gi, 'olusturuldu'],
+  [/\byangilandi\b/gi, 'guncellendi'],
+  [/\btiklandi\b/gi, 'geri yuklendi'],
+  [/\bo'?chirildi\b/gi, 'silindi'],
+  [/\bcreated\b/gi, 'olusturuldu'],
+  [/\bupdated\b/gi, 'guncellendi'],
+  [/\bdeleted\b/gi, 'silindi'],
+  [/\brestored\b/gi, 'geri yuklendi'],
+  [/\byuklab olindi\b/gi, 'indirildi'],
+  [/\byuklandi\b/gi, 'yuklendi'],
+  [/\bolindi\b/gi, 'alindi'],
+  [/\bsavatga yuborildi\b/gi, 'cope tasindi'],
+  [/\bsavatdan\b/gi, 'copten'],
+  [/\bbutunlay\b/gi, 'kalici olarak'],
+  [/\bIDlar\b/g, 'ID'],
+  [/\bBarchasi\b/g, 'Tumu'],
+  [/\bta yozuv\b/gi, 'kayit'],
+  [/\bta\b/g, 'adet'],
+  [/\bZaxira nusxasi\b/g, 'Yedek'],
+  [/\bzaxira nusxasi\b/gi, 'yedek'],
+  [/\bZaxira\b/g, 'Yedek'],
+  [/\bzaxira\b/gi, 'yedek'],
+  [/\bfayl\b/gi, 'dosya'],
+  [/\bO'?zgarishlar\b/gi, 'Degisiklikler'],
+  [/\bAlmashtirish\b/gi, 'degistir'],
+  [/\btizimga kirdi\b/gi, 'sisteme girdi'],
+];
+
+const AUDIT_DETAIL_CLEANUPS_TR = [
+  [/Yeni analiz olusturuldu/gi, 'Yeni analiz olusturuldu'],
+  [/Hasta formu \(DOCX\) indirildi/gi, 'Hasta formu (DOCX) indirildi'],
+  [/Hasta raporu \(PDF\) indirildi/gi, 'Hasta raporu (PDF) indirildi'],
+  [/\s+:/g, ':'],
+];
+
 const AUDIT_DETAIL_PATTERNS_KZ = [
   [
     /^Yangi tahlil (yaratildi|created|создано):\s*(.*)$/i,
@@ -745,6 +914,8 @@ const formatAuditTarget = (targetType, lang) => {
   const value = String(targetType);
   if (lang === 'en')
     return AUDIT_TARGET_LABELS_EN[value] || translateAuditText(value, lang);
+  if (lang === 'tr')
+    return AUDIT_TARGET_LABELS_TR[value] || translateAuditText(value, lang);
   if (lang === 'ru')
     return AUDIT_TARGET_LABELS_RU[value] || translateAuditText(value, lang);
   if (lang === 'kz')
@@ -760,7 +931,11 @@ const formatAuditJsonValue = (value, lang) => {
     return value.map((item) => formatAuditJsonValue(item, lang)).join(', ');
   if (typeof value === 'object') return formatAuditDetails(value, lang);
   const text = String(value);
-  return lang === 'en' || lang === 'ru' || lang === 'kz' || lang === 'ky'
+  return lang === 'en' ||
+    lang === 'tr' ||
+    lang === 'ru' ||
+    lang === 'kz' ||
+    lang === 'ky'
     ? translateAuditText(text, lang)
     : text;
 };
@@ -769,27 +944,33 @@ const translateAuditText = (text, lang) => {
   const patterns =
     lang === 'en'
       ? AUDIT_DETAIL_PATTERNS_EN
-      : lang === 'ky'
-        ? AUDIT_DETAIL_PATTERNS_KY
-        : lang === 'kz'
-          ? AUDIT_DETAIL_PATTERNS_KZ
-          : AUDIT_DETAIL_PATTERNS_RU;
+      : lang === 'tr'
+        ? AUDIT_DETAIL_PATTERNS_TR
+        : lang === 'ky'
+          ? AUDIT_DETAIL_PATTERNS_KY
+          : lang === 'kz'
+            ? AUDIT_DETAIL_PATTERNS_KZ
+            : AUDIT_DETAIL_PATTERNS_RU;
   const replacements =
     lang === 'en'
       ? AUDIT_DETAIL_REPLACEMENTS_EN
-      : lang === 'ky'
-        ? AUDIT_DETAIL_REPLACEMENTS_KY
-        : lang === 'kz'
-          ? AUDIT_DETAIL_REPLACEMENTS_KZ
-          : AUDIT_DETAIL_REPLACEMENTS_RU;
+      : lang === 'tr'
+        ? AUDIT_DETAIL_REPLACEMENTS_TR
+        : lang === 'ky'
+          ? AUDIT_DETAIL_REPLACEMENTS_KY
+          : lang === 'kz'
+            ? AUDIT_DETAIL_REPLACEMENTS_KZ
+            : AUDIT_DETAIL_REPLACEMENTS_RU;
   const cleanups =
     lang === 'en'
       ? AUDIT_DETAIL_CLEANUPS_EN
-      : lang === 'ky'
-        ? AUDIT_DETAIL_CLEANUPS_KY
-        : lang === 'kz'
-          ? AUDIT_DETAIL_CLEANUPS_KZ
-          : AUDIT_DETAIL_CLEANUPS_RU;
+      : lang === 'tr'
+        ? AUDIT_DETAIL_CLEANUPS_TR
+        : lang === 'ky'
+          ? AUDIT_DETAIL_CLEANUPS_KY
+          : lang === 'kz'
+            ? AUDIT_DETAIL_CLEANUPS_KZ
+            : AUDIT_DETAIL_CLEANUPS_RU;
 
   const patternMatch = patterns.find(([pattern]) => pattern.test(text));
   if (patternMatch) return text.replace(patternMatch[0], patternMatch[1]);
@@ -816,15 +997,18 @@ const formatAuditDetails = (details, lang) => {
           const label =
             lang === 'en'
               ? AUDIT_JSON_KEY_LABELS_EN[key] || translateAuditText(key, lang)
-              : lang === 'ru'
-                ? AUDIT_JSON_KEY_LABELS_RU[key] || translateAuditText(key, lang)
-                : lang === 'kz'
-                  ? AUDIT_JSON_KEY_LABELS_KZ[key] ||
+              : lang === 'tr'
+                ? AUDIT_JSON_KEY_LABELS_TR[key] || translateAuditText(key, lang)
+                : lang === 'ru'
+                  ? AUDIT_JSON_KEY_LABELS_RU[key] ||
                     translateAuditText(key, lang)
-                  : lang === 'ky'
-                    ? AUDIT_JSON_KEY_LABELS_KY[key] ||
+                  : lang === 'kz'
+                    ? AUDIT_JSON_KEY_LABELS_KZ[key] ||
                       translateAuditText(key, lang)
-                    : key;
+                    : lang === 'ky'
+                      ? AUDIT_JSON_KEY_LABELS_KY[key] ||
+                        translateAuditText(key, lang)
+                      : key;
           return `${label}: ${formatAuditJsonValue(value, lang)}`;
         })
         .join('; ');
@@ -833,7 +1017,13 @@ const formatAuditDetails = (details, lang) => {
     // Plain text audit details are expected too.
   }
 
-  if (lang !== 'en' && lang !== 'ru' && lang !== 'kz' && lang !== 'ky')
+  if (
+    lang !== 'en' &&
+    lang !== 'tr' &&
+    lang !== 'ru' &&
+    lang !== 'kz' &&
+    lang !== 'ky'
+  )
     return text;
   return translateAuditText(text, lang);
 };

@@ -314,6 +314,57 @@ METRIC_LABELS["en"] = {
 }
 
 
+SUMMARY_I18N["tr"] = {
+    **SUMMARY_I18N["en"],
+    "title": "MORPHOCHECK BILIMSEL-ISTATISTIK DOCX RAPORU",
+    "report_date": "Rapor tarihi",
+    "summary": "1. Genel ozet",
+    "scope": "Kapsam",
+    "all_researchers": "Tum arastirmacilarin verileri",
+    "researcher_scope": "Arastirmaciya ait veriler",
+    "researcher": "Arastirmaci",
+    "total_records": "Toplam kayit",
+    "age_range": "Yas araligi",
+    "avg_age": "Ortalama yas",
+    "active_filters": "Aktif filtreler",
+    "none": "Yok",
+    "indicator": "Gosterge",
+    "value": "Deger",
+    "demographics": "2. Demografik infografikler",
+    "gender": "Cinsiyet",
+    "region": "Bolge",
+    "visual_share": "Gorsel pay",
+    "stats": "3. Otomatik istatistiksel analiz tablolari",
+    "z_group": "BMI Z-score grubu",
+    "groups": "4. Gruplara gore analiz",
+    "male_n": "Erkek N",
+    "male_mean": "Erkek mean",
+    "female_n": "Kadin N",
+    "female_mean": "Kadin mean",
+    "diff": "Fark",
+    "share": "Pay",
+    "correlation": "5. Korelasyon ve regresyon",
+    "model": "Model",
+    "not_enough": "Yeterli veri yok",
+    "equation": "Kilo = {intercept} + {slope} x Boy",
+    "note_title": "6. Bilimsel not",
+    "note": "Rapor otomatik olarak olusturuldu. Tablolarda tanimlayici istatistikler, cinsiyete gore t-test, bolgelere gore ANOVA, korelasyon matrisi ve boy-kilo regresyon modeli sunulur.",
+    "years": "yil",
+}
+
+METRIC_LABELS["tr"] = {
+    "chest_standing_height": "Boy (ayakta)",
+    "weight": "Kilo",
+    "bmi": "BMI",
+    "chest_circumference_pause": "Gogus cevresi",
+    "waist_circumference": "Bel cevresi",
+    "head_circumference": "Bas cevresi",
+    "thigh_circumference": "Uyluk cevresi",
+    "calf_circumference": "Baldir cevresi",
+    "dynamometry": "Dinamometri",
+}
+
+
 def _tr(lang, key):
     return SUMMARY_I18N.get(lang, SUMMARY_I18N["uz"]).get(
         key, SUMMARY_I18N["uz"].get(key, key)

@@ -187,6 +187,18 @@ export const getLocalizedLocationLabel = (value, lang, level = 1) => {
     return clean;
   }
 
+  if (lang === 'tr') {
+    const clean = stripUzSuffix(value);
+    const ascii = transliterateUzToAscii(value);
+    if (key === 'toshkent shahri' || /shahri$/i.test(value))
+      return `${ascii} sehri`;
+    if (/respublikasi$/i.test(value)) return `${ascii} Cumhuriyeti`;
+    if (/viloyati$/i.test(value) || level === 1) return `${ascii} bolgesi`;
+    if (/tumani$/i.test(value) || level === 2) return `${ascii} ilcesi`;
+    if (/mahallasi$/i.test(value) || level === 3) return `${clean} mahallesi`;
+    return clean;
+  }
+
   if (lang === 'en') {
     const clean = stripUzSuffix(value);
     const ascii = transliterateUzToAscii(value);

@@ -90,6 +90,30 @@ const COPY = {
     missing: 'Consent not confirmed yet',
     language: 'Language',
   },
+  tr: {
+    title: 'Helsinki Bildirgesi kapsaminda ebeveyn/vasi onami',
+    compliance: 'Insan katilimcili tibbi arastirmalar icin etik ilkeler',
+    note: 'Hasta ve cocuk sagligi verileri Dunya Tabipler Birligi Helsinki Bildirgesi ilkeleri kapsaminda yalnizca tibbi analiz, bilimsel izlem ve rapor hazirlama icin kullanilir. Katilimci haklari, gizlilik, riskin azaltilmasi ve gonullu onam onceliklidir.',
+    guardianName: 'Onam veren ebeveyn veya vasi tam adi',
+    relationship: 'Yakinlik derecesi',
+    phone: 'Vasi telefonu',
+    child: 'Cocuk/hasta',
+    checkbox:
+      'Cocugun yasal temsilcisi olarak, Helsinki Bildirgesi ilkelerine gore aciklanan amaclar kapsaminda cocugun kisisel ve saglik verilerinin MorphoCheck sisteminde islenmesine onay veriyorum.',
+    privacyHelp: 'Etik onam ilkelerini inceleyin',
+    privacyButton: 'Gor',
+    declarationButton: 'Bildirgenin tam metnini gor',
+    declarationTitle: 'Helsinki Bildirgesi tam metni',
+    declarationAcknowledge: 'Inceledim',
+    declarationScrollHint: 'Onaylamak icin metnin sonuna kadar inin.',
+    declarationLoading: 'Bildirge metni yukleniyor...',
+    declarationError: 'Bildirge metni yuklenemedi.',
+    docxButton: 'DOCX indir',
+    close: 'Kapat',
+    confirmed: 'Onam onaylandi',
+    missing: 'Onam henuz onaylanmadi',
+    language: 'Dil',
+  },
   ru: {
     title: 'Конфиденциальность и согласие родителя/представителя',
     compliance: 'Этические принципы Хельсинкской декларации',
@@ -216,7 +240,7 @@ const COPY = {
   },
 };
 
-const LANGS = ['uz', 'ru', 'en', 'kz', 'ky', 'tg', 'tm'];
+const LANGS = ['uz', 'tr', 'ru', 'en', 'kz', 'ky', 'tg', 'tm'];
 const getCopy = (lang) => COPY[lang] || COPY.uz;
 
 const downloadBlob = (blob, filename) => {
@@ -242,6 +266,7 @@ function HelsinkiDeclarationDialog({ open, onClose, copy, lang = 'uz' }) {
       uz: '/Helsinki_declaration_uz.md',
       ru: '/Helsinki_declaration_ru.md',
       en: '/Helsinki_declaration_en.md',
+      tr: '/Helsinki_declaration_tr.md',
       kz: '/Helsinki_declaration_kz.md',
       ky: '/Helsinki_declaration_kg.md',
       tg: '/Helsinki_declaration_tj.md',

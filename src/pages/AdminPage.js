@@ -255,6 +255,7 @@ const getDateLocale = (lang) => {
   if (lang === 'ru') return 'ru-RU';
   if (lang === 'kz') return 'kk-KZ';
   if (lang === 'en') return 'en-US';
+  if (lang === 'tr') return 'tr-TR';
   return 'uz-UZ';
 };
 

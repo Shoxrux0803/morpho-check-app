@@ -1319,7 +1319,7 @@ def export_research_xlsx(
                 from services.ky_localization import report_text
 
                 localized = report_text(val, export_lang) if val else "-"
-                if export_lang in ["en", "tm"]:
+                if export_lang in ["en", "tr", "tm"]:
                     display_val = localized
                 else:
                     display_val = lat2cyr(localized) if localized != "-" else "-"

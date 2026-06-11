@@ -507,6 +507,15 @@ const localizedSuffix = (base, level, lang) => {
     return title;
   }
 
+  if (lang === 'tr') {
+    if (clean === 'toshkent shahri' || /shahri$/i.test(base))
+      return `${ascii} sehri`;
+    if (/respublikasi$/i.test(base)) return `${ascii} Cumhuriyeti`;
+    if (level === 1) return `${ascii} bolgesi`;
+    if (level === 2) return `${ascii} ilcesi`;
+    return title;
+  }
+
   if (lang === 'ru') {
     const cyrillic = latinToCyrillicUz(title);
     if (clean === 'toshkent shahri' || /shahri$/i.test(base))
@@ -698,15 +707,17 @@ const localizedFeatureName = (item, lang = 'uz') => {
   const direct =
     lang === 'en'
       ? props.name_en
-      : lang === 'ru'
-        ? props.name_ru
-        : lang === 'ky'
-          ? props.name_ky || props.name_kg
-          : lang === 'kz'
-            ? props.name_kz || props.name_kk
-            : lang === 'tg'
-              ? props.name_tg || props.name_tj
-              : props.name_uz || props.display_name;
+      : lang === 'tr'
+        ? props.name_tr
+        : lang === 'ru'
+          ? props.name_ru
+          : lang === 'ky'
+            ? props.name_ky || props.name_kg
+            : lang === 'kz'
+              ? props.name_kz || props.name_kk
+              : lang === 'tg'
+                ? props.name_tg || props.name_tj
+                : props.name_uz || props.display_name;
 
   if (direct && !looksMojibake(direct)) return displayLocationName(direct);
   return localizedSuffix(fallback, level, lang);

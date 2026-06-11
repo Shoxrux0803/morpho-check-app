@@ -684,6 +684,158 @@ const infoCopy = {
   },
 };
 
+infoCopy.tr = {
+  ...infoCopy.en,
+  heroKicker: 'Bilimsel antropometri, somatotip ve dijital risk analizi',
+  heroTitle: 'Morfofonksiyonel analiz icin profesyonel ayrintili harita',
+  heroDesc:
+    'Z-Score, Heath-Carter somatotipi, HMAI, MII, ADI ve MCRI indeksleri tek bir kavramsal modelde birlesir: norm, uyum, adaptasyon, disharmoni ve metabolik risk sistem duzeyinde klinik profil olarak degerlendirilir.',
+  compositeOverline: 'Kompozit profil',
+  compositeTitle: 'Indeks paneli',
+  zScoreTitle: 'Z-Score analizi',
+  zScoreDesc:
+    'Z-score cocugu yalnizca normal veya anormal diye etiketlemez. Buyume egiliminden net uzakligi gosterir; bu nedenle tarama, dinamik izlem ve risk gruplarini ayirmada temel bilimsel olcuttur.',
+  zScoreNote:
+    'Z-score, cocugun olcumunun yas ve cinsiyete ozgu referans popullasyondan kac standart sapma farkli oldugunu gosterir. MorphoCheck boy, agirlik ve BMI sinyallerini birlikte okuyarak ADI ve MCRI icin klinik temel kurar.',
+  somatoTitle: 'Heath-Carter somatotipi',
+  somatoDesc:
+    'Somatotip endomorfi, mezomorfi ve ektomorfi dengesini gosterir. MorphoCheck bu uc bileseni vucut kompozisyonu ve Z-score ile karsilastirarak fenotipin klinik yorumunu netlestirir.',
+  authorOverline: 'Yazar indeksleri',
+  authorTitle: 'HMAI, MII, ADI ve MCRI icin gelismis bilimsel blok',
+  riskTitle: 'MorphoCheck Risk Score kavrami',
+  riskDesc:
+    'Platform nihai yorumu tek bir indekse sikistirmaz. MCRI riski artirir, ADI disharmoni sinyalini guclendirir; MII ve HMAI ise uyum ve adaptasyonun koruyucu faktorleri olarak ele alinir.',
+  decisionTitle: 'Klinik karar zinciri',
+  readyOverline: 'Analize hazir',
+  readyTitle: 'Analizi pratik sonuca donusturun',
+  readyDesc:
+    'MorphoCheck Pro bilimsel formulleri hekimler, arastirmacilar ve yoneticiler icin okunabilir, disa aktarilabilir ve izlenebilir dijital rapora donusturur.',
+  indexCards: [
+    {
+      ...indexCards[0],
+      title: 'Bolgesel Morfolojik Adaptasyon Indeksi',
+      subtitle: 'HMAI (adaptasyon)',
+      meaning:
+        'Kas ve yag bilesenleri arasindaki orani BMI ve bolgesel ekolojik katsayi ile iliskilendirerek cocugun morfolojisinin ortama ne kadar iyi uyum sagladigini gosterir.',
+      deep: 'Basit BMI vucut kompozisyonunu ayirmaz. HMAI saglikli kas baskinligi, enerji rezervi ve cevresel etkiyi tek bir butunlesik gostergede birlestirir.',
+      factors: [
+        'MM% - kas kutlesi',
+        'FM% - yag kutlesi',
+        'BMI - vucut kitle indeksi',
+        'E - bolgesel faktor',
+      ],
+      zones: [
+        'Dusuk adaptasyon',
+        'Kompansasyon',
+        'Optimal adaptasyon',
+        'Spor fenotipi',
+      ],
+    },
+    {
+      ...indexCards[1],
+      title: 'Morfolojik Integrasyon Indeksi',
+      subtitle: 'MII (integrasyon)',
+      meaning:
+        'Boy, agirlik, gogus cevresi, BMI ve yag yuzdesi arasindaki korelasyon uyumunu degerlendirir ve bedeni tek bir biyolojik sistem olarak gosterir.',
+      deep: 'MII izole sayilar yerine sistemik uyumu olcer. Yuksek MII koordineli gelisimi, dusuk MII ise gizli dengesizligi gosterebilir.',
+      factors: [
+        'r(h,m) - boy/agirlik',
+        'r(m,CI) - agirlik/gogus',
+        'r(BMI,FM%) - indeks/kompozisyon',
+      ],
+      zones: [
+        'Parcalanma',
+        'Gecis bolgesi',
+        'Uyumlu integrasyon',
+        'Yuksek sistemlilik',
+      ],
+    },
+    {
+      ...indexCards[2],
+      title: 'Antropometrik Disharmoni Indeksi',
+      subtitle: 'ADI (disharmoni)',
+      meaning:
+        'Boy, agirlik ve BMI icin Z-score sapmalarini birlestirerek genel morfolojik dengesizligi klinik olarak kullanisli bir olcuye donusturur.',
+      deep: 'Z-score degerleri ayri okundugunda klinik sinyal parcalanir. ADI sapmalari toplar ve toplam riski daha hizli fark etmeye yardim eder.',
+      factors: [
+        'Zh - boy Z-score',
+        'Zw - agirlik Z-score',
+        'ZBMI - BMI Z-score',
+      ],
+      zones: [
+        'Normale yakin',
+        'Hafif dengesizlik',
+        'Orta disharmoni',
+        'Agir disharmoni',
+      ],
+    },
+    {
+      ...indexCards[3],
+      title: 'MorphoCheck Kompleks Risk Indeksi',
+      subtitle: 'MCRI (risk indeksi)',
+      meaning:
+        'BMI, yag kutlesi ve kas bilesenini birlestirerek adipostatik fenotip ve metabolik riski erken asamada ongormeye yardim eder.',
+      deep: 'Yuksek BMI her zaman ayni risk anlamina gelmez: kas kutlesi yuksek cocugun klinik anlami, yag kutlesi yuksek ve kas kutlesi dusuk cocuktan farklidir.',
+      factors: [
+        'BMIz - BMI standardi',
+        'FMz - yag Z-score',
+        'MMz - kas Z-score',
+      ],
+      zones: ['Dusuk risk', 'Izlem', 'Onleme', 'Yuksek risk'],
+    },
+  ],
+  clinicalLayers: [
+    {
+      icon: Activity,
+      title: 'Z-Score standardi',
+      value: 'WHO',
+      color: '#0ea5e9',
+    },
+    {
+      icon: Dna,
+      title: 'Heath-Carter modeli',
+      value: '3 bilesen',
+      color: '#16a34a',
+    },
+    {
+      icon: BrainCircuit,
+      title: 'AI yorumu',
+      value: 'Baglamsal',
+      color: '#8b5cf6',
+    },
+    {
+      icon: FileText,
+      title: 'Rapor',
+      value: 'PDF/DOCX/XLSX',
+      color: '#f97316',
+    },
+  ],
+  somatoTypes: [
+    { label: 'Endomorf', value: 72, color: '#f97316' },
+    { label: 'Mezomorf', value: 88, color: '#16a34a' },
+    { label: 'Ektomorf', value: 54, color: '#0ea5e9' },
+  ],
+  flowNodes: [
+    { title: 'Antropometri', desc: 'boy, agirlik, CI', color: '#0ea5e9' },
+    { title: 'BIA kompozisyonu', desc: 'FM%, MM%', color: '#16a34a' },
+    { title: 'Cevre faktoru', desc: 'E, urban, rakim', color: '#8b5cf6' },
+    { title: 'Indeksler', desc: 'HMAI, MII, ADI, MCRI', color: '#f97316' },
+    { title: 'Sonuc', desc: 'profil, risk, oneri', color: '#dc2626' },
+  ],
+  riskFactors: [
+    ['Yuksek MCRI', 'risk artar', '#dc2626'],
+    ['Yuksek ADI', 'disharmoni artar', '#f97316'],
+    ['Yuksek MII', 'uyum koruyucudur', '#16a34a'],
+    ['Yuksek HMAI', 'adaptasyon gucludur', '#0ea5e9'],
+  ],
+  decisionSteps: [
+    'Olcumleri dogrulama ve yas-cinsiyet normlariyla karsilastirma',
+    'Somatotip, vucut kompozisyonu ve Z-score kesisimini belirleme',
+    'HMAI/MII/ADI/MCRI ile adaptif, yapisal ve risk profillerini cikarma',
+    'Tarama sonucu, izlem yonu ve koruyucu onerileri olusturma',
+  ],
+};
+
 function GlassPanel({ children, sx, hover = true }) {
   const theme = useTheme();
   const { mode } = useThemeMode();

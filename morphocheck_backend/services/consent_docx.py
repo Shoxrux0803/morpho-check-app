@@ -78,6 +78,42 @@ CONSENT_I18N = {
         "signature": "Guardian signature",
         "system": "System record",
     },
+    "tr": {
+        "title": "HELSINKI BILDIRGESI KAPSAMINDA ETIK ONAM FORMU",
+        "subtitle": "MorphoCheck sisteminde insan katilimcili tibbi arastirma verilerinin islenmesi",
+        "child": "Cocuk/hasta tam adi",
+        "guardian": "Ebeveyn veya yasal vasi",
+        "relationship": "Yakinlik derecesi",
+        "phone": "Telefon",
+        "date": "Tarih",
+        "policy": "Politika surumu",
+        "standard": "Etik temel",
+        "standard_text": (
+            "Sistem, kisisel, antropometrik ve saglik verilerini Dunya Tabipler Birligi "
+            "Helsinki Bildirgesi'nin insan katilimcili tibbi arastirmalara iliskin etik "
+            "ilkeleri kapsaminda isler: katilimci haklari ve esenliginin onceligi, "
+            "bilgilendirilmis gonullu onam, gizlilik, riskin azaltılması ve bilimsel olarak "
+            "gerekcelendirilmis amac."
+        ),
+        "consent": "Onam metni",
+        "consent_text": (
+            "Cocugun yasal temsilcisi olarak, cocugun kisisel, antropometrik ve saglik "
+            "verilerinin MorphoCheck sisteminde tibbi analiz, bilimsel izlem ve rapor "
+            "hazirlama amaciyla islenmesine onay veriyorum. Onam gonulludur; yasal temsilci "
+            "anlasilir bilgi alma ve onami geri cekme hakkina sahiptir. Cocugumun fiziksel "
+            "gelisim degerlendirmesinin Helsinki Bildirgesi kurallarina uygun yurutulmesini "
+            "kabul ediyorum. Bildirge metnini tamamen inceledim."
+        ),
+        "use": "Verilerin kullanimi",
+        "use_items": [
+            "Tibbi-antropometrik analiz ve klinik onerilerin hazirlanmasi.",
+            "Yalnizca yetkili admin, superadmin veya arastirmaci kullanicilar tarafindan incelenmesi.",
+            "Bilimsel/istatistiksel analizde mumkun oldugunca kimliksiz veya en aza indirilmis bicimde kullanilmasi.",
+            "Cocuklar gibi hassas katilimcilarin yararinin korunmasi ve olasi zararin azaltılması.",
+        ],
+        "signature": "Vasi imzasi",
+        "system": "Sistem kaydi",
+    },
     "ru": {
         "title": "СТАНДАРТЫ КОНФИДЕНЦИАЛЬНОСТИ И ФОРМА СОГЛАСИЯ",
         "subtitle": "Обработка данных ребенка/пациента в MorphoCheck",

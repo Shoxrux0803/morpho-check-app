@@ -67,7 +67,7 @@ class ConsentDocxRequest(BaseModel):
 async def generate_pdf_endpoint(
     request: Request,
     request_data: PatientData,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
 ):
     try:
@@ -177,7 +177,7 @@ async def generate_pdf_endpoint(
 async def generate_pdf_by_id_endpoint(
     patient_id: int,
     request: Request,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
@@ -372,7 +372,7 @@ async def generate_pdf_by_id_endpoint(
 async def generate_docx_by_id_endpoint(
     patient_id: int,
     request: Request,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
@@ -529,7 +529,7 @@ async def generate_docx_by_id_endpoint(
 @router.post("/consent-docx")
 async def generate_consent_docx_endpoint(
     payload: ConsentDocxRequest,
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz, ky, tg"),
+    lang: str = Query(default="uz", description="Til: uz, tr, ru, en, kz, ky, tg"),
 ):
     buffer = await asyncio.to_thread(generate_consent_docx, payload.model_dump(), lang)
     return StreamingResponse(
@@ -546,7 +546,7 @@ async def generate_consent_docx_endpoint(
 async def generate_consent_docx_by_id_endpoint(
     patient_id: int,
     request: Request,
-    lang: str = Query(default="uz", description="Til: uz, ru, en, kz, ky, tg"),
+    lang: str = Query(default="uz", description="Til: uz, tr, ru, en, kz, ky, tg"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
 ):
@@ -606,7 +606,7 @@ async def generate_consent_docx_by_id_endpoint(
 )
 async def generate_docx_endpoint(
     request_data: PatientData,
-    lang: str = Query(default="uz", description="Til: uz, tm, ru, en, kz"),
+    lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
 ):
     """

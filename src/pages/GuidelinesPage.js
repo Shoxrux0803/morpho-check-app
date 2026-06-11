@@ -463,6 +463,74 @@ guidelineCopy.ky = {
   ],
 };
 
+guidelineCopy.tr = {
+  ...guidelineCopy.en,
+  back: 'Geri',
+  badge: 'Gorsel kilavuzlar',
+  title: 'Antropometrik olcumler icin profesyonel kilavuz',
+  desc: 'Araclarin dogru kullanimi, vucut landmark noktalarinin belirlenmesi ve MorphoCheck verilerinin kaliteli girisi icin kisa klinik protokol.',
+  metrics: [
+    ['2x', 'tekrar olcum'],
+    ['0', 'sifir kontrolu'],
+    ['90°', 'dik durus'],
+  ],
+  landmarksTitle: 'Landmark noktalar',
+  protocolTitle: 'Olcum protokolu',
+  qualityTitle: 'Kalite kontrol',
+  tools: [
+    {
+      title: 'Stadiometre',
+      value: 'Boy',
+      guide:
+        'Basi Frankfort duzleminde tutun, topuklari hizalayin ve sirtin dik yuzeye yakin olmasini saglayin.',
+    },
+    {
+      title: 'Tibbi tarti',
+      value: 'Agirlik',
+      guide:
+        'Hafif kiyafet, ayakkabisiz durus ve platformun ortasinda hareketsiz pozisyon kullanin.',
+    },
+    {
+      title: 'Antropometrik mezura',
+      value: 'Cevre',
+      guide:
+        'Mezurayi deriyi sikistirmadan yatay tutun; sonucu normal nefes verme sonrasinda kaydedin.',
+    },
+    {
+      title: 'Kaliper',
+      value: 'Deri kivrimi',
+      guide:
+        'Kivrimi bas ve isaret parmagi ile kaldirin, kaliperi tutusun yaklasik 1 cm altina yerlestirin.',
+    },
+  ],
+  landmarks: [
+    ['Vertex', 'boy olcumu icin ust referans nokta'],
+    ['Acromion', 'omuz genisligi referansi'],
+    ['Mesosternale', 'gogus cevresi duzlemi'],
+    ['Omphalion', 'bel ve karin kontrolu'],
+    ['Iliocristale', 'iliak krest referansi'],
+    ['Trochanterion', 'proksimal uyluk landmarki'],
+    ['Sphyrion', 'ekstremite uzunlugu icin alt referans'],
+  ],
+  protocol: [
+    'Araci duz bir yuzeye yerlestirin ve sifir konumunu kontrol edin.',
+    'Cocugu standart posturde konumlandirin: dik durus, gevsek omuzlar, bakis ileri.',
+    'Landmark noktasini palpe edin, sonra olcum hattini bu noktadan gecirin.',
+    'Her gostergeyi en az iki kez olcun; fark buyukse ucuncu olcumu alin.',
+  ],
+  quality: [
+    ['Kalibrasyon', 'Tarti ve stadiometre gun basinda kontrol edilir.'],
+    [
+      'Ayni kosullar',
+      'Olcumleri ayni oda, zaman ve kiyafet standardinda yapin.',
+    ],
+    [
+      'Hemen kayit',
+      'Sonucu birimleriyle birlikte hemen MorphoCheck sistemine girin.',
+    ],
+  ],
+};
+
 function GlassPanel({ children, sx = {}, hover = true }) {
   const theme = useTheme();
 
