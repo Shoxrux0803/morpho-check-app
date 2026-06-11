@@ -2,9 +2,10 @@
 
 import os
 import random
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import google.generativeai as genai
+from utils.i18n import request_lang
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ЭКСПЕРТНАЯ БАЗА ЗНАНИЙ (SCIENTIFIC TEMPLATES)
@@ -242,6 +243,8 @@ for _section in EXPERT_TIPS_LIBRARY.values():
     for _item in _section.values():
         if "tm" not in _item:
             _item["tm"] = _item.get("uz", [])
+        if "tr" not in _item:
+            _item["tr"] = _item.get("uz", [])
 GEMINI_MODELS = [
     "gemini-3-flash-preview",
     "gemini-2.5-flash",
@@ -265,14 +268,15 @@ def get_gemini_model(model_name: str):
 
 
 def get_expert_tips(
-    patient_data: Dict, ml_predictions: Dict, lang: str = "uz"
+    patient_data: Dict, ml_predictions: Dict, lang: Optional[str] = None
 ) -> List[str]:
     """
     Выбирает 3 совета из экспертной библиотеки на основе данных анализа.
     Работает мгновенно.
     """
     tips = []
-    l = lang if lang in ["uz", "ru", "en", "kz", "tm"] else "uz"
+    active_lang = lang or request_lang.get() or "uz"
+    l = active_lang if active_lang in ["uz", "ru", "en", "kz", "tm", "tr"] else "uz"
 
     # 1. Совет по питанию (на основе ИМТ / Z-score)
     z = patient_data.get("z_score", 0)
@@ -320,16 +324,17 @@ def get_expert_tips(
 
 
 def generate_parent_tips(
-    patient_data: Dict, ml_predictions: Dict, lang: str = "uz", use_ai: bool = False
+    patient_data: Dict, ml_predictions: Dict, lang: Optional[str] = None, use_ai: bool = False
 ) -> List[str]:
     """
     Генерирует 3 совета для родителей.
     По умолчанию использует мгновенные экспертные шаблоны.
     Если use_ai=True и есть ключ, пытается использовать Gemini.
     """
+    active_lang = lang or request_lang.get() or "uz"
 
     # 1. Всегда сначала готовим экспертные советы (мгновенно)
-    expert_tips = get_expert_tips(patient_data, ml_predictions, lang)
+    expert_tips = get_expert_tips(patient_data, ml_predictions, active_lang)
 
     # 2. Если ИИ не требуется или ключа нет — возвращаем шаблоны сразу
     if not use_ai or not os.getenv("GEMINI_API_KEY"):
@@ -348,7 +353,7 @@ def generate_parent_tips(
     Act as a professional pediatric anthropometrist. 
     Based on the following data for a {age}-year-old {gender} child, provide exactly 3 ultra-short advice/tips for their parents.
     DATA: BMI {bmi}, Z-Score {z_score}, Risks: Metabolic {risks.get("metabolic_syndrome_risk") or 0}%, Musculoskeletal {risks.get("musculoskeletal_risk") or 0}%
-    INSTRUCTIONS: Respond in {lang.upper()}. 3 bullet points. Max 5-7 words per point. Practical and positive. No jargon. Return ONLY list.
+    INSTRUCTIONS: Respond in {active_lang.upper()}. 3 bullet points. Max 5-7 words per point. Practical and positive. No jargon. Return ONLY list.
     """
 
     for model_name in GEMINI_MODELS:

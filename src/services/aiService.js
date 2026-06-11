@@ -10,7 +10,8 @@ const aiService = {
     history = [],
     contextData = null,
     imageData = null,
-    imageMimeType = null
+    imageMimeType = null,
+    lang = 'uz'
   ) => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
@@ -27,8 +28,11 @@ const aiService = {
       payload.image_mime_type = imageMimeType;
     }
 
-    const response = await axios.post(`${API_URL}/ai/chat`, payload, {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await axios.post(`${API_URL}/ai/chat?lang=${lang}`, payload, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Accept-Language': lang
+      },
     });
     return response.data;
   },

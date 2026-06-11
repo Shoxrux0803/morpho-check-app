@@ -31,6 +31,7 @@ import remarkGfm from 'remark-gfm';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import aiService from '../../services/aiService';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const TypewriterMessage = ({ content, onUpdate, onComplete }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -58,17 +59,117 @@ const TypewriterMessage = ({ content, onUpdate, onComplete }) => {
   );
 };
 
-const SMART_PROMPTS = [
-  'Bemor BMI tahlili',
-  "JSST me'yorlari haqida",
-  "O'sish dinamikasi",
-  'Tavsiyalar bering',
-];
+const LOCALIZED_SMART_PROMPTS = {
+  uz: [
+    'Bemor BMI tahlili',
+    "JSST me'yorlari haqida",
+    "O'sish dinamikasi",
+    'Tavsiyalar bering',
+  ],
+  ru: [
+    'Анализ ИМТ пациента',
+    'О нормах ВОЗ',
+    'Динамика роста',
+    'Дайте рекомендации',
+  ],
+  en: [
+    'Patient BMI Analysis',
+    'About WHO standards',
+    'Growth dynamics',
+    'Give recommendations',
+  ],
+  tr: [
+    'Hasta BMI Analizi',
+    'DSÖ standartları hakkında',
+    'Büyüme dinamikleri',
+    'Öneriler verin',
+  ],
+  tg: [
+    'Таҳлили BMI-и бемор',
+    'Дар бораи меъёрҳои ТУТ',
+    'Динамикаи рушд',
+    'Тавсияҳо диҳед',
+  ],
+  tm: [
+    'Näsagyň BMI seljermesi',
+    'BSG kadalary hakda',
+    'Ösüş dinamikasy',
+    'Maslahat beriň',
+  ],
+  ky: [
+    'Бейтаптын ИМТ анализи',
+    'ДСУ нормалары жөнүндө',
+    'Өсүү динамикасы',
+    'Сунуштарды бериңиз',
+  ],
+  kz: [
+    'Пациенттің ДСИ талдауы',
+    'ДДҰ нормалары туралы',
+    'Өсу динамикасы',
+    'Ұсыныстар беріңіз',
+  ],
+};
+
+const WELCOME_MESSAGES = {
+  uz: "Salom! Men MorphoAI yordamchisiman. Sizga loyiha haqida ma'lumot berishim yoki tahlillarni kiritishda yordam berishim mumkin. Qanday yordam bera olaman?",
+  ru: "Здравствуйте! Я помощник MorphoAI. Я могу предоставить информацию о проекте или помочь с вводом анализов. Чем я могу помочь?",
+  en: "Hello! I am MorphoAI assistant. I can provide project information or help with entering measurements. How can I help you?",
+  tr: "Merhaba! Ben MorphoAI yardımcısıyım. Proje hakkında bilgi verebilir veya ölçümleri girmenize yardımcı olabilirim. Nasıl yardımcı olabilirim?",
+  tg: "Салом! Ман ёвар MorphoAI ҳастам. Ман метавонам дар бораи лоиҳа маълумот диҳам ё дар ворид кардани ченкуниҳо кӯмак кунам. Чӣ тавр метавонам кӯмак кунам?",
+  tm: "Salam! Men MorphoAI kömekçisi. Men size taslama barada maglumat berip bilerin ýa-da ölçegleri girizmäge kömek edip bilerin. Nähili kömek edip bilerin?",
+  ky: "Салам! Мен MorphoAI жардамчысымын. Мен сизге долбоор жөнүндө маалымат бере алам же өлчөөлөрдү киргизүүгө жардам бере алам. Кантип жардам бере алам?",
+  kz: "Сәлем! Мен MorphoAI көмекшісімін. Мен сізге жоба туралы ақпарат бере аламын немесе өлшемдерді енгізуге көмектесе аламын. Қалай көмектесе аламын?",
+};
+
+const PLACEHOLDERS = {
+  uz: "Xabar yozing...",
+  ru: "Введите сообщение...",
+  en: "Type a message...",
+  tr: "Bir mesaj yazın...",
+  tg: "Паём нависед...",
+  tm: "Habar ýazyň...",
+  ky: "Кабар жазыңыз...",
+  kz: "Хабарлама жазыңыз...",
+};
+
+const DISCLAIMERS = {
+  uz: "Diqqat: AI tavsiyalari va bashoratlari faqat ma'lumot uchun. Tibbiy qarorlarni mutaxassis tasdiqlashi shart.",
+  ru: "Внимание: Рекомендации и прогнозы ИИ носят исключительно информационный характер. Медицинские решения должны быть подтверждены специалистом.",
+  en: "Disclaimer: AI recommendations and predictions are for information only. Medical decisions must be validated by a professional.",
+  tr: "Dikkat: Yapay zeka önerileri ve tahminleri yalnızca bilgi amaçlıdır. Tıbbi kararlar bir uzman tarafından onaylanmalıdır.",
+  tg: "Диққат: Тавсияҳо ва пешгӯиҳои AI танҳо барои маълумотанд. Қарорҳои тиббӣ бояд аз ҷониби мутахассис тасдиқ карда шаванд.",
+  tm: "Üns beriň: AI maslahatlary we çaklamalary diňe maglumat üçin. Lukmançylyk kararlary hünärmen tarapyndan tassyklanmalydyr.",
+  ky: "Көңүл буруңуз: Жасалма интеллекттин сунуштары жана божомолдору маалымат үчүн гана. Медициналык чечимдер адис тарабындан тастыкталышы керек.",
+  kz: "Назар аударыңыз: Жасанды интеллект ұсыныстары мен болжамдары тек ақпараттық сипатта. Медициналық шешімдерді маман растауы тиіс.",
+};
+
+const PAGE_LABELS = {
+  uz: "Sahifa",
+  ru: "Страница",
+  en: "Page",
+  tr: "Sayfa",
+  tg: "Саҳифа",
+  tm: "Sahypa",
+  ky: "Баракча",
+  kz: "Парақша",
+};
+
+const ERROR_PREFIX = {
+  uz: "Uzr, xatolik yuz berdi.",
+  ru: "Извините, произошла ошибка.",
+  en: "Sorry, an error occurred.",
+  tr: "Üzgünüz, bir hata oluştu.",
+  tg: "Бубахшед, хатогӣ рӯй дод.",
+  tm: "Bagyşlaň, säwlik ýüze çykdy.",
+  ky: "Кечиресиз, ката кетti.",
+  kz: "Кешіріңіз, қате кетті.",
+};
 
 const AIAssistantWidget = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
+  const { lang } = useLanguage();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900);
@@ -77,13 +178,22 @@ const AIAssistantWidget = () => {
   }, []);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content:
-        "Salom! Men MorphoAI yordamchisiman. Sizga loyiha haqida ma'lumot berishim yoki tahlillarni kiritishda yordam berishim mumkin. Qanday yordam bera olaman?",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    setMessages((prev) => {
+      if (prev.length === 0 || (prev.length === 1 && prev[0].role === 'assistant')) {
+        return [
+          {
+            role: 'assistant',
+            content: WELCOME_MESSAGES[lang] || WELCOME_MESSAGES.en,
+          },
+        ];
+      }
+      return prev;
+    });
+  }, [lang]);
+
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -154,9 +264,21 @@ const AIAssistantWidget = () => {
 
     setInputValue('');
 
+    const defaultImageMsg = {
+      uz: 'Ilovadagi rasmni tahlil qiling.',
+      ru: 'Проанализируйте изображение.',
+      en: 'Analyze the image.',
+      tr: 'Resmi analiz edin.',
+      tg: 'Аксро таҳлил кунед.',
+      tm: 'Suraty seljeriň.',
+      ky: 'Сүрөттү анализдеңиз.',
+      kz: 'Суретті талдаңыз.',
+    };
+    const imageMsgContent = defaultImageMsg[lang] || defaultImageMsg.en;
+
     const userMsg = {
       role: 'user',
-      content: textToSend || 'Ilovadagi rasmni tahlil qiling.',
+      content: textToSend || imageMsgContent,
     };
     if (selectedImage) {
       userMsg.image = selectedImage; // For display only
@@ -181,7 +303,8 @@ const AIAssistantWidget = () => {
         history,
         contextData,
         imageBase64,
-        imageMimeType
+        imageMimeType,
+        lang
       );
 
       setMessages((prev) => [
@@ -189,15 +312,26 @@ const AIAssistantWidget = () => {
         { role: 'assistant', content: response.reply, animate: true },
       ]);
     } catch (error) {
+      const defaultErrorMsg = {
+        uz: "Gemini API bilan bog'lanib bo'lmadi.",
+        ru: "Не удалось связаться с Gemini API.",
+        en: "Could not connect to Gemini API.",
+        tr: "Gemini API ile bağlantı kurulamadı.",
+        tg: "Пайвастшавӣ бо Gemini API имконнопазир аст.",
+        tm: "Gemini API bilen birigip bolmady.",
+        ky: "Gemini API менен байланышууга мүмкүн болгон жок.",
+        kz: "Gemini API-мен байланысу мүмкін болмады.",
+      };
       const detail =
         error?.response?.data?.detail ||
         error?.response?.data?.message ||
-        "Gemini API bilan bog'lanib bo'lmadi.";
+        (defaultErrorMsg[lang] || defaultErrorMsg.en);
+      const errPrefix = ERROR_PREFIX[lang] || ERROR_PREFIX.en;
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: `**Uzr, xatolik yuz berdi.** ${detail}`,
+          content: `**${errPrefix}** ${detail}`,
           animate: true,
         },
       ]);
@@ -584,7 +718,7 @@ const AIAssistantWidget = () => {
                   variant="caption"
                   sx={{ color: isDark ? '#90caf9' : '#1976d2' }}
                 >
-                  Sahifa: {location.pathname}
+                  {(PAGE_LABELS[lang] || PAGE_LABELS.en)}: {location.pathname}
                 </Typography>
               </Box>
 
@@ -599,7 +733,7 @@ const AIAssistantWidget = () => {
                   '&::-webkit-scrollbar': { display: 'none' },
                 }}
               >
-                {SMART_PROMPTS.map((prompt, i) => (
+                {(LOCALIZED_SMART_PROMPTS[lang] || LOCALIZED_SMART_PROMPTS.en).map((prompt, i) => (
                   <Chip
                     key={i}
                     label={prompt}
@@ -641,8 +775,7 @@ const AIAssistantWidget = () => {
                     textAlign: 'center',
                   }}
                 >
-                  Diqqat: AI tavsiyalari va bashoratlari faqat ma'lumot uchun.
-                  Tibbiy qarorlarni mutaxassis tasdiqlashi shart.
+                  {DISCLAIMERS[lang] || DISCLAIMERS.en}
                 </Typography>
               </Box>
 
@@ -711,7 +844,7 @@ const AIAssistantWidget = () => {
                 />
                 <TextField
                   fullWidth
-                  placeholder="Xabar yozing..."
+                  placeholder={PLACEHOLDERS[lang] || PLACEHOLDERS.en}
                   variant="outlined"
                   size="small"
                   value={inputValue}

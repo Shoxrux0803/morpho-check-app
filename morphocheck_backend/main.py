@@ -21,10 +21,14 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from utils.i18n import I18nMiddleware, i18n_http_exception_handler, i18n_validation_exception_handler
 
 from models.base import Base
 from routers.admin_router import router as admin_router
@@ -74,6 +78,10 @@ app = FastAPI(
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_exception_handler(StarletteHTTPException, i18n_http_exception_handler)
+app.add_exception_handler(RequestValidationError, i18n_validation_exception_handler)
+
+app.add_middleware(I18nMiddleware)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

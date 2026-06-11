@@ -13,6 +13,7 @@ from models.user import User
 from routers.auth_router import get_current_user
 from services.ai_advice_service import generate_parent_tips
 from services.nlp_service import analyze_text
+from utils.i18n import request_lang
 
 load_dotenv(override=True)
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=True)
@@ -88,7 +89,11 @@ async def ai_chat(req: ChatRequest, current_user: User = Depends(get_current_use
         context_data_str = (
             json.dumps(req.context_data) if req.context_data else "None provided"
         )
-        system_prompt = f"You are MorphoAI Assistant. Context: {req.context_page}. Data: {context_data_str}"
+        lang_code = request_lang.get() or "uz"
+        system_prompt = (
+            f"You are MorphoAI Assistant. Context: {req.context_page}. Data: {context_data_str}. "
+            f"Please respond in language: {lang_code.upper()}."
+        )
         contents = [system_prompt, req.message]
         response, model_name = await generate_with_fallback(contents)
         return {"reply": response.text, "model": model_name}
@@ -137,7 +142,7 @@ async def ai_parent_tips(req: Dict, current_user: User = Depends(get_current_use
     try:
         patient_data = req.get("patient_data", {})
         ml_predictions = req.get("ml_predictions", {})
-        lang = req.get("lang", "uz")
+        lang = req.get("lang") or request_lang.get() or "uz"
         tips = generate_parent_tips(patient_data, ml_predictions, lang=lang)
         return {"tips": tips}
     except Exception:
