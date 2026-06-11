@@ -666,6 +666,16 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
             "qr_title": "Санҷиш ё бозкушоии сабт",
             "qr_hint": "QR кодро скан кунед",
         },
+        "tr": {
+            "doctor_note": "Doktor notu:",
+            "qr_title": "Kaydi dogrula veya yeniden ac",
+            "qr_hint": "QR kodu tarayin",
+        },
+        "tm": {
+            "doctor_note": "Lukman belligi:",
+            "qr_title": "Yazgyny tassykla ya-da yeniden ac",
+            "qr_hint": "QR kody skanlap alyn",
+        },
     }
     L = {**L, **fallback_extra.get(lang, fallback_extra["uz"])}
 

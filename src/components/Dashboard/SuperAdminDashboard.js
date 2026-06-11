@@ -362,6 +362,60 @@ DASH_I18N.tm = {
   underweight: 'Agram yetmezciligi',
 };
 
+DASH_I18N.tr = {
+  ...DASH_I18N.uz,
+  title: 'SuperAdmin Analiz Merkezi',
+  subtitle:
+    'Bölgeler, yöneticiler, klinik risk ve aylık dinamik için tek kontrol paneli',
+  analyses: 'Analizler',
+  admins: 'Yöneticiler',
+  today: 'Bugün',
+  totalAnalyses: 'Toplam Analizler',
+  allTime: 'Tüm zamanlar boyunca',
+  todayAnalyses: 'Bugünkü analizler',
+  enteredToday: 'Bugün girilen',
+  weeklyGrowth: 'Haftalık büyüme',
+  thisWeek: 'bu hafta',
+  totalAdmins: 'Toplam yönetici',
+  simple: 'standart',
+  avgBmi: 'Ortalama BMI',
+  systemWide: 'Sistem genelinde',
+  riskRegions: 'En çok risk görülen bölgeler',
+  riskRegionsSub: 'BMI veya Z-skoru risk eşiğini aşan kayıtlar',
+  riskFrom: 'içinden',
+  risk: 'risk',
+  monthlyDynamics: 'Aylık dinamik',
+  monthlyDynamicsSub: 'Son 12 ay içindeki analiz sayısı',
+  analysesCount: 'Analiz sayısı',
+  genderDistribution: 'Cinsiyet dağılımı',
+  genderDistributionSub: 'Erkek / Kadın oranı',
+  ageGroups: 'Yaş grupları',
+  ageGroupsSub: 'Hastalara göre yaş',
+  patientsCount: 'Hasta sayısı',
+  somatotypeDistribution: 'Somatotip dağılımı',
+  somatotypeDistributionSub: 'Vücut yapısı sınıflandırması',
+  count: 'Sayı',
+  topRegions: 'İllere göre ilk 10',
+  topRegionsSub: 'En çok analiz girilen bölgeler',
+  bmiStatusDistribution: 'BMI durumu dağılımı',
+  bmiStatusDistributionSub: 'Sağlık gruplarına göre',
+  noData: 'Veri yok',
+  patient: 'hasta',
+  avgRadar: 'Somatotip ortalama radarı',
+  avgRadarSub: 'Sistem genelinde ortalama somatometrik göstergeler',
+  average: 'Ortalama',
+  adminsDistribution: 'Yönetici dağılımı',
+  adminsDistributionSub: 'Rollerine göre sistem kullanıcıları',
+  lastUpdate: 'Son güncelleme',
+  male: 'Erkek',
+  female: 'Kadın',
+  unknown: 'Bilinmeyen',
+  normal: 'Normal',
+  overweight: 'Fazla Kilolu',
+  obese: 'Obezite',
+  underweight: 'Zayıf',
+};
+
 // ==== PALETTE ====
 const COLORS = {
   primary: '#0f766e',
@@ -382,6 +436,7 @@ const localeByLang = {
   ru: 'ru-RU',
   en: 'en-US',
   kz: 'kk-KZ',
+  tr: 'tr-TR',
 };
 
 const REGION_LABELS_RU = {

@@ -178,6 +178,29 @@ FILTER_I18N.tm = {
   apply: 'Ulan',
 };
 
+FILTER_I18N.tr = {
+  ...FILTER_I18N.uz,
+  title: 'Analitik Filtreler',
+  subtitle: 'Verileri sıralama ve analiz etme',
+  activeFilters: (count) => `${count} aktif filtre`,
+  demographics: 'Demografi',
+  gender: 'CİNSİYET',
+  male: 'Erkek',
+  female: 'Kadın',
+  all: 'Hepsi',
+  region: 'BÖLGE (İL)',
+  allRegions: 'Tüm bölgeler',
+  biometrics: 'Biyometri',
+  ageRange: 'YAŞ ARALIĞI',
+  bmiRange: 'BMI ARALIĞI',
+  scientific: 'Bilimsel Sınıflandırma',
+  somatotype: 'SOMATOTİP',
+  allTypes: 'Tüm tipler',
+  dateFrom: 'TARİHİNDEN',
+  clear: 'Temizle',
+  apply: 'Uygula',
+};
+
 const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}

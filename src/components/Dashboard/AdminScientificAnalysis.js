@@ -333,6 +333,49 @@ ADMIN_SCI_TEXT.tm = {
   footerSuffix: 'maglumat analizi',
 };
 
+ADMIN_SCI_TEXT.tr = {
+  ...ADMIN_SCI_TEXT.uz,
+  emptyTitle: 'Bilimsel analiz için veri bulunamadı',
+  emptySub: 'Lütfen önce hastaları kaydedin',
+  title: 'Bilimsel-Antropometrik Analiz',
+  subtitle: 'Karmaşık istatistiksel modeller ve korelasyon analizi sonuçları',
+  filtered: 'Filtrelenmiş',
+  bmiHistogram: 'BMI Histogramı',
+  bmiHistogramSub: 'Hastaların BMI değerlerine göre istatistiksel dağılımı',
+  patients: 'Hastalar',
+  patientCount: 'Hasta sayısı',
+  zScoreAnalysis: 'Z-skoru (SD) Analizi',
+  zScoreAnalysisSub: 'Popülasyon normundan sapma göstergesi',
+  percentiles: 'İstatistiksel Yüzdelikler (Persentil)',
+  percentilesSub: 'Grup içi ölçümlerin kantilleri',
+  percentile: 'Persentil',
+  height: 'Boy',
+  weight: 'Kilo',
+  chest: 'Göğüs',
+  age: 'Yaş',
+  cm: ' cm',
+  kg: ' kg',
+  yearUnit: ' yaş',
+  p50Note: '* P50 değeri grup için medyanı temsil eder.',
+  riskGroups: 'Sağlık Riski Grupları',
+  riskGroupsSub: 'BMI tabanlı klinik risk değerlendirmesi',
+  normal: 'Normal',
+  overweight: 'Fazla Kilolu',
+  obese: 'Obezite',
+  underweight: 'Zayıf',
+  lowRisk: 'Düşük risk',
+  mediumRisk: 'Orta risk',
+  highRisk: 'Yüksek risk',
+  observe: 'Gözlem',
+  patientsLower: 'hasta',
+  ageBmiTitle: 'Yaş — BMI Korelasyonu',
+  ageBmiSub: 'Yaşla birlikte vücut kitle indeksindeki değişim',
+  heightChestTitle: 'Boy — Göğüs',
+  heightChestSub: 'Antropometrik ölçümler arasındaki ilişki',
+  measurements: 'Ölçümler',
+  footerSuffix: 'kayıt analiz edildi',
+};
+
 const localeByLang = {
   uz: 'uz-UZ',
   tg: 'tg-TJ',
@@ -341,6 +384,7 @@ const localeByLang = {
   en: 'en-US',
   kz: 'kk-KZ',
   ky: 'ky-KG',
+  tr: 'tr-TR',
 };
 
 const GlassCard = ({ children, sx = {} }) => {

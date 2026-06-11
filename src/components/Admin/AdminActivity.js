@@ -232,6 +232,39 @@ ACTIVITY_I18N.tm = {
   noResearchers: 'Gozlegciler tapylmady',
 };
 
+ACTIVITY_I18N.tr = {
+  typing: '• yazıyor...',
+  sec: 'sn',
+  min: 'dk',
+  best: 'En İyi',
+  researcher: 'Araştırmacı',
+  admin: 'Yönetici',
+  today: 'Bugün',
+  week: 'Hafta',
+  month: 'Bu Ay',
+  monthShort: 'Ay',
+  ratingScore: 'Derecelendirme Puanı',
+  perRecord: 'Kayıt Başına:',
+  totalEntered: 'Toplam Girilen:',
+  unit: 'adet',
+  activeTime: 'En Aktif Zaman:',
+  lastActivity: 'Son Aktivite:',
+  refreshError: 'Veriler güncellenirken hata oluştu!',
+  title: 'Top listesi',
+  usersOnline: (count) => `Şu anda ${count} kullanıcı çevrimiçi`,
+  lastUpdate: 'Son Güncelleme',
+  all: 'Hepsi',
+  admins: 'Yöneticiler',
+  researchers: 'Araştırmacılar',
+  refresh: 'Yenile',
+  loading: 'Veriler yükleniyor...',
+  bestResult: 'En iyi sonuç',
+  oneRecord: '1 kayıt',
+  noUsers: 'Kullanıcı bulunamadı',
+  noAdmins: 'Yönetici bulunamadı',
+  noResearchers: 'Araştırmacı bulunamadı',
+};
+
 const StatusBadge = ({ status, isTyping, t }) => {
   const colors = {
     online: '#10B981',

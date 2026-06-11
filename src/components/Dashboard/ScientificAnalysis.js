@@ -421,6 +421,65 @@ SCI_TEXT.tm = {
   zGreater: '> +2σ (Semizlik)',
 };
 
+SCI_TEXT.tr = {
+  ...SCI_TEXT.uz,
+  title: 'Bilimsel Analiz',
+  subtitle:
+    'Popülasyon Z-skoru, persentil, korelasyon ve risk grupları analizi',
+  zDist: 'Z-skoruna Göre Dağılım',
+  zDistSub:
+    'BMI standart sapma gruplarına göre normalden sapma analizi',
+  patientCount: 'Hasta sayısı',
+  patients: 'Hastalar',
+  patientsLower: 'hasta',
+  normalNote:
+    'Normal dağılıma (Gauss eğrisi) göre: hastaların %68\'inin +/-1σ aralığında, %95\'inin ise +/-2σ aralığında olması beklenir. Sisteminizde: Normal grubu',
+  percentileTable: 'Persentil Tablosu',
+  percentileSub: 'BMI, boy ve kiloya göre dağılım sınırları',
+  percentile: 'Persentil',
+  heightCm: 'Boy (cm)',
+  weightKg: 'Kilo (kg)',
+  percentileNote:
+    '* Veriler ortalama BMI değerine göre hesaplanmaktadır:',
+  correlationMatrix: 'Korelasyon Matrisi',
+  correlationSub:
+    'Parametreler arasındaki ilişki (Pearson r katsayısı)',
+  parameter: 'Parametre',
+  age: 'Yaş',
+  height: 'Boy',
+  weight: 'Kilo',
+  chest: 'Göğüs',
+  strongCorr: 'Güçlü ilişki (r > 0.7)',
+  mediumCorr: 'Orta ilişki (0.4-0.7)',
+  weakCorr: 'Zayıf ilişki (0.2-0.4)',
+  riskGroups: 'Risk Grupları Analizi',
+  riskGroupsSub: 'Sağlık riskine göre hasta grupları ve oranları',
+  healthy: 'Sağlıklı (Normal BMI)',
+  overweight: 'Fazla Kilolu',
+  obese: 'Obezite',
+  underweight: 'Zayıf',
+  lowRisk: 'Düşük risk',
+  mediumRisk: 'Orta risk',
+  highRisk: 'Yüksek risk',
+  observeRisk: 'Gözlemlenmeli',
+  attention: 'Dikkat',
+  highRiskNote:
+    'Sistemde hastaların %{pct}\'si yüksek risk grubunda. Klinik müdahale önerilir.',
+  trendTitle: '6 Aylık Trend Analizi',
+  trendSub: 'Dinamik, büyüme hızı ve ortalama BMI değeri',
+  analysesCount: 'Analiz sayısı',
+  avgBmi: 'Ortalama BMI',
+  average: 'Ortalama',
+  footer:
+    'MorphoCheck bilimsel-istatistiksel analiz modülü • Tüm veriler gerçek zamanlıdır •',
+  zLess: '< -2σ (Zayıf)',
+  zMinus2: '-2σ - -1σ',
+  zMinus1: '-1σ - 0 (Norm-)',
+  zZero: '0 - +1σ (Norm+)',
+  zPlus1: '+1σ - +2σ',
+  zGreater: '> +2σ (Obezite)',
+};
+
 const localeByLang = {
   uz: 'uz-UZ',
   tg: 'tg-TJ',
@@ -429,6 +488,7 @@ const localeByLang = {
   en: 'en-US',
   kz: 'kk-KZ',
   ky: 'ky-KG',
+  tr: 'tr-TR',
 };
 
 const GlassCard = ({ children, sx = {} }) => {
