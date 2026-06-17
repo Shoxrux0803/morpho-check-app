@@ -99,6 +99,115 @@ const PAGE_LABELS = {
 
 const RESEARCH_TYPE_OPTIONS = ['PhD', 'DSc', 'Magistrlik', 'Grant loyihasi'];
 
+const ADMIN_REPORT_LABELS = {
+  uz: {
+    title: 'Admin va izlanuvchilar umumiy reporti',
+    subtitle: "XLSX reportni ko'rish uchun tayyor vizual jadval",
+    preview: "Reportni ko'rish",
+    download: 'XLSX yuklab olish',
+    downloading: 'Yuklanmoqda...',
+    total: 'Jami',
+    admins: 'Adminlar',
+    researchers: 'Izlanuvchilar',
+    superadmins: 'Superadminlar',
+    generatedAt: 'Tayyorlangan vaqt',
+    noRows: "Report uchun ma'lumot topilmadi",
+    downloaded: 'Report yuklab olindi',
+    downloadError: 'Report yuklashda xatolik:',
+    columns: {
+      index: '#',
+      name: 'Ism Familiya',
+      email: 'Email',
+      role: 'Rol',
+      phone: 'Telefon',
+      region: 'Hudud',
+      district: 'Tuman/Shahar',
+      mahalla: 'Mahalla',
+      researchTopic: 'Ilmiy ish mavzusi',
+      researchType: 'Tadqiqot turi',
+      researchArea: 'Tadqiqot hududi',
+      supervisor: 'Ilmiy rahbar',
+      createdAt: 'Yaratilgan vaqt',
+    },
+  },
+  en: {
+    title: 'Admins and researchers report',
+    subtitle: 'A visual preview of the XLSX report',
+    preview: 'View report',
+    download: 'Download XLSX',
+    downloading: 'Downloading...',
+    total: 'Total',
+    admins: 'Admins',
+    researchers: 'Researchers',
+    superadmins: 'Superadmins',
+    generatedAt: 'Generated at',
+    noRows: 'No rows found for this report',
+    downloaded: 'Report downloaded',
+    downloadError: 'Report download error:',
+    columns: {
+      index: '#',
+      name: 'Full name',
+      email: 'Email',
+      role: 'Role',
+      phone: 'Phone',
+      region: 'Region',
+      district: 'District/City',
+      mahalla: 'Mahalla',
+      researchTopic: 'Research topic',
+      researchType: 'Research type',
+      researchArea: 'Research area',
+      supervisor: 'Scientific supervisor',
+      createdAt: 'Created at',
+    },
+  },
+  ru: {
+    title: 'Общий отчет админов и исследователей',
+    subtitle: 'Визуальный предпросмотр XLSX отчета',
+    preview: 'Посмотреть отчет',
+    download: 'Скачать XLSX',
+    downloading: 'Загрузка...',
+    total: 'Всего',
+    admins: 'Админы',
+    researchers: 'Исследователи',
+    superadmins: 'Суперадмины',
+    generatedAt: 'Сформировано',
+    noRows: 'Данные для отчета не найдены',
+    downloaded: 'Отчет скачан',
+    downloadError: 'Ошибка загрузки отчета:',
+    columns: {
+      index: '#',
+      name: 'ФИО',
+      email: 'Email',
+      role: 'Роль',
+      phone: 'Телефон',
+      region: 'Регион',
+      district: 'Район/город',
+      mahalla: 'Махалля',
+      researchTopic: 'Тема исследования',
+      researchType: 'Тип исследования',
+      researchArea: 'Регион исследования',
+      supervisor: 'Научный руководитель',
+      createdAt: 'Создано',
+    },
+  },
+};
+
+const ADMIN_REPORT_COLUMN_KEYS = [
+  'index',
+  'name',
+  'email',
+  'role',
+  'phone',
+  'region',
+  'district',
+  'mahalla',
+  'researchTopic',
+  'researchType',
+  'researchArea',
+  'supervisor',
+  'createdAt',
+];
+
 const AUDIT_ACTION_LABELS = {
   en: {
     create: 'Create',
@@ -1100,6 +1209,30 @@ const blurActiveElement = () => {
   }
 };
 
+const formatReportDate = (value) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
+};
+
+const escapeExcelCell = (value) =>
+  String(value ?? '-')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
 const SuperAdminPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -1108,6 +1241,7 @@ const SuperAdminPage = () => {
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const pt = useCallback((key) => pageT(lang, key), [lang]);
+  const reportLabels = ADMIN_REPORT_LABELS[lang] || ADMIN_REPORT_LABELS.uz;
   const [activeTab, setActiveTab] = useState(0);
   const [loginForm, setLoginForm] = useState({
     email: '',
@@ -1123,6 +1257,8 @@ const SuperAdminPage = () => {
   // Admin Management State
   const [admins, setAdmins] = useState([]);
   const [adminsLoading, setAdminsLoading] = useState(false);
+  const [adminReportOpen, setAdminReportOpen] = useState(false);
+  const [adminReportDownloading, setAdminReportDownloading] = useState(false);
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [adminForm, setAdminForm] = useState({
@@ -1578,6 +1714,87 @@ const SuperAdminPage = () => {
       if (activeTab === 7) fetchBackups();
     }
   }, [user, activeTab, dashFilters]);
+
+  const getAdminReportRows = useCallback(
+    () =>
+      (admins || []).map((admin, index) => ({
+        index: index + 1,
+        name: admin.name || '-',
+        email: admin.email || '-',
+        role: admin.role || '-',
+        phone: admin.phone || '-',
+        region: admin.region
+          ? getLocalizedLocationLabel(admin.region, lang, 1)
+          : '-',
+        district: admin.district
+          ? getLocalizedLocationLabel(admin.district, lang, 2)
+          : '-',
+        mahalla: admin.mahalla
+          ? getLocalizedLocationLabel(admin.mahalla, lang, 3)
+          : '-',
+        researchTopic: admin.research_topic || '-',
+        researchType: admin.research_type || '-',
+        researchArea: admin.research_area || '-',
+        supervisor: admin.scientific_supervisor || '-',
+        createdAt: formatReportDate(admin.created_at),
+      })),
+    [admins, lang]
+  );
+
+  const createAdminReportFallbackBlob = useCallback(() => {
+    const rows = getAdminReportRows();
+    const columns = reportLabels.columns;
+    const header = ADMIN_REPORT_COLUMN_KEYS.map(
+      (key) => `<th>${escapeExcelCell(columns[key] || key)}</th>`
+    ).join('');
+    const body = rows
+      .map(
+        (row) =>
+          `<tr>${ADMIN_REPORT_COLUMN_KEYS.map(
+            (key) => `<td>${escapeExcelCell(row[key])}</td>`
+          ).join('')}</tr>`
+      )
+      .join('');
+    const html = `<!doctype html><html><head><meta charset="utf-8" /></head><body><h2>${escapeExcelCell(
+      reportLabels.title
+    )}</h2><p>${escapeExcelCell(reportLabels.generatedAt)}: ${escapeExcelCell(
+      new Date().toLocaleString()
+    )}</p><table border="1"><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></body></html>`;
+
+    return new Blob([html], {
+      type: 'application/vnd.ms-excel;charset=utf-8',
+    });
+  }, [getAdminReportRows, reportLabels]);
+
+  const handleOpenAdminReport = () => {
+    blurActiveElement();
+    setAdminReportOpen(true);
+    if (!admins.length && !adminsLoading) fetchAdmins();
+  };
+
+  const handleDownloadAdminReport = async () => {
+    setAdminReportDownloading(true);
+    try {
+      let blob;
+      let filename = `admin_researchers_report_${new Date()
+        .toISOString()
+        .slice(0, 10)}.xlsx`;
+
+      try {
+        blob = await AdminApi.users.exportXlsx({ include_researchers: true });
+      } catch {
+        blob = createAdminReportFallbackBlob();
+        filename = filename.replace(/\.xlsx$/i, '.xls');
+      }
+
+      downloadBlob(blob, filename);
+      toast.success(reportLabels.downloaded);
+    } catch (err) {
+      toast.error(`${reportLabels.downloadError} ${err.message}`);
+    } finally {
+      setAdminReportDownloading(false);
+    }
+  };
 
   const fetchDashboardStats = async (filters = dashFilters) => {
     setStatsLoading(true);
@@ -2235,20 +2452,31 @@ const SuperAdminPage = () => {
               <Typography variant="h4" fontWeight={800}>
                 {pt('adminManagement')}
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={() => {
-                  blurActiveElement();
-                  setCurrentAdmin(null);
-                  setAdminForm(normalizeAdminForm());
-                  setShowAdminPassword(false);
-                  setAdminDialogOpen(true);
-                }}
-                sx={{ borderRadius: 2 }}
-              >
-                {pt('newAdmin')}
-              </Button>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <Button
+                  variant="outlined"
+                  startIcon={<Visibility />}
+                  onClick={handleOpenAdminReport}
+                  disabled={adminsLoading}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {reportLabels.preview}
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    blurActiveElement();
+                    setCurrentAdmin(null);
+                    setAdminForm(normalizeAdminForm());
+                    setShowAdminPassword(false);
+                    setAdminDialogOpen(true);
+                  }}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {pt('newAdmin')}
+                </Button>
+              </Stack>
             </Box>
 
             <TableContainer
@@ -2872,6 +3100,13 @@ const SuperAdminPage = () => {
   };
 
   const isDark = theme.palette.mode === 'dark';
+  const adminReportRows = getAdminReportRows();
+  const adminReportSummary = {
+    total: admins.length,
+    admins: admins.filter((item) => item.role === 'admin').length,
+    researchers: admins.filter((item) => item.role === 'researcher').length,
+    superadmins: admins.filter((item) => item.role === 'superadmin').length,
+  };
 
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 10 }}>
@@ -3430,6 +3665,192 @@ const SuperAdminPage = () => {
             logout();
           }}
         />
+
+        <Dialog
+          open={adminReportOpen}
+          onClose={() => setAdminReportOpen(false)}
+          maxWidth="lg"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              maxHeight: '88vh',
+            },
+          }}
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box
+              display="flex"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              gap={2}
+            >
+              <Box>
+                <Typography variant="h6" fontWeight={900}>
+                  {reportLabels.title}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {reportLabels.subtitle}
+                </Typography>
+              </Box>
+              <IconButton
+                onClick={() => setAdminReportOpen(false)}
+                size="small"
+              >
+                <Close />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
+            <Stack spacing={2.5}>
+              <Grid container spacing={1.5}>
+                {[
+                  [reportLabels.total, adminReportSummary.total, 'primary'],
+                  [reportLabels.admins, adminReportSummary.admins, 'info'],
+                  [
+                    reportLabels.researchers,
+                    adminReportSummary.researchers,
+                    'success',
+                  ],
+                  [
+                    reportLabels.superadmins,
+                    adminReportSummary.superadmins,
+                    'error',
+                  ],
+                ].map(([label, value, color]) => (
+                  <Grid item xs={6} md={3} key={label}>
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        bgcolor: 'action.hover',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        {label}
+                      </Typography>
+                      <Typography
+                        variant="h5"
+                        fontWeight={900}
+                        color={`${color}.main`}
+                      >
+                        {value}
+                      </Typography>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                spacing={1}
+              >
+                <Chip
+                  variant="outlined"
+                  label={`${reportLabels.generatedAt}: ${new Date().toLocaleString()}`}
+                />
+                <Button
+                  variant="contained"
+                  startIcon={
+                    adminReportDownloading ? (
+                      <CircularProgress size={18} color="inherit" />
+                    ) : (
+                      <Download />
+                    )
+                  }
+                  onClick={handleDownloadAdminReport}
+                  disabled={adminReportDownloading || adminsLoading}
+                  sx={{ borderRadius: 2 }}
+                >
+                  {adminReportDownloading
+                    ? reportLabels.downloading
+                    : reportLabels.download}
+                </Button>
+              </Stack>
+
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  borderRadius: 2,
+                  maxHeight: 520,
+                }}
+              >
+                <Table stickyHeader size="small" sx={{ minWidth: 1180 }}>
+                  <TableHead>
+                    <TableRow>
+                      {ADMIN_REPORT_COLUMN_KEYS.map((key) => (
+                        <TableCell key={key} sx={{ fontWeight: 800 }}>
+                          {reportLabels.columns[key] || key}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {adminsLoading ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={ADMIN_REPORT_COLUMN_KEYS.length}
+                          align="center"
+                          sx={{ py: 6 }}
+                        >
+                          <CircularProgress />
+                        </TableCell>
+                      </TableRow>
+                    ) : adminReportRows.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={ADMIN_REPORT_COLUMN_KEYS.length}
+                          align="center"
+                          sx={{ py: 6 }}
+                        >
+                          {reportLabels.noRows}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      adminReportRows.map((row) => (
+                        <TableRow key={`${row.email}-${row.index}`} hover>
+                          {ADMIN_REPORT_COLUMN_KEYS.map((key) => (
+                            <TableCell
+                              key={key}
+                              sx={{
+                                whiteSpace:
+                                  key === 'researchTopic' ? 'normal' : 'nowrap',
+                                maxWidth:
+                                  key === 'researchTopic' ? 260 : undefined,
+                              }}
+                            >
+                              {row[key]}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ p: 2, gap: 1 }}>
+            <Button onClick={() => setAdminReportOpen(false)} color="inherit">
+              {pt('close')}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<Download />}
+              onClick={handleDownloadAdminReport}
+              disabled={adminReportDownloading || adminsLoading}
+            >
+              {reportLabels.download}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Dialog
           open={deleteConfirmOpen}

@@ -805,6 +805,31 @@ export const AdminApi = {
       return resp.json();
     },
 
+    exportXlsx: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/users/export-xlsx?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        }
+      );
+
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.blob();
+    },
+
     restore: async (id) => {
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/users/${id}/restore`,

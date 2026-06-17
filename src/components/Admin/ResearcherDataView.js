@@ -63,6 +63,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import AdvancedResearchFilter from '../Research/AdvancedResearchFilter';
 import { researcherT } from '../../utils/researcherI18n';
 import { ConsentStatus } from '../Consent/PrivacyConsentPanel';
+import { normalizePreviewScript } from '../../utils/scriptI18n';
 
 /* ════════════════════════════════════════════════════
    Utility Components
@@ -107,6 +108,353 @@ const getDateLocale = (lang) => {
   if (lang === 'en') return 'en-US';
   if (lang === 'tr') return 'tr-TR';
   return 'uz-UZ';
+};
+
+const RESEARCH_XLSX_PREVIEW_COLUMNS = [
+  { key: 'created_at', label: 'Yaratilgan vaqt' },
+  { key: 'id', label: 'ID' },
+  { key: 'created_by_name', label: 'Kiritgan researcher' },
+  { key: 'created_by_email', label: 'Researcher email' },
+  { key: 'full_name', label: 'F.I.SH.' },
+  { key: 'school_name', label: 'Maktab / bogcha' },
+  { key: 'settlement', label: 'Aholi punkti' },
+  { key: 'birth_place', label: "Tug'ilgan joy" },
+  { key: 'birth_date', label: "Tug'ilgan sana" },
+  { key: 'child_age', label: 'Bola yoshi' },
+  { key: 'age_group', label: 'Yosh guruhi' },
+  { key: 'gender', label: 'Jins' },
+  { key: 'father_nationality', label: 'Ota millati' },
+  { key: 'mother_nationality', label: 'Ona millati' },
+  { key: 'living_since', label: 'Yashaydi' },
+  { key: 'enrolled_date', label: 'Qabul qilingan sana' },
+  { key: 'living_conditions', label: 'Yashash sharoiti' },
+  { key: 'labor_regime', label: 'Mehnat rejimi' },
+  { key: 'past_illnesses', label: "O'tkazgan kasalliklari" },
+  { key: 'children_count', label: 'Oiladagi bolalar soni' },
+  { key: 'child_order', label: 'Nechanchi farzand' },
+  { key: 'feeding_type', label: 'Ovqatlantirish turi' },
+  { key: 'parents_marriage', label: 'Ota-ona nikohi' },
+  { key: 'mother_health_status', label: 'Ona salomatligi' },
+  { key: 'examination_date', label: 'Tekshiruv sanasi' },
+  { key: 'lower_leg_total', label: 'Pastki oyoq umumiy' },
+  { key: 'lower_leg_spina_iliaca', label: 'Spina iliaca' },
+  { key: 'lower_leg_symphysion', label: 'Symphysion' },
+  { key: 'lower_leg_length', label: 'Boldir uzunligi' },
+  { key: 'tibiale_height', label: 'Tibiale balandligi' },
+  { key: 'pelvic_width', label: 'Tos kengligi' },
+  { key: 'thigh_length', label: 'Son uzunligi' },
+  { key: 'thigh_circumference', label: 'Son aylanasi' },
+  { key: 'calf_length', label: 'Boldir uzunligi' },
+  { key: 'calf_circumference', label: 'Boldir aylanasi' },
+  { key: 'foot_length', label: 'Oyoq panjasi uzunligi' },
+  { key: 'teeth_count', label: 'Tishlar soni' },
+  { key: 'menstruation_start', label: 'Menstruatsiya boshlanishi' },
+  { key: 'skull_longitudinal', label: 'Bosh uzunlama diametri' },
+  { key: 'skull_transverse', label: 'Bosh ko‘ndalang diametri' },
+  { key: 'head_circumference', label: 'Bosh aylanasi' },
+  { key: 'forehead_transverse', label: 'Peshona kengligi' },
+  { key: 'skull_height', label: 'Bosh balandligi' },
+  { key: 'skull_base_length', label: 'Bosh asosi uzunligi' },
+  { key: 'skull_base_width', label: 'Bosh asosi kengligi' },
+  { key: 'face_bizygomatic', label: 'Yuz bizigomatik kengligi' },
+  { key: 'face_bigonial', label: 'Yuz bigonial kengligi' },
+  { key: 'face_morphological_height', label: 'Yuz morfologik balandligi' },
+  { key: 'face_physiognomic_height', label: 'Yuz fiziognomik balandligi' },
+  { key: 'nose_height', label: 'Burun balandligi' },
+  { key: 'nose_width', label: 'Burun kengligi' },
+  { key: 'outer_canthal_width', label: 'Tashqi kantus kengligi' },
+  { key: 'inner_canthal_width', label: 'Ichki kantus kengligi' },
+  { key: 'lips_mucosa_height', label: 'Lab shilliq qavati balandligi' },
+  { key: 'mouth_width', label: "Og'iz kengligi" },
+  { key: 'chest_standing_height', label: "Bo'y tik (sm)" },
+  { key: 'chest_sitting_height', label: "Bo'y o'tirgan (sm)" },
+  { key: 'weight', label: 'Vazn (kg)' },
+  { key: 'trunk_length', label: 'Gavda uzunligi' },
+  { key: 'torso_length', label: 'Torso uzunligi' },
+  { key: 'chest_circumference_pause', label: "Ko'krak ayl. pauza" },
+  { key: 'chest_circumference_inhale', label: "Ko'krak ayl. nafas olish" },
+  { key: 'chest_circumference_exhale', label: "Ko'krak ayl. nafas chiqarish" },
+  { key: 'waist_circumference', label: 'Bel aylanasi' },
+  { key: 'abdomen_circumference', label: 'Qorin aylanasi' },
+  { key: 'upper_segment_length', label: 'Yuqori segment uzunligi' },
+  { key: 'chest_transverse_diameter', label: "Ko'krak ko'ndalang diametri" },
+  { key: 'chest_anteroposterior_diameter', label: "Ko'krak old-orqa diametri" },
+  { key: 'chest_height', label: "Ko'krak balandligi" },
+  { key: 'arm_length', label: "Qo'l uzunligi" },
+  { key: 'shoulder_length', label: 'Yelka uzunligi' },
+  { key: 'shoulder_width', label: 'Yelka kengligi' },
+  { key: 'shoulder_circumference_rest', label: 'Yelka ayl. tinch' },
+  { key: 'shoulder_circumference_flexed', label: 'Yelka ayl. bukilgan' },
+  { key: 'forearm_length', label: 'Bilak uzunligi' },
+  { key: 'hand_length', label: "Qo'l panjasi uzunligi" },
+  { key: 'dynamometry', label: 'Dinamometriya' },
+  { key: 'fat_triceps', label: 'Yog triceps' },
+  { key: 'fat_biceps', label: 'Yog biceps' },
+  { key: 'fat_subscapular', label: 'Yog kurak osti' },
+  { key: 'fat_iliac', label: 'Yog iliak' },
+  { key: 'fat_popliteal', label: 'Yog tizza osti' },
+  { key: 'tvi', label: 'TVI / BMI' },
+  { key: 'z_h', label: "Bo'y-yosh z-score" },
+  { key: 'z_w', label: 'Vazn-yosh z-score' },
+  { key: 'z_bmi', label: 'TVI-yosh z-score' },
+  { key: 'z_body_length', label: 'Tana uzunligi z-score' },
+  { key: 'centile', label: 'Sentil intervali' },
+  { key: 'corridor', label: "Sog'lomlik yo'lagi" },
+  { key: 'morphological_type', label: 'Somatotip' },
+  { key: 'hmai', label: 'HMAI' },
+  { key: 'mii', label: 'MII' },
+  { key: 'adi', label: 'ADI' },
+  { key: 'mcri', label: 'MCRI' },
+];
+
+const RESEARCH_XLSX_MODAL_TEXT = {
+  uz: {
+    title: 'Izlanuvchi XLSX report',
+    subtitle:
+      "Yuklab olishdan oldin XLSX reportdagi keng ustunlar va ma'lumotlarni ko'ring.",
+    showing: "Ko'rsatilmoqda",
+    previewLimit:
+      "Preview birinchi 200 qatorni ko'rsatadi, XLSX to'liq yuklanadi.",
+    downloading: 'Yuklanmoqda...',
+    download: 'XLSX yuklab olish',
+  },
+  ru: {
+    title: 'XLSX отчет исследователя',
+    subtitle:
+      'Перед скачиванием просмотрите широкие столбцы и данные XLSX отчета.',
+    showing: 'Показано',
+    previewLimit:
+      'Предпросмотр показывает первые 200 строк, XLSX будет скачан полностью.',
+    downloading: 'Загрузка...',
+    download: 'Скачать XLSX',
+  },
+  en: {
+    title: 'Researcher XLSX report',
+    subtitle: 'Preview the wide XLSX report columns and data before download.',
+    showing: 'Showing',
+    previewLimit:
+      'Preview shows the first 200 rows; the XLSX download includes all rows.',
+    downloading: 'Downloading...',
+    download: 'Download XLSX',
+  },
+  kz: {
+    title: 'Зерттеуші XLSX есебі',
+    subtitle:
+      'Жүктеп алудан бұрын XLSX есептің кең бағандары мен деректерін көріңіз.',
+    showing: 'Көрсетілді',
+    previewLimit:
+      'Алдын ала көру алғашқы 200 жолды көрсетеді, XLSX толық жүктеледі.',
+    downloading: 'Жүктелуде...',
+    download: 'XLSX жүктеп алу',
+  },
+  ky: {
+    title: 'Изилдөөчү XLSX отчету',
+    subtitle:
+      'Жүктөөдөн мурун XLSX отчеттун кең тилкелерин жана маалыматтарын көрүңүз.',
+    showing: 'Көрсөтүлдү',
+    previewLimit:
+      'Алдын ала көрүү биринчи 200 сапты көрсөтөт, XLSX толук жүктөлөт.',
+    downloading: 'Жүктөлүүдө...',
+    download: 'XLSX жүктөө',
+  },
+  tg: {
+    title: 'Ҳисоботи XLSX-и таҳқиқотчӣ',
+    subtitle:
+      'Пеш аз боргирӣ сутунҳои васеъ ва маълумоти ҳисоботи XLSX-ро бинед.',
+    showing: 'Намоиш дода шуд',
+    previewLimit:
+      'Пешнамоиш 200 сатри аввалро нишон медиҳад, XLSX пурра боргирӣ мешавад.',
+    downloading: 'Боргирӣ...',
+    download: 'Боргирии XLSX',
+  },
+  tm: {
+    title: 'Gözlegçi XLSX hasabaty',
+    subtitle:
+      'Yüklemezden öň XLSX hasabatynyň giň sütünlerini we maglumatlaryny görüň.',
+    showing: 'Görkezilýär',
+    previewLimit:
+      'Öňünden syn ilkinji 200 setiri görkezýär, XLSX doly ýüklenýär.',
+    downloading: 'Ýüklenýär...',
+    download: 'XLSX ýükle',
+  },
+  tr: {
+    title: 'Araştırmacı XLSX raporu',
+    subtitle:
+      'İndirmeden önce XLSX raporundaki geniş sütunları ve verileri görüntüleyin.',
+    showing: 'Gösteriliyor',
+    previewLimit: 'Önizleme ilk 200 satırı gösterir, XLSX tamamen indirilir.',
+    downloading: 'İndiriliyor...',
+    download: 'XLSX indir',
+  },
+};
+
+const RESEARCH_XLSX_COLUMN_LABELS = {
+  uz: Object.fromEntries(
+    RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => [column.key, column.label])
+  ),
+  en: {
+    created_at: 'Created at',
+    id: 'ID',
+    created_by_name: 'Researcher',
+    created_by_email: 'Researcher email',
+    full_name: 'Full name',
+    school_name: 'School / kindergarten',
+    settlement: 'Settlement',
+    birth_place: 'Birth place',
+    birth_date: 'Birth date',
+    child_age: 'Child age',
+    age_group: 'Age group',
+    gender: 'Gender',
+    father_nationality: "Father's nationality",
+    mother_nationality: "Mother's nationality",
+    examination_date: 'Examination date',
+    chest_standing_height: 'Standing height',
+    chest_sitting_height: 'Sitting height',
+    weight: 'Weight',
+    tvi: 'BMI',
+    z_h: 'Height-age z-score',
+    z_w: 'Weight-age z-score',
+    z_bmi: 'BMI-age z-score',
+    z_body_length: 'Body length z-score',
+    centile: 'Centile interval',
+    corridor: 'Health corridor',
+    morphological_type: 'Somatotype',
+  },
+  ru: {
+    created_at: 'Создано',
+    id: 'ID',
+    created_by_name: 'Исследователь',
+    created_by_email: 'Email исследователя',
+    full_name: 'Ф.И.О.',
+    school_name: 'Школа / детсад',
+    settlement: 'Населенный пункт',
+    birth_place: 'Место рождения',
+    birth_date: 'Дата рождения',
+    child_age: 'Возраст ребенка',
+    age_group: 'Возрастная группа',
+    gender: 'Пол',
+    father_nationality: 'Национальность отца',
+    mother_nationality: 'Национальность матери',
+    examination_date: 'Дата осмотра',
+    chest_standing_height: 'Рост стоя',
+    chest_sitting_height: 'Рост сидя',
+    weight: 'Вес',
+    tvi: 'ИМТ',
+    z_h: 'Рост-возраст z-score',
+    z_w: 'Вес-возраст z-score',
+    z_bmi: 'ИМТ-возраст z-score',
+    z_body_length: 'Длина тела z-score',
+    centile: 'Центильный интервал',
+    corridor: 'Коридор здоровья',
+    morphological_type: 'Соматотип',
+  },
+};
+
+['kz', 'ky', 'tg', 'tm', 'tr'].forEach((code) => {
+  RESEARCH_XLSX_COLUMN_LABELS[code] = RESEARCH_XLSX_COLUMN_LABELS.en;
+});
+
+const humanizeColumnKey = (key) =>
+  key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+
+const getResearchXlsxText = (lang) =>
+  RESEARCH_XLSX_MODAL_TEXT[lang] || RESEARCH_XLSX_MODAL_TEXT.uz;
+
+const getResearchXlsxColumnLabel = (key, lang, t) => {
+  const translated = t(key);
+  if (translated && translated !== key) return translated;
+  return (
+    (RESEARCH_XLSX_COLUMN_LABELS[lang] || RESEARCH_XLSX_COLUMN_LABELS.uz)[
+      key
+    ] || humanizeColumnKey(key)
+  );
+};
+
+const normalizePreviewText = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[’‘`ʼʻ]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const RESEARCH_VALUE_TRANSLATIONS = {
+  uzbek: {
+    match: ['uzbek', "o'zbek", 'o‘zbek', 'ўзбек', 'узбек', 'ӯзбек', 'ozbek'],
+    values: {
+      uz: "O'zbek",
+      ru: 'Узбек',
+      en: 'Uzbek',
+      kz: 'Өзбек',
+      ky: 'Өзбек',
+      tg: 'Ӯзбек',
+      tm: 'Özbek',
+      tr: 'Özbek',
+    },
+  },
+  born: {
+    match: ['tugilgandan', "tug'ilgandan", 'туғилгандан', 'тугилгандан', '1'],
+    values: {
+      uz: "Tug'ilgandan",
+      ru: 'С рождения',
+      en: 'Since birth',
+      kz: 'Туғаннан бастап',
+      ky: 'Туулгандан бери',
+      tg: 'Аз таваллуд',
+      tm: 'Doglandan bäri',
+      tr: 'Doğumdan beri',
+    },
+  },
+  male: {
+    match: ['erkak', 'male', 'm', 'boy', "o'g'il bola", 'ўғил бола', 'ўғил'],
+    key: 'boy',
+  },
+  female: {
+    match: ['ayol', 'female', 'f', 'girl', 'qiz bola', 'қиз бола', 'қиз'],
+    key: 'girl',
+  },
+  natural: {
+    match: ['tabiiy', 'табиий', 'естествен', 'natural', 'табигый', 'tabigy'],
+    key: 'natural',
+  },
+  artificial: {
+    match: ["sun'iy", 'suniy', 'сунъий', 'искусствен', 'artificial', 'жасалма'],
+    key: 'artificial',
+  },
+  closeRelative: {
+    match: ['yaqin qarindosh', 'яқин қариндош', 'близкород', 'close relat'],
+    key: 'closeRelative',
+  },
+  distantRelative: {
+    match: ['uzoq qarindosh', 'узоқ қариндош', 'дальнород', 'distant relat'],
+    key: 'distantRelative',
+  },
+  notRelative: {
+    match: ['qarindosh emas', 'қариндош эмас', 'неродствен', 'not relat'],
+    key: 'notRelative',
+  },
+};
+
+const localizeResearchPreviewValue = (columnKey, value, lang, t) => {
+  if (value === undefined || value === null || value === '') return '-';
+  const normalized = normalizePreviewText(value);
+  const candidateEntries =
+    columnKey === 'living_since'
+      ? Object.values(RESEARCH_VALUE_TRANSLATIONS)
+      : Object.entries(RESEARCH_VALUE_TRANSLATIONS)
+          .filter(([key]) => key !== 'born')
+          .map(([, item]) => item);
+  const entry = candidateEntries.find((item) =>
+    item.match.some(
+      (pattern) => normalized === pattern || normalized.includes(pattern)
+    )
+  );
+  if (!entry) return normalizePreviewScript(columnKey, value, lang);
+  const localized = entry.values
+    ? entry.values[lang] || entry.values.uz
+    : entry.key
+      ? t(entry.key)
+      : value;
+  return normalizePreviewScript(columnKey, localized, lang);
 };
 
 const RESEARCH_METRICS = [
@@ -987,6 +1335,7 @@ export const ResearchStatisticsPanel = ({ rows }) => {
 const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const { lang } = useLanguage();
   const t = useCallback((key) => researcherT(lang, key), [lang]);
+  const xlsxText = getResearchXlsxText(lang);
   const dateLocale = getDateLocale(lang);
   const [data, setData] = useState([]);
   const [deletedData, setDeletedData] = useState([]);
@@ -1021,6 +1370,11 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const [saving, setSaving] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [exportingXlsx, setExportingXlsx] = useState(false);
+  const [xlsxPreviewOpen, setXlsxPreviewOpen] = useState(false);
+  const [xlsxPreviewRows, setXlsxPreviewRows] = useState([]);
+  const [xlsxPreviewTotal, setXlsxPreviewTotal] = useState(0);
+  const [xlsxPreviewLoading, setXlsxPreviewLoading] = useState(false);
   const importInputRef = useRef(null);
 
   const [checked, setChecked] = useState(new Set());
@@ -1212,7 +1566,57 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     }
   };
 
+  const mapResearchXlsxPreviewRow = useCallback(
+    (row) => {
+      const value = (key) => {
+        const current = row?.[key];
+        if (current === undefined || current === null || current === '')
+          return '-';
+        return current;
+      };
+
+      return Object.fromEntries(
+        RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => {
+          const rawValue =
+            column.key === 'created_at' && row?.created_at
+              ? new Date(row.created_at).toLocaleString(dateLocale)
+              : value(column.key);
+          return [
+            column.key,
+            localizeResearchPreviewValue(column.key, rawValue, lang, t),
+          ];
+        })
+      );
+    },
+    [dateLocale, lang, t]
+  );
+
+  const openXlsxPreview = async () => {
+    setXlsxPreviewOpen(true);
+    setXlsxPreviewLoading(true);
+    try {
+      const result = await ResearchApi.list({
+        ...appliedFilter,
+        page: 1,
+        page_size: 200,
+        paginated: true,
+      });
+      const items = Array.isArray(result) ? result : result.items || [];
+      setXlsxPreviewRows(items.map(mapResearchXlsxPreviewRow));
+      setXlsxPreviewTotal(
+        Array.isArray(result) ? items.length : result.total || items.length
+      );
+    } catch (err) {
+      toast.error(`${t('errorPrefix')} ${err.message}`);
+      setXlsxPreviewRows(data.map(mapResearchXlsxPreviewRow));
+      setXlsxPreviewTotal(total || data.length);
+    } finally {
+      setXlsxPreviewLoading(false);
+    }
+  };
+
   const handleExportXlsx = async () => {
+    setExportingXlsx(true);
     try {
       const blob = await ResearchApi.exportXlsx({ ...appliedFilter, lang });
       const url = window.URL.createObjectURL(blob);
@@ -1222,8 +1626,11 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       document.body.appendChild(a);
       a.click();
       a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (err) {
       toast.error(`${t('errorPrefix')} ${err.message}`);
+    } finally {
+      setExportingXlsx(false);
     }
   };
 
@@ -1631,7 +2038,8 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             variant="contained"
             color="success"
             startIcon={<Download />}
-            onClick={handleExportXlsx}
+            onClick={openXlsxPreview}
+            disabled={xlsxPreviewLoading || exportingXlsx}
           >
             XLSX
           </Button>
@@ -1705,6 +2113,175 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       )}
 
       {activeTab === 1 && renderTable(deletedData, deletedLoading, true)}
+
+      <Dialog
+        open={xlsxPreviewOpen}
+        onClose={() => !exportingXlsx && setXlsxPreviewOpen(false)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, maxHeight: '88vh' } }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={2}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight={900}>
+                {xlsxText.title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {xlsxText.subtitle}
+              </Typography>
+            </Box>
+            <IconButton
+              size="small"
+              onClick={() => setXlsxPreviewOpen(false)}
+              disabled={exportingXlsx}
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
+          <Stack spacing={2}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              spacing={1.5}
+            >
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Alert severity="info" sx={{ py: 0, borderRadius: 2 }}>
+                  {xlsxText.showing}: {xlsxPreviewRows.length} /{' '}
+                  {xlsxPreviewTotal}
+                </Alert>
+                {xlsxPreviewTotal > xlsxPreviewRows.length && (
+                  <Alert severity="warning" sx={{ py: 0, borderRadius: 2 }}>
+                    {xlsxText.previewLimit}
+                  </Alert>
+                )}
+              </Stack>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={
+                  exportingXlsx ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <Download />
+                  )
+                }
+                onClick={handleExportXlsx}
+                disabled={exportingXlsx || xlsxPreviewLoading}
+                sx={{ borderRadius: 2 }}
+              >
+                {exportingXlsx ? xlsxText.downloading : xlsxText.download}
+              </Button>
+            </Stack>
+
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ borderRadius: 2, maxHeight: 560 }}
+            >
+              <Table
+                stickyHeader
+                size="small"
+                sx={{
+                  minWidth: 7600,
+                  '& .MuiTableCell-root': {
+                    borderColor: 'divider',
+                    px: 0.75,
+                    py: 0.5,
+                    fontSize: '0.72rem',
+                  },
+                  '& .MuiTableHead-root .MuiTableCell-root': {
+                    bgcolor: '#3498DB',
+                    color: '#fff',
+                    fontWeight: 900,
+                    whiteSpace: 'nowrap',
+                  },
+                  '& .MuiTableBody-root .MuiTableRow-root:nth-of-type(even)': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+                    {RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => (
+                      <TableCell key={column.key}>
+                        {getResearchXlsxColumnLabel(column.key, lang, t)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {xlsxPreviewLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={RESEARCH_XLSX_PREVIEW_COLUMNS.length}
+                        align="center"
+                        sx={{ py: 8 }}
+                      >
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : xlsxPreviewRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={RESEARCH_XLSX_PREVIEW_COLUMNS.length}
+                        align="center"
+                        sx={{ py: 8 }}
+                      >
+                        {t('noData')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    xlsxPreviewRows.map((row, idx) => (
+                      <TableRow key={`${row.id}-${idx}`} hover>
+                        {RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => (
+                          <TableCell
+                            key={column.key}
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              maxWidth: 180,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {row[column.key]}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => setXlsxPreviewOpen(false)}
+            color="inherit"
+            disabled={exportingXlsx}
+          >
+            {t('close')}
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<Download />}
+            onClick={handleExportXlsx}
+            disabled={exportingXlsx || xlsxPreviewLoading}
+          >
+            {xlsxText.download}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* ── Detail Modal ── */}
       <DetailModal

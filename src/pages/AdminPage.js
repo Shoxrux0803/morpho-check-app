@@ -70,6 +70,8 @@ import {
 } from '@mui/icons-material';
 import LogoutConfirmDialog from '../components/LogoutConfirmDialog';
 import { pageT } from '../utils/pageI18n';
+import { getLocalizedLocationLabel } from '../utils/locationI18n';
+import { normalizePreviewScript } from '../utils/scriptI18n';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 
@@ -259,6 +261,487 @@ const getDateLocale = (lang) => {
   return 'uz-UZ';
 };
 
+const XLSX_PREVIEW_COLUMNS = [
+  { key: 'date', label: 'Sana' },
+  { key: 'idCode', label: 'ID kod' },
+  { key: 'fullName', label: 'F.I.SH.' },
+  { key: 'gender', label: 'Jins' },
+  { key: 'age', label: 'Yosh' },
+  { key: 'region', label: 'Viloyat' },
+  { key: 'district', label: 'Tuman' },
+  { key: 'address', label: 'Manzil' },
+  { key: 'admin', label: 'Kiritdi' },
+  { key: 'height', label: "Bo'y (sm)" },
+  { key: 'weight', label: 'Vazn (kg)' },
+  { key: 'bmi', label: 'IAV' },
+  { key: 'status', label: 'Holat' },
+  { key: 'somatotype', label: 'Somatotip' },
+  { key: 'idealWeight', label: 'Ideal Vazn (kg)' },
+  { key: 'weightDiff', label: 'Farq (kg)' },
+  { key: 'weightRange', label: "Vazn Oraliq'i" },
+  { key: 'chest', label: "Ko'krak ayl." },
+  { key: 'waist', label: 'Bel ayl.' },
+  { key: 'head', label: 'Bosh ayl.' },
+  { key: 'shoulderBreadth', label: 'Elka keng.' },
+  { key: 'shoulderRatio', label: 'Elka prop.' },
+  { key: 'thighCircumference', label: 'Son ayl.' },
+  { key: 'thighRatio', label: 'Son prop.' },
+  { key: 'hmai', label: 'HMAI' },
+  { key: 'mii', label: 'MII' },
+  { key: 'adi', label: 'ADI' },
+  { key: 'tbwPercent', label: 'TBW (%)' },
+  { key: 'fatPercent', label: "Yo'g' (%)" },
+  { key: 'fatMass', label: "Yo'g' (kg)" },
+  { key: 'muscleMass', label: 'Muscul (kg)' },
+  { key: 'boneMass', label: 'Suyak (kg)' },
+  { key: 'acmPercent', label: 'ACM (%)' },
+  { key: 'visceralFat', label: "Visceral Yo'g'" },
+  { key: 'bodyLength', label: 'Tana uzunligi (sm)' },
+  { key: 'parentsPhone', label: 'Ota-ona telefon raqami' },
+];
+
+const XLSX_MODAL_TEXT = {
+  uz: {
+    adminTitle: 'Umumiy XLSX report',
+    adminSubtitle:
+      "Yuklab olishdan oldin XLSX reportdagi ustunlar va ma'lumotlarni shu yerda ko'ring.",
+    showing: "Ko'rsatilmoqda",
+    previewLimit:
+      "Preview birinchi 200 qatorni ko'rsatadi, XLSX to'liq yuklanadi.",
+    downloading: 'Yuklanmoqda...',
+    download: 'XLSX yuklab olish',
+  },
+  ru: {
+    adminTitle: 'Общий XLSX отчет',
+    adminSubtitle:
+      'Перед скачиванием просмотрите столбцы и данные XLSX отчета.',
+    showing: 'Показано',
+    previewLimit:
+      'Предпросмотр показывает первые 200 строк, XLSX будет скачан полностью.',
+    downloading: 'Загрузка...',
+    download: 'Скачать XLSX',
+  },
+  en: {
+    adminTitle: 'General XLSX report',
+    adminSubtitle:
+      'Preview the XLSX report columns and data before downloading.',
+    showing: 'Showing',
+    previewLimit:
+      'Preview shows the first 200 rows; the XLSX download includes all rows.',
+    downloading: 'Downloading...',
+    download: 'Download XLSX',
+  },
+  kz: {
+    adminTitle: 'Жалпы XLSX есеп',
+    adminSubtitle:
+      'Жүктеп алудан бұрын XLSX есеп бағандары мен деректерін көріңіз.',
+    showing: 'Көрсетілді',
+    previewLimit:
+      'Алдын ала көру алғашқы 200 жолды көрсетеді, XLSX толық жүктеледі.',
+    downloading: 'Жүктелуде...',
+    download: 'XLSX жүктеп алу',
+  },
+  ky: {
+    adminTitle: 'Жалпы XLSX отчет',
+    adminSubtitle:
+      'Жүктөөдөн мурун XLSX отчеттун тилкелерин жана маалыматтарын көрүңүз.',
+    showing: 'Көрсөтүлдү',
+    previewLimit:
+      'Алдын ала көрүү биринчи 200 сапты көрсөтөт, XLSX толук жүктөлөт.',
+    downloading: 'Жүктөлүүдө...',
+    download: 'XLSX жүктөө',
+  },
+  tg: {
+    adminTitle: 'Ҳисоботи умумии XLSX',
+    adminSubtitle:
+      'Пеш аз боргирӣ сутунҳо ва маълумоти ҳисоботи XLSX-ро бинед.',
+    showing: 'Намоиш дода шуд',
+    previewLimit:
+      'Пешнамоиш 200 сатри аввалро нишон медиҳад, XLSX пурра боргирӣ мешавад.',
+    downloading: 'Боргирӣ...',
+    download: 'Боргирии XLSX',
+  },
+  tm: {
+    adminTitle: 'Umumy XLSX hasabat',
+    adminSubtitle:
+      'Yuklemezden öň XLSX hasabatynyň sütünlerini we maglumatlaryny görüň.',
+    showing: 'Görkezilýär',
+    previewLimit:
+      'Öňünden syn ilkinji 200 setiri görkezýär, XLSX doly ýüklenýär.',
+    downloading: 'Ýüklenýär...',
+    download: 'XLSX ýükle',
+  },
+  tr: {
+    adminTitle: 'Genel XLSX raporu',
+    adminSubtitle:
+      'İndirmeden önce XLSX raporundaki sütunları ve verileri görüntüleyin.',
+    showing: 'Gösteriliyor',
+    previewLimit: 'Önizleme ilk 200 satırı gösterir, XLSX tamamen indirilir.',
+    downloading: 'İndiriliyor...',
+    download: 'XLSX indir',
+  },
+};
+
+const ADMIN_XLSX_COLUMN_LABELS = {
+  uz: {
+    date: 'Sana',
+    idCode: 'ID kod',
+    fullName: 'F.I.SH.',
+    gender: 'Jins',
+    age: 'Yosh',
+    region: 'Viloyat',
+    district: 'Tuman',
+    address: 'Manzil',
+    admin: 'Kiritdi',
+    height: "Bo'y (sm)",
+    weight: 'Vazn (kg)',
+    bmi: 'IAV',
+    status: 'Holat',
+    somatotype: 'Somatotip',
+    idealWeight: 'Ideal vazn (kg)',
+    weightDiff: 'Farq (kg)',
+    weightRange: "Vazn oralig'i",
+    chest: "Ko'krak ayl.",
+    waist: 'Bel ayl.',
+    head: 'Bosh ayl.',
+    shoulderBreadth: 'Yelka keng.',
+    shoulderRatio: 'Yelka prop.',
+    thighCircumference: 'Son ayl.',
+    thighRatio: 'Son prop.',
+    hmai: 'HMAI',
+    mii: 'MII',
+    adi: 'ADI',
+    tbwPercent: 'TBW (%)',
+    fatPercent: "Yog' (%)",
+    fatMass: "Yog' (kg)",
+    muscleMass: 'Muskul (kg)',
+    boneMass: 'Suyak (kg)',
+    acmPercent: 'ACM (%)',
+    visceralFat: "Visceral yog'",
+    bodyLength: 'Tana uzunligi (sm)',
+    parentsPhone: 'Ota-ona telefon raqami',
+  },
+  ru: {
+    date: 'Дата',
+    idCode: 'ID код',
+    fullName: 'Ф.И.О.',
+    gender: 'Пол',
+    age: 'Возраст',
+    region: 'Область',
+    district: 'Район',
+    address: 'Адрес',
+    admin: 'Ввел',
+    height: 'Рост (см)',
+    weight: 'Вес (кг)',
+    bmi: 'ИМТ',
+    status: 'Статус',
+    somatotype: 'Соматотип',
+    idealWeight: 'Идеальный вес (кг)',
+    weightDiff: 'Разница (кг)',
+    weightRange: 'Диапазон веса',
+    chest: 'Окр. груди',
+    waist: 'Окр. талии',
+    head: 'Окр. головы',
+    shoulderBreadth: 'Ширина плеч',
+    shoulderRatio: 'Проп. плеч',
+    thighCircumference: 'Окр. бедра',
+    thighRatio: 'Проп. бедра',
+    hmai: 'HMAI',
+    mii: 'MII',
+    adi: 'ADI',
+    tbwPercent: 'TBW (%)',
+    fatPercent: 'Жир (%)',
+    fatMass: 'Жир (кг)',
+    muscleMass: 'Мышцы (кг)',
+    boneMass: 'Кость (кг)',
+    acmPercent: 'ACM (%)',
+    visceralFat: 'Висцеральный жир',
+    bodyLength: 'Длина тела (см)',
+    parentsPhone: 'Телефон родителей',
+  },
+  en: {
+    date: 'Date',
+    idCode: 'ID code',
+    fullName: 'Full name',
+    gender: 'Gender',
+    age: 'Age',
+    region: 'Region',
+    district: 'District',
+    address: 'Address',
+    admin: 'Entered by',
+    height: 'Height (cm)',
+    weight: 'Weight (kg)',
+    bmi: 'BMI',
+    status: 'Status',
+    somatotype: 'Somatotype',
+    idealWeight: 'Ideal weight (kg)',
+    weightDiff: 'Difference (kg)',
+    weightRange: 'Weight range',
+    chest: 'Chest circ.',
+    waist: 'Waist circ.',
+    head: 'Head circ.',
+    shoulderBreadth: 'Shoulder breadth',
+    shoulderRatio: 'Shoulder prop.',
+    thighCircumference: 'Thigh circ.',
+    thighRatio: 'Thigh prop.',
+    hmai: 'HMAI',
+    mii: 'MII',
+    adi: 'ADI',
+    tbwPercent: 'TBW (%)',
+    fatPercent: 'Fat (%)',
+    fatMass: 'Fat (kg)',
+    muscleMass: 'Muscle (kg)',
+    boneMass: 'Bone (kg)',
+    acmPercent: 'ACM (%)',
+    visceralFat: 'Visceral fat',
+    bodyLength: 'Body length (cm)',
+    parentsPhone: 'Parent phone number',
+  },
+};
+
+ADMIN_XLSX_COLUMN_LABELS.kz = {
+  date: 'Күні',
+  idCode: 'ID коды',
+  fullName: 'Аты-жөні',
+  gender: 'Жынысы',
+  age: 'Жасы',
+  region: 'Өңір',
+  district: 'Аудан',
+  address: 'Мекенжай',
+  admin: 'Енгізді',
+  height: 'Бойы (см)',
+  weight: 'Салмағы (кг)',
+  bmi: 'BMI',
+  status: 'Күйі',
+  somatotype: 'Соматотип',
+  idealWeight: 'Идеал салмақ (кг)',
+  weightDiff: 'Айырма (кг)',
+  weightRange: 'Салмақ аралығы',
+  chest: 'Кеуде айн.',
+  waist: 'Бел айн.',
+  head: 'Бас айн.',
+  shoulderBreadth: 'Иық ені',
+  shoulderRatio: 'Иық проп.',
+  thighCircumference: 'Сан айн.',
+  thighRatio: 'Сан проп.',
+  hmai: 'HMAI',
+  mii: 'MII',
+  adi: 'ADI',
+  tbwPercent: 'TBW (%)',
+  fatPercent: 'Май (%)',
+  fatMass: 'Май (кг)',
+  muscleMass: 'Бұлшықет (кг)',
+  boneMass: 'Сүйек (кг)',
+  acmPercent: 'ACM (%)',
+  visceralFat: 'Висцералды май',
+  bodyLength: 'Дене ұзындығы (см)',
+  parentsPhone: 'Ата-ана телефоны',
+};
+ADMIN_XLSX_COLUMN_LABELS.ky = {
+  date: 'Күнү',
+  idCode: 'ID коду',
+  fullName: 'Аты-жөнү',
+  gender: 'Жынысы',
+  age: 'Жашы',
+  region: 'Аймак',
+  district: 'Район',
+  address: 'Дарек',
+  admin: 'Киргизди',
+  height: 'Бою (см)',
+  weight: 'Салмагы (кг)',
+  bmi: 'BMI',
+  status: 'Абалы',
+  somatotype: 'Соматотип',
+  idealWeight: 'Идеал салмак (кг)',
+  weightDiff: 'Айырма (кг)',
+  weightRange: 'Салмак аралыгы',
+  chest: 'Көкүрөк айл.',
+  waist: 'Бел айл.',
+  head: 'Баш айл.',
+  shoulderBreadth: 'Ийин кеңдиги',
+  shoulderRatio: 'Ийин проп.',
+  thighCircumference: 'Сан айл.',
+  thighRatio: 'Сан проп.',
+  hmai: 'HMAI',
+  mii: 'MII',
+  adi: 'ADI',
+  tbwPercent: 'TBW (%)',
+  fatPercent: 'Май (%)',
+  fatMass: 'Май (кг)',
+  muscleMass: 'Булчуң (кг)',
+  boneMass: 'Сөөк (кг)',
+  acmPercent: 'ACM (%)',
+  visceralFat: 'Висцералдык май',
+  bodyLength: 'Дене узундугу (см)',
+  parentsPhone: 'Ата-эне телефону',
+};
+ADMIN_XLSX_COLUMN_LABELS.tg = {
+  date: 'Сана',
+  idCode: 'ID код',
+  fullName: 'Ному насаб',
+  gender: 'Ҷинс',
+  age: 'Синну сол',
+  region: 'Вилоят',
+  district: 'Ноҳия',
+  address: 'Суроға',
+  admin: 'Ворид кард',
+  height: 'Қад (см)',
+  weight: 'Вазн (кг)',
+  bmi: 'BMI',
+  status: 'Ҳолат',
+  somatotype: 'Соматотип',
+  idealWeight: 'Вазни идеалӣ (кг)',
+  weightDiff: 'Фарқ (кг)',
+  weightRange: 'Фосилаи вазн',
+  chest: 'Даври сина',
+  waist: 'Даври миён',
+  head: 'Даври сар',
+  shoulderBreadth: 'Паҳнои китф',
+  shoulderRatio: 'Проп. китф',
+  thighCircumference: 'Даври рон',
+  thighRatio: 'Проп. рон',
+  hmai: 'HMAI',
+  mii: 'MII',
+  adi: 'ADI',
+  tbwPercent: 'TBW (%)',
+  fatPercent: 'Равған (%)',
+  fatMass: 'Равған (кг)',
+  muscleMass: 'Мушак (кг)',
+  boneMass: 'Устухон (кг)',
+  acmPercent: 'ACM (%)',
+  visceralFat: 'Равғани висцералӣ',
+  bodyLength: 'Дарозии бадан (см)',
+  parentsPhone: 'Телефони волидон',
+};
+ADMIN_XLSX_COLUMN_LABELS.tm = {
+  date: 'Sene',
+  idCode: 'ID kod',
+  fullName: 'Doly ady',
+  gender: 'Jyns',
+  age: 'Ýaş',
+  region: 'Welaýat',
+  district: 'Etrap',
+  address: 'Salgysy',
+  admin: 'Girizen',
+  height: 'Boý (sm)',
+  weight: 'Agram (kg)',
+  bmi: 'BMI',
+  status: 'Ýagdaý',
+  somatotype: 'Somatotip',
+  idealWeight: 'Ideal agram (kg)',
+  weightDiff: 'Tapawut (kg)',
+  weightRange: 'Agram aralygy',
+  chest: 'Döş aýl.',
+  waist: 'Bil aýl.',
+  head: 'Baş aýl.',
+  shoulderBreadth: 'Egin giňligi',
+  shoulderRatio: 'Egin prop.',
+  thighCircumference: 'But aýl.',
+  thighRatio: 'But prop.',
+  hmai: 'HMAI',
+  mii: 'MII',
+  adi: 'ADI',
+  tbwPercent: 'TBW (%)',
+  fatPercent: 'Ýag (%)',
+  fatMass: 'Ýag (kg)',
+  muscleMass: 'Myşsa (kg)',
+  boneMass: 'Süňk (kg)',
+  acmPercent: 'ACM (%)',
+  visceralFat: 'Wisseral ýag',
+  bodyLength: 'Beden uzynlygy (sm)',
+  parentsPhone: 'Ene-ata telefony',
+};
+ADMIN_XLSX_COLUMN_LABELS.tr = {
+  date: 'Tarih',
+  idCode: 'ID kodu',
+  fullName: 'Ad Soyad',
+  gender: 'Cinsiyet',
+  age: 'Yaş',
+  region: 'Bölge',
+  district: 'İlçe',
+  address: 'Adres',
+  admin: 'Giren',
+  height: 'Boy (cm)',
+  weight: 'Kilo (kg)',
+  bmi: 'BMI',
+  status: 'Durum',
+  somatotype: 'Somatotip',
+  idealWeight: 'İdeal kilo (kg)',
+  weightDiff: 'Fark (kg)',
+  weightRange: 'Kilo aralığı',
+  chest: 'Göğüs çev.',
+  waist: 'Bel çev.',
+  head: 'Baş çev.',
+  shoulderBreadth: 'Omuz geniş.',
+  shoulderRatio: 'Omuz prop.',
+  thighCircumference: 'Uyluk çev.',
+  thighRatio: 'Uyluk prop.',
+  hmai: 'HMAI',
+  mii: 'MII',
+  adi: 'ADI',
+  tbwPercent: 'TBW (%)',
+  fatPercent: 'Yağ (%)',
+  fatMass: 'Yağ (kg)',
+  muscleMass: 'Kas (kg)',
+  boneMass: 'Kemik (kg)',
+  acmPercent: 'ACM (%)',
+  visceralFat: 'Visseral yağ',
+  bodyLength: 'Vücut uzunluğu (cm)',
+  parentsPhone: 'Ebeveyn telefonu',
+};
+
+const getXlsxText = (lang) => XLSX_MODAL_TEXT[lang] || XLSX_MODAL_TEXT.uz;
+const getAdminXlsxColumnLabel = (key, lang) =>
+  (ADMIN_XLSX_COLUMN_LABELS[lang] || ADMIN_XLSX_COLUMN_LABELS.uz)[key] || key;
+
+const normalizePreviewText = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .replace(/[’‘`ʼʻ]/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const ADMIN_VALUE_TRANSLATIONS = {
+  gender: [
+    {
+      match: ['erkak', 'male', 'm', 'boy', "o'g'il bola", 'ўғил бола'],
+      key: 'male',
+    },
+    {
+      match: ['ayol', 'female', 'f', 'girl', 'qiz bola', 'қиз бола'],
+      key: 'female',
+    },
+  ],
+  bmiStatus: [
+    { match: ['normal', 'norma', "me'yor", 'меъёр', 'норма'], key: 'normal' },
+    {
+      match: ['ortiqcha', 'overweight', 'избыточ', 'артық', 'ашыкча'],
+      key: 'overweight',
+    },
+    { match: ['semizlik', 'obese', 'ожир', 'семіз', 'семир'], key: 'obese' },
+    {
+      match: ["ozg'in", 'underweight', 'камвазн', 'недостат', 'арык'],
+      key: 'underweight',
+    },
+  ],
+};
+
+const localizeAdminPreviewValue = (key, value, lang, pt) => {
+  if (value === undefined || value === null || value === '') return '-';
+  const normalized = normalizePreviewText(value);
+  const group =
+    key === 'gender'
+      ? ADMIN_VALUE_TRANSLATIONS.gender
+      : key === 'status'
+        ? ADMIN_VALUE_TRANSLATIONS.bmiStatus
+        : null;
+  const matched = group?.find((item) =>
+    item.match.some((pattern) => normalized.includes(pattern))
+  );
+  const localized = matched ? pt(matched.key) : value;
+  return normalizePreviewScript(key, localized, lang);
+};
+
 const translateBmiStatus = (value, lang) => {
   if (lang !== 'ru') return value || '-';
   const normalized = String(value || '').toLowerCase();
@@ -375,6 +858,7 @@ export default function AdminPage() {
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const pt = useCallback((key) => pageT(lang, key), [lang]);
+  const xlsxText = getXlsxText(lang);
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
@@ -425,6 +909,10 @@ export default function AdminPage() {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const [exportingXlsx, setExportingXlsx] = useState(false);
+  const [xlsxPreviewOpen, setXlsxPreviewOpen] = useState(false);
+  const [xlsxPreviewRows, setXlsxPreviewRows] = useState([]);
+  const [xlsxPreviewLoading, setXlsxPreviewLoading] = useState(false);
+  const [xlsxPreviewTotal, setXlsxPreviewTotal] = useState(0);
   const [importingXlsx, setImportingXlsx] = useState(false);
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -740,6 +1228,114 @@ export default function AdminPage() {
     }
   }, [pdfLang, pt, viewRow]);
 
+  const mapXlsxPreviewRow = useCallback(
+    (row) => {
+      const ageParts = [
+        row.age ? `${row.age} ${pt('yearShort')}` : '',
+        row.age_months !== undefined &&
+        row.age_months !== null &&
+        row.age_days !== undefined &&
+        row.age_days !== null
+          ? `${row.age_months} ${pt('monthShort')}, ${row.age_days} ${pt('dayShort')}`
+          : '',
+      ].filter(Boolean);
+      const value = (...keys) => {
+        for (const key of keys) {
+          const current = row[key];
+          if (current !== undefined && current !== null && current !== '') {
+            return current;
+          }
+        }
+        return '-';
+      };
+
+      const rowValues = {
+        date: row.createdAt
+          ? new Date(row.createdAt).toLocaleDateString(getDateLocale(lang))
+          : '-',
+        idCode: row.idCode || '-',
+        fullName:
+          row.name ||
+          [row.lastName, row.firstName].filter(Boolean).join(' ') ||
+          '-',
+        gender: localizeAdminPreviewValue('gender', row.gender, lang, pt),
+        age: ageParts.join(' / ') || '-',
+        region: row.region
+          ? getLocalizedLocationLabel(row.region, lang, 1)
+          : '-',
+        district: row.district
+          ? getLocalizedLocationLabel(row.district, lang, 2)
+          : '-',
+        address: row.address || '-',
+        admin: row.created_by_name || pt('unknown'),
+        height: value('height'),
+        weight: value('weight'),
+        bmi: value('bmi'),
+        status: localizeAdminPreviewValue('status', row.bmiStatus, lang, pt),
+        somatotype: value('somatotype'),
+        idealWeight: value('ideal_weight', 'idealWeight'),
+        weightDiff: value('weight_diff', 'weightDiff'),
+        weightRange: value('ideal_weight_range', 'weightRange'),
+        chest: value('chest'),
+        waist: value('waist'),
+        head: value('head'),
+        shoulderBreadth: value('shoulder_breadth', 'shoulderBreadth'),
+        shoulderRatio: value('shoulder_ratio', 'shoulderRatio'),
+        thighCircumference: value('thigh_circumference', 'thighCircumference'),
+        thighRatio: value('thigh_ratio', 'thighRatio'),
+        hmai: value('hmai'),
+        mii: value('mii'),
+        adi: value('adi'),
+        tbwPercent: value('tbw_percent', 'total_body_water', 'totalBodyWater'),
+        fatPercent: value('fat_percent', 'fatPercent'),
+        fatMass: value('fat_mass', 'fatMass'),
+        muscleMass: value('muscle_mass', 'muscleMass'),
+        boneMass: value('bone_mass', 'boneMass'),
+        acmPercent: value('acm_percent', 'acm'),
+        visceralFat: value('visceral_fat', 'visceralFat'),
+        bodyLength: value('body_length', 'bodyLength'),
+        parentsPhone: row.parentsPhone || row.parents_phone || '-',
+      };
+      return Object.fromEntries(
+        Object.entries(rowValues).map(([key, current]) => [
+          key,
+          normalizePreviewScript(key, current, lang),
+        ])
+      );
+    },
+    [lang, pt]
+  );
+
+  const openXlsxPreview = useCallback(async () => {
+    setXlsxPreviewOpen(true);
+    setXlsxPreviewLoading(true);
+    try {
+      const resp = await AdminApi.analyses.list({
+        q: dashFilters.q,
+        gender: dashFilters.gender,
+        ageMin: dashFilters.age_min,
+        ageMax: dashFilters.age_max,
+        dateFrom: dashFilters.date_from,
+        dateTo: dashFilters.date_to,
+        region: dashFilters.region,
+        somatotype: dashFilters.somatotype,
+        sortKey: sort.key === 'createdAt' ? 'created_at' : sort.key,
+        sortDir: sort.dir,
+        page: 1,
+        pageSize: 200,
+      });
+      const rows = (resp.items || []).map(normalize);
+      setXlsxPreviewRows(rows.map(mapXlsxPreviewRow));
+      setXlsxPreviewTotal(resp.total || rows.length);
+    } catch (e) {
+      toast.error(`${pt('excelError')} ${e.message}`);
+      setXlsxPreviewRows(raw.map(mapXlsxPreviewRow));
+      setXlsxPreviewTotal(totalCount || raw.length);
+    } finally {
+      setXlsxPreviewLoading(false);
+    }
+  }, [dashFilters, mapXlsxPreviewRow, pt, raw, sort, totalCount]);
+
   const handleExportXlsx = useCallback(async () => {
     setExportingXlsx(true);
     try {
@@ -759,7 +1355,7 @@ export default function AdminPage() {
     } finally {
       setExportingXlsx(false);
     }
-  }, [dashFilters, pt]);
+  }, [dashFilters, lang, pt]);
 
   const handleDownloadTemplate = useCallback(async () => {
     try {
@@ -868,8 +1464,8 @@ export default function AdminPage() {
                       <Download />
                     )
                   }
-                  onClick={handleExportXlsx}
-                  disabled={exportingXlsx}
+                  onClick={openXlsxPreview}
+                  disabled={exportingXlsx || xlsxPreviewLoading}
                 >
                   {pt('export')}
                 </Button>
@@ -963,12 +1559,14 @@ export default function AdminPage() {
     setImportConfirmOpen,
     importingXlsx,
     exportingXlsx,
-    handleExportXlsx,
+    openXlsxPreview,
+    xlsxPreviewLoading,
     onDeleteSelected,
     pt,
     checked,
     dashFilters,
     pageLabels,
+    lang,
     setDashFilters,
     toggleAll,
     toggleOne,
@@ -1411,6 +2009,182 @@ export default function AdminPage() {
           </DialogActions>
         </Dialog>
       )}
+
+      <Dialog
+        open={xlsxPreviewOpen}
+        onClose={() => !exportingXlsx && setXlsxPreviewOpen(false)}
+        maxWidth="xl"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            maxHeight: '88vh',
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box
+            display="flex"
+            alignItems="flex-start"
+            justifyContent="space-between"
+            gap={2}
+          >
+            <Box>
+              <Typography variant="h6" fontWeight={900}>
+                {xlsxText.adminTitle}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {xlsxText.adminSubtitle}
+              </Typography>
+            </Box>
+            <IconButton
+              onClick={() => setXlsxPreviewOpen(false)}
+              disabled={exportingXlsx}
+              size="small"
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
+          <Stack spacing={2}>
+            <Stack
+              direction={{ xs: 'column', md: 'row' }}
+              justifyContent="space-between"
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              spacing={1.5}
+            >
+              <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Alert severity="info" sx={{ py: 0, borderRadius: 2 }}>
+                  {xlsxText.showing}: {xlsxPreviewRows.length} /{' '}
+                  {xlsxPreviewTotal}
+                </Alert>
+                {xlsxPreviewTotal > xlsxPreviewRows.length && (
+                  <Alert severity="warning" sx={{ py: 0, borderRadius: 2 }}>
+                    {xlsxText.previewLimit}
+                  </Alert>
+                )}
+              </Stack>
+              <Button
+                variant="contained"
+                startIcon={
+                  exportingXlsx ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <Download />
+                  )
+                }
+                onClick={handleExportXlsx}
+                disabled={exportingXlsx || xlsxPreviewLoading}
+                sx={{ borderRadius: 2 }}
+              >
+                {exportingXlsx ? xlsxText.downloading : xlsxText.download}
+              </Button>
+            </Stack>
+
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ borderRadius: 2, maxHeight: 560 }}
+            >
+              <Table
+                stickyHeader
+                size="small"
+                sx={{
+                  minWidth: 2800,
+                  '& .MuiTableCell-root': {
+                    borderColor: 'divider',
+                    px: 0.75,
+                    py: 0.5,
+                    fontSize: '0.72rem',
+                  },
+                  '& .MuiTableHead-root .MuiTableCell-root': {
+                    bgcolor: '#3498DB',
+                    color: '#fff',
+                    fontWeight: 900,
+                    whiteSpace: 'nowrap',
+                  },
+                  '& .MuiTableBody-root .MuiTableRow-root:nth-of-type(even)': {
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                <TableHead>
+                  <TableRow>
+                    {XLSX_PREVIEW_COLUMNS.map((column) => (
+                      <TableCell key={column.key} sx={{ fontWeight: 800 }}>
+                        {getAdminXlsxColumnLabel(column.key, lang)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {xlsxPreviewLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={XLSX_PREVIEW_COLUMNS.length}
+                        align="center"
+                        sx={{ py: 8 }}
+                      >
+                        <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : xlsxPreviewRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={XLSX_PREVIEW_COLUMNS.length}
+                        align="center"
+                        sx={{ py: 8 }}
+                      >
+                        {pt('noData')}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    xlsxPreviewRows.map((row, idx) => (
+                      <TableRow
+                        key={`${row.fullName}-${row.date}-${idx}`}
+                        hover
+                      >
+                        {XLSX_PREVIEW_COLUMNS.map((column) => (
+                          <TableCell
+                            key={column.key}
+                            sx={{
+                              whiteSpace: 'nowrap',
+                              maxWidth:
+                                column.key === 'parentsPhone' ? 180 : 150,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {row[column.key]}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => setXlsxPreviewOpen(false)}
+            color="inherit"
+            disabled={exportingXlsx}
+          >
+            {pt('close')}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<Download />}
+            onClick={handleExportXlsx}
+            disabled={exportingXlsx || xlsxPreviewLoading}
+          >
+            {xlsxText.download}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Confirmation Dialog for Super Admin */}
       <Dialog
