@@ -372,19 +372,70 @@ export default function Header() {
   };
 
   const navButtonSx = {
-    '&.active': {
-      fontWeight: 700,
-      color: 'primary.main',
-      backgroundColor:
-        mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
-    },
+    position: 'relative',
+    minHeight: 40,
+    minWidth: 0,
+    px: 1.45,
+    py: 0.9,
+    borderRadius: 2.5,
     color: 'text.secondary',
-    borderRadius: 2,
-    px: 2,
-    transition: 'all 0.2s ease',
+    fontWeight: 700,
+    letterSpacing: 0,
+    border: '1px solid transparent',
+    background: 'transparent',
+    boxShadow: 'none',
+    backdropFilter: 'none',
+    WebkitBackdropFilter: 'none',
+    transition:
+      'color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease',
+    '& .MuiButton-startIcon': {
+      mr: 0.8,
+      color: 'inherit',
+    },
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      left: 14,
+      right: 14,
+      bottom: 4,
+      height: 2,
+      borderRadius: 999,
+      background:
+        mode === 'dark'
+          ? 'linear-gradient(90deg, #5eead4, #60a5fa)'
+          : 'linear-gradient(90deg, #0f766e, #2563eb)',
+      opacity: 0,
+      transform: 'scaleX(0.72)',
+      transition: 'opacity 0.2s ease, transform 0.2s ease',
+    },
+    '&.active': {
+      fontWeight: 800,
+      color: 'primary.main',
+      background:
+        mode === 'dark'
+          ? 'rgba(94, 234, 212, 0.08)'
+          : 'rgba(15, 118, 110, 0.07)',
+      borderColor:
+        mode === 'dark'
+          ? 'rgba(94, 234, 212, 0.16)'
+          : 'rgba(15, 118, 110, 0.12)',
+      boxShadow: 'none',
+      '&::after': {
+        opacity: 1,
+        transform: 'scaleX(1)',
+      },
+    },
     '&:hover': {
+      color: mode === 'dark' ? '#f8fafc' : 'primary.main',
       backgroundColor:
-        mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
+        mode === 'dark'
+          ? 'rgba(148, 163, 184, 0.08)'
+          : 'rgba(15, 23, 42, 0.04)',
+      borderColor:
+        mode === 'dark'
+          ? 'rgba(148, 163, 184, 0.12)'
+          : 'rgba(15, 23, 42, 0.06)',
+      boxShadow: 'none',
       transform: 'translateY(-1px)',
     },
   };
@@ -420,10 +471,17 @@ export default function Header() {
   ];
 
   const activeNavSx = {
-    fontWeight: 700,
+    fontWeight: 800,
     color: 'primary.main',
-    backgroundColor:
-      mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
+    background:
+      mode === 'dark' ? 'rgba(94, 234, 212, 0.08)' : 'rgba(15, 118, 110, 0.07)',
+    borderColor:
+      mode === 'dark' ? 'rgba(94, 234, 212, 0.16)' : 'rgba(15, 118, 110, 0.12)',
+    boxShadow: 'none',
+    '&::after': {
+      opacity: 1,
+      transform: 'scaleX(1)',
+    },
   };
   const guidelinesCopy = guidelinesLabels[lang] || guidelinesLabels.en;
   const calendarDays = useMemo(
