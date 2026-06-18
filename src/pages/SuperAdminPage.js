@@ -3113,7 +3113,7 @@ const SuperAdminPage = () => {
       <Container
         maxWidth={false}
         sx={{
-          py: 4,
+          py: { xs: 2, md: 4 },
           pr: { xs: 1.5, sm: 2, md: 4 },
           pl: { xs: 1.5, sm: 2, md: '356px' },
           maxWidth: '100%',
@@ -3136,11 +3136,11 @@ const SuperAdminPage = () => {
           >
             <GlassPaper
               sx={{
-                p: 2,
+                p: { xs: 1, sm: 1.5, md: 2 },
                 display: { md: 'flex' },
                 flexDirection: { md: 'column' },
                 height: { md: '100%' },
-                overflow: { md: 'hidden' },
+                overflow: { xs: 'hidden', md: 'hidden' },
                 border: '1px solid',
                 borderColor: isDark
                   ? 'rgba(255,255,255,0.12)'
@@ -3150,24 +3150,48 @@ const SuperAdminPage = () => {
                   : '0 8px 32px rgba(100,116,139,0.08)',
               }}
             >
-              <Box p={2} mb={2} textAlign="center">
+              <Box
+                sx={{
+                  p: { xs: 1, md: 2 },
+                  mb: { xs: 1, md: 2 },
+                  textAlign: { xs: 'left', md: 'center' },
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: { xs: 'flex-start', md: 'center' },
+                  gap: { xs: 1.25, md: 0 },
+                  flexDirection: { xs: 'row', md: 'column' },
+                }}
+              >
                 <Avatar
                   sx={{
-                    width: 64,
-                    height: 64,
-                    margin: '0 auto 16px',
+                    width: { xs: 44, md: 64 },
+                    height: { xs: 44, md: 64 },
+                    margin: { xs: 0, md: '0 auto 16px' },
                     bgcolor: 'primary.main',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    fontSize: { xs: '0.9rem', md: '1.25rem' },
                   }}
                 >
                   SA
                 </Avatar>
-                <Typography variant="h6" fontWeight={700}>
-                  {user.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {pt('adminManagement')}
-                </Typography>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    noWrap
+                    sx={{ fontSize: { xs: '0.98rem', md: '1.25rem' } }}
+                  >
+                    {user.name}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    noWrap
+                    sx={{ display: 'block' }}
+                  >
+                    {pt('adminManagement')}
+                  </Typography>
+                </Box>
               </Box>
 
               <Tabs
@@ -3184,81 +3208,146 @@ const SuperAdminPage = () => {
                     overflowY: { md: 'auto !important' },
                     overflowX: { xs: 'auto', md: 'hidden' },
                     pr: { md: 0.5 },
+                    '&::-webkit-scrollbar': {
+                      display: { xs: 'none', md: 'initial' },
+                    },
+                    scrollbarWidth: { xs: 'none', md: 'thin' },
+                  },
+                  '& .MuiTabs-flexContainer': {
+                    gap: { xs: 0.75, md: 0 },
                   },
                   '& .MuiTabs-indicator': { display: 'none' },
                   '& .MuiTab-root': {
-                    borderRadius: 2,
-                    mb: { xs: 0, md: 0.5 },
-                    mr: { xs: 1, md: 0 },
-                    alignItems: { xs: 'center', md: 'flex-start' },
+                    position: 'relative',
+                    overflow: 'hidden',
+                    isolation: 'isolate',
+                    borderRadius: 999,
+                    mb: { xs: 0, md: 1 },
+                    mr: { xs: 0, md: 0 },
+                    minWidth: { xs: 'max-content', md: '100%' },
+                    maxWidth: { xs: 'none', md: '100%' },
+                    px: { xs: 1.35, sm: 1.7, md: 2.25 },
+                    py: { xs: 0.82, sm: 1, md: 1.15 },
+                    alignItems: 'center',
+                    justifyContent: { xs: 'center', md: 'flex-start' },
                     textAlign: { xs: 'center', md: 'left' },
-                    minHeight: { xs: 48, md: 44 },
+                    minHeight: { xs: 40, sm: 44, md: 50 },
                     textTransform: 'none',
-                    fontWeight: 600,
-                    fontSize: '0.85rem',
-                    transition: 'all 0.2s',
-                    color: 'text.secondary',
+                    fontWeight: 800,
+                    fontSize: { xs: '0.76rem', sm: '0.82rem', md: '0.88rem' },
+                    letterSpacing: 0,
+                    whiteSpace: 'nowrap',
+                    color: isDark
+                      ? 'rgba(226, 232, 240, 0.72)'
+                      : 'rgba(51, 65, 85, 0.78)',
+                    border: '1px solid',
+                    borderColor: isDark
+                      ? 'rgba(148, 163, 184, 0.18)'
+                      : 'rgba(15, 118, 110, 0.12)',
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.42), rgba(30, 41, 59, 0.22))'
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(240, 253, 250, 0.28))',
+                    boxShadow: isDark
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(0,0,0,0.18)'
+                      : 'inset 0 1px 0 rgba(255,255,255,0.65), 0 8px 20px rgba(15,23,42,0.06)',
+                    backdropFilter: 'blur(18px) saturate(170%)',
+                    WebkitBackdropFilter: 'blur(18px) saturate(170%)',
+                    transition:
+                      'transform 0.22s ease, color 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: -1,
+                      borderRadius: 'inherit',
+                      background:
+                        'linear-gradient(135deg, rgba(255,255,255,0.48), rgba(255,255,255,0.05) 45%, rgba(94,234,212,0.14))',
+                      opacity: 0,
+                      transition: 'opacity 0.22s ease',
+                    },
+                    '& .MuiTab-iconWrapper': {
+                      mr: { xs: 0.65, sm: 0.85, md: 1.15 },
+                      fontSize: { xs: 18, sm: 19, md: 20 },
+                      color: 'inherit',
+                      filter: 'drop-shadow(0 2px 8px rgba(45, 212, 191, 0.18))',
+                    },
                     '&.Mui-selected': {
-                      bgcolor: isDark
-                        ? 'rgba(255, 255, 255, 0.05)'
-                        : 'rgba(15, 118, 110, 0.08)',
-                      color: 'primary.main',
+                      color: '#ecfeff',
+                      borderColor: isDark
+                        ? 'rgba(94, 234, 212, 0.46)'
+                        : 'rgba(20, 184, 166, 0.42)',
+                      background:
+                        'linear-gradient(135deg, rgba(20,184,166,0.95), rgba(37,99,235,0.88) 52%, rgba(139,92,246,0.88))',
+                      boxShadow:
+                        'inset 0 1px 0 rgba(255,255,255,0.42), 0 12px 30px rgba(20,184,166,0.22), 0 6px 18px rgba(37,99,235,0.18)',
+                      transform: 'translateY(-1px)',
+                      '&::before': {
+                        opacity: 1,
+                      },
                     },
                     '&:hover': {
-                      bgcolor: isDark
-                        ? 'rgba(255, 255, 255, 0.03)'
-                        : 'rgba(0, 0, 0, 0.04)',
+                      color: isDark ? '#f8fafc' : 'primary.main',
+                      borderColor: isDark
+                        ? 'rgba(94, 234, 212, 0.32)'
+                        : 'rgba(20, 184, 166, 0.28)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: isDark
+                        ? 'inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 26px rgba(0,0,0,0.24)'
+                        : 'inset 0 1px 0 rgba(255,255,255,0.72), 0 12px 26px rgba(15,23,42,0.10)',
+                      '&::before': {
+                        opacity: 0.75,
+                      },
                     },
                   },
                 }}
               >
                 <Tab
-                  icon={<Dashboard sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<Dashboard />}
                   iconPosition="start"
                   label={pt('dashboard')}
                 />
                 <Tab
-                  icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<AutoGraph />}
                   iconPosition="start"
                   label={pageLabels.scientificAnalysis}
                 />
                 <Tab
-                  icon={<Place sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<Place />}
                   iconPosition="start"
                   label={pt('regionalMap')}
                 />
                 <Tab
-                  icon={<People sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<People />}
                   iconPosition="start"
                   label={pt('admins')}
                 />
                 <Tab
-                  icon={<RestoreFromTrash sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<RestoreFromTrash />}
                   iconPosition="start"
                   label={pt('deleted')}
                 />
                 <Tab
-                  icon={<Security sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<Security />}
                   iconPosition="start"
                   label={pt('security')}
                 />
                 <Tab
-                  icon={<History sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<History />}
                   iconPosition="start"
                   label={pt('auditLog')}
                 />
                 <Tab
-                  icon={<Storage sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<Storage />}
                   iconPosition="start"
                   label={pt('backup')}
                 />
                 <Tab
-                  icon={<SettingsSuggest sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<SettingsSuggest />}
                   iconPosition="start"
                   label={pt('clinicalCms')}
                 />
                 <Tab
-                  icon={<AutoGraph sx={{ mr: 1.5, fontSize: 20 }} />}
+                  icon={<AutoGraph />}
                   iconPosition="start"
                   label={pt('topChart')}
                 />

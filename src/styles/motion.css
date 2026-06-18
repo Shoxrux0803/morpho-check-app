@@ -99,7 +99,7 @@
   }
 }
 
-/* ================== OVERLAY (BLUR EFFEKT) ================== */
+/* ================== OVERLAY ================== */
 .mc-overlay {
   position: fixed;
   inset: 0;
@@ -107,9 +107,9 @@
   display: none;
   align-items: center;
   justify-content: center;
-  background-color: transparent !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  background-color: rgba(226, 232, 240, 0.12) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .mc-overlay:not(.closing) {
@@ -126,13 +126,17 @@
 .mc-modal {
   width: min(700px, 92vw);
   padding: 16px;
-  border-radius: 16px;
+  border-radius: 34px;
+  position: relative;
+  overflow: hidden;
 
   /* ✅ LIGHT MODE - OQ MODAL */
-  background-color: #ffffff !important;
-  color: #000000 !important;
-  border: 1px solid #e5e7eb !important;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.15) !important;
+  background: var(--mc-liquid-bg-strong) !important;
+  color: var(--mc-liquid-text) !important;
+  border: 1px solid var(--mc-liquid-border) !important;
+  box-shadow: var(--mc-liquid-shadow) !important;
+  backdrop-filter: var(--mc-liquid-filter) !important;
+  -webkit-backdrop-filter: var(--mc-liquid-filter) !important;
   opacity: 1 !important;
 }
 
@@ -146,31 +150,27 @@
 
 /* ✅ DARK MODE - QORA MODAL */
 [data-theme='dark'] .mc-modal {
-  background-color: #1f2937 !important;
-  color: #ffffff !important;
-  border: 1px solid #374151 !important;
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4) !important;
+  background: var(--mc-liquid-bg-strong) !important;
+  color: var(--mc-liquid-text) !important;
+  border-color: var(--mc-liquid-border) !important;
+  box-shadow: var(--mc-liquid-shadow) !important;
 }
 
-/* ================== ANIMATIONLAR (BLUR GA MOSLASHTIRILGAN) ================== */
+/* ================== ANIMATIONLAR ================== */
 @keyframes mc-overlay-in {
   from {
-    backdrop-filter: blur(0px);
     opacity: 0;
   }
   to {
-    backdrop-filter: blur(12px);
     opacity: 1;
   }
 }
 
 @keyframes mc-overlay-out {
   from {
-    backdrop-filter: blur(12px);
     opacity: 1;
   }
   to {
-    backdrop-filter: blur(0px);
     opacity: 0;
   }
 }

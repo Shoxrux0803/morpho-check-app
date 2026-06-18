@@ -1770,9 +1770,11 @@ export default function AdminPage() {
               variant="h6"
               fontWeight="900"
               sx={{
-                flexGrow: 1,
+                flexGrow: { xs: 0, md: 1 },
                 color: 'primary.main',
-                minWidth: { xs: '100%', md: 180 },
+                minWidth: { xs: 'calc(100% - 56px)', md: 180 },
+                fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' },
+                whiteSpace: 'nowrap',
               }}
             >
               MORPHO CHECK{' '}
@@ -1789,6 +1791,13 @@ export default function AdminPage() {
                 minWidth: 0,
                 maxWidth: '100%',
                 overflowX: 'auto',
+                order: { xs: 3, md: 0 },
+                flexBasis: { xs: '100%', md: 'auto' },
+                pb: { xs: 0.5, md: 0 },
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
+                scrollbarWidth: 'none',
               }}
             >
               <Tabs
@@ -1796,6 +1805,94 @@ export default function AdminPage() {
                 onChange={(e, v) => setActiveTab(v)}
                 variant="scrollable"
                 scrollButtons="auto"
+                sx={{
+                  minHeight: 0,
+                  '& .MuiTabs-flexContainer': {
+                    gap: { xs: 0.75, sm: 1, md: 1.25 },
+                    alignItems: 'center',
+                  },
+                  '& .MuiTabs-indicator': { display: 'none' },
+                  '& .MuiTabs-scrollButtons': {
+                    color: 'primary.main',
+                  },
+                  '& .MuiTab-root': {
+                    position: 'relative',
+                    overflow: 'hidden',
+                    isolation: 'isolate',
+                    minWidth: { xs: 'max-content', sm: 132 },
+                    maxWidth: { xs: 'none', md: 220 },
+                    minHeight: { xs: 40, sm: 44 },
+                    px: { xs: 1.35, sm: 1.8, md: 2.35 },
+                    py: { xs: 0.82, sm: 1 },
+                    borderRadius: 999,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    fontSize: { xs: '0.76rem', sm: '0.82rem', md: '0.88rem' },
+                    letterSpacing: 0,
+                    whiteSpace: 'nowrap',
+                    color: isDark
+                      ? 'rgba(226, 232, 240, 0.72)'
+                      : 'rgba(51, 65, 85, 0.78)',
+                    border: '1px solid',
+                    borderColor: isDark
+                      ? 'rgba(148, 163, 184, 0.18)'
+                      : 'rgba(15, 118, 110, 0.12)',
+                    background: isDark
+                      ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.42), rgba(30, 41, 59, 0.22))'
+                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(240, 253, 250, 0.28))',
+                    boxShadow: isDark
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(0,0,0,0.18)'
+                      : 'inset 0 1px 0 rgba(255,255,255,0.65), 0 8px 20px rgba(15,23,42,0.06)',
+                    backdropFilter: 'blur(18px) saturate(170%)',
+                    WebkitBackdropFilter: 'blur(18px) saturate(170%)',
+                    transition:
+                      'transform 0.22s ease, color 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: -1,
+                      borderRadius: 'inherit',
+                      background:
+                        'linear-gradient(135deg, rgba(255,255,255,0.48), rgba(255,255,255,0.05) 45%, rgba(94,234,212,0.14))',
+                      opacity: 0,
+                      transition: 'opacity 0.22s ease',
+                    },
+                    '& .MuiTab-iconWrapper': {
+                      mr: { xs: 0.65, sm: 1 },
+                      fontSize: { xs: 18, sm: 20 },
+                      color: 'inherit',
+                      filter: 'drop-shadow(0 2px 8px rgba(45, 212, 191, 0.18))',
+                    },
+                    '&.Mui-selected': {
+                      color: '#ecfeff',
+                      borderColor: isDark
+                        ? 'rgba(94, 234, 212, 0.46)'
+                        : 'rgba(20, 184, 166, 0.42)',
+                      background:
+                        'linear-gradient(135deg, rgba(20,184,166,0.95), rgba(37,99,235,0.88) 52%, rgba(139,92,246,0.88))',
+                      boxShadow:
+                        'inset 0 1px 0 rgba(255,255,255,0.42), 0 12px 30px rgba(20,184,166,0.22), 0 6px 18px rgba(37,99,235,0.18)',
+                      transform: 'translateY(-1px)',
+                      '&::before': {
+                        opacity: 1,
+                      },
+                    },
+                    '&:hover': {
+                      color: isDark ? '#f8fafc' : 'primary.main',
+                      borderColor: isDark
+                        ? 'rgba(94, 234, 212, 0.32)'
+                        : 'rgba(20, 184, 166, 0.28)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: isDark
+                        ? 'inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 26px rgba(0,0,0,0.24)'
+                        : 'inset 0 1px 0 rgba(255,255,255,0.72), 0 12px 26px rgba(15,23,42,0.10)',
+                      '&::before': {
+                        opacity: 0.75,
+                      },
+                    },
+                  },
+                }}
               >
                 {availableTabs.map((tab) => (
                   <Tab
@@ -1804,7 +1901,6 @@ export default function AdminPage() {
                     iconPosition="start"
                     label={tab.label}
                     value={tab.id}
-                    sx={{ fontWeight: 700, textTransform: 'none' }}
                   />
                 ))}
               </Tabs>

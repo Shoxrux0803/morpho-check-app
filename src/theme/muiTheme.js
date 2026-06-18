@@ -68,6 +68,29 @@ const getVariantColors = (isDark, variant = 'neo') => {
 export const makeTheme = (mode = 'light', variant = 'neo') => {
   const isDark = mode === 'dark';
   const colors = getVariantColors(isDark, variant);
+  const liquidGlass = {
+    surface: isDark
+      ? 'linear-gradient(135deg, rgba(22, 28, 42, 0.58), rgba(9, 14, 26, 0.42))'
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.28))',
+    surfaceStrong: isDark
+      ? 'linear-gradient(135deg, rgba(28, 36, 54, 0.78), rgba(10, 15, 28, 0.62))'
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42))',
+    tint: isDark ? 'rgba(96, 165, 250, 0.12)' : 'rgba(14, 165, 233, 0.08)',
+    border: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.58)',
+    borderSoft: isDark
+      ? 'rgba(255, 255, 255, 0.12)'
+      : 'rgba(255, 255, 255, 0.42)',
+    shadow: isDark
+      ? 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(255,255,255,0.06), 0 22px 55px rgba(0,0,0,0.42)'
+      : 'inset 0 1px 0 rgba(255,255,255,0.78), inset 0 -1px 0 rgba(255,255,255,0.22), 0 22px 55px rgba(20,30,60,0.16), 0 4px 14px rgba(255,255,255,0.18)',
+    shadowHover: isDark
+      ? 'inset 0 1px 0 rgba(255,255,255,0.2), 0 28px 70px rgba(0,0,0,0.52)'
+      : 'inset 0 1px 0 rgba(255,255,255,0.86), 0 28px 70px rgba(20,30,60,0.22)',
+    blur: 'blur(28px) saturate(190%) brightness(1.08)',
+    blurSoft: 'blur(18px) saturate(170%)',
+    highlight:
+      'linear-gradient(135deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.18) 22%, rgba(255,255,255,0.06) 48%, rgba(255,255,255,0.28) 100%)',
+  };
 
   return createTheme({
     palette: {
@@ -181,7 +204,9 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundImage: isDark ? colors.auraDark : colors.auraLight,
+            backgroundImage: isDark
+              ? `${colors.auraDark}, radial-gradient(circle at 84% 16%, rgba(236,72,153,0.13), transparent 30%), radial-gradient(circle at 72% 82%, rgba(251,191,36,0.10), transparent 34%)`
+              : `${colors.auraLight}, radial-gradient(circle at 15% 20%, rgba(107,213,255,0.30), transparent 28%), radial-gradient(circle at 85% 15%, rgba(255,179,223,0.28), transparent 30%), radial-gradient(circle at 70% 80%, rgba(255,210,122,0.24), transparent 35%)`,
             backgroundAttachment: 'fixed',
             backgroundRepeat: 'no-repeat',
             backgroundSize: 'cover',
@@ -198,25 +223,27 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
           '*': {
             boxSizing: 'border-box',
           },
+          '#root': {
+            minHeight: '100vh',
+          },
         },
       },
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backdropFilter: 'saturate(120%) blur(10px)',
+            WebkitBackdropFilter: liquidGlass.blur,
+            backdropFilter: liquidGlass.blur,
             backgroundColor: isDark
-              ? 'rgba(23, 26, 33, 0.8)'
-              : 'rgba(255, 255, 255, 0.8)',
-            boxShadow: isDark
-              ? 'inset 0 -1px 0 rgba(255,255,255,0.1)'
-              : 'inset 0 -1px 0 rgba(0,0,0,0.06)',
-            border: 'none',
+              ? 'rgba(12, 18, 32, 0.58)'
+              : 'rgba(255, 255, 255, 0.42)',
+            boxShadow: liquidGlass.shadow,
+            borderBottom: `1px solid ${liquidGlass.border}`,
             transition: 'all 0.3s ease',
           },
           colorDefault: {
             backgroundColor: isDark
-              ? 'rgba(23, 26, 33, 0.8)'
-              : 'rgba(255, 255, 255, 0.8)',
+              ? 'rgba(12, 18, 32, 0.58)'
+              : 'rgba(255, 255, 255, 0.42)',
           },
         },
       },
@@ -226,23 +253,21 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
         },
         styleOverrides: {
           root: ({ theme }) => ({
-            borderRadius: 18,
-            background: theme.palette.background.paper,
-            backdropFilter: 'blur(10px)',
-            border:
-              theme.palette.mode === 'light'
-                ? '1px solid rgba(0,0,0,0.05)'
-                : '1px solid rgba(255,255,255,0.05)',
-            boxShadow:
-              theme.palette.mode === 'light'
-                ? '0 4px 20px rgba(100,100,150,.08), 0 1px 3px rgba(0,0,0,0.04)'
-                : '0 4px 20px rgba(0,0,0,.3), 0 1px 3px rgba(255,255,255,0.05)',
+            position: 'relative',
+            borderRadius: 24,
+            background: liquidGlass.surface,
+            WebkitBackdropFilter: liquidGlass.blur,
+            backdropFilter: liquidGlass.blur,
+            border: `1px solid ${liquidGlass.border}`,
+            boxShadow: liquidGlass.shadow,
             transition: 'all 0.3s ease',
+            backgroundClip: 'padding-box',
             '&:hover': {
-              boxShadow:
+              boxShadow: liquidGlass.shadowHover,
+              borderColor:
                 theme.palette.mode === 'light'
-                  ? '0 8px 30px rgba(100,100,150,.12), 0 2px 6px rgba(0,0,0,0.06)'
-                  : '0 8px 30px rgba(0,0,0,.4), 0 2px 6px rgba(255,255,255,0.08)',
+                  ? 'rgba(255,255,255,0.72)'
+                  : 'rgba(255,255,255,0.24)',
             },
           }),
         },
@@ -250,12 +275,18 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       MuiCard: {
         styleOverrides: {
           root: ({ theme }) => ({
-            borderRadius: 20,
+            borderRadius: 28,
             padding: theme.spacing(0),
             overflow: 'hidden',
+            background: liquidGlass.surface,
+            WebkitBackdropFilter: liquidGlass.blur,
+            backdropFilter: liquidGlass.blur,
+            border: `1px solid ${liquidGlass.border}`,
+            boxShadow: liquidGlass.shadow,
             transition: 'all 0.3s ease',
             '&:hover': {
               transform: 'translateY(-2px)',
+              boxShadow: liquidGlass.shadowHover,
             },
           }),
         },
@@ -263,15 +294,19 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       MuiButton: {
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            borderRadius: 999,
             fontWeight: 600,
             fontSize: '0.875rem',
             padding: '10px 24px',
             textTransform: 'none',
             transition: 'all 0.3s ease',
-            boxShadow: 'none',
+            WebkitBackdropFilter: liquidGlass.blurSoft,
+            backdropFilter: liquidGlass.blurSoft,
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.64), 0 8px 20px rgba(20,30,60,0.12)',
             '&:hover': {
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              boxShadow:
+                'inset 0 1px 0 rgba(255,255,255,0.78), 0 12px 28px rgba(20,30,60,0.18)',
               transform: 'translateY(-1px)',
             },
             '&.Mui-disabled': {
@@ -279,15 +314,25 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
             },
           },
           contained: {
-            boxShadow: 'none',
+            background:
+              'linear-gradient(135deg, rgba(14,165,233,0.88), rgba(139,92,246,0.86))',
+            color: '#fff',
             '&:hover': {
-              boxShadow: '0 6px 16px rgba(0,0,0,0.2)',
+              background:
+                'linear-gradient(135deg, rgba(14,165,233,0.96), rgba(236,72,153,0.90))',
             },
           },
           outlined: {
-            borderWidth: '2px',
+            borderWidth: '1px',
+            borderColor: liquidGlass.border,
+            background: isDark
+              ? 'rgba(255,255,255,0.07)'
+              : 'rgba(255,255,255,0.36)',
             '&:hover': {
-              borderWidth: '2px',
+              borderWidth: '1px',
+              borderColor: isDark
+                ? 'rgba(255,255,255,0.26)'
+                : 'rgba(255,255,255,0.72)',
             },
           },
         },
@@ -296,8 +341,16 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              borderRadius: 12,
+              borderRadius: 18,
+              background: isDark
+                ? 'rgba(255,255,255,0.07)'
+                : 'rgba(255,255,255,0.40)',
+              WebkitBackdropFilter: liquidGlass.blurSoft,
+              backdropFilter: liquidGlass.blurSoft,
               transition: 'all 0.3s ease',
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: liquidGlass.borderSoft,
+              },
               '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: colors.primary,
               },
@@ -312,13 +365,19 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       MuiChip: {
         styleOverrides: {
           root: {
-            borderRadius: 10,
+            borderRadius: 999,
             fontWeight: 500,
             fontSize: '0.75rem',
             height: '28px',
+            WebkitBackdropFilter: liquidGlass.blurSoft,
+            backdropFilter: liquidGlass.blurSoft,
           },
           filled: {
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+            background: isDark
+              ? 'rgba(255,255,255,0.10)'
+              : 'rgba(255,255,255,0.42)',
+            boxShadow:
+              'inset 0 1px 0 rgba(255,255,255,0.54), 0 2px 8px rgba(20,30,60,0.10)',
           },
         },
       },
@@ -349,26 +408,62 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       MuiDialog: {
         styleOverrides: {
           paper: {
-            borderRadius: 20,
+            borderRadius: 34,
+            overflow: 'hidden',
+            background: liquidGlass.surfaceStrong,
+            WebkitBackdropFilter: liquidGlass.blur,
+            backdropFilter: liquidGlass.blur,
+            border: `1px solid ${liquidGlass.border}`,
+            boxShadow: liquidGlass.shadow,
+            backgroundClip: 'padding-box',
+            '@media (max-width:600px)': {
+              margin: 12,
+              width: 'calc(100% - 24px)',
+              maxWidth: 'calc(100% - 24px)',
+              maxHeight: 'calc(100% - 24px)',
+              borderRadius: 24,
+            },
+          },
+        },
+      },
+      MuiBackdrop: {
+        styleOverrides: {
+          root: {
+            backgroundColor: isDark
+              ? 'rgba(2, 6, 23, 0.18)'
+              : 'rgba(226, 232, 240, 0.12)',
+            WebkitBackdropFilter: 'none',
+            backdropFilter: 'none',
+          },
+        },
+      },
+      MuiDialogTitle: {
+        styleOverrides: {
+          root: {
+            borderBottom: `1px solid ${liquidGlass.borderSoft}`,
             background: isDark
-              ? 'linear-gradient(135deg, rgba(35,35,45,0.9), rgba(25,25,35,0.9))'
-              : 'linear-gradient(135deg, rgba(255,255,255,0.95), rgba(250,250,255,0.95))',
-            backdropFilter: 'blur(20px)',
-            border: isDark
-              ? '1px solid rgba(255,255,255,0.1)'
-              : '1px solid rgba(255,255,255,0.8)',
-            boxShadow: isDark
-              ? '0 25px 50px rgba(0,0,0,0.5)'
-              : '0 25px 50px rgba(0,0,0,0.15)',
+              ? 'rgba(255,255,255,0.04)'
+              : 'rgba(255,255,255,0.20)',
+          },
+        },
+      },
+      MuiDialogActions: {
+        styleOverrides: {
+          root: {
+            borderTop: `1px solid ${liquidGlass.borderSoft}`,
+            background: isDark
+              ? 'rgba(255,255,255,0.04)'
+              : 'rgba(255,255,255,0.18)',
           },
         },
       },
       MuiAlert: {
         styleOverrides: {
           root: {
-            borderRadius: 14,
-            backdropFilter: 'blur(10px)',
-            border: '1px solid',
+            borderRadius: 20,
+            WebkitBackdropFilter: liquidGlass.blurSoft,
+            backdropFilter: liquidGlass.blurSoft,
+            border: `1px solid ${liquidGlass.borderSoft}`,
           },
           standardSuccess: {
             backgroundColor: isDark
@@ -409,9 +504,24 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
           root: {
             borderRadius: 10,
             height: 6,
+            background: isDark
+              ? 'rgba(255,255,255,0.10)'
+              : 'rgba(255,255,255,0.34)',
           },
           bar: {
             borderRadius: 10,
+          },
+        },
+      },
+      MuiTableContainer: {
+        styleOverrides: {
+          root: {
+            borderRadius: 24,
+            background: liquidGlass.surface,
+            WebkitBackdropFilter: liquidGlass.blur,
+            backdropFilter: liquidGlass.blur,
+            border: `1px solid ${liquidGlass.borderSoft}`,
+            boxShadow: liquidGlass.shadow,
           },
         },
       },

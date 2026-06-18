@@ -86,6 +86,60 @@ code {
   box-sizing: border-box;
 }
 
+:root {
+  --mc-liquid-bg: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.54),
+    rgba(255, 255, 255, 0.28)
+  );
+  --mc-liquid-bg-strong: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0.42)
+  );
+  --mc-liquid-border: rgba(255, 255, 255, 0.58);
+  --mc-liquid-border-soft: rgba(255, 255, 255, 0.42);
+  --mc-liquid-text: rgba(20, 25, 35, 0.9);
+  --mc-liquid-muted: rgba(20, 25, 35, 0.68);
+  --mc-liquid-filter: blur(28px) saturate(190%) brightness(1.08);
+  --mc-liquid-filter-soft: blur(18px) saturate(170%);
+  --mc-liquid-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.22),
+    0 22px 55px rgba(20, 30, 60, 0.16), 0 4px 14px rgba(255, 255, 255, 0.18);
+  --mc-liquid-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 28px 70px rgba(20, 30, 60, 0.22);
+  --mc-liquid-highlight: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.18) 22%,
+    rgba(255, 255, 255, 0.06) 48%,
+    rgba(255, 255, 255, 0.28) 100%
+  );
+}
+
+[data-theme='dark'] {
+  --mc-liquid-bg: linear-gradient(
+    135deg,
+    rgba(22, 28, 42, 0.58),
+    rgba(9, 14, 26, 0.42)
+  );
+  --mc-liquid-bg-strong: linear-gradient(
+    135deg,
+    rgba(28, 36, 54, 0.78),
+    rgba(10, 15, 28, 0.62)
+  );
+  --mc-liquid-border: rgba(255, 255, 255, 0.18);
+  --mc-liquid-border-soft: rgba(255, 255, 255, 0.12);
+  --mc-liquid-text: rgba(235, 242, 255, 0.92);
+  --mc-liquid-muted: rgba(205, 215, 232, 0.68);
+  --mc-liquid-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06), 0 22px 55px rgba(0, 0, 0, 0.42);
+  --mc-liquid-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 28px 70px rgba(0, 0, 0, 0.52);
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -96,9 +150,196 @@ canvas {
 }
 
 /* Glass morphism support */
-.glass {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+.glass,
+.liquid-card,
+.card,
+.modal-content,
+.dropdown-menu,
+.toast,
+.popover,
+.list-group,
+.offcanvas,
+.navbar,
+.mc-liquid-glass {
+  position: relative;
+  overflow: hidden;
+  color: var(--mc-liquid-text);
+  background: var(--mc-liquid-bg) !important;
+  border: 1px solid var(--mc-liquid-border) !important;
+  box-shadow: var(--mc-liquid-shadow) !important;
+  backdrop-filter: var(--mc-liquid-filter);
+  -webkit-backdrop-filter: var(--mc-liquid-filter);
+  background-clip: padding-box;
+}
+
+.glass::before,
+.liquid-card::before,
+.card::before,
+.modal-content::before,
+.dropdown-menu::before,
+.toast::before,
+.popover::before,
+.offcanvas::before,
+.mc-liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--mc-liquid-highlight);
+  opacity: 0.58;
+}
+
+.glass::after,
+.liquid-card::after,
+.card::after,
+.modal-content::after,
+.dropdown-menu::after,
+.toast::after,
+.popover::after,
+.offcanvas::after,
+.mc-liquid-glass::after {
+  content: '';
+  position: absolute;
+  top: -35%;
+  left: -20%;
+  width: 70%;
+  height: 80%;
+  z-index: 0;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.46),
+    rgba(255, 255, 255, 0.08) 55%,
+    transparent 70%
+  );
+  filter: blur(18px);
+  opacity: 0.62;
+}
+
+.glass > *,
+.liquid-card > *,
+.card > *,
+.modal-content > *,
+.dropdown-menu > *,
+.toast > *,
+.popover > *,
+.offcanvas > *,
+.mc-liquid-glass > * {
+  position: relative;
+  z-index: 1;
+}
+
+.glass:hover,
+.liquid-card:hover,
+.card:hover,
+.mc-liquid-glass:hover {
+  box-shadow: var(--mc-liquid-shadow-hover) !important;
+}
+
+.modal-content,
+.liquid-card {
+  border-radius: 34px;
+}
+
+.card {
+  border-radius: 28px;
+}
+
+.dropdown-menu,
+.toast,
+.popover,
+.offcanvas {
+  border-radius: 22px;
+}
+
+@media (max-width: 600px) {
+  :root {
+    --mc-liquid-filter: blur(18px) saturate(170%) brightness(1.04);
+    --mc-liquid-filter-soft: blur(12px) saturate(150%);
+    --mc-liquid-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.62),
+      0 12px 28px rgba(20, 30, 60, 0.12);
+    --mc-liquid-shadow-hover:
+      inset 0 1px 0 rgba(255, 255, 255, 0.68),
+      0 16px 34px rgba(20, 30, 60, 0.16);
+  }
+
+  [data-theme='dark'] {
+    --mc-liquid-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 14px 32px rgba(0, 0, 0, 0.36);
+    --mc-liquid-shadow-hover:
+      inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 18px 38px rgba(0, 0, 0, 0.42);
+  }
+
+  .modal-content,
+  .liquid-card {
+    border-radius: 24px;
+  }
+
+  .card,
+  .glass,
+  .mc-liquid-glass {
+    border-radius: 20px;
+  }
+
+  .dropdown-menu,
+  .toast,
+  .popover,
+  .offcanvas {
+    border-radius: 18px;
+  }
+
+  .glass::before,
+  .liquid-card::before,
+  .card::before,
+  .modal-content::before,
+  .dropdown-menu::before,
+  .toast::before,
+  .popover::before,
+  .offcanvas::before,
+  .mc-liquid-glass::before {
+    opacity: 0.42;
+  }
+
+  .glass::after,
+  .liquid-card::after,
+  .card::after,
+  .modal-content::after,
+  .dropdown-menu::after,
+  .toast::after,
+  .popover::after,
+  .offcanvas::after,
+  .mc-liquid-glass::after {
+    opacity: 0.42;
+    filter: blur(14px);
+  }
+}
+
+.btn,
+.form-control,
+.form-select,
+.input-group-text {
+  border-color: var(--mc-liquid-border-soft);
+  backdrop-filter: var(--mc-liquid-filter-soft);
+  -webkit-backdrop-filter: var(--mc-liquid-filter-soft);
+}
+
+.btn:not(.btn-link),
+.form-control,
+.form-select,
+.input-group-text {
+  background-color: rgba(255, 255, 255, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
+}
+
+[data-theme='dark'] .btn:not(.btn-link),
+[data-theme='dark'] .form-control,
+[data-theme='dark'] .form-select,
+[data-theme='dark'] .input-group-text {
+  color: var(--mc-liquid-text);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Loading animation */
