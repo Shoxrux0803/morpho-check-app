@@ -571,30 +571,159 @@ export default function IntroPage() {
       },
     },
     actionButton: {
-      borderRadius: '14px',
+      minHeight: 58,
+      borderRadius: '18px',
       padding: '14px 28px',
       fontSize: '1.02rem',
       fontWeight: '800',
       textTransform: 'none',
       letterSpacing: 0,
-      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-      boxShadow: 'none',
-      '&:hover': { transform: 'translateY(-2px)' },
+      position: 'relative',
+      overflow: 'hidden',
+      isolation: 'isolate',
+      border: `1px solid ${alpha(theme.palette.common.white, mode === 'dark' ? 0.2 : 0.48)}`,
+      backgroundClip: 'padding-box',
+      backdropFilter: 'blur(20px) saturate(180%) brightness(1.06)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%) brightness(1.06)',
+      transition:
+        'transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.32s ease, box-shadow 0.32s ease, background 0.32s ease',
+      boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.42)}, inset 0 -10px 24px ${alpha(theme.palette.common.white, mode === 'dark' ? 0.05 : 0.22)}, 0 18px 42px ${alpha(theme.palette.common.black, mode === 'dark' ? 0.34 : 0.14)}`,
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        inset: 1,
+        zIndex: -1,
+        borderRadius: 'inherit',
+        background: `linear-gradient(145deg, ${alpha(theme.palette.common.white, mode === 'dark' ? 0.16 : 0.42)} 0%, ${alpha(theme.palette.common.white, mode === 'dark' ? 0.05 : 0.16)} 42%, ${alpha(theme.palette.common.white, mode === 'dark' ? 0.12 : 0.3)} 100%)`,
+      },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: '-70%',
+        left: '-45%',
+        width: '70%',
+        height: '220%',
+        zIndex: -1,
+        borderRadius: '999px',
+        background: `linear-gradient(115deg, transparent 0%, ${alpha(theme.palette.common.white, 0.08)} 30%, ${alpha(theme.palette.common.white, 0.5)} 48%, ${alpha(theme.palette.common.white, 0.08)} 66%, transparent 100%)`,
+        filter: 'blur(1px)',
+        transform: 'translateX(-20%) rotate(8deg)',
+        opacity: 0,
+        transition:
+          'transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease',
+      },
+      '& .MuiButton-startIcon, & .MuiButton-endIcon': {
+        position: 'relative',
+        zIndex: 1,
+      },
+      '&:hover': {
+        transform: 'translateY(-3px)',
+        boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.56)}, inset 0 -12px 26px ${alpha(theme.palette.common.white, mode === 'dark' ? 0.08 : 0.26)}, 0 24px 58px ${alpha(theme.palette.common.black, mode === 'dark' ? 0.42 : 0.18)}`,
+      },
+      '&:hover::after': {
+        opacity: 1,
+        transform: 'translateX(190%) rotate(8deg)',
+      },
+      '&:active': {
+        transform: 'translateY(-1px) scale(0.99)',
+      },
+      '&:focus-visible': {
+        outline: `3px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+        outlineOffset: 3,
+      },
+    },
+    featurePill: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 1,
+      px: 1.7,
+      py: 1,
+      minHeight: 36,
+      borderRadius: '14px',
+      position: 'relative',
+      overflow: 'hidden',
+      isolation: 'isolate',
+      color: 'text.primary',
+      background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, mode === 'dark' ? 0.3 : 0.66)}, ${alpha(theme.palette.background.default, mode === 'dark' ? 0.14 : 0.42)})`,
+      border: `1px solid ${alpha(theme.palette.common.white, mode === 'dark' ? 0.16 : 0.46)}`,
+      backdropFilter: 'blur(18px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+      boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, mode === 'dark' ? 0.18 : 0.48)}, 0 12px 28px ${alpha(theme.palette.common.black, mode === 'dark' ? 0.2 : 0.08)}`,
+      transition:
+        'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease, box-shadow 0.28s ease',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        inset: 1,
+        zIndex: -1,
+        borderRadius: 'inherit',
+        background: `linear-gradient(145deg, ${alpha(theme.palette.common.white, mode === 'dark' ? 0.08 : 0.26)}, transparent 48%, ${alpha(theme.palette.primary.main, 0.08)})`,
+      },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: '-50%',
+        left: '-35%',
+        width: '55%',
+        height: '190%',
+        zIndex: -1,
+        borderRadius: '999px',
+        background: alpha(
+          theme.palette.common.white,
+          mode === 'dark' ? 0.16 : 0.42
+        ),
+        filter: 'blur(14px)',
+        opacity: 0.45,
+      },
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        borderColor: alpha(theme.palette.primary.main, 0.4),
+        boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, mode === 'dark' ? 0.26 : 0.56)}, 0 16px 36px ${alpha(theme.palette.primary.main, 0.16)}`,
+      },
     },
     glassChip: {
       px: 2,
       py: 0.8,
       borderRadius: '100px',
-      bgcolor: alpha(theme.palette.primary.main, 0.1),
+      position: 'relative',
+      overflow: 'hidden',
+      isolation: 'isolate',
+      background: `linear-gradient(135deg, ${alpha('#f8c271', mode === 'dark' ? 0.16 : 0.24)}, ${alpha(theme.palette.background.paper, mode === 'dark' ? 0.16 : 0.58)})`,
       color: theme.palette.primary.main,
       fontWeight: '800',
       fontSize: '0.8rem',
-      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-      backdropFilter: 'blur(10px)',
+      border: `1px solid ${alpha('#f8c271', mode === 'dark' ? 0.28 : 0.46)}`,
+      backdropFilter: 'blur(18px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+      boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, mode === 'dark' ? 0.18 : 0.48)}, 0 12px 30px ${alpha('#f8c271', 0.1)}`,
       display: 'inline-flex',
       alignItems: 'center',
       gap: 1,
       mb: 3,
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        inset: 1,
+        zIndex: -1,
+        borderRadius: 'inherit',
+        background: `linear-gradient(145deg, ${alpha(theme.palette.common.white, mode === 'dark' ? 0.12 : 0.34)}, transparent 56%, ${alpha('#f8c271', 0.18)})`,
+      },
+      '&::after': {
+        content: '""',
+        position: 'absolute',
+        top: '-80%',
+        left: '-15%',
+        zIndex: -1,
+        width: '54%',
+        height: '220%',
+        borderRadius: '999px',
+        background: alpha(
+          theme.palette.common.white,
+          mode === 'dark' ? 0.12 : 0.34
+        ),
+        filter: 'blur(14px)',
+        transform: 'rotate(12deg)',
+      },
     },
   };
 
@@ -736,24 +865,7 @@ export default function IntroPage() {
                         { icon: BarChart3, text: 'Z-score monitoring' },
                         { icon: Microscope, text: 'AI klinik tahlil' },
                       ].map((item) => (
-                        <Box
-                          key={item.text}
-                          sx={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            px: 1.6,
-                            py: 1,
-                            borderRadius: '12px',
-                            color: 'text.primary',
-                            bgcolor: alpha(
-                              theme.palette.background.paper,
-                              mode === 'dark' ? 0.22 : 0.62
-                            ),
-                            border: `1px solid ${alpha(theme.palette.primary.main, 0.12)}`,
-                            backdropFilter: 'blur(14px)',
-                          }}
-                        >
+                        <Box key={item.text} sx={styles.featurePill}>
                           <item.icon
                             size={17}
                             color={theme.palette.primary.main}
@@ -780,8 +892,19 @@ export default function IntroPage() {
                         }
                         sx={{
                           ...styles.actionButton,
-                          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #0891b2 100%)`,
-                          boxShadow: `0 14px 34px ${alpha(theme.palette.primary.main, 0.28)}`,
+                          color: theme.palette.common.white,
+                          background: `linear-gradient(135deg, ${alpha('#f8c271', 0.95)} 0%, ${alpha(theme.palette.primary.main, 0.9)} 46%, ${alpha('#0891b2', 0.95)} 100%)`,
+                          borderColor: alpha(theme.palette.common.white, 0.38),
+                          boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.6)}, inset 0 -14px 28px ${alpha('#0891b2', 0.18)}, 0 18px 48px ${alpha(theme.palette.primary.main, 0.34)}`,
+                          '&:hover': {
+                            ...styles.actionButton['&:hover'],
+                            background: `linear-gradient(135deg, ${alpha('#ffd59a', 0.98)} 0%, ${alpha(theme.palette.primary.main, 0.95)} 44%, ${alpha('#06b6d4', 0.98)} 100%)`,
+                            borderColor: alpha(
+                              theme.palette.common.white,
+                              0.58
+                            ),
+                            boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, 0.72)}, inset 0 -14px 30px ${alpha('#0891b2', 0.22)}, 0 24px 64px ${alpha(theme.palette.primary.main, 0.42)}`,
+                          },
                         }}
                         startIcon={<Zap size={22} />}
                       >
@@ -792,13 +915,21 @@ export default function IntroPage() {
                         onClick={() => navigate('/info')}
                         sx={{
                           ...styles.actionButton,
-                          borderWidth: '2px',
-                          borderColor: alpha(theme.palette.text.primary, 0.14),
+                          borderWidth: '1px',
+                          borderColor: alpha(
+                            theme.palette.common.white,
+                            mode === 'dark' ? 0.18 : 0.5
+                          ),
                           color: 'text.primary',
+                          background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, mode === 'dark' ? 0.22 : 0.58)}, ${alpha('#64748b', mode === 'dark' ? 0.12 : 0.1)})`,
                           '&:hover': {
-                            borderWidth: '2px',
-                            borderColor: theme.palette.primary.main,
-                            bgcolor: alpha(theme.palette.primary.main, 0.05),
+                            ...styles.actionButton['&:hover'],
+                            borderWidth: '1px',
+                            borderColor: alpha(
+                              theme.palette.primary.main,
+                              0.45
+                            ),
+                            background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, mode === 'dark' ? 0.3 : 0.72)}, ${alpha(theme.palette.primary.main, mode === 'dark' ? 0.14 : 0.1)})`,
                           },
                         }}
                       >
@@ -810,14 +941,19 @@ export default function IntroPage() {
                         startIcon={<GraduationCap size={18} />}
                         sx={{
                           ...styles.actionButton,
-                          borderWidth: '2px',
-                          borderColor: alpha('#0f766e', 0.35),
-                          color: '#0f766e',
+                          borderWidth: '1px',
+                          borderColor: alpha(
+                            '#14b8a6',
+                            mode === 'dark' ? 0.34 : 0.42
+                          ),
+                          color: mode === 'dark' ? '#5eead4' : '#0f766e',
+                          background: `linear-gradient(135deg, ${alpha('#14b8a6', mode === 'dark' ? 0.16 : 0.12)}, ${alpha(theme.palette.background.paper, mode === 'dark' ? 0.2 : 0.5)})`,
                           '&:hover': {
-                            borderWidth: '2px',
-                            borderColor: '#0f766e',
-                            bgcolor: alpha('#0f766e', 0.07),
-                            boxShadow: `0 0 20px ${alpha('#0f766e', 0.18)}`,
+                            ...styles.actionButton['&:hover'],
+                            borderWidth: '1px',
+                            borderColor: '#14b8a6',
+                            background: `linear-gradient(135deg, ${alpha('#14b8a6', mode === 'dark' ? 0.24 : 0.18)}, ${alpha(theme.palette.background.paper, mode === 'dark' ? 0.26 : 0.62)})`,
+                            boxShadow: `inset 0 1px 0 ${alpha(theme.palette.common.white, mode === 'dark' ? 0.28 : 0.54)}, 0 24px 58px ${alpha('#0f766e', 0.24)}`,
                           },
                         }}
                       >
