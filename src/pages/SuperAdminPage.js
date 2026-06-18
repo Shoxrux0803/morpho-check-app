@@ -3115,7 +3115,7 @@ const SuperAdminPage = () => {
         sx={{
           py: { xs: 2, md: 4 },
           pr: { xs: 1.5, sm: 2, md: 4 },
-          pl: { xs: 1.5, sm: 2, md: '356px' },
+          pl: { xs: 1.5, sm: 2, md: '324px' },
           maxWidth: '100%',
         }}
       >
@@ -3123,37 +3123,37 @@ const SuperAdminPage = () => {
           {/* Sidebar Tabs */}
           <Box
             sx={{
-              width: { xs: '100%', md: 300 },
-              minWidth: { md: 300 },
-              maxWidth: { md: 300 },
+              width: { xs: '100%', md: 276 },
+              minWidth: { md: 276 },
+              maxWidth: { md: 276 },
               flexShrink: 0,
               position: { md: 'fixed' },
-              top: { md: 96 },
-              left: { md: 32 },
+              top: { md: 88 },
+              left: { md: 24 },
               zIndex: { md: 10 },
-              height: { md: 'calc(100vh - 120px)' },
+              height: { md: 'calc(100vh - 104px)' },
             }}
           >
             <GlassPaper
               sx={{
-                p: { xs: 1, sm: 1.5, md: 2 },
+                p: { xs: 1, sm: 1.35, md: 1.5 },
                 display: { md: 'flex' },
                 flexDirection: { md: 'column' },
                 height: { md: '100%' },
                 overflow: { xs: 'hidden', md: 'hidden' },
                 border: '1px solid',
                 borderColor: isDark
-                  ? 'rgba(255,255,255,0.12)'
+                  ? 'rgba(255,255,255,0.10)'
                   : 'rgba(100,116,139,0.12)',
                 boxShadow: isDark
-                  ? '0 8px 32px rgba(0,0,0,0.4)'
-                  : '0 8px 32px rgba(100,116,139,0.08)',
+                  ? '0 18px 48px rgba(0,0,0,0.34)'
+                  : '0 18px 48px rgba(100,116,139,0.09)',
               }}
             >
               <Box
                 sx={{
-                  p: { xs: 1, md: 2 },
-                  mb: { xs: 1, md: 2 },
+                  p: { xs: 1, md: 1.2 },
+                  mb: { xs: 1, md: 1.1 },
                   textAlign: { xs: 'left', md: 'center' },
                   display: 'flex',
                   alignItems: 'center',
@@ -3164,12 +3164,12 @@ const SuperAdminPage = () => {
               >
                 <Avatar
                   sx={{
-                    width: { xs: 44, md: 64 },
-                    height: { xs: 44, md: 64 },
-                    margin: { xs: 0, md: '0 auto 16px' },
+                    width: { xs: 44, md: 54 },
+                    height: { xs: 44, md: 54 },
+                    margin: { xs: 0, md: '0 auto 12px' },
                     bgcolor: 'primary.main',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    fontSize: { xs: '0.9rem', md: '1.25rem' },
+                    fontSize: { xs: '0.9rem', md: '1.08rem' },
                   }}
                 >
                   SA
@@ -3179,7 +3179,7 @@ const SuperAdminPage = () => {
                     variant="h6"
                     fontWeight={700}
                     noWrap
-                    sx={{ fontSize: { xs: '0.98rem', md: '1.25rem' } }}
+                    sx={{ fontSize: { xs: '0.98rem', md: '1.08rem' } }}
                   >
                     {user.name}
                   </Typography>
@@ -3196,8 +3196,8 @@ const SuperAdminPage = () => {
 
               <Tabs
                 orientation={isMobile ? 'horizontal' : 'vertical'}
-                variant="scrollable"
-                scrollButtons="auto"
+                variant={isMobile ? 'scrollable' : 'standard'}
+                scrollButtons={isMobile ? 'auto' : false}
                 value={activeTab}
                 onChange={(e, v) => setActiveTab(v)}
                 sx={{
@@ -3205,13 +3205,13 @@ const SuperAdminPage = () => {
                   minHeight: { md: 0 },
                   overflow: { md: 'hidden' },
                   '& .MuiTabs-scroller': {
-                    overflowY: { md: 'auto !important' },
+                    overflowY: { md: 'hidden !important' },
                     overflowX: { xs: 'auto', md: 'hidden' },
-                    pr: { md: 0.5 },
+                    pr: { md: 0 },
                     '&::-webkit-scrollbar': {
-                      display: { xs: 'none', md: 'initial' },
+                      display: 'none',
                     },
-                    scrollbarWidth: { xs: 'none', md: 'thin' },
+                    scrollbarWidth: 'none',
                   },
                   '& .MuiTabs-flexContainer': {
                     gap: { xs: 0.75, md: 0 },
@@ -3222,19 +3222,19 @@ const SuperAdminPage = () => {
                     overflow: 'hidden',
                     isolation: 'isolate',
                     borderRadius: 999,
-                    mb: { xs: 0, md: 1 },
+                    mb: { xs: 0, md: 0.65 },
                     mr: { xs: 0, md: 0 },
                     minWidth: { xs: 'max-content', md: '100%' },
                     maxWidth: { xs: 'none', md: '100%' },
-                    px: { xs: 1.35, sm: 1.7, md: 2.25 },
-                    py: { xs: 0.82, sm: 1, md: 1.15 },
+                    px: { xs: 1.35, sm: 1.7, md: 1.65 },
+                    py: { xs: 0.82, sm: 1, md: 0.78 },
                     alignItems: 'center',
                     justifyContent: { xs: 'center', md: 'flex-start' },
                     textAlign: { xs: 'center', md: 'left' },
-                    minHeight: { xs: 40, sm: 44, md: 50 },
+                    minHeight: { xs: 40, sm: 44, md: 40 },
                     textTransform: 'none',
                     fontWeight: 800,
-                    fontSize: { xs: '0.76rem', sm: '0.82rem', md: '0.88rem' },
+                    fontSize: { xs: '0.76rem', sm: '0.82rem', md: '0.8rem' },
                     letterSpacing: 0,
                     whiteSpace: 'nowrap',
                     color: isDark
@@ -3248,10 +3248,10 @@ const SuperAdminPage = () => {
                       ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.42), rgba(30, 41, 59, 0.22))'
                       : 'linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(240, 253, 250, 0.28))',
                     boxShadow: isDark
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(0,0,0,0.18)'
-                      : 'inset 0 1px 0 rgba(255,255,255,0.65), 0 8px 20px rgba(15,23,42,0.06)',
-                    backdropFilter: 'blur(18px) saturate(170%)',
-                    WebkitBackdropFilter: 'blur(18px) saturate(170%)',
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.07), 0 6px 16px rgba(0,0,0,0.14)'
+                      : 'inset 0 1px 0 rgba(255,255,255,0.62), 0 6px 16px rgba(15,23,42,0.05)',
+                    backdropFilter: 'blur(14px) saturate(160%)',
+                    WebkitBackdropFilter: 'blur(14px) saturate(160%)',
                     transition:
                       'transform 0.22s ease, color 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease',
                     '&::before': {
@@ -3266,10 +3266,10 @@ const SuperAdminPage = () => {
                       transition: 'opacity 0.22s ease',
                     },
                     '& .MuiTab-iconWrapper': {
-                      mr: { xs: 0.65, sm: 0.85, md: 1.15 },
-                      fontSize: { xs: 18, sm: 19, md: 20 },
+                      mr: { xs: 0.65, sm: 0.85, md: 0.95 },
+                      fontSize: { xs: 18, sm: 19, md: 18 },
                       color: 'inherit',
-                      filter: 'drop-shadow(0 2px 8px rgba(45, 212, 191, 0.18))',
+                      filter: 'drop-shadow(0 2px 6px rgba(45, 212, 191, 0.14))',
                     },
                     '&.Mui-selected': {
                       color: '#ecfeff',
@@ -3279,7 +3279,7 @@ const SuperAdminPage = () => {
                       background:
                         'linear-gradient(135deg, rgba(20,184,166,0.95), rgba(37,99,235,0.88) 52%, rgba(139,92,246,0.88))',
                       boxShadow:
-                        'inset 0 1px 0 rgba(255,255,255,0.42), 0 12px 30px rgba(20,184,166,0.22), 0 6px 18px rgba(37,99,235,0.18)',
+                        'inset 0 1px 0 rgba(255,255,255,0.38), 0 9px 22px rgba(20,184,166,0.18), 0 4px 14px rgba(37,99,235,0.14)',
                       transform: 'translateY(-1px)',
                       '&::before': {
                         opacity: 1,
@@ -3292,8 +3292,8 @@ const SuperAdminPage = () => {
                         : 'rgba(20, 184, 166, 0.28)',
                       transform: 'translateY(-1px)',
                       boxShadow: isDark
-                        ? 'inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 26px rgba(0,0,0,0.24)'
-                        : 'inset 0 1px 0 rgba(255,255,255,0.72), 0 12px 26px rgba(15,23,42,0.10)',
+                        ? 'inset 0 1px 0 rgba(255,255,255,0.10), 0 9px 20px rgba(0,0,0,0.20)'
+                        : 'inset 0 1px 0 rgba(255,255,255,0.70), 0 9px 20px rgba(15,23,42,0.08)',
                       '&::before': {
                         opacity: 0.75,
                       },
@@ -3354,8 +3354,8 @@ const SuperAdminPage = () => {
               </Tabs>
 
               <Box
-                mt={2}
-                pt={2}
+                mt="auto"
+                pt={1.2}
                 borderTop={
                   isDark
                     ? '1px solid rgba(255,255,255,0.08)'
@@ -3370,7 +3370,13 @@ const SuperAdminPage = () => {
                     blurActiveElement();
                     setLogoutDialogOpen(true);
                   }}
-                  sx={{ borderRadius: 2, justifyContent: 'flex-start', px: 2 }}
+                  sx={{
+                    minHeight: 42,
+                    borderRadius: 999,
+                    justifyContent: 'flex-start',
+                    px: 1.6,
+                    fontSize: '0.8rem',
+                  }}
                 >
                   {pt('logout')}
                 </Button>

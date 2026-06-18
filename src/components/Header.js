@@ -493,6 +493,23 @@ export default function Header() {
   const selectedDateKey = toDateKey(selectedDate);
   const selectedDateLabel = `${selectedDate.getDate()} ${calendarCopy.months[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`;
   const calendarMonthLabel = `${calendarCopy.months[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`;
+  const modeSwitcherOptions = [
+    {
+      value: 'light',
+      label: 'Light',
+      icon: <Brightness7Icon fontSize="small" />,
+    },
+    {
+      value: 'dark',
+      label: 'Dark',
+      icon: <Brightness4Icon fontSize="small" />,
+    },
+  ];
+  const selectMode = (value) => {
+    if (mode !== value) {
+      toggle();
+    }
+  };
 
   return (
     <>
@@ -1179,41 +1196,129 @@ export default function Header() {
                   >
                     Mode
                   </Typography>
-                  <Stack direction="row" spacing={1} mt={0.75}>
-                    {[
-                      {
-                        value: 'light',
-                        label: 'Light',
-                        icon: <Brightness7Icon fontSize="small" />,
+                  <Box
+                    sx={{
+                      '--glass-light': '#ffffff',
+                      '--glass-dark': '#020617',
+                      '--glass-reflex-light': mode === 'dark' ? 0.45 : 1,
+                      '--glass-reflex-dark': mode === 'dark' ? 2 : 1,
+                      position: 'relative',
+                      mt: 0.75,
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      alignItems: 'center',
+                      gap: 0.5,
+                      width: '100%',
+                      minHeight: 58,
+                      p: '6px',
+                      borderRadius: 999,
+                      backgroundColor:
+                        mode === 'dark'
+                          ? 'rgba(148, 163, 184, 0.10)'
+                          : 'rgba(255, 255, 255, 0.28)',
+                      border: '1px solid',
+                      borderColor:
+                        mode === 'dark'
+                          ? 'rgba(255, 255, 255, 0.16)'
+                          : 'rgba(255, 255, 255, 0.64)',
+                      backdropFilter: 'blur(18px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+                      boxShadow:
+                        mode === 'dark'
+                          ? 'inset 0 0 0 1px rgba(255,255,255,0.05), inset 1.8px 3px 0 -2px rgba(255,255,255,0.32), inset -0.3px -1px 4px rgba(0,0,0,0.46), inset 0 3px 4px -2px rgba(0,0,0,0.40), 0 16px 38px rgba(0,0,0,0.34)'
+                          : 'inset 0 0 0 1px rgba(255,255,255,0.28), inset 1.8px 3px 0 -2px rgba(255,255,255,0.96), inset -2px -2px 0 -2px rgba(255,255,255,0.82), inset -0.3px -1px 4px rgba(15,23,42,0.12), inset 0 3px 4px -2px rgba(15,23,42,0.12), 0 16px 38px rgba(8,47,73,0.13)',
+                      transition:
+                        'background-color 0.4s cubic-bezier(1, 0, 0.4, 1), border-color 0.4s cubic-bezier(1, 0, 0.4, 1), box-shadow 0.4s cubic-bezier(1, 0, 0.4, 1)',
+                      '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 6,
+                        left: 6,
+                        width: 'calc(50% - 6px)',
+                        height: 'calc(100% - 12px)',
+                        borderRadius: 999,
+                        zIndex: 0,
+                        transform:
+                          mode === 'dark'
+                            ? 'translateX(calc(100% + 0px)) scale(1)'
+                            : 'translateX(0) scale(1)',
+                        transformOrigin: mode === 'dark' ? 'left' : 'right',
+                        background:
+                          mode === 'dark'
+                            ? 'linear-gradient(135deg, rgba(96,165,250,0.42), rgba(94,234,212,0.20))'
+                            : 'linear-gradient(135deg, rgba(255,255,255,0.54), rgba(255,255,255,0.24))',
+                        boxShadow:
+                          mode === 'dark'
+                            ? 'inset 0 0 0 1px rgba(255,255,255,0.12), inset 2px 1px 0 -1px rgba(255,255,255,0.42), inset -1px 2px 3px -1px rgba(0,0,0,0.34), inset 0 -4px 1px -2px rgba(0,0,0,0.26), 0 3px 10px rgba(0,0,0,0.26)'
+                            : 'inset 0 0 0 1px rgba(255,255,255,0.38), inset 2px 1px 0 -1px rgba(255,255,255,0.96), inset -1.5px -1px 0 -1px rgba(255,255,255,0.82), inset -1px 2px 3px -1px rgba(15,23,42,0.12), inset 0 -4px 1px -2px rgba(15,23,42,0.08), 0 3px 10px rgba(8,47,73,0.10)',
+                        transition:
+                          'transform 0.42s cubic-bezier(1, 0, 0.4, 1), background 0.4s cubic-bezier(1, 0, 0.4, 1), box-shadow 0.4s cubic-bezier(1, 0, 0.4, 1)',
+                        animation: 'mcLiquidToggle 440ms ease',
                       },
-                      {
-                        value: 'dark',
-                        label: 'Dark',
-                        icon: <Brightness4Icon fontSize="small" />,
+                      '@keyframes mcLiquidToggle': {
+                        '0%': { scale: '1 1' },
+                        '50%': { scale: '1.08 1' },
+                        '100%': { scale: '1 1' },
                       },
-                    ].map((item) => (
-                      <Button
+                    }}
+                  >
+                    {modeSwitcherOptions.map((item) => (
+                      <Box
                         key={item.value}
-                        fullWidth
-                        variant={mode === item.value ? 'contained' : 'outlined'}
-                        startIcon={item.icon}
-                        onClick={() => {
-                          if (mode !== item.value) toggle();
-                        }}
+                        component="button"
+                        type="button"
+                        aria-pressed={mode === item.value}
+                        onClick={() => selectMode(item.value)}
                         sx={{
-                          borderRadius: 2,
-                          textTransform: 'none',
+                          position: 'relative',
+                          zIndex: 1,
+                          minHeight: 46,
+                          width: '100%',
+                          border: 0,
+                          borderRadius: 999,
+                          display: 'inline-flex',
+                          alignItems: 'center',
                           justifyContent: 'center',
-                          py: 1,
+                          gap: 0.8,
+                          color:
+                            mode === item.value
+                              ? 'text.primary'
+                              : 'text.secondary',
+                          background: 'transparent',
+                          cursor: mode === item.value ? 'default' : 'pointer',
+                          font: 'inherit',
+                          fontWeight: mode === item.value ? 900 : 800,
+                          letterSpacing: 0,
                           transition:
-                            'transform 0.2s ease, box-shadow 0.2s ease',
-                          '&:hover': { transform: 'translateY(-2px)' },
+                            'color 0.18s ease, transform 0.18s ease, opacity 0.18s ease',
+                          '& svg': {
+                            fontSize: 20,
+                            transition: 'transform 0.18s ease',
+                          },
+                          '&:hover': {
+                            color:
+                              mode === item.value
+                                ? 'text.primary'
+                                : 'primary.main',
+                            transform:
+                              mode === item.value ? 'none' : 'translateY(-1px)',
+                          },
+                          '&:hover svg': {
+                            transform:
+                              mode === item.value ? 'none' : 'scale(1.12)',
+                          },
+                          '&:focus-visible': {
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: 2,
+                          },
                         }}
                       >
+                        {item.icon}
                         {item.label}
-                      </Button>
+                      </Box>
                     ))}
-                  </Stack>
+                  </Box>
                 </Box>
 
                 <Box>

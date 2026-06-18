@@ -70,26 +70,26 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
   const colors = getVariantColors(isDark, variant);
   const liquidGlass = {
     surface: isDark
-      ? 'linear-gradient(135deg, rgba(22, 28, 42, 0.58), rgba(9, 14, 26, 0.42))'
-      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.28))',
+      ? 'linear-gradient(135deg, rgba(25, 32, 48, 0.58), rgba(8, 13, 25, 0.34))'
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.20))',
     surfaceStrong: isDark
-      ? 'linear-gradient(135deg, rgba(28, 36, 54, 0.78), rgba(10, 15, 28, 0.62))'
-      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.42))',
+      ? 'linear-gradient(135deg, rgba(31, 41, 61, 0.76), rgba(10, 15, 28, 0.56))'
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.30))',
     tint: isDark ? 'rgba(96, 165, 250, 0.12)' : 'rgba(14, 165, 233, 0.08)',
-    border: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.58)',
+    border: isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.64)',
     borderSoft: isDark
-      ? 'rgba(255, 255, 255, 0.12)'
-      : 'rgba(255, 255, 255, 0.42)',
+      ? 'rgba(255, 255, 255, 0.14)'
+      : 'rgba(255, 255, 255, 0.46)',
     shadow: isDark
-      ? 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(255,255,255,0.06), 0 22px 55px rgba(0,0,0,0.42)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.78), inset 0 -1px 0 rgba(255,255,255,0.22), 0 22px 55px rgba(20,30,60,0.16), 0 4px 14px rgba(255,255,255,0.18)',
+      ? 'inset 0 0 0 1px rgba(255,255,255,0.08), inset 1.8px 3px 0 -2px rgba(255,255,255,0.38), inset -2px -2px 0 -2px rgba(255,255,255,0.20), inset -3px -9px 1px -7px rgba(255,255,255,0.12), inset -0.5px -1px 4px rgba(0,0,0,0.34), inset 0 3px 5px -2px rgba(0,0,0,0.34), 0 20px 56px rgba(0,0,0,0.42), 0 2px 8px rgba(0,0,0,0.20)'
+      : 'inset 0 0 0 1px rgba(255,255,255,0.34), inset 1.8px 3px 0 -2px rgba(255,255,255,0.92), inset -2px -2px 0 -2px rgba(255,255,255,0.86), inset -3px -9px 1px -7px rgba(255,255,255,0.66), inset -0.5px -1px 4px rgba(15,23,42,0.10), inset 0 3px 5px -2px rgba(15,23,42,0.12), 0 22px 55px rgba(20,30,60,0.14), 0 2px 8px rgba(255,255,255,0.28)',
     shadowHover: isDark
-      ? 'inset 0 1px 0 rgba(255,255,255,0.2), 0 28px 70px rgba(0,0,0,0.52)'
-      : 'inset 0 1px 0 rgba(255,255,255,0.86), 0 28px 70px rgba(20,30,60,0.22)',
-    blur: 'blur(28px) saturate(190%) brightness(1.08)',
-    blurSoft: 'blur(18px) saturate(170%)',
+      ? 'inset 0 0 0 1px rgba(255,255,255,0.10), inset 2px 3px 0 -2px rgba(255,255,255,0.42), inset 0 4px 6px -2px rgba(0,0,0,0.38), 0 28px 72px rgba(0,0,0,0.54)'
+      : 'inset 0 0 0 1px rgba(255,255,255,0.42), inset 2px 3px 0 -2px rgba(255,255,255,0.98), inset 0 4px 6px -2px rgba(15,23,42,0.12), 0 30px 74px rgba(20,30,60,0.20)',
+    blur: 'blur(26px) saturate(185%) brightness(1.06)',
+    blurSoft: 'blur(14px) saturate(165%) brightness(1.04)',
     highlight:
-      'linear-gradient(135deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.18) 22%, rgba(255,255,255,0.06) 48%, rgba(255,255,255,0.28) 100%)',
+      'linear-gradient(135deg, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.18) 24%, rgba(255,255,255,0.05) 52%, rgba(255,255,255,0.30) 100%)',
   };
 
   return createTheme({
