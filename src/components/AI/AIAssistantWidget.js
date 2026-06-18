@@ -112,57 +112,57 @@ const LOCALIZED_SMART_PROMPTS = {
 
 const WELCOME_MESSAGES = {
   uz: "Salom! Men MorphoAI yordamchisiman. Sizga loyiha haqida ma'lumot berishim yoki tahlillarni kiritishda yordam berishim mumkin. Qanday yordam bera olaman?",
-  ru: "Здравствуйте! Я помощник MorphoAI. Я могу предоставить информацию о проекте или помочь с вводом анализов. Чем я могу помочь?",
-  en: "Hello! I am MorphoAI assistant. I can provide project information or help with entering measurements. How can I help you?",
-  tr: "Merhaba! Ben MorphoAI yardımcısıyım. Proje hakkında bilgi verebilir veya ölçümleri girmenize yardımcı olabilirim. Nasıl yardımcı olabilirim?",
-  tg: "Салом! Ман ёвар MorphoAI ҳастам. Ман метавонам дар бораи лоиҳа маълумот диҳам ё дар ворид кардани ченкуниҳо кӯмак кунам. Чӣ тавр метавонам кӯмак кунам?",
-  tm: "Salam! Men MorphoAI kömekçisi. Men size taslama barada maglumat berip bilerin ýa-da ölçegleri girizmäge kömek edip bilerin. Nähili kömek edip bilerin?",
-  ky: "Салам! Мен MorphoAI жардамчысымын. Мен сизге долбоор жөнүндө маалымат бере алам же өлчөөлөрдү киргизүүгө жардам бере алам. Кантип жардам бере алам?",
-  kz: "Сәлем! Мен MorphoAI көмекшісімін. Мен сізге жоба туралы ақпарат бере аламын немесе өлшемдерді енгізуге көмектесе аламын. Қалай көмектесе аламын?",
+  ru: 'Здравствуйте! Я помощник MorphoAI. Я могу предоставить информацию о проекте или помочь с вводом анализов. Чем я могу помочь?',
+  en: 'Hello! I am MorphoAI assistant. I can provide project information or help with entering measurements. How can I help you?',
+  tr: 'Merhaba! Ben MorphoAI yardımcısıyım. Proje hakkında bilgi verebilir veya ölçümleri girmenize yardımcı olabilirim. Nasıl yardımcı olabilirim?',
+  tg: 'Салом! Ман ёвар MorphoAI ҳастам. Ман метавонам дар бораи лоиҳа маълумот диҳам ё дар ворид кардани ченкуниҳо кӯмак кунам. Чӣ тавр метавонам кӯмак кунам?',
+  tm: 'Salam! Men MorphoAI kömekçisi. Men size taslama barada maglumat berip bilerin ýa-da ölçegleri girizmäge kömek edip bilerin. Nähili kömek edip bilerin?',
+  ky: 'Салам! Мен MorphoAI жардамчысымын. Мен сизге долбоор жөнүндө маалымат бере алам же өлчөөлөрдү киргизүүгө жардам бере алам. Кантип жардам бере алам?',
+  kz: 'Сәлем! Мен MorphoAI көмекшісімін. Мен сізге жоба туралы ақпарат бере аламын немесе өлшемдерді енгізуге көмектесе аламын. Қалай көмектесе аламын?',
 };
 
 const PLACEHOLDERS = {
-  uz: "Xabar yozing...",
-  ru: "Введите сообщение...",
-  en: "Type a message...",
-  tr: "Bir mesaj yazın...",
-  tg: "Паём нависед...",
-  tm: "Habar ýazyň...",
-  ky: "Кабар жазыңыз...",
-  kz: "Хабарлама жазыңыз...",
+  uz: 'Xabar yozing...',
+  ru: 'Введите сообщение...',
+  en: 'Type a message...',
+  tr: 'Bir mesaj yazın...',
+  tg: 'Паём нависед...',
+  tm: 'Habar ýazyň...',
+  ky: 'Кабар жазыңыз...',
+  kz: 'Хабарлама жазыңыз...',
 };
 
 const DISCLAIMERS = {
   uz: "Diqqat: AI tavsiyalari va bashoratlari faqat ma'lumot uchun. Tibbiy qarorlarni mutaxassis tasdiqlashi shart.",
-  ru: "Внимание: Рекомендации и прогнозы ИИ носят исключительно информационный характер. Медицинские решения должны быть подтверждены специалистом.",
-  en: "Disclaimer: AI recommendations and predictions are for information only. Medical decisions must be validated by a professional.",
-  tr: "Dikkat: Yapay zeka önerileri ve tahminleri yalnızca bilgi amaçlıdır. Tıbbi kararlar bir uzman tarafından onaylanmalıdır.",
-  tg: "Диққат: Тавсияҳо ва пешгӯиҳои AI танҳо барои маълумотанд. Қарорҳои тиббӣ бояд аз ҷониби мутахассис тасдиқ карда шаванд.",
-  tm: "Üns beriň: AI maslahatlary we çaklamalary diňe maglumat üçin. Lukmançylyk kararlary hünärmen tarapyndan tassyklanmalydyr.",
-  ky: "Көңүл буруңуз: Жасалма интеллекттин сунуштары жана божомолдору маалымат үчүн гана. Медициналык чечимдер адис тарабындан тастыкталышы керек.",
-  kz: "Назар аударыңыз: Жасанды интеллект ұсыныстары мен болжамдары тек ақпараттық сипатта. Медициналық шешімдерді маман растауы тиіс.",
+  ru: 'Внимание: Рекомендации и прогнозы ИИ носят исключительно информационный характер. Медицинские решения должны быть подтверждены специалистом.',
+  en: 'Disclaimer: AI recommendations and predictions are for information only. Medical decisions must be validated by a professional.',
+  tr: 'Dikkat: Yapay zeka önerileri ve tahminleri yalnızca bilgi amaçlıdır. Tıbbi kararlar bir uzman tarafından onaylanmalıdır.',
+  tg: 'Диққат: Тавсияҳо ва пешгӯиҳои AI танҳо барои маълумотанд. Қарорҳои тиббӣ бояд аз ҷониби мутахассис тасдиқ карда шаванд.',
+  tm: 'Üns beriň: AI maslahatlary we çaklamalary diňe maglumat üçin. Lukmançylyk kararlary hünärmen tarapyndan tassyklanmalydyr.',
+  ky: 'Көңүл буруңуз: Жасалма интеллекттин сунуштары жана божомолдору маалымат үчүн гана. Медициналык чечимдер адис тарабындан тастыкталышы керек.',
+  kz: 'Назар аударыңыз: Жасанды интеллект ұсыныстары мен болжамдары тек ақпараттық сипатта. Медициналық шешімдерді маман растауы тиіс.',
 };
 
 const PAGE_LABELS = {
-  uz: "Sahifa",
-  ru: "Страница",
-  en: "Page",
-  tr: "Sayfa",
-  tg: "Саҳифа",
-  tm: "Sahypa",
-  ky: "Баракча",
-  kz: "Парақша",
+  uz: 'Sahifa',
+  ru: 'Страница',
+  en: 'Page',
+  tr: 'Sayfa',
+  tg: 'Саҳифа',
+  tm: 'Sahypa',
+  ky: 'Баракча',
+  kz: 'Парақша',
 };
 
 const ERROR_PREFIX = {
-  uz: "Uzr, xatolik yuz berdi.",
-  ru: "Извините, произошла ошибка.",
-  en: "Sorry, an error occurred.",
-  tr: "Üzgünüz, bir hata oluştu.",
-  tg: "Бубахшед, хатогӣ рӯй дод.",
-  tm: "Bagyşlaň, säwlik ýüze çykdy.",
-  ky: "Кечиресиз, ката кетti.",
-  kz: "Кешіріңіз, қате кетті.",
+  uz: 'Uzr, xatolik yuz berdi.',
+  ru: 'Извините, произошла ошибка.',
+  en: 'Sorry, an error occurred.',
+  tr: 'Üzgünüz, bir hata oluştu.',
+  tg: 'Бубахшед, хатогӣ рӯй дод.',
+  tm: 'Bagyşlaň, säwlik ýüze çykdy.',
+  ky: 'Кечиресиз, ката кетti.',
+  kz: 'Кешіріңіз, қате кетті.',
 };
 
 const AIAssistantWidget = () => {
@@ -182,7 +182,10 @@ const AIAssistantWidget = () => {
 
   useEffect(() => {
     setMessages((prev) => {
-      if (prev.length === 0 || (prev.length === 1 && prev[0].role === 'assistant')) {
+      if (
+        prev.length === 0 ||
+        (prev.length === 1 && prev[0].role === 'assistant')
+      ) {
         return [
           {
             role: 'assistant',
@@ -314,18 +317,19 @@ const AIAssistantWidget = () => {
     } catch (error) {
       const defaultErrorMsg = {
         uz: "Gemini API bilan bog'lanib bo'lmadi.",
-        ru: "Не удалось связаться с Gemini API.",
-        en: "Could not connect to Gemini API.",
-        tr: "Gemini API ile bağlantı kurulamadı.",
-        tg: "Пайвастшавӣ бо Gemini API имконнопазир аст.",
-        tm: "Gemini API bilen birigip bolmady.",
-        ky: "Gemini API менен байланышууга мүмкүн болгон жок.",
-        kz: "Gemini API-мен байланысу мүмкін болмады.",
+        ru: 'Не удалось связаться с Gemini API.',
+        en: 'Could not connect to Gemini API.',
+        tr: 'Gemini API ile bağlantı kurulamadı.',
+        tg: 'Пайвастшавӣ бо Gemini API имконнопазир аст.',
+        tm: 'Gemini API bilen birigip bolmady.',
+        ky: 'Gemini API менен байланышууга мүмкүн болгон жок.',
+        kz: 'Gemini API-мен байланысу мүмкін болмады.',
       };
       const detail =
         error?.response?.data?.detail ||
         error?.response?.data?.message ||
-        (defaultErrorMsg[lang] || defaultErrorMsg.en);
+        defaultErrorMsg[lang] ||
+        defaultErrorMsg.en;
       const errPrefix = ERROR_PREFIX[lang] || ERROR_PREFIX.en;
       setMessages((prev) => [
         ...prev,
@@ -718,7 +722,7 @@ const AIAssistantWidget = () => {
                   variant="caption"
                   sx={{ color: isDark ? '#90caf9' : '#1976d2' }}
                 >
-                  {(PAGE_LABELS[lang] || PAGE_LABELS.en)}: {location.pathname}
+                  {PAGE_LABELS[lang] || PAGE_LABELS.en}: {location.pathname}
                 </Typography>
               </Box>
 
@@ -733,7 +737,9 @@ const AIAssistantWidget = () => {
                   '&::-webkit-scrollbar': { display: 'none' },
                 }}
               >
-                {(LOCALIZED_SMART_PROMPTS[lang] || LOCALIZED_SMART_PROMPTS.en).map((prompt, i) => (
+                {(
+                  LOCALIZED_SMART_PROMPTS[lang] || LOCALIZED_SMART_PROMPTS.en
+                ).map((prompt, i) => (
                   <Chip
                     key={i}
                     label={prompt}

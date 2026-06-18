@@ -28,12 +28,16 @@ const aiService = {
       payload.image_mime_type = imageMimeType;
     }
 
-    const response = await axios.post(`${API_URL}/ai/chat?lang=${lang}`, payload, {
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Accept-Language': lang
-      },
-    });
+    const response = await axios.post(
+      `${API_URL}/ai/chat?lang=${lang}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Accept-Language': lang,
+        },
+      }
+    );
     return response.data;
   },
 

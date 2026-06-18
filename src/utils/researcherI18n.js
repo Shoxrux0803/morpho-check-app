@@ -1870,7 +1870,8 @@ dictionaries.tr = {
   restoredOne: 'Geri yuklendi',
   movedTrashMany: 'Veriler cop kutusuna tasindi',
   movedTrashOne: 'Silindi',
-  confirmHardDelete: 'Bu verileri veritabanindan kalici olarak silmek istiyor musunuz?',
+  confirmHardDelete:
+    'Bu verileri veritabanindan kalici olarak silmek istiyor musunuz?',
   confirmSoftDelete: 'Bu verileri silmek istediginizden emin misiniz?',
   cancel: 'Iptal',
   close: 'Kapat',
@@ -1930,8 +1931,10 @@ dictionaries.tr = {
   calfCircumference: 'Baldir cevresi',
   dynamometry: 'Dinamometri',
   autoStatsTitle: 'Otomatik istatistiksel analiz',
-  autoStatsSubtitle: 'Sonuclar, gecerli filtrelenmis tablo uzerinden gercek zamanli hesaplanir.',
-  autoStatsMinimum: 'Guvenilir istatistiksel testler icin en az 3 kayit gereklidir. Kayitlar arttikca p-value, etki buyuklugu, ANOVA ve regresyon otomatik olarak gosterilir.',
+  autoStatsSubtitle:
+    'Sonuclar, gecerli filtrelenmis tablo uzerinden gercek zamanli hesaplanir.',
+  autoStatsMinimum:
+    'Guvenilir istatistiksel testler icin en az 3 kayit gereklidir. Kayitlar arttikca p-value, etki buyuklugu, ANOVA ve regresyon otomatik olarak gosterilir.',
   byBmi: 'BMI ye gore',
   percentile50: '50. yuzdelik dilim',
   bmiRange: 'BMI araligi',
@@ -2046,7 +2049,7 @@ dictionaries.tr = {
   fatBiceps: 'Biceps cilt kivrimi',
   fatSubscapular: 'Subskapular cilt kivrimi',
   fatIliac: 'Iliak cilt kivrimi',
-  fatPopliteal: 'Popliteal cilt kivrimi'
+  fatPopliteal: 'Popliteal cilt kivrimi',
 };
 
 const DEFAULT_LANGUAGE = 'en';

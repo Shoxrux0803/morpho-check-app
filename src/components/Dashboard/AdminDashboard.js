@@ -404,8 +404,7 @@ ADMIN_DASH_I18N.tr = {
   underweight: 'Zayıf',
   insightNormal:
     'Gruptaki hastaların çoğunluğu (%60+) normal kiloya sahip, bu olumlu bir göstergedir.',
-  insightRisk:
-    'Dikkat: grupta fazla kilo ve obezite oranı yüksek (%40+).',
+  insightRisk: 'Dikkat: grupta fazla kilo ve obezite oranı yüksek (%40+).',
   insightBmi: (bmi) =>
     `Ortalama BMI (${bmi}) normun biraz üzerinde. Önleyici tedbirlerin artırılması önerilir.`,
   insightGender: (male, female) =>

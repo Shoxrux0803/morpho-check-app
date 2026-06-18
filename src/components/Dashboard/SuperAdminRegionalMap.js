@@ -933,7 +933,7 @@ MAP_I18N.tr = {
   bmiDistribution: 'BMI dağılımı',
   regionSample: (count) => `Bölgeye göre n=${count}`,
   zBands: 'BMI Z-skoru bantları',
-  zBandsSub: 'WHO LMS\'ye göre klinik gruplandırma',
+  zBandsSub: "WHO LMS'ye göre klinik gruplandırma",
   analyticalIndicators: 'Analitik göstergeler',
   activityStructure: 'Aktivite yapısı',
   operationalAnalysis: 'Operasyonel analiz',
@@ -977,9 +977,11 @@ MAP_I18N.tr = {
   notSpecified: 'Belirtilmemiş',
   regionNotSpecified: 'Bölge belirtilmemiş',
   sameAreaPin: 'Aynı bölgedeki pin',
-  chatError: 'Sohbet yalnızca yönetici veya araştırmacı pinleri için açılabilir',
+  chatError:
+    'Sohbet yalnızca yönetici veya araştırmacı pinleri için açılabilir',
   chatOpened: (name) => `${name} ile sohbet açıldı`,
-  chatPrompt: 'Sohbet penceresinden yönetici veya araştırmacı ile iletişime geçebilirsiniz',
+  chatPrompt:
+    'Sohbet penceresinden yönetici veya araştırmacı ile iletişime geçebilirsiniz',
   underweight: 'Zayıf',
   normal: 'Normal',
   overweight: 'Fazla Kilolu',

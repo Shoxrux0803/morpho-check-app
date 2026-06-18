@@ -26,6 +26,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import CheckIcon from '@mui/icons-material/Check';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
@@ -295,8 +296,9 @@ const buildCalendarDays = (monthDate) => {
 };
 
 export default function Header() {
-  const { mode, toggle, variant, setVariant } = useThemeMode();
+  const { mode, toggle, variant, setVariant, setMode } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
+  const [prevMode, setPrevMode] = useState(mode);
   const { user, logout } = useAuth();
   const { pendingCount, isOnline, setEditingItem } = useOfflineSync();
   const navigate = useNavigate();
@@ -507,8 +509,16 @@ export default function Header() {
   ];
   const selectMode = (value) => {
     if (mode !== value) {
-      toggle();
+      setPrevMode(mode);
+      setMode(value);
     }
+  };
+
+  const getTransformOrigin = () => {
+    const order = { light: 0, dark: 1 };
+    const prevOrder = order[prevMode] ?? 0;
+    const currentOrder = order[mode] ?? 0;
+    return currentOrder > prevOrder ? 'left' : 'right';
   };
 
   return (
@@ -1205,7 +1215,7 @@ export default function Header() {
                       position: 'relative',
                       mt: 0.75,
                       display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
                       alignItems: 'center',
                       gap: 0.5,
                       width: '100%',
@@ -1221,12 +1231,12 @@ export default function Header() {
                         mode === 'dark'
                           ? 'rgba(255, 255, 255, 0.16)'
                           : 'rgba(255, 255, 255, 0.64)',
-                      backdropFilter: 'blur(18px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(18px) saturate(180%)',
+                      backdropFilter: 'blur(8px) url(#switcher) saturate(200%)',
+                      WebkitBackdropFilter: 'blur(8px) saturate(200%)',
                       boxShadow:
                         mode === 'dark'
                           ? 'inset 0 0 0 1px rgba(255,255,255,0.05), inset 1.8px 3px 0 -2px rgba(255,255,255,0.32), inset -0.3px -1px 4px rgba(0,0,0,0.46), inset 0 3px 4px -2px rgba(0,0,0,0.40), 0 16px 38px rgba(0,0,0,0.34)'
-                          : 'inset 0 0 0 1px rgba(255,255,255,0.28), inset 1.8px 3px 0 -2px rgba(255,255,255,0.96), inset -2px -2px 0 -2px rgba(255,255,255,0.82), inset -0.3px -1px 4px rgba(15,23,42,0.12), inset 0 3px 4px -2px rgba(15,23,42,0.12), 0 16px 38px rgba(8,47,73,0.13)',
+                          : 'inset 0 0 0 1px rgba(255,255,255,0.28), inset 1.8px 3px 0 -2px rgba(255,255,255,0.96), inset -2px -2px 0 -2px rgba(255,255,255,0.82), inset -0.3px -1px 4px rgba(15,23,42,0.10), inset 0 3px 4px -2px rgba(15,23,42,0.12), 0 16px 38px rgba(8,47,73,0.13)',
                       transition:
                         'background-color 0.4s cubic-bezier(1, 0, 0.4, 1), border-color 0.4s cubic-bezier(1, 0, 0.4, 1), box-shadow 0.4s cubic-bezier(1, 0, 0.4, 1)',
                       '&::after': {
@@ -1234,15 +1244,15 @@ export default function Header() {
                         position: 'absolute',
                         top: 6,
                         left: 6,
-                        width: 'calc(50% - 6px)',
+                        width: 'calc(50% - 4px)',
                         height: 'calc(100% - 12px)',
                         borderRadius: 999,
                         zIndex: 0,
                         transform:
                           mode === 'dark'
-                            ? 'translateX(calc(100% + 0px)) scale(1)'
+                            ? 'translateX(100%) scale(1)'
                             : 'translateX(0) scale(1)',
-                        transformOrigin: mode === 'dark' ? 'left' : 'right',
+                        transformOrigin: getTransformOrigin(),
                         background:
                           mode === 'dark'
                             ? 'linear-gradient(135deg, rgba(96,165,250,0.42), rgba(94,234,212,0.20))'
@@ -1726,6 +1736,29 @@ export default function Header() {
         </Toolbar>
       </AppBar>
       <Toolbar sx={{ py: 1 }} />
+      <svg
+        style={{
+          position: 'absolute',
+          width: 0,
+          height: 0,
+          pointerEvents: 'none',
+        }}
+        xmlns="http://www.w3.org/2000/svg"
+        version="1.1"
+      >
+        <defs>
+          <filter id="switcher">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feColorMatrix
+              in="blur"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8"
+              result="goo"
+            />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
     </>
   );
 }

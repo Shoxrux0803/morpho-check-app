@@ -29,7 +29,7 @@ export function applyTheme(theme) {
   }
 
   // 2) Bootstrap 5.3 temani qo‘llash
-  root.setAttribute('data-bs-theme', t);
+  root.setAttribute('data-bs-theme', t === THEMES.LIGHT ? 'light' : 'dark');
   root.setAttribute('data-theme', t);
 
   if (document.body) {

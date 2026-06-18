@@ -17,7 +17,7 @@ export default function ThemeSync() {
     body.classList.toggle('bg-light', !on);
     root?.classList.toggle('dark', on); // fallback
     html.setAttribute('data-theme', mode);
-    html.setAttribute('data-bs-theme', mode);
+    html.setAttribute('data-bs-theme', mode === 'light' ? 'light' : 'dark');
 
     // ixtiyoriy: mobil status bar
     const meta = document.querySelector('meta[name="theme-color"]');

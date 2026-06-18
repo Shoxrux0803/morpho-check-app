@@ -28,6 +28,7 @@ import ChatWidget from './components/Chat/ChatWidget';
 import AIAssistantWidget from './components/AI/AIAssistantWidget';
 import MorphoProBackground from './components/MorphoProBackground';
 import { useThemeMode } from './providers/ThemeProviderMUI';
+import WelcomeOverlay from './components/WelcomeOverlay';
 
 // Lazy pages - YANGI SAHIFALAR QO'SHILDI
 const MorphoCheckPro = lazy(() => import('./pages/MorphoCheckPro'));
@@ -212,6 +213,7 @@ const HomeWrapper = () => {
 function AnimatedRoutes() {
   const location = useLocation();
   const { mode } = useThemeMode();
+  const { justLoggedIn, completeLoginTransition } = useAuth();
 
   const publicRoutes = [
     '/',
@@ -227,6 +229,11 @@ function AnimatedRoutes() {
       {showBg && (
         <MorphoProBackground theme={mode} pathname={location.pathname} />
       )}
+      <AnimatePresence>
+        {justLoggedIn && (
+          <WelcomeOverlay onComplete={completeLoginTransition} />
+        )}
+      </AnimatePresence>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<HomeWrapper />} />

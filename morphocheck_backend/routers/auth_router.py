@@ -247,7 +247,7 @@ def get_current_superadmin(current_user: User = Depends(get_current_user)):
 
 
 @router.post("/register", response_model=UserOut)
-@limiter.limit("5/minute")
+@limiter.limit("100/minute")
 def register(request: Request, user_in: UserRegister, db: Session = Depends(get_db)):
     email = user_in.email.strip().lower()
     existing_user = db.query(User).filter(User.email == email).first()
@@ -271,7 +271,7 @@ def register(request: Request, user_in: UserRegister, db: Session = Depends(get_
 
 
 @router.post("/login", response_model=Token)
-@limiter.limit("5/minute")
+@limiter.limit("100/minute")
 def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
     # Login (email) yoki Ism (name) bo'yicha qidirish
     login_value = user_in.email.strip().lower()

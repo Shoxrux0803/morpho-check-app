@@ -68,6 +68,7 @@ const getVariantColors = (isDark, variant = 'neo') => {
 export const makeTheme = (mode = 'light', variant = 'neo') => {
   const isDark = mode === 'dark';
   const colors = getVariantColors(isDark, variant);
+
   const liquidGlass = {
     surface: isDark
       ? 'linear-gradient(135deg, rgba(25, 32, 48, 0.58), rgba(8, 13, 25, 0.34))'
@@ -94,7 +95,7 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
 
   return createTheme({
     palette: {
-      mode,
+      mode: isDark ? 'dark' : 'light',
       primary: {
         main: colors.primary,
         light: isDark ? `${colors.primary}99` : `${colors.primary}33`,

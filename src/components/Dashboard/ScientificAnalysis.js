@@ -427,23 +427,20 @@ SCI_TEXT.tr = {
   subtitle:
     'Popülasyon Z-skoru, persentil, korelasyon ve risk grupları analizi',
   zDist: 'Z-skoruna Göre Dağılım',
-  zDistSub:
-    'BMI standart sapma gruplarına göre normalden sapma analizi',
+  zDistSub: 'BMI standart sapma gruplarına göre normalden sapma analizi',
   patientCount: 'Hasta sayısı',
   patients: 'Hastalar',
   patientsLower: 'hasta',
   normalNote:
-    'Normal dağılıma (Gauss eğrisi) göre: hastaların %68\'inin +/-1σ aralığında, %95\'inin ise +/-2σ aralığında olması beklenir. Sisteminizde: Normal grubu',
+    "Normal dağılıma (Gauss eğrisi) göre: hastaların %68'inin +/-1σ aralığında, %95'inin ise +/-2σ aralığında olması beklenir. Sisteminizde: Normal grubu",
   percentileTable: 'Persentil Tablosu',
   percentileSub: 'BMI, boy ve kiloya göre dağılım sınırları',
   percentile: 'Persentil',
   heightCm: 'Boy (cm)',
   weightKg: 'Kilo (kg)',
-  percentileNote:
-    '* Veriler ortalama BMI değerine göre hesaplanmaktadır:',
+  percentileNote: '* Veriler ortalama BMI değerine göre hesaplanmaktadır:',
   correlationMatrix: 'Korelasyon Matrisi',
-  correlationSub:
-    'Parametreler arasındaki ilişki (Pearson r katsayısı)',
+  correlationSub: 'Parametreler arasındaki ilişki (Pearson r katsayısı)',
   parameter: 'Parametre',
   age: 'Yaş',
   height: 'Boy',
@@ -464,7 +461,7 @@ SCI_TEXT.tr = {
   observeRisk: 'Gözlemlenmeli',
   attention: 'Dikkat',
   highRiskNote:
-    'Sistemde hastaların %{pct}\'si yüksek risk grubunda. Klinik müdahale önerilir.',
+    "Sistemde hastaların %{pct}'si yüksek risk grubunda. Klinik müdahale önerilir.",
   trendTitle: '6 Aylık Trend Analizi',
   trendSub: 'Dinamik, büyüme hızı ve ortalama BMI değeri',
   analysesCount: 'Analiz sayısı',

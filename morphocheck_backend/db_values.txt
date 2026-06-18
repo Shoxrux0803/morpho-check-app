@@ -1,0 +1,18 @@
+Unique values of parents_marriage:
+  None: 2
+  'Qarindosh emas': 2
+  'Qarindosh emas (неродственный)': 1
+  'Uzoq qarindosh': 2
+  'Uzoq qarindosh (дальнородственный)': 2
+  'Yaqin qarindosh': 1
+  'Yaqin qarindosh (близкородственный)': 1
+  'Узоқ қариндош (дальнородственный)': 4
+  'Қариндош емас': 5
+  'Қариндош емас (неродственный)': 3
+
+Unique values of feeding_type:
+  None: 2
+  "Sun'iy (искусственном вскармливании)": 1
+  'Tabiiy': 7
+  'Tabiiy (естественном вскармливании)': 1
+  'Табиий': 12

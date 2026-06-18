@@ -13,12 +13,14 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     localStorage.removeItem('user_role');
     del('auth_token').catch(console.error);
     setUser(null);
+    setJustLoggedIn(false);
   }, []);
 
   const login = async (credentials) => {
@@ -34,6 +36,7 @@ export const AuthProvider = ({ children }) => {
         const profile = await api.getUserProfile();
         localStorage.setItem('user_role', profile.role);
         setUser(profile);
+        setJustLoggedIn(true);
         return profile;
       }
       throw new Error("Token topilmadi. Backend javobi noto'g'ri formatda.");
@@ -47,6 +50,10 @@ export const AuthProvider = ({ children }) => {
       throw err;
     }
   };
+
+  const completeLoginTransition = useCallback(() => {
+    setJustLoggedIn(false);
+  }, []);
 
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -74,7 +81,15 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, isAuthenticated: !!user }}
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        isAuthenticated: !!user,
+        justLoggedIn,
+        completeLoginTransition,
+      }}
     >
       {children}
     </AuthContext.Provider>

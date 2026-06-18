@@ -12,6 +12,7 @@ import { getStoredTheme, applyTheme, THEMES } from '../utils/theme';
 
 const ThemeCtx = createContext({
   mode: 'light',
+  setMode: () => {},
   toggle: () => {},
   variant: 'neo',
   setVariant: () => {},
@@ -74,8 +75,9 @@ export default function ThemeProviderMUI({ children }) {
   const value = useMemo(
     () => ({
       mode,
+      setMode: (m) => setMode(m),
       toggle: () =>
-        setMode((m) => (m === THEMES.DARK ? THEMES.LIGHT : THEMES.DARK)),
+        setMode((m) => (m === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT)),
       variant,
       setVariant: (v) => setVariant(THEME_VARIANTS.includes(v) ? v : 'neo'),
     }),
