@@ -2,6 +2,7 @@ import React, {
   useMemo,
   useState,
   useEffect,
+  useRef,
   createContext,
   useContext,
 } from 'react';
@@ -16,6 +17,44 @@ const ThemeCtx = createContext({
   setVariant: () => {},
 });
 export const useThemeMode = () => useContext(ThemeCtx);
+
+function ThemeTransitionOverlay({ mode }) {
+  const isFirstRender = useRef(true);
+  const timeoutRef = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return undefined;
+    }
+
+    if (
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return undefined;
+    }
+
+    setVisible(false);
+    window.requestAnimationFrame(() => setVisible(true));
+    timeoutRef.current = window.setTimeout(() => setVisible(false), 760);
+
+    return () => {
+      window.clearTimeout(timeoutRef.current);
+    };
+  }, [mode]);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      aria-hidden="true"
+      className="mc-theme-transition-overlay"
+      data-mode={mode}
+    />
+  );
+}
 
 export default function ThemeProviderMUI({ children }) {
   const [mode, setMode] = useState(getStoredTheme());
@@ -47,6 +86,7 @@ export default function ThemeProviderMUI({ children }) {
     <ThemeCtx.Provider value={value}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <ThemeTransitionOverlay mode={mode} />
         {children}
       </ThemeProvider>
     </ThemeCtx.Provider>

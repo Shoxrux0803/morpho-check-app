@@ -39,7 +39,7 @@ export function applyTheme(theme) {
 
   // 3) klassni qisqa muddatdan keyin olib tashlaymiz
   if (root.classList.contains('theme-transition')) {
-    window.setTimeout(() => root.classList.remove('theme-transition'), 250);
+    window.setTimeout(() => root.classList.remove('theme-transition'), 720);
   }
 
   try {
