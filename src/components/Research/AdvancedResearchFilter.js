@@ -114,7 +114,20 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
     <Box sx={{ mb: 3 }}>
       <GlassPaper sx={{ p: 2 }}>
         {/* Main Search Bar */}
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={{ xs: 1.25, sm: 1.5 }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          sx={{
+            minWidth: 0,
+            '& .MuiButton-root': {
+              minHeight: 42,
+              minWidth: { xs: 0, sm: 96 },
+              whiteSpace: 'normal',
+              lineHeight: 1.2,
+            },
+          }}
+        >
           <TextField
             fullWidth
             size="small"
@@ -137,7 +150,12 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             variant={expanded ? 'contained' : 'outlined'}
             startIcon={expanded ? <ExpandLess /> : <FilterList />}
             onClick={() => setExpanded(!expanded)}
-            sx={{ borderRadius: 3, textTransform: 'none', minWidth: 140 }}
+            sx={{
+              borderRadius: 3,
+              textTransform: 'none',
+              width: { xs: '100%', sm: 'auto' },
+              px: { xs: 1.5, sm: 2 },
+            }}
           >
             {t('filters')}
           </Button>
@@ -146,7 +164,12 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             variant="contained"
             color="primary"
             onClick={() => onSearch()}
-            sx={{ borderRadius: 3, px: 3, textTransform: 'none' }}
+            sx={{
+              borderRadius: 3,
+              px: { xs: 1.5, sm: 3 },
+              textTransform: 'none',
+              width: { xs: '100%', sm: 'auto' },
+            }}
           >
             {t('search')}
           </Button>
@@ -159,9 +182,10 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
               onClick={onExport}
               sx={{
                 borderRadius: 3,
-                px: 2,
+                px: { xs: 1.5, sm: 2 },
                 textTransform: 'none',
                 whiteSpace: 'nowrap',
+                width: { xs: '100%', sm: 'auto' },
               }}
             >
               XLSX

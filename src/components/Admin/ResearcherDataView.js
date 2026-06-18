@@ -2000,15 +2000,43 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   return (
     <Box>
       <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={3}
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between',
+          alignItems: { xs: 'stretch', md: 'center' },
+          gap: 2,
+          mb: 3,
+          minWidth: 0,
+        }}
       >
-        <Typography variant="h4" fontWeight={900}>
+        <Typography variant="h4" fontWeight={900} sx={{ minWidth: 0 }}>
           {t('researcherDataTitle')}
         </Typography>
-        <Stack direction="row" spacing={2}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: { xs: 'stretch', md: 'flex-end' },
+            gap: { xs: 1.25, sm: 1.5 },
+            width: { xs: '100%', md: 'auto' },
+            minWidth: 0,
+            '& .MuiButton-root': {
+              minHeight: 44,
+              borderRadius: 2,
+              flex: { xs: '1 1 128px', sm: '0 1 auto' },
+              minWidth: { xs: 0, sm: 112 },
+              px: { xs: 1.25, sm: 2 },
+              whiteSpace: 'normal',
+              textAlign: 'center',
+              lineHeight: 1.2,
+            },
+            '& .MuiButton-startIcon': {
+              mr: { xs: 0.75, sm: 1 },
+              flexShrink: 0,
+            },
+          }}
+        >
           <input
             ref={importInputRef}
             type="file"
@@ -2076,7 +2104,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
           >
             {t('refresh')}
           </Button>
-        </Stack>
+        </Box>
       </Box>
 
       <Tabs

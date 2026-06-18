@@ -1404,6 +1404,14 @@ const ResearchAnalytics = ({ data, isDark }) => {
           direction={{ xs: 'column', sm: 'row' }}
           spacing={2}
           justifyContent="center"
+          sx={{
+            alignItems: { xs: 'stretch', sm: 'center' },
+            '& .MuiButton-root': {
+              width: { xs: '100%', sm: 'auto' },
+              whiteSpace: 'normal',
+              lineHeight: 1.2,
+            },
+          }}
         >
           <Button
             variant="contained"
@@ -2788,7 +2796,16 @@ const ResearcherPage = () => {
               <Stack
                 direction={{ xs: 'column', sm: 'row' }}
                 spacing={2}
-                sx={{ mt: 4 }}
+                sx={{
+                  mt: 4,
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                  '& .MuiButton-root': {
+                    width: { xs: '100%', sm: 'auto' },
+                    minHeight: 48,
+                    whiteSpace: 'normal',
+                    lineHeight: 1.2,
+                  },
+                }}
               >
                 <Button
                   variant="contained"
@@ -3175,11 +3192,16 @@ const ResearcherPage = () => {
               {activeTab === 2 && (
                 <Stack spacing={3}>
                   <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', md: 'row' },
+                      justifyContent: 'space-between',
+                      alignItems: { xs: 'stretch', md: 'center' },
+                      gap: 2,
+                      minWidth: 0,
+                    }}
                   >
-                    <Box>
+                    <Box sx={{ minWidth: 0 }}>
                       <Typography variant="h4" fontWeight={900}>
                         {pt('researcherPanelTab')}
                       </Typography>
@@ -3247,7 +3269,30 @@ const ResearcherPage = () => {
                         </Stack>
                       )}
                     </Box>
-                    <Box display="flex" gap={2} flexWrap="wrap">
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: { xs: 'stretch', md: 'flex-end' },
+                        gap: { xs: 1.25, sm: 1.5 },
+                        width: { xs: '100%', md: 'auto' },
+                        minWidth: 0,
+                        '& .MuiButton-root': {
+                          minHeight: 44,
+                          borderRadius: 2,
+                          flex: { xs: '1 1 128px', sm: '0 1 auto' },
+                          minWidth: { xs: 0, sm: 112 },
+                          px: { xs: 1.25, sm: 2 },
+                          whiteSpace: 'normal',
+                          textAlign: 'center',
+                          lineHeight: 1.2,
+                        },
+                        '& .MuiButton-startIcon': {
+                          mr: { xs: 0.75, sm: 1 },
+                          flexShrink: 0,
+                        },
+                      }}
+                    >
                       <input
                         ref={importInputRef}
                         type="file"
@@ -3380,11 +3425,16 @@ const ResearcherPage = () => {
               {activeTab === 3 && isSuperAdmin && (
                 <Stack spacing={3}>
                   <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      justifyContent: 'space-between',
+                      alignItems: { xs: 'stretch', sm: 'center' },
+                      gap: 2,
+                      minWidth: 0,
+                    }}
                   >
-                    <Box>
+                    <Box sx={{ minWidth: 0 }}>
                       <Typography variant="h4" fontWeight={900}>
                         {tr('deleted')}
                       </Typography>
@@ -3397,7 +3447,11 @@ const ResearcherPage = () => {
                       onClick={fetchDeleted}
                       variant="contained"
                       color="warning"
-                      sx={{ borderRadius: 2 }}
+                      sx={{
+                        borderRadius: 2,
+                        width: { xs: '100%', sm: 'auto' },
+                        whiteSpace: 'normal',
+                      }}
                     >
                       {tr('refresh')}
                     </Button>
