@@ -341,7 +341,7 @@ export default function Header() {
         blur: 16,
         edge: 24 / w,
       });
-      layer.style.backdropFilter       = filterVal;
+      layer.style.backdropFilter = filterVal;
       layer.style.webkitBackdropFilter = filterVal;
     }
 
@@ -351,9 +351,8 @@ export default function Header() {
       window.removeEventListener('resize', applyHeaderGlass);
       removeFilter(filterId);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   const openLogoutDialog = () => {
     blurActiveElement();
@@ -757,7 +756,7 @@ export default function Header() {
                     sx={{
                       ...navButtonSx,
                       ...(location.pathname === '/researcher' &&
-                        researcherSection === item.section
+                      researcherSection === item.section
                         ? activeNavSx
                         : {}),
                     }}
@@ -1608,6 +1607,7 @@ export default function Header() {
             anchor="right"
             open={drawerOpen}
             onClose={() => setDrawerOpen(false)}
+            sx={{ zIndex: (theme) => theme.zIndex.drawer + 30 }}
             PaperProps={{
               sx: {
                 width: 280,
@@ -1645,7 +1645,7 @@ export default function Header() {
                       justifyContent: 'flex-start',
                       py: 1.5,
                       ...(location.pathname === '/researcher' &&
-                        researcherSection === item.section
+                      researcherSection === item.section
                         ? activeNavSx
                         : {}),
                     }}
