@@ -384,17 +384,17 @@ const ChatWidget = () => {
               width: isMobile ? 'calc(100vw - 24px)' : '400px',
               height: isMobile ? 'calc(100dvh - 88px)' : '650px',
               maxHeight: isMobile ? 'calc(100dvh - 88px)' : '90vh',
-              background: isDark ? '#1e1e1e' : '#ffffff',
-              backdropFilter: 'blur(20px)',
+              background: isDark ? 'rgba(18, 18, 18, 0.45)' : 'rgba(255, 255, 255, 0.45)',
+              backdropFilter: 'blur(24px) saturate(180%)',
               boxShadow: isDark
-                ? '0 20px 40px rgba(0,0,0,0.4)'
-                : '0 20px 40px rgba(0,0,0,0.15)',
+                ? '0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
+                : '0 8px 32px rgba(31,38,135,0.15), inset 0 0 0 1px rgba(255,255,255,0.6)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
               border: isDark
-                ? '1px solid rgba(255,255,255,0.1)'
-                : '1px solid rgba(0,0,0,0.05)',
+                ? '1px solid rgba(255, 255, 255, 0.1)'
+                : '1px solid rgba(255, 255, 255, 0.4)',
               marginBottom: isMobile ? '0' : '10px',
               color: isDark ? '#fff' : '#000',
               transformOrigin: isMobile ? 'bottom left' : 'bottom right',
@@ -409,8 +409,11 @@ const ChatWidget = () => {
                 padding: '15px 20px',
                 background:
                   currentView === VIEWS.BROADCAST
-                    ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
-                    : 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
+                    ? 'linear-gradient(135deg, rgba(255,149,0,0.7) 0%, rgba(255,94,0,0.7) 100%)'
+                    : isDark 
+                      ? 'linear-gradient(135deg, rgba(15,118,110,0.6) 0%, rgba(37,99,235,0.6) 100%)' 
+                      : 'linear-gradient(135deg, rgba(15,118,110,0.7) 0%, rgba(37,99,235,0.7) 100%)',
+                backdropFilter: 'blur(10px)',
                 color: '#fff',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -496,7 +499,7 @@ const ChatWidget = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden',
-                background: isDark ? '#121212' : '#f8f9fa',
+                background: 'transparent',
                 position: 'relative',
               }}
             >

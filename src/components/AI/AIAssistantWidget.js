@@ -441,15 +441,15 @@ const AIAssistantWidget = () => {
                 height: isMobile ? 'calc(100dvh - 92px)' : '600px',
                 maxHeight: isMobile ? 'calc(100dvh - 92px)' : '90vh',
                 background: isDark
-                  ? 'rgba(30, 30, 30, 0.95)'
-                  : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(12px)',
+                  ? 'rgba(18, 18, 18, 0.45)'
+                  : 'rgba(255, 255, 255, 0.45)',
+                backdropFilter: 'blur(24px) saturate(180%)',
                 border: isDark
                   ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : '1px solid rgba(255, 255, 255, 0.3)',
+                  : '1px solid rgba(255, 255, 255, 0.4)',
                 boxShadow: isDark
-                  ? '0 8px 32px rgba(0,0,0,0.5)'
-                  : '0 8px 32px rgba(0,0,0,0.15)',
+                  ? '0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
+                  : '0 8px 32px rgba(31,38,135,0.15), inset 0 0 0 1px rgba(255,255,255,0.6)',
               }}
             >
               {/* Header */}
@@ -457,8 +457,9 @@ const AIAssistantWidget = () => {
                 sx={{
                   p: 2,
                   background: isDark
-                    ? 'linear-gradient(90deg, #0d47a1, #1976d2)'
-                    : 'linear-gradient(90deg, #1976d2, #64b5f6)',
+                    ? 'linear-gradient(90deg, rgba(13,71,161,0.6), rgba(25,118,210,0.6))'
+                    : 'linear-gradient(90deg, rgba(25,118,210,0.7), rgba(100,181,246,0.7))',
+                  backdropFilter: 'blur(10px)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
@@ -495,9 +496,7 @@ const AIAssistantWidget = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 2,
-                  bgcolor: isDark
-                    ? 'rgba(0,0,0,0.2)'
-                    : 'rgba(240, 244, 248, 0.5)',
+                  bgcolor: 'transparent',
                 }}
               >
                 {messages.map((msg, idx) => (
@@ -838,7 +837,9 @@ const AIAssistantWidget = () => {
                 sx={{
                   p: 2,
                   pt: selectedImage ? 1 : 2,
-                  bgcolor: isDark ? '#1e1e1e' : 'white',
+                  bgcolor: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                  backdropFilter: 'blur(10px)',
+                  borderTop: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
                 }}
               >
                 <input
