@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import {
   Link as RouterLink,
   NavLink,
@@ -53,6 +53,8 @@ import { useOfflineSync } from '../providers/OfflineSyncProvider';
 import WeatherClock from './WeatherClock';
 import SyncManager from './SyncManager';
 import LogoutConfirmDialog from './LogoutConfirmDialog';
+import LiquidGlass from './ui/LiquidGlass';
+import { nextFilterId, injectFilter, removeFilter } from '../utils/liquidGlass';
 
 const blurActiveElement = () => {
   if (document.activeElement instanceof HTMLElement) {
@@ -304,6 +306,7 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ── State hooks (must be declared before refs/effects) ───────────────────────
   const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
   const [langChanging, setLangChanging] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
@@ -314,6 +317,43 @@ export default function Header() {
   const [calendarMonth, setCalendarMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1)
   );
+
+  // ── Liquid glass filter for header ──────────────────────────────────────────
+  const headerGlassLayerRef = useRef(null);
+  const headerFilterIdRef = useRef(null);
+  if (!headerFilterIdRef.current) headerFilterIdRef.current = nextFilterId();
+
+  useEffect(() => {
+    const layer = headerGlassLayerRef.current;
+    const filterId = headerFilterIdRef.current;
+    if (!layer || !filterId) return;
+
+    function applyHeaderGlass() {
+      const w = window.innerWidth;
+      const h = 64;
+      const filterVal = injectFilter({
+        filterId,
+        width: w,
+        height: h,
+        strength: 28,
+        saturate: 1.6,
+        brightness: 1.05,
+        blur: 16,
+        edge: 24 / w,
+      });
+      layer.style.backdropFilter       = filterVal;
+      layer.style.webkitBackdropFilter = filterVal;
+    }
+
+    applyHeaderGlass();
+    window.addEventListener('resize', applyHeaderGlass);
+    return () => {
+      window.removeEventListener('resize', applyHeaderGlass);
+      removeFilter(filterId);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   const openLogoutDialog = () => {
     blurActiveElement();
@@ -524,17 +564,48 @@ export default function Header() {
   return (
     <>
       <AppBar
-        className="mc-header-glow"
+        className="mc-header-liquid"
         position="fixed"
         color="transparent"
         elevation={0}
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 20,
-          backdropFilter: 'blur(18px)',
-          WebkitBackdropFilter: 'blur(18px)',
+          background: 'transparent',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+          transition: 'box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          boxShadow:
+            mode === 'dark'
+              ? '0 1px 0 rgba(255,255,255,0.08), 0 8px 32px rgba(0,0,0,0.32)'
+              : '0 1px 0 rgba(255,255,255,0.70), 0 8px 32px rgba(15,23,42,0.09)',
+          '&:hover': {
+            boxShadow:
+              mode === 'dark'
+                ? '0 1px 0 rgba(255,255,255,0.12), 0 16px 48px rgba(0,0,0,0.45)'
+                : '0 1px 0 rgba(255,255,255,0.95), 0 16px 48px rgba(15,23,42,0.16)',
+          },
         }}
       >
-        <Toolbar sx={{ py: 1 }}>
+        {/* ── Liquid Glass Layer — sits behind content, applies displacement filter ── */}
+        <Box
+          ref={headerGlassLayerRef}
+          aria-hidden="true"
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 0,
+            pointerEvents: 'none',
+            background:
+              mode === 'dark'
+                ? 'linear-gradient(135deg, rgba(255,255,255,0.065) 0%, rgba(255,255,255,0.025) 100%)'
+                : 'linear-gradient(135deg, rgba(255,255,255,0.58) 0%, rgba(255,255,255,0.32) 100%)',
+            boxShadow:
+              mode === 'dark'
+                ? 'inset 0 0 0 1px rgba(255,255,255,0.10)'
+                : 'inset 0 0 0 1px rgba(255,255,255,0.65)',
+          }}
+        />
+        <Toolbar sx={{ py: 1, position: 'relative', zIndex: 1 }}>
           {/* Brand */}
           <Stack
             direction="row"
@@ -686,7 +757,7 @@ export default function Header() {
                     sx={{
                       ...navButtonSx,
                       ...(location.pathname === '/researcher' &&
-                      researcherSection === item.section
+                        researcherSection === item.section
                         ? activeNavSx
                         : {}),
                     }}
@@ -1574,7 +1645,7 @@ export default function Header() {
                       justifyContent: 'flex-start',
                       py: 1.5,
                       ...(location.pathname === '/researcher' &&
-                      researcherSection === item.section
+                        researcherSection === item.section
                         ? activeNavSx
                         : {}),
                     }}
