@@ -19,6 +19,15 @@ body {
   overflow-x: hidden;
 }
 
+/* Fix page jumping when modals/dropdowns open */
+body[style],
+.MuiAppBar-root[style],
+header[style],
+.navbar[style],
+.fixed-top[style] {
+  padding-right: 0 !important;
+}
+
 body {
   margin: 0;
   font-family:
@@ -162,6 +171,7 @@ code {
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 html.theme-transition,
@@ -498,6 +508,54 @@ canvas {
   border-color: var(--mc-liquid-border-soft);
   backdrop-filter: var(--mc-liquid-filter-soft);
   -webkit-backdrop-filter: var(--mc-liquid-filter-soft);
+}
+
+/* Global smooth transitions */
+.btn,
+.form-control,
+.form-select,
+.input-group-text,
+input:not([type="checkbox"]):not([type="radio"]):not(.MuiInputBase-input),
+textarea:not(.MuiInputBase-input),
+select:not(.MuiInputBase-input),
+.MuiInputBase-root,
+.MuiOutlinedInput-notchedOutline {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Global input smooth hover effect (Native & Bootstrap) */
+input:not([type="checkbox"]):not([type="radio"]):not(.MuiInputBase-input):hover:not(:focus),
+textarea:not(.MuiInputBase-input):hover:not(:focus),
+select:not(.MuiInputBase-input):hover:not(:focus),
+.form-control:hover:not(:focus),
+.form-select:hover:not(:focus) {
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
+  border-color: rgba(14, 165, 233, 0.5) !important;
+}
+
+/* MUI Input smooth hover effect */
+.MuiInputBase-root:hover:not(.Mui-focused) {
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
+}
+.MuiInputBase-root:hover:not(.Mui-focused) .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(14, 165, 233, 0.5) !important;
+}
+
+/* Dark Mode */
+[data-theme='dark'] input:not([type="checkbox"]):not([type="radio"]):not(.MuiInputBase-input):hover:not(:focus),
+[data-theme='dark'] textarea:not(.MuiInputBase-input):hover:not(:focus),
+[data-theme='dark'] select:not(.MuiInputBase-input):hover:not(:focus),
+[data-theme='dark'] .form-control:hover:not(:focus),
+[data-theme='dark'] .form-select:hover:not(:focus) {
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2) !important;
+  border-color: rgba(96, 165, 250, 0.6) !important;
+}
+
+[data-theme='dark'] .MuiInputBase-root:hover:not(.Mui-focused) {
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.2) !important;
+}
+[data-theme='dark'] .MuiInputBase-root:hover:not(.Mui-focused) .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(96, 165, 250, 0.6) !important;
 }
 
 .btn:not(.btn-link),
