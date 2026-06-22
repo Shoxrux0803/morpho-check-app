@@ -474,11 +474,31 @@ RESEARCH_TEMPLATE_EXAMPLE = {
 }
 
 
-def research_record_to_dict(record: ResearchRecord) -> dict:
+def research_record_to_dict(record: ResearchRecord, current_user: Optional[User] = None) -> dict:
     payload = {
         column.name: getattr(record, column.name)
         for column in ResearchRecord.__table__.columns
     }
+    
+    # Маскирование персональных данных для field_assistant
+    if current_user and current_user.role == "field_assistant":
+        raw_name = payload.get("full_name")
+        if raw_name:
+            parts = raw_name.split()
+            if len(parts) > 1:
+                payload["full_name"] = f"{parts[0]} {parts[1][0]}."
+            elif len(parts) == 1:
+                payload["full_name"] = f"{parts[0][0]}."
+            else:
+                payload["full_name"] = "***"
+        else:
+            payload["full_name"] = "***"
+            
+        payload["parents_phone"] = "***"
+        payload["consent_guardian_name"] = "***"
+        payload["consent_guardian_phone"] = "***"
+        payload["birth_place"] = "***"
+
     payload["created_by_name"] = (
         record.created_by.name if getattr(record, "created_by", None) else None
     )
@@ -1179,7 +1199,7 @@ def get_current_researcher_or_superadmin(
         )
 
     # 4. Roli bo'yicha tekshirish
-    if user.role not in ["researcher", "superadmin"]:
+    if user.role not in ["researcher", "superadmin", "field_assistant"]:
         raise HTTPException(
             status_code=403, detail="Sizda ushbu amalni bajarish uchun ruxsat yo'q."
         )
@@ -1249,6 +1269,8 @@ def export_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Eksport qilishga ruxsatingiz yo'q")
     """XLSX Export - Advanced version with styling and Cyrillic headers"""
     export_lang = normalize_export_lang(lang)
     query = (
@@ -1751,6 +1773,8 @@ async def import_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Import qilishga ruxsatingiz yo'q")
     region_offsets = {}
     filename = (file.filename or "").lower()
     if not filename.endswith(".xlsx"):
@@ -1904,8 +1928,15 @@ def list_research_records(
         .filter(ResearchRecord.is_deleted == 0)
     )
 
-    if current_user.role == "researcher":
+    if current_user.role == "field_assistant":
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
+    elif current_user.role == "researcher":
+        # Researcher sees their own records + records of assistants supervised by them
+        assistant_ids = db.query(User.id).filter(User.supervisor_id == current_user.id, User.role == "field_assistant").subquery()
+        query = query.filter(
+            (ResearchRecord.created_by_id == current_user.id) | 
+            (ResearchRecord.created_by_id.in_(assistant_ids))
+        )
     elif researcher_id:
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
@@ -2026,7 +2057,7 @@ def list_research_records(
         .limit(page_size)
         .all()
     )
-    items = [research_record_to_dict(record) for record in records]
+    items = [research_record_to_dict(record, current_user) for record in records]
     if paginated:
         return {"items": items, "total": int(total)}
     return items
@@ -2042,6 +2073,8 @@ def export_dataset_for_analysis(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Eksport qilishga ruxsatingiz yo'q")
     """
     Advanced export for statistical analysis (SPSS/Python).
     - Numeric encoding for categorical variables.
@@ -2175,6 +2208,8 @@ def export_research_summary_docx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Eksport qilishga ruxsatingiz yo'q")
     export_lang = normalize_export_lang(lang)
     query = (
         db.query(ResearchRecord)
@@ -2334,9 +2369,13 @@ def get_research_record(
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
-    if current_user.role == "researcher" and record.created_by_id != current_user.id:
+    if current_user.role == "field_assistant" and record.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
-    return research_record_to_dict(record)
+    elif current_user.role == "researcher" and record.created_by_id != current_user.id:
+        creator = db.get(User, record.created_by_id)
+        if not (creator and creator.supervisor_id == current_user.id):
+            raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
+    return research_record_to_dict(record, current_user)
 
 
 @router.put("/{record_id}", response_model=ResearchRecordOut)
@@ -2346,6 +2385,8 @@ def update_research_record(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Tahrirlashga ruxsatingiz yo'q")
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
@@ -2368,6 +2409,8 @@ def delete_research_record(
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """Soft delete"""
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="O'chirishga ruxsatingiz yo'q")
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
@@ -2425,6 +2468,8 @@ def download_research_docx(
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """DOCX hisobot yuklab olish"""
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Eksport qilishga ruxsatingiz yo'q")
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
@@ -2450,6 +2495,8 @@ def download_research_consent_docx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="Eksport qilishga ruxsatingiz yo'q")
     record = db.get(ResearchRecord, record_id)
     if not record or record.is_deleted == 1:
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")

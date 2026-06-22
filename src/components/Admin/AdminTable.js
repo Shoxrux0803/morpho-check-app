@@ -42,6 +42,7 @@ const AdminTable = ({
   const t = (key) => pageT(lang, key);
   const locale = localeByLang[lang] || 'uz-UZ';
   const isSuperAdmin = user?.role === 'superadmin';
+  const isAssistant = user?.role === 'field_assistant';
   const translateGender = (value) => {
     const normalized = String(value || '').toLowerCase();
     if (['erkak', 'male', 'm', 'boy'].includes(normalized)) return t('male');
@@ -72,13 +73,15 @@ const AdminTable = ({
       <Table sx={{ minWidth: isSuperAdmin ? 1120 : 900 }}>
         <TableHead>
           <TableRow>
-            <TableCell padding="checkbox">
-              <Checkbox
-                checked={allChecked}
-                onChange={toggleAll}
-                indeterminate={checked.size > 0 && !allChecked}
-              />
-            </TableCell>
+            {!isAssistant && (
+              <TableCell padding="checkbox">
+                <Checkbox
+                  checked={allChecked}
+                  onChange={toggleAll}
+                  indeterminate={checked.size > 0 && !allChecked}
+                />
+              </TableCell>
+            )}
             <TableCell>{t('date')}</TableCell>
             <TableCell>{t('fullName')}</TableCell>
             <TableCell>{t('gender')}</TableCell>
@@ -123,14 +126,16 @@ const AdminTable = ({
                     }
                   }}
                 >
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={checked.has(row.id)}
-                      onChange={() => toggleOne(row.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      disabled={isDeleted && !isSuperAdmin}
-                    />
-                  </TableCell>
+                  {!isAssistant && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={checked.has(row.id)}
+                        onChange={() => toggleOne(row.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={isDeleted && !isSuperAdmin}
+                      />
+                    </TableCell>
+                  )}
 
                   {/* Sana */}
                   <TableCell

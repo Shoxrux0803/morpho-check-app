@@ -31,6 +31,7 @@ from routers.auth_router import (
     get_current_admin,
     get_current_superadmin,
     get_current_user,
+    get_current_admin_or_assistant,
 )
 from services.analyze_service import (
     _split_region_and_district,
@@ -188,8 +189,25 @@ def bmi_status_by_age(bmi: Optional[float], age: Optional[int]) -> str:
     return "Semizlik?"
 
 
-def to_dict_analysis(row: PatientAnalysis) -> dict:
-    first_name, last_name = split_name(getattr(row, "name", None))
+def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) -> dict:
+    raw_name = getattr(row, "name", None)
+    
+    # Маскирование персональных данных для field_assistant
+    if current_user and current_user.role == "field_assistant":
+        if raw_name:
+            parts = raw_name.split()
+            if len(parts) > 1:
+                masked_name = f"{parts[0]} {parts[1][0]}."
+            elif len(parts) == 1:
+                masked_name = f"{parts[0][0]}."
+            else:
+                masked_name = "***"
+        else:
+            masked_name = "***"
+    else:
+        masked_name = raw_name
+
+    first_name, last_name = split_name(masked_name)
     bmi_val = getattr(row, "bmi", None)
     if bmi_val is None:
         bmi_val = calc_bmi(getattr(row, "weight", None), getattr(row, "height", None))
@@ -197,7 +215,7 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "id": getattr(row, "id", None),
         "id_code": getattr(row, "id_code", None),
         "created_at": getattr(row, "created_at", None),
-        "name": getattr(row, "name", None),
+        "name": masked_name,
         "first_name": first_name,
         "last_name": last_name,
         "gender": getattr(row, "gender", None),
@@ -217,13 +235,13 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
         "recommendations": getattr(row, "recommendations", None),
         "ai_recommendations": getattr(row, "ai_recommendations", None),
         "doctor_note": getattr(row, "doctor_note", None),
-        "parents_phone": getattr(row, "parents_phone", None),
+        "parents_phone": "***" if current_user and current_user.role == "field_assistant" else getattr(row, "parents_phone", None),
         "consent_confirmed": bool(getattr(row, "consent_confirmed", 0)),
-        "consent_guardian_name": getattr(row, "consent_guardian_name", None),
+        "consent_guardian_name": "***" if current_user and current_user.role == "field_assistant" else getattr(row, "consent_guardian_name", None),
         "consent_guardian_relationship": getattr(
             row, "consent_guardian_relationship", None
         ),
-        "consent_guardian_phone": getattr(row, "consent_guardian_phone", None),
+        "consent_guardian_phone": "***" if current_user and current_user.role == "field_assistant" else getattr(row, "consent_guardian_phone", None),
         "consent_confirmed_at": getattr(row, "consent_confirmed_at", None),
         "consent_policy_version": getattr(row, "consent_policy_version", None),
     }
@@ -249,7 +267,10 @@ def to_dict_analysis(row: PatientAnalysis) -> dict:
     )
     for extra in extra_fields:
         if hasattr(row, extra):
-            payload[extra] = getattr(row, extra)
+            if current_user and current_user.role == "field_assistant" and extra in ["address", "mahalla"]:
+                payload[extra] = "***"
+            else:
+                payload[extra] = getattr(row, extra)
 
     # Add creator name if requested
     payload["created_by_id"] = getattr(row, "created_by_id", None)
@@ -314,6 +335,17 @@ def clean_user_payload(data: dict, preserve_empty_location: bool = False) -> dic
             if cleaned.get(key) == "":
                 cleaned.pop(key, None)
 
+    # supervisor_id: empty string or 0 → None (prevents FK constraint errors)
+    if "supervisor_id" in cleaned:
+        sid = cleaned["supervisor_id"]
+        if sid == "" or sid == 0:
+            cleaned["supervisor_id"] = None
+        elif sid is not None:
+            try:
+                cleaned["supervisor_id"] = int(sid)
+            except (TypeError, ValueError):
+                cleaned["supervisor_id"] = None
+
     return cleaned
 
 
@@ -336,7 +368,8 @@ def list_users(
             or_(User.name.ilike(like), User.email.ilike(like), User.phone.ilike(like))
         )
     items = (
-        query.order_by(User.id.desc())
+        query.options(joinedload(User.supervisor))
+        .order_by(User.id.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
@@ -352,6 +385,7 @@ def list_users(
 def list_deleted_users(db: Session = Depends(get_db)):
     return (
         db.query(User)
+        .options(joinedload(User.supervisor))
         .filter(User.is_deleted == 1)
         .order_by(desc(User.deleted_at), desc(User.id))
         .all()
@@ -388,7 +422,14 @@ def create_user(
     user = User(**user_data)
     db.add(user)
     db.commit()
-    db.refresh(user)
+
+    # Reload with joinedload to get supervisor_role populated
+    user = (
+        db.query(User)
+        .options(joinedload(User.supervisor))
+        .filter(User.id == user.id)
+        .first()
+    )
 
     # Audit Log
     record_audit_log(
@@ -410,7 +451,12 @@ def create_user(
     dependencies=[Depends(get_current_superadmin)],
 )
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.get(User, user_id)
+    user = (
+        db.query(User)
+        .options(joinedload(User.supervisor))
+        .filter(User.id == user_id)
+        .first()
+    )
     if not user:
         raise HTTPException(404, "User not found")
     return user
@@ -424,7 +470,12 @@ def update_user(
     db: Session = Depends(get_db),
     current_admin: User = Depends(get_current_superadmin),
 ):
-    user = db.get(User, user_id)
+    user = (
+        db.query(User)
+        .options(joinedload(User.supervisor))
+        .filter(User.id == user_id)
+        .first()
+    )
     if not user:
         raise HTTPException(404, "User not found")
 
@@ -452,7 +503,14 @@ def update_user(
         setattr(user, k, v)
 
     db.commit()
-    db.refresh(user)
+
+    # Reload with joinedload to get supervisor_role populated
+    user = (
+        db.query(User)
+        .options(joinedload(User.supervisor))
+        .filter(User.id == user_id)
+        .first()
+    )
 
     # Audit Log
     record_audit_log(
@@ -513,7 +571,14 @@ def restore_user(
     user.deleted_at = None
     user.deleted_by_id = None
     db.commit()
-    db.refresh(user)
+
+    # Reload with joinedload
+    user = (
+        db.query(User)
+        .options(joinedload(User.supervisor))
+        .filter(User.id == user_id)
+        .first()
+    )
 
     record_audit_log(
         db=db,
@@ -532,7 +597,7 @@ def restore_user(
 @router.get("/analyses")
 def list_analyses(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin_or_assistant),
     q: Optional[str] = Query(None),
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
@@ -548,11 +613,17 @@ def list_analyses(
 ):
     base = db.query(PatientAnalysis)
 
-    if current_user.role != "superadmin":
-        # Oddiy admin: faqat o'z ma'lumotlari + o'chirilmaganlar
+    if current_user.role == "field_assistant":
         base = base.filter(
             PatientAnalysis.created_by_id == current_user.id,
             PatientAnalysis.is_deleted == 0,
+        )
+    elif current_user.role != "superadmin":
+        # Oddiy admin: o'z ma'lumotlari + biriktirilgan assistentlar kiritgan ma'lumotlar
+        assistant_ids = db.query(User.id).filter(User.supervisor_id == current_user.id, User.role == "field_assistant").subquery()
+        base = base.filter(
+            ((PatientAnalysis.created_by_id == current_user.id) | (PatientAnalysis.created_by_id.in_(assistant_ids))) &
+            (PatientAnalysis.is_deleted == 0)
         )
     else:
         # Super admin: barcha ma'lumotlar
@@ -607,7 +678,7 @@ def list_analyses(
     )
 
     items_db = base.offset(max(0, (page - 1) * page_size)).limit(page_size).all()
-    items = [to_dict_analysis(r) for r in items_db]
+    items = [to_dict_analysis(r, current_user) for r in items_db]
     return {"items": items, "total": int(total)}
 
 
@@ -615,7 +686,7 @@ def list_analyses(
 def get_analysis(
     analysis_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin_or_assistant),
 ):
     rec = db.get(PatientAnalysis, analysis_id)
     if not rec:
@@ -623,9 +694,11 @@ def get_analysis(
 
     # Ownership Check
     if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
-        raise HTTPException(403, "Ushbu ma'lumotni ko'rishga huquqingiz yo'q")
+        creator = db.get(User, rec.created_by_id)
+        if not (creator and creator.supervisor_id == current_user.id):
+            raise HTTPException(403, "Ushbu ma'lumotni ko'rishga huquqingiz yo'q")
 
-    return to_dict_analysis(rec)
+    return to_dict_analysis(rec, current_user)
 
 
 class AdminDeleteRequestModel(BaseModel):

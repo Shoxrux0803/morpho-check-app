@@ -53,7 +53,13 @@ const GlassPaper = ({ children, sx = {} }) => (
   </Paper>
 );
 
-const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
+const AdvancedResearchFilter = ({
+  filter,
+  setFilter,
+  onSearch,
+  onExport,
+  isAssistant,
+}) => {
   const { lang } = useLanguage();
   const t = (key) => researcherT(lang, key);
   const [expanded, setExpanded] = useState(false);
@@ -174,7 +180,7 @@ const AdvancedResearchFilter = ({ filter, setFilter, onSearch, onExport }) => {
             {t('search')}
           </Button>
 
-          {onExport && (
+          {onExport && !isAssistant && (
             <Button
               variant="outlined"
               color="success"

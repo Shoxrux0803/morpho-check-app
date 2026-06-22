@@ -483,20 +483,31 @@ export default function Header() {
 
   const researcherSection =
     new URLSearchParams(location.search).get('section') || 'home';
+  const isResearcherAssistant =
+    user?.role === 'field_assistant' && user?.supervisor_role === 'researcher';
   const isResearcherHome =
-    user?.role === 'researcher' &&
+    (user?.role === 'researcher' || isResearcherAssistant) &&
     location.pathname === '/researcher' &&
     researcherSection === 'home';
-  const homePath = user?.role === 'researcher' ? '/researcher' : '/';
+  const homePath =
+    user?.role === 'researcher' || isResearcherAssistant
+      ? '/researcher'
+      : user?.role === 'field_assistant'
+        ? '/admin'
+        : '/';
   const analyzePath = '/morphocheck-pro';
   const guidelinesPath = '/guidelines';
   const researcherNavItems = [
-    {
-      label: 'Asosiy',
-      to: '/researcher?section=home',
-      section: 'home',
-      icon: <HomeIcon />,
-    },
+    ...(isResearcherAssistant
+      ? []
+      : [
+          {
+            label: 'Asosiy',
+            to: '/researcher?section=home',
+            section: 'home',
+            icon: <HomeIcon />,
+          },
+        ]),
     {
       label: 'Tahlil qilish',
       to: '/researcher?section=analyze',
@@ -747,7 +758,7 @@ export default function Header() {
             sx={{ display: { xs: 'none', md: 'flex' } }}
           >
             {/* Navigation Links */}
-            {user?.role === 'researcher' ? (
+            {user?.role === 'researcher' || isResearcherAssistant ? (
               researcherNavItems.map((item) => (
                 <Tooltip title={item.label} key={item.section}>
                   <Button
@@ -775,25 +786,27 @@ export default function Header() {
               ))
             ) : (
               <>
-                <Tooltip title={t('homeTooltip')}>
-                  <Button
-                    component={NavLink}
-                    to={homePath}
-                    end
-                    sx={{
-                      ...navButtonSx,
-                      ...(isResearcherHome ? activeNavSx : {}),
-                    }}
-                    startIcon={<HomeIcon fontSize="small" />}
-                  >
-                    <Box
-                      component="span"
-                      sx={{ display: { xs: 'none', md: 'inline' } }}
+                {user?.role !== 'field_assistant' && (
+                  <Tooltip title={t('homeTooltip')}>
+                    <Button
+                      component={NavLink}
+                      to={homePath}
+                      end
+                      sx={{
+                        ...navButtonSx,
+                        ...(isResearcherHome ? activeNavSx : {}),
+                      }}
+                      startIcon={<HomeIcon fontSize="small" />}
                     >
-                      {t('home')}
-                    </Box>
-                  </Button>
-                </Tooltip>
+                      <Box
+                        component="span"
+                        sx={{ display: { xs: 'none', md: 'inline' } }}
+                      >
+                        {t('home')}
+                      </Box>
+                    </Button>
+                  </Tooltip>
+                )}
 
                 <Tooltip title={t('analyzeTooltip')}>
                   <Button
@@ -1634,7 +1647,7 @@ export default function Header() {
             </Box>
 
             <List sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {user?.role === 'researcher' ? (
+              {user?.role === 'researcher' || isResearcherAssistant ? (
                 researcherNavItems.map((item) => (
                   <Button
                     key={item.section}
@@ -1657,21 +1670,23 @@ export default function Header() {
                 ))
               ) : (
                 <>
-                  <Button
-                    component={NavLink}
-                    to={homePath}
-                    end
-                    sx={{
-                      ...navButtonSx,
-                      justifyContent: 'flex-start',
-                      py: 1.5,
-                      ...(isResearcherHome ? activeNavSx : {}),
-                    }}
-                    startIcon={<HomeIcon />}
-                    onClick={() => setDrawerOpen(false)}
-                  >
-                    {t('home')}
-                  </Button>
+                  {user?.role !== 'field_assistant' && (
+                    <Button
+                      component={NavLink}
+                      to={homePath}
+                      end
+                      sx={{
+                        ...navButtonSx,
+                        justifyContent: 'flex-start',
+                        py: 1.5,
+                        ...(isResearcherHome ? activeNavSx : {}),
+                      }}
+                      startIcon={<HomeIcon />}
+                      onClick={() => setDrawerOpen(false)}
+                    >
+                      {t('home')}
+                    </Button>
+                  )}
                   <Button
                     component={NavLink}
                     to={analyzePath}

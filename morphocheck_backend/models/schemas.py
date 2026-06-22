@@ -298,6 +298,7 @@ class UserCreate(BaseModel):
     research_type: Optional[str] = Field(None, max_length=100)
     research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
+    supervisor_id: Optional[int] = None
 
     @field_validator("password")
     @classmethod
@@ -318,7 +319,7 @@ class UserCreate(BaseModel):
     def check_passwords_match(self):
         if self.password and self.password != self.password_confirm:
             raise ValueError("Parollar mos emas")
-        if self.role not in {"user", "admin", "superadmin", "researcher"}:
+        if self.role not in {"user", "admin", "superadmin", "researcher", "field_assistant"}:
             raise ValueError("Noto'g'ri foydalanuvchi roli")
         return self
 
@@ -381,6 +382,7 @@ class UserUpdate(BaseModel):
     research_type: Optional[str] = Field(None, max_length=100)
     research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
+    supervisor_id: Optional[int] = None
 
     @field_validator("password")
     @classmethod
@@ -400,8 +402,16 @@ class UserUpdate(BaseModel):
     @field_validator("role")
     @classmethod
     def validate_role(cls, v):
-        if v is not None and v not in {"user", "admin", "superadmin", "researcher"}:
+        if v is not None and v not in {"user", "admin", "superadmin", "researcher", "field_assistant"}:
             raise ValueError("Noto'g'ri foydalanuvchi roli")
+        return v
+
+    @field_validator("supervisor_id", mode="before")
+    @classmethod
+    def coerce_supervisor_id(cls, v):
+        """Convert empty string to None to avoid FK constraint errors."""
+        if v == "" or v == 0:
+            return None
         return v
 
 
@@ -421,6 +431,8 @@ class UserOut(BaseModel):
     research_type: Optional[str] = None
     research_area: Optional[str] = None
     scientific_supervisor: Optional[str] = None
+    supervisor_id: Optional[int] = None
+    supervisor_role: Optional[str] = None
     is_deleted: Optional[int] = 0
     deleted_at: Optional[datetime.datetime] = None
     deleted_by_id: Optional[int] = None

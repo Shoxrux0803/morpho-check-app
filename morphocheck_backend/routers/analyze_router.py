@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.user import User
 from models.userdata import PatientAnalysis
-from routers.auth_router import get_current_admin, get_optional_user
+from routers.auth_router import get_current_admin, get_optional_user, get_current_admin_or_assistant
 from services.analyze_workflow_service import (
     analyze_and_store,
     build_pdf_report_data,
@@ -28,7 +28,7 @@ logger.setLevel(logging.INFO)
 def analyze_and_store_raw(
     data: Dict[str, Any],
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin_or_assistant),
 ):
     try:
         rec = store_raw_analysis(data, db, current_user)

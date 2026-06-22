@@ -173,6 +173,7 @@ const DetailModal = ({
   onEdit,
   onDelete,
   isSuperAdmin,
+  isAssistant,
 }) => {
   const { lang } = useLanguage();
   const tr = useCallback((key) => researcherT(lang, key), [lang]);
@@ -267,8 +268,10 @@ const DetailModal = ({
         <ConsentStatus
           record={record}
           lang={lang}
-          onDownloadDocx={() =>
-            ResearchApi.downloadConsentDocx(record.id, lang)
+          onDownloadDocx={
+            !isAssistant
+              ? () => ResearchApi.downloadConsentDocx(record.id, lang)
+              : undefined
           }
         />
         <Section
@@ -393,26 +396,28 @@ const DetailModal = ({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Stack direction="row" spacing={1}>
-          <Button
-            size="small"
-            startIcon={<Description />}
-            onClick={() => ResearchApi.downloadDocx(record.id, lang)}
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
-          >
-            DOCX ({lang.toUpperCase()})
-          </Button>
-          <Button
-            size="small"
-            startIcon={<Description />}
-            onClick={() => ResearchApi.downloadConsentDocx(record.id, lang)}
-            variant="outlined"
-            sx={{ borderRadius: 2 }}
-          >
-            Consent DOCX
-          </Button>
-        </Stack>
+        {!isAssistant && (
+          <Stack direction="row" spacing={1}>
+            <Button
+              size="small"
+              startIcon={<Description />}
+              onClick={() => ResearchApi.downloadDocx(record.id, lang)}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              DOCX ({lang.toUpperCase()})
+            </Button>
+            <Button
+              size="small"
+              startIcon={<Description />}
+              onClick={() => ResearchApi.downloadConsentDocx(record.id, lang)}
+              variant="outlined"
+              sx={{ borderRadius: 2 }}
+            >
+              Consent DOCX
+            </Button>
+          </Stack>
+        )}
         <Box flex={1} />
         <Button
           startIcon={<Edit />}
@@ -431,14 +436,16 @@ const DetailModal = ({
             {tr('hardDelete')}
           </Button>
         )}
-        <Button
-          startIcon={<Delete />}
-          color="warning"
-          variant="outlined"
-          onClick={() => onDelete(record.id, 'soft')}
-        >
-          {tr('delete')}
-        </Button>
+        {!isAssistant && (
+          <Button
+            startIcon={<Delete />}
+            color="warning"
+            variant="outlined"
+            onClick={() => onDelete(record.id, 'soft')}
+          >
+            {tr('delete')}
+          </Button>
+        )}
         <Button onClick={onClose} variant="text">
           {tr('close')}
         </Button>
@@ -778,6 +785,7 @@ const RecordsTable = ({
   onEdit,
   onDelete,
   isSuperAdmin,
+  isAssistant,
   checked,
   toggleAll,
   toggleOne,
@@ -799,15 +807,17 @@ const RecordsTable = ({
           }}
         >
           <TableRow>
-            <TableCell sx={{ width: 40, p: 1 }}>
-              <IconButton size="small" onClick={toggleAll} color="primary">
-                {rows.length > 0 && rows.every((r) => checked?.has(r.id)) ? (
-                  <CheckCircle fontSize="small" />
-                ) : (
-                  <InfoOutlined fontSize="small" />
-                )}
-              </IconButton>
-            </TableCell>
+            {!isAssistant && (
+              <TableCell sx={{ width: 40, p: 1 }}>
+                <IconButton size="small" onClick={toggleAll} color="primary">
+                  {rows.length > 0 && rows.every((r) => checked?.has(r.id)) ? (
+                    <CheckCircle fontSize="small" />
+                  ) : (
+                    <InfoOutlined fontSize="small" />
+                  )}
+                </IconButton>
+              </TableCell>
+            )}
             <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>{tr('fullName')}</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>
@@ -860,32 +870,34 @@ const RecordsTable = ({
                 }}
                 onClick={() => onView(row)}
               >
-                <TableCell
-                  sx={{ p: 1 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleOne(row.id);
-                  }}
-                >
-                  <IconButton
-                    size="small"
-                    color={checked?.has(row.id) ? 'primary' : 'default'}
+                {!isAssistant && (
+                  <TableCell
+                    sx={{ p: 1 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleOne(row.id);
+                    }}
                   >
-                    {checked?.has(row.id) ? (
-                      <CheckCircle fontSize="small" />
-                    ) : (
-                      <Box
-                        sx={{
-                          width: 18,
-                          height: 18,
-                          border: '2px solid',
-                          borderColor: 'divider',
-                          borderRadius: '4px',
-                        }}
-                      />
-                    )}
-                  </IconButton>
-                </TableCell>
+                    <IconButton
+                      size="small"
+                      color={checked?.has(row.id) ? 'primary' : 'default'}
+                    >
+                      {checked?.has(row.id) ? (
+                        <CheckCircle fontSize="small" />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: 18,
+                            height: 18,
+                            border: '2px solid',
+                            borderColor: 'divider',
+                            borderRadius: '4px',
+                          }}
+                        />
+                      )}
+                    </IconButton>
+                  </TableCell>
+                )}
                 <TableCell>
                   <Typography variant="caption" color="text.secondary">
                     {idx + 1}
@@ -971,15 +983,17 @@ const RecordsTable = ({
                             <Edit fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title={tr('softDelete')}>
-                          <IconButton
-                            size="small"
-                            color="warning"
-                            onClick={() => onDelete(row.id, 'soft')}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        {!isAssistant && (
+                          <Tooltip title={tr('softDelete')}>
+                            <IconButton
+                              size="small"
+                              color="warning"
+                              onClick={() => onDelete(row.id, 'soft')}
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         {isSuperAdmin && (
                           <Tooltip title={tr('hardDelete')}>
                             <IconButton
@@ -1475,7 +1489,7 @@ const ResearchAnalytics = ({ data, isDark }) => {
 /* ════════════════════════════════════════════════════
    MAIN PAGE
 ════════════════════════════════════════════════════ */
-const EnhancedResearchAnalytics = ({ data, isDark }) => {
+const EnhancedResearchAnalytics = ({ data, isDark, isAssistant }) => {
   const [timeRange, setTimeRange] = useState('all');
 
   const stats = useMemo(() => {
@@ -2200,52 +2214,55 @@ const EnhancedResearchAnalytics = ({ data, isDark }) => {
         </Grid>
       </Grid>
 
-      <GlassPaper
-        sx={{
-          p: 4,
-          textAlign: 'center',
-          background: isDark
-            ? 'linear-gradient(135deg, rgba(16,185,129,0.16) 0%, rgba(37,99,235,0.08) 100%)'
-            : 'linear-gradient(135deg, rgba(236,253,245,0.94) 0%, rgba(239,246,255,0.8) 100%)',
-        }}
-      >
-        <Typography variant="h5" fontWeight={950} mb={1}>
-          Tadqiqot Hisoboti
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={4}>
-          Barcha to'plangan ma'lumotlarni tahliliy formatda (.xlsx) yuklab oling
-        </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={async () => {
-            try {
-              const blob = await ResearchApi.exportDataset({});
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `full_analysis_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              window.URL.revokeObjectURL(url);
-              toast.success('Yuklab olish yakunlandi');
-            } catch (err) {
-              toast.error('Xatolik: ' + err.message);
-            }
-          }}
-          startIcon={<Download />}
+      {!isAssistant && (
+        <GlassPaper
           sx={{
-            borderRadius: 3,
-            px: { xs: 3, sm: 8 },
-            py: 2,
-            fontWeight: 900,
-            background: 'linear-gradient(135deg, #059669 0%, #2563eb 100%)',
+            p: 4,
+            textAlign: 'center',
+            background: isDark
+              ? 'linear-gradient(135deg, rgba(16,185,129,0.16) 0%, rgba(37,99,235,0.08) 100%)'
+              : 'linear-gradient(135deg, rgba(236,253,245,0.94) 0%, rgba(239,246,255,0.8) 100%)',
           }}
         >
-          To'liq bazani eksport qilish
-        </Button>
-      </GlassPaper>
+          <Typography variant="h5" fontWeight={950} mb={1}>
+            Tadqiqot Hisoboti
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={4}>
+            Barcha to'plangan ma'lumotlarni tahliliy formatda (.xlsx) yuklab
+            oling
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={async () => {
+              try {
+                const blob = await ResearchApi.exportDataset({});
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `full_analysis_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                toast.success('Yuklab olish yakunlandi');
+              } catch (err) {
+                toast.error('Xatolik: ' + err.message);
+              }
+            }}
+            startIcon={<Download />}
+            sx={{
+              borderRadius: 3,
+              px: { xs: 3, sm: 8 },
+              py: 2,
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, #059669 0%, #2563eb 100%)',
+            }}
+          >
+            To'liq bazani eksport qilish
+          </Button>
+        </GlassPaper>
+      )}
     </Stack>
   );
 };
@@ -2258,6 +2275,7 @@ const ResearcherPage = () => {
   const pt = useCallback((key, fallback) => pageT(lang, key, fallback), [lang]);
   const { user, logout } = useAuth();
   const isSuperAdmin = user?.role === 'superadmin';
+  const isAssistant = user?.role === 'field_assistant';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -2304,10 +2322,15 @@ const ResearcherPage = () => {
   useEffect(() => {
     const section =
       new URLSearchParams(location.search).get('section') || 'home';
-    const nextTab = sectionToTab[section] ?? 0;
+    let nextTab = sectionToTab[section] ?? 0;
+
+    if (isAssistant && nextTab === 0) {
+      nextTab = 1;
+    }
+
     setActiveTab(!isSuperAdmin && nextTab === 3 ? 0 : nextTab);
     setChecked(new Set());
-  }, [isSuperAdmin, location.search, sectionToTab]);
+  }, [isSuperAdmin, location.search, sectionToTab, isAssistant]);
 
   const toggleAll = useCallback(() => {
     const rows = activeTab === 3 ? deletedData : data;
@@ -3293,56 +3316,60 @@ const ResearcherPage = () => {
                         },
                       }}
                     >
-                      <input
-                        ref={importInputRef}
-                        type="file"
-                        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        hidden
-                        onChange={handleImportXlsx}
-                      />
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        startIcon={<Description />}
-                        onClick={handleExportSummaryDocx}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        {tr('docxReport')}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        startIcon={<Description />}
-                        onClick={handleDownloadImportTemplate}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        {tr('template')}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="success"
-                        startIcon={
-                          importing ? (
-                            <CircularProgress size={18} />
-                          ) : (
-                            <CloudUpload />
-                          )
-                        }
-                        onClick={() => importInputRef.current?.click()}
-                        disabled={importing}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        {tr('importXlsx')}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<Delete />}
-                        onClick={() => setDeleteConfirmOpen(true)}
-                        disabled={checked.size === 0}
-                        sx={{ borderRadius: 2 }}
-                      >
-                        {tr('delete')} ({checked.size})
-                      </Button>
+                      {!isAssistant && (
+                        <>
+                          <input
+                            ref={importInputRef}
+                            type="file"
+                            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            hidden
+                            onChange={handleImportXlsx}
+                          />
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<Description />}
+                            onClick={handleExportSummaryDocx}
+                            sx={{ borderRadius: 2 }}
+                          >
+                            {tr('docxReport')}
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            startIcon={<Description />}
+                            onClick={handleDownloadImportTemplate}
+                            sx={{ borderRadius: 2 }}
+                          >
+                            {tr('template')}
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="success"
+                            startIcon={
+                              importing ? (
+                                <CircularProgress size={18} />
+                              ) : (
+                                <CloudUpload />
+                              )
+                            }
+                            onClick={() => importInputRef.current?.click()}
+                            disabled={importing}
+                            sx={{ borderRadius: 2 }}
+                          >
+                            {tr('importXlsx')}
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            startIcon={<Delete />}
+                            onClick={() => setDeleteConfirmOpen(true)}
+                            disabled={checked.size === 0}
+                            sx={{ borderRadius: 2 }}
+                          >
+                            {tr('delete')} ({checked.size})
+                          </Button>
+                        </>
+                      )}
                       <Chip
                         icon={
                           <Visibility sx={{ color: 'inherit !important' }} />
@@ -3367,6 +3394,7 @@ const ResearcherPage = () => {
                     setFilter={setFilter}
                     onSearch={handleSearch}
                     onExport={handleExport}
+                    isAssistant={isAssistant}
                   />
 
                   <RecordsTable
@@ -3386,6 +3414,7 @@ const ResearcherPage = () => {
                       }
                     }}
                     isSuperAdmin={isSuperAdmin}
+                    isAssistant={isAssistant}
                     tr={tr}
                     lang={lang}
                   />
@@ -3418,7 +3447,11 @@ const ResearcherPage = () => {
                   <Box sx={{ mt: 3 }}>
                     <ResearchStatisticsPanel rows={data} />
                   </Box>
-                  <EnhancedResearchAnalytics data={data} isDark={isDark} />
+                  <EnhancedResearchAnalytics
+                    data={data}
+                    isDark={isDark}
+                    isAssistant={isAssistant}
+                  />
                 </Stack>
               )}
 
@@ -3522,6 +3555,7 @@ const ResearcherPage = () => {
             setDetailRecord(null);
           }}
           isSuperAdmin={isSuperAdmin}
+          isAssistant={isAssistant}
         />
 
         <EditModal

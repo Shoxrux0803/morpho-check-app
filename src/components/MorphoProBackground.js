@@ -396,15 +396,15 @@ function WaveDotField({ isDark }) {
     const amountY = window.innerWidth < 760 ? 48 : 78;
     const palette = isDark
       ? {
-        dot: [103, 232, 249],
-        accent: [45, 212, 191],
-        line: [59, 130, 246],
-      }
+          dot: [103, 232, 249],
+          accent: [45, 212, 191],
+          line: [59, 130, 246],
+        }
       : {
-        dot: [14, 116, 144],
-        accent: [20, 184, 166],
-        line: [37, 99, 235],
-      };
+          dot: [14, 116, 144],
+          accent: [20, 184, 166],
+          line: [37, 99, 235],
+        };
 
     let width = 0;
     let height = 0;

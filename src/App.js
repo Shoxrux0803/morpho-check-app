@@ -152,6 +152,17 @@ const AdminWrapper = () => {
     return <Navigate to="/researcher" replace />;
   }
 
+  if (
+    user.role === 'field_assistant' &&
+    user.supervisor_role === 'researcher'
+  ) {
+    return <Navigate to="/researcher?section=analyze" replace />;
+  }
+
+  if (user.role === 'field_assistant' && user.supervisor_role === 'admin') {
+    return <Navigate to="/morphocheck-pro" replace />;
+  }
+
   return (
     <PageTransition>
       <AdminPage />
@@ -182,7 +193,13 @@ const ResearcherWrapper = () => {
 
   if (loading) return <PageLoader />;
 
-  if (user?.role === 'researcher' || user?.role === 'superadmin') {
+  const isResearcherAssistant =
+    user?.role === 'field_assistant' && user?.supervisor_role === 'researcher';
+  if (
+    user?.role === 'researcher' ||
+    user?.role === 'superadmin' ||
+    isResearcherAssistant
+  ) {
     return (
       <PageTransition>
         <ResearcherPage />
@@ -198,8 +215,18 @@ const HomeWrapper = () => {
 
   if (loading) return <PageLoader />;
 
+  const isResearcherAssistant =
+    user?.role === 'field_assistant' && user?.supervisor_role === 'researcher';
   if (user?.role === 'researcher') {
     return <Navigate to="/researcher" replace />;
+  }
+
+  if (isResearcherAssistant) {
+    return <Navigate to="/researcher?section=analyze" replace />;
+  }
+
+  if (user?.role === 'field_assistant' && user?.supervisor_role === 'admin') {
+    return <Navigate to="/morphocheck-pro" replace />;
   }
 
   return (

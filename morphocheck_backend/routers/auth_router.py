@@ -246,6 +246,15 @@ def get_current_superadmin(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+def get_current_admin_or_assistant(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ["admin", "superadmin", "field_assistant"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Ushbu amal uchun huquqingiz yetarli emas (faqat admin va assistentlar uchun)",
+        )
+    return current_user
+
+
 @router.post("/register", response_model=UserOut)
 @limiter.limit("100/minute")
 def register(request: Request, user_in: UserRegister, db: Session = Depends(get_db)):

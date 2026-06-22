@@ -855,6 +855,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, login: authLogin, loading: authLoading, logout } = useAuth();
+  const isAssistant = user?.role === 'field_assistant';
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const pt = useCallback((key) => pageT(lang, key), [lang]);
@@ -1431,54 +1432,56 @@ export default function AdminPage() {
               <Typography variant="h5" fontWeight="bold">
                 {pt('dataListTitle')}
               </Typography>
-              <Box display="flex" gap={1.5} flexWrap="wrap">
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  onClick={handleDownloadTemplate}
-                  startIcon={<Download />}
-                >
-                  {pt('template')}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="success"
-                  onClick={() => setImportConfirmOpen(true)}
-                  startIcon={
-                    importingXlsx ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      <Visibility />
-                    )
-                  }
-                >
-                  {pt('import')}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  startIcon={
-                    exportingXlsx ? (
-                      <CircularProgress size={20} />
-                    ) : (
-                      <Download />
-                    )
-                  }
-                  onClick={openXlsxPreview}
-                  disabled={exportingXlsx || xlsxPreviewLoading}
-                >
-                  {pt('export')}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<Delete />}
-                  onClick={onDeleteSelected}
-                  disabled={!checked.size}
-                >
-                  {pt('delete')} ({checked.size})
-                </Button>
-              </Box>
+              {!isAssistant && (
+                <Box display="flex" gap={1.5} flexWrap="wrap">
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={handleDownloadTemplate}
+                    startIcon={<Download />}
+                  >
+                    {pt('template')}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="success"
+                    onClick={() => setImportConfirmOpen(true)}
+                    startIcon={
+                      importingXlsx ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <Visibility />
+                      )
+                    }
+                  >
+                    {pt('import')}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    startIcon={
+                      exportingXlsx ? (
+                        <CircularProgress size={20} />
+                      ) : (
+                        <Download />
+                      )
+                    }
+                    onClick={openXlsxPreview}
+                    disabled={exportingXlsx || xlsxPreviewLoading}
+                  >
+                    {pt('export')}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<Delete />}
+                    onClick={onDeleteSelected}
+                    disabled={!checked.size}
+                  >
+                    {pt('delete')} ({checked.size})
+                  </Button>
+                </Box>
+              )}
             </Box>
 
             <Paper

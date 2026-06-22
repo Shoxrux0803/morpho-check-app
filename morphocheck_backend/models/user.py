@@ -1,6 +1,7 @@
 # morphocheck_backend/models/user.py
 
-from sqlalchemy import Column, DateTime, Float, Index, Integer, String, func
+from sqlalchemy import Column, DateTime, Float, Index, Integer, String, func, ForeignKey
+from sqlalchemy.orm import relationship
 
 from .base import Base  # shu papkadan Base ni olish uchun
 
@@ -23,8 +24,17 @@ class User(Base):
     research_type = Column(String(100), nullable=True)
     research_area = Column(String(255), nullable=True)
     scientific_supervisor = Column(String(200), nullable=True)
-    role = Column(String(30), default="user", index=True)  # "user" yoki "admin"
+    supervisor_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)  # Field assistant uchun biriktirilgan admin/izlanuvchi ID
+    role = Column(String(30), default="user", index=True)  # "user", "admin", "superadmin", "researcher", "field_assistant"
     created_at = Column(DateTime, server_default=func.now())
+
+    supervisor = relationship("User", remote_side=[id], foreign_keys=[supervisor_id], backref="assistants")
+
+    @property
+    def supervisor_role(self):
+        if self.supervisor:
+            return self.supervisor.role
+        return None
 
     # --- Activity & Performance ---
     last_active_at = Column(DateTime, nullable=True, index=True)

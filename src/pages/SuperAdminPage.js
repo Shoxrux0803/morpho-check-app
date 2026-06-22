@@ -1278,6 +1278,7 @@ const SuperAdminPage = () => {
     research_type: '',
     research_area: '',
     scientific_supervisor: '',
+    supervisor_id: '',
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
@@ -1305,6 +1306,7 @@ const SuperAdminPage = () => {
     research_type: admin.research_type || '',
     research_area: admin.research_area || '',
     scientific_supervisor: admin.scientific_supervisor || '',
+    supervisor_id: admin.supervisor_id || '',
   });
 
   // Deleted Data State
@@ -2037,8 +2039,18 @@ const SuperAdminPage = () => {
       return;
     }
 
+    if (adminForm.role === 'field_assistant' && !adminForm.supervisor_id) {
+      toast.error('Iltimos, assistent uchun kuratorni tanlang');
+      return;
+    }
+
     try {
       const { confirmPassword, ...payload } = adminForm;
+      if (payload.role === 'field_assistant') {
+        payload.supervisor_id = Number(payload.supervisor_id);
+      } else {
+        payload.supervisor_id = null;
+      }
       [
         'research_topic',
         'research_type',
@@ -3511,15 +3523,56 @@ const SuperAdminPage = () => {
                 <Select
                   value={adminForm.role}
                   label={pt('role')}
-                  onChange={(e) =>
-                    setAdminForm({ ...adminForm, role: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const nextRole = e.target.value;
+                    setAdminForm({
+                      ...adminForm,
+                      role: nextRole,
+                      supervisor_id:
+                        nextRole === 'field_assistant'
+                          ? adminForm.supervisor_id
+                          : '',
+                    });
+                  }}
                 >
                   <MenuItem value="admin">Administrator</MenuItem>
                   <MenuItem value="superadmin">Super Administrator</MenuItem>
                   <MenuItem value="researcher">{pt('researcher')}</MenuItem>
+                  <MenuItem value="field_assistant">Field Assistant</MenuItem>
                 </Select>
               </FormControl>
+              {adminForm.role === 'field_assistant' && (
+                <FormControl fullWidth sx={{ mt: 1 }}>
+                  <InputLabel>Kurator (Admin / Izlanuvchi)</InputLabel>
+                  <Select
+                    value={adminForm.supervisor_id || ''}
+                    label="Kurator (Admin / Izlanuvchi)"
+                    onChange={(e) =>
+                      setAdminForm({
+                        ...adminForm,
+                        supervisor_id: e.target.value,
+                      })
+                    }
+                  >
+                    <MenuItem value="">
+                      <em>Tanlanmagan</em>
+                    </MenuItem>
+                    {admins
+                      .filter(
+                        (item) =>
+                          (item.role === 'admin' ||
+                            item.role === 'researcher') &&
+                          !item.is_deleted
+                      )
+                      .map((c) => (
+                        <MenuItem key={c.id} value={c.id}>
+                          {c.name} (
+                          {c.role === 'admin' ? 'Admin' : pt('researcher')})
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+              )}
               {adminForm.role === 'researcher' && (
                 <Stack spacing={2}>
                   <TextField
