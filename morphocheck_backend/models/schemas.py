@@ -605,6 +605,7 @@ class ResearchRecordCreate(BaseModel):
     consent_guardian_relationship: Optional[str] = Field(None, max_length=100)
     consent_guardian_phone: Optional[str] = Field(None, max_length=50)
     consent_policy_version: Optional[str] = Field(CONSENT_POLICY_VERSION, max_length=50)
+    id_code: Optional[str] = Field(None, max_length=50)
     father_height: Optional[float] = None
     mother_height: Optional[float] = None
 

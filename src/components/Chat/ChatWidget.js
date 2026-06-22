@@ -384,7 +384,9 @@ const ChatWidget = () => {
               width: isMobile ? 'calc(100vw - 24px)' : '400px',
               height: isMobile ? 'calc(100dvh - 88px)' : '650px',
               maxHeight: isMobile ? 'calc(100dvh - 88px)' : '90vh',
-              background: isDark ? 'rgba(18, 18, 18, 0.45)' : 'rgba(255, 255, 255, 0.45)',
+              background: isDark
+                ? 'rgba(18, 18, 18, 0.45)'
+                : 'rgba(255, 255, 255, 0.45)',
               backdropFilter: 'blur(24px) saturate(180%)',
               boxShadow: isDark
                 ? '0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
@@ -410,8 +412,8 @@ const ChatWidget = () => {
                 background:
                   currentView === VIEWS.BROADCAST
                     ? 'linear-gradient(135deg, rgba(255,149,0,0.7) 0%, rgba(255,94,0,0.7) 100%)'
-                    : isDark 
-                      ? 'linear-gradient(135deg, rgba(15,118,110,0.6) 0%, rgba(37,99,235,0.6) 100%)' 
+                    : isDark
+                      ? 'linear-gradient(135deg, rgba(15,118,110,0.6) 0%, rgba(37,99,235,0.6) 100%)'
                       : 'linear-gradient(135deg, rgba(15,118,110,0.7) 0%, rgba(37,99,235,0.7) 100%)',
                 backdropFilter: 'blur(10px)',
                 color: '#fff',

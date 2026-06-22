@@ -10,4 +10,4 @@ async def test_login_invalid_credentials(async_client: AsyncClient):
         json={"email": "wrong@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 400
-    assert "Email yoki parol noto'g'ri" in response.json()["detail"]
+    assert "Email yoki parol noto'g'ri" in response.json()["message"]

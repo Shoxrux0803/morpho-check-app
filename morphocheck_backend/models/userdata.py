@@ -124,6 +124,7 @@ class ResearchRecord(Base):
     __tablename__ = "research_records"
 
     id = Column(Integer, primary_key=True)
+    id_code = Column(String(50), nullable=True, index=True)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_by = relationship("User", foreign_keys=[created_by_id])
     created_at = Column(DateTime, server_default=func.now(), index=True)

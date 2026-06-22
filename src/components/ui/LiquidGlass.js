@@ -25,14 +25,14 @@ import {
 
 // ─── Glass-box background tints ───────────────────────────────────────────────
 function overlayBg(color, button) {
-  if (color === 'white')  return 'rgba(250,250,250,0.18)';
-  if (color === 'black')  return 'rgba(9,9,11,0.48)';
+  if (color === 'white') return 'rgba(250,250,250,0.18)';
+  if (color === 'black') return 'rgba(9,9,11,0.48)';
   return button ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.26)';
 }
 
 function glassBoxBg(color) {
-  if (color === 'white')  return 'rgba(250,250,250,0.50)';
-  if (color === 'black')  return 'rgba(9,9,11,0.50)';
+  if (color === 'white') return 'rgba(250,250,250,0.50)';
+  if (color === 'black') return 'rgba(9,9,11,0.50)';
   return 'rgba(9,9,11,0.01)';
 }
 
@@ -51,19 +51,19 @@ export default function LiquidGlass({
   borderRadius,
   onClick,
 }) {
-  const containerRef  = useRef(null);
+  const containerRef = useRef(null);
   const filterLayerRef = useRef(null);
   // Stable, unique filter ID per component instance
-  const filterIdRef   = useRef(null);
+  const filterIdRef = useRef(null);
   if (!filterIdRef.current) filterIdRef.current = nextFilterId();
   const filterId = filterIdRef.current;
 
-  const saturate   = button ? 1.2 : 1.5;
+  const saturate = button ? 1.2 : 1.5;
   const brightness = button ? 1.6 : 1.1;
 
   // ── Redraw logic ─────────────────────────────────────────────────────────────
   const redraw = useCallback(() => {
-    const container   = containerRef.current;
+    const container = containerRef.current;
     const filterLayer = filterLayerRef.current;
     if (!container || !filterLayer) return;
 
@@ -76,15 +76,21 @@ export default function LiquidGlass({
     if (!w || !h) return;
 
     // Size the filter layer to match content
-    filterLayer.style.width  = `${w}px`;
+    filterLayer.style.width = `${w}px`;
     filterLayer.style.height = `${h}px`;
 
     const filterVal = injectFilter({
-      filterId, width: w, height: h,
-      strength, saturate, brightness, blur, chromaticAberration,
+      filterId,
+      width: w,
+      height: h,
+      strength,
+      saturate,
+      brightness,
+      blur,
+      chromaticAberration,
     });
 
-    filterLayer.style.backdropFilter       = filterVal;
+    filterLayer.style.backdropFilter = filterVal;
     filterLayer.style.webkitBackdropFilter = filterVal;
   }, [filterId, strength, saturate, brightness, blur, chromaticAberration]);
 
@@ -157,7 +163,8 @@ export default function LiquidGlass({
           zIndex: 2,
           pointerEvents: 'none',
           background: glassBoxBg(color),
-          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.55)',
+          boxShadow:
+            'inset 0 0 0 1px rgba(255,255,255,0.18), inset 0 1px 0 rgba(255,255,255,0.55)',
         }}
       />
     </Tag>

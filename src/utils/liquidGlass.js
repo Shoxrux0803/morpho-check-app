@@ -75,19 +75,19 @@ export function generateDispMap(w, h, edge = 0.28) {
 
       // X displacement — left edge negative (dark), right positive (bright)
       let dx = 0;
-      if (x < ex)          dx = -(1 - x / ex);
-      else if (x > w - ex) dx =  (x - (w - ex)) / ex;
+      if (x < ex) dx = -(1 - x / ex);
+      else if (x > w - ex) dx = (x - (w - ex)) / ex;
 
       // Y displacement — top edge negative, bottom positive
       let dy = 0;
-      if (y < ey)          dy = -(1 - y / ey);
-      else if (y > h - ey) dy =  (y - (h - ey)) / ey;
+      if (y < ey) dy = -(1 - y / ey);
+      else if (y > h - ey) dy = (y - (h - ey)) / ey;
 
       // Smooth ease curve (power ≈ 0.62)
       dx = Math.sign(dx) * Math.pow(Math.abs(dx), 0.62);
       dy = Math.sign(dy) * Math.pow(Math.abs(dy), 0.62);
 
-      d[i]     = ((dx * 0.5 + 0.5) * 255) | 0; // R → X
+      d[i] = ((dx * 0.5 + 0.5) * 255) | 0; // R → X
       d[i + 1] = ((dy * 0.5 + 0.5) * 255) | 0; // G → Y
       d[i + 2] = 128;
       d[i + 3] = 255;
@@ -140,10 +140,13 @@ export function injectFilter({
   if (!mapUrl) return `blur(${blur}px) saturate(180%)`;
 
   // Build chromatic aberration channels if requested
-  const cabR  = chromaticAberration > 0 ? chromaticAberration : 0;
-  const cabB  = chromaticAberration > 0 ? -chromaticAberration : 0;
+  const cabR = chromaticAberration > 0 ? chromaticAberration : 0;
+  const cabB = chromaticAberration > 0 ? -chromaticAberration : 0;
 
-  const filterEl = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+  const filterEl = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'filter'
+  );
   filterEl.id = filterId;
   filterEl.setAttribute('color-interpolation-filters', 'sRGB');
   filterEl.setAttribute('x', '-5%');
@@ -167,13 +170,17 @@ export function injectFilter({
       yChannelSelector="G"
       result="displaced"
     />
-    ${chromaticAberration > 0 ? `
+    ${
+      chromaticAberration > 0
+        ? `
     <!-- Chromatic aberration: split R/B channels -->
     <feDisplacementMap in="SourceGraphic" in2="map" scale="${strength + cabR}" xChannelSelector="R" yChannelSelector="G" result="dispR"/>
     <feDisplacementMap in="SourceGraphic" in2="map" scale="${strength + cabB}" xChannelSelector="R" yChannelSelector="G" result="dispB"/>
     <feBlend in="dispR" in2="displaced" mode="screen" result="blendRed"/>
     <feBlend in="dispB" in2="blendRed" mode="multiply" result="displaced"/>
-    ` : ''}
+    `
+        : ''
+    }
   `;
 
   defs.appendChild(filterEl);

@@ -1,7 +1,7 @@
 RESEARCH_EXPORT_HEADERS = {
     "uz": {
         "created_at": "Сана",
-        "id": "ID",
+        "id": "Study Code (ID код)",
         "full_name": "Ф.И.Ш.",
         "school_name": "Мактаб/Муассаса",
         "settlement": "Аҳоли пункти",
@@ -83,7 +83,7 @@ RESEARCH_EXPORT_HEADERS = {
     },
     "ru": {
         "created_at": "Дата",
-        "id": "ID",
+        "id": "Study Code (ID код)",
         "full_name": "Ф.И.О.",
         "school_name": "Школа/Учреждение",
         "settlement": "Населенный пункт",
@@ -165,7 +165,7 @@ RESEARCH_EXPORT_HEADERS = {
     },
     "en": {
         "created_at": "Date",
-        "id": "ID",
+        "id": "Study Code",
         "full_name": "Full Name",
         "school_name": "School/Institution",
         "settlement": "Settlement",
@@ -247,7 +247,7 @@ RESEARCH_EXPORT_HEADERS = {
     },
     "kz": {
         "created_at": "Күні",
-        "id": "ID",
+        "id": "Study Code (ID коды)",
         "full_name": "Т.А.Ә.",
         "school_name": "Мектеп/Мекеме",
         "settlement": "Елді мекен",
@@ -329,7 +329,7 @@ RESEARCH_EXPORT_HEADERS = {
     },
     "ky": {
         "created_at": "Дата",
-        "id": "ID",
+        "id": "Study Code (ID коду)",
         "full_name": "Аты-жөнү",
         "school_name": "Мектеп/Мекеме",
         "settlement": "Калктуу конуш",
@@ -411,7 +411,7 @@ RESEARCH_EXPORT_HEADERS = {
     },
     "tm": {
         "created_at": "Sene",
-        "id": "ID",
+        "id": "Study Code (ID kody)",
         "full_name": "F.I.A.",
         "school_name": "Mekdep/Edara",
         "settlement": "Ilatly punkt",
@@ -493,7 +493,7 @@ RESEARCH_EXPORT_HEADERS = {
     },
     "tg": {
         "created_at": "Сана",
-        "id": "ID",
+        "id": "Study Code (рамзи ID)",
         "full_name": "Ному насаб",
         "school_name": "Мактаб/Муассиса",
         "settlement": "Маҳали зист",
@@ -848,7 +848,7 @@ ADMIN_EXPORT_HEADERS = {
 
 RESEARCH_EXPORT_HEADERS["tr"] = {
     "created_at": "Tarih",
-    "id": "ID",
+    "id": "Study Code (ID kodu)",
     "full_name": "Ad Soyad",
     "school_name": "Okul/Kurum",
     "settlement": "Yerlesim yeri",

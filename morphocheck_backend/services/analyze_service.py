@@ -136,16 +136,16 @@ def generate_region_based_id(db: Session, region: str) -> str:
     # Prifikslar xaritasi (Lotin va Kirill variantlari uchun)
     prefixes = {
         # Lotin
-        "Toshkent shahri": "TS",
-        "Toshkent viloyati": "TV",
+        "Toshkent shahri": "TOSH",
+        "Toshkent viloyati": "TOSH",
         "Andijon": "AND",
-        "FargвЂona": "FAR",
+        "Farg‘ona": "FAR",
         "Farg'ona": "FAR",
         "Namangan": "NAM",
         "Samarqand": "SAM",
         "Buxoro": "BUX",
         "Xorazm": "XOR",
-        "QoraqalpogвЂiston": "QR",
+        "Qoraqalpog‘iston": "QR",
         "Qoraqalpog'iston": "QR",
         "Jizzax": "JIZ",
         "Sirdaryo": "SIR",
@@ -153,20 +153,20 @@ def generate_region_based_id(db: Session, region: str) -> str:
         "Qashqadaryo": "QAS",
         "Navoiy": "NAV",
         # Kirill
-        "РўРѕС€РєРµРЅС‚ С€Р°ТіСЂРё": "TS",
-        "РўРѕС€РєРµРЅС‚ РІРёР»РѕСЏС‚Рё": "TV",
-        "РђРЅРґРёР¶РѕРЅ": "AND",
-        "Р¤Р°СЂТ“РѕРЅР°": "FAR",
-        "РќР°РјР°РЅРіР°РЅ": "NAM",
-        "РЎР°РјР°СЂТ›Р°РЅРґ": "SAM",
-        "Р‘СѓС…РѕСЂРѕ": "BUX",
-        "РҐРѕСЂР°Р·Рј": "XOR",
-        "ТљРѕСЂР°Т›Р°Р»РїРѕТ“РёСЃС‚РѕРЅ": "QR",
-        "Р–РёР·Р·Р°С…": "JIZ",
-        "РЎРёСЂРґР°СЂС‘": "SIR",
-        "РЎСѓСЂС…РѕРЅРґР°СЂС‘": "SUR",
-        "ТљР°С€Т›Р°РґР°СЂС‘": "QAS",
-        "РќР°РІРѕРёР№": "NAV",
+        "Тошкент шаҳри": "TOSH",
+        "Тошкент вилояти": "TOSH",
+        "Андижон": "AND",
+        "Фарғона": "FAR",
+        "Наманган": "NAM",
+        "Самарқанд": "SAM",
+        "Бухоро": "BUX",
+        "Хоразм": "XOR",
+        "Қорақалпоғистон": "QR",
+        "Жиззах": "JIZ",
+        "Сирдарё": "SIR",
+        "Сурхондарё": "SUR",
+        "Қашқадарё": "QAS",
+        "Навоий": "NAV",
     }
 
     prefix = prefixes.get(region_norm)
@@ -182,25 +182,47 @@ def generate_region_based_id(db: Session, region: str) -> str:
 
     if not prefix:
         # Agar xaritada bo'lmasa, birinchi 3 ta harfni olamiz
-        # Hammasini lotinga o'girib keyin prefix olish xavfsizroq bo'lishi mumkin,
-        # lekin hozircha oddiyroq yo'l:
         clean_name = "".join(filter(str.isalnum, region_norm))
         if clean_name:
             prefix = clean_name[:3].upper()
         else:
             prefix = "UNK"
 
-    # Mavjud yozuvlar sonini hisoblash (prefix bo'yicha emas, aynan shu region bo'yicha)
-    # Normallashtirilgan qidiruv: region nomi prefix bilan bog'liq bo'lgan barcha yozuvlarni sanaydi
-    # Yoki shunchaki barcha Prefix-ID larni sanash (Prefix-XXXXX)
-    # counts based on Prefix-ID
-    count = (
+    # Mavjud yozuvlar sonini hisoblash
+    from sqlalchemy import or_
+    from models.userdata import PatientAnalysis, ResearchRecord
+
+    # Tarixiy muvofiqlik (masalan, TS/TV -> TOSH yoki QR/QQ -> QR)
+    historical_mappings = {
+        "TOSH": ["TOSH", "TS", "TV"],
+        "QR": ["QR", "QQ", "QOR"],
+        "QAS": ["QAS", "QASH"],
+    }
+    prefixes_to_check = historical_mappings.get(prefix, [prefix])
+
+    count_pa = (
         db.query(PatientAnalysis)
-        .filter(PatientAnalysis.id_code.like(f"{prefix}-%"))
+        .filter(
+            or_(
+                *[PatientAnalysis.id_code.like(f"{p}-%") for p in prefixes_to_check],
+                *[PatientAnalysis.id_code.like(f"MC-{p}-%") for p in prefixes_to_check]
+            )
+        )
         .count()
     )
 
-    return f"{prefix}-{count + 1:05d}"
+    count_rr = (
+        db.query(ResearchRecord)
+        .filter(
+            or_(
+                *[ResearchRecord.id_code.like(f"{p}-%") for p in prefixes_to_check],
+                *[ResearchRecord.id_code.like(f"MC-{p}-%") for p in prefixes_to_check]
+            )
+        )
+        .count()
+    )
+
+    return f"MC-{prefix}-{count_pa + count_rr + 1:04d}"
 
 
 def calculate_bmi(

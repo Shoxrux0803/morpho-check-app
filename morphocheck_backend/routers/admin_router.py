@@ -2040,6 +2040,8 @@ async def import_analyses_xlsx(
     wb = load_workbook(BytesIO(contents), data_only=True)
     ws = wb.active
 
+    region_offsets = {}
+
     # Field mapping (header index -> field name)
     field_map = {
         0: "first_name",
@@ -2307,9 +2309,29 @@ async def import_analyses_xlsx(
             rec.age = format_int(data.get("age"), 0)
             rec.age_months = format_int(data.get("age_months"), 0)
             rec.age_days = format_int(data.get("age_days"), 0)
-            rec.id_code = str(data.get("id_code") or "").strip() or None
             rec.region = str(data.get("region") or "").strip()
             rec.district = str(data.get("district") or "").strip()
+            rec.id_code = str(data.get("id_code") or "").strip() or None
+
+            # Auto-generate or fix id_code if missing or not in MC- format
+            if not rec.id_code or not rec.id_code.startswith("MC-"):
+                from services.analyze_service import generate_region_based_id
+                clean_region, _ = _split_region_and_district(rec.region, rec.district)
+                if clean_region not in region_offsets:
+                    base_id = generate_region_based_id(db, clean_region)
+                    parts = base_id.split("-")
+                    if len(parts) >= 3 and parts[-1].isdigit():
+                        region_offsets[clean_region] = {
+                            "prefix": "-".join(parts[:-1]),
+                            "count": int(parts[-1])
+                        }
+                    else:
+                        region_offsets[clean_region] = {"prefix": "MC-UNK", "count": 1}
+                
+                pfx = region_offsets[clean_region]["prefix"]
+                cnt = region_offsets[clean_region]["count"]
+                rec.id_code = f"{pfx}-{cnt:04d}"
+                region_offsets[clean_region]["count"] += 1
             rec.mahalla = str(data.get("mahalla") or "").strip()
             rec.address = str(data.get("address") or "").strip()
             rec.height = format_val(data.get("height"), 0.0)

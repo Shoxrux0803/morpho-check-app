@@ -1,6 +1,12 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Box, Typography, Avatar, CircularProgress, useTheme } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Avatar,
+  CircularProgress,
+  useTheme,
+} from '@mui/material';
 import { Security, Science, AdminPanelSettings } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -61,7 +67,7 @@ const TRANSLATIONS = {
     superadmin: 'Супер Администратор катары ийгиликтүү кирдиңиз!',
     researcher: 'Изилдөөчү катары ийгиликтүү кирдиңиз!',
     loading: 'Башкаруу панели жүктөлүүдө...',
-  }
+  },
 };
 
 const getRoleDetails = (role) => {
@@ -169,7 +175,9 @@ export default function WelcomeOverlay({ onComplete }) {
           width: '90%',
           maxWidth: '450px',
           textAlign: 'center',
-          background: isDark ? 'rgba(30, 41, 59, 0.45)' : 'rgba(255, 255, 255, 0.75)',
+          background: isDark
+            ? 'rgba(30, 41, 59, 0.45)'
+            : 'rgba(255, 255, 255, 0.75)',
           border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)'}`,
           boxShadow: isDark
             ? '0 20px 50px rgba(0, 0, 0, 0.4)'
@@ -182,7 +190,12 @@ export default function WelcomeOverlay({ onComplete }) {
           <motion.div
             initial={{ scale: 0, rotate: -45 }}
             animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', damping: 15, stiffness: 300, delay: 0.25 }}
+            transition={{
+              type: 'spring',
+              damping: 15,
+              stiffness: 300,
+              delay: 0.25,
+            }}
           >
             <Avatar
               sx={{
@@ -218,7 +231,12 @@ export default function WelcomeOverlay({ onComplete }) {
               {welcomeText}
             </Typography>
             {name && (
-              <Typography variant="h6" fontWeight={700} color="text.primary" sx={{ mb: 1 }}>
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                color="text.primary"
+                sx={{ mb: 1 }}
+              >
                 {name}
               </Typography>
             )}
@@ -234,7 +252,12 @@ export default function WelcomeOverlay({ onComplete }) {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.6 }}
         >
-          <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+          <Box
+            display="flex"
+            flexDirection="column"
+            alignItems="center"
+            gap={2}
+          >
             <CircularProgress
               size={28}
               thickness={4.5}
@@ -243,7 +266,12 @@ export default function WelcomeOverlay({ onComplete }) {
                 animationDuration: '750ms',
               }}
             />
-            <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ letterSpacing: '0.5px' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={600}
+              sx={{ letterSpacing: '0.5px' }}
+            >
               {loadingText}
             </Typography>
           </Box>

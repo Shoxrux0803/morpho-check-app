@@ -837,9 +837,13 @@ const AIAssistantWidget = () => {
                 sx={{
                   p: 2,
                   pt: selectedImage ? 1 : 2,
-                  bgcolor: isDark ? 'rgba(30, 30, 30, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                  bgcolor: isDark
+                    ? 'rgba(30, 30, 30, 0.5)'
+                    : 'rgba(255, 255, 255, 0.5)',
                   backdropFilter: 'blur(10px)',
-                  borderTop: isDark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
+                  borderTop: isDark
+                    ? '1px solid rgba(255,255,255,0.05)'
+                    : '1px solid rgba(0,0,0,0.05)',
                 }}
               >
                 <input

@@ -1217,6 +1217,25 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
 
     left_cell.paragraphs[0].clear()
     right_cell.paragraphs[0].clear()
+    
+    if data.get("id_code"):
+        study_code_label = "Study Code"
+        if lang == "ru":
+            study_code_label = "Код исследования"
+        elif lang == "uz":
+            study_code_label = "Tadqiqot kodi"
+        elif lang == "tg":
+            study_code_label = "Рамзи таҳқиқот"
+        elif lang == "ky":
+            study_code_label = "Изилдөө коду"
+        elif lang == "kz" or lang == "kk":
+            study_code_label = "Зерттеу коды"
+        elif lang == "tr":
+            study_code_label = "Araştırma kodu"
+        elif lang == "tm":
+            study_code_label = "Gözleg kody"
+        add_demo(left_cell, study_code_label, data.get("id_code"), bold_label=True)
+        
     add_demo(left_cell, L["fio"], T(data.get("full_name"), capitalize=True))
     add_demo(left_cell, L["school"], T(data.get("school_name")))
     add_demo(left_cell, L["settlement"], T(data.get("settlement")))

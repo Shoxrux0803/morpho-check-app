@@ -57,7 +57,12 @@ export default function SyncManager({ open, onClose, onEditItem }) {
   };
 
   return (
-    <Drawer anchor="right" open={open} onClose={onClose} sx={{ zIndex: (theme) => theme.zIndex.drawer + 30 }}>
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 30 }}
+    >
       <Box sx={{ width: 350, p: 3 }}>
         <Box
           sx={{

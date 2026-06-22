@@ -1529,7 +1529,7 @@ def export_research_xlsx(
             if field_name == "created_at":
                 display_val = val.strftime("%Y-%m-%d %H:%M") if val else "-"
             elif field_name == "id":
-                display_val = val  # ID o'zgarmasin
+                display_val = record.id_code if record.id_code else val
             elif field_name == "gender":
                 display_val = format_research_gender_for_xlsx(val, export_lang)
             elif field_name == "created_by_email":
@@ -1751,6 +1751,7 @@ async def import_research_xlsx(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    region_offsets = {}
     filename = (file.filename or "").lower()
     if not filename.endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="Faqat .xlsx fayl qabul qilinadi")
@@ -1823,6 +1824,27 @@ async def import_research_xlsx(
 
         record = ResearchRecord(**payload)
         record.created_by_id = target_user.id
+
+        from services.analyze_service import generate_region_based_id, _split_region_and_district
+        
+        clean_region, _ = _split_region_and_district(record.settlement or record.birth_place, None)
+        
+        if clean_region not in region_offsets:
+            base_id = generate_region_based_id(db, clean_region)
+            parts = base_id.split("-")
+            if len(parts) >= 3 and parts[-1].isdigit():
+                region_offsets[clean_region] = {
+                    "prefix": "-".join(parts[:-1]),
+                    "count": int(parts[-1])
+                }
+            else:
+                region_offsets[clean_region] = {"prefix": "MC-UNK", "count": 1}
+                
+        pfx = region_offsets[clean_region]["prefix"]
+        cnt = region_offsets[clean_region]["count"]
+        record.id_code = f"{pfx}-{cnt:04d}"
+        region_offsets[clean_region]["count"] += 1
+
         records.append(record)
 
     if errors:
@@ -2084,7 +2106,7 @@ def export_dataset_for_analysis(
 
         dataset.append(
             {
-                "id": r.id,
+                "id": r.id_code or r.id,
                 "full_name": r.full_name,
                 "age_years": age,
                 "age_group": calculate_research_age_group(r),
@@ -2266,10 +2288,16 @@ def create_research_record(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
+    from services.analyze_service import generate_region_based_id, _split_region_and_district
+
     record = ResearchRecord(**payload.model_dump(exclude_unset=True))
     record.created_by_id = current_user.id
     if record.consent_confirmed and not record.consent_confirmed_at:
         record.consent_confirmed_at = datetime.utcnow()
+
+    clean_region, _ = _split_region_and_district(record.settlement or record.birth_place, None)
+    record.id_code = generate_region_based_id(db, clean_region)
+
     db.add(record)
 
     # Update user stats
