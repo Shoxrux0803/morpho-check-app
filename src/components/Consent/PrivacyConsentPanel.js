@@ -674,7 +674,8 @@ export function PrivacyConsentPanel({
               sx={{ mt: -0.5, ml: -1 }}
               checked={checked}
               onChange={(event) => {
-                handleValue(keys.confirmed, event.target.checked);
+                const isChecked = event.target.checked;
+                handleValue(keys.confirmed, isChecked);
                 handleValue(keys.policyVersion, CONSENT_POLICY_VERSION);
               }}
             />

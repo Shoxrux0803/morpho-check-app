@@ -165,7 +165,7 @@ const ResearcherForm = ({ onSuccess }) => {
     const numericFields = ['children_count', 'child_order', 'teeth_count'];
     const v =
       numericFields.includes(name) && value !== '' ? Number(value) : value;
-    setFormData({ ...formData, [name]: v });
+    setFormData((prev) => ({ ...prev, [name]: v }));
   };
 
   const validateStep1 = () => {
