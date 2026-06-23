@@ -3380,9 +3380,20 @@ export default function SuperAdminRegionalMap({
   const loading = !mapReady || loadingBoundary;
   const dataLoading = loadingRows || statsLoading;
   const satelliteBoundaryOpacity = satelliteEnabled ? 0 : 1;
+  const mapPanelHeight = {
+    xs: 'clamp(420px, 62dvh, 560px)',
+    sm: 'clamp(500px, 66dvh, 640px)',
+  };
 
   return (
-    <Box>
+    <Box
+      sx={{
+        height: { lg: 'calc(100dvh - 144px)' },
+        minHeight: 0,
+        display: { lg: 'flex' },
+        flexDirection: 'column',
+      }}
+    >
       <Box
         sx={{
           mb: 2,
@@ -3440,14 +3451,17 @@ export default function SuperAdminRegionalMap({
           gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 390px' },
           gap: 2,
           alignItems: 'stretch',
+          flex: { lg: '1 1 0' },
+          minHeight: { lg: 0 },
         }}
       >
         <Paper
           elevation={0}
           sx={{
             position: 'relative',
-            height: { xs: 720, lg: 900 },
-            minHeight: 680,
+            width: '100%',
+            minWidth: 0,
+            height: { ...mapPanelHeight, lg: '100%' },
             borderRadius: 2,
             overflow: 'hidden',
             border: '1px solid',
@@ -3491,7 +3505,7 @@ export default function SuperAdminRegionalMap({
               viewBox={svgViewBox}
               width="100%"
               height="100%"
-              preserveAspectRatio="xMidYMid slice"
+              preserveAspectRatio="xMidYMid meet"
               role="img"
               aria-label={mt.title}
               style={{
@@ -4067,7 +4081,9 @@ export default function SuperAdminRegionalMap({
         <Paper
           elevation={0}
           sx={{
-            height: { xs: 'auto', lg: 900 },
+            minWidth: 0,
+            height: { xs: 'auto', lg: '100%' },
+            maxHeight: { lg: '100%' },
             overflow: 'hidden',
             borderRadius: 2,
             border: '1px solid',

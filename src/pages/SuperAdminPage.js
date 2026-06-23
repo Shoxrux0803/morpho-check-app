@@ -3121,7 +3121,13 @@ const SuperAdminPage = () => {
   };
 
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 10 }}>
+    <Box
+      sx={{
+        bgcolor: 'background.default',
+        minHeight: activeTab === 2 ? 'calc(100dvh - 80px)' : '100vh',
+        pb: activeTab === 2 ? 0 : 10,
+      }}
+    >
       <Container
         maxWidth={false}
         sx={{
@@ -3414,10 +3420,7 @@ const SuperAdminPage = () => {
                 <Box
                   sx={{
                     minWidth: {
-                      xs:
-                        activeTab === 0 || activeTab === 1 || activeTab === 2
-                          ? 720
-                          : 0,
+                      xs: activeTab === 0 || activeTab === 1 ? 720 : 0,
                       md: 0,
                     },
                   }}

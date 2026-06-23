@@ -71,6 +71,14 @@ const PageTransition = ({ children }) => (
   </motion.div>
 );
 
+const ConditionalFooter = () => {
+  const { pathname } = useLocation();
+  const isSuperAdminPage =
+    pathname === '/superadmin' || pathname.startsWith('/superadmin/');
+
+  return isSuperAdminPage ? null : <Footer />;
+};
+
 // Marshrut almashganda oynani yuqoriga ko'tarish
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -390,7 +398,7 @@ export default function App() {
               <ChatWidget />
               <AIAssistantWidget />
 
-              <Footer />
+              <ConditionalFooter />
             </div>
           </Router>
         </OfflineSyncProvider>
