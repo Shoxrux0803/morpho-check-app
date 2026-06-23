@@ -590,6 +590,9 @@ const RobotAvatar = ({
 
   // Moods: idle | sleeping | smiling | winking | eating | singing | curious | love | dizzy
   const [mood, setMood] = useState('idle');
+  const moodRef = useRef(mood);
+  useEffect(() => { moodRef.current = mood; }, [mood]);
+
   const [blinkState, setBlinkState]       = useState(false);
   const [isWakingUp, setIsWakingUp]       = useState(false);
   const [isTalkingInternal, setIsTalkingInternal] = useState(false);
@@ -640,7 +643,7 @@ const RobotAvatar = ({
   useEffect(() => {
     if (compact) return;
     const timer = setInterval(() => {
-      if (isOpenRef.current) return;
+      if (isOpenRef.current || moodRef.current === 'sleeping') return;
       
       const hour = new Date().getHours();
       // Biorhythms: late night / early morning check
