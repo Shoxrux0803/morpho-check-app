@@ -8,7 +8,6 @@ import {
   Typography,
   Box,
   IconButton,
-  Zoom,
 } from '@mui/material';
 import { Logout, Close } from '@mui/icons-material';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -20,7 +19,6 @@ const LogoutConfirmDialog = ({ open, onClose, onConfirm }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      TransitionComponent={Zoom}
       keepMounted
       PaperProps={{
         sx: {

@@ -2715,7 +2715,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 };
 
 const DetailModal = ({
-  record,
+  record: incomingRecord,
   open,
   onClose,
   onEdit,
@@ -2726,6 +2726,20 @@ const DetailModal = ({
 }) => {
   const { lang } = useLanguage();
   const t = useCallback((key) => researcherT(lang, key), [lang]);
+  const lastRecordRef = useRef(null);
+
+  if (incomingRecord) lastRecordRef.current = incomingRecord;
+  const record = incomingRecord || lastRecordRef.current;
+  const [transitionOpen, setTransitionOpen] = useState(open);
+
+  useEffect(() => {
+    setTransitionOpen(open);
+  }, [open]);
+
+  const requestClose = () => setTransitionOpen(false);
+  const finishClose = () => {
+    if (open) onClose();
+  };
 
   if (!record) return null;
 
@@ -2762,9 +2776,17 @@ const DetailModal = ({
 
   return (
     <Dialog
-      open={open}
-      onClose={onClose}
+      open={transitionOpen}
+      onClose={requestClose}
       maxWidth="md"
+      transitionDuration={{ enter: 340, exit: 420 }}
+      TransitionProps={{
+        easing: {
+          enter: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          exit: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        },
+        onExited: finishClose,
+      }}
       fullWidth
       scroll="paper"
     >
@@ -2782,7 +2804,7 @@ const DetailModal = ({
               ID: {record.id} | {t('date')}: {record.examination_date || '-'}
             </Typography>
           </Box>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={requestClose}>
             <Close />
           </IconButton>
         </Stack>
@@ -2953,7 +2975,7 @@ const DetailModal = ({
             {t('hardDelete')}
           </Button>
         )}
-        <Button onClick={onClose}>{t('close')}</Button>
+        <Button onClick={requestClose}>{t('close')}</Button>
       </DialogActions>
     </Dialog>
   );

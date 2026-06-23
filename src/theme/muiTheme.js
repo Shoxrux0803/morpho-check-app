@@ -1,5 +1,6 @@
 // src/theme/muiTheme.js
 import { createTheme } from '@mui/material/styles';
+import Grow from '@mui/material/Grow';
 
 export const THEME_VARIANTS = ['neo', 'ocean', 'sunset', 'minimal'];
 
@@ -74,8 +75,8 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       ? 'linear-gradient(135deg, rgba(25, 32, 48, 0.58), rgba(8, 13, 25, 0.34))'
       : 'linear-gradient(135deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.20))',
     surfaceStrong: isDark
-      ? 'linear-gradient(135deg, rgba(31, 41, 61, 0.76), rgba(10, 15, 28, 0.56))'
-      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.30))',
+      ? 'linear-gradient(135deg, rgba(25, 34, 52, 0.96), rgba(8, 13, 25, 0.92))'
+      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 249, 0.90))',
     tint: isDark ? 'rgba(96, 165, 250, 0.12)' : 'rgba(14, 165, 233, 0.08)',
     border: isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(255, 255, 255, 0.64)',
     borderSoft: isDark
@@ -407,10 +408,33 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
         },
       },
       MuiDialog: {
+        defaultProps: {
+          // Keep every dialog transition consistent across the application.
+          // Grow animates opacity and scale in both directions. The longer
+          // exit duration keeps closing as fluid and visible as opening.
+          TransitionComponent: Grow,
+          transitionDuration: {
+            enter: 340,
+            exit: 340,
+          },
+          TransitionProps: {
+            easing: {
+              enter: 'cubic-bezier(0.22, 1, 0.36, 1)',
+              exit: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            },
+          },
+        },
         styleOverrides: {
+          root: {
+            '& .MuiDialog-container': {
+              willChange: 'opacity, transform',
+            },
+          },
           paper: {
             borderRadius: 34,
             overflow: 'hidden',
+            transformOrigin: 'center center',
+            willChange: 'opacity, transform',
             background: liquidGlass.surfaceStrong,
             WebkitBackdropFilter: liquidGlass.blur,
             backdropFilter: liquidGlass.blur,
@@ -431,10 +455,10 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
         styleOverrides: {
           root: {
             backgroundColor: isDark
-              ? 'rgba(2, 6, 23, 0.18)'
-              : 'rgba(226, 232, 240, 0.12)',
-            WebkitBackdropFilter: 'none',
-            backdropFilter: 'none',
+              ? 'rgba(2, 6, 23, 0.58)'
+              : 'rgba(15, 23, 42, 0.28)',
+            WebkitBackdropFilter: 'blur(5px) saturate(115%)',
+            backdropFilter: 'blur(5px) saturate(115%)',
           },
         },
       },

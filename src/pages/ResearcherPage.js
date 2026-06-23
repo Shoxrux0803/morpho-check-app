@@ -167,7 +167,7 @@ const getDateLocale = (lang) => {
    DETAIL MODAL
 ════════════════════════════════════════════════════ */
 const DetailModal = ({
-  record,
+  record: incomingRecord,
   open,
   onClose,
   onEdit,
@@ -178,6 +178,20 @@ const DetailModal = ({
   const { lang } = useLanguage();
   const tr = useCallback((key) => researcherT(lang, key), [lang]);
   const dateLocale = getDateLocale(lang);
+  const lastRecordRef = useRef(null);
+
+  if (incomingRecord) lastRecordRef.current = incomingRecord;
+  const record = incomingRecord || lastRecordRef.current;
+  const [transitionOpen, setTransitionOpen] = useState(open);
+
+  useEffect(() => {
+    setTransitionOpen(open);
+  }, [open]);
+
+  const requestClose = () => setTransitionOpen(false);
+  const finishClose = () => {
+    if (open) onClose();
+  };
 
   if (!record) return null;
 
@@ -219,9 +233,17 @@ const DetailModal = ({
 
   return (
     <Dialog
-      open={open}
-      onClose={onClose}
+      open={transitionOpen}
+      onClose={requestClose}
       maxWidth="md"
+      transitionDuration={{ enter: 340, exit: 420 }}
+      TransitionProps={{
+        easing: {
+          enter: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          exit: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        },
+        onExited: finishClose,
+      }}
       fullWidth
       scroll="paper"
       PaperProps={{
@@ -258,7 +280,7 @@ const DetailModal = ({
               {new Date(record.created_at).toLocaleDateString(dateLocale)}
             </Typography>
           </Box>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={requestClose}>
             <Close />
           </IconButton>
         </Stack>
@@ -446,7 +468,7 @@ const DetailModal = ({
             {tr('delete')}
           </Button>
         )}
-        <Button onClick={onClose} variant="text">
+        <Button onClick={requestClose} variant="text">
           {tr('close')}
         </Button>
       </DialogActions>
