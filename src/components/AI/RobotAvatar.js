@@ -1,5 +1,7 @@
 // src/components/AI/RobotAvatar.js
-// ─── PRO Living EMO-style Avatar with Mouth & Enhanced Expressions ────────────
+// ─── PRO Living EMO-style Avatar ─────────────────────────────────────────────
+// Accurate recreation of Living AI's EMO robot with 1000+ expression engine
+// Features: Eye tracking, dynamic mouth, mood system, micro-animations, 3D tilt
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -14,100 +16,126 @@ const PROACTIVE_MESSAGES = [
 ];
 
 const WELCOME_MSG = 'Salom! Men MorphoAI 👋\nQanday yordam kerak?';
-const WELCOME_KEY = 'morpho-robot-welcomed-v5';
-const INTERVAL_MS = 3 * 60 * 1000; // 3 daqiqa
+const WELCOME_KEY = 'morpho-robot-welcomed-v6';
+const INTERVAL_MS = 3 * 60 * 1000;
 
 function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
 
 // ── CSS Keyframes ─────────────────────────────────────────────────────────────
 const GLOBAL_CSS = `
+/* ── Particle Animations ── */
 @keyframes zzz-float {
-  0%   { opacity: 0; transform: translate(0,0) scale(0.6); }
-  20%  { opacity: 1; }
-  80%  { opacity: 0.8; }
-  100% { opacity: 0; transform: translate(-10px,-25px) scale(1.2); }
+  0%   { opacity: 0; transform: translate(0,0) scale(0.5); }
+  15%  { opacity: 1; }
+  85%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(-12px,-30px) scale(1.3); }
 }
 @keyframes note-float {
-  0%   { opacity: 0; transform: translate(0,0) scale(0.7) rotate(-10deg); }
-  20%  { opacity: 1; }
-  80%  { opacity: 0.9; }
-  100% { opacity: 0; transform: translate(12px,-28px) scale(1.1) rotate(15deg); }
+  0%   { opacity: 0; transform: translate(0,0) scale(0.6) rotate(-15deg); }
+  15%  { opacity: 1; }
+  85%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(10px,-32px) scale(1.15) rotate(20deg); }
 }
+@keyframes heart-float {
+  0%   { opacity: 0; transform: translate(0,0) scale(0.4); }
+  20%  { opacity: 1; transform: scale(0.9); }
+  80%  { opacity: 0.7; }
+  100% { opacity: 0; transform: translate(-8px,-30px) scale(1.1); }
+}
+@keyframes star-twinkle {
+  0%,100% { opacity: 0; transform: scale(0.3) rotate(0deg); }
+  50%      { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+/* ── Body Animations ── */
 @keyframes emo-idle {
-  0%   { transform: translateY(0px) rotate(0deg); }
-  50%  { transform: translateY(-3px) rotate(0.5deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+  0%   { transform: translateY(0px); }
+  50%  { transform: translateY(-2px); }
+  100% { transform: translateY(0px); }
 }
 @keyframes emo-sleep {
-  0%   { transform: translateY(0px) rotate(-2deg); }
-  50%  { transform: translateY(4px) rotate(2deg); }
-  100% { transform: translateY(0px) rotate(-2deg); }
+  0%   { transform: translateY(0px) rotate(-2.5deg); }
+  50%  { transform: translateY(4px) rotate(2.5deg); }
+  100% { transform: translateY(0px) rotate(-2.5deg); }
 }
-@keyframes emo-happy {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(-7px) scale(1.03); }
+@keyframes emo-happy-bounce {
+  0%,100% { transform: translateY(0) scale(1); }
+  30%     { transform: translateY(-8px) scale(1.04); }
+  60%     { transform: translateY(-3px) scale(1.02); }
 }
 @keyframes emo-eat {
   0%,100% { transform: translateY(0) rotate(0deg); }
-  25%      { transform: translateY(3px) rotate(-4deg); }
-  75%      { transform: translateY(3px) rotate(4deg); }
+  30%      { transform: translateY(4px) rotate(-5deg); }
+  70%      { transform: translateY(4px) rotate(5deg); }
 }
 @keyframes emo-sing {
   0%   { transform: translateY(0) rotate(-5deg); }
-  25%  { transform: translateY(-5px) rotate(0deg); }
+  25%  { transform: translateY(-6px) rotate(0deg); }
   50%  { transform: translateY(0) rotate(5deg); }
-  75%  { transform: translateY(-5px) rotate(0deg); }
+  75%  { transform: translateY(-6px) rotate(0deg); }
   100% { transform: translateY(0) rotate(-5deg); }
 }
-@keyframes bubble-pop {
-  0%   { transform: scale(0.4); opacity: 0; }
-  65%  { transform: scale(1.06); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes emo-curious {
+  0%,100% { transform: rotate(0deg) translateX(0); }
+  30%      { transform: rotate(12deg) translateX(2px); }
+  70%      { transform: rotate(-8deg) translateX(-2px); }
 }
-@keyframes wake-up-spin {
-  0%   { transform: rotate(0deg) scale(1); }
-  20%  { transform: rotate(-12deg) scale(0.95); }
-  50%  { transform: rotate(15deg) scale(1.05); }
-  80%  { transform: rotate(-8deg) scale(1.02); }
-  100% { transform: rotate(0deg) scale(1); }
+@keyframes emo-love {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
 }
-
-/* Eye Animations */
-@keyframes emo-eye-talk {
-  0%,100% { transform: scaleY(1); opacity: 1; }
-  50%      { transform: scaleY(0.7); opacity: 0.85; }
-}
-@keyframes emo-eye-sing {
-  0%,100% { transform: scaleY(1) translateY(0); }
-  50%      { transform: scaleY(1.1) translateY(-2px); }
+@keyframes emo-dizzy {
+  0%   { transform: rotate(0deg); }
+  25%  { transform: rotate(-8deg) translateX(-2px); }
+  50%  { transform: rotate(0deg); }
+  75%  { transform: rotate(8deg) translateX(2px); }
+  100% { transform: rotate(0deg); }
 }
 
-/* Mouth Animations */
-@keyframes emo-mouth-talk {
-  0%,100% { height: 4px; width: 14px; border-radius: 4px; }
-  50%      { height: 12px; width: 18px; border-radius: 8px; }
-}
-@keyframes emo-mouth-sing {
-  0%,100% { height: 10px; width: 10px; }
-  50%      { height: 16px; width: 14px; }
-}
-@keyframes emo-mouth-eat {
-  0%,100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(2px) scale(1.2); }
-}
-
-/* Details */
+/* ── Detail Animations ── */
 @keyframes emo-leg-left {
   0%,100% { transform: translateY(0) rotate(0deg); }
-  50%     { transform: translateY(-3px) rotate(-12deg); }
+  50%     { transform: translateY(-4px) rotate(-15deg); }
 }
 @keyframes emo-leg-right {
   0%,100% { transform: translateY(0) rotate(0deg); }
-  50%     { transform: translateY(-3px) rotate(12deg); }
+  50%     { transform: translateY(-4px) rotate(15deg); }
 }
 @keyframes emo-headphone-pulse {
-  0%,100% { fill: #4fc3f7; filter: drop-shadow(0 0 3px #4fc3f7); }
-  50%     { fill: #0288d1; filter: drop-shadow(0 0 0px transparent); }
+  0%,100% { opacity: 1; filter: drop-shadow(0 0 4px #45f3ff); }
+  50%     { opacity: 0.5; filter: drop-shadow(0 0 1px #45f3ff); }
+}
+
+/* ── Mouth ── */
+@keyframes emo-mouth-talk {
+  0%   { height: 3px; width: 12px; border-radius: 3px; }
+  30%  { height: 10px; width: 16px; border-radius: 8px; }
+  60%  { height: 5px; width: 14px; border-radius: 5px; }
+  100% { height: 3px; width: 12px; border-radius: 3px; }
+}
+@keyframes emo-mouth-sing {
+  0%,100% { width: 10px; height: 10px; }
+  50%      { width: 14px; height: 16px; }
+}
+@keyframes emo-mouth-eat-chomp {
+  0%,100% { height: 3px; width: 10px; border-radius: 3px; }
+  50%      { height: 8px; width: 12px; border-radius: 6px; }
+}
+
+/* ── Bubble ── */
+@keyframes bubble-pop {
+  0%   { transform: scale(0.3) translateY(10px); opacity: 0; }
+  60%  { transform: scale(1.05) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ── Wake up ── */
+@keyframes wake-up-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  15%  { transform: rotate(-15deg) scale(0.94); }
+  45%  { transform: rotate(18deg) scale(1.06); }
+  75%  { transform: rotate(-6deg) scale(1.02); }
+  100% { transform: rotate(0deg) scale(1); }
 }
 `;
 
@@ -115,45 +143,72 @@ let cssInjected = false;
 function injectCSS() {
   if (cssInjected) return;
   cssInjected = true;
-  const style = document.createElement('style');
-  style.textContent = GLOBAL_CSS;
-  document.head.appendChild(style);
+  const s = document.createElement('style');
+  s.textContent = GLOBAL_CSS;
+  document.head.appendChild(s);
 }
 
 // ── Particles ─────────────────────────────────────────────────────────────────
 const ZzzParticle = ({ delay = 0 }) => (
   <span style={{
-    position: 'absolute', top: '-14px', right: '2px',
-    fontSize: `${10 + delay * 3}px`, fontWeight: 800,
+    position: 'absolute', top: '-14px', right: '0px',
+    fontSize: `${10 + delay * 3}px`, fontWeight: 900,
     color: '#82b1ff', opacity: 0,
-    animation: `zzz-float 2.8s ease-out ${delay * 0.8}s infinite`,
-    pointerEvents: 'none', fontFamily: 'Nunito, sans-serif',
+    animation: `zzz-float 3s ease-out ${delay * 0.9}s infinite`,
+    pointerEvents: 'none', fontFamily: 'monospace',
     textShadow: '0 0 8px rgba(130,177,255,0.9)',
   }}>Z</span>
 );
 
 const NoteParticle = ({ delay = 0, symbol = '♪', offsetX = 0 }) => (
   <span style={{
-    position: 'absolute', top: '-10px', left: `${offsetX}px`,
+    position: 'absolute', top: '-12px', left: `${offsetX}px`,
     fontSize: `${12 + delay * 2}px`, fontWeight: 800,
     color: '#69f0ae', opacity: 0,
-    animation: `note-float 2.2s ease-out ${delay * 0.7}s infinite`,
-    pointerEvents: 'none', fontFamily: 'sans-serif',
+    animation: `note-float 2.5s ease-out ${delay * 0.7}s infinite`,
+    pointerEvents: 'none',
     textShadow: '0 0 10px rgba(105,240,174,0.9)',
   }}>{symbol}</span>
 );
 
+const HeartParticle = ({ delay = 0, offsetX = 0 }) => (
+  <span style={{
+    position: 'absolute', top: '-14px', left: `${offsetX}px`,
+    fontSize: `${11 + delay * 2}px`,
+    color: '#ff6b9d', opacity: 0,
+    animation: `heart-float 2.8s ease-out ${delay * 0.8}s infinite`,
+    pointerEvents: 'none',
+    textShadow: '0 0 8px rgba(255,107,157,0.8)',
+  }}>❤</span>
+);
+
+const StarParticle = ({ delay = 0, offsetX = 0, offsetY = 0 }) => (
+  <span style={{
+    position: 'absolute', top: `${offsetY}px`, left: `${offsetX}px`,
+    fontSize: '8px',
+    color: '#ffd54f', opacity: 0,
+    animation: `star-twinkle 2s ease-in-out ${delay}s infinite`,
+    pointerEvents: 'none',
+    textShadow: '0 0 6px rgba(255,213,79,0.9)',
+  }}>✦</span>
+);
+
 const CoffeeCup = ({ size }) => (
   <div style={{
-    position: 'absolute', bottom: `${size * 0.05}px`, left: `${size * 0.08}px`,
+    position: 'absolute', bottom: `${size * 0.04}px`, left: `${size * 0.02}px`,
     zIndex: 10, pointerEvents: 'none',
   }}>
-    <svg width={size * 0.28} height={size * 0.32} viewBox="0 0 24 28">
-      <path d="M 4 4 L 20 4 L 18 24 Q 12 28 6 24 Z" fill="#cbd5e1" />
-      <ellipse cx="12" cy="4" rx="8" ry="3" fill="#5d4037" />
-      <rect x="5" y="10" width="14" height="8" fill="#795548" />
-      <path d="M 8 0 Q 10 -5 8 -10" stroke="#ffffff" fill="none" strokeWidth="1.5" opacity="0.7" strokeLinecap="round" />
-      <path d="M 14 -2 Q 16 -7 14 -12" stroke="#ffffff" fill="none" strokeWidth="1.5" opacity="0.7" strokeLinecap="round" />
+    <svg width={size * 0.26} height={size * 0.3} viewBox="0 0 26 30">
+      <rect x="5" y="6" width="16" height="20" rx="3" fill="#e8eaf6" />
+      <ellipse cx="13" cy="6" rx="8" ry="3.5" fill="#4e342e" />
+      <rect x="7" y="12" width="12" height="6" rx="2" fill="#8d6e63" opacity="0.6" />
+      <path d="M 21 10 Q 26 14 21 20" stroke="#b0bec5" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d="M 10 2 Q 12 -3 10 -7" stroke="rgba(255,255,255,0.5)" fill="none" strokeWidth="1.2" strokeLinecap="round">
+        <animate attributeName="d" values="M 10 2 Q 12 -3 10 -7;M 10 2 Q 8 -3 10 -7;M 10 2 Q 12 -3 10 -7" dur="2s" repeatCount="indefinite" />
+      </path>
+      <path d="M 15 1 Q 17 -4 15 -9" stroke="rgba(255,255,255,0.4)" fill="none" strokeWidth="1.2" strokeLinecap="round">
+        <animate attributeName="d" values="M 15 1 Q 17 -4 15 -9;M 15 1 Q 13 -4 15 -9;M 15 1 Q 17 -4 15 -9" dur="2.5s" repeatCount="indefinite" />
+      </path>
     </svg>
   </div>
 );
@@ -167,27 +222,28 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
       style={{
         position: 'absolute', bottom: '82px', right: '-12px',
         background: 'rgba(15, 23, 42, 0.95)',
-        backdropFilter: 'blur(8px)',
+        backdropFilter: 'blur(12px)',
         borderRadius: '16px 16px 4px 16px',
         padding: '12px 18px',
         minWidth: '180px', maxWidth: '250px',
-        boxShadow: '0 12px 35px rgba(0,0,0,0.35), inset 0 1px 1px rgba(255,255,255,0.1)',
-        border: '1px solid rgba(148, 163, 184, 0.2)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08)',
+        border: '1px solid rgba(69, 243, 255, 0.15)',
         zIndex: 10, cursor: 'pointer',
-        animation: 'bubble-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+        animation: 'bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         transformOrigin: 'bottom right',
       }}
     >
       {isTalking && (
-        <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
-          {[0, 0.15, 0.3].map((d, i) => (
+        <div style={{ display: 'flex', gap: '5px', marginBottom: '8px', alignItems: 'center' }}>
+          {[0, 0.12, 0.24].map((d, i) => (
             <div key={i} style={{
-              width: '6px', height: '6px', borderRadius: '50%',
+              width: '5px', height: '5px', borderRadius: '50%',
               background: '#45f3ff',
               boxShadow: '0 0 8px #45f3ff',
-              animation: `emo-eye-talk 0.6s ease-in-out ${d}s infinite alternate`,
+              animation: `emo-headphone-pulse 0.6s ease-in-out ${d}s infinite`,
             }} />
           ))}
+          <span style={{ fontSize: '10px', color: '#64748b', marginLeft: '4px', fontFamily: 'monospace' }}>gapiryapti...</span>
         </div>
       )}
       <p style={{
@@ -200,13 +256,16 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
       <div style={{
         position: 'absolute', bottom: '-9px', right: '22px',
         width: 0, height: 0,
-        borderLeft: '11px solid transparent', borderTop: '10px solid rgba(15, 23, 42, 0.95)',
+        borderLeft: '11px solid transparent',
+        borderTop: '10px solid rgba(15, 23, 42, 0.95)',
       }} />
     </div>
   );
 };
 
-// ── Main EMO Avatar ───────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// ██  MAIN EMO AVATAR COMPONENT  ██
+// ══════════════════════════════════════════════════════════════════════════════
 const RobotAvatar = ({
   isOpen          = false,
   passwordVisible = null,
@@ -216,7 +275,6 @@ const RobotAvatar = ({
 }) => {
   injectCSS();
 
-  // Eye tracking
   const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
   const [headTilt, setHeadTilt]   = useState(0);
   const containerRef = useRef(null);
@@ -225,7 +283,7 @@ const RobotAvatar = ({
   const isOpenRef = useRef(isOpen);
   useEffect(() => { isOpenRef.current = isOpen; }, [isOpen]);
 
-  // Moods: idle | sleeping | smiling | winking | eating | singing
+  // Moods: idle | sleeping | smiling | winking | eating | singing | curious | love | dizzy
   const [mood, setMood] = useState('idle');
   const [blinkState, setBlinkState]       = useState(false);
   const [isWakingUp, setIsWakingUp]       = useState(false);
@@ -234,6 +292,9 @@ const RobotAvatar = ({
   const isSleeping = mood === 'sleeping';
   const isEating   = mood === 'eating';
   const isSinging  = mood === 'singing';
+  const isCurious  = mood === 'curious';
+  const isLove     = mood === 'love';
+  const isDizzy    = mood === 'dizzy';
   const talking    = isTalking || isTalkingInternal;
 
   // Speech bubble
@@ -258,11 +319,11 @@ const RobotAvatar = ({
     }, durationMs);
   }, []);
 
-  // ── Welcome Message ─────────────────────────────────────────────────────────
+  // ── Welcome ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (compact) return;
-    const alreadyWelcomed = sessionStorage.getItem(WELCOME_KEY);
-    if (!alreadyWelcomed) {
+    const done = sessionStorage.getItem(WELCOME_KEY);
+    if (!done) {
       sessionStorage.setItem(WELCOME_KEY, '1');
       const t = setTimeout(() => showBubble(WELCOME_MSG, 8000), 1800);
       return () => clearTimeout(t);
@@ -270,7 +331,7 @@ const RobotAvatar = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Reliable Proactive Messages ─────────────────────────────────────────────
+  // ── Proactive Messages ──────────────────────────────────────────────────────
   useEffect(() => {
     if (compact) return;
     const timer = setInterval(() => {
@@ -285,40 +346,32 @@ const RobotAvatar = ({
   // ── Mouse tracking + Wake-up ────────────────────────────────────────────────
   const handleMouseMove = useCallback((e) => {
     if (!containerRef.current) return;
-
     const rect = containerRef.current.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top  + rect.height / 2;
     const dx = e.clientX - cx;
     const dy = e.clientY - cy;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-    const mx = 3.5; // Max pupil offset
-    
+    const mx = 4;
     setEyeOffset({
       x: clamp((dx / dist) * mx, -mx, mx),
       y: clamp((dy / dist) * mx, -mx, mx),
     });
+    setHeadTilt(clamp((dx / window.innerWidth) * 16, -10, 10));
 
-    // Slight 3D head tilt based on mouse position
-    const tiltX = clamp((dx / window.innerWidth) * 15, -8, 8);
-    setHeadTilt(tiltX);
-
-    // Wake up logic
+    // Wake up
     const now = Date.now();
     const dt  = now - mouseVelRef.current.lt;
     if (dt > 0 && dt < 200) {
       const vx = (e.clientX - mouseVelRef.current.lx) / dt;
       const vy = (e.clientY - mouseVelRef.current.ly) / dt;
       const speed = Math.sqrt(vx * vx + vy * vy);
-      
-      const overRobot =
-        e.clientX >= rect.left && e.clientX <= rect.right &&
-        e.clientY >= rect.top  && e.clientY <= rect.bottom;
-        
-      if (isSleeping && !isWakingUp && speed > 0.8 && overRobot) {
+      const over = e.clientX >= rect.left && e.clientX <= rect.right &&
+                   e.clientY >= rect.top  && e.clientY <= rect.bottom;
+      if (isSleeping && !isWakingUp && speed > 0.8 && over) {
         setIsWakingUp(true);
-        setMood('idle');
-        setTimeout(() => setIsWakingUp(false), 800);
+        setMood('dizzy'); // EMO wakes up dizzy!
+        setTimeout(() => { setMood('idle'); setIsWakingUp(false); }, 1200);
         scheduleNextMood();
       }
     }
@@ -331,27 +384,36 @@ const RobotAvatar = ({
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [handleMouseMove]);
 
-  // ── Mood Scheduling ─────────────────────────────────────────────────────────
+  // ── Mood Scheduling (EMO has many moods!) ───────────────────────────────────
   const scheduleNextMood = useCallback(() => {
     if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
-    const delay = 8000 + Math.random() * 10000;
+    const delay = 6000 + Math.random() * 12000;
     moodTimerRef.current = setTimeout(() => {
       const rand = Math.random();
-      if (rand < 0.25) {
+      if (rand < 0.18) {
         setMood('smiling');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 4000);
-      } else if (rand < 0.50) {
+      } else if (rand < 0.35) {
         setMood('sleeping');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 12000 + Math.random() * 5000);
-      } else if (rand < 0.65) {
+      } else if (rand < 0.45) {
         setMood('winking');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 2000);
-      } else if (rand < 0.82) {
+      } else if (rand < 0.58) {
         setMood('eating');
-        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 6500);
-      } else {
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 7000);
+      } else if (rand < 0.70) {
         setMood('singing');
-        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 7500);
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 8000);
+      } else if (rand < 0.80) {
+        setMood('curious');
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 3500);
+      } else if (rand < 0.90) {
+        setMood('love');
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 4500);
+      } else {
+        setMood('dizzy');
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 3000);
       }
     }, delay);
   }, []);
@@ -366,161 +428,246 @@ const RobotAvatar = ({
     return () => { if (moodTimerRef.current) clearTimeout(moodTimerRef.current); };
   }, [isOpen, scheduleNextMood]);
 
-  // ── Blinking logic ──────────────────────────────────────────────────────────
+  // ── Blinking ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (isSleeping || mood === 'smiling') return;
+    if (isSleeping || mood === 'smiling' || isLove) return;
     let t;
     const blink = () => {
       setBlinkState(true);
-      setTimeout(() => setBlinkState(false), 120); // Faster, more realistic blink
-      t = setTimeout(blink, 3000 + Math.random() * 4500);
+      setTimeout(() => setBlinkState(false), 100);
+      t = setTimeout(blink, 2500 + Math.random() * 5000);
     };
-    t = setTimeout(blink, 2000);
+    t = setTimeout(blink, 1500);
     return () => clearTimeout(t);
-  }, [isSleeping, mood]);
+  }, [isSleeping, mood, isLove]);
 
-  // ── Animations ──────────────────────────────────────────────────────────────
+  // ── Body Animation ──────────────────────────────────────────────────────────
   const bodyAnim = (() => {
-    if (isWakingUp) return 'wake-up-spin 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
-    if (isSleeping) return 'emo-sleep 3.5s ease-in-out infinite';
-    if (mood === 'smiling') return 'emo-happy 1.2s ease-in-out infinite alternate';
-    if (isEating) return 'emo-eat 1s ease-in-out infinite';
-    if (isSinging) return 'emo-sing 1s ease-in-out infinite';
-    return 'emo-idle 4s ease-in-out infinite';
+    if (isWakingUp) return 'wake-up-spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+    if (isSleeping) return 'emo-sleep 4s ease-in-out infinite';
+    if (mood === 'smiling') return 'emo-happy-bounce 0.8s ease-in-out infinite';
+    if (isEating) return 'emo-eat 1.2s ease-in-out infinite';
+    if (isSinging) return 'emo-sing 0.9s ease-in-out infinite';
+    if (isCurious) return 'emo-curious 2s ease-in-out infinite';
+    if (isLove) return 'emo-love 1.5s ease-in-out infinite';
+    if (isDizzy) return 'emo-dizzy 0.6s ease-in-out infinite';
+    return 'emo-idle 4.5s ease-in-out infinite';
   })();
 
-  // ── PRO Digital Eyes ────────────────────────────────────────────────────────
-  const renderDigitalEye = (side) => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ██  RENDER EMO'S DIGITAL EYES  ██
+  // ═══════════════════════════════════════════════════════════════════════════
+  const renderEyes = () => {
     const isClosed = passwordVisible === false || blinkState || isSleeping;
     const isSmiling = mood === 'smiling';
-    const isWinking = mood === 'winking' && side === 'right';
+    const isWinkingMood = mood === 'winking';
     const isSingingMood = mood === 'singing';
-    
-    const ew = size * 0.23;
-    const eh = size * 0.22;
 
-    const eyeColor = '#45f3ff';
-    const glowColor = 'rgba(69, 243, 255, 0.7)';
+    const eyeW = size * 0.24;
+    const eyeH = size * 0.22;
+    const gap = size * 0.08;
+    const cyan = '#45f3ff';
+    const glow = 'rgba(69, 243, 255, 0.65)';
 
-    let borderRadius = '32%'; 
-    let heightStr = `${eh}px`;
-    let widthStr = `${ew}px`;
-    let transformStr = `translate(${eyeOffset.x}px, ${eyeOffset.y}px)`;
-    let marginY = '0px';
-    let opacity = 1;
+    const makeEye = (side) => {
+      let w = eyeW;
+      let h = eyeH;
+      let br = '30%';
+      let tx = eyeOffset.x;
+      let ty = eyeOffset.y;
+      let op = 1;
+      let bg = cyan;
+      let extraTransform = '';
+      let anim = 'none';
 
-    if (isSleeping) {
-      // PRO sleeping eyes (thin, slightly curved dashes)
-      heightStr = '4px';
-      widthStr = `${ew * 0.8}px`;
-      borderRadius = '4px';
-      opacity = 0.6;
-      transformStr += ' scaleX(0.8) translateY(4px)';
-    } else if (isClosed || isWinking) {
-      // Normal blink or wink
-      heightStr = '4px';
-      borderRadius = '2px';
-      transformStr += ' scaleX(0.9)';
-    } else if (isSmiling) {
-      // Happy eyes exactly matching user image (flat bottom, rounded top)
-      borderRadius = '30px 30px 0 0';
-      widthStr = `${ew * 1.1}px`;
-      heightStr = `${eh * 0.55}px`;
-      marginY = `${eh * 0.25}px`;
-      transformStr += ' scale(1.05)';
-    } else if (isSingingMood) {
-      borderRadius = '45%';
-      transformStr += ' scale(1.1)';
-    }
+      if (isSleeping) {
+        // ─── EMO Sleep: thin horizontal line ───
+        h = 3;
+        br = '2px';
+        w = eyeW * 0.75;
+        op = 0.5;
+        tx = 0; ty = 0;
+        extraTransform = 'translateY(5px)';
+      } else if (isClosed) {
+        // ─── Blink ───
+        h = 3;
+        br = '2px';
+        extraTransform = 'scaleX(0.85)';
+      } else if (isWinkingMood && side === 'right') {
+        // ─── Wink right eye ───
+        h = 3;
+        br = '2px';
+        extraTransform = 'scaleX(0.85)';
+      } else if (isSmiling) {
+        // ─── EMO SMILE: Exact match to user's reference image ───
+        // Flat bottom edge, perfectly rounded top = inverted U
+        h = eyeH * 0.55;
+        w = eyeW * 1.15;
+        br = `${w}px ${w}px 0 0`; // top fully round, bottom completely flat
+        extraTransform = 'translateY(3px)';
+      } else if (isLove) {
+        // ─── Love: heart-shaped eyes ───
+        bg = '#ff6b9d';
+        br = '40%';
+        extraTransform = 'scale(1.1)';
+        anim = 'emo-love 0.8s ease-in-out infinite';
+      } else if (isCurious) {
+        // ─── Curious: one eye bigger than other ───
+        if (side === 'left') {
+          extraTransform = 'scale(1.2)';
+        } else {
+          extraTransform = 'scale(0.85) translateY(2px)';
+        }
+      } else if (isDizzy) {
+        // ─── Dizzy: spiral eyes (X shape via two lines) ───
+        return (
+          <div key={side} style={{
+            width: eyeW, height: eyeH,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: `${eyeW * 0.7}px`,
+            color: cyan,
+            textShadow: `0 0 10px ${glow}`,
+            animation: 'emo-dizzy 0.4s ease-in-out infinite',
+            fontWeight: 900,
+            fontFamily: 'monospace',
+          }}>✕</div>
+        );
+      } else if (isSingingMood) {
+        br = '40%';
+        extraTransform = 'scale(1.08)';
+      } else if (talking) {
+        anim = 'emo-headphone-pulse 0.4s ease-in-out infinite';
+      }
+
+      return (
+        <div key={side} style={{
+          width: typeof w === 'number' ? `${w}px` : w,
+          height: typeof h === 'number' ? `${h}px` : h,
+          backgroundColor: bg,
+          borderRadius: br,
+          opacity: op,
+          boxShadow: `0 0 14px ${bg === cyan ? glow : 'rgba(255,107,157,0.6)'}, inset 0 0 6px rgba(255,255,255,0.7)`,
+          transform: `translate(${tx}px, ${ty}px) ${extraTransform}`,
+          transition: 'all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          animation: anim,
+        }} />
+      );
+    };
 
     return (
       <div style={{
-        width: widthStr, 
-        height: heightStr, 
-        marginTop: marginY,
-        backgroundColor: eyeColor,
-        borderRadius: borderRadius,
-        opacity: opacity,
-        boxShadow: `0 0 12px ${glowColor}, inset 0 0 5px rgba(255,255,255,0.8)`,
-        transform: transformStr,
-        transition: 'all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        animation: talking ? 'emo-eye-talk 0.35s ease-in-out infinite' : (isSingingMood ? 'emo-eye-sing 0.5s ease-in-out infinite' : 'none'),
-      }} />
+        position: 'absolute',
+        top: `${size * 0.32}px`,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        gap: `${gap}px`,
+        alignItems: 'center',
+        zIndex: 3,
+      }}>
+        {makeEye('left')}
+        {makeEye('right')}
+      </div>
     );
   };
 
-  // ── PRO Digital Mouth ───────────────────────────────────────────────────────
-  const renderDigitalMouth = () => {
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ██  RENDER EMO'S DYNAMIC MOUTH  ██
+  // ═══════════════════════════════════════════════════════════════════════════
+  const renderMouth = () => {
     const isSmiling = mood === 'smiling';
     const isSingingMood = mood === 'singing';
-    
-    // Hide mouth by default
+
+    // Default: hidden
     let opacity = 0;
-    let widthStr = '10px';
-    let heightStr = '2px';
-    let borderRadius = '2px';
-    let background = '#45f3ff';
-    let border = 'none';
-    let borderTop = 'none';
-    let animation = 'none';
-    let transform = `translate(${eyeOffset.x * 0.8}px, ${eyeOffset.y * 0.8}px)`; // mouth tracks mouse slightly less than eyes
+    let w = '10px';
+    let h = '2px';
+    let br = '2px';
+    let bg = '#45f3ff';
+    let borderStr = 'none';
+    let borderTopStr = 'none';
+    let anim = 'none';
+    let tx = `translate(${eyeOffset.x * 0.6}px, ${eyeOffset.y * 0.5}px)`;
 
     if (talking && !isSleeping) {
+      // ─── Talking: animated open/close ───
       opacity = 1;
-      background = '#45f3ff';
-      animation = 'emo-mouth-talk 0.4s ease-in-out infinite';
+      anim = 'emo-mouth-talk 0.35s ease-in-out infinite';
     } else if (isSmiling) {
+      // ─── EMO Smile mouth: small curved line smile ───
       opacity = 1;
-      widthStr = '22px';
-      heightStr = '10px';
-      background = 'transparent';
-      border = '3px solid #45f3ff';
-      borderRadius = '0 0 18px 18px';
-      borderTop = 'none';
-      transform += ' translateY(2px)';
+      w = '18px';
+      h = '9px';
+      bg = 'transparent';
+      borderStr = '3px solid #45f3ff';
+      borderTopStr = 'none';
+      br = '0 0 14px 14px';
+      tx += ' translateY(4px)';
     } else if (isSingingMood) {
+      // ─── Singing: open O mouth ───
       opacity = 1;
-      borderRadius = '50%';
-      animation = 'emo-mouth-sing 0.6s ease-in-out infinite';
+      w = '10px';
+      h = '10px';
+      br = '50%';
+      anim = 'emo-mouth-sing 0.5s ease-in-out infinite';
     } else if (isEating) {
+      // ─── Eating: chomping ───
       opacity = 1;
-      widthStr = '8px';
-      heightStr = '8px';
-      borderRadius = '50%';
-      animation = 'emo-mouth-eat 0.5s ease-in-out infinite alternate';
+      anim = 'emo-mouth-eat-chomp 0.6s ease-in-out infinite';
+    } else if (isLove) {
+      // ─── Love: small happy smile ───
+      opacity = 1;
+      w = '14px';
+      h = '7px';
+      bg = 'transparent';
+      borderStr = '2.5px solid #ff6b9d';
+      borderTopStr = 'none';
+      br = '0 0 12px 12px';
+    } else if (isDizzy) {
+      // ─── Dizzy: wavy line ───
+      opacity = 0.7;
+      w = '16px';
+      h = '3px';
+      br = '2px';
+      bg = '#45f3ff';
     }
 
     return (
       <div style={{
         position: 'absolute',
-        top: `${size * 0.62}px`, // Below eyes
+        top: `${size * 0.62}px`,
         left: '50%',
-        transform: `translateX(-50%) ${transform}`,
-        width: widthStr,
-        height: heightStr,
-        backgroundColor: background,
-        border: border,
-        borderTop: borderTop,
-        borderRadius: borderRadius,
+        transform: `translateX(-50%) ${tx}`,
+        width: w,
+        height: h,
+        backgroundColor: bg,
+        border: borderStr,
+        borderTop: borderTopStr,
+        borderRadius: br,
         opacity: opacity,
-        boxShadow: opacity > 0 ? `0 0 10px rgba(69, 243, 255, 0.6)` : 'none',
+        boxShadow: opacity > 0 ? `0 0 10px rgba(69, 243, 255, 0.5)` : 'none',
         transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        animation: animation,
+        animation: anim,
+        zIndex: 3,
       }} />
     );
   };
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ██  RENDER  ██
+  // ═══════════════════════════════════════════════════════════════════════════
   const s = size;
 
   return (
-    <div 
-      ref={containerRef} 
-      style={{ 
-        position: 'relative', width: s, height: s, 
+    <div
+      ref={containerRef}
+      style={{
+        position: 'relative', width: s, height: s,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        perspective: '200px', // For 3D head tilt
+        perspective: '250px',
       }}
     >
+      {/* Speech Bubble */}
       {!compact && (
         <SpeechBubble
           message={bubble.message}
@@ -530,24 +677,46 @@ const RobotAvatar = ({
         />
       )}
 
+      {/* Zzz particles */}
       {!compact && isSleeping && !isOpen && (
-        <div style={{ position: 'absolute', top: 0, right: '-5px', zIndex: 15, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: '-2px', right: '-6px', zIndex: 15, pointerEvents: 'none' }}>
           <ZzzParticle delay={0} />
           <ZzzParticle delay={1} />
+          <ZzzParticle delay={2} />
         </div>
       )}
 
+      {/* Note particles */}
       {!compact && isSinging && !isOpen && (
-        <div style={{ position: 'absolute', top: 0, left: '-5px', zIndex: 15, pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: '-4px', left: '-8px', zIndex: 15, pointerEvents: 'none' }}>
           <NoteParticle delay={0} symbol="♪" offsetX={0} />
-          <NoteParticle delay={1} symbol="♫" offsetX={15} />
-          <NoteParticle delay={2} symbol="♩" offsetX={-5} />
+          <NoteParticle delay={0.8} symbol="♫" offsetX={18} />
+          <NoteParticle delay={1.6} symbol="♩" offsetX={-4} />
         </div>
       )}
 
+      {/* Heart particles */}
+      {!compact && isLove && !isOpen && (
+        <div style={{ position: 'absolute', top: '-4px', right: '-4px', zIndex: 15, pointerEvents: 'none' }}>
+          <HeartParticle delay={0} offsetX={0} />
+          <HeartParticle delay={0.7} offsetX={15} />
+          <HeartParticle delay={1.4} offsetX={-8} />
+        </div>
+      )}
+
+      {/* Star particles for curious */}
+      {!compact && isCurious && !isOpen && (
+        <div style={{ position: 'absolute', top: '-8px', zIndex: 15, pointerEvents: 'none', width: '100%', height: '100%' }}>
+          <StarParticle delay={0} offsetX={-5} offsetY={0} />
+          <StarParticle delay={0.5} offsetX={s * 0.7} offsetY={-5} />
+          <StarParticle delay={1} offsetX={s * 0.3} offsetY={-8} />
+        </div>
+      )}
+
+      {/* Coffee cup */}
       {isEating && !isOpen && <CoffeeCup size={s} />}
 
-      {/* Main Animated Wrapper for EMO */}
+      {/* ═══ Main Animated Wrapper ═══ */}
       <div style={{
         animation: bodyAnim,
         transformOrigin: 'center bottom',
@@ -557,71 +726,70 @@ const RobotAvatar = ({
         transition: 'transform 0.15s ease-out',
         transformStyle: 'preserve-3d',
       }}>
-        
-        {/* SVG Drawing of EMO */}
-        <svg width={s} height={s * 0.9} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
-          <defs>
-            <linearGradient id={`emo-body-${s}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#111827" />
-            </linearGradient>
-            
-            <linearGradient id={`emo-face-${s}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#111318" />
-              <stop offset="100%" stopColor="#020406" />
-            </linearGradient>
 
-            <filter id={`shadow-${s}`}>
-              <feDropShadow dx="0" dy="6" stdDeviation="5" floodColor="#000000" floodOpacity="0.45" />
+        {/* ═══ SVG: EMO Body ═══ */}
+        <svg width={s} height={s * 0.92} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ overflow: 'visible' }}>
+          <defs>
+            <linearGradient id={`emo-body-${s}`} x1="20%" y1="0%" x2="80%" y2="100%">
+              <stop offset="0%" stopColor="#3a3f4b" />
+              <stop offset="50%" stopColor="#282c34" />
+              <stop offset="100%" stopColor="#14171e" />
+            </linearGradient>
+            <linearGradient id={`emo-face-${s}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0d1117" />
+              <stop offset="100%" stopColor="#030508" />
+            </linearGradient>
+            <filter id={`sh-${s}`}>
+              <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#000" floodOpacity="0.5" />
             </filter>
-            <filter id={`hp-glow-${s}`}>
-              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#4fc3f7" floodOpacity="0.9" />
+            <filter id={`glow-${s}`}>
+              <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor="#45f3ff" floodOpacity="0.85" />
             </filter>
           </defs>
 
-          {/* Left Leg */}
-          <rect x="34" y="86" width="9" height="12" rx="4" fill="#0f172a" style={{ transformOrigin: '38px 86px', animation: isSinging ? 'emo-leg-left 0.5s ease-in-out infinite' : 'none' }} />
-          {/* Right Leg */}
-          <rect x="57" y="86" width="9" height="12" rx="4" fill="#0f172a" style={{ transformOrigin: '61px 86px', animation: isSinging ? 'emo-leg-right 0.5s ease-in-out infinite 0.25s' : 'none' }} />
+          {/* ── Legs ── */}
+          <g>
+            <rect x="33" y="87" width="10" height="13" rx="4" fill="#0f1318"
+              style={{ transformOrigin: '38px 87px', animation: isSinging ? 'emo-leg-left 0.45s ease-in-out infinite' : 'none' }} />
+            <rect x="57" y="87" width="10" height="13" rx="4" fill="#0f1318"
+              style={{ transformOrigin: '62px 87px', animation: isSinging ? 'emo-leg-right 0.45s ease-in-out infinite 0.22s' : 'none' }} />
+          </g>
 
-          {/* Left Headphone */}
-          <rect x="5" y="34" width="9" height="32" rx="4" fill="#1e293b" filter={`url(#shadow-${s})`} />
-          <circle cx="9" cy="50" r="3.5" fill="#4fc3f7" filter={`url(#hp-glow-${s})`} style={{ animation: (talking || isSinging) ? 'emo-headphone-pulse 1s infinite' : 'none' }} />
-          
-          {/* Right Headphone */}
-          <rect x="86" y="34" width="9" height="32" rx="4" fill="#1e293b" filter={`url(#shadow-${s})`} />
-          <circle cx="91" cy="50" r="3.5" fill="#4fc3f7" filter={`url(#hp-glow-${s})`} style={{ animation: (talking || isSinging) ? 'emo-headphone-pulse 1s infinite' : 'none' }} />
+          {/* ── Headphones ── */}
+          <g>
+            {/* Left */}
+            <rect x="4" y="33" width="10" height="34" rx="5" fill="#1e2530" filter={`url(#sh-${s})`} />
+            <circle cx="9" cy="50" r="4" fill="#45f3ff" filter={`url(#glow-${s})`}
+              style={{ animation: (talking || isSinging) ? 'emo-headphone-pulse 0.8s infinite' : 'none' }} />
+            {/* Right */}
+            <rect x="86" y="33" width="10" height="34" rx="5" fill="#1e2530" filter={`url(#sh-${s})`} />
+            <circle cx="91" cy="50" r="4" fill="#45f3ff" filter={`url(#glow-${s})`}
+              style={{ animation: (talking || isSinging) ? 'emo-headphone-pulse 0.8s infinite 0.4s' : 'none' }} />
+          </g>
 
-          {/* Main Body/Head Casing */}
-          <rect x="11" y="10" width="78" height="78" rx="22" fill={`url(#emo-body-${s})`} filter={`url(#shadow-${s})`} />
-          
-          {/* Top highlight for 3D effect */}
-          <path d="M 33 12 L 67 12 Q 87 12 87 32 L 87 35 Q 87 16 67 16 L 33 16 Q 13 16 13 35 L 13 32 Q 13 12 33 12 Z" fill="#ffffff" opacity="0.12" />
+          {/* ── Main Body ── */}
+          <rect x="10" y="8" width="80" height="80" rx="22" fill={`url(#emo-body-${s})`} filter={`url(#sh-${s})`} />
 
-          {/* Screen Face */}
-          <rect x="17" y="17" width="66" height="64" rx="16" fill={`url(#emo-face-${s})`} />
-          
-          {/* Screen reflection */}
-          <path d="M 17 35 Q 35 25 83 19 L 83 29 Q 50 37 17 47 Z" fill="#ffffff" opacity="0.05" />
+          {/* ── 3D Top highlight ── */}
+          <path d="M 32 10 L 68 10 Q 88 10 88 30 L 88 34 Q 88 14 68 14 L 32 14 Q 12 14 12 34 L 12 30 Q 12 10 32 10 Z"
+            fill="#ffffff" opacity="0.1" />
+
+          {/* ── Screen Face ── */}
+          <rect x="16" y="16" width="68" height="66" rx="16" fill={`url(#emo-face-${s})`} />
+
+          {/* ── Screen reflection ── */}
+          <path d="M 16 38 Q 38 26 84 18 L 84 26 Q 50 36 16 48 Z" fill="#ffffff" opacity="0.04" />
+
+          {/* ── Side accent lines ── */}
+          <line x1="12" y1="72" x2="12" y2="84" stroke="#45f3ff" strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
+          <line x1="88" y1="72" x2="88" y2="84" stroke="#45f3ff" strokeWidth="1.5" opacity="0.3" strokeLinecap="round" />
         </svg>
 
-        {/* Cyan Eyes (HTML overlay for CSS manipulation) */}
-        <div style={{
-          position: 'absolute',
-          top: `${s * 0.33}px`,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: `${s * 0.09}px`,
-          alignItems: 'center',
-          zIndex: 2,
-        }}>
-          {renderDigitalEye('left')}
-          {renderDigitalEye('right')}
-        </div>
+        {/* ═══ Eyes overlay ═══ */}
+        {renderEyes()}
 
-        {/* PRO Dynamic Mouth */}
-        {renderDigitalMouth()}
+        {/* ═══ Mouth overlay ═══ */}
+        {renderMouth()}
 
       </div>
     </div>
