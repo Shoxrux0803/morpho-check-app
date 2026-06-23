@@ -33,6 +33,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import aiService from '../../services/aiService';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 const TypewriterMessage = ({ content, onUpdate, onComplete }) => {
   const [displayedText, setDisplayedText] = useState('');
@@ -172,12 +173,13 @@ const AIAssistantWidget = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
   const { lang } = useLanguage();
   const location = useLocation();
+  const { isAuthenticated } = useAuth();
 
   // Password visibility tracking for login page robot eyes
   const [passwordVisible, setPasswordVisible] = useState(null);
 
   useEffect(() => {
-    const isLoginPage = location.pathname === '/admin' || location.pathname === '/login';
+    const isLoginPage = !isAuthenticated && (location.pathname === '/admin' || location.pathname === '/login');
     if (!isLoginPage) {
       setPasswordVisible(null);
       return;
@@ -189,7 +191,7 @@ const AIAssistantWidget = () => {
     };
     window.addEventListener('robot-password-toggle', handleToggle);
     return () => window.removeEventListener('robot-password-toggle', handleToggle);
-  }, [location.pathname]);
+  }, [location.pathname, isAuthenticated]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900);

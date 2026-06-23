@@ -3,19 +3,172 @@
 // Accurate recreation of Living AI's EMO robot with 1000+ expression engine
 // Features: Eye tracking, dynamic mouth, mood system, micro-animations, 3D tilt
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const PROACTIVE_MESSAGES = [
-  'Yordam kerakmi? 🤖',
-  'Ishlaringiz yaxshimi? 😊',
-  'Nima yangiliklar? 📊',
-  'Savollaringiz bormi? 💬',
-  'Bugun qanday ketmoqda? 🚀',
-  'Tahlil natijalari tayormi? 📋',
-  'Bir daqiqa dam oling! ☕',
-];
+const AI_TRANSLATIONS = {
+  uz: {
+    welcome: 'Salom! Men MorphoAI 👋\nQanday yordam kerak?',
+    proactive: [
+      'Yordam kerakmi? 🤖',
+      'Ishlaringiz yaxshimi? 😊',
+      'Nima yangiliklar? 📊',
+      'Savollaringiz bormi? 💬',
+      'Bugun qanday ketmoqda? 🚀',
+      'Tahlil natijalari tayormi? 📋',
+      'Bir daqiqa dam oling! ☕',
+    ],
+    praises: [
+      "WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!",
+      "Ajoyib natija! 🌟\nSiz haqiqatan ham ajoyibsiz!",
+      "Zo'r! 👍\nShu ruhda davom eting!",
+      "Qoyilmaqom! 🏆\nBunday natija kishini quvontiradi!",
+      "Ofarin! 👏\nJuda yaxshi harakat qildingiz!"
+    ],
+    talking: 'gapiryapti...'
+  },
+  ru: {
+    welcome: 'Привет! Я MorphoAI 👋\nЧем могу помочь?',
+    proactive: [
+      'Нужна помощь? 🤖',
+      'Как ваши дела? 😊',
+      'Что нового? 📊',
+      'Есть вопросы? 💬',
+      'Как проходит день? 🚀',
+      'Результаты анализа готовы? 📋',
+      'Отдохните минутку! ☕',
+    ],
+    praises: [
+      "ВАУ, потрясающе! 🎉\nОтличная работа! Я горжусь вами!",
+      "Превосходный результат! 🌟\nВы просто молодец!",
+      "Отлично! 👍\nПродолжайте в том же духе!",
+      "Изумительно! 🏆\nТакой результат радует глаз!",
+      "Браво! 👏\nОчень хорошее достижение!"
+    ],
+    talking: 'печатает...'
+  },
+  en: {
+    welcome: 'Hello! I am MorphoAI 👋\nHow can I help you?',
+    proactive: [
+      'Need help? 🤖',
+      'How are you doing? 😊',
+      'What\'s new? 📊',
+      'Any questions? 💬',
+      'How is your day going? 🚀',
+      'Are analysis results ready? 📋',
+      'Take a minute to rest! ☕',
+    ],
+    praises: [
+      "WOW, amazing! 🎉\nGreat job! I'm proud of you!",
+      "Excellent result! 🌟\nYou are truly awesome!",
+      "Great! 👍\nKeep up the good work!",
+      "Spectacular! 🏆\nSuch a result is delightful!",
+      "Bravo! 👏\nYou did a really good job!"
+    ],
+    talking: 'typing...'
+  },
+  tg: {
+    welcome: 'Салом! Ман MorphoAI 👋\nЧӣ тавр ёрӣ расонам?',
+    proactive: [
+      'Ёрӣ лозим аст? 🤖',
+      'Корҳо чӣ тавр? 😊',
+      'Чӣ навигариҳо? 📊',
+      'Саволҳо доред? 💬',
+      'Рӯзатон чӣ гуна мегузарад? 🚀',
+      'Натиҷаҳои таҳлил тайёранд? 📋',
+      'Як дақиқа истироҳат кунед! ☕',
+    ],
+    praises: [
+      "ВАУ, қоил! 🎉\nКори олӣ! Ман бо шумо фахр мекунам!",
+      "Натиҷаи аҷиб! 🌟\nШумо воқеан беҳтарин ҳастед!",
+      "Зӯр! 👍\nҲамин тавр давом диҳед!",
+      "Олиҷаноб! 🏆\nЧунин натиҷа касро хурсанд мекунад!",
+      "Офарин! 👏\nБисёр хуб ҳаракат кардед!"
+    ],
+    talking: 'менависад...'
+  },
+  kz: {
+    welcome: 'Сәлем! Мен MorphoAI 👋\nҚандай көмек керек?',
+    proactive: [
+      'Көмек керек пе? 🤖',
+      'Жағдайыңыз қалай? 😊',
+      'Не жаңалық? 📊',
+      'Сұрақтарыңыз бар ма? 💬',
+      'Күніңіз қалай өтіп жатыр? 🚀',
+      'Талдау нәтижелері дайын ба? 📋',
+      'Бір минут демалыңыз! ☕',
+    ],
+    praises: [
+      "ВАУ, керемет! 🎉\nЖақсы жұмыс! Мен сізбен мақтанамын!",
+      "Керемет нәтиже! 🌟\nСіз шынымен тамашасыз!",
+      "Күшті! 👍\nОсы қарқынмен жалғастырыңыз!",
+      "Ғажап! 🏆\nМұндай нәтиже қуантады!",
+      "Жарайсыз! 👏\nӨте жақсы еңбек еттіңіз!"
+    ],
+    talking: 'жазып жатыр...'
+  },
+  ky: {
+    welcome: 'Салам! Мен MorphoAI 👋\nКандай жардам керек?',
+    proactive: [
+      'Жардам керекпи? 🤖',
+      'Иштериңиз кандай? 😊',
+      'Эмне жаңылык? 📊',
+      'Суроолоруңуз барбы? 💬',
+      'Күнүңүз кандай өтүп жатат? 🚀',
+      'Анализ жыйынтыктары даярбы? 📋',
+      'Бир мүнөт эс алыңыз! ☕',
+    ],
+    praises: [
+      "ВАУ, азамат! 🎉\nЖакшы жумуш! Мен сиз менен сыймыктанам!",
+      "Эң сонун натыйжа! 🌟\nСиз чындыгында мыктысыз!",
+      "Мыкты! 👍\nУшул темпте улантыңыз!",
+      "Керемет! 🏆\nМындай натыйжа кубантат!",
+      "Бали! 👏\nӨтө жакшы аракет кылдыңыз!"
+    ],
+    talking: 'жазып жатат...'
+  },
+  tr: {
+    welcome: 'Merhaba! Ben MorphoAI 👋\nNasıl yardımcı olabilirim?',
+    proactive: [
+      'Yardıma ihtiyacınız var mı? 🤖',
+      'Nasılsınız? 😊',
+      'Ne var ne yok? 📊',
+      'Sorularınız var mı? 💬',
+      'Gününüz nasıl geçiyor? 🚀',
+      'Analiz sonuçları hazır mı? 📋',
+      'Bir dakika dinlenin! ☕',
+    ],
+    praises: [
+      "WOW, harika! 🎉\nİyi iş! Seninle gurur duyuyorum!",
+      "Mükemmel sonuç! 🌟\nGerçekten harikasın!",
+      "Süper! 👍\nAynen böyle devam et!",
+      "Muhteşem! 🏆\nBöyle bir sonuç sevindirici!",
+      "Tebrikler! 👏\nÇok iyi çaba gösterdin!"
+    ],
+    talking: 'yazıyor...'
+  },
+  tm: {
+    welcome: 'Salam! Men MorphoAI 👋\nNäme kömek edip bilerin?',
+    proactive: [
+      'Kömek gerekmi? 🤖',
+      'Ýagdaýlaryňyz nähili? 😊',
+      'Näme täzelik? 📊',
+      'Soraglaryňyz barmy? 💬',
+      'Günüňiz nähili geçýär? 🚀',
+      'Barlag netijeleri taýýarmy? 📋',
+      'Bir minut dynç alyň! ☕',
+    ],
+    praises: [
+      "WOW, berekella! 🎉\nGowy iş! Men seniň bilen buýsanýaryn!",
+      "Ajaýyp netije! 🌟\nSen hakykatdan hem ajaýyp!",
+      "Gaty gowy! 👍\nŞu depginde dowam et!",
+      "Gudrat! 🏆\nŞeýle netije begendirýär!",
+      "Berekella! 👏\nÖrän gowy hereket etdiň!"
+    ],
+    talking: 'ýazýar...'
+  }
+};
 
-const WELCOME_MSG = 'Salom! Men MorphoAI 👋\nQanday yordam kerak?';
 const WELCOME_KEY = 'morpho-robot-welcomed-v6';
 const INTERVAL_MS = 3 * 60 * 1000;
 
@@ -215,6 +368,9 @@ const CoffeeCup = ({ size }) => (
 
 // ── Speech Bubble ─────────────────────────────────────────────────────────────
 const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
+  const { lang } = useLanguage();
+  const aiDict = AI_TRANSLATIONS[lang] || AI_TRANSLATIONS['uz'];
+
   if (!visible) return null;
   return (
     <div
@@ -243,7 +399,7 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
               animation: `emo-headphone-pulse 0.6s ease-in-out ${d}s infinite`,
             }} />
           ))}
-          <span style={{ fontSize: '10px', color: '#64748b', marginLeft: '4px', fontFamily: 'monospace' }}>gapiryapti...</span>
+          <span style={{ fontSize: '10px', color: '#64748b', marginLeft: '4px', fontFamily: 'monospace' }}>{aiDict.talking}</span>
         </div>
       )}
       <p style={{
@@ -274,6 +430,8 @@ const RobotAvatar = ({
   isTalking       = false,
 }) => {
   injectCSS();
+  const { lang } = useLanguage();
+  const aiDict = AI_TRANSLATIONS[lang] || AI_TRANSLATIONS['uz'];
 
   const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
   const [headTilt, setHeadTilt]   = useState(0);
@@ -325,23 +483,24 @@ const RobotAvatar = ({
     const done = sessionStorage.getItem(WELCOME_KEY);
     if (!done) {
       sessionStorage.setItem(WELCOME_KEY, '1');
-      const t = setTimeout(() => showBubble(WELCOME_MSG, 8000), 1800);
+      const t = setTimeout(() => showBubble(aiDict.welcome, 8000), 1800);
       return () => clearTimeout(t);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [aiDict.welcome]);
 
   // ── Proactive Messages ──────────────────────────────────────────────────────
   useEffect(() => {
     if (compact) return;
     const timer = setInterval(() => {
       if (isOpenRef.current) return;
-      const msg = PROACTIVE_MESSAGES[proMsgIdx.current % PROACTIVE_MESSAGES.length];
+      const msgs = aiDict.proactive;
+      const msg = msgs[proMsgIdx.current % msgs.length];
       proMsgIdx.current++;
       showBubble(msg, 9000);
     }, INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [compact, showBubble]);
+  }, [compact, showBubble, aiDict.proactive]);
 
   // ── Mouse tracking + Wake-up ────────────────────────────────────────────────
   const handleMouseMove = useCallback((e) => {
@@ -432,7 +591,11 @@ const RobotAvatar = ({
   useEffect(() => {
     const handleCelebrate = (e) => {
       setMood('smiling');
-      if (e.detail?.message) {
+      const praises = aiDict.praises;
+      if (praises && praises.length > 0) {
+        const randPraise = praises[Math.floor(Math.random() * praises.length)];
+        showBubble(randPraise, 8000);
+      } else if (e.detail?.message) {
         showBubble(e.detail.message, 8000);
       }
       setTimeout(() => { setMood('idle'); }, 4000);
@@ -452,7 +615,7 @@ const RobotAvatar = ({
       window.removeEventListener('emo-celebrate', handleCelebrate);
       window.removeEventListener('admin-chat-toggled', handleAdminChat);
     };
-  }, [showBubble]);
+  }, [showBubble, aiDict.praises]);
 
   // ── Blinking ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -767,12 +930,7 @@ const RobotAvatar = ({
           </defs>
 
           {/* ── Legs ── */}
-          <g>
-            <rect x="33" y="87" width="10" height="13" rx="4" fill="#0f1318"
-              style={{ transformOrigin: '38px 87px', animation: isSinging ? 'emo-leg-left 0.45s ease-in-out infinite' : 'none' }} />
-            <rect x="57" y="87" width="10" height="13" rx="4" fill="#0f1318"
-              style={{ transformOrigin: '62px 87px', animation: isSinging ? 'emo-leg-right 0.45s ease-in-out infinite 0.22s' : 'none' }} />
-          </g>
+          {/* Removed by user request */ }
 
           {/* ── Headphones ── */}
           <g>
