@@ -881,24 +881,6 @@ const RobotAvatar = ({
   // ██  RENDER EMO'S DIGITAL EYES  ██
   // ═══════════════════════════════════════════════════════════════════════════
   const renderEyes = () => {
-    if (talking) {
-      return (
-        <div style={{
-          position: 'absolute',
-          top: `${size * 0.38}px`,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: `${size * 0.45}px`,
-          height: '6px',
-          backgroundColor: '#45f3ff',
-          borderRadius: '3px',
-          boxShadow: '0 0 14px rgba(69, 243, 255, 0.9), inset 0 0 4px rgba(255,255,255,0.7)',
-          animation: 'emo-scanner 0.8s ease-in-out infinite alternate',
-          zIndex: 3,
-        }} />
-      );
-    }
-
     const isClosed = passwordVisible === false || blinkState || isSleeping;
     const isSmiling = mood === 'smiling';
     const isWinkingMood = mood === 'winking';
