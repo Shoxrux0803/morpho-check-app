@@ -276,8 +276,10 @@ def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) 
     payload["created_by_id"] = getattr(row, "created_by_id", None)
     if hasattr(row, "created_by") and row.created_by:
         payload["created_by_name"] = row.created_by.name
+        payload["created_by_role"] = row.created_by.role
     else:
         payload["created_by_name"] = "Noma'lum"
+        payload["created_by_role"] = None
 
     # Soft delete ma'lumotlari
     payload["is_deleted"] = bool(getattr(row, "is_deleted", False))
@@ -349,6 +351,22 @@ def clean_user_payload(data: dict, preserve_empty_location: bool = False) -> dic
     return cleaned
 
 
+def validate_assistant_supervisor(db: Session, role: str, supervisor_id: Optional[int]):
+    """Field assistant must belong to one active admin or researcher."""
+    if role != "field_assistant":
+        return None
+    if not supervisor_id:
+        raise HTTPException(400, "Field Assistant uchun kurator tanlanishi shart.")
+    supervisor = db.get(User, supervisor_id)
+    if (
+        not supervisor
+        or supervisor.role not in {"admin", "researcher"}
+        or getattr(supervisor, "is_deleted", 0) == 1
+    ):
+        raise HTTPException(400, "Kurator faol admin yoki izlanuvchi bo'lishi kerak.")
+    return supervisor
+
+
 # ------------------ USERS ----------------------
 @router.get(
     "/users",
@@ -408,6 +426,11 @@ def create_user(
             )
 
     user_data = clean_user_payload(payload.model_dump(exclude_unset=True))
+    role = user_data.get("role", "user")
+    if role == "field_assistant":
+        validate_assistant_supervisor(db, role, user_data.get("supervisor_id"))
+    else:
+        user_data["supervisor_id"] = None
 
     # Hash password if provided
     if "password" in user_data:
@@ -482,6 +505,13 @@ def update_user(
     update_data = clean_user_payload(
         payload.model_dump(exclude_unset=True), preserve_empty_location=True
     )
+
+    next_role = update_data.get("role", user.role)
+    next_supervisor_id = update_data.get("supervisor_id", user.supervisor_id)
+    if next_role == "field_assistant":
+        validate_assistant_supervisor(db, next_role, next_supervisor_id)
+    else:
+        update_data["supervisor_id"] = None
 
     # Check if new email conflicts with other users
     if "email" in update_data and update_data["email"] != user.email:

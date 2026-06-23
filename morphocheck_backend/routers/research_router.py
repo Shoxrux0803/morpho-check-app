@@ -505,6 +505,9 @@ def research_record_to_dict(record: ResearchRecord, current_user: Optional[User]
     payload["created_by_email"] = (
         record.created_by.email if getattr(record, "created_by", None) else None
     )
+    payload["created_by_role"] = (
+        record.created_by.role if getattr(record, "created_by", None) else None
+    )
     payload["deleted_by_name"] = (
         record.deleted_by.name if getattr(record, "deleted_by", None) else None
     )
@@ -1199,7 +1202,13 @@ def get_current_researcher_or_superadmin(
         )
 
     # 4. Roli bo'yicha tekshirish
-    if user.role not in ["researcher", "superadmin", "field_assistant"]:
+    is_researcher_assistant = (
+        user.role == "field_assistant"
+        and user.supervisor is not None
+        and user.supervisor.role == "researcher"
+        and getattr(user.supervisor, "is_deleted", 0) != 1
+    )
+    if user.role not in ["researcher", "superadmin"] and not is_researcher_assistant:
         raise HTTPException(
             status_code=403, detail="Sizda ushbu amalni bajarish uchun ruxsat yo'q."
         )

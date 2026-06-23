@@ -1860,6 +1860,15 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                     </TableCell>
                     {isSuperAdmin && (
                       <TableCell>
+                        {row.created_by_role === 'field_assistant' && (
+                          <Chip
+                            label="Field Assistant kiritdi"
+                            size="small"
+                            color="warning"
+                            variant="outlined"
+                            sx={{ mb: 0.5, fontWeight: 700 }}
+                          />
+                        )}
                         <Typography variant="body2" fontWeight={700}>
                           {getCreatorName(row)}
                         </Typography>

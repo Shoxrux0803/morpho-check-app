@@ -792,8 +792,10 @@ const RecordsTable = ({
   showDeleted = false,
   tr = (key) => key,
   lang = 'uz',
+  user,
 }) => {
   const dateLocale = getDateLocale(lang);
+  const showCreator = !isAssistant;
 
   return (
     <TableContainer component={GlassPaper}>
@@ -828,6 +830,9 @@ const RecordsTable = ({
               <TableCell sx={{ fontWeight: 700 }}>
                 {tr('heightWeight')}
               </TableCell>
+            )}
+            {showCreator && (
+              <TableCell sx={{ fontWeight: 700 }}>Kiritgan shaxs</TableCell>
             )}
             {showDeleted && (
               <TableCell sx={{ fontWeight: 700, color: 'error.main' }}>
@@ -943,6 +948,31 @@ const RecordsTable = ({
                         ? `${row.chest_standing_height} sm`
                         : '—'}{' '}
                       /{row.weight ? ` ${row.weight} kg` : ' —'}
+                    </Typography>
+                  </TableCell>
+                )}
+                {showCreator && (
+                  <TableCell>
+                    <Chip
+                      label={
+                        row.created_by_role === 'field_assistant'
+                          ? 'Field Assistant kiritdi'
+                          : row.created_by_id === user?.id
+                            ? "O'zi kiritdi"
+                            : (row.created_by_role || 'Foydalanuvchi') +
+                              ' kiritdi'
+                      }
+                      size="small"
+                      color={
+                        row.created_by_role === 'field_assistant'
+                          ? 'warning'
+                          : 'primary'
+                      }
+                      variant="outlined"
+                      sx={{ fontWeight: 700 }}
+                    />
+                    <Typography variant="caption" display="block">
+                      {row.created_by_name || '—'}
                     </Typography>
                   </TableCell>
                 )}
@@ -3417,6 +3447,7 @@ const ResearcherPage = () => {
                     isAssistant={isAssistant}
                     tr={tr}
                     lang={lang}
+                    user={user}
                   />
 
                   <DashboardFilters
@@ -3513,6 +3544,7 @@ const ResearcherPage = () => {
                     showDeleted
                     tr={tr}
                     lang={lang}
+                    user={user}
                   />
                   {checked.size > 0 && (
                     <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>

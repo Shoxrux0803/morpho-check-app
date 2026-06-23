@@ -247,10 +247,16 @@ def get_current_superadmin(current_user: User = Depends(get_current_user)):
 
 
 def get_current_admin_or_assistant(current_user: User = Depends(get_current_user)):
-    if current_user.role not in ["admin", "superadmin", "field_assistant"]:
+    is_admin_assistant = (
+        current_user.role == "field_assistant"
+        and current_user.supervisor is not None
+        and current_user.supervisor.role == "admin"
+        and getattr(current_user.supervisor, "is_deleted", 0) != 1
+    )
+    if current_user.role not in ["admin", "superadmin"] and not is_admin_assistant:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Ushbu amal uchun huquqingiz yetarli emas (faqat admin va assistentlar uchun)",
+            detail="Ushbu amal uchun huquqingiz yetarli emas (faqat admin va uning assistenti uchun)",
         )
     return current_user
 

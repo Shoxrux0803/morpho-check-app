@@ -692,6 +692,7 @@ class ResearchRecordOut(ResearchRecordCreate):
     created_by_id: Optional[int] = None
     created_by_name: Optional[str] = None
     created_by_email: Optional[str] = None
+    created_by_role: Optional[str] = None
     created_at: datetime.datetime
     is_deleted: Optional[int] = 0
     deleted_by_id: Optional[int] = None

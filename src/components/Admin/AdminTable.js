@@ -43,6 +43,7 @@ const AdminTable = ({
   const locale = localeByLang[lang] || 'uz-UZ';
   const isSuperAdmin = user?.role === 'superadmin';
   const isAssistant = user?.role === 'field_assistant';
+  const showCreator = !isAssistant;
   const translateGender = (value) => {
     const normalized = String(value || '').toLowerCase();
     if (['erkak', 'male', 'm', 'boy'].includes(normalized)) return t('male');
@@ -70,7 +71,7 @@ const AdminTable = ({
         WebkitOverflowScrolling: 'touch',
       }}
     >
-      <Table sx={{ minWidth: isSuperAdmin ? 1120 : 900 }}>
+      <Table sx={{ minWidth: isSuperAdmin ? 1180 : 980 }}>
         <TableHead>
           <TableRow>
             {!isAssistant && (
@@ -89,7 +90,7 @@ const AdminTable = ({
             <TableCell>{t('addressShort')}</TableCell>
             <TableCell>BMI</TableCell>
             <TableCell>{t('status')}</TableCell>
-            {isSuperAdmin && <TableCell>Admin</TableCell>}
+            {showCreator && <TableCell>Kiritgan shaxs</TableCell>}
             {isSuperAdmin && <TableCell>{t('status')}</TableCell>}
             <TableCell>{t('actions')}</TableCell>
           </TableRow>
@@ -222,14 +223,27 @@ const AdminTable = ({
                     />
                   </TableCell>
 
-                  {/* Super admin: Admin ustuni */}
-                  {isSuperAdmin && (
+                  {showCreator && (
                     <TableCell sx={{ textDecoration: 'none !important' }}>
-                      <Typography
-                        variant="body2"
-                        color={isDeleted ? 'text.disabled' : 'primary'}
-                        fontWeight="medium"
-                      >
+                      <Chip
+                        label={
+                          row.created_by_role === 'field_assistant'
+                            ? 'Field Assistant kiritdi'
+                            : row.created_by_id === user?.id
+                              ? "O'zi kiritdi"
+                              : (row.created_by_role || 'Foydalanuvchi') +
+                                ' kiritdi'
+                        }
+                        size="small"
+                        color={
+                          row.created_by_role === 'field_assistant'
+                            ? 'warning'
+                            : 'primary'
+                        }
+                        variant="outlined"
+                        sx={{ fontWeight: 700 }}
+                      />
+                      <Typography variant="caption" display="block">
                         {row.created_by_name || t('unknown')}
                       </Typography>
                     </TableCell>
