@@ -328,6 +328,24 @@ const GLOBAL_CSS = `
   0%   { transform: translateX(-50%) scaleX(0.7); opacity: 0.6; }
   100% { transform: translateX(-50%) scaleX(1.1); opacity: 1; }
 }
+
+/* ── Weather Animations ── */
+@keyframes emo-hot {
+  0%   { transform: translateY(0px) scale(1); }
+  50%  { transform: translateY(2px) scale(0.98); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes emo-cold {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25%  { transform: translateX(-1px) translateY(1px); }
+  75%  { transform: translateX(1px) translateY(-1px); }
+}
+@keyframes rain-drop {
+  0%   { transform: translateY(-20px) scaleY(1); opacity: 0; }
+  10%  { opacity: 1; }
+  80%  { transform: translateY(50px) scaleY(1); opacity: 1; }
+  100% { transform: translateY(60px) scaleY(0.2); opacity: 0; }
+}
 `;
 
 let cssInjected = false;
@@ -400,6 +418,54 @@ const CoffeeCup = ({ size }) => (
       <path d="M 15 1 Q 17 -4 15 -9" stroke="rgba(255,255,255,0.4)" fill="none" strokeWidth="1.2" strokeLinecap="round">
         <animate attributeName="d" values="M 15 1 Q 17 -4 15 -9;M 15 1 Q 13 -4 15 -9;M 15 1 Q 17 -4 15 -9" dur="2.5s" repeatCount="indefinite" />
       </path>
+    </svg>
+  </div>
+);
+
+const RainParticle = ({ delay = 0, offsetX = 0 }) => (
+  <span style={{
+    position: 'absolute', top: '0px', left: `${offsetX}px`,
+    width: '2px', height: '10px',
+    background: 'linear-gradient(to bottom, rgba(69,243,255,0), rgba(69,243,255,0.8))',
+    opacity: 0,
+    animation: `rain-drop 0.8s linear ${delay}s infinite`,
+    pointerEvents: 'none',
+  }} />
+);
+
+const SweatParticle = ({ delay = 0, offsetX = 0, offsetY = 0 }) => (
+  <span style={{
+    position: 'absolute', top: `${offsetY}px`, left: `${offsetX}px`,
+    width: '4px', height: '6px',
+    borderRadius: '50% 50% 2px 2px',
+    background: 'rgba(69,243,255,0.6)',
+    opacity: 0,
+    animation: `bubble-pop 2s ease-in-out ${delay}s infinite alternate`,
+    pointerEvents: 'none',
+  }} />
+);
+
+const Umbrella = ({ size }) => (
+  <div style={{
+    position: 'absolute', top: `-${size * 0.1}px`, left: `-${size * 0.1}px`,
+    zIndex: 20, pointerEvents: 'none',
+  }}>
+    <svg width={size * 0.8} height={size * 0.8} viewBox="0 0 40 40">
+      <path d="M 20 5 C 5 5 2 20 2 20 L 38 20 C 38 20 35 5 20 5 Z" fill="#ff4757" opacity="0.9" />
+      <path d="M 20 20 L 20 35 C 20 37 22 37 22 35" stroke="#2f3542" strokeWidth="2" fill="none" strokeLinecap="round" />
+    </svg>
+  </div>
+);
+
+const Scarf = ({ size }) => (
+  <div style={{
+    position: 'absolute', top: `${size * 0.7}px`, left: `${size * 0.1}px`,
+    zIndex: 20, pointerEvents: 'none',
+  }}>
+    <svg width={size * 0.8} height={size * 0.4} viewBox="0 0 40 20">
+      <rect x="5" y="0" width="30" height="8" rx="4" fill="#3742fa" />
+      <rect x="25" y="5" width="6" height="12" rx="3" fill="#3742fa" />
+      <line x1="25" y1="16" x2="31" y2="16" stroke="#fff" strokeWidth="1" opacity="0.5" />
     </svg>
   </div>
 );
@@ -478,6 +544,9 @@ const RobotAvatar = ({
   
   const isOpenRef = useRef(isOpen);
   useEffect(() => { isOpenRef.current = isOpen; }, [isOpen]);
+
+  // Weather Context: 'hot', 'cold', 'rain', 'moderate'
+  const weatherContextRef = useRef(null);
 
   // Moods: idle | sleeping | smiling | winking | eating | singing | curious | love | dizzy
   const [mood, setMood] = useState('idle');
@@ -599,25 +668,34 @@ const RobotAvatar = ({
     const delay = 6000 + Math.random() * 12000;
     moodTimerRef.current = setTimeout(() => {
       const rand = Math.random();
-      if (rand < 0.18) {
+      const wCtx = weatherContextRef.current;
+      
+      // 25% chance to show a weather-related mood if context exists
+      if (wCtx && rand < 0.25) {
+        setMood(`weather_${wCtx}`);
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, wCtx === 'moderate' ? 4000 : 8000);
+        return;
+      }
+      
+      if (rand < 0.35) {
         setMood('smiling');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 4000);
-      } else if (rand < 0.35) {
+      } else if (rand < 0.50) {
         setMood('sleeping');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 12000 + Math.random() * 5000);
-      } else if (rand < 0.45) {
+      } else if (rand < 0.60) {
         setMood('winking');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 2000);
-      } else if (rand < 0.58) {
+      } else if (rand < 0.70) {
         setMood('eating');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 7000);
-      } else if (rand < 0.70) {
+      } else if (rand < 0.80) {
         setMood('singing');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 8000);
-      } else if (rand < 0.80) {
+      } else if (rand < 0.88) {
         setMood('curious');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 3500);
-      } else if (rand < 0.90) {
+      } else if (rand < 0.95) {
         setMood('love');
         moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 4500);
       } else {
@@ -668,6 +746,27 @@ const RobotAvatar = ({
     };
   }, [showBubble, aiDict.praises, scheduleNextMood]);
 
+  // ── Weather Listener ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const handleWeather = (e) => {
+      const { code, temp } = e.detail;
+      const isRain = (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95);
+      const isSnow = (code >= 71 && code <= 86);
+
+      if (isRain) {
+        weatherContextRef.current = 'rain';
+      } else if (isSnow || temp <= 10) {
+        weatherContextRef.current = 'cold';
+      } else if (temp >= 30) {
+        weatherContextRef.current = 'hot';
+      } else {
+        weatherContextRef.current = 'moderate';
+      }
+    };
+    window.addEventListener('weather-update', handleWeather);
+    return () => window.removeEventListener('weather-update', handleWeather);
+  }, []);
+
   // ── Blinking ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (isSleeping || mood === 'smiling' || isLove) return;
@@ -691,6 +790,13 @@ const RobotAvatar = ({
     if (isCurious) return 'emo-idle 4.5s ease-in-out infinite';
     if (isLove) return 'emo-love 1.5s ease-in-out infinite';
     if (isDizzy) return 'emo-dizzy 0.6s ease-in-out infinite';
+    
+    // Weather overrides
+    if (mood === 'weather_cold') return 'emo-cold 0.3s ease-in-out infinite';
+    if (mood === 'weather_hot')  return 'emo-hot 2s ease-in-out infinite';
+    if (mood === 'weather_rain') return 'emo-idle 4.5s ease-in-out infinite';
+    if (mood === 'weather_moderate') return 'emo-happy-bounce 3s ease-in-out infinite';
+
     return 'emo-idle 4.5s ease-in-out infinite';
   })();
 
@@ -1046,6 +1152,27 @@ const RobotAvatar = ({
       {/* Coffee cup */}
       {isEating && !isOpen && <CoffeeCup size={s} />}
 
+      {/* Weather UI overlays */}
+      {!compact && mood === 'weather_rain' && !isOpen && (
+        <>
+          <Umbrella size={s} />
+          <div style={{ position: 'absolute', top: '-10px', left: '0', width: '100%', height: '100%', zIndex: 15, pointerEvents: 'none' }}>
+            <RainParticle delay={0} offsetX={10} />
+            <RainParticle delay={0.2} offsetX={30} />
+            <RainParticle delay={0.4} offsetX={50} />
+            <RainParticle delay={0.1} offsetX={20} />
+            <RainParticle delay={0.3} offsetX={40} />
+          </div>
+        </>
+      )}
+
+      {!compact && mood === 'weather_hot' && !isOpen && (
+        <div style={{ position: 'absolute', top: '10px', right: '15px', zIndex: 15, pointerEvents: 'none' }}>
+          <SweatParticle delay={0} offsetX={0} offsetY={0} />
+          <SweatParticle delay={0.5} offsetX={5} offsetY={10} />
+        </div>
+      )}
+
       {/* ═══ Main Animated Wrapper ═══ */}
       <div style={{
         animation: bodyAnim,
@@ -1102,6 +1229,14 @@ const RobotAvatar = ({
           {/* ── Screen Face ── */}
           <rect x="16" y="16" width="68" height="66" rx="16" fill={`url(#emo-face-${s})`} />
 
+          {/* Weather tint overlay */}
+          {mood === 'weather_hot' && (
+            <rect x="16" y="16" width="68" height="66" rx="16" fill="rgba(255, 60, 0, 0.15)" pointerEvents="none" />
+          )}
+          {mood === 'weather_cold' && (
+            <rect x="16" y="16" width="68" height="66" rx="16" fill="rgba(69, 243, 255, 0.15)" pointerEvents="none" />
+          )}
+
           {/* ── Screen reflection ── */}
           <path d="M 16 38 Q 38 26 84 18 L 84 26 Q 50 36 16 48 Z" fill="#ffffff" opacity="0.04" />
 
@@ -1116,6 +1251,10 @@ const RobotAvatar = ({
         {/* ═══ Mouth overlay ═══ */}
         {renderMouth()}
 
+        {/* Scarf for cold weather overlay */}
+        {!compact && mood === 'weather_cold' && !isOpen && (
+          <Scarf size={s} />
+        )}
       </div>
     </div>
   );

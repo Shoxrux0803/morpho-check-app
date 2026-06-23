@@ -41,6 +41,10 @@ export default function WeatherClock() {
           const weatherData = await weatherRes.json();
           setWeather(weatherData.current_weather);
           setDailyForecast(weatherData.daily);
+          window.dispatchEvent(new CustomEvent('weather-update', { detail: { 
+            code: weatherData.current_weather.weathercode, 
+            temp: weatherData.current_weather.temperature 
+          } }));
         }
 
         const geoRes = await fetch(
