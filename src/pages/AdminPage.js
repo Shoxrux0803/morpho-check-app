@@ -44,8 +44,6 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  TextField,
-  InputAdornment,
   Stack,
   Avatar,
   Tooltip,
@@ -58,9 +56,7 @@ import {
   Dashboard as DashboardIcon,
   List as ListIcon,
   Lock,
-  Person,
   Visibility,
-  VisibilityOff,
   Assessment,
   BiotechOutlined,
   Logout,
@@ -74,6 +70,7 @@ import { getLocalizedLocationLabel } from '../utils/locationI18n';
 import { normalizePreviewScript } from '../utils/scriptI18n';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import LoginExperience from '../components/Auth/LoginExperience';
 
 // Modular Components
 import AdminDashboard from '../components/Dashboard/AdminDashboard';
@@ -144,53 +141,6 @@ const normalizeImportError = (err, unknownError = 'Unknown error') => {
     value: err?.value ?? '',
   };
 };
-
-const GlassPaper = ({ children, sx = {} }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      background: (theme) =>
-        theme.palette.mode === 'dark'
-          ? 'rgba(30, 30, 40, 0.7)'
-          : 'rgba(255, 255, 255, 0.7)',
-      backdropFilter: 'blur(20px)',
-      borderRadius: 4,
-      border: '1px solid',
-      borderColor: (theme) =>
-        theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.12)'
-          : 'rgba(100, 116, 139, 0.12)',
-      overflow: 'auto',
-      '&::-webkit-scrollbar': {
-        height: '6px',
-        width: '6px',
-      },
-      '&::-webkit-scrollbar-track': {
-        background: 'transparent',
-      },
-      '&::-webkit-scrollbar-thumb': {
-        background: (theme) =>
-          theme.palette.mode === 'dark'
-            ? 'rgba(255,255,255,0.1)'
-            : 'rgba(0,0,0,0.1)',
-        borderRadius: '10px',
-      },
-      '&::-webkit-scrollbar-thumb:hover': {
-        background: (theme) =>
-          theme.palette.mode === 'dark'
-            ? 'rgba(255,255,255,0.2)'
-            : 'rgba(0,0,0,0.2)',
-      },
-      boxShadow: (theme) =>
-        theme.palette.mode === 'dark'
-          ? '0 8px 32px rgba(0,0,0,0.4)'
-          : '0 8px 32px rgba(100,116,139,0.1)',
-      ...sx,
-    }}
-  >
-    {children}
-  </Paper>
-);
 
 const horizontalScrollSx = {
   width: '100%',
@@ -1590,133 +1540,22 @@ export default function AdminPage() {
   // LOGIN SCREEN
   if (!user) {
     return (
-      <Container maxWidth="sm" sx={{ py: 8 }}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <GlassPaper sx={{ p: 4, position: 'relative', overflow: 'visible' }}>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: -40,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                boxShadow: '0 8px 32px rgba(15, 118, 110, 0.24)',
-              }}
-            >
-              <Lock sx={{ color: 'white', fontSize: 40 }} />
-            </Box>
-
-            <Box textAlign="center" mt={4} mb={4}>
-              <Typography variant="h4" fontWeight={800} gutterBottom>
-                {pt('adminPanelTitle')}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {pt('loginSubtitle')}
-              </Typography>
-            </Box>
-
-            {loginError && (
-              <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-                {loginError}
-              </Alert>
-            )}
-
-            <Box component="form" onSubmit={handleLogin}>
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  label={pt('emailOrLogin')}
-                  variant="outlined"
-                  value={loginForm.email}
-                  onChange={(e) =>
-                    setLoginForm({ ...loginForm, email: e.target.value })
-                  }
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person color="primary" />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <TextField
-                  fullWidth
-                  label={pt('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  variant="outlined"
-                  value={loginForm.password}
-                  onChange={(e) =>
-                    setLoginForm({ ...loginForm, password: e.target.value })
-                  }
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock color="primary" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                {requiresVerification && (
-                  <TextField
-                    fullWidth
-                    label="Tasdiqlash kodi"
-                    variant="outlined"
-                    value={loginForm.verification_code}
-                    onChange={(e) =>
-                      setLoginForm({
-                        ...loginForm,
-                        verification_code: e.target.value,
-                      })
-                    }
-                    inputProps={{ inputMode: 'numeric', maxLength: 6 }}
-                  />
-                )}
-                <Button
-                  fullWidth
-                  size="large"
-                  type="submit"
-                  variant="contained"
-                  disabled={loginInProgress}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    boxShadow: '0 8px 16px rgba(15, 118, 110, 0.22)',
-                    fontSize: '1rem',
-                    fontWeight: 700,
-                    textTransform: 'none',
-                  }}
-                >
-                  {loginInProgress ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    pt('login')
-                  )}
-                </Button>
-              </Stack>
-            </Box>
-          </GlassPaper>
-        </motion.div>
-      </Container>
+      <LoginExperience
+        lang={lang}
+        title={pt('adminPanelTitle')}
+        subtitle={pt('loginSubtitle')}
+        loginLabel={pt('login')}
+        emailLabel={pt('emailOrLogin')}
+        passwordLabel={pt('password')}
+        form={loginForm}
+        setForm={setLoginForm}
+        showPassword={showPassword}
+        setShowPassword={setShowPassword}
+        requiresVerification={requiresVerification}
+        error={loginError}
+        loading={loginInProgress}
+        onSubmit={handleLogin}
+      />
     );
   }
 
