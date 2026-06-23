@@ -27,7 +27,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Siz juda kech ishlayapsiz! Choy ichib, dam olish vaqti kelmadimi? 🌙☕',
     tickle: 'Ey, qitiqlamang! 😄',
-    idlePrompt: 'Hammasi joyidami? Yordam kerak bo\'lsa aytishingiz mumkin! 🤔',
+    idlePrompts: [
+      'Hammasi joyidami? Yordam kerak bo\'lsa aytishingiz mumkin! 🤔',
+      'Ish boshlaymizmi? Nega to\'xtab qoldingiz? 🚀',
+      'Biror nima yozmoqchimisiz? Men tayyorman! 📝',
+      'Sizni kutmoqdaman... 👀'
+    ],
     longTyping: 'Katta matn yozyapsiz shekilli? Yordam kerak bo\'lsa, men shu yerdaman! 📝',
     talking: 'gapiryapti...'
   },
@@ -51,7 +56,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Вы так поздно работаете! Не пора ли выпить чаю и отдохнуть? 🌙☕',
     tickle: 'Эй, щекотно же! 😄',
-    idlePrompt: 'Все в порядке? Может, нужна подсказка? 🤔',
+    idlePrompts: [
+      'Все в порядке? Может, нужна подсказка? 🤔',
+      'Начнем работу? Почему вы остановились? 🚀',
+      'Хотите что-то написать? Я готов! 📝',
+      'Я жду вас... 👀'
+    ],
     longTyping: 'Кажется, вы пишете большой текст? Если нужна помощь — я рядом! 📝',
     talking: 'печатает...'
   },
@@ -75,7 +85,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'You are working so late! Isn\'t it time for tea and some rest? 🌙☕',
     tickle: 'Hey, that tickles! 😄',
-    idlePrompt: 'Is everything okay? Let me know if you need a hint! 🤔',
+    idlePrompts: [
+      'Is everything okay? Let me know if you need a hint! 🤔',
+      'Shall we start? Why did you stop? 🚀',
+      'Do you want to write something? I am ready! 📝',
+      'I am waiting for you... 👀'
+    ],
     longTyping: 'Looks like you\'re typing a lot! Let me know if you need any help! 📝',
     talking: 'typing...'
   },
@@ -99,7 +114,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Шумо хеле дер кор карда истодаед! Вақти чой нӯшидан ва истироҳат нест? 🌙☕',
     tickle: 'Эй, гижик накунед! 😄',
-    idlePrompt: 'Ҳамааш хуб аст? Агар кӯмак лозим бошад, гӯед! 🤔',
+    idlePrompts: [
+      'Ҳамааш хуб аст? Агар кӯмак лозим бошад, гӯед! 🤔',
+      'Корро сар кунем? Чаро истодед? 🚀',
+      'Ягон чиз навиштан мехоҳед? Ман тайёрам! 📝',
+      'Ман шуморо интизорам... 👀'
+    ],
     longTyping: 'Ба назар мерасад, ки шумо матни калон навишта истодаед? Агар кӯмак лозим бошад, ман дар ин ҷо ҳастам! 📝',
     talking: 'менависад...'
   },
@@ -123,7 +143,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Сіз өте кеш жұмыс істеп жатырсыз! Шай ішіп, демалатын кез келген жоқ па? 🌙☕',
     tickle: 'Эй, қытықтамаңыз! 😄',
-    idlePrompt: 'Бәрі дұрыс па? Көмек керек болса айтыңыз! 🤔',
+    idlePrompts: [
+      'Бәрі дұрыс па? Көмек керек болса айтыңыз! 🤔',
+      'Жұмысты бастаймыз ба? Неге тоқтап қалдыңыз? 🚀',
+      'Бірдеңе жазғыңыз келе ме? Мен дайынмын! 📝',
+      'Мен сізді күтіп тұрмын... 👀'
+    ],
     longTyping: 'Сіз үлкен мәтін жазып жатқан сияқтысыз? Көмек керек болса, мен осындамын! 📝',
     talking: 'жазып жатыр...'
   },
@@ -147,7 +172,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Сиз өтө кеч иштеп жатасыз! Чай ичип, эс ала турган убак келген жокпу? 🌙☕',
     tickle: 'Эй, кытыгылабаңыз! 😄',
-    idlePrompt: 'Баары жайындабы? Жардам керек болсо айтыңыз! 🤔',
+    idlePrompts: [
+      'Баары жайындабы? Жардам керек болсо айтыңыз! 🤔',
+      'Ишти баштайбызбы? Эмнеге токтоп калдыңыз? 🚀',
+      'Бир нерсе жазгыңыз келеби? Мен даярмын! 📝',
+      'Мен сизди күтүп жатам... 👀'
+    ],
     longTyping: 'Сиз чоң текст жазып жаткан окшойсуз? Жардам керек болсо, мен ушул жердемин! 📝',
     talking: 'жазып жатат...'
   },
@@ -171,7 +201,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Çok geç saatlere kadar çalışıyorsunuz! Biraz çay içip dinlenme vakti gelmedi mi? 🌙☕',
     tickle: 'Hey, gıdıklanıyorum! 😄',
-    idlePrompt: 'Her şey yolunda mı? Yardıma ihtiyacınız olursa bana bildirin! 🤔',
+    idlePrompts: [
+      'Her şey yolunda mı? Yardıma ihtiyacınız olursa bana bildirin! 🤔',
+      'Çalışmaya başlayalım mı? Neden durdunuz? 🚀',
+      'Bir şey yazmak ister misiniz? Ben hazırım! 📝',
+      'Sizi bekliyorum... 👀'
+    ],
     longTyping: 'Büyük bir metin yazıyorsunuz sanırım? Yardıma ihtiyacınız olursa buradayım! 📝',
     talking: 'yazıyor...'
   },
@@ -195,7 +230,12 @@ const AI_TRANSLATIONS = {
     ],
     nightTime: 'Gaty giç işleýärsiňiz! Çaý içip, dynç almagyň wagty gelmedimi? 🌙☕',
     tickle: 'Eý, gyjyklamaň! 😄',
-    idlePrompt: 'Hemme zat gowumy? Kömek gerek bolsa aýdyň! 🤔',
+    idlePrompts: [
+      'Hemme zat gowumy? Kömek gerek bolsa aýdyň! 🤔',
+      'Işe başlalyňmy? Näme üçin saklandyňyz? 🚀',
+      'Bir zat ýazmak isleýärsiňizmi? Men taýýar! 📝',
+      'Men size garaşýaryn... 👀'
+    ],
     longTyping: 'Uly tekst ýazýan ýaly? Kömek gerek bolsa, men şu taýda! 📝',
     talking: 'ýazýar...'
   }
@@ -839,11 +879,18 @@ const RobotAvatar = ({
     const idleTimer = setInterval(() => {
       if (isOpenRef.current) return;
       if (!idlePromptShownRef.current && Date.now() - lastActivityRef.current > 120000) {
-        if (aiDict.idlePrompt) {
-          showBubble(aiDict.idlePrompt, 10000);
-          setMood('curious');
-          if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
-          moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 6000);
+        if (aiDict.idlePrompts && aiDict.idlePrompts.length > 0) {
+          if (Math.random() < 0.4) {
+            setMood('sleeping');
+            if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+          } else {
+            const msgs = aiDict.idlePrompts;
+            const msg = msgs[Math.floor(Math.random() * msgs.length)];
+            showBubble(msg, 10000);
+            setMood('curious');
+            if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+            moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 6000);
+          }
           idlePromptShownRef.current = true;
         }
       }
@@ -854,7 +901,7 @@ const RobotAvatar = ({
       window.removeEventListener('keydown', handleActivity);
       clearInterval(idleTimer);
     };
-  }, [compact, aiDict.idlePrompt, showBubble, scheduleNextMood]);
+  }, [compact, aiDict.idlePrompts, showBubble, scheduleNextMood]);
 
   // ── Tickling ────────────────────────────────────────────────────────────────
   const clickCountRef = useRef(0);
