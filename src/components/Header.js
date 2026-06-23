@@ -409,6 +409,7 @@ export default function Header() {
     setTimeout(() => {
       setLang(code);
       setLangChanging(false);
+      closeSettings();
     }, 220);
   };
 

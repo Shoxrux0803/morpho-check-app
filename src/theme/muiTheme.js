@@ -457,8 +457,13 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
             backgroundColor: isDark
               ? 'rgba(2, 6, 23, 0.58)'
               : 'rgba(15, 23, 42, 0.28)',
-            WebkitBackdropFilter: 'blur(5px) saturate(115%)',
-            backdropFilter: 'blur(5px) saturate(115%)',
+            WebkitBackdropFilter: 'none',
+            backdropFilter: 'none',
+          },
+          invisible: {
+            backgroundColor: 'transparent',
+            WebkitBackdropFilter: 'none',
+            backdropFilter: 'none',
           },
         },
       },
