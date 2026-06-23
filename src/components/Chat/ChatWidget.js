@@ -159,6 +159,7 @@ const ChatWidget = () => {
     if (isOpen) {
       window.dispatchEvent(new CustomEvent('close-ai-chat'));
     }
+    window.dispatchEvent(new CustomEvent('admin-chat-toggled', { detail: { isOpen } }));
   }, [isOpen]);
 
   const fetchConversations = async () => {

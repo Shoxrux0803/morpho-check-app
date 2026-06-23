@@ -420,16 +420,15 @@ const RobotAvatar = ({
 
   useEffect(() => {
     if (isOpen) {
-      setMood('curious');
+      setMood('idle');
       if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
-      moodTimerRef.current = setTimeout(() => { setMood('idle'); }, 3000);
       return;
     }
     scheduleNextMood();
     return () => { if (moodTimerRef.current) clearTimeout(moodTimerRef.current); };
   }, [isOpen, scheduleNextMood]);
 
-  // ── Celebration Event Listener ──────────────────────────────────────────────
+  // ── Celebration & Admin Chat Listeners ──────────────────────────────────────
   useEffect(() => {
     const handleCelebrate = (e) => {
       setMood('smiling');
@@ -438,8 +437,21 @@ const RobotAvatar = ({
       }
       setTimeout(() => { setMood('idle'); }, 4000);
     };
+
+    const handleAdminChat = (e) => {
+      if (e.detail?.isOpen) {
+        setMood('curious');
+        if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); }, 3000);
+      }
+    };
+
     window.addEventListener('emo-celebrate', handleCelebrate);
-    return () => window.removeEventListener('emo-celebrate', handleCelebrate);
+    window.addEventListener('admin-chat-toggled', handleAdminChat);
+    return () => {
+      window.removeEventListener('emo-celebrate', handleCelebrate);
+      window.removeEventListener('admin-chat-toggled', handleAdminChat);
+    };
   }, [showBubble]);
 
   // ── Blinking ────────────────────────────────────────────────────────────────

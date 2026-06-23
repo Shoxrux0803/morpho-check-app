@@ -401,6 +401,16 @@ const AIAssistantWidget = () => {
     }
   };
 
+  const [isAdminChatOpen, setIsAdminChatOpen] = useState(false);
+
+  useEffect(() => {
+    const handleAdminChat = (e) => {
+      setIsAdminChatOpen(e.detail?.isOpen || false);
+    };
+    window.addEventListener('admin-chat-toggled', handleAdminChat);
+    return () => window.removeEventListener('admin-chat-toggled', handleAdminChat);
+  }, []);
+
   return (
     <Box
       sx={{
@@ -424,26 +434,42 @@ const AIAssistantWidget = () => {
             background: 'transparent',
             padding: 0,
             overflow: 'visible',
-            width: isMobile ? 80 : 130, // Larger size
-            height: isMobile ? 80 : 130,
-            transform: isOpen ? (isMobile ? 'scale(0)' : 'translateX(-430px) rotate(8deg) translateY(-20px)') : 'none',
+            width: 64,
+            height: 64,
+            transform: (!isOpen && isAdminChatOpen) ? (isMobile ? 'none' : 'translateX(-325px) rotate(15deg) translateY(-10px)') : 'none',
             '&:hover': {
-              transform: isOpen ? 'translateX(-430px) rotate(8deg) translateY(-20px) scale(1.05)' : 'scale(1.08)',
+              transform: (!isOpen && isAdminChatOpen) ? 'translateX(-325px) rotate(15deg) translateY(-10px) scale(1.05)' : 'scale(1.08)',
               background: 'transparent',
             },
             '&:active': {
-              transform: isOpen ? 'translateX(-430px) rotate(8deg) translateY(-20px) scale(0.96)' : 'scale(0.96)',
+              transform: (!isOpen && isAdminChatOpen) ? 'translateX(-325px) rotate(15deg) translateY(-10px) scale(0.96)' : 'scale(0.96)',
             },
-            transition: 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             zIndex: 1001,
           }}
         >
-          <RobotAvatar
-            isOpen={isOpen}
-            passwordVisible={passwordVisible}
-            size={isMobile ? 80 : 130}
-            isTalking={isTalking}
-          />
+          {isOpen ? (
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(45deg, #1565c0, #1976d2)',
+                borderRadius: '50%',
+              }}
+            >
+              <Close sx={{ color: 'white', fontSize: 28 }} />
+            </div>
+          ) : (
+            <RobotAvatar
+              isOpen={isOpen}
+              passwordVisible={passwordVisible}
+              size={64}
+              isTalking={isTalking}
+            />
+          )}
         </Fab>
       </Zoom>
 
