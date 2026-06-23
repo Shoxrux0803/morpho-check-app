@@ -27,6 +27,7 @@ import ThemeSync from './components/ThemeSync';
 import ChatWidget from './components/Chat/ChatWidget';
 import AIAssistantWidget from './components/AI/AIAssistantWidget';
 import MorphoProBackground from './components/MorphoProBackground';
+import TubesBackground from './components/TubesBackground';
 import { useThemeMode } from './providers/ThemeProviderMUI';
 import WelcomeOverlay from './components/WelcomeOverlay';
 
@@ -261,9 +262,6 @@ function AnimatedRoutes() {
 
   return (
     <>
-      {showBg && (
-        <MorphoProBackground theme={mode} pathname={location.pathname} />
-      )}
       <AnimatePresence>
         {justLoggedIn && (
           <WelcomeOverlay onComplete={completeLoginTransition} />

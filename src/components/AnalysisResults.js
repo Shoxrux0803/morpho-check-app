@@ -183,28 +183,28 @@ export default function AnalysisResults({
   const assistantActions = [
     {
       key: 'parent',
-      label: 'Ota-ona uchun',
+      label: t('forParents'),
       icon: <PsychologyAltOutlinedIcon />,
       prompt:
         'Analiz natijasiga asoslanib, ota-ona uchun oddiy tilda, vahima qilmaydigan 4-5 ta aniq maslahat yozing. Tibbiy terminlarni qisqa tushuntiring.',
     },
     {
       key: 'doctor',
-      label: 'Klinik izoh',
+      label: t('clinicalNotes'),
       icon: <MedicalServicesOutlinedIcon />,
       prompt:
         'Shifokor uchun klinik izoh tayyorlang: asosiy antropometrik topilmalar, BMI/Z-score talqini, xavf omillari va kuzatuv taktikasi. Qisqa, professional formatda yozing.',
     },
     {
       key: 'nutrition',
-      label: 'Nutrition plan',
+      label: t('nutritionPlan'),
       icon: <RestaurantMenuOutlinedIcon />,
       prompt:
         "Bolaning yoshi, jinsi, BMI, Z-score va tavsiyalarga mos 7 kunlik amaliy nutrition plan tuzing. Nonushta, tushlik, kechki ovqat va foydali tamaddi g'oyalarini bering.",
     },
     {
       key: 'checkups',
-      label: 'Tekshiruvlar',
+      label: t('checkups'),
       icon: <FactCheckOutlinedIcon />,
       prompt:
         "Keyingi tekshiruvlar ro'yxatini tuzing: qaysi mutaxassis, qaysi laborator/instrumental tekshiruv va qachon qayta ko'rik kerakligini prioritet bo'yicha yozing.",
@@ -246,17 +246,17 @@ export default function AnalysisResults({
       setAssistantReplies((prev) => ({
         ...prev,
         [action.key]:
-          res?.reply || "AI javob qaytarmadi. Iltimos, qayta urinib ko'ring.",
+          res?.reply || t('aiNoResponse'),
       }));
     } catch (err) {
       console.error('AI assistant action error:', err);
       const detail =
         err?.response?.data?.detail ||
         err?.response?.data?.message ||
-        'Internet/API sozlamalarini tekshiring.';
+        t('networkError');
       setAssistantReplies((prev) => ({
         ...prev,
-        [action.key]: `AI yordamchini chaqirishda xatolik yuz berdi. ${detail}`,
+        [action.key]: `${t('aiAssistantError')} ${detail}`,
       }));
     } finally {
       setAssistantLoading(false);
@@ -525,7 +525,7 @@ export default function AnalysisResults({
                     }}
                   >
                     <InsightsOutlinedIcon color="error" />
-                    Klinik risk flag tizimi
+                    {t('clinicalRiskSystem')}
                   </Typography>
                   <Grid container spacing={2}>
                     {riskEntries.map(([key, item]) => {
@@ -602,7 +602,7 @@ export default function AnalysisResults({
                     }}
                   >
                     <ShowChartIcon color="primary" />
-                    Progress tracking
+                    {t('progressTrackingLabel')}
                   </Typography>
                   <Paper
                     variant="outlined"
@@ -625,8 +625,8 @@ export default function AnalysisResults({
                         >
                           <Typography variant="body1" fontWeight={700}>
                             {progressTracking.period_months
-                              ? `${progressTracking.period_months} oy ichidagi o'zgarish`
-                              : "Oldingi o'lchov bilan solishtirish"}
+                              ? `${progressTracking.period_months} ${t('changeInMonths')}`
+                              : t('compareWithPrevious')}
                           </Typography>
                           <Chip
                             label={progressTracking.trend}
@@ -695,7 +695,7 @@ export default function AnalysisResults({
                       </Stack>
                     ) : (
                       <Typography variant="body2" color="text.secondary">
-                        {progressTracking.message}
+                        {t('noPreviousMeasurement')}
                       </Typography>
                     )}
                   </Paper>

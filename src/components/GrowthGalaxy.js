@@ -8,10 +8,18 @@ const orbitDots = [
   { size: 9, color: '#7dd3fc', top: '77%', left: '88%' },
   { size: 7, color: '#ffffff', top: '42%', left: '-1%' },
 ];
-
-export default function GrowthGalaxy({ mode }) {
+export default function GrowthGalaxy({ mode, colorPalette }) {
   const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
   const dark = mode === 'dark';
+
+  const defaultColors = ['#5eead4', '#7dd3fc', '#ffffff'];
+  const colors = colorPalette || defaultColors;
+
+  const dynamicOrbitDots = [
+    { size: 14, color: colors[0] || defaultColors[0], top: '7%', left: '25%' },
+    { size: 9, color: colors[1] || defaultColors[1], top: '77%', left: '88%' },
+    { size: 7, color: colors[2] || defaultColors[2], top: '42%', left: '-1%' },
+  ];
 
   return (
     <Paper
@@ -38,7 +46,7 @@ export default function GrowthGalaxy({ mode }) {
           overflow: 'hidden',
           borderRadius: { xs: 3.2, md: 5 },
           background:
-            'radial-gradient(circle at 22% 20%,rgba(94,234,212,.34),transparent 28%), radial-gradient(circle at 82% 82%,rgba(56,189,248,.3),transparent 31%), linear-gradient(145deg,#063c46 0%,#0f766e 48%,#1767a8 100%)',
+            `radial-gradient(circle at 22% 20%, ${colors[0]}40, transparent 28%), radial-gradient(circle at 82% 82%, ${colors[1]}40, transparent 31%), linear-gradient(145deg, ${colors[2]}20 0%, ${colors[0]}30 48%, ${colors[1]}20 100%)`,
           isolation: 'isolate',
         }}
       >
@@ -55,7 +63,7 @@ export default function GrowthGalaxy({ mode }) {
             left: -125,
             top: -105,
             borderRadius: '50%',
-            bgcolor: 'rgba(94,234,212,.2)',
+            bgcolor: `${colors[0]}30`,
             filter: 'blur(7px)',
           }}
         />
@@ -74,7 +82,7 @@ export default function GrowthGalaxy({ mode }) {
             right: -160,
             bottom: -145,
             borderRadius: '42%',
-            bgcolor: 'rgba(37,99,235,.25)',
+            bgcolor: `${colors[1]}40`,
             filter: 'blur(10px)',
           }}
         />
@@ -136,11 +144,11 @@ export default function GrowthGalaxy({ mode }) {
                 transform: ring === 1 ? 'rotateX(64deg)' : undefined,
                 boxShadow:
                   ring === 0
-                    ? `inset 0 0 38px ${alpha('#5eead4', 0.08)}`
+                    ? `inset 0 0 38px ${alpha(colors[0], 0.15)}`
                     : 'none',
               }}
             >
-              {(ring === 0 ? orbitDots : orbitDots.slice(0, 2)).map(
+              {(ring === 0 ? dynamicOrbitDots : dynamicOrbitDots.slice(0, 2)).map(
                 (dot, index) => (
                   <Box
                     key={dot.color}
@@ -185,7 +193,7 @@ export default function GrowthGalaxy({ mode }) {
               backdropFilter: 'blur(22px) saturate(170%)',
               border: '1px solid rgba(255,255,255,.3)',
               boxShadow:
-                'inset 0 1px 1px rgba(255,255,255,.5), 0 30px 70px rgba(0,28,48,.38), 0 0 65px rgba(94,234,212,.2)',
+                `inset 0 1px 1px rgba(255,255,255,.5), 0 30px 70px rgba(0,28,48,.38), 0 0 65px ${colors[0]}40`,
             }}
           >
             <Box
@@ -195,9 +203,9 @@ export default function GrowthGalaxy({ mode }) {
                   ? undefined
                   : {
                       filter: [
-                        'drop-shadow(0 8px 18px rgba(0,60,80,.28))',
-                        'drop-shadow(0 12px 28px rgba(94,234,212,.48))',
-                        'drop-shadow(0 8px 18px rgba(0,60,80,.28))',
+                        `drop-shadow(0 8px 18px ${colors[1]}40)`,
+                        `drop-shadow(0 12px 28px ${colors[0]}60)`,
+                        `drop-shadow(0 8px 18px ${colors[1]}40)`,
                       ],
                     }
               }

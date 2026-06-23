@@ -41,7 +41,7 @@ import { useThemeMode } from '../providers/ThemeProviderMUI';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import GrowthGalaxy from '../components/GrowthGalaxy';
-
+import TubesBackground from '../components/TubesBackground';
 const createStorySteps = (t) => [
   {
     eyebrow: t('storyStep1Eyebrow'),
@@ -178,7 +178,10 @@ const StickyScrollStory = ({ theme, mode, fadeInUp, t }) => {
                         }`,
                         bgcolor: isActive
                           ? alpha(step.color, mode === 'dark' ? 0.14 : 0.08)
-                          : 'transparent',
+                          : alpha(theme.palette.background.paper, 0.05),
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        boxShadow: isActive ? `0 8px 32px ${alpha(step.color, 0.2)}` : 'none',
                         transition: 'all 0.35s ease',
                       }}
                     >
@@ -239,6 +242,9 @@ const StickyScrollStory = ({ theme, mode, fadeInUp, t }) => {
                               : 0.08
                             : 0.03
                         ),
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        boxShadow: activeIndex === index ? `0 8px 32px ${alpha(step.color, 0.2)}` : 'none',
                       }}
                     >
                       <Typography
@@ -283,6 +289,25 @@ export default function IntroPage() {
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const yParallax = useTransform(scrollYProgress, [0, 0.5], [0, -100]);
+
+  const [weatherData, setWeatherData] = useState(null);
+
+  useEffect(() => {
+    const handleWeather = (e) => setWeatherData(e.detail);
+    window.addEventListener('weather-update', handleWeather);
+    return () => window.removeEventListener('weather-update', handleWeather);
+  }, []);
+
+  const getGrowthGalaxyPalette = (weather) => {
+    if (!weather) return undefined;
+    const { temp, code } = weather;
+    if (temp >= 28) return ['#ff8c00', '#ff4500', '#ffffff'];
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) return ['#00bfff', '#1e90ff', '#ffffff'];
+    if ((code >= 71 && code <= 86) || temp <= 5) return ['#add8e6', '#e0ffff', '#ffffff'];
+    return undefined; // Default
+  };
+
+  const currentPalette = getGrowthGalaxyPalette(weatherData);
 
   useEffect(() => {
     if (mode === 'dark') {
@@ -494,6 +519,7 @@ export default function IntroPage() {
 
   return (
     <Box sx={{ minHeight: '100vh', position: 'relative' }}>
+      <TubesBackground />
       <ScrollProgress
         progress={smoothProgress}
         color={theme.palette.primary.main}
@@ -684,7 +710,7 @@ export default function IntroPage() {
               </Box>
 
               <Box sx={{ minWidth: 0, width: '100%' }}>
-                <GrowthGalaxy mode={mode} />
+                <GrowthGalaxy mode={mode} colorPalette={currentPalette} />
               </Box>
             </Box>
           </Box>
