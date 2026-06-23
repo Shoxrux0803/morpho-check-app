@@ -422,10 +422,11 @@ const RobotAvatar = ({
       borderRadius = '2px';
       transformStr += ' scaleX(0.9)';
     } else if (isSmiling) {
-      // Happy eyes (inverted U)
-      borderRadius = '50% 50% 15% 15%';
-      heightStr = `${eh * 0.65}px`;
-      marginY = `${eh * 0.15}px`;
+      // Happy eyes exactly matching user image (flat bottom, rounded top)
+      borderRadius = '30px 30px 0 0';
+      widthStr = `${ew * 1.1}px`;
+      heightStr = `${eh * 0.55}px`;
+      marginY = `${eh * 0.25}px`;
       transformStr += ' scale(1.05)';
     } else if (isSingingMood) {
       borderRadius = '45%';
