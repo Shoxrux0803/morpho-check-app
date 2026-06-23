@@ -40,7 +40,7 @@ import {
 import { useThemeMode } from '../providers/ThemeProviderMUI';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import GrowthGalaxy from '../components/GrowthGalaxy';
+import Logo3D from '../components/Logo3D';
 import TubesBackground from '../components/TubesBackground';
 const createStorySteps = (t) => [
   {
@@ -710,7 +710,7 @@ export default function IntroPage() {
               </Box>
 
               <Box sx={{ minWidth: 0, width: '100%' }}>
-                <GrowthGalaxy mode={mode} colorPalette={currentPalette} />
+                <Logo3D mode={mode} colorPalette={currentPalette} />
               </Box>
             </Box>
           </Box>

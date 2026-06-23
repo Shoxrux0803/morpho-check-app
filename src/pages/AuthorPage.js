@@ -36,7 +36,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import MorphoProBackground from '../components/MorphoProBackground';
+import TubesBackground from '../components/TubesBackground';
 import { useThemeMode } from '../providers/ThemeProviderMUI';
 import { useLanguage } from '../contexts/LanguageContext';
 import authorPortrait from '../assets/author_portrait.png';
@@ -146,21 +146,38 @@ export default function AuthorPage() {
   const isDark = mode === 'dark';
 
   const glassStyle = {
-    background: alpha(theme.palette.background.paper, isDark ? 0.25 : 0.6),
-    backdropFilter: 'blur(24px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-    border: `1px solid ${alpha(theme.palette.common.white, isDark ? 0.08 : 0.2)}`,
+    background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, isDark ? 0.35 : 0.7)} 0%, ${alpha(theme.palette.background.default, isDark ? 0.15 : 0.4)} 100%)`,
+    backdropFilter: 'blur(28px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(28px) saturate(180%)',
+    border: `1px solid ${alpha(theme.palette.primary.main, isDark ? 0.2 : 0.15)}`,
     borderRadius: '32px',
-    boxShadow: `0 12px 40px 0 ${alpha(theme.palette.common.black, isDark ? 0.4 : 0.08)}`,
-    transition: 'all 0.4s ease-in-out',
+    boxShadow: `0 24px 70px ${alpha(theme.palette.common.black, isDark ? 0.4 : 0.1)}`,
+    transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+    position: 'relative',
+    overflow: 'hidden',
+    '&:hover': {
+      transform: 'translateY(-6px)',
+      boxShadow: `0 30px 90px ${alpha(theme.palette.common.black, isDark ? 0.5 : 0.15)}`,
+      borderColor: alpha(theme.palette.primary.main, 0.4),
+    },
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      inset: 1,
+      zIndex: -1,
+      borderRadius: 'inherit',
+      background: `linear-gradient(145deg, ${alpha(theme.palette.common.white, isDark ? 0.1 : 0.3)} 0%, transparent 50%, ${alpha(theme.palette.common.white, isDark ? 0.05 : 0.1)} 100%)`,
+    }
   };
 
   const gradientText = {
-    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #8b5cf6 50%, #ec4899 100%)`,
+    background: `linear-gradient(to right, ${theme.palette.primary.main}, #0891b2, #0f766e, #ca8a04, ${theme.palette.primary.main})`,
+    backgroundSize: '200% auto',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
     fontWeight: 900,
+    animation: 'slowRainbow 12s linear infinite',
   };
 
   return (
@@ -172,7 +189,7 @@ export default function AuthorPage() {
         py: { xs: 6, md: 10 },
       }}
     >
-      <MorphoProBackground theme={mode} />
+      <TubesBackground />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
         {/* Header */}
@@ -261,6 +278,7 @@ export default function AuthorPage() {
                     fontWeight={900}
                     gutterBottom
                     letterSpacing={0}
+                    sx={gradientText}
                   >
                     {AUTHOR.fullName}
                   </Typography>
@@ -387,14 +405,21 @@ export default function AuthorPage() {
                           p: 2,
                           textAlign: 'center',
                           borderRadius: '20px',
-                          bgcolor: alpha(stat.color, 0.05),
-                          border: `1px solid ${alpha(stat.color, 0.1)}`,
+                          bgcolor: alpha(stat.color, isDark ? 0.15 : 0.08),
+                          border: `1px solid ${alpha(stat.color, 0.3)}`,
+                          boxShadow: `inset 0 1px 0 ${alpha('#fff', 0.1)}, 0 8px 24px ${alpha(stat.color, 0.15)}`,
+                          backdropFilter: 'blur(10px)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: `0 12px 28px ${alpha(stat.color, 0.25)}`,
+                          }
                         }}
                       >
                         <Typography
                           variant="h4"
                           fontWeight={900}
-                          sx={{ color: stat.color }}
+                          sx={{ color: stat.color, textShadow: `0 0 20px ${alpha(stat.color, 0.4)}` }}
                         >
                           {stat.value}
                         </Typography>
