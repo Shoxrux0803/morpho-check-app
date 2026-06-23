@@ -420,8 +420,9 @@ const RobotAvatar = ({
 
   useEffect(() => {
     if (isOpen) {
-      setMood('idle');
+      setMood('curious');
       if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+      moodTimerRef.current = setTimeout(() => { setMood('idle'); }, 3000);
       return;
     }
     scheduleNextMood();
