@@ -1,5 +1,6 @@
 // src/components/AI/AIAssistantWidget.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import RobotAvatar from './RobotAvatar';
 import {
   Box,
   Fab,
@@ -170,6 +171,25 @@ const AIAssistantWidget = () => {
   const isDark = theme.palette.mode === 'dark';
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
   const { lang } = useLanguage();
+  const location = useLocation();
+
+  // Password visibility tracking for login page robot eyes
+  const [passwordVisible, setPasswordVisible] = useState(null);
+
+  useEffect(() => {
+    const isLoginPage = location.pathname === '/admin' || location.pathname === '/login';
+    if (!isLoginPage) {
+      setPasswordVisible(null);
+      return;
+    }
+    // Default: eyes closed (password hidden)
+    setPasswordVisible(false);
+    const handleToggle = (e) => {
+      setPasswordVisible(e.detail?.visible ?? false);
+    };
+    window.addEventListener('robot-password-toggle', handleToggle);
+    return () => window.removeEventListener('robot-password-toggle', handleToggle);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 900);
@@ -200,6 +220,9 @@ const AIAssistantWidget = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Robot talking state: true ONLY when AI is responding/loading
+  const isTalking = isLoading || messages.some((m) => m.animate === true);
+
   // Image Upload State
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
@@ -207,7 +230,6 @@ const AIAssistantWidget = () => {
 
   const fileInputRef = useRef(null);
   const scrollRef = useRef(null);
-  const location = useLocation();
 
   const scrollToBottom = useCallback(() => {
     if (scrollRef.current) {
@@ -389,7 +411,7 @@ const AIAssistantWidget = () => {
         zIndex: 1000,
       }}
     >
-      {/* Floating Action Button */}
+      {/* Floating Action Button — Living Robot */}
       <Zoom in={true}>
         <Fab
           color="primary"
@@ -397,18 +419,45 @@ const AIAssistantWidget = () => {
           onClick={() => setIsOpen(!isOpen)}
           sx={{
             boxShadow: isDark
-              ? '0 8px 32px rgba(0,0,0,0.5)'
-              : '0 8px 32px rgba(0,0,0,0.2)',
-            background: isDark
-              ? 'linear-gradient(45deg, #0d47a1, #1976d2)'
-              : 'linear-gradient(45deg, #1976d2, #42a5f5)',
+              ? '0 8px 40px rgba(13,71,161,0.7)'
+              : '0 8px 40px rgba(25,118,210,0.35)',
+            background: 'transparent',
+            padding: 0,
+            overflow: 'visible',
+            width: 64,
+            height: 64,
             '&:hover': {
-              transform: 'scale(1.1) rotate(5deg)',
+              transform: 'scale(1.08)',
+              background: 'transparent',
             },
-            transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            '&:active': {
+              transform: 'scale(0.96)',
+            },
+            transition: 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           }}
         >
-          {isOpen ? <Close /> : <SmartToy className="floating" />}
+          {isOpen ? (
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(45deg, #1565c0, #1976d2)',
+                borderRadius: '50%',
+              }}
+            >
+              <Close sx={{ color: 'white', fontSize: 28 }} />
+            </div>
+          ) : (
+            <RobotAvatar
+              isOpen={isOpen}
+              passwordVisible={passwordVisible}
+              size={64}
+              isTalking={isTalking}
+            />
+          )}
         </Fab>
       </Zoom>
 
@@ -455,32 +504,83 @@ const AIAssistantWidget = () => {
               {/* Header */}
               <Box
                 sx={{
-                  p: 2,
+                  px: 2,
+                  py: 1.5,
                   background: isDark
-                    ? 'linear-gradient(90deg, rgba(13,71,161,0.6), rgba(25,118,210,0.6))'
-                    : 'linear-gradient(90deg, rgba(25,118,210,0.7), rgba(100,181,246,0.7))',
-                  backdropFilter: 'blur(10px)',
+                    ? 'linear-gradient(135deg, rgba(9,30,90,0.9) 0%, rgba(13,71,161,0.85) 50%, rgba(25,118,210,0.8) 100%)'
+                    : 'linear-gradient(135deg, rgba(13,71,161,0.95) 0%, rgba(25,118,210,0.9) 50%, rgba(66,165,245,0.85) 100%)',
+                  backdropFilter: 'blur(12px)',
                   color: 'white',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
+                  borderBottom: '1px solid rgba(255,255,255,0.12)',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
               >
-                <Avatar sx={{ bgcolor: 'rgba(255,255,255,0.2)' }}>
-                  <AutoAwesome sx={{ color: 'white' }} />
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    MorphoAI Assistant Pro
-                  </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    Powered by Gemini 1.5
+                {/* Background shimmer */}
+                <Box sx={{
+                  position: 'absolute', inset: 0,
+                  background: 'radial-gradient(circle at 15% 50%, rgba(100,181,246,0.15) 0%, transparent 60%)',
+                  pointerEvents: 'none',
+                }} />
+
+                {/* Robot avatar in header */}
+                <Box sx={{
+                  width: 56, height: 56, flexShrink: 0,
+                  position: 'relative',
+                  filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))',
+                  zIndex: 1,
+                }}>
+                  <RobotAvatar
+                    size={56}
+                    compact={true}
+                    isTalking={isTalking}
+                    isOpen={true}
+                    passwordVisible={null}
+                  />
+                  {/* Talking pulse ring */}
+                  {isTalking && (
+                    <Box sx={{
+                      position: 'absolute', inset: '-4px',
+                      borderRadius: '50%',
+                      border: '2px solid rgba(100,181,246,0.8)',
+                      animation: 'pulse-ring 1s ease-out infinite',
+                      '@keyframes pulse-ring': {
+                        '0%':   { transform: 'scale(0.95)', opacity: 1 },
+                        '100%': { transform: 'scale(1.15)', opacity: 0 },
+                      },
+                    }} />
+                  )}
+                </Box>
+
+                <Box sx={{ flex: 1, zIndex: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: '0.95rem' }}>
+                      MorphoAI
+                    </Typography>
+                    {/* Online indicator */}
+                    <Box sx={{
+                      width: 7, height: 7, borderRadius: '50%',
+                      bgcolor: isTalking ? '#ffd54f' : '#69f0ae',
+                      boxShadow: isTalking ? '0 0 6px #ffd54f' : '0 0 6px #69f0ae',
+                      animation: 'pulse-dot 2s ease-in-out infinite',
+                      '@keyframes pulse-dot': {
+                        '0%,100%': { opacity: 1 },
+                        '50%':     { opacity: 0.4 },
+                      },
+                    }} />
+                  </Box>
+                  <Typography variant="caption" sx={{ opacity: 0.75, display: 'block' }}>
+                    {isTalking ? '🤖 Javob yozmoqda...' : '✨ Powered by Gemini'}
                   </Typography>
                 </Box>
+
                 <IconButton
                   size="small"
                   onClick={() => setIsOpen(false)}
-                  sx={{ color: 'white' }}
+                  sx={{ color: 'white', zIndex: 1 }}
                 >
                   <Close />
                 </IconButton>

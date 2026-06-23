@@ -342,6 +342,7 @@ const ActivityCard = ({
   lang,
 }) => {
   const isResearcher = admin.role === 'researcher';
+  const isFieldAssistant = admin.role === 'field_assistant';
   const score = getScore(admin);
   const progress = maxScore ? Math.round((score / maxScore) * 100) : 0;
 
@@ -471,7 +472,13 @@ const ActivityCard = ({
               </Stack>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Chip
-                  label={isResearcher ? t.researcher : t.admin}
+                  label={
+                    isResearcher
+                      ? t.researcher
+                      : isFieldAssistant
+                        ? 'Field assistant'
+                        : t.admin
+                  }
                   size="small"
                   variant="outlined"
                   color={isResearcher ? 'secondary' : 'primary'}
@@ -793,6 +800,15 @@ export default function AdminActivity() {
             >
               {t.researchers}
             </Button>
+            <Button
+              onClick={() => setRoleFilter('field_assistant')}
+              variant={
+                roleFilter === 'field_assistant' ? 'contained' : 'outlined'
+              }
+              sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            >
+              Field assistants
+            </Button>
           </ButtonGroup>
 
           <Tooltip title={t.refresh}>
@@ -947,7 +963,9 @@ export default function AdminActivity() {
                       ? t.noUsers
                       : roleFilter === 'admin'
                         ? t.noAdmins
-                        : t.noResearchers}
+                        : roleFilter === 'researcher'
+                          ? t.noResearchers
+                          : 'Field assistants topilmadi'}
                   </Typography>
                 </Paper>
               </Grid>

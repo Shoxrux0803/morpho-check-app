@@ -2598,7 +2598,7 @@ def get_admin_activity(
 ):
     """Faqat Super Admin uchun: barcha adminlar va izlanuvchilar faolligini ko'rish."""
     # Adminlar va Researcherlarni olamiz
-    users = db.query(User).filter(User.role.in_(["admin", "researcher"])).all()
+    users = db.query(User).filter(User.role.in_(["admin", "researcher", "field_assistant"])).all()
 
     now = datetime.utcnow()
     today_start = datetime.combine(date.today(), datetime.min.time())

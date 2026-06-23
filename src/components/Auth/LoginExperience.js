@@ -336,7 +336,13 @@ export default function LoginExperience({
                         <InputAdornment position="end">
                           <IconButton
                             aria-label={localized.showPassword}
-                            onClick={() => setShowPassword(!showPassword)}
+                            onClick={() => {
+                              const next = !showPassword;
+                              setShowPassword(next);
+                              window.dispatchEvent(
+                                new CustomEvent('robot-password-toggle', { detail: { visible: next } })
+                              );
+                            }}
                           >
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
