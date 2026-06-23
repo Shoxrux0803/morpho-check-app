@@ -25,6 +25,10 @@ const AI_TRANSLATIONS = {
       "Qoyilmaqom! 🏆\nBunday natija kishini quvontiradi!",
       "Ofarin! 👏\nJuda yaxshi harakat qildingiz!"
     ],
+    nightTime: 'Siz juda kech ishlayapsiz! Choy ichib, dam olish vaqti kelmadimi? 🌙☕',
+    tickle: 'Ey, qitiqlamang! 😄',
+    idlePrompt: 'Hammasi joyidami? Yordam kerak bo\'lsa aytishingiz mumkin! 🤔',
+    longTyping: 'Katta matn yozyapsiz shekilli? Yordam kerak bo\'lsa, men shu yerdaman! 📝',
     talking: 'gapiryapti...'
   },
   ru: {
@@ -45,6 +49,10 @@ const AI_TRANSLATIONS = {
       "Изумительно! 🏆\nТакой результат радует глаз!",
       "Браво! 👏\nОчень хорошее достижение!"
     ],
+    nightTime: 'Вы так поздно работаете! Не пора ли выпить чаю и отдохнуть? 🌙☕',
+    tickle: 'Эй, щекотно же! 😄',
+    idlePrompt: 'Все в порядке? Может, нужна подсказка? 🤔',
+    longTyping: 'Кажется, вы пишете большой текст? Если нужна помощь — я рядом! 📝',
     talking: 'печатает...'
   },
   en: {
@@ -65,6 +73,10 @@ const AI_TRANSLATIONS = {
       "Spectacular! 🏆\nSuch a result is delightful!",
       "Bravo! 👏\nYou did a really good job!"
     ],
+    nightTime: 'You are working so late! Isn\'t it time for tea and some rest? 🌙☕',
+    tickle: 'Hey, that tickles! 😄',
+    idlePrompt: 'Is everything okay? Let me know if you need a hint! 🤔',
+    longTyping: 'Looks like you\'re typing a lot! Let me know if you need any help! 📝',
     talking: 'typing...'
   },
   tg: {
@@ -85,6 +97,10 @@ const AI_TRANSLATIONS = {
       "Олиҷаноб! 🏆\nЧунин натиҷа касро хурсанд мекунад!",
       "Офарин! 👏\nБисёр хуб ҳаракат кардед!"
     ],
+    nightTime: 'Шумо хеле дер кор карда истодаед! Вақти чой нӯшидан ва истироҳат нест? 🌙☕',
+    tickle: 'Эй, гижик накунед! 😄',
+    idlePrompt: 'Ҳамааш хуб аст? Агар кӯмак лозим бошад, гӯед! 🤔',
+    longTyping: 'Ба назар мерасад, ки шумо матни калон навишта истодаед? Агар кӯмак лозим бошад, ман дар ин ҷо ҳастам! 📝',
     talking: 'менависад...'
   },
   kz: {
@@ -105,6 +121,10 @@ const AI_TRANSLATIONS = {
       "Ғажап! 🏆\nМұндай нәтиже қуантады!",
       "Жарайсыз! 👏\nӨте жақсы еңбек еттіңіз!"
     ],
+    nightTime: 'Сіз өте кеш жұмыс істеп жатырсыз! Шай ішіп, демалатын кез келген жоқ па? 🌙☕',
+    tickle: 'Эй, қытықтамаңыз! 😄',
+    idlePrompt: 'Бәрі дұрыс па? Көмек керек болса айтыңыз! 🤔',
+    longTyping: 'Сіз үлкен мәтін жазып жатқан сияқтысыз? Көмек керек болса, мен осындамын! 📝',
     talking: 'жазып жатыр...'
   },
   ky: {
@@ -125,6 +145,10 @@ const AI_TRANSLATIONS = {
       "Керемет! 🏆\nМындай натыйжа кубантат!",
       "Бали! 👏\nӨтө жакшы аракет кылдыңыз!"
     ],
+    nightTime: 'Сиз өтө кеч иштеп жатасыз! Чай ичип, эс ала турган убак келген жокпу? 🌙☕',
+    tickle: 'Эй, кытыгылабаңыз! 😄',
+    idlePrompt: 'Баары жайындабы? Жардам керек болсо айтыңыз! 🤔',
+    longTyping: 'Сиз чоң текст жазып жаткан окшойсуз? Жардам керек болсо, мен ушул жердемин! 📝',
     talking: 'жазып жатат...'
   },
   tr: {
@@ -145,6 +169,10 @@ const AI_TRANSLATIONS = {
       "Muhteşem! 🏆\nBöyle bir sonuç sevindirici!",
       "Tebrikler! 👏\nÇok iyi çaba gösterdin!"
     ],
+    nightTime: 'Çok geç saatlere kadar çalışıyorsunuz! Biraz çay içip dinlenme vakti gelmedi mi? 🌙☕',
+    tickle: 'Hey, gıdıklanıyorum! 😄',
+    idlePrompt: 'Her şey yolunda mı? Yardıma ihtiyacınız olursa bana bildirin! 🤔',
+    longTyping: 'Büyük bir metin yazıyorsunuz sanırım? Yardıma ihtiyacınız olursa buradayım! 📝',
     talking: 'yazıyor...'
   },
   tm: {
@@ -165,6 +193,10 @@ const AI_TRANSLATIONS = {
       "Gudrat! 🏆\nŞeýle netije begendirýär!",
       "Berekella! 👏\nÖrän gowy hereket etdiň!"
     ],
+    nightTime: 'Gaty giç işleýärsiňiz! Çaý içip, dynç almagyň wagty gelmedimi? 🌙☕',
+    tickle: 'Eý, gyjyklamaň! 😄',
+    idlePrompt: 'Hemme zat gowumy? Kömek gerek bolsa aýdyň! 🤔',
+    longTyping: 'Uly tekst ýazýan ýaly? Kömek gerek bolsa, men şu taýda! 📝',
     talking: 'ýazýar...'
   }
 };
@@ -289,6 +321,12 @@ const GLOBAL_CSS = `
   45%  { transform: rotate(18deg) scale(1.06); }
   75%  { transform: rotate(-6deg) scale(1.02); }
   100% { transform: rotate(0deg) scale(1); }
+}
+
+/* ── Scanner ── */
+@keyframes emo-scanner {
+  0%   { transform: translateX(-50%) scaleX(0.7); opacity: 0.6; }
+  100% { transform: translateX(-50%) scaleX(1.1); opacity: 1; }
 }
 `;
 
@@ -489,18 +527,30 @@ const RobotAvatar = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aiDict.welcome]);
 
-  // ── Proactive Messages ──────────────────────────────────────────────────────
+  // ── Proactive Messages & Biorhythms ─────────────────────────────────────────
   useEffect(() => {
     if (compact) return;
     const timer = setInterval(() => {
       if (isOpenRef.current) return;
+      
+      const hour = new Date().getHours();
+      // Biorhythms: late night / early morning check
+      if (hour >= 23 || hour < 5) {
+        // High chance to show night time prompt and get sleepy
+        if (Math.random() > 0.3 && aiDict.nightTime) {
+          showBubble(aiDict.nightTime, 9000);
+          setMood('sleeping');
+          return;
+        }
+      }
+      
       const msgs = aiDict.proactive;
       const msg = msgs[proMsgIdx.current % msgs.length];
       proMsgIdx.current++;
       showBubble(msg, 9000);
     }, INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [compact, showBubble, aiDict.proactive]);
+  }, [compact, showBubble, aiDict.proactive, aiDict.nightTime]);
 
   // ── Mouse tracking + Wake-up ────────────────────────────────────────────────
   const handleMouseMove = useCallback((e) => {
@@ -598,14 +648,15 @@ const RobotAvatar = ({
       } else if (e.detail?.message) {
         showBubble(e.detail.message, 8000);
       }
-      setTimeout(() => { setMood('idle'); }, 4000);
+      if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+      moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 4000);
     };
 
     const handleAdminChat = (e) => {
       if (e.detail?.isOpen) {
         setMood('curious');
         if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
-        moodTimerRef.current = setTimeout(() => { setMood('idle'); }, 3000);
+        moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 3000);
       }
     };
 
@@ -615,7 +666,7 @@ const RobotAvatar = ({
       window.removeEventListener('emo-celebrate', handleCelebrate);
       window.removeEventListener('admin-chat-toggled', handleAdminChat);
     };
-  }, [showBubble, aiDict.praises]);
+  }, [showBubble, aiDict.praises, scheduleNextMood]);
 
   // ── Blinking ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -637,16 +688,111 @@ const RobotAvatar = ({
     if (mood === 'smiling') return 'emo-happy-bounce 0.8s ease-in-out infinite';
     if (isEating) return 'emo-eat 1.2s ease-in-out infinite';
     if (isSinging) return 'emo-sing 0.9s ease-in-out infinite';
-    if (isCurious) return 'emo-curious 2s ease-in-out infinite';
+    if (isCurious) return 'emo-idle 4.5s ease-in-out infinite';
     if (isLove) return 'emo-love 1.5s ease-in-out infinite';
     if (isDizzy) return 'emo-dizzy 0.6s ease-in-out infinite';
     return 'emo-idle 4.5s ease-in-out infinite';
   })();
 
+  // ── Empathy (Keyboard & Idle) ───────────────────────────────────────────────
+  const lastActivityRef = useRef(Date.now());
+  const idlePromptShownRef = useRef(false);
+  const keystrokeCountRef = useRef(0);
+  const lastKeystrokeTimeRef = useRef(0);
+
+  useEffect(() => {
+    if (compact) return;
+    const handleActivity = (e) => {
+      lastActivityRef.current = Date.now();
+      idlePromptShownRef.current = false;
+      
+      // Keyboard empathy (detect long typing sessions)
+      if (e.type === 'keydown' && !isOpenRef.current) {
+        const now = Date.now();
+        if (now - lastKeystrokeTimeRef.current > 3000) {
+          keystrokeCountRef.current = 0; // reset if paused for 3 seconds
+        }
+        keystrokeCountRef.current += 1;
+        lastKeystrokeTimeRef.current = now;
+
+        if (keystrokeCountRef.current > 40) {
+          keystrokeCountRef.current = 0; // prevent spam
+          if (aiDict.longTyping) {
+            setMood('curious');
+            showBubble(aiDict.longTyping, 6000);
+            if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+            moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 6000);
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    
+    const idleTimer = setInterval(() => {
+      if (isOpenRef.current) return;
+      if (!idlePromptShownRef.current && Date.now() - lastActivityRef.current > 120000) {
+        if (aiDict.idlePrompt) {
+          showBubble(aiDict.idlePrompt, 10000);
+          setMood('curious');
+          if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
+          moodTimerRef.current = setTimeout(() => { setMood('idle'); scheduleNextMood(); }, 6000);
+          idlePromptShownRef.current = true;
+        }
+      }
+    }, 10000);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      clearInterval(idleTimer);
+    };
+  }, [compact, aiDict.idlePrompt, showBubble, scheduleNextMood]);
+
+  // ── Tickling ────────────────────────────────────────────────────────────────
+  const clickCountRef = useRef(0);
+  const lastClickTimeRef = useRef(0);
+
+  const handleAvatarClick = useCallback(() => {
+    const now = Date.now();
+    if (now - lastClickTimeRef.current > 1000) {
+      clickCountRef.current = 0;
+    }
+    clickCountRef.current += 1;
+    lastClickTimeRef.current = now;
+
+    if (clickCountRef.current >= 4) {
+      clickCountRef.current = 0;
+      setMood('dizzy');
+      if (aiDict.tickle) {
+        showBubble(aiDict.tickle, 4000);
+      }
+    }
+  }, [aiDict.tickle, showBubble]);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // ██  RENDER EMO'S DIGITAL EYES  ██
   // ═══════════════════════════════════════════════════════════════════════════
   const renderEyes = () => {
+    if (talking) {
+      return (
+        <div style={{
+          position: 'absolute',
+          top: `${size * 0.38}px`,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: `${size * 0.45}px`,
+          height: '6px',
+          backgroundColor: '#45f3ff',
+          borderRadius: '3px',
+          boxShadow: '0 0 14px rgba(69, 243, 255, 0.9), inset 0 0 4px rgba(255,255,255,0.7)',
+          animation: 'emo-scanner 0.8s ease-in-out infinite alternate',
+          zIndex: 3,
+        }} />
+      );
+    }
+
     const isClosed = passwordVisible === false || blinkState || isSleeping;
     const isSmiling = mood === 'smiling';
     const isWinkingMood = mood === 'winking';
@@ -843,10 +989,12 @@ const RobotAvatar = ({
   return (
     <div
       ref={containerRef}
+      onClick={handleAvatarClick}
       style={{
         position: 'relative', width: s, height: s,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         perspective: '250px',
+        cursor: 'pointer',
       }}
     >
       {/* Speech Bubble */}
