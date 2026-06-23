@@ -187,10 +187,16 @@ export default function InputForm({
       if (maybe && typeof maybe.then === 'function') {
         try {
           await maybe;
+          window.dispatchEvent(new CustomEvent('emo-celebrate', {
+            detail: { message: "WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!" }
+          }));
         } finally {
           smoothScrollToResults();
         }
       } else {
+        window.dispatchEvent(new CustomEvent('emo-celebrate', {
+          detail: { message: "WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!" }
+        }));
         smoothScrollToResults();
       }
     },

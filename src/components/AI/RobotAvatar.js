@@ -428,6 +428,19 @@ const RobotAvatar = ({
     return () => { if (moodTimerRef.current) clearTimeout(moodTimerRef.current); };
   }, [isOpen, scheduleNextMood]);
 
+  // ── Celebration Event Listener ──────────────────────────────────────────────
+  useEffect(() => {
+    const handleCelebrate = (e) => {
+      setMood('smiling');
+      if (e.detail?.message) {
+        showBubble(e.detail.message, 8000);
+      }
+      setTimeout(() => { setMood('idle'); }, 4000);
+    };
+    window.addEventListener('emo-celebrate', handleCelebrate);
+    return () => window.removeEventListener('emo-celebrate', handleCelebrate);
+  }, [showBubble]);
+
   // ── Blinking ────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (isSleeping || mood === 'smiling' || isLove) return;
@@ -500,11 +513,11 @@ const RobotAvatar = ({
         extraTransform = 'scaleX(0.85)';
       } else if (isSmiling) {
         // ─── EMO SMILE: Exact match to user's reference image ───
-        // Flat bottom edge, perfectly rounded top = inverted U
-        h = eyeH * 0.55;
+        // Flat bottom edge, perfectly rounded top = inverted U, slightly squeezed
+        h = eyeH * 0.40;
         w = eyeW * 1.15;
         br = `${w}px ${w}px 0 0`; // top fully round, bottom completely flat
-        extraTransform = 'translateY(3px)';
+        extraTransform = 'translateY(6px)';
       } else if (isLove) {
         // ─── Love: heart-shaped eyes ───
         bg = '#ff6b9d';
@@ -535,9 +548,9 @@ const RobotAvatar = ({
       } else if (isSingingMood) {
         br = '40%';
         extraTransform = 'scale(1.08)';
-      } else if (talking) {
-        anim = 'emo-headphone-pulse 0.4s ease-in-out infinite';
       }
+      // REMOVED talking animation from eyes so they stay still when talking
+
 
       return (
         <div key={side} style={{
@@ -594,15 +607,8 @@ const RobotAvatar = ({
       opacity = 1;
       anim = 'emo-mouth-talk 0.35s ease-in-out infinite';
     } else if (isSmiling) {
-      // ─── EMO Smile mouth: small curved line smile ───
-      opacity = 1;
-      w = '18px';
-      h = '9px';
-      bg = 'transparent';
-      borderStr = '3px solid #45f3ff';
-      borderTopStr = 'none';
-      br = '0 0 14px 14px';
-      tx += ' translateY(4px)';
+      // ─── EMO Smile mouth: hidden when smiling based on user request ───
+      // Opacity stays 0, no mouth shown.
     } else if (isSingingMood) {
       // ─── Singing: open O mouth ───
       opacity = 1;
