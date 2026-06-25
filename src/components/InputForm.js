@@ -54,6 +54,10 @@ import aiService from '../services/aiService';
 
 import { MCTextField as Field, MCSelect } from './ui/MCField';
 import { UZB_LOCATIONS } from '../data/uzbLocations';
+import {
+  canUsePermission,
+  normalizeAdminPermissions,
+} from '../utils/adminPermissions';
 import { useGrowthAnalytics } from '../hooks/useGrowthAnalytics';
 import {
   CONSENT_POLICY_VERSION,
@@ -79,7 +83,7 @@ export default function InputForm({
   onBulkUpdate,
 }) {
   const { lang, t } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const btnRef = useRef(null);
   const [activeStep, setActiveStep] = useState(0);
   const [predictLoading, setPredictLoading] = useState(false);
@@ -88,8 +92,26 @@ export default function InputForm({
   const [mahallaLoading, setMahallaLoading] = useState(false);
 
   // Admin modini aniqlash: prop berilgan bo'lsa shuni, aks holda login holatini oladi
-  const showAdvanced =
+  const isPrivilegedInput =
     isAdminView !== undefined ? isAdminView : isAuthenticated;
+  const adminPermissions = normalizeAdminPermissions(user?.admin_permissions);
+  const anthroPermissionKeys = [
+    'shoulder_length',
+    'shoulder_breadth',
+    'shoulder_circumference',
+    'arm_elbow_length',
+    'hand_length',
+    'thigh_length',
+    'thigh_circumference',
+    'calf_length',
+    'calf_circumference',
+    'foot_length',
+  ];
+  const showAdvanced =
+    isPrivilegedInput &&
+    anthroPermissionKeys.some((key) => canUsePermission(adminPermissions, key));
+  const showBioimpedance =
+    isPrivilegedInput && canUsePermission(adminPermissions, 'bioimpedance');
 
   const validateAnthro = (form) => {
     const errs = [];
@@ -187,16 +209,26 @@ export default function InputForm({
       if (maybe && typeof maybe.then === 'function') {
         try {
           await maybe;
-          window.dispatchEvent(new CustomEvent('emo-celebrate', {
-            detail: { message: "WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!" }
-          }));
+          window.dispatchEvent(
+            new CustomEvent('emo-celebrate', {
+              detail: {
+                message:
+                  'WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!',
+              },
+            })
+          );
         } finally {
           smoothScrollToResults();
         }
       } else {
-        window.dispatchEvent(new CustomEvent('emo-celebrate', {
-          detail: { message: "WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!" }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('emo-celebrate', {
+            detail: {
+              message:
+                'WOW qoyil! 🎉\nYaxshi ishlayapsiz! Men sizdan faxrlanaman!',
+            },
+          })
+        );
         smoothScrollToResults();
       }
     },
@@ -443,7 +475,7 @@ export default function InputForm({
   const steps = [
     t('personalInfo'),
     t('anthroMeasurements'),
-    t('bioimpedanceAnalysis'),
+    ...(showBioimpedance ? [t('bioimpedanceAnalysis')] : []),
   ];
 
   // Custom step connector
@@ -505,7 +537,6 @@ export default function InputForm({
             sx={{ minWidth: { xs: 280, sm: 'auto' } }}
           >
             {steps.map((label, index) => {
-              if (index === 2 && !showAdvanced) return null;
               return (
                 <Step key={label}>
                   <StepLabel
@@ -1142,136 +1173,174 @@ export default function InputForm({
 
                   {showAdvanced && (
                     <>
-                      <Grid item xs={12} md={4}>
-                        <Field
-                          fullWidth
-                          label={`${t('shoulderLength')} (sm) *`}
-                          name="shoulderLength"
-                          type="number"
-                          required
-                          value={formData.shoulderLength || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<AccessibilityNewIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Field
-                          fullWidth
-                          label={`${t('shoulderBreadth')} (sm) *`}
-                          name="shoulderBreadth"
-                          type="number"
-                          required
-                          value={formData.shoulderBreadth || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<AccessibilityNewIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Field
-                          fullWidth
-                          label={`${t('shoulderCircumference')} (sm) *`}
-                          name="shoulderCircumference"
-                          type="number"
-                          required
-                          value={formData.shoulderCircumference || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<AccessibilityNewIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Field
-                          fullWidth
-                          label={`${t('armElbowLength')} (sm) *`}
-                          name="armElbowLength"
-                          type="number"
-                          required
-                          value={formData.armElbowLength || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<PanToolIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Field
-                          fullWidth
-                          label={`${t('handLength')} (sm) *`}
-                          name="handLength"
-                          type="number"
-                          required
-                          value={formData.handLength || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<PanToolIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Field
-                          fullWidth
-                          label={`${t('thighLength')} (sm) *`}
-                          name="thighLength"
-                          type="number"
-                          required
-                          value={formData.thighLength || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<DirectionsWalkIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={6}>
-                        <Field
-                          fullWidth
-                          label={`${t('thighCircumference')} (sm) *`}
-                          name="thighCircumference"
-                          type="number"
-                          required
-                          value={formData.thighCircumference || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<DirectionsWalkIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Field
-                          fullWidth
-                          label={`${t('calfLength')} (sm) *`}
-                          name="calfLength"
-                          type="number"
-                          required
-                          value={formData.calfLength || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<DirectionsWalkIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Field
-                          fullWidth
-                          label={`${t('calfCircumference')} (sm) *`}
-                          name="calfCircumference"
-                          type="number"
-                          required
-                          value={formData.calfCircumference || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<DirectionsWalkIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
-                      <Grid item xs={12} md={4}>
-                        <Field
-                          fullWidth
-                          label={`${t('footLength')} (sm) *`}
-                          name="footLength"
-                          type="number"
-                          required
-                          value={formData.footLength || ''}
-                          onChange={handleInputChange}
-                          InputProps={adorn(<DirectionsWalkIcon />)}
-                          sx={inputSx}
-                        />
-                      </Grid>
+                      {canUsePermission(
+                        adminPermissions,
+                        'shoulder_length'
+                      ) && (
+                        <Grid item xs={12} md={4}>
+                          <Field
+                            fullWidth
+                            label={`${t('shoulderLength')} (sm) *`}
+                            name="shoulderLength"
+                            type="number"
+                            required
+                            value={formData.shoulderLength || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<AccessibilityNewIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(
+                        adminPermissions,
+                        'shoulder_breadth'
+                      ) && (
+                        <Grid item xs={12} md={4}>
+                          <Field
+                            fullWidth
+                            label={`${t('shoulderBreadth')} (sm) *`}
+                            name="shoulderBreadth"
+                            type="number"
+                            required
+                            value={formData.shoulderBreadth || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<AccessibilityNewIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(
+                        adminPermissions,
+                        'shoulder_circumference'
+                      ) && (
+                        <Grid item xs={12} md={4}>
+                          <Field
+                            fullWidth
+                            label={`${t('shoulderCircumference')} (sm) *`}
+                            name="shoulderCircumference"
+                            type="number"
+                            required
+                            value={formData.shoulderCircumference || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<AccessibilityNewIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(
+                        adminPermissions,
+                        'arm_elbow_length'
+                      ) && (
+                        <Grid item xs={12} md={6}>
+                          <Field
+                            fullWidth
+                            label={`${t('armElbowLength')} (sm) *`}
+                            name="armElbowLength"
+                            type="number"
+                            required
+                            value={formData.armElbowLength || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<PanToolIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(adminPermissions, 'hand_length') && (
+                        <Grid item xs={12} md={6}>
+                          <Field
+                            fullWidth
+                            label={`${t('handLength')} (sm) *`}
+                            name="handLength"
+                            type="number"
+                            required
+                            value={formData.handLength || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<PanToolIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(adminPermissions, 'thigh_length') && (
+                        <Grid item xs={12} md={6}>
+                          <Field
+                            fullWidth
+                            label={`${t('thighLength')} (sm) *`}
+                            name="thighLength"
+                            type="number"
+                            required
+                            value={formData.thighLength || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<DirectionsWalkIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(
+                        adminPermissions,
+                        'thigh_circumference'
+                      ) && (
+                        <Grid item xs={12} md={6}>
+                          <Field
+                            fullWidth
+                            label={`${t('thighCircumference')} (sm) *`}
+                            name="thighCircumference"
+                            type="number"
+                            required
+                            value={formData.thighCircumference || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<DirectionsWalkIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(adminPermissions, 'calf_length') && (
+                        <Grid item xs={12} md={4}>
+                          <Field
+                            fullWidth
+                            label={`${t('calfLength')} (sm) *`}
+                            name="calfLength"
+                            type="number"
+                            required
+                            value={formData.calfLength || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<DirectionsWalkIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(
+                        adminPermissions,
+                        'calf_circumference'
+                      ) && (
+                        <Grid item xs={12} md={4}>
+                          <Field
+                            fullWidth
+                            label={`${t('calfCircumference')} (sm) *`}
+                            name="calfCircumference"
+                            type="number"
+                            required
+                            value={formData.calfCircumference || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<DirectionsWalkIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
+                      {canUsePermission(adminPermissions, 'foot_length') && (
+                        <Grid item xs={12} md={4}>
+                          <Field
+                            fullWidth
+                            label={`${t('footLength')} (sm) *`}
+                            name="footLength"
+                            type="number"
+                            required
+                            value={formData.footLength || ''}
+                            onChange={handleInputChange}
+                            InputProps={adorn(<DirectionsWalkIcon />)}
+                            sx={inputSx}
+                          />
+                        </Grid>
+                      )}
                     </>
                   )}
                 </Grid>
@@ -1290,7 +1359,7 @@ export default function InputForm({
                   >
                     {t('backBtn')}
                   </Button>
-                  {showAdvanced ? (
+                  {showBioimpedance ? (
                     <Stack direction="row" spacing={2}>
                       <Button
                         onClick={handleLocalSubmit}
@@ -1339,7 +1408,7 @@ export default function InputForm({
             </motion.div>
           )}
 
-          {activeStep === 2 && showAdvanced && (
+          {activeStep === 2 && showBioimpedance && (
             <motion.div
               key="step2"
               variants={containerVariants}

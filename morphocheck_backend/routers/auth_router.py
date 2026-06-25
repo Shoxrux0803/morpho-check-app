@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from models.auth_device import LoginVerificationCode, TrustedLoginDevice
 from models.schemas import Token, UserLogin, UserOut, UserRegister
 from models.user import User
+from utils.admin_permissions import get_effective_admin_permissions, normalize_admin_permissions
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.rate_limit import limiter
@@ -346,4 +347,6 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserOut)
 def read_users_me(current_user: User = Depends(get_current_user)):
-    return current_user
+    data = UserOut.model_validate(current_user).model_dump()
+    data["admin_permissions"] = get_effective_admin_permissions(current_user)
+    return data

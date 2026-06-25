@@ -17,6 +17,7 @@ from services.analyze_workflow_service import (
     store_raw_analysis,
 )
 from services.pdf_services import generate_pdf_report as generate_pdf_file
+from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions
 from utils.database import get_db
 
 router = APIRouter(tags=["Tahlil"])
@@ -48,9 +49,12 @@ def analyze_full(
     current_user: Optional[User] = Depends(get_optional_user),
 ):
     try:
-        return analyze_and_store(
+        result = analyze_and_store(
             data, db, request, lang=lang, current_user=current_user
         )
+        if current_user:
+            return filter_payload_by_permissions(result, get_effective_admin_permissions(current_user))
+        return result
     except HTTPException:
         raise
     except Exception as exc:

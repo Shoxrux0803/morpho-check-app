@@ -1057,8 +1057,18 @@ const RobotAvatar = ({
     let h = '2px';
     let br = '2px';
     let bg = '#45f3ff';
-    let borderStr = 'none';
-    let borderTopStr = 'none';
+    let borderTopWidth = '0';
+    let borderRightWidth = '0';
+    let borderBottomWidth = '0';
+    let borderLeftWidth = '0';
+    const borderTopStyle = 'solid';
+    const borderRightStyle = 'solid';
+    const borderBottomStyle = 'solid';
+    const borderLeftStyle = 'solid';
+    let borderTopColor = 'transparent';
+    let borderRightColor = 'transparent';
+    let borderBottomColor = 'transparent';
+    let borderLeftColor = 'transparent';
     let anim = 'none';
     let tx = `translate(${eyeOffset.x * 0.6}px, ${eyeOffset.y * 0.5}px)`;
 
@@ -1086,8 +1096,13 @@ const RobotAvatar = ({
       w = '14px';
       h = '7px';
       bg = 'transparent';
-      borderStr = '2.5px solid #ff6b9d';
-      borderTopStr = 'none';
+      borderRightWidth = '2.5px';
+      borderBottomWidth = '2.5px';
+      borderLeftWidth = '2.5px';
+      borderTopColor = '#ff6b9d';
+      borderRightColor = '#ff6b9d';
+      borderBottomColor = '#ff6b9d';
+      borderLeftColor = '#ff6b9d';
       br = '0 0 12px 12px';
     } else if (isDizzy) {
       // ─── Dizzy: wavy line ───
@@ -1107,8 +1122,18 @@ const RobotAvatar = ({
         width: w,
         height: h,
         backgroundColor: bg,
-        border: borderStr,
-        borderTop: borderTopStr,
+        borderTopWidth,
+        borderRightWidth,
+        borderBottomWidth,
+        borderLeftWidth,
+        borderTopStyle,
+        borderRightStyle,
+        borderBottomStyle,
+        borderLeftStyle,
+        borderTopColor,
+        borderRightColor,
+        borderBottomColor,
+        borderLeftColor,
         borderRadius: br,
         opacity: opacity,
         boxShadow: opacity > 0 ? `0 0 10px rgba(69, 243, 255, 0.5)` : 'none',

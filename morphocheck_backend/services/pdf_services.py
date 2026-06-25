@@ -941,15 +941,25 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
         ],
     ]
 
-    shoulder_length_val = (
-        data.get("shoulder_length", 0)
-        if isinstance(data, dict)
-        else getattr(data, "shoulder_length", 0)
+    deep_fields = (
+        "shoulder_length",
+        "shoulder_breadth",
+        "shoulder_circumference",
+        "arm_elbow_length",
+        "hand_length",
+        "thigh_length",
+        "thigh_circumference",
+        "calf_length",
+        "calf_circumference",
+        "foot_length",
     )
-    try:
-        is_deep_analysis = float(shoulder_length_val) > 0
-    except (TypeError, ValueError):
-        is_deep_analysis = False
+    def _has_positive_field(field_name):
+        value = data.get(field_name, 0) if isinstance(data, dict) else getattr(data, field_name, 0)
+        try:
+            return float(value or 0) > 0
+        except (TypeError, ValueError):
+            return False
+    is_deep_analysis = any(_has_positive_field(field) for field in deep_fields)
 
     detailed = analysis_data_dict.get("indices", {})
     if detailed and is_deep_analysis:

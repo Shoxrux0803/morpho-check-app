@@ -39,6 +39,10 @@ import { useLanguage, LANGUAGES } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useGrowthAnalytics } from '../hooks/useGrowthAnalytics';
 import aiService from '../services/aiService';
+import {
+  canUsePermission,
+  normalizeAdminPermissions,
+} from '../utils/adminPermissions';
 
 export default function AnalysisResults({
   formData,
@@ -47,7 +51,32 @@ export default function AnalysisResults({
   onContinue,
 }) {
   const { t, lang } = useLanguage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const adminPermissions = normalizeAdminPermissions(user?.admin_permissions);
+  const canShowShoulderRatio = canUsePermission(
+    adminPermissions,
+    'shoulder_breadth'
+  );
+  const canShowThighRatio = canUsePermission(
+    adminPermissions,
+    'thigh_circumference'
+  );
+  const canShowBioimpedance = canUsePermission(
+    adminPermissions,
+    'bioimpedance'
+  );
+  const canShowDetailedIndices = [
+    'shoulder_length',
+    'shoulder_breadth',
+    'shoulder_circumference',
+    'arm_elbow_length',
+    'hand_length',
+    'thigh_length',
+    'thigh_circumference',
+    'calf_length',
+    'calf_circumference',
+    'foot_length',
+  ].some((key) => canUsePermission(adminPermissions, key));
   const [pdfLang, setPdfLang] = useState(lang);
   const [chartType, setChartType] = useState('height');
   const analytics = useGrowthAnalytics(formData);
@@ -245,8 +274,7 @@ export default function AnalysisResults({
       );
       setAssistantReplies((prev) => ({
         ...prev,
-        [action.key]:
-          res?.reply || t('aiNoResponse'),
+        [action.key]: res?.reply || t('aiNoResponse'),
       }));
     } catch (err) {
       console.error('AI assistant action error:', err);
@@ -996,38 +1024,50 @@ export default function AnalysisResults({
                 </Grid>
               </Grid>
 
-              <Grid container spacing={3} sx={{ mt: 1 }}>
-                <Grid xs={12} md={6}>
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 2, height: '100%' }}
-                  >
-                    <Stack spacing={0.5}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        {t('shoulderRatio')}
-                      </Typography>
-                      <Typography variant="h4">
-                        {shoulderRatio ? `${shoulderRatio}%` : '—'}
-                      </Typography>
-                    </Stack>
-                  </Paper>
+              {(canShowShoulderRatio || canShowThighRatio) && (
+                <Grid container spacing={3} sx={{ mt: 1 }}>
+                  {canShowShoulderRatio && (
+                    <Grid xs={12} md={6}>
+                      <Paper
+                        variant="outlined"
+                        sx={{ p: 2, borderRadius: 2, height: '100%' }}
+                      >
+                        <Stack spacing={0.5}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            {t('shoulderRatio')}
+                          </Typography>
+                          <Typography variant="h4">
+                            {shoulderRatio ? `${shoulderRatio}%` : '???'}
+                          </Typography>
+                        </Stack>
+                      </Paper>
+                    </Grid>
+                  )}
+                  {canShowThighRatio && (
+                    <Grid xs={12} md={6}>
+                      <Paper
+                        variant="outlined"
+                        sx={{ p: 2, borderRadius: 2, height: '100%' }}
+                      >
+                        <Stack spacing={0.5}>
+                          <Typography
+                            variant="subtitle2"
+                            color="text.secondary"
+                          >
+                            {t('thighRatio')}
+                          </Typography>
+                          <Typography variant="h4">
+                            {thighRatio ? `${thighRatio}%` : '???'}
+                          </Typography>
+                        </Stack>
+                      </Paper>
+                    </Grid>
+                  )}
                 </Grid>
-                <Grid xs={12} md={6}>
-                  <Paper
-                    variant="outlined"
-                    sx={{ p: 2, borderRadius: 2, height: '100%' }}
-                  >
-                    <Stack spacing={0.5}>
-                      <Typography variant="subtitle2" color="text.secondary">
-                        {t('thighRatio')}
-                      </Typography>
-                      <Typography variant="h4">
-                        {thighRatio ? `${thighRatio}%` : '—'}
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </Grid>
-              </Grid>
+              )}
 
               <Box sx={{ mt: 2 }}>
                 <Typography variant="caption" color="text.secondary">
@@ -1040,14 +1080,15 @@ export default function AnalysisResults({
                   {formData.calfCircumference || '—'} | {t('footLength')}:{' '}
                   {formData.footLength || '—'}
                 </Typography>
-                {analysis?.indices?.z_body_length != null && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('bodyLengthZScore')}:{' '}
-                      <b>{analysis.indices.z_body_length}</b>
-                    </Typography>
-                  </Box>
-                )}
+                {canShowBioimpedance &&
+                  analysis?.indices?.z_body_length != null && (
+                    <Box sx={{ mt: 1 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {t('bodyLengthZScore')}:{' '}
+                        <b>{analysis.indices.z_body_length}</b>
+                      </Typography>
+                    </Box>
+                  )}
                 {(formData.fatherHeight ||
                   formData.motherHeight ||
                   patientInfo?.father_height ||
@@ -1098,7 +1139,7 @@ export default function AnalysisResults({
               </Box>
 
               {/* Detal ko'rsatkichlar (HMAI, MII, ADI) - Faqat ro'yxatdan o'tgan mutaxassislar uchun */}
-              {isAuthenticated && (
+              {isAuthenticated && canShowDetailedIndices && (
                 <>
                   <Typography
                     variant="h6"

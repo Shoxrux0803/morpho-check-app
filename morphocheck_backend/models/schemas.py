@@ -2,9 +2,10 @@ import datetime
 import math
 import re
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from utils.admin_permissions import DEFAULT_ADMIN_PERMISSIONS, normalize_admin_permissions
 
 CONSENT_POLICY_VERSION = "helsinki-declaration-consent-v1"
 
@@ -299,6 +300,12 @@ class UserCreate(BaseModel):
     research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
     supervisor_id: Optional[int] = None
+    admin_permissions: Optional[dict[str, bool]] = Field(default_factory=lambda: dict(DEFAULT_ADMIN_PERMISSIONS))
+
+    @field_validator("admin_permissions", mode="before")
+    @classmethod
+    def normalize_permissions(cls, v: Any):
+        return normalize_admin_permissions(v)
 
     @field_validator("password")
     @classmethod
@@ -383,6 +390,14 @@ class UserUpdate(BaseModel):
     research_area: Optional[str] = Field(None, max_length=255)
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
     supervisor_id: Optional[int] = None
+    admin_permissions: Optional[dict[str, bool]] = None
+
+    @field_validator("admin_permissions", mode="before")
+    @classmethod
+    def normalize_permissions(cls, v: Any):
+        if v is None:
+            return None
+        return normalize_admin_permissions(v)
 
     @field_validator("password")
     @classmethod
@@ -433,9 +448,17 @@ class UserOut(BaseModel):
     scientific_supervisor: Optional[str] = None
     supervisor_id: Optional[int] = None
     supervisor_role: Optional[str] = None
+    admin_permissions: Optional[dict[str, bool]] = Field(
+        default_factory=lambda: dict(DEFAULT_ADMIN_PERMISSIONS)
+    )
     is_deleted: Optional[int] = 0
     deleted_at: Optional[datetime.datetime] = None
     deleted_by_id: Optional[int] = None
+
+    @field_validator("admin_permissions", mode="before")
+    @classmethod
+    def normalize_permissions(cls, v: Any):
+        return normalize_admin_permissions(v)
 
     class Config:
         from_attributes = True

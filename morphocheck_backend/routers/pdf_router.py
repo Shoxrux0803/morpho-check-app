@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.user import User
 from models.userdata import PatientAnalysis
-from routers.auth_router import get_current_admin
+from routers.auth_router import get_current_admin, get_optional_user
 from services.ai_advice_service import generate_parent_tips
 from services.analyze_service import (
     BMI_CATEGORIES,
@@ -24,6 +24,7 @@ from services.consent_docx import generate_consent_docx
 from services.docx_services import generate_docx_report
 from services.ml_service import get_ml_predictions
 from services.pdf_services import generate_pdf_file
+from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.date_utils import calculate_age_precise
@@ -69,6 +70,7 @@ async def generate_pdf_endpoint(
     request_data: PatientData,
     lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
 ):
     try:
         # Yoshni qayta hisoblash (umumiy xatoni to'g'irlash uchun)
@@ -138,6 +140,7 @@ async def generate_pdf_endpoint(
             lang=lang,
         )
 
+        data_dict = filter_payload_by_permissions(data_dict, get_effective_admin_permissions(current_user)) if current_user else data_dict
         buffer = await asyncio.to_thread(generate_pdf_file, data_dict, lang=lang)
 
         if not isinstance(buffer, BytesIO):
@@ -327,6 +330,7 @@ async def generate_pdf_by_id_endpoint(
             lang=lang,
         )
 
+        report_data = filter_payload_by_permissions(report_data, get_effective_admin_permissions(current_user)) if current_user else report_data
         buffer = await asyncio.to_thread(generate_pdf_file, report_data, lang)
         buffer.seek(0)
 
@@ -497,6 +501,7 @@ async def generate_docx_by_id_endpoint(
         ]:
             report_data[col] = getattr(rec, col, 0) or 0
 
+        report_data = filter_payload_by_permissions(report_data, get_effective_admin_permissions(current_user))
         buffer = await asyncio.to_thread(generate_docx_report, report_data, lang)
         buffer.seek(0)
 
@@ -608,6 +613,7 @@ async def generate_docx_endpoint(
     request_data: PatientData,
     lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_user),
 ):
     """
     Kiritilgan ma'lumotlardan kirillcha DOCX anketasi yaratib yuklaydi.
@@ -637,6 +643,7 @@ async def generate_docx_endpoint(
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
 
+        data_dict = filter_payload_by_permissions(data_dict, get_effective_admin_permissions(current_user)) if current_user else data_dict
         buffer = await asyncio.to_thread(generate_docx_report, data_dict, lang)
 
         if not isinstance(buffer, BytesIO):

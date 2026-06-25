@@ -109,6 +109,13 @@ DOCX_LABELS = {
         "consultant": "Консультант",
         "sig_date": "Имзо / Сана",
         "doctor_parent": "Мутахассис / Ота-она",
+        "astenik": "Астеник",
+        "normostenik": "Нормостеник",
+        "giperstenik": "Гиперстеник",
+        "mos": "Мос",
+        "mos_emas": "Мос эмас",
+        "mavjud": "Мавжуд",
+        "yoq": "Йўқ",
         "cm": "см",
         "kg": "кг",
     },
@@ -1625,65 +1632,104 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # -----------------------------------------------------------------------
     _section_head_paragraph(doc, L("section_2"))
 
-    t2 = doc.add_table(rows=11, cols=7)
-    t2.style = "Table Grid"
-    _set_table_full_width(t2)
-
-    headers2 = [
-        L("no"),
-        L("indicator"),
-        L("unit"),
-        L("value"),
-        L("indicator"),
-        L("unit"),
-        L("value"),
+    metric_specs = [
+        ("height", L("height"), L("cm")),
+        ("weight", L("weight"), L("kg")),
+        ("head", L("head"), L("cm")),
+        ("chest", L("chest"), L("cm")),
+        ("waist", L("waist"), L("cm")),
+        ("shoulder_length", L("sh_len"), L("cm")),
+        ("shoulder_breadth", L("sh_br"), L("cm")),
+        ("shoulder_circumference", L("sh_circ"), L("cm")),
+        ("arm_elbow_length", L("arm_elb"), L("cm")),
+        ("hand_length", L("hand"), L("cm")),
+        ("thigh_length", L("thigh_len"), L("cm")),
+        ("thigh_circumference", L("thigh_circ"), L("cm")),
+        ("calf_length", L("calf_len"), L("cm")),
+        ("calf_circumference", L("calf_circ"), L("cm")),
+        ("foot_length", L("foot"), L("cm")),
+        ("body_length", L("body_len"), L("cm")),
     ]
-    for c, h in enumerate(headers2):
-        _set_cell_font(
-            t2.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
-        )
-        _shade_cell(t2.cell(0, c))
-
-    left_metrics = [
-        ("1", L("height"), L("cm"), _fmt(_val(data, "height"))),
-        ("2", L("weight"), L("kg"), _fmt(_val(data, "weight"))),
-        ("3", L("head"), L("cm"), _fmt(_val(data, "head"))),
-        ("4", L("chest"), L("cm"), _fmt(_val(data, "chest"))),
-        ("5", L("waist"), L("cm"), _fmt(_val(data, "waist"))),
-        ("6", L("sh_len"), L("cm"), _fmt(_val(data, "shoulder_length"))),
-        ("7", L("sh_br"), L("cm"), _fmt(_val(data, "shoulder_breadth"))),
-        ("8", L("sh_circ"), L("cm"), _fmt(_val(data, "shoulder_circumference"))),
-        ("9", L("arm_elb"), L("cm"), _fmt(_val(data, "arm_elbow_length"))),
-        ("10", L("hand"), L("cm"), _fmt(_val(data, "hand_length"))),
+    always_metric_keys = {"height", "weight", "head", "chest", "waist"}
+    visible_metrics = [
+        (key, label, unit, _fmt(_val(data, key)))
+        for key, label, unit in metric_specs
+        if key in always_metric_keys or key in data
     ]
 
-    right_metrics = [
-        (L("thigh_len"), L("cm"), _fmt(_val(data, "thigh_length"))),
-        (L("thigh_circ"), L("cm"), _fmt(_val(data, "thigh_circumference"))),
-        (L("calf_len"), L("cm"), _fmt(_val(data, "calf_length"))),
-        (L("calf_circ"), L("cm"), _fmt(_val(data, "calf_circumference"))),
-        (L("foot"), L("cm"), _fmt(_val(data, "foot_length"))),
-        (L("body_len"), L("cm"), _fmt(_val(data, "body_length"))),
-    ]
+    use_compact_metrics_table = len(visible_metrics) <= 8
+    if use_compact_metrics_table:
+        t2 = doc.add_table(rows=1, cols=4)
+        t2.style = "Table Grid"
+        _set_table_full_width(t2)
+        headers2 = [L("no"), L("indicator"), L("unit"), L("value")]
+        for c, h in enumerate(headers2):
+            _set_cell_font(
+                t2.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+            )
+            _shade_cell(t2.cell(0, c))
 
-    for i, (num, label, unit, qiymat) in enumerate(left_metrics, start=1):
-        _set_cell_font(t2.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t2.cell(i, 1), label, size=9)
-        _set_cell_font(t2.cell(i, 2), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t2.cell(i, 3), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        for i, (_key, label, unit, qiymat) in enumerate(visible_metrics, start=1):
+            row = t2.add_row()
+            _set_cell_font(row.cells[0], str(i), size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(row.cells[1], label, size=9)
+            _set_cell_font(row.cells[2], unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(row.cells[3], qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
 
-    for i, (label, unit, qiymat) in enumerate(right_metrics, start=1):
-        _set_cell_font(t2.cell(i, 4), label, size=9)
-        _set_cell_font(t2.cell(i, 5), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t2.cell(i, 6), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        _set_col_width(t2, 0, 0.8)
+        _set_col_width(t2, 1, 8.0)
+        _set_col_width(t2, 2, 1.0)
+        _set_col_width(t2, 3, 3.0)
+    else:
+        t2 = doc.add_table(rows=1, cols=7)
+        t2.style = "Table Grid"
+        _set_table_full_width(t2)
+        headers2 = [
+            L("no"),
+            L("indicator"),
+            L("unit"),
+            L("value"),
+            L("indicator"),
+            L("unit"),
+            L("value"),
+        ]
+        for c, h in enumerate(headers2):
+            _set_cell_font(
+                t2.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+            )
+            _shade_cell(t2.cell(0, c))
 
-    _set_col_width(t2, 0, 0.8)
-    _set_col_width(t2, 1, 4.2)
-    _set_col_width(t2, 2, 0.8)
-    _set_col_width(t2, 3, 2.0)
-    _set_col_width(t2, 4, 4.2)
-    _set_col_width(t2, 5, 0.8)
-    _set_col_width(t2, 6, 2.0)
+        split_at = (len(visible_metrics) + 1) // 2
+        left_metrics = [
+            (str(i + 1), label, unit, value)
+            for i, (_key, label, unit, value) in enumerate(visible_metrics[:split_at])
+        ]
+        right_metrics = [
+            (label, unit, value) for _key, label, unit, value in visible_metrics[split_at:]
+        ]
+        row_count = max(len(left_metrics), len(right_metrics))
+        for _ in range(row_count):
+            t2.add_row()
+
+        for i, (num, label, unit, qiymat) in enumerate(left_metrics, start=1):
+            _set_cell_font(t2.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t2.cell(i, 1), label, size=9)
+            _set_cell_font(t2.cell(i, 2), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t2.cell(i, 3), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+
+        for i, (label, unit, qiymat) in enumerate(right_metrics, start=1):
+            _set_cell_font(t2.cell(i, 4), label, size=9)
+            _set_cell_font(t2.cell(i, 5), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t2.cell(i, 6), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+
+        _set_col_width(t2, 0, 0.8)
+        _set_col_width(t2, 1, 4.2)
+        _set_col_width(t2, 2, 0.8)
+        _set_col_width(t2, 3, 2.0)
+        _set_col_width(t2, 4, 4.2)
+        _set_col_width(t2, 5, 0.8)
+        _set_col_width(t2, 6, 2.0)
+
     _style_report_table(t2)
 
     # -----------------------------------------------------------------------
@@ -1737,7 +1783,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     mcri_val = detailed.get("mcri", 0)
     mcri_desc = LP(ky_text(detailed.get("mcri_desc", ""), lang))
 
-    t3 = doc.add_table(rows=12, cols=4)
+    t3 = doc.add_table(rows=1, cols=4)
     t3.style = "Table Grid"
     _set_table_full_width(t3)
 
@@ -1767,7 +1813,23 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         ("11", L("mcri_label"), f"{mcri_val}", mcri_desc),
     ]
 
-    for i, (num, label, m_val, baholash) in enumerate(indices, start=1):
+    optional_index_keys = {
+        L("body_len_z"): "z_body_length",
+        L("hmai_label"): "hmai",
+        L("mii_label"): "mii",
+        L("adi_label"): "adi",
+        L("mcri_label"): "mcri",
+    }
+    filtered_indices = []
+    for row in indices:
+        required_key = optional_index_keys.get(row[1])
+        if required_key and required_key not in detailed:
+            continue
+        filtered_indices.append(row)
+    while len(filtered_indices) > len(t3.rows) - 1:
+        t3.add_row()
+
+    for i, (num, label, m_val, baholash) in enumerate(filtered_indices, start=1):
         _set_cell_font(t3.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t3.cell(i, 1), label, size=9)
         _set_cell_font(t3.cell(i, 2), m_val, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
@@ -1782,86 +1844,96 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # -----------------------------------------------------------------------
     # IV. БИОИМПЕДАНС ТАҲЛИЛИ НАТИЖАЛАРИ
     # -----------------------------------------------------------------------
-    _section_head_paragraph(doc, L("section_4"))
-
-    t4 = doc.add_table(rows=8, cols=5)
-    t4.style = "Table Grid"
-    _set_table_full_width(t4)
-
-    headers4 = [L("no"), L("indicator"), L("unit"), L("value"), L("norm")]
-    for c, h in enumerate(headers4):
-        _set_cell_font(
-            t4.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
-        )
-        _shade_cell(t4.cell(0, c))
-
     bio_results = analysis.get("indices", {})
+    has_bio_section = any(
+        key in bio_results
+        for key in (
+            "tbw_percent", "fm_percent", "fm", "muscle_mass", "bone_mass",
+            "acm_percent", "visceral_fat",
+        )
+    )
 
-    bio_rows = [
-        (
-            "1",
-            L("tbw"),
-            "%",
-            f"{bio_results.get('tbw_percent', '')}",
-            f"{bio_results.get('tbw_norm', '')}",
-        ),
-        (
-            "2",
-            L("fm_p"),
-            "%",
-            f"{bio_results.get('fm_percent', '')}",
-            f"{bio_results.get('fm_norm', '')}",
-        ),
-        (
-            "3",
-            L("fm_kg"),
-            L("kg"),
-            f"{bio_results.get('fm', '')}",
-            f"{bio_results.get('fm_kg_norm', '')}",
-        ),
-        (
-            "4",
-            L("muscle"),
-            L("kg"),
-            f"{bio_results.get('muscle_mass', '')}",
-            f"{bio_results.get('muscle_norm', '')}",
-        ),
-        (
-            "5",
-            L("bone"),
-            L("kg"),
-            f"{bio_results.get('bone_mass', '')}",
-            f"{bio_results.get('bone_norm', '')}",
-        ),
-        (
-            "6",
-            L("acm"),
-            "%",
-            f"{bio_results.get('acm_percent', '')}",
-            f"{bio_results.get('acm_norm', '')}",
-        ),
-        (
-            "7",
-            L("visceral"),
-            "—",
-            f"{bio_results.get('visceral_fat', '')}",
-            f"{bio_results.get('visceral_norm', '')}",
-        ),
-    ]
+    if has_bio_section:
+        _section_head_paragraph(doc, L("section_4"))
 
-    for i, (num, label, unit, qiymat, norma) in enumerate(bio_rows, start=1):
-        _set_cell_font(t4.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t4.cell(i, 1), label, size=9)
-        _set_cell_font(t4.cell(i, 2), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t4.cell(i, 3), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
-        _set_cell_font(t4.cell(i, 4), norma, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        t4 = doc.add_table(rows=8, cols=5)
+        t4.style = "Table Grid"
+        _set_table_full_width(t4)
 
-    _set_col_width(t4, 0, 0.8)
-    _set_col_width(t4, 1, 6.0)
-    _set_col_width(t4, 2, 1.2)
-    _set_col_width(t4, 3, 3.5)
-    _set_col_width(t4, 4, 3.5)
-    _style_report_table(t4)
+        headers4 = [L("no"), L("indicator"), L("unit"), L("value"), L("norm")]
+        for c, h in enumerate(headers4):
+            _set_cell_font(
+                t4.cell(0, c), h, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+            )
+            _shade_cell(t4.cell(0, c))
+
+        bio_results = analysis.get("indices", {})
+
+        bio_rows = [
+            (
+                "1",
+                L("tbw"),
+                "%",
+                f"{bio_results.get('tbw_percent', '')}",
+                f"{bio_results.get('tbw_norm', '')}",
+            ),
+            (
+                "2",
+                L("fm_p"),
+                "%",
+                f"{bio_results.get('fm_percent', '')}",
+                f"{bio_results.get('fm_norm', '')}",
+            ),
+            (
+                "3",
+                L("fm_kg"),
+                L("kg"),
+                f"{bio_results.get('fm', '')}",
+                f"{bio_results.get('fm_kg_norm', '')}",
+            ),
+            (
+                "4",
+                L("muscle"),
+                L("kg"),
+                f"{bio_results.get('muscle_mass', '')}",
+                f"{bio_results.get('muscle_norm', '')}",
+            ),
+            (
+                "5",
+                L("bone"),
+                L("kg"),
+                f"{bio_results.get('bone_mass', '')}",
+                f"{bio_results.get('bone_norm', '')}",
+            ),
+            (
+                "6",
+                L("acm"),
+                "%",
+                f"{bio_results.get('acm_percent', '')}",
+                f"{bio_results.get('acm_norm', '')}",
+            ),
+            (
+                "7",
+                L("visceral"),
+                "—",
+                f"{bio_results.get('visceral_fat', '')}",
+                f"{bio_results.get('visceral_norm', '')}",
+            ),
+        ]
+
+        for i, (num, label, unit, qiymat, norma) in enumerate(bio_rows, start=1):
+            _set_cell_font(t4.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4.cell(i, 1), label, size=9)
+            _set_cell_font(t4.cell(i, 2), unit, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4.cell(i, 3), qiymat, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4.cell(i, 4), norma, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+
+        _set_col_width(t4, 0, 0.8)
+        _set_col_width(t4, 1, 6.0)
+        _set_col_width(t4, 2, 1.2)
+        _set_col_width(t4, 3, 3.5)
+        _set_col_width(t4, 4, 3.5)
+        _style_report_table(t4)
 
     # -----------------------------------------------------------------------
     # V. МОРФОЛОГИК ВА БИОЛОГИК БАҲОЛАШ
@@ -1894,17 +1966,17 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     s_trend_key = bio_results.get("secular_trend_key", "")
 
     morph_type_text = (
-        f"{_checkbox(m_type_key == 'astenik')} {L('astenik')}  "
-        f"{_checkbox(m_type_key == 'normostenik')} {L('normostenik')}  "
-        f"{_checkbox(m_type_key == 'giperstenik')} {L('giperstenik')}"
+        f"{_checkbox(m_type_key == 'astenik')} {LP(L('astenik'))}  "
+        f"{_checkbox(m_type_key == 'normostenik')} {LP(L('normostenik'))}  "
+        f"{_checkbox(m_type_key == 'giperstenik')} {LP(L('giperstenik'))}"
     )
     bio_age_text = (
-        f"{_checkbox(b_age_key == 'mos')} {L('mos')}  "
-        f"{_checkbox(b_age_key == 'mos_emas')} {L('mos_emas')}"
+        f"{_checkbox(b_age_key == 'mos')} {LP(L('mos'))}  "
+        f"{_checkbox(b_age_key == 'mos_emas')} {LP(L('mos_emas'))}"
     )
     secular_trend_text = (
-        f"{_checkbox(s_trend_key == 'mavjud')} {L('mavjud')}  "
-        f"{_checkbox(s_trend_key == 'yoq')} {L('yoq')}"
+        f"{_checkbox(s_trend_key == 'mavjud')} {LP(L('mavjud'))}  "
+        f"{_checkbox(s_trend_key == 'yoq')} {LP(L('yoq'))}"
     )
 
     morph_rows = [

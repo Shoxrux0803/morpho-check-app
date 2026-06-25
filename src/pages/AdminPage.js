@@ -81,6 +81,10 @@ import InputForm from '../components/InputForm';
 import ResearcherDataView from '../components/Admin/ResearcherDataView';
 import DashboardFilters from '../components/Dashboard/DashboardFilters';
 import { ConsentStatus } from '../components/Consent/PrivacyConsentPanel';
+import {
+  canUsePermission,
+  getAdminPermissionLabels,
+} from '../utils/adminPermissions';
 
 /** ===== Helpers ===== */
 const calcBMI = (wKg, hCm) => {
@@ -232,9 +236,17 @@ const XLSX_PREVIEW_COLUMNS = [
   { key: 'chest', label: "Ko'krak ayl." },
   { key: 'waist', label: 'Bel ayl.' },
   { key: 'head', label: 'Bosh ayl.' },
+  { key: 'shoulderLength', label: 'Yelka uzunligi' },
   { key: 'shoulderBreadth', label: 'Elka keng.' },
-  { key: 'shoulderRatio', label: 'Elka prop.' },
+  { key: 'shoulderCircumference', label: 'Yelka aylanasi' },
+  { key: 'armElbowLength', label: 'Bilak uzunligi' },
+  { key: 'handLength', label: 'Panja uzunligi' },
+  { key: 'thighLength', label: 'Son uzunligi' },
   { key: 'thighCircumference', label: 'Son ayl.' },
+  { key: 'calfLength', label: 'Boldir uzunligi' },
+  { key: 'calfCircumference', label: 'Boldir aylanasi' },
+  { key: 'footLength', label: 'Oyoq panja uzunligi' },
+  { key: 'shoulderRatio', label: 'Elka prop.' },
   { key: 'thighRatio', label: 'Son prop.' },
   { key: 'hmai', label: 'HMAI' },
   { key: 'mii', label: 'MII' },
@@ -250,6 +262,51 @@ const XLSX_PREVIEW_COLUMNS = [
   { key: 'parentsPhone', label: 'Ota-ona telefon raqami' },
 ];
 
+const XLSX_PERMISSION_COLUMN_MAP = {
+  shoulderLength: 'shoulder_length',
+  shoulderBreadth: 'shoulder_breadth',
+  shoulderCircumference: 'shoulder_circumference',
+  armElbowLength: 'arm_elbow_length',
+  handLength: 'hand_length',
+  thighLength: 'thigh_length',
+  thighCircumference: 'thigh_circumference',
+  calfLength: 'calf_length',
+  calfCircumference: 'calf_circumference',
+  footLength: 'foot_length',
+  shoulderRatio: 'shoulder_breadth',
+  thighRatio: 'thigh_circumference',
+  tbwPercent: 'bioimpedance',
+  fatPercent: 'bioimpedance',
+  fatMass: 'bioimpedance',
+  muscleMass: 'bioimpedance',
+  boneMass: 'bioimpedance',
+  acmPercent: 'bioimpedance',
+  visceralFat: 'bioimpedance',
+  bodyLength: 'bioimpedance',
+};
+
+const XLSX_ANTHROPOMETRY_PERMISSION_KEYS = [
+  'shoulder_length',
+  'shoulder_breadth',
+  'shoulder_circumference',
+  'arm_elbow_length',
+  'hand_length',
+  'thigh_length',
+  'thigh_circumference',
+  'calf_length',
+  'calf_circumference',
+  'foot_length',
+];
+
+const isXlsxPreviewColumnEnabled = (columnKey, permissions) => {
+  if (['hmai', 'mii', 'adi'].includes(columnKey)) {
+    return XLSX_ANTHROPOMETRY_PERMISSION_KEYS.some((key) =>
+      canUsePermission(permissions, key)
+    );
+  }
+  const permissionKey = XLSX_PERMISSION_COLUMN_MAP[columnKey];
+  return permissionKey ? canUsePermission(permissions, permissionKey) : true;
+};
 const XLSX_MODAL_TEXT = {
   uz: {
     adminTitle: 'Umumiy XLSX report',
@@ -640,9 +697,126 @@ ADMIN_XLSX_COLUMN_LABELS.tr = {
   parentsPhone: 'Ebeveyn telefonu',
 };
 
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.uz, {
+  shoulderLength: 'Yelka uzunligi (sm)',
+  shoulderBreadth: 'Yelka kengligi (sm)',
+  shoulderCircumference: 'Yelka aylanasi (sm)',
+  armElbowLength: 'Bilak uzunligi (sm)',
+  handLength: 'Panja uzunligi (sm)',
+  thighLength: 'Son uzunligi (sm)',
+  thighCircumference: 'Son aylanasi (sm)',
+  calfLength: 'Boldir uzunligi (sm)',
+  calfCircumference: 'Boldir aylanasi (sm)',
+  footLength: 'Oyoq panja uzunligi (sm)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.ru, {
+  shoulderLength: 'Длина плеча (см)',
+  shoulderBreadth: 'Ширина плеч (см)',
+  shoulderCircumference: 'Окружность плеча (см)',
+  armElbowLength: 'Длина предплечья (см)',
+  handLength: 'Длина кисти (см)',
+  thighLength: 'Длина бедра (см)',
+  thighCircumference: 'Окружность бедра (см)',
+  calfLength: 'Длина голени (см)',
+  calfCircumference: 'Окружность голени (см)',
+  footLength: 'Длина стопы (см)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.en, {
+  shoulderLength: 'Shoulder length (cm)',
+  shoulderBreadth: 'Shoulder breadth (cm)',
+  shoulderCircumference: 'Shoulder circumference (cm)',
+  armElbowLength: 'Forearm length (cm)',
+  handLength: 'Hand length (cm)',
+  thighLength: 'Thigh length (cm)',
+  thighCircumference: 'Thigh circumference (cm)',
+  calfLength: 'Calf length (cm)',
+  calfCircumference: 'Calf circumference (cm)',
+  footLength: 'Foot length (cm)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.kz, {
+  shoulderLength: 'Иық ұзындығы (см)',
+  shoulderBreadth: 'Иық ені (см)',
+  shoulderCircumference: 'Иық айналымы (см)',
+  armElbowLength: 'Білек ұзындығы (см)',
+  handLength: 'Қол басы ұзындығы (см)',
+  thighLength: 'Сан ұзындығы (см)',
+  thighCircumference: 'Сан айналымы (см)',
+  calfLength: 'Балтыр ұзындығы (см)',
+  calfCircumference: 'Балтыр айналымы (см)',
+  footLength: 'Аяқ басы ұзындығы (см)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.ky, {
+  shoulderLength: 'Ийин узундугу (см)',
+  shoulderBreadth: 'Ийин кеңдиги (см)',
+  shoulderCircumference: 'Ийин айланасы (см)',
+  armElbowLength: 'Билек узундугу (см)',
+  handLength: 'Кол манжа узундугу (см)',
+  thighLength: 'Сан узундугу (см)',
+  thighCircumference: 'Сан айланасы (см)',
+  calfLength: 'Балтыр узундугу (см)',
+  calfCircumference: 'Балтыр айланасы (см)',
+  footLength: 'Бут манжа узундугу (см)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.tg, {
+  shoulderLength: 'Дарозии китф (см)',
+  shoulderBreadth: 'Паҳнои китф (см)',
+  shoulderCircumference: 'Даври китф (см)',
+  armElbowLength: 'Дарозии соид (см)',
+  handLength: 'Дарозии панҷаи даст (см)',
+  thighLength: 'Дарозии рон (см)',
+  thighCircumference: 'Даври рон (см)',
+  calfLength: 'Дарозии соқ (см)',
+  calfCircumference: 'Даври соқ (см)',
+  footLength: 'Дарозии панҷаи пой (см)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.tm, {
+  shoulderLength: 'Yelka uzynlygy (sm)',
+  shoulderBreadth: 'Yelka inligi (sm)',
+  shoulderCircumference: 'Yelka aylawy (sm)',
+  armElbowLength: 'Bilek uzynlygy (sm)',
+  handLength: 'Penje uzynlygy (sm)',
+  thighLength: 'Son uzynlygy (sm)',
+  thighCircumference: 'Son aylawy (sm)',
+  calfLength: 'Boldur uzynlygy (sm)',
+  calfCircumference: 'Boldur aylawy (sm)',
+  footLength: 'Ayak dabanynyn uzynlygy (sm)',
+});
+Object.assign(ADMIN_XLSX_COLUMN_LABELS.tr, {
+  shoulderLength: 'Omuz uzunluğu (cm)',
+  shoulderBreadth: 'Omuz genişliği (cm)',
+  shoulderCircumference: 'Omuz çevresi (cm)',
+  armElbowLength: 'Önkol uzunluğu (cm)',
+  handLength: 'El uzunluğu (cm)',
+  thighLength: 'Uyluk uzunluğu (cm)',
+  thighCircumference: 'Uyluk çevresi (cm)',
+  calfLength: 'Baldır uzunluğu (cm)',
+  calfCircumference: 'Baldır çevresi (cm)',
+  footLength: 'Ayak uzunluğu (cm)',
+});
 const getXlsxText = (lang) => XLSX_MODAL_TEXT[lang] || XLSX_MODAL_TEXT.uz;
-const getAdminXlsxColumnLabel = (key, lang) =>
-  (ADMIN_XLSX_COLUMN_LABELS[lang] || ADMIN_XLSX_COLUMN_LABELS.uz)[key] || key;
+const XLSX_PERMISSION_LABEL_BY_COLUMN = {
+  shoulderLength: 'shoulder_length',
+  shoulderBreadth: 'shoulder_breadth',
+  shoulderCircumference: 'shoulder_circumference',
+  armElbowLength: 'arm_elbow_length',
+  handLength: 'hand_length',
+  thighLength: 'thigh_length',
+  thighCircumference: 'thigh_circumference',
+  calfLength: 'calf_length',
+  calfCircumference: 'calf_circumference',
+  footLength: 'foot_length',
+};
+
+const getAdminXlsxColumnLabel = (key, lang) => {
+  const directLabel = (ADMIN_XLSX_COLUMN_LABELS[lang] ||
+    ADMIN_XLSX_COLUMN_LABELS.uz)[key];
+  if (directLabel) return directLabel;
+  const permissionKey = XLSX_PERMISSION_LABEL_BY_COLUMN[key];
+  if (permissionKey) {
+    return `${getAdminPermissionLabels(lang)[permissionKey]} (cm)`;
+  }
+  return key;
+};
 
 const normalizePreviewText = (value) =>
   String(value || '')
@@ -864,6 +1038,13 @@ export default function AdminPage() {
   const [xlsxPreviewRows, setXlsxPreviewRows] = useState([]);
   const [xlsxPreviewLoading, setXlsxPreviewLoading] = useState(false);
   const [xlsxPreviewTotal, setXlsxPreviewTotal] = useState(0);
+  const visibleXlsxPreviewColumns = useMemo(
+    () =>
+      XLSX_PREVIEW_COLUMNS.filter((column) =>
+        isXlsxPreviewColumnEnabled(column.key, user?.admin_permissions)
+      ),
+    [user?.admin_permissions]
+  );
   const [importingXlsx, setImportingXlsx] = useState(false);
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
@@ -1230,9 +1411,20 @@ export default function AdminPage() {
         chest: value('chest'),
         waist: value('waist'),
         head: value('head'),
+        shoulderLength: value('shoulder_length', 'shoulderLength'),
         shoulderBreadth: value('shoulder_breadth', 'shoulderBreadth'),
-        shoulderRatio: value('shoulder_ratio', 'shoulderRatio'),
+        shoulderCircumference: value(
+          'shoulder_circumference',
+          'shoulderCircumference'
+        ),
+        armElbowLength: value('arm_elbow_length', 'armElbowLength'),
+        handLength: value('hand_length', 'handLength'),
+        thighLength: value('thigh_length', 'thighLength'),
         thighCircumference: value('thigh_circumference', 'thighCircumference'),
+        calfLength: value('calf_length', 'calfLength'),
+        calfCircumference: value('calf_circumference', 'calfCircumference'),
+        footLength: value('foot_length', 'footLength'),
+        shoulderRatio: value('shoulder_ratio', 'shoulderRatio'),
         thighRatio: value('thigh_ratio', 'thighRatio'),
         hmai: value('hmai'),
         mii: value('mii'),
@@ -2029,7 +2221,10 @@ export default function AdminPage() {
                 stickyHeader
                 size="small"
                 sx={{
-                  minWidth: 2800,
+                  minWidth: Math.max(
+                    1200,
+                    visibleXlsxPreviewColumns.length * 92
+                  ),
                   '& .MuiTableCell-root': {
                     borderColor: 'divider',
                     px: 0.75,
@@ -2049,7 +2244,7 @@ export default function AdminPage() {
               >
                 <TableHead>
                   <TableRow>
-                    {XLSX_PREVIEW_COLUMNS.map((column) => (
+                    {visibleXlsxPreviewColumns.map((column) => (
                       <TableCell key={column.key} sx={{ fontWeight: 800 }}>
                         {getAdminXlsxColumnLabel(column.key, lang)}
                       </TableCell>
@@ -2060,7 +2255,7 @@ export default function AdminPage() {
                   {xlsxPreviewLoading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={XLSX_PREVIEW_COLUMNS.length}
+                        colSpan={visibleXlsxPreviewColumns.length}
                         align="center"
                         sx={{ py: 8 }}
                       >
@@ -2070,7 +2265,7 @@ export default function AdminPage() {
                   ) : xlsxPreviewRows.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={XLSX_PREVIEW_COLUMNS.length}
+                        colSpan={visibleXlsxPreviewColumns.length}
                         align="center"
                         sx={{ py: 8 }}
                       >
@@ -2083,7 +2278,7 @@ export default function AdminPage() {
                         key={`${row.fullName}-${row.date}-${idx}`}
                         hover
                       >
-                        {XLSX_PREVIEW_COLUMNS.map((column) => (
+                        {visibleXlsxPreviewColumns.map((column) => (
                           <TableCell
                             key={column.key}
                             sx={{

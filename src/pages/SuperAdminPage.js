@@ -36,6 +36,8 @@ import {
   useTheme,
   useMediaQuery,
   Checkbox,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -76,6 +78,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AdminApi, ResearchApi } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { UZB_LOCATIONS } from '../data/uzbLocations';
+import {
+  getAdminPermissionLabels,
+  getAdminPermissionText,
+  normalizeAdminPermissions,
+} from '../utils/adminPermissions';
 import LogoutConfirmDialog from '../components/LogoutConfirmDialog';
 
 // Components
@@ -1240,6 +1247,8 @@ const SuperAdminPage = () => {
   const { user, login: authLogin, logout, loading: authLoading } = useAuth();
   const { lang } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
+  const adminPermissionLabels = getAdminPermissionLabels(lang);
+  const apt = useCallback((key) => getAdminPermissionText(lang, key), [lang]);
   const pt = useCallback((key) => pageT(lang, key), [lang]);
   const reportLabels = ADMIN_REPORT_LABELS[lang] || ADMIN_REPORT_LABELS.uz;
   const [activeTab, setActiveTab] = useState(0);
@@ -1260,6 +1269,7 @@ const SuperAdminPage = () => {
   const [adminReportOpen, setAdminReportOpen] = useState(false);
   const [adminReportDownloading, setAdminReportDownloading] = useState(false);
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
+  const [adminDialogStep, setAdminDialogStep] = useState(0);
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [adminForm, setAdminForm] = useState({
     name: '',
@@ -1279,6 +1289,7 @@ const SuperAdminPage = () => {
     research_area: '',
     scientific_supervisor: '',
     supervisor_id: '',
+    admin_permissions: normalizeAdminPermissions(),
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
@@ -1288,6 +1299,10 @@ const SuperAdminPage = () => {
   const hasSelectedAdminMahallaOption =
     !adminMahallaValue ||
     mahallaOptions.some((mahalla) => mahalla.label === adminMahallaValue);
+
+  useEffect(() => {
+    if (adminDialogOpen) setAdminDialogStep(0);
+  }, [adminDialogOpen]);
 
   const normalizeAdminForm = (admin = {}) => ({
     name: admin.name || '',
@@ -1307,6 +1322,7 @@ const SuperAdminPage = () => {
     research_area: admin.research_area || '',
     scientific_supervisor: admin.scientific_supervisor || '',
     supervisor_id: admin.supervisor_id || '',
+    admin_permissions: normalizeAdminPermissions(admin.admin_permissions),
   });
 
   // Deleted Data State
@@ -2046,10 +2062,16 @@ const SuperAdminPage = () => {
 
     try {
       const { confirmPassword, ...payload } = adminForm;
+      payload.admin_permissions = normalizeAdminPermissions(
+        payload.admin_permissions
+      );
       if (payload.role === 'field_assistant') {
         payload.supervisor_id = Number(payload.supervisor_id);
       } else {
         payload.supervisor_id = null;
+      }
+      if (payload.role !== 'admin') {
+        payload.admin_permissions = normalizeAdminPermissions();
       }
       [
         'research_topic',
@@ -3435,368 +3457,441 @@ const SuperAdminPage = () => {
         <Dialog
           open={adminDialogOpen}
           onClose={() => setAdminDialogOpen(false)}
-          maxWidth="sm"
+          maxWidth="md"
           fullWidth
         >
           <DialogTitle sx={{ fontWeight: 800 }}>
             {currentAdmin ? pt('adminEdit') : pt('addAdmin')}
           </DialogTitle>
           <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField
-                label={pt('fullName')}
-                fullWidth
-                value={adminForm.name}
-                onChange={(e) =>
-                  setAdminForm({ ...adminForm, name: e.target.value })
-                }
-              />
-              <TextField
-                label="Email"
-                fullWidth
-                value={adminForm.email}
-                onChange={(e) =>
-                  setAdminForm({ ...adminForm, email: e.target.value })
-                }
-              />
+            <Tabs
+              value={adminDialogStep}
+              onChange={(_, nextStep) => setAdminDialogStep(nextStep)}
+              sx={{ mb: 2, borderBottom: '1px solid', borderColor: 'divider' }}
+            >
+              <Tab label={apt('profile')} />
+              <Tab label={apt('adminRights')} />
+            </Tabs>
+            {adminDialogStep === 0 && (
+              <Stack spacing={2} sx={{ mt: 1 }}>
+                <TextField
+                  label={pt('fullName')}
+                  fullWidth
+                  value={adminForm.name}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, name: e.target.value })
+                  }
+                />
+                <TextField
+                  label="Email"
+                  fullWidth
+                  value={adminForm.email}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, email: e.target.value })
+                  }
+                />
 
-              <TextField
-                label={
-                  currentAdmin
-                    ? `${pt('newPassword')} (${pt('optional')})`
-                    : pt('password')
-                }
-                type={showAdminPassword ? 'text' : 'password'}
-                fullWidth
-                value={adminForm.password}
-                onChange={(e) =>
-                  setAdminForm({ ...adminForm, password: e.target.value })
-                }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowAdminPassword(!showAdminPassword)}
-                        edge="end"
-                      >
-                        {showAdminPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+                <TextField
+                  label={
+                    currentAdmin
+                      ? `${pt('newPassword')} (${pt('optional')})`
+                      : pt('password')
+                  }
+                  type={showAdminPassword ? 'text' : 'password'}
+                  fullWidth
+                  value={adminForm.password}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, password: e.target.value })
+                  }
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowAdminPassword(!showAdminPassword)
+                          }
+                          edge="end"
+                        >
+                          {showAdminPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
 
-              <TextField
-                label={pt('confirmPassword')}
-                type={showAdminPassword ? 'text' : 'password'}
-                fullWidth
-                value={adminForm.confirmPassword}
-                onChange={(e) =>
-                  setAdminForm({
-                    ...adminForm,
-                    confirmPassword: e.target.value,
-                  })
-                }
-                error={
-                  adminForm.password !== adminForm.confirmPassword &&
-                  adminForm.confirmPassword !== ''
-                }
-                helperText={
-                  adminForm.password !== adminForm.confirmPassword &&
-                  adminForm.confirmPassword !== ''
-                    ? pt('passwordsNoMatch')
-                    : ''
-                }
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowAdminPassword(!showAdminPassword)}
-                        edge="end"
-                      >
-                        {showAdminPassword ? <VisibilityOff /> : <Visibility />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <FormControl fullWidth>
-                <InputLabel>{pt('role')}</InputLabel>
-                <Select
-                  value={adminForm.role}
-                  label={pt('role')}
-                  onChange={(e) => {
-                    const nextRole = e.target.value;
+                <TextField
+                  label={pt('confirmPassword')}
+                  type={showAdminPassword ? 'text' : 'password'}
+                  fullWidth
+                  value={adminForm.confirmPassword}
+                  onChange={(e) =>
                     setAdminForm({
                       ...adminForm,
-                      role: nextRole,
-                      supervisor_id:
-                        nextRole === 'field_assistant'
-                          ? adminForm.supervisor_id
-                          : '',
-                    });
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  error={
+                    adminForm.password !== adminForm.confirmPassword &&
+                    adminForm.confirmPassword !== ''
+                  }
+                  helperText={
+                    adminForm.password !== adminForm.confirmPassword &&
+                    adminForm.confirmPassword !== ''
+                      ? pt('passwordsNoMatch')
+                      : ''
+                  }
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowAdminPassword(!showAdminPassword)
+                          }
+                          edge="end"
+                        >
+                          {showAdminPassword ? (
+                            <VisibilityOff />
+                          ) : (
+                            <Visibility />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
                   }}
-                >
-                  <MenuItem value="admin">Administrator</MenuItem>
-                  <MenuItem value="superadmin">Super Administrator</MenuItem>
-                  <MenuItem value="researcher">{pt('researcher')}</MenuItem>
-                  <MenuItem value="field_assistant">Field Assistant</MenuItem>
-                </Select>
-              </FormControl>
-              {adminForm.role === 'field_assistant' && (
-                <FormControl fullWidth sx={{ mt: 1 }}>
-                  <InputLabel>Kurator (Admin / Izlanuvchi)</InputLabel>
+                />
+
+                <FormControl fullWidth>
+                  <InputLabel>{pt('role')}</InputLabel>
                   <Select
-                    value={adminForm.supervisor_id || ''}
-                    label="Kurator (Admin / Izlanuvchi)"
+                    value={adminForm.role}
+                    label={pt('role')}
+                    onChange={(e) => {
+                      const nextRole = e.target.value;
+                      setAdminForm({
+                        ...adminForm,
+                        role: nextRole,
+                        supervisor_id:
+                          nextRole === 'field_assistant'
+                            ? adminForm.supervisor_id
+                            : '',
+                      });
+                    }}
+                  >
+                    <MenuItem value="admin">Administrator</MenuItem>
+                    <MenuItem value="superadmin">Super Administrator</MenuItem>
+                    <MenuItem value="researcher">{pt('researcher')}</MenuItem>
+                    <MenuItem value="field_assistant">Field Assistant</MenuItem>
+                  </Select>
+                </FormControl>
+                {adminForm.role === 'field_assistant' && (
+                  <FormControl fullWidth sx={{ mt: 1 }}>
+                    <InputLabel>Kurator (Admin / Izlanuvchi)</InputLabel>
+                    <Select
+                      value={adminForm.supervisor_id || ''}
+                      label="Kurator (Admin / Izlanuvchi)"
+                      onChange={(e) =>
+                        setAdminForm({
+                          ...adminForm,
+                          supervisor_id: e.target.value,
+                        })
+                      }
+                    >
+                      <MenuItem value="">
+                        <em>Tanlanmagan</em>
+                      </MenuItem>
+                      {admins
+                        .filter(
+                          (item) =>
+                            (item.role === 'admin' ||
+                              item.role === 'researcher') &&
+                            !item.is_deleted
+                        )
+                        .map((c) => (
+                          <MenuItem key={c.id} value={c.id}>
+                            {c.name} (
+                            {c.role === 'admin' ? 'Admin' : pt('researcher')})
+                          </MenuItem>
+                        ))}
+                    </Select>
+                  </FormControl>
+                )}
+                {adminForm.role === 'researcher' && (
+                  <Stack spacing={2}>
+                    <TextField
+                      label={pt('researchTopic')}
+                      fullWidth
+                      multiline
+                      minRows={2}
+                      value={adminForm.research_topic || ''}
+                      onChange={(e) =>
+                        setAdminForm({
+                          ...adminForm,
+                          research_topic: e.target.value,
+                        })
+                      }
+                    />
+                    <TextField
+                      label={pt('scientificSupervisor')}
+                      fullWidth
+                      value={adminForm.scientific_supervisor || ''}
+                      onChange={(e) =>
+                        setAdminForm({
+                          ...adminForm,
+                          scientific_supervisor: e.target.value,
+                        })
+                      }
+                    />
+                    <FormControl fullWidth>
+                      <InputLabel>{pt('researchType')}</InputLabel>
+                      <Select
+                        value={adminForm.research_type || ''}
+                        label={pt('researchType')}
+                        onChange={(e) =>
+                          setAdminForm({
+                            ...adminForm,
+                            research_type: e.target.value,
+                          })
+                        }
+                      >
+                        <MenuItem value="">{pt('notSelected')}</MenuItem>
+                        {RESEARCH_TYPE_OPTIONS.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth>
+                      <InputLabel>{pt('researchArea')}</InputLabel>
+                      <Select
+                        value={adminForm.research_area || ''}
+                        label={pt('researchArea')}
+                        onChange={(e) =>
+                          setAdminForm({
+                            ...adminForm,
+                            research_area: e.target.value,
+                          })
+                        }
+                      >
+                        <MenuItem value="">{pt('notSelected')}</MenuItem>
+                        {adminForm.research_area &&
+                          !Object.keys(UZB_LOCATIONS).includes(
+                            adminForm.research_area
+                          ) && (
+                            <MenuItem value={adminForm.research_area}>
+                              {adminForm.research_area}
+                            </MenuItem>
+                          )}
+                        {Object.keys(UZB_LOCATIONS).map((region) => (
+                          <MenuItem key={region} value={region}>
+                            {region}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Stack>
+                )}
+                <TextField
+                  label={pt('phone')}
+                  fullWidth
+                  value={adminForm.phone || ''}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, phone: e.target.value })
+                  }
+                />
+                <FormControl fullWidth>
+                  <InputLabel>{pt('region')}</InputLabel>
+                  <Select
+                    value={adminForm.region || ''}
+                    label={pt('region')}
                     onChange={(e) =>
                       setAdminForm({
                         ...adminForm,
-                        supervisor_id: e.target.value,
+                        region: e.target.value,
+                        district: '',
+                        mahalla: '',
                       })
                     }
                   >
-                    <MenuItem value="">
-                      <em>Tanlanmagan</em>
-                    </MenuItem>
-                    {admins
-                      .filter(
-                        (item) =>
-                          (item.role === 'admin' ||
-                            item.role === 'researcher') &&
-                          !item.is_deleted
-                      )
-                      .map((c) => (
-                        <MenuItem key={c.id} value={c.id}>
-                          {c.name} (
-                          {c.role === 'admin' ? 'Admin' : pt('researcher')})
-                        </MenuItem>
-                      ))}
+                    <MenuItem value="">{pt('allGlobal')}</MenuItem>
+                    {Object.keys(UZB_LOCATIONS).map((r) => (
+                      <MenuItem key={r} value={r}>
+                        {getLocalizedLocationLabel(r, lang, 1)}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
-              )}
-              {adminForm.role === 'researcher' && (
-                <Stack spacing={2}>
-                  <TextField
-                    label={pt('researchTopic')}
-                    fullWidth
-                    multiline
-                    minRows={2}
-                    value={adminForm.research_topic || ''}
+                <FormControl fullWidth disabled={!adminForm.region}>
+                  <InputLabel>{pt('districtCity')}</InputLabel>
+                  <Select
+                    value={adminForm.district || ''}
+                    label={pt('districtCity')}
                     onChange={(e) =>
-                      setAdminForm({
-                        ...adminForm,
-                        research_topic: e.target.value,
-                      })
+                      setAdminFormWithBoundaryCenter(
+                        { district: e.target.value, mahalla: '' },
+                        { preferDistrict: true }
+                      )
+                    }
+                  >
+                    {!adminForm.region && (
+                      <MenuItem value="">{pt('chooseRegionFirst')}</MenuItem>
+                    )}
+                    {(UZB_LOCATIONS[adminForm.region] || []).map((district) => (
+                      <MenuItem key={district} value={district}>
+                        {getLocalizedLocationLabel(district, lang, 2)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl
+                  fullWidth
+                  disabled={!adminForm.district || mahallaLoading}
+                >
+                  <InputLabel>{pt('mahalla')}</InputLabel>
+                  <Select
+                    value={adminMahallaValue}
+                    label={pt('mahalla')}
+                    onChange={(e) =>
+                      setAdminFormWithBoundaryCenter(
+                        { mahalla: e.target.value },
+                        { preferMahalla: true, fillFallbackCenter: true }
+                      )
+                    }
+                  >
+                    {mahallaLoading && (
+                      <MenuItem value="">{pt('mahallasLoading')}</MenuItem>
+                    )}
+                    {!mahallaLoading && mahallaOptions.length === 0 && (
+                      <MenuItem value="">{pt('mahallaNotFound')}</MenuItem>
+                    )}
+                    {!hasSelectedAdminMahallaOption && (
+                      <MenuItem value={adminMahallaValue}>
+                        {getLocalizedLocationLabel(adminMahallaValue, lang, 3)}
+                      </MenuItem>
+                    )}
+                    {mahallaOptions.map((mahalla) => (
+                      <MenuItem
+                        key={mahalla.boundary_id || mahalla.id}
+                        value={mahalla.label}
+                      >
+                        {getLocalizedLocationLabel(mahalla.label, lang, 3)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  label={pt('address')}
+                  fullWidth
+                  value={adminForm.address || ''}
+                  onChange={(e) =>
+                    setAdminForm({ ...adminForm, address: e.target.value })
+                  }
+                  helperText={pt('addressCoordinateHelp')}
+                />
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <TextField
+                    label="Latitude"
+                    type="number"
+                    fullWidth
+                    value={adminForm.latitude ?? ''}
+                    onChange={(e) =>
+                      setAdminForm({ ...adminForm, latitude: e.target.value })
                     }
                   />
                   <TextField
-                    label={pt('scientificSupervisor')}
+                    label="Longitude"
+                    type="number"
                     fullWidth
-                    value={adminForm.scientific_supervisor || ''}
+                    value={adminForm.longitude ?? ''}
                     onChange={(e) =>
-                      setAdminForm({
-                        ...adminForm,
-                        scientific_supervisor: e.target.value,
-                      })
+                      setAdminForm({ ...adminForm, longitude: e.target.value })
                     }
                   />
-                  <FormControl fullWidth>
-                    <InputLabel>{pt('researchType')}</InputLabel>
-                    <Select
-                      value={adminForm.research_type || ''}
-                      label={pt('researchType')}
-                      onChange={(e) =>
-                        setAdminForm({
-                          ...adminForm,
-                          research_type: e.target.value,
-                        })
-                      }
-                    >
-                      <MenuItem value="">{pt('notSelected')}</MenuItem>
-                      {RESEARCH_TYPE_OPTIONS.map((type) => (
-                        <MenuItem key={type} value={type}>
-                          {type}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl fullWidth>
-                    <InputLabel>{pt('researchArea')}</InputLabel>
-                    <Select
-                      value={adminForm.research_area || ''}
-                      label={pt('researchArea')}
-                      onChange={(e) =>
-                        setAdminForm({
-                          ...adminForm,
-                          research_area: e.target.value,
-                        })
-                      }
-                    >
-                      <MenuItem value="">{pt('notSelected')}</MenuItem>
-                      {adminForm.research_area &&
-                        !Object.keys(UZB_LOCATIONS).includes(
-                          adminForm.research_area
-                        ) && (
-                          <MenuItem value={adminForm.research_area}>
-                            {adminForm.research_area}
-                          </MenuItem>
-                        )}
-                      {Object.keys(UZB_LOCATIONS).map((region) => (
-                        <MenuItem key={region} value={region}>
-                          {region}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
                 </Stack>
-              )}
-              <TextField
-                label={pt('phone')}
-                fullWidth
-                value={adminForm.phone || ''}
-                onChange={(e) =>
-                  setAdminForm({ ...adminForm, phone: e.target.value })
-                }
-              />
-              <FormControl fullWidth>
-                <InputLabel>{pt('region')}</InputLabel>
-                <Select
-                  value={adminForm.region || ''}
-                  label={pt('region')}
-                  onChange={(e) =>
-                    setAdminForm({
-                      ...adminForm,
-                      region: e.target.value,
-                      district: '',
-                      mahalla: '',
-                    })
-                  }
-                >
-                  <MenuItem value="">{pt('allGlobal')}</MenuItem>
-                  {Object.keys(UZB_LOCATIONS).map((r) => (
-                    <MenuItem key={r} value={r}>
-                      {getLocalizedLocationLabel(r, lang, 1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth disabled={!adminForm.region}>
-                <InputLabel>{pt('districtCity')}</InputLabel>
-                <Select
-                  value={adminForm.district || ''}
-                  label={pt('districtCity')}
-                  onChange={(e) =>
-                    setAdminFormWithBoundaryCenter(
-                      { district: e.target.value, mahalla: '' },
-                      { preferDistrict: true }
-                    )
-                  }
-                >
-                  {!adminForm.region && (
-                    <MenuItem value="">{pt('chooseRegionFirst')}</MenuItem>
-                  )}
-                  {(UZB_LOCATIONS[adminForm.region] || []).map((district) => (
-                    <MenuItem key={district} value={district}>
-                      {getLocalizedLocationLabel(district, lang, 2)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl
-                fullWidth
-                disabled={!adminForm.district || mahallaLoading}
-              >
-                <InputLabel>{pt('mahalla')}</InputLabel>
-                <Select
-                  value={adminMahallaValue}
-                  label={pt('mahalla')}
-                  onChange={(e) =>
-                    setAdminFormWithBoundaryCenter(
-                      { mahalla: e.target.value },
-                      { preferMahalla: true, fillFallbackCenter: true }
-                    )
-                  }
-                >
-                  {mahallaLoading && (
-                    <MenuItem value="">{pt('mahallasLoading')}</MenuItem>
-                  )}
-                  {!mahallaLoading && mahallaOptions.length === 0 && (
-                    <MenuItem value="">{pt('mahallaNotFound')}</MenuItem>
-                  )}
-                  {!hasSelectedAdminMahallaOption && (
-                    <MenuItem value={adminMahallaValue}>
-                      {getLocalizedLocationLabel(adminMahallaValue, lang, 3)}
-                    </MenuItem>
-                  )}
-                  {mahallaOptions.map((mahalla) => (
-                    <MenuItem
-                      key={mahalla.boundary_id || mahalla.id}
-                      value={mahalla.label}
-                    >
-                      {getLocalizedLocationLabel(mahalla.label, lang, 3)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                label={pt('address')}
-                fullWidth
-                value={adminForm.address || ''}
-                onChange={(e) =>
-                  setAdminForm({ ...adminForm, address: e.target.value })
-                }
-                helperText={pt('addressCoordinateHelp')}
-              />
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <TextField
-                  label="Latitude"
-                  type="number"
-                  fullWidth
-                  value={adminForm.latitude ?? ''}
-                  onChange={(e) =>
-                    setAdminForm({ ...adminForm, latitude: e.target.value })
-                  }
-                />
-                <TextField
-                  label="Longitude"
-                  type="number"
-                  fullWidth
-                  value={adminForm.longitude ?? ''}
-                  onChange={(e) =>
-                    setAdminForm({ ...adminForm, longitude: e.target.value })
-                  }
-                />
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Place />}
+                    onClick={setAdminPinFromBoundary}
+                    disabled={!adminForm.region}
+                    sx={{
+                      borderRadius: 1.5,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {pt('pinRegionCenter')}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<MyLocation />}
+                    onClick={useCurrentLocationForAdmin}
+                    sx={{
+                      borderRadius: 1.5,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {pt('getCurrentLocation')}
+                  </Button>
+                </Stack>
               </Stack>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <Button
-                  variant="outlined"
-                  startIcon={<Place />}
-                  onClick={setAdminPinFromBoundary}
-                  disabled={!adminForm.region}
-                  sx={{
-                    borderRadius: 1.5,
-                    textTransform: 'none',
-                    fontWeight: 800,
-                  }}
-                >
-                  {pt('pinRegionCenter')}
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<MyLocation />}
-                  onClick={useCurrentLocationForAdmin}
-                  sx={{
-                    borderRadius: 1.5,
-                    textTransform: 'none',
-                    fontWeight: 800,
-                  }}
-                >
-                  {pt('getCurrentLocation')}
-                </Button>
+            )}
+            {adminDialogStep === 1 && (
+              <Stack spacing={1.5} sx={{ mt: 1 }}>
+                <Alert severity="info">{apt('inheritanceInfo')}</Alert>
+                {adminForm.role !== 'admin' && (
+                  <Alert severity="warning">{apt('adminOnlyWarning')}</Alert>
+                )}
+                <Grid container spacing={1.5}>
+                  {Object.entries(adminPermissionLabels).map(([key, label]) => (
+                    <Grid item xs={12} sm={6} key={key}>
+                      <Paper
+                        variant="outlined"
+                        sx={{ p: 1.5, borderRadius: 1.5 }}
+                      >
+                        <FormControlLabel
+                          sx={{
+                            m: 0,
+                            width: '100%',
+                            justifyContent: 'space-between',
+                          }}
+                          label={
+                            <Typography fontWeight={700}>{label}</Typography>
+                          }
+                          labelPlacement="start"
+                          control={
+                            <Switch
+                              checked={
+                                normalizeAdminPermissions(
+                                  adminForm.admin_permissions
+                                )[key]
+                              }
+                              disabled={adminForm.role !== 'admin'}
+                              onChange={(e) =>
+                                setAdminForm({
+                                  ...adminForm,
+                                  admin_permissions: {
+                                    ...normalizeAdminPermissions(
+                                      adminForm.admin_permissions
+                                    ),
+                                    [key]: e.target.checked,
+                                  },
+                                })
+                              }
+                            />
+                          }
+                        />
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
               </Stack>
-            </Stack>
+            )}
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
             <Button onClick={() => setAdminDialogOpen(false)}>

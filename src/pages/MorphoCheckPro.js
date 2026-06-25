@@ -5,6 +5,10 @@ import AnalysisResults from '../components/AnalysisResults';
 import { postAnalysis, generatePdf, generateDocx } from '../services/api';
 import { AdminApi } from '../services/AdminApi';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  canUsePermission,
+  normalizeAdminPermissions,
+} from '../utils/adminPermissions';
 
 import { useLanguage } from '../contexts/LanguageContext';
 import { useOfflineSync } from '../providers/OfflineSyncProvider';
@@ -83,6 +87,39 @@ export default function MorphoCheckPro() {
   const [activeTab, setActiveTab] = useState('form');
   const resultsRef = useRef(null);
   const { user } = useAuth();
+  const adminPermissions = normalizeAdminPermissions(user?.admin_permissions);
+  const applyAdminPermissionsToPayload = (payload) => {
+    const next = { ...payload };
+    const fieldMap = {
+      shoulder_length: 'shoulderLength',
+      shoulder_breadth: 'shoulderBreadth',
+      shoulder_circumference: 'shoulderCircumference',
+      arm_elbow_length: 'armElbowLength',
+      hand_length: 'handLength',
+      thigh_length: 'thighLength',
+      thigh_circumference: 'thighCircumference',
+      calf_length: 'calfLength',
+      calf_circumference: 'calfCircumference',
+      foot_length: 'footLength',
+    };
+    Object.entries(fieldMap).forEach(([permissionKey, payloadKey]) => {
+      if (!canUsePermission(adminPermissions, permissionKey))
+        delete next[payloadKey];
+    });
+    if (!canUsePermission(adminPermissions, 'bioimpedance')) {
+      [
+        'totalBodyWater',
+        'fatPercent',
+        'fatMass',
+        'muscleMass',
+        'boneMass',
+        'acm',
+        'visceralFat',
+        'bodyLength',
+      ].forEach((key) => delete next[key]);
+    }
+    return next;
+  };
 
   useEffect(() => {
     if (user?.role === 'admin' || user?.role === 'superadmin') {
@@ -282,12 +319,14 @@ export default function MorphoCheckPro() {
         ...consentPayload,
       };
 
+      const filteredPayload = applyAdminPermissionsToPayload(payload);
+
       if (!navigator.onLine) {
         if (editingItem) {
-          await updateQueueItem(editingItem.id, payload);
+          await updateQueueItem(editingItem.id, filteredPayload);
           setEditingItem(null);
         } else {
-          await addToQueue(payload, lang);
+          await addToQueue(filteredPayload, lang);
         }
         setFormData({ ...formData, firstName: '', lastName: '' });
         setActiveTab('form');
@@ -295,7 +334,7 @@ export default function MorphoCheckPro() {
       }
 
       // If online but we were fixing an item, try to send and then remove from queue
-      const raw = await postAnalysis(payload, lang);
+      const raw = await postAnalysis(filteredPayload, lang);
 
       if (editingItem) {
         await removeFromQueue(editingItem.id);
@@ -420,7 +459,10 @@ export default function MorphoCheckPro() {
         ...consentPayload,
       };
 
-      const blob = await generatePdf(payload, selectedLang);
+      const blob = await generatePdf(
+        applyAdminPermissionsToPayload(payload),
+        selectedLang
+      );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -500,7 +542,10 @@ export default function MorphoCheckPro() {
         ...consentPayload,
       };
 
-      const blob = await generateDocx(payload, selectedLang);
+      const blob = await generateDocx(
+        applyAdminPermissionsToPayload(payload),
+        selectedLang
+      );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

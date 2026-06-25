@@ -265,6 +265,7 @@ def ensure_schema_updates():
             ("research_type", "VARCHAR(100)"),
             ("research_area", "VARCHAR(255)"),
             ("scientific_supervisor", "VARCHAR(200)"),
+            ("admin_permissions", "TEXT"),
         ]:
             _add_column_if_missing("users", col, typ)
 

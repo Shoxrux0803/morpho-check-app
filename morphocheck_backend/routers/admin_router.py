@@ -42,6 +42,7 @@ from services.analyze_service import (
 )
 from services.cache_service import cache_service
 from services.clinical_service import clinical_service
+from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions, serialize_admin_permissions
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.security import get_password_hash
@@ -289,6 +290,9 @@ def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) 
     else:
         payload["deleted_by_name"] = None
 
+    if current_user:
+        payload = filter_payload_by_permissions(payload, get_effective_admin_permissions(current_user))
+
     return payload
 
 
@@ -338,6 +342,9 @@ def clean_user_payload(data: dict, preserve_empty_location: bool = False) -> dic
                 cleaned.pop(key, None)
 
     # supervisor_id: empty string or 0 → None (prevents FK constraint errors)
+    if "admin_permissions" in cleaned:
+        cleaned["admin_permissions"] = serialize_admin_permissions(cleaned["admin_permissions"])
+
     if "supervisor_id" in cleaned:
         sid = cleaned["supervisor_id"]
         if sid == "" or sid == 0:
@@ -1634,10 +1641,92 @@ def export_analyses_xlsx(
     ws = wb.active
     ws.title = "Analyses"
 
-    from utils.i18n_export import get_admin_headers
+    from utils.i18n_export import get_admin_headers, get_research_header
 
-    headers = get_admin_headers(lang)
+    base_headers = get_admin_headers(lang)
+    export_permissions = get_effective_admin_permissions(current_user)
+    legacy_column_keys = [
+        "created_at", "id_code", "name", "gender", "age", "region", "district",
+        "address", "created_by", "height", "weight", "bmi", "bmi_category",
+        "somatotype", "ideal_weight", "weight_diff", "weight_range", "chest",
+        "waist", "head", "shoulder_breadth", "shoulder_ratio",
+        "thigh_circumference", "thigh_ratio", "hmai", "mii", "adi",
+        "tbw", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm",
+        "visceral_fat", "body_length", "parents_phone",
+    ]
+    header_by_key = {
+        key: base_headers[i]
+        for i, key in enumerate(legacy_column_keys)
+        if i < len(base_headers)
+    }
+    research_header_keys = {
+        "shoulder_length": "shoulder_length",
+        "shoulder_breadth": "shoulder_width",
+        "shoulder_circumference": "shoulder_circumference_rest",
+        "arm_elbow_length": "forearm_length",
+        "hand_length": "hand_length",
+        "thigh_length": "thigh_length",
+        "thigh_circumference": "thigh_circumference",
+        "calf_length": "calf_length",
+        "calf_circumference": "calf_circumference",
+        "foot_length": "foot_length",
+    }
+    column_keys = [
+        "created_at", "id_code", "name", "gender", "age", "region", "district",
+        "address", "created_by", "height", "weight", "bmi", "bmi_category",
+        "somatotype", "ideal_weight", "weight_diff", "weight_range", "chest",
+        "waist", "head", "shoulder_length", "shoulder_breadth",
+        "shoulder_circumference", "arm_elbow_length", "hand_length",
+        "thigh_length", "thigh_circumference", "calf_length",
+        "calf_circumference", "foot_length", "shoulder_ratio", "thigh_ratio",
+        "hmai", "mii", "adi", "tbw", "fat_percent", "fat_mass",
+        "muscle_mass", "bone_mass", "acm", "visceral_fat", "body_length",
+        "parents_phone",
+    ]
+    permission_column_map = {
+        "shoulder_length": "shoulder_length",
+        "shoulder_breadth": "shoulder_breadth",
+        "shoulder_circumference": "shoulder_circumference",
+        "arm_elbow_length": "arm_elbow_length",
+        "hand_length": "hand_length",
+        "thigh_length": "thigh_length",
+        "thigh_circumference": "thigh_circumference",
+        "calf_length": "calf_length",
+        "calf_circumference": "calf_circumference",
+        "foot_length": "foot_length",
+        "shoulder_ratio": "shoulder_breadth",
+        "thigh_ratio": "thigh_circumference",
+        "tbw": "bioimpedance",
+        "fat_percent": "bioimpedance",
+        "fat_mass": "bioimpedance",
+        "muscle_mass": "bioimpedance",
+        "bone_mass": "bioimpedance",
+        "acm": "bioimpedance",
+        "visceral_fat": "bioimpedance",
+        "body_length": "bioimpedance",
+    }
+    anthropometry_permission_keys = (
+        "shoulder_length", "shoulder_breadth", "shoulder_circumference",
+        "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
+        "calf_length", "calf_circumference", "foot_length",
+    )
 
+    def _xlsx_column_enabled(key: str) -> bool:
+        if key in {"hmai", "mii", "adi"}:
+            return any(export_permissions.get(k, True) for k in anthropometry_permission_keys)
+        permission_key = permission_column_map.get(key)
+        return export_permissions.get(permission_key, True) if permission_key else True
+
+    def _xlsx_header_for(key: str) -> str:
+        if key in header_by_key:
+            return header_by_key[key]
+        research_key = research_header_keys.get(key)
+        if research_key:
+            return get_research_header(lang, research_key)
+        return key
+
+    enabled_column_keys = [key for key in column_keys if _xlsx_column_enabled(key)]
+    headers = [_xlsx_header_for(key) for key in enabled_column_keys]
     # Header styling
     header_fill = PatternFill(
         start_color="3498DB", end_color="3498DB", fill_type="solid"
@@ -1715,47 +1804,57 @@ def export_analyses_xlsx(
             # Others use Cyrillic
             return lat2cyr(localized)
 
-        vals = [
-            r.created_at.strftime("%Y-%m-%d") if r.created_at else "-",
-            r.id_code or "-",
-            _fmt(r.name),
-            _fmt(r.gender),
-            age_str,
-            _fmt(r.region),
-            _fmt(r.district),
-            _fmt(r.address),
-            _fmt(r.created_by.name if r.created_by else ""),
-            r.height or 0,
-            r.weight or 0,
-            analysis.get("bmi", r.bmi or "-"),
-            _fmt(analysis.get("bmi_category", "-")),
-            _fmt(analysis.get("somatotype", r.somatotype or "-")),
-            analysis.get("ideal_weight", "-"),
-            analysis.get("weight_diff", "-"),
-            vazn_range,
-            r.chest or 0,
-            getattr(r, "waist", 0) or 0,
-            r.head or 0,
-            getattr(r, "shoulder_breadth", 0) or 0,
-            analysis.get("shoulder_ratio", "-"),
-            getattr(r, "thigh_circumference", 0) or 0,
-            analysis.get("thigh_ratio", "-"),
-            indices.get("hmai", "-"),
-            indices.get("mii", "-"),
-            indices.get("adi", "-"),
-            indices.get("tbw_percent", getattr(r, "total_body_water", None) or "-"),
-            indices.get("fm_percent", getattr(r, "fat_percent", None) or "-"),
-            indices.get("fm", getattr(r, "fat_mass", None) or "-"),
-            indices.get("muscle_mass", getattr(r, "muscle_mass", None) or "-"),
-            indices.get("bone_mass", getattr(r, "bone_mass", None) or "-"),
-            indices.get("acm_percent", getattr(r, "acm", None) or "-"),
-            indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
-            r.body_length or 0,
-            r.parents_phone or "-",
-        ]
+        value_by_key = {
+            "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else "-",
+            "id_code": r.id_code or "-",
+            "name": _fmt(r.name),
+            "gender": _fmt(r.gender),
+            "age": age_str,
+            "region": _fmt(r.region),
+            "district": _fmt(r.district),
+            "address": _fmt(r.address),
+            "created_by": _fmt(r.created_by.name if r.created_by else ""),
+            "height": r.height or 0,
+            "weight": r.weight or 0,
+            "bmi": analysis.get("bmi", r.bmi or "-"),
+            "bmi_category": _fmt(analysis.get("bmi_category", "-")),
+            "somatotype": _fmt(analysis.get("somatotype", r.somatotype or "-")),
+            "ideal_weight": analysis.get("ideal_weight", "-"),
+            "weight_diff": analysis.get("weight_diff", "-"),
+            "weight_range": vazn_range,
+            "chest": r.chest or 0,
+            "waist": getattr(r, "waist", 0) or 0,
+            "head": r.head or 0,
+            "shoulder_length": getattr(r, "shoulder_length", 0) or 0,
+            "shoulder_breadth": getattr(r, "shoulder_breadth", 0) or 0,
+            "shoulder_circumference": getattr(r, "shoulder_circumference", 0) or 0,
+            "arm_elbow_length": getattr(r, "arm_elbow_length", 0) or 0,
+            "hand_length": getattr(r, "hand_length", 0) or 0,
+            "thigh_length": getattr(r, "thigh_length", 0) or 0,
+            "thigh_circumference": getattr(r, "thigh_circumference", 0) or 0,
+            "calf_length": getattr(r, "calf_length", 0) or 0,
+            "calf_circumference": getattr(r, "calf_circumference", 0) or 0,
+            "foot_length": getattr(r, "foot_length", 0) or 0,
+            "shoulder_ratio": analysis.get("shoulder_ratio", "-"),
+            "thigh_ratio": analysis.get("thigh_ratio", "-"),
+            "hmai": indices.get("hmai", "-"),
+            "mii": indices.get("mii", "-"),
+            "adi": indices.get("adi", "-"),
+            "tbw": indices.get("tbw_percent", getattr(r, "total_body_water", None) or "-"),
+            "fat_percent": indices.get("fm_percent", getattr(r, "fat_percent", None) or "-"),
+            "fat_mass": indices.get("fm", getattr(r, "fat_mass", None) or "-"),
+            "muscle_mass": indices.get("muscle_mass", getattr(r, "muscle_mass", None) or "-"),
+            "bone_mass": indices.get("bone_mass", getattr(r, "bone_mass", None) or "-"),
+            "acm": indices.get("acm_percent", getattr(r, "acm", None) or "-"),
+            "visceral_fat": indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
+            "body_length": r.body_length or 0,
+            "parents_phone": r.parents_phone or "-",
+        }
 
         # Barcha string qiymatlarni lat2cyr orqali o'girish shart emas —
         # sarlavhalar allaqachon kirill yozuvida
+
+        vals = [value_by_key.get(key, "-") for key in enabled_column_keys]
 
         for col_num, val in enumerate(vals, 1):
             cell = ws.cell(row=row_idx, column=col_num, value=val)
