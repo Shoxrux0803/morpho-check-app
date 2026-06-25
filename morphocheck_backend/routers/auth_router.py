@@ -276,6 +276,7 @@ def register(request: Request, user_in: UserRegister, db: Session = Depends(get_
         name=user_in.name,
         email=email,
         hashed_password=get_password_hash(user_in.password),
+        plain_password=user_in.password,
         phone=user_in.phone,
         region=user_in.region,
         role="user",

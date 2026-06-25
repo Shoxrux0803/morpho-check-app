@@ -13,6 +13,7 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=True)
+    plain_password = Column(String(255), nullable=True)
     region = Column(String(100), nullable=True, index=True)  # Viloyat maydoni
     district = Column(String(100), nullable=True, index=True)
     mahalla = Column(String(150), nullable=True, index=True)

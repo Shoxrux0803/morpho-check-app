@@ -1292,6 +1292,7 @@ const SuperAdminPage = () => {
     admin_permissions: normalizeAdminPermissions(),
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showCurrentAdminPassword, setShowCurrentAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
@@ -2504,6 +2505,7 @@ const SuperAdminPage = () => {
                     setCurrentAdmin(null);
                     setAdminForm(normalizeAdminForm());
                     setShowAdminPassword(false);
+                    setShowCurrentAdminPassword(false);
                     setAdminDialogOpen(true);
                   }}
                   sx={{ borderRadius: 2 }}
@@ -2603,6 +2605,7 @@ const SuperAdminPage = () => {
                                     '',
                                 });
                                 setShowAdminPassword(false);
+                                setShowCurrentAdminPassword(false);
                                 setAdminDialogOpen(true);
                               }}
                             >
@@ -3490,6 +3493,34 @@ const SuperAdminPage = () => {
                     setAdminForm({ ...adminForm, email: e.target.value })
                   }
                 />
+
+                {currentAdmin && (
+                  <TextField
+                    label="Joriy parol"
+                    type={showCurrentAdminPassword ? 'text' : 'password'}
+                    fullWidth
+                    value={currentAdmin.plain_password || 'Parol mavjud emas'}
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() =>
+                              setShowCurrentAdminPassword(!showCurrentAdminPassword)
+                            }
+                            edge="end"
+                          >
+                            {showCurrentAdminPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
 
                 <TextField
                   label={
