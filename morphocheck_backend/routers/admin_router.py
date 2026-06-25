@@ -1741,7 +1741,7 @@ def export_analyses_xlsx(
     somatotype: Optional[str] = Query(None),
     lang: Optional[str] = Query("uz"),
 ):
-    base = db.query(PatientAnalysis)
+    base = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 0)
 
     # Ownership Filter
     if current_user.role != "superadmin":

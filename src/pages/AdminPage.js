@@ -1375,7 +1375,7 @@ export default function AdminPage() {
     } finally {
       setDownloadingDocx(false);
     }
-  }, [handleDownloadPdf, viewRow, pdfLang]);
+  }, [viewRow, pdfLang]);
 
   const handleDownloadConsentDocx = useCallback(async () => {
     if (!viewRow) return;
@@ -1737,6 +1737,7 @@ export default function AdminPage() {
     ];
     return allTabs.filter((tab) => tab.roles.includes(user?.role));
   }, [
+    isAssistant,
     user,
     raw,
     loading,
