@@ -66,6 +66,7 @@ import {
 } from '@mui/icons-material';
 import LogoutConfirmDialog from '../components/LogoutConfirmDialog';
 import { pageT } from '../utils/pageI18n';
+import { researcherT } from '../utils/researcherI18n';
 import { getLocalizedLocationLabel } from '../utils/locationI18n';
 import { normalizePreviewScript } from '../utils/scriptI18n';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -199,13 +200,42 @@ const REGION_LABELS_RU = {
 };
 
 const getRegionLabel = (value, lang) => {
-  if (lang !== 'ru') return value || '-';
-  const key = String(value || '')
-    .toLowerCase()
-    .replace(/[‘’`ʻʼ]/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
-  return REGION_LABELS_RU[key] || value || '-';
+  if (!value) return '-';
+  const regions = {
+    "Andijon": { ru: "Андижанская область", en: "Andijan", kz: "Әндіжан", ky: "Андижан", tg: "Андиҷон", tm: "Andijan", tr: "Andican" },
+    "Buxoro": { ru: "Бухарская область", en: "Bukhara", kz: "Бұхара", ky: "Бухара", tg: "Бухоро", tm: "Buhara", tr: "Buhara" },
+    "Farg'ona": { ru: "Ферганская область", en: "Fergana", kz: "Ферғана", ky: "Фергана", tg: "Фарғона", tm: "Fergana", tr: "Fergana" },
+    "Jizzax": { ru: "Джизакская область", en: "Jizzakh", kz: "Жызақ", ky: "Жиззах", tg: "Ҷиззах", tm: "Jizzak", tr: "Cizzah" },
+    "Xorazm": { ru: "Хорезмская область", en: "Khorezm", kz: "Хорезм", ky: "Хорезм", tg: "Хоразм", tm: "Horezm", tr: "Harezm" },
+    "Namangan": { ru: "Наманганская область", en: "Namangan", kz: "Наманган", ky: "Наманган", tg: "Наманган", tm: "Namangan", tr: "Namangan" },
+    "Navoiy": { ru: "Навоийская область", en: "Navoi", kz: "Науаи", ky: "Навои", tg: "Навоӣ", tm: "Nowaýy", tr: "Nevai" },
+    "Qashqadaryo": { ru: "Кашкадарьинская область", en: "Kashkadarya", kz: "Қашқадария", ky: "Кашкадарыя", tg: "Қашқадарё", tm: "Kaşkaderýä", tr: "Kaşkaderya" },
+    "Qoraqalpog'iston Respublikasi": { ru: "Республика Каракалпакстан", en: "Republic of Karakalpakstan", kz: "Қарақалпақстан Республикасы", ky: "Каракалпакстан Республикасы", tg: "Ҷумҳурии Қарақалпоғистон", tm: "Garaqalpagystan Respublikasy", tr: "Karakalpakistan Cumhuriyeti" },
+    "Samarqand": { ru: "Самаркандская область", en: "Samarkand", kz: "Самарқан", ky: "Самаркан", tg: "Самарқанд", tm: "Samarkand", tr: "Semerkant" },
+    "Sirdaryo": { ru: "Сырдарьинская область", en: "Syrdarya", kz: "Сырдария", ky: "Сырдарыя", tg: "Сирдарё", tm: "Syrderýä", tr: "Sirderya" },
+    "Surxondaryo": { ru: "Сурхандарьинская область", en: "Surkhandarya", kz: "Сұрхандария", ky: "Сурхандарыя", tg: "Сурхондарё", tm: "Surhandarýä", tr: "Surhanderya" },
+    "Toshkent shahri": { ru: "город Ташкент", en: "Tashkent city", kz: "Ташкент қаласы", ky: "Ташкент шаары", tg: "шаҳри Тошканд", tm: "Daşkent şäheri", tr: "Taşkent şehri" },
+    "Toshkent": { ru: "Ташкентская область", en: "Tashkent", kz: "Ташкент", ky: "Ташкент", tg: "Тошканд", tm: "Daşkent", tr: "Taşkent" }
+  };
+  
+  let result = String(value);
+  for (const [uzTerm, translations] of Object.entries(regions)) {
+    if (result.includes(uzTerm) && translations[lang]) {
+      result = result.replace(uzTerm, translations[lang]);
+    }
+  }
+  
+  // fallback map for ru that was previously there just in case of weird formats
+  if (lang === 'ru' && result === String(value)) {
+    const key = String(value || '')
+      .toLowerCase()
+      .replace(/[‘’`ʻʼ]/g, "'")
+      .replace(/\s+/g, ' ')
+      .trim();
+    return REGION_LABELS_RU[key] || value;
+  }
+  
+  return result;
 };
 
 const getDateLocale = (lang) => {
@@ -2082,12 +2112,334 @@ export default function AdminPage() {
                 </TableRow>
               )}
               {Object.keys(viewRow).map(key => {
-                const excluded = ['id', 'idCode', 'lastName', 'firstName', 'createdAt', 'updatedAt', 'region', 'parentsPhone', 'bmi', 'bmiStatus', 'doctorNote', 'is_deleted', 'deleted_at', 'deleted_by', 'created_by_id', 'created_by_name', 'created_by_role', 'deleted_by_name', 'deleted_by_role', 'full_name', 'id_code'];
-                if (excluded.includes(key) || viewRow[key] === null || viewRow[key] === undefined || viewRow[key] === '') return null;
+                const excluded = [
+                  'id', 'idcode', 'id_code', 'lastname', 'last_name', 'firstname', 'first_name', 'name', 'full_name',
+                  'createdat', 'created_at', 'updatedat', 'updated_at', 'region', 'parentsphone', 'parents_phone',
+                  'bmi', 'bmistatus', 'bmi_status', 'doctornote', 'doctor_note', 'is_deleted', 'deleted_at', 'deleted_by',
+                  'created_by_id', 'created_by_name', 'created_by_role', 'deleted_by_name', 'deleted_by_role',
+                  'consentconfirmed', 'consent_confirmed', 'consentguardianname', 'consent_guardian_name',
+                  'consentguardianrelationship', 'consent_guardian_relationship', 'consentguardianphone', 'consent_guardian_phone',
+                  'consentpolicyversion', 'consent_policy_version', 'consentconfirmedat', 'consent_confirmed_at'
+                ];
+                
+                const lowerKey = key.toLowerCase();
+                if (excluded.includes(lowerKey) || viewRow[key] === null || viewRow[key] === undefined || viewRow[key] === '') return null;
+
+                const getLabel = (k) => {
+                  const camelK = k.replace(/_([a-z])/g, g => g[1].toUpperCase());
+                  
+                  if (ADMIN_XLSX_COLUMN_LABELS[lang] && ADMIN_XLSX_COLUMN_LABELS[lang][camelK]) {
+                    return ADMIN_XLSX_COLUMN_LABELS[lang][camelK];
+                  }
+                  if (ADMIN_XLSX_COLUMN_LABELS[lang] && ADMIN_XLSX_COLUMN_LABELS[lang][k]) {
+                     return ADMIN_XLSX_COLUMN_LABELS[lang][k];
+                  }
+                  
+                  const pT = pageT(lang, camelK);
+                  if (pT && pT !== camelK) return pT;
+                  const pT2 = pageT(lang, k);
+                  if (pT2 && pT2 !== k) return pT2;
+
+                  const rT = researcherT(lang, camelK);
+                  if (rT && rT !== camelK) return rT;
+                  const rT2 = researcherT(lang, k);
+                  if (rT2 && rT2 !== k) return rT2;
+                  
+                  const extra = {
+                    uz: { age_months: 'Oylar', age_days: 'Kunlar', months: 'Oylar', days: 'Kunlar', height_cm: 'Bo\'y (sm)', weight_kg: 'Vazn (kg)', chest_circ: 'Ko\'krak ayl.', waist_circ: 'Bel ayl.', hip_circ: 'Boks ayl.', head_circ: 'Bosh ayl.', z_score: 'Z Score', somatotype: 'Somatotip', recommendations: 'Tavsiyalar', district: 'Tuman', mahalla: 'Mahalla', address: 'Manzil', examination_date: 'Tekshiruv sanasi', birth_date: 'Tug\'ilgan sana', preschool: 'MTM', preschool_institution: 'MTM', preschoolinstitution: 'MTM' },
+                    ru: { age_months: 'Месяцы', age_days: 'Дни', months: 'Месяцы', days: 'Дни', height_cm: 'Рост (см)', weight_kg: 'Вес (кг)', chest_circ: 'Окр. груди', waist_circ: 'Окр. талии', hip_circ: 'Окр. бедер', head_circ: 'Окр. головы', z_score: 'Z-оценка', somatotype: 'Соматотип', recommendations: 'Рекомендации', district: 'Район', mahalla: 'Махалля', address: 'Адрес', examination_date: 'Дата осмотра', birth_date: 'Дата рождения', preschool: 'ДОУ', preschool_institution: 'ДОУ', preschoolinstitution: 'ДОУ' },
+                    en: { age_months: 'Months', age_days: 'Days', months: 'Months', days: 'Days', height_cm: 'Height (cm)', weight_kg: 'Weight (kg)', chest_circ: 'Chest circ.', waist_circ: 'Waist circ.', hip_circ: 'Hip circ.', head_circ: 'Head circ.', z_score: 'Z Score', somatotype: 'Somatotype', recommendations: 'Recommendations', district: 'District', mahalla: 'Mahalla', address: 'Address', examination_date: 'Examination Date', birth_date: 'Birth Date', preschool: 'Preschool', preschool_institution: 'Preschool Institution', preschoolinstitution: 'Preschool Institution' },
+                    kz: { age_months: 'Айлар', age_days: 'Күндер', months: 'Айлар', days: 'Күндер', height_cm: 'Бойы (см)', weight_kg: 'Салмағы (кг)', chest_circ: 'Кеуде айн.', waist_circ: 'Бел айн.', hip_circ: 'Жамбас айн.', head_circ: 'Бас айн.', z_score: 'Z-баға', somatotype: 'Соматотип', recommendations: 'Ұсыныстар', district: 'Аудан', mahalla: 'Махалла', address: 'Мекенжай', examination_date: 'Тексеру күні', birth_date: 'Туған күні', preschool: 'МДМ', preschool_institution: 'МДМ', preschoolinstitution: 'МДМ' },
+                    ky: { age_months: 'Айлар', age_days: 'Күндөр', months: 'Айлар', days: 'Күндөр', height_cm: 'Бою (см)', weight_kg: 'Салмагы (кг)', chest_circ: 'Көкүрөк айл.', waist_circ: 'Бел айл.', hip_circ: 'Жамбаш айл.', head_circ: 'Баш айл.', z_score: 'Z-баа', somatotype: 'Соматотип', recommendations: 'Сунуштар', district: 'Район', mahalla: 'Махалла', address: 'Дарек', examination_date: 'Текшерүү күнү', birth_date: 'Туулган күнү', preschool: 'МЧББ', preschool_institution: 'МЧББ', preschoolinstitution: 'МЧББ' },
+                    tg: { age_months: 'Моҳҳо', age_days: 'Рӯзҳо', months: 'Моҳҳо', days: 'Рӯзҳо', height_cm: 'Қад (см)', weight_kg: 'Вазн (кг)', chest_circ: 'Даври сина', waist_circ: 'Даври миён', hip_circ: 'Даври косахона', head_circ: 'Даври сар', z_score: 'Z-хол', somatotype: 'Соматотип', recommendations: 'Тавсияҳо', district: 'Ноҳия', mahalla: 'Маҳалла', address: 'Суроға', examination_date: 'Санаи муоина', birth_date: 'Санаи таваллуд', preschool: 'МТМ', preschool_institution: 'МТМ', preschoolinstitution: 'МТМ' },
+                    tm: { age_months: 'Aýlar', age_days: 'Günler', months: 'Aýlar', days: 'Günler', height_cm: 'Boý (sm)', weight_kg: 'Agram (kg)', chest_circ: 'Döş aýl.', waist_circ: 'Bil aýl.', hip_circ: 'Çanak aýl.', head_circ: 'Baş aýl.', z_score: 'Z bahasy', somatotype: 'Somatotip', recommendations: 'Maslahatlar', district: 'Etrap', mahalla: 'Mahalla', address: 'Salgysy', examination_date: 'Barlag senesi', birth_date: 'Doglan senesi', preschool: 'MÇB', preschool_institution: 'MÇB', preschoolinstitution: 'MÇB' },
+                    tr: { age_months: 'Aylar', age_days: 'Günler', months: 'Aylar', days: 'Günler', height_cm: 'Boy (cm)', weight_kg: 'Kilo (kg)', chest_circ: 'Göğüs çev.', waist_circ: 'Bel çev.', hip_circ: 'Kalça çev.', head_circ: 'Baş çev.', z_score: 'Z Skoru', somatotype: 'Somatotip', recommendations: 'Öneriler', district: 'İlçe', mahalla: 'Mahalle', address: 'Adres', examination_date: 'Muayene Tarihi', birth_date: 'Doğum Tarihi', preschool: 'Okul Öncesi Kurum', preschool_institution: 'Okul Öncesi Kurum', preschoolinstitution: 'Okul Öncesi Kurum' }
+                  };
+                  
+                  const lK = k.toLowerCase();
+                  if (extra[lang] && extra[lang][lK]) return extra[lang][lK];
+                  if (extra.uz[lK]) return extra.uz[lK];
+                  
+                  return k.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
+                };
+
+                const translateRecommendations = (text, lang) => {
+                  if (!text || typeof text !== 'string') return text;
+                  const dictionary = {
+                    "Sport: ": { uz: "Sport: ", ru: "Спорт: ", en: "Sport: ", kz: "Спорт: ", ky: "Спорт: ", tg: "Варзиш: ", tm: "Sport: ", tr: "Spor: " },
+                    "Specialist: ": { uz: "Mutaxassis: ", ru: "Специалист: ", en: "Specialist: ", kz: "Маман: ", ky: "Адис: ", tg: "Мутахассис: ", tm: "Hünärmen: ", tr: "Uzman: " },
+                    "Checkups: ": { uz: "Tekshiruvlar: ", ru: "Обследования: ", en: "Checkups: ", kz: "Тексерулер: ", ky: "Текшерүүлөр: ", tg: "Муоинаҳо: ", tm: "Barlaglar: ", tr: "Kontroller: " },
+                    "General: ": { uz: "Umumiy: ", ru: "Общие: ", en: "General: ", kz: "Жалпы: ", ky: "Жалпы: ", tg: "Умумӣ: ", tm: "Umumy: ", tr: "Genel: " },
+                    "Nutrition: ": { uz: "Oziqlanish: ", ru: "Питание: ", en: "Nutrition: ", kz: "Тамақтану: ", ky: "Тамактануу: ", tg: "Ғизо: ", tm: "Iýmit: ", tr: "Beslenme: " },
+                    "Activity: ": { uz: "Faollik: ", ru: "Активность: ", en: "Activity: ", kz: "Белсенділік: ", ky: "Аракет: ", tg: "Фаъолият: ", tm: "Işjeňlik: ", tr: "Aktivite: " },
+                    
+                    "Sportga yo'naltirish (taxminiy):": {
+                      ru: "Спортивная ориентация (примерно):",
+                      en: "Sports orientation (approximate):",
+                      kz: "Спортқа бағыттау (шамамен):",
+                      tr: "Spor yonlendirmesi (tahmini):",
+                      tg: "Самти варзишӣ (тахминӣ):",
+                      ky: "Спортко багыттоо (болжолдуу):",
+                      tm: "Sport ugry (takmynan):"
+                    },
+                    "Qo'shimcha yo'nalishlar:": {
+                      ru: "Дополнительные направления:",
+                      en: "Additional options:",
+                      kz: "Қосымша бағыттар:",
+                      tr: "Ek secenekler:",
+                      tg: "Самтҳои иловагӣ:",
+                      ky: "Кошумча багыттар:",
+                      tm: "Goşmaça ugurlar:"
+                    },
+                    "Sabab:": {
+                      ru: "Причина:",
+                      en: "Reason:",
+                      kz: "Себебі:",
+                      tr: "Neden:",
+                      tg: "Сабаб:",
+                      ky: "Себеби:",
+                      tm: "Sebäp:"
+                    },
+                    "Yakuniy tanlovda bolaning qiziqishi, murabbiy bahosi va shifokor ruxsati hisobga olinsin.": {
+                      ru: "При окончательном выборе следует учитывать интерес ребёнка, оценку тренера и разрешение врача.",
+                      en: "Final choice should consider the child's interest, coach assessment, and physician clearance.",
+                      kz: "Соңғы таңдауда баланың қызығушылығы, жаттықтырушы бағасы және дәрігер рұқсаты ескерілсін.",
+                      tr: "Son secimde cocugun ilgisi, antrenor degerlendirmesi ve doktor izni dikkate alinmalidir.",
+                      tg: "Ҳангоми интихоби ниҳоӣ таваҷҷӯҳи кӯдак, баҳои мураббӣ ва иҷозати табиб ба назар гирифта шавад.",
+                      ky: "Акыркы тандоодо баланын кызыгуусу, машыктыруучунун баасы жана дарыгердин уруксаты эске алынсын.",
+                      tm: "Ahyrky saýlawda çaganyň gyzyklanmasy, tälimçiniň bahasy we lukmanyň rugsady göz öňünde tutulmaly."
+                    },
+                    "tana ko'rsatkichlari muvozanatli": {
+                      ru: "показатели тела сбалансированы",
+                      en: "body indicators are balanced",
+                      kz: "дене көрсеткіштері теңгерімді",
+                      tr: "vucut gostergeleri dengeli",
+                      tg: "нишондиҳандаҳои бадан мутаносиб мебошанд",
+                      ky: "дене көрсөткүчтөрү тең салмактуу",
+                      tm: "beden görkezijileri deňagramly"
+                    },
+                    "bo'y ko'rsatkichi yuqoriroq": {
+                      ru: "показатель роста относительно высокий",
+                      en: "height indicator is relatively high",
+                      kz: "бой көрсеткіші салыстырмалы түрде жоғары",
+                      tr: "boy gostergesi nispeten yuksek",
+                      tg: "нишондиҳандаи қад баландтар аст",
+                      ky: "боюнун көрсөткүчү жогорураак",
+                      tm: "boý görkezijisi has ýokary"
+                    },
+                    "ixcham va chaqqon tana tuzilishi": {
+                      ru: "компактное и подвижное телосложение",
+                      en: "compact and agile body build",
+                      kz: "ықшам әрі ширақ дене бітімі",
+                      tr: "kompakt ve cevik vucut yapisi",
+                      tg: "сохти бадани паймон ва чолок",
+                      ky: "жыйнактуу жана шамдагай дене түзүлүшү",
+                      tm: "yzygiderli we çalasyn beden gurluşy"
+                    },
+                    "yengil vazn va nisbatan nozik tana tuzilishi": {
+                      ru: "лёгкий вес и относительно худощавое телосложение",
+                      en: "lighter weight and leaner body build",
+                      kz: "салмағы жеңіл және дене бітімі салыстырмалы түрде нәзік",
+                      tr: "hafif kilo ve nispeten ince vucut yapisi",
+                      tg: "вазни сабук ва сохти бадани нисбатан лоғар",
+                      ky: "жеңил салмак жана салыштырмалуу ичке дене түзүлүшү",
+                      tm: "ýeňil agram we has inçe beden gurluşy"
+                    },
+                    "vazn/BMI yuqoriroq bo'lgani uchun bo'g'imlarga yengilroq yuklama ma'qul": {
+                      ru: "вес/BMI выше нормы, поэтому предпочтительна нагрузка с меньшим воздействием на суставы",
+                      en: "weight/BMI is higher, so lower joint-load activity is preferable",
+                      kz: "салмақ/BMI жоғары болғандықтан буындарға жеңілірек жүктеме қолайлы",
+                      tr: "kilo/BMI daha yuksek oldugundan, eklemlere daha az yuk bindiren aktiviteler tercih edilmelidir",
+                      tg: "аз сабаби баланд будани вазн/ИМБ, сарбории камтар ба буғумҳо тавсия дода мешавад",
+                      ky: "салмак/ДМИ жогору болгондуктан, муундарга азыраак күч келтирүү сунушталат",
+                      tm: "agram/BMI has ýokary bolany üçin, bogunlara has az agram düşýän hereketler maslahat berilýär"
+                    },
+                    "kuch va tayanch-mushak imkoniyatlari yaxshi rivojlanishi mumkin": {
+                      ru: "силовые и опорно-мышечные возможности могут хорошо развиваться",
+                      en: "strength and musculoskeletal capacity may develop well",
+                      kz: "күш және тірек-бұлшықет мүмкіндіктері жақсы дамуы мүмкін",
+                      tr: "guc ve kas-iskelet kapasitesi iyi gelisebilir",
+                      tg: "қувва ва имкониятҳои мушаку устухон хуб инкишоф ёфта метавонанд",
+                      ky: "күч жана таяныч-кыймыл мүмкүнчүлүктөрү жакшы өнүгүшү мүмкүн",
+                      tm: "güýç we direg-myşsa mümkinçilikleri gowy ösüp biler"
+                    },
+                    "morfologik uyg'unlik yaxshi": {
+                      ru: "морфологическая гармония хорошая",
+                      en: "morphological harmony is good",
+                      kz: "морфологиялық үйлесімділік жақсы",
+                      tr: "morfolojik uyum iyi",
+                      tg: "ҳамоҳангии морфологӣ хуб аст",
+                      ky: "морфологиялык шайкештик жакшы",
+                      tm: "morfologik sazlaşyk gowy"
+                    },
+                    "moslashuv ko'rsatkichlari chidamlilik mashqlariga mos": {
+                      ru: "показатели адаптации подходят для тренировок на выносливость",
+                      en: "adaptation indicators fit endurance training",
+                      kz: "бейімделу көрсеткіштері төзімділік жаттығуларына сәйкес",
+                      tr: "adaptasyon gostergeleri dayaniklilik antrenmanlarina uygun",
+                      tg: "нишондиҳандаҳои мутобиқшавӣ ба машқҳои тобоварӣ мувофиқанд",
+                      ky: "ыңгайлашуу көрсөткүчтөрү чыдамкайлык машыгууларына ылайыктуу",
+                      tm: "uýgunlaşma görkezijileri çydamlylyk türgenleşiklerine laýyk gelýär"
+                    },
+                    "yengil atletika": { ru: "лёгкая атлетика", en: "athletics", kz: "жеңіл атлетика", tr: "atletizm", tg: "варзиши сабук", ky: "жеңил атлетика", tm: "ýeňil atletika" },
+                    "futbol": { ru: "футбол", en: "football", kz: "футбол", tr: "futbol", tg: "футбол", ky: "футбол", tm: "futbol" },
+                    "gimnastika": { ru: "гимнастика", en: "gymnastics", kz: "гимнастика", tr: "jimnastik", tg: "гимнастика", ky: "гимнастика", tm: "gimnastika" },
+                    "suzish": { ru: "плавание", en: "swimming", kz: "жүзу", tr: "yuzme", tg: "шиноварӣ", ky: "сүзүү", tm: "ýüzmek" },
+                    "kurash": { ru: "борьба", en: "wrestling", kz: "күрес", tr: "gures", tg: "гӯштин", ky: "күрөш", tm: "göreş" },
+                    "basketbol": { ru: "баскетбол", en: "basketball", kz: "баскетбол", tr: "basketbol", tg: "баскетбол", ky: "баскетбол", tm: "basketbol" },
+                    "velosport": { ru: "велоспорт", en: "cycling", kz: "велоспорт", tr: "bisiklet sporu", tg: "велосипедронӣ", ky: "велоспорт", tm: "welosport" },
+                    
+                    "Pediatr yoki parhezshunos (dietolog) ko'rigi tavsiya etiladi.": {
+                      ru: "Рекомендуется осмотр педиатра или диетолога.",
+                      en: "A pediatrician or nutritionist checkup is recommended.",
+                      kz: "Педиатр немесе диетологқа қаралу ұсынылады.",
+                      tr: "Bir çocuk doktoru veya diyetisyen muayenesi önerilir.",
+                      tg: "Муоинаи педиатр ё диетолог тавсия дода мешавад.",
+                      ky: "Педиатр же диетологдун кароосу сунушталат.",
+                      tm: "Pediatr ýa-da diýetolog gözegçiligi maslahat berilýär."
+                    },
+                    "Vazn yetishmasligi sabablarini aniqlash zarur.": {
+                      ru: "Необходимо выяснить причины дефицита веса.",
+                      en: "It is necessary to determine the causes of underweight.",
+                      kz: "Салмақ тапшылығының себептерін анықтау қажет.",
+                      tr: "Zayıflığın nedenlerini belirlemek gereklidir.",
+                      tg: "Сабабҳои норасоии вазнро муайян кардан зарур аст.",
+                      ky: "Салмагы жетишсиздигинин себептерин аныктоо зарыл.",
+                      tm: "Agram ýetmezçiliginiň sebäplerini anyklamak zerurdyr."
+                    },
+                    "Qon tahlili (gemoglobin), gormonal fon va oshqozon-ichak tizimi tekshiruvidan o'tish tavsiya etiladi.": {
+                      ru: "Рекомендуется сдать анализ крови (гемоглобин), проверить гормональный фон и пройти обследование ЖКТ.",
+                      en: "Blood test (hemoglobin), hormonal background check, and gastrointestinal tract examination are recommended.",
+                      kz: "Қан талдауын (гемоглобин) тапсыру, гормоналды фонды тексеру және асқазан-ішек жолдарын тексеру ұсынылады.",
+                      tr: "Kan testi (hemoglobin), hormonal arka plan kontrolü ve mide-bağırsak sistemi muayenesi önerilir.",
+                      tg: "Ташхиси хун (гемоглобин), санҷиши заминаи гормоналӣ ва муоинаи меъдаю рӯда тавсия дода мешавад.",
+                      ky: "Кандын анализи (гемоглобин), гормоналдык фон жана ашказан-ичеги трактын текшерүүдөн өтүү сунушталат.",
+                      tm: "Gan barlagy (gemoglobin), gormonal fon we aşgazan-içege ulgamynyň barlagyndan geçmek maslahat berilýär."
+                    }
+                  };
+                  
+                  let result = text;
+                  for (const [uzTerm, translations] of Object.entries(dictionary)) {
+                     if (translations[lang]) {
+                        result = result.split(uzTerm).join(translations[lang]);
+                     }
+                  }
+                  return result;
+                };
+
+                const formatValue = (k, v) => {
+                  if (v === null || v === undefined || v === '') return '';
+
+                  if (k === 'recommendations') {
+                     return translateRecommendations(String(v), lang);
+                  }
+
+                  if (k === 'gender') {
+                    const lVal = String(v).toLowerCase();
+                    if (lVal === 'boy' || lVal === 'erkak') {
+                      const mGender = {
+                        uz: "O'g'il bola",
+                        ru: "Мальчик",
+                        en: "Boy",
+                        kz: "Ұл",
+                        ky: "Эркек бала",
+                        tg: "Писар",
+                        tm: "Oglan",
+                        tr: "Erkek"
+                      };
+                      return mGender[lang] || mGender['uz'];
+                    } else if (lVal === 'girl' || lVal === 'ayol' || lVal === 'qiz') {
+                      const fGender = {
+                        uz: "Qiz bola",
+                        ru: "Девочка",
+                        en: "Girl",
+                        kz: "Қыз",
+                        ky: "Кыз",
+                        tg: "Духтар",
+                        tm: "Gyz",
+                        tr: "Kız"
+                      };
+                      return fGender[lang] || fGender['uz'];
+                    }
+                  }
+
+                  if (k === 'region' || k === 'viloyat' || k === 'district' || k === 'tuman') {
+                     const regions = {
+                        "Andijon shahri": { ru: "г. Андижан", en: "Andijan city", kz: "Әндіжан қаласы", ky: "Андижан шаары", tg: "шаҳри Андиҷон", tm: "Andijan şäheri", tr: "Andican şehri" },
+                        "Buxoro shahri": { ru: "г. Бухара", en: "Bukhara city", kz: "Бұхара қаласы", ky: "Бухара шаары", tg: "шаҳри Бухоро", tm: "Buhara şäheri", tr: "Buhara şehri" },
+                        "Samarqand shahri": { ru: "г. Самарканд", en: "Samarkand city", kz: "Самарқан қаласы", ky: "Самаркан шаары", tg: "шаҳри Самарқанд", tm: "Samarkand şäheri", tr: "Semerkant şehri" },
+                        "Namangan shahri": { ru: "г. Наманган", en: "Namangan city", kz: "Наманган қаласы", ky: "Наманган шаары", tg: "шаҳри Наманган", tm: "Namangan şäheri", tr: "Namangan şehri" },
+                        "Farg'ona shahri": { ru: "г. Фергана", en: "Fergana city", kz: "Ферғана қаласы", ky: "Фергана шаары", tg: "шаҳри Фарғона", tm: "Fergana şäheri", tr: "Fergana şehri" },
+                        "Navoiy shahri": { ru: "г. Навои", en: "Navoi city", kz: "Науаи қаласы", ky: "Навои шаары", tg: "шаҳри Навоӣ", tm: "Nowaýy şäheri", tr: "Nevai şehri" },
+                        "Qarshi shahri": { ru: "г. Карши", en: "Karshi city", kz: "Қаршы қаласы", ky: "Карши шаары", tg: "шаҳри Қаршӣ", tm: "Karşi şäheri", tr: "Karşi şehri" },
+                        "Termiz shahri": { ru: "г. Термез", en: "Termez city", kz: "Термез қаласы", ky: "Термез шаары", tg: "шаҳри Термиз", tm: "Termez şäheri", tr: "Tirmiz şehri" },
+                        "Guliston shahri": { ru: "г. Гулистан", en: "Gulistan city", kz: "Гүлістан қаласы", ky: "Гулистан шаары", tg: "шаҳри Гулистон", tm: "Gülistan şäheri", tr: "Gülistan şehri" },
+                        "Jizzax shahri": { ru: "г. Джизак", en: "Jizzakh city", kz: "Жызақ қаласы", ky: "Жиззах шаары", tg: "шаҳри Ҷиззах", tm: "Jizzak şäheri", tr: "Cizzah şehri" },
+                        "Urganch shahri": { ru: "г. Ургенч", en: "Urgench city", kz: "Үргеніш қаласы", ky: "Ургенч шаары", tg: "шаҳри Урганч", tm: "Urgenç şäheri", tr: "Urgenç şehri" },
+                        "Nukus shahri": { ru: "г. Нукус", en: "Nukus city", kz: "Нөкіс қаласы", ky: "Нукус шаары", tg: "шаҳри Нукус", tm: "Nökis şäheri", tr: "Nukus şehri" },
+                        
+                        "Andijon": { ru: "Андижанская область", en: "Andijan", kz: "Әндіжан", ky: "Андижан", tg: "Андиҷон", tm: "Andijan", tr: "Andican" },
+                        "Buxoro": { ru: "Бухарская область", en: "Bukhara", kz: "Бұхара", ky: "Бухара", tg: "Бухоро", tm: "Buhara", tr: "Buhara" },
+                        "Farg'ona": { ru: "Ферганская область", en: "Fergana", kz: "Ферғана", ky: "Фергана", tg: "Фарғона", tm: "Fergana", tr: "Fergana" },
+                        "Jizzax": { ru: "Джизакская область", en: "Jizzakh", kz: "Жызақ", ky: "Жиззах", tg: "Ҷиззах", tm: "Jizzak", tr: "Cizzah" },
+                        "Xorazm": { ru: "Хорезмская область", en: "Khorezm", kz: "Хорезм", ky: "Хорезм", tg: "Хоразм", tm: "Horezm", tr: "Harezm" },
+                        "Namangan": { ru: "Наманганская область", en: "Namangan", kz: "Наманган", ky: "Наманган", tg: "Наманган", tm: "Namangan", tr: "Namangan" },
+                        "Navoiy": { ru: "Навоийская область", en: "Navoi", kz: "Науаи", ky: "Навои", tg: "Навоӣ", tm: "Nowaýy", tr: "Nevai" },
+                        "Qashqadaryo": { ru: "Кашкадарьинская область", en: "Kashkadarya", kz: "Қашқадария", ky: "Кашкадарыя", tg: "Қашқадарё", tm: "Kaşkaderýä", tr: "Kaşkaderya" },
+                        "Qoraqalpog'iston Respublikasi": { ru: "Республика Каракалпакстан", en: "Republic of Karakalpakstan", kz: "Қарақалпақстан Республикасы", ky: "Каракалпакстан Республикасы", tg: "Ҷумҳурии Қарақалпоғистон", tm: "Garaqalpagystan Respublikasy", tr: "Karakalpakistan Cumhuriyeti" },
+                        "Samarqand": { ru: "Самаркандская область", en: "Samarkand", kz: "Самарқан", ky: "Самаркан", tg: "Самарқанд", tm: "Samarkand", tr: "Semerkant" },
+                        "Sirdaryo": { ru: "Сырдарьинская область", en: "Syrdarya", kz: "Сырдария", ky: "Сырдарыя", tg: "Сирдарё", tm: "Syrderýä", tr: "Sirderya" },
+                        "Surxondaryo": { ru: "Сурхандарьинская область", en: "Surkhandarya", kz: "Сұрхандария", ky: "Сурхандарыя", tg: "Сурхондарё", tm: "Surhandarýä", tr: "Surhanderya" },
+                        "Toshkent shahri": { ru: "город Ташкент", en: "Tashkent city", kz: "Ташкент қаласы", ky: "Ташкент шаары", tg: "шаҳри Тошканд", tm: "Daşkent şäheri", tr: "Taşkent şehri" },
+                        "Toshkent": { ru: "Ташкентская область", en: "Tashkent", kz: "Ташкент", ky: "Ташкент", tg: "Тошканд", tm: "Daşkent", tr: "Taşkent" },
+                        
+                        " shahri": { ru: " город", en: " city", kz: " қаласы", ky: " шаары", tg: " шаҳри", tm: " şäheri", tr: " şehri" },
+                        " tumani": { ru: " район", en: " district", kz: " ауданы", ky: " району", tg: " ноҳияси", tm: " etraby", tr: " ilçesi" }
+                     };
+                     
+                     let result = String(v);
+                     for (const [uzTerm, translations] of Object.entries(regions)) {
+                        if (result.includes(uzTerm) && translations[lang]) {
+                           result = result.replace(uzTerm, translations[lang]);
+                        }
+                     }
+                     return result;
+                  }
+
+                  if (typeof v === 'boolean') {
+                    const yesNo = {
+                      uz: { true: 'Ha', false: "Yo'q" },
+                      ru: { true: 'Да', false: 'Нет' },
+                      en: { true: 'Yes', false: 'No' },
+                      kz: { true: 'Иә', false: 'Жоқ' },
+                      ky: { true: 'Ооба', false: 'Жок' },
+                      tg: { true: 'Ҳа', false: 'Не' },
+                      tm: { true: 'Hawa', false: 'Ýok' },
+                      tr: { true: 'Evet', false: 'Hayır' }
+                    };
+                    return yesNo[lang]?.[v] ?? String(v);
+                  }
+
+                  if (typeof v === 'string') {
+                    const vLower = v.toLowerCase();
+                    const pT = pageT(lang, vLower);
+                    if (pT && pT !== vLower) return pT;
+                    const rT = researcherT(lang, vLower);
+                    if (rT && rT !== vLower) return rT;
+
+                    if (v === "Noma'lum" || vLower === "unknown") {
+                       const unk = { uz: "Noma'lum", ru: 'Неизвестно', en: 'Unknown', tg: 'Номаълум', kz: 'Белгісіз', ky: 'Белгисиз', tm: 'Näbelli', tr: 'Bilinmiyor' };
+                       if (unk[lang]) return unk[lang];
+                    }
+                  }
+
+                  return String(v);
+                };
+
                 return (
                   <TableRow key={key}>
-                    <TableCell sx={{ textTransform: 'capitalize', color: 'text.secondary' }}>{key.replace(/_/g, ' ')}</TableCell>
-                    <TableCell><strong>{String(viewRow[key])}</strong></TableCell>
+                    <TableCell sx={{ textTransform: 'capitalize', color: 'text.secondary' }}>{getLabel(key)}</TableCell>
+                    <TableCell><strong>{formatValue(key, viewRow[key])}</strong></TableCell>
                   </TableRow>
                 )
               })}
