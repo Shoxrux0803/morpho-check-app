@@ -39,7 +39,7 @@
     "react-simple-maps": "^3.0.0",
     "recharts": "^3.2.1",
     "remark-gfm": "^4.0.1",
-    "three": "^0.169.0",
+    "three": "^0.170.0",
     "threejs-components": "^0.0.30",
     "web-vitals": "^2.1.4",
     "workbox-window": "^7.4.0"

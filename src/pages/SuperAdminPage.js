@@ -3499,6 +3499,7 @@ const SuperAdminPage = () => {
                   }
                   type={showAdminPassword ? 'text' : 'password'}
                   fullWidth
+                  autoComplete="new-password"
                   value={adminForm.password}
                   onChange={(e) =>
                     setAdminForm({ ...adminForm, password: e.target.value })
@@ -3527,6 +3528,7 @@ const SuperAdminPage = () => {
                   label={pt('confirmPassword')}
                   type={showAdminPassword ? 'text' : 'password'}
                   fullWidth
+                  autoComplete="new-password"
                   value={adminForm.confirmPassword}
                   onChange={(e) =>
                     setAdminForm({
