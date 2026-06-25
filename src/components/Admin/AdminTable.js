@@ -92,7 +92,7 @@ const AdminTable = ({
             <TableCell>{t('status')}</TableCell>
             {showCreator && <TableCell>Kiritgan shaxs</TableCell>}
             {isSuperAdmin && <TableCell>{t('status')}</TableCell>}
-            <TableCell>{t('actions')}</TableCell>
+            {!isAssistant && <TableCell>{t('actions')}</TableCell>}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -304,58 +304,60 @@ const AdminTable = ({
                   )}
 
                   {/* Amallar */}
-                  <TableCell
-                    onClick={(e) => e.stopPropagation()}
-                    sx={{ textDecoration: 'none !important' }}
-                  >
-                    <Box display="flex" gap={0.5}>
-                      {/* Ko'rish tugmasi: aktiv qatorlar + super admin uchun o'chirilganlar ham */}
-                      {(!isDeleted || isSuperAdmin) && (
-                        <Tooltip
-                          title={
-                            isDeleted ? t('viewDeletedData') : t('detailsTitle')
-                          }
-                        >
-                          <IconButton
-                            size="small"
-                            sx={
-                              isDeleted
-                                ? { color: 'error.main', opacity: 0.8 }
-                                : {}
+                  {!isAssistant && (
+                    <TableCell
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{ textDecoration: 'none !important' }}
+                    >
+                      <Box display="flex" gap={0.5}>
+                        {/* Ko'rish tugmasi: aktiv qatorlar + super admin uchun o'chirilganlar ham */}
+                        {(!isDeleted || isSuperAdmin) && (
+                          <Tooltip
+                            title={
+                              isDeleted ? t('viewDeletedData') : t('detailsTitle')
                             }
-                            onClick={() => setViewRow(row)}
                           >
-                            <Visibility fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                      {/* Tahrirlash tugmasi: faqat o'chirilmaganlar uchun */}
-                      {!isDeleted && onEdit && (
-                        <Tooltip title={t('editData')}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => onEdit(row)}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
+                            <IconButton
+                              size="small"
+                              sx={
+                                isDeleted
+                                  ? { color: 'error.main', opacity: 0.8 }
+                                  : {}
+                              }
+                              onClick={() => setViewRow(row)}
+                            >
+                              <Visibility fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {/* Tahrirlash tugmasi: faqat o'chirilmaganlar uchun */}
+                        {!isDeleted && !isAssistant && onEdit && (
+                          <Tooltip title={t('editData')}>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => onEdit(row)}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
 
-                      {/* Super admin: o'chirilgan ma'lumotni tiklash */}
-                      {isSuperAdmin && isDeleted && onRestore && (
-                        <Tooltip title={t('restore')}>
-                          <IconButton
-                            size="small"
-                            color="success"
-                            onClick={() => onRestore([row.id])}
-                          >
-                            <RestoreFromTrash fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      )}
-                    </Box>
-                  </TableCell>
+                        {/* Super admin: o'chirilgan ma'lumotni tiklash */}
+                        {isSuperAdmin && isDeleted && onRestore && (
+                          <Tooltip title={t('restore')}>
+                            <IconButton
+                              size="small"
+                              color="success"
+                              onClick={() => onRestore([row.id])}
+                            >
+                              <RestoreFromTrash fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             })

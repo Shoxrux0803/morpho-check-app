@@ -168,10 +168,6 @@ const AdminWrapper = () => {
     return <Navigate to="/researcher?section=analyze" replace />;
   }
 
-  if (user.role === 'field_assistant' && user.supervisor_role === 'admin') {
-    return <Navigate to="/morphocheck-pro" replace />;
-  }
-
   return (
     <PageTransition>
       <AdminPage />

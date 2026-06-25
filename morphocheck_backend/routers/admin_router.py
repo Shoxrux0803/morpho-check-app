@@ -1053,7 +1053,7 @@ def create_payment(payload: PaymentCreate, db: Session = Depends(get_db)):
 @router.get("/stats")
 def stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin_or_assistant),
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
     age_max: Optional[int] = Query(None),
@@ -1590,6 +1590,142 @@ def stats(
     }
 
 
+# ----------------- XLSX PREVIEW ------------------
+@router.get("/export-xlsx-preview")
+def preview_analyses_xlsx(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+    q: Optional[str] = Query(None),
+    gender: Optional[str] = Query(None),
+    age_min: Optional[int] = Query(None),
+    age_max: Optional[int] = Query(None),
+    date_from: Optional[date] = Query(None),
+    date_to: Optional[date] = Query(None),
+    region: Optional[str] = Query(None),
+    somatotype: Optional[str] = Query(None),
+    sort_key: str = "created_at",
+    sort_dir: str = "desc",
+    page: int = 1,
+    page_size: int = 200,
+    lang: Optional[str] = Query("uz"),
+):
+    base = db.query(PatientAnalysis)
+
+    if current_user.role != "superadmin":
+        base = base.filter(PatientAnalysis.created_by_id == current_user.id)
+    base = base.filter(PatientAnalysis.is_deleted == 0)
+
+    if q:
+        like = f"%{q}%"
+        base = base.filter(PatientAnalysis.name.ilike(like))
+    if gender:
+        base = base.filter(func.lower(PatientAnalysis.gender) == gender.lower())
+    if age_min is not None:
+        base = base.filter(PatientAnalysis.age >= age_min)
+    if age_max is not None:
+        base = base.filter(PatientAnalysis.age <= age_max)
+    if date_from:
+        start_dt = datetime.combine(date_from, datetime.min.time())
+        base = base.filter(PatientAnalysis.created_at >= start_dt)
+    if date_to:
+        end_dt = datetime.combine(date_to, datetime.max.time())
+        base = base.filter(PatientAnalysis.created_at <= end_dt)
+    if region:
+        base = base.filter(PatientAnalysis.region == region)
+    if somatotype:
+        base = base.filter(PatientAnalysis.somatotype == somatotype)
+
+    total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
+
+    sort_map = {
+        "created_at": PatientAnalysis.created_at,
+        "name": PatientAnalysis.name,
+        "gender": PatientAnalysis.gender,
+        "age": PatientAnalysis.age,
+        "height": PatientAnalysis.height,
+        "weight": PatientAnalysis.weight,
+        "bmi": PatientAnalysis.bmi,
+        "last_name": PatientAnalysis.name,
+    }
+    sort_col = sort_map.get(sort_key, PatientAnalysis.created_at)
+    base = base.order_by(asc(sort_col) if sort_dir == "asc" else desc(sort_col))
+    base = base.options(joinedload(PatientAnalysis.created_by))
+
+    safe_page_size = min(max(page_size, 1), 200)
+    rows_db = base.offset(max(0, (page - 1) * safe_page_size)).limit(safe_page_size).all()
+    all_settings = clinical_service.get_all_settings(db)
+
+    items = []
+    for r in rows_db:
+        try:
+            analysis = calc_full_bmi(
+                build_patient_data_from_analysis(r),
+                all_settings=all_settings,
+                lang=lang,
+            )
+        except Exception as e:
+            logger.error(f"Error calculating XLSX preview row (id={r.id}): {e}")
+            analysis = {}
+
+        weight_range = "-"
+        if "ideal_weight_range" in analysis:
+            rng = analysis["ideal_weight_range"] or {}
+            weight_range = f"{rng.get('min', '-')}-{rng.get('max', '-')}"
+        indices = analysis.get("indices", {}) or {}
+
+        items.append({
+            "id": r.id,
+            "created_at": r.created_at,
+            "id_code": r.id_code,
+            "name": r.name,
+            "gender": r.gender,
+            "age": r.age,
+            "age_months": getattr(r, "age_months", None),
+            "age_days": getattr(r, "age_days", None),
+            "region": r.region,
+            "district": r.district,
+            "address": r.address,
+            "created_by_name": r.created_by.name if r.created_by else "Noma'lum",
+            "height": r.height or 0,
+            "weight": r.weight or 0,
+            "bmi": analysis.get("bmi", r.bmi or "-"),
+            "bmi_status": analysis.get("bmi_category") or bmi_status_by_age(r.bmi, r.age),
+            "somatotype": analysis.get("somatotype", r.somatotype or "-"),
+            "ideal_weight": analysis.get("ideal_weight", "-"),
+            "weight_diff": analysis.get("weight_diff", "-"),
+            "weight_range": weight_range,
+            "chest": r.chest or 0,
+            "waist": getattr(r, "waist", 0) or 0,
+            "head": r.head or 0,
+            "shoulder_length": getattr(r, "shoulder_length", 0) or 0,
+            "shoulder_breadth": getattr(r, "shoulder_breadth", 0) or 0,
+            "shoulder_circumference": getattr(r, "shoulder_circumference", 0) or 0,
+            "arm_elbow_length": getattr(r, "arm_elbow_length", 0) or 0,
+            "hand_length": getattr(r, "hand_length", 0) or 0,
+            "thigh_length": getattr(r, "thigh_length", 0) or 0,
+            "thigh_circumference": getattr(r, "thigh_circumference", 0) or 0,
+            "calf_length": getattr(r, "calf_length", 0) or 0,
+            "calf_circumference": getattr(r, "calf_circumference", 0) or 0,
+            "foot_length": getattr(r, "foot_length", 0) or 0,
+            "shoulder_ratio": analysis.get("shoulder_ratio", "-"),
+            "thigh_ratio": analysis.get("thigh_ratio", "-"),
+            "hmai": indices.get("hmai", "-"),
+            "mii": indices.get("mii", "-"),
+            "adi": indices.get("adi", "-"),
+            "tbw": indices.get("tbw_percent", getattr(r, "total_body_water", None) or "-"),
+            "fat_percent": indices.get("fm_percent", getattr(r, "fat_percent", None) or "-"),
+            "fat_mass": indices.get("fm", getattr(r, "fat_mass", None) or "-"),
+            "muscle_mass": indices.get("muscle_mass", getattr(r, "muscle_mass", None) or "-"),
+            "bone_mass": indices.get("bone_mass", getattr(r, "bone_mass", None) or "-"),
+            "acm": indices.get("acm_percent", getattr(r, "acm", None) or "-"),
+            "visceral_fat": indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
+            "body_length": r.body_length or 0,
+            "parents_phone": r.parents_phone or "-",
+        })
+
+    return {"items": items, "total": int(total)}
+
+
 # ----------------- EXPORT XLSX ------------------
 @router.get("/export-xlsx")
 def export_analyses_xlsx(
@@ -1602,6 +1738,7 @@ def export_analyses_xlsx(
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
     region: Optional[str] = Query(None),
+    somatotype: Optional[str] = Query(None),
     lang: Optional[str] = Query("uz"),
 ):
     base = db.query(PatientAnalysis)
@@ -1627,6 +1764,8 @@ def export_analyses_xlsx(
         base = base.filter(PatientAnalysis.created_at <= end_dt)
     if region:
         base = base.filter(PatientAnalysis.region == region)
+    if somatotype:
+        base = base.filter(PatientAnalysis.somatotype == somatotype)
 
     rows_db = (
         base.options(
@@ -2100,9 +2239,94 @@ def export_deleted_docx(
 
 # ----------------- BULK IMPORT / TEMPLATE ------------------
 
+ANTHROPOMETRY_IMPORT_FIELDS = {
+    "shoulder_length",
+    "shoulder_breadth",
+    "shoulder_circumference",
+    "arm_elbow_length",
+    "hand_length",
+    "thigh_length",
+    "thigh_circumference",
+    "calf_length",
+    "calf_circumference",
+    "foot_length",
+}
+BIOIMPEDANCE_IMPORT_FIELDS = {
+    "body_length",
+    "total_body_water",
+    "fat_percent",
+    "fat_mass",
+    "muscle_mass",
+    "bone_mass",
+    "acm",
+    "visceral_fat",
+}
+IMPORT_TEMPLATE_COLUMNS = [
+    ("first_name", "first_name (Ism) *", "Ali"),
+    ("last_name", "last_name (Familiya) *", "Valiyev"),
+    ("gender", "gender (erkak/ayol) *", "erkak"),
+    ("age", "age (Yosh) *", 10),
+    ("age_months", "age_months (Yosh oylar)", 5),
+    ("age_days", "age_days (Yosh kunlar)", 12),
+    ("id_code", "id_code (ID kod)", "MC-001"),
+    ("region", "region (Viloyat) *", "Toshkent"),
+    ("district", "district (Tuman)", "Yunusobod"),
+    ("mahalla", "mahalla", "Minor"),
+    ("address", "address (Manzil)", "Amir Temur ko'chasi"),
+    ("height", "height (Bo'y, sm) *", 140.5),
+    ("weight", "weight (Vazn, kg) *", 35.2),
+    ("chest", "chest (Ko'krak qafasi, sm) *", 70),
+    ("waist", "waist (Bel aylanasi, sm) *", 65),
+    ("hip", "hip (Son/dumba aylanasi, sm)", 72),
+    ("head", "head (Bosh aylanasi, sm) *", 52),
+    ("birth_date", "birth_date (Tug'ilgan sana: YYYY-MM-DD)", "2014-05-10"),
+    ("examination_date", "examination_date (Sana: YYYY-MM-DD)", "2024-05-10"),
+    ("preschool_institution", "preschool_institution (Muassasa)", "123-maktab"),
+    ("parents_phone", "parents_phone", "+998901234567"),
+    ("father_height", "father_height", 172),
+    ("mother_height", "mother_height", 164),
+    ("doctor_note", "doctor_note", "Sog'lom"),
+    ("shoulder_length", "shoulder_length", 15),
+    ("shoulder_breadth", "shoulder_breadth", 30),
+    ("shoulder_circumference", "shoulder_circumference", 25),
+    ("arm_elbow_length", "arm_elbow_length", 20),
+    ("hand_length", "hand_length", 15),
+    ("thigh_length", "thigh_length", 40),
+    ("thigh_circumference", "thigh_circumference", 35),
+    ("calf_length", "calf_length", 25),
+    ("calf_circumference", "calf_circumference", 20),
+    ("foot_length", "foot_length", 22),
+    ("body_length", "body_length", 135),
+    ("total_body_water", "total_body_water", None),
+    ("fat_percent", "fat_percent", None),
+    ("fat_mass", "fat_mass", None),
+    ("muscle_mass", "muscle_mass", None),
+    ("bone_mass", "bone_mass", None),
+    ("acm", "acm", None),
+    ("visceral_fat", "visceral_fat", None),
+]
+IMPORT_FIELD_NAMES = {field for field, _header, _sample in IMPORT_TEMPLATE_COLUMNS}
+LEGACY_IMPORT_FIELD_MAP = {i: field for i, (field, _header, _sample) in enumerate(IMPORT_TEMPLATE_COLUMNS)}
+
+
+def import_field_enabled(field: str, permissions: dict[str, bool]) -> bool:
+    if field in ANTHROPOMETRY_IMPORT_FIELDS:
+        return permissions.get(field, True)
+    if field in BIOIMPEDANCE_IMPORT_FIELDS:
+        return permissions.get("bioimpedance", True)
+    return True
+
+
+def parse_import_header_field(value) -> Optional[str]:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    token = raw.split()[0].split("(")[0].strip().strip("*").strip().lower()
+    return token if token in IMPORT_FIELD_NAMES else None
+
 
 @router.get("/export-template")
-def export_template():
+def export_template(current_user: User = Depends(get_current_admin)):
     """Import uchun Excel shablonini yuklab olish."""
     wb = Workbook()
     ws = wb.active
@@ -2112,50 +2336,12 @@ def export_template():
     # Ammo userga tushunarli bo'lishi uchun Kirillda ham qoldirish mumkin.
     # Biz Lotin (field name) + Izoh (Kirill) kombinatsiyasini ishlatamiz.
 
-    headers = [
-        "first_name (Ism) *",
-        "last_name (Familiya) *",
-        "gender (erkak/ayol) *",
-        "age (Yosh) *",
-        "age_months (Yosh oylar)",
-        "age_days (Yosh kunlar)",
-        "id_code (ID kod)",
-        "region (Viloyat) *",
-        "district (Tuman)",
-        "mahalla",
-        "address (Manzil)",
-        "height (Bo'y, sm) *",
-        "weight (Vazn, kg) *",
-        "chest (Ko'krak qafasi, sm) *",
-        "waist (Bel aylanasi, sm) *",
-        "hip (Son/dumba aylanasi, sm)",
-        "head (Bosh aylanasi, sm) *",
-        "birth_date (Tug'ilgan sana: YYYY-MM-DD)",
-        "examination_date (Sana: YYYY-MM-DD)",
-        "preschool_institution (Muassasa)",
-        "parents_phone",
-        "father_height",
-        "mother_height",
-        "doctor_note",
-        "shoulder_length",
-        "shoulder_breadth",
-        "shoulder_circumference",
-        "arm_elbow_length",
-        "hand_length",
-        "thigh_length",
-        "thigh_circumference",
-        "calf_length",
-        "calf_circumference",
-        "foot_length",
-        "body_length",
-        "total_body_water",
-        "fat_percent",
-        "fat_mass",
-        "muscle_mass",
-        "bone_mass",
-        "acm",
-        "visceral_fat",
+    permissions = get_effective_admin_permissions(current_user)
+    enabled_template_columns = [
+        column for column in IMPORT_TEMPLATE_COLUMNS if import_field_enabled(column[0], permissions)
     ]
+    headers = [header for _field, header, _sample in enabled_template_columns]
+    sample = [sample for _field, _header, sample in enabled_template_columns]
 
     header_fill = PatternFill(
         start_color="2ECC71", end_color="2ECC71", fill_type="solid"
@@ -2168,51 +2354,6 @@ def export_template():
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
 
-    # Namuna qator
-    sample = [
-        "Ali",
-        "Valiyev",
-        "erkak",
-        10,
-        5,
-        12,
-        "MC-001",
-        "Toshkent",
-        "Yunusobod",
-        "Minor",
-        "Amir Temur ko'chasi",
-        140.5,
-        35.2,
-        70,
-        65,
-        72,
-        52,
-        "2014-05-10",
-        "2024-05-10",
-        "123-maktab",
-        "+998901234567",
-        172,
-        164,
-        "Sog'lom",
-        15,
-        30,
-        25,
-        20,
-        15,
-        40,
-        35,
-        25,
-        20,
-        22,
-        135,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
-    ]
     for col_num, val in enumerate(sample, 1):
         ws.cell(row=2, column=col_num, value=val)
 
@@ -2241,55 +2382,24 @@ async def import_analyses_xlsx(
     contents = await file.read()
     wb = load_workbook(BytesIO(contents), data_only=True)
     ws = wb.active
+    import_permissions = get_effective_admin_permissions(current_user)
 
     region_offsets = {}
 
-    # Field mapping (header index -> field name)
+    # Header-based mapping keeps imports compatible with permission-shortened templates.
+    header_values = [cell.value for cell in ws[1]]
     field_map = {
-        0: "first_name",
-        1: "last_name",
-        2: "gender",
-        3: "age",
-        4: "age_months",
-        5: "age_days",
-        6: "id_code",
-        7: "region",
-        8: "district",
-        9: "mahalla",
-        10: "address",
-        11: "height",
-        12: "weight",
-        13: "chest",
-        14: "waist",
-        15: "hip",
-        16: "head",
-        17: "birth_date",
-        18: "examination_date",
-        19: "preschool_institution",
-        20: "parents_phone",
-        21: "father_height",
-        22: "mother_height",
-        23: "doctor_note",
-        24: "shoulder_length",
-        25: "shoulder_breadth",
-        26: "shoulder_circumference",
-        27: "arm_elbow_length",
-        28: "hand_length",
-        29: "thigh_length",
-        30: "thigh_circumference",
-        31: "calf_length",
-        32: "calf_circumference",
-        33: "foot_length",
-        34: "body_length",
-        35: "total_body_water",
-        36: "fat_percent",
-        37: "fat_mass",
-        38: "muscle_mass",
-        39: "bone_mass",
-        40: "acm",
-        41: "visceral_fat",
+        idx: field
+        for idx, header in enumerate(header_values)
+        if (field := parse_import_header_field(header))
+        and import_field_enabled(field, import_permissions)
     }
-
+    if not field_map:
+        field_map = {
+            idx: field
+            for idx, field in LEGACY_IMPORT_FIELD_MAP.items()
+            if import_field_enabled(field, import_permissions)
+        }
     imported_count = 0
     updated_count = 0
     skipped_count = 0
@@ -2406,35 +2516,39 @@ async def import_analyses_xlsx(
                 )
 
             numeric_fields = [
-                "age",
-                "age_months",
-                "age_days",
-                "height",
-                "weight",
-                "chest",
-                "waist",
-                "hip",
-                "head",
-                "father_height",
-                "mother_height",
-                "shoulder_length",
-                "shoulder_breadth",
-                "shoulder_circumference",
-                "arm_elbow_length",
-                "hand_length",
-                "thigh_length",
-                "thigh_circumference",
-                "calf_length",
-                "calf_circumference",
-                "foot_length",
-                "body_length",
-                "total_body_water",
-                "fat_percent",
-                "fat_mass",
-                "muscle_mass",
-                "bone_mass",
-                "acm",
-                "visceral_fat",
+                field
+                for field in (
+                    "age",
+                    "age_months",
+                    "age_days",
+                    "height",
+                    "weight",
+                    "chest",
+                    "waist",
+                    "hip",
+                    "head",
+                    "father_height",
+                    "mother_height",
+                    "shoulder_length",
+                    "shoulder_breadth",
+                    "shoulder_circumference",
+                    "arm_elbow_length",
+                    "hand_length",
+                    "thigh_length",
+                    "thigh_circumference",
+                    "calf_length",
+                    "calf_circumference",
+                    "foot_length",
+                    "body_length",
+                    "total_body_water",
+                    "fat_percent",
+                    "fat_mass",
+                    "muscle_mass",
+                    "bone_mass",
+                    "acm",
+                    "visceral_fat",
+                )
+                if import_field_enabled(field, import_permissions)
             ]
             for field in numeric_fields:
                 if not is_blank(data.get(field)) and not is_number_like(
@@ -2554,24 +2668,28 @@ async def import_analyses_xlsx(
 
             # Bio fields
             bio_fields = [
-                "shoulder_length",
-                "shoulder_breadth",
-                "shoulder_circumference",
-                "arm_elbow_length",
-                "hand_length",
-                "thigh_length",
-                "thigh_circumference",
-                "calf_length",
-                "calf_circumference",
-                "foot_length",
-                "body_length",
-                "total_body_water",
-                "fat_percent",
-                "fat_mass",
-                "muscle_mass",
-                "bone_mass",
-                "acm",
-                "visceral_fat",
+                field
+                for field in (
+                    "shoulder_length",
+                    "shoulder_breadth",
+                    "shoulder_circumference",
+                    "arm_elbow_length",
+                    "hand_length",
+                    "thigh_length",
+                    "thigh_circumference",
+                    "calf_length",
+                    "calf_circumference",
+                    "foot_length",
+                    "body_length",
+                    "total_body_water",
+                    "fat_percent",
+                    "fat_mass",
+                    "muscle_mass",
+                    "bone_mass",
+                    "acm",
+                    "visceral_fat",
+                )
+                if import_field_enabled(field, import_permissions)
             ]
             for bf in bio_fields:
                 val = data.get(bf)

@@ -138,6 +138,24 @@ export const AdminApi = {
         return r.blob();
       });
     },
+    previewXlsx: (opts = {}) =>
+      call(
+        withQuery('/admin/export-xlsx-preview', {
+          q: opts.q,
+          gender: opts.gender,
+          age_min: opts.ageMin,
+          age_max: opts.ageMax,
+          date_from: opts.dateFrom,
+          date_to: opts.dateTo,
+          sort_key: opts.sortKey,
+          sort_dir: opts.sortDir,
+          region: opts.region,
+          somatotype: opts.somatotype,
+          lang: opts.lang,
+          page: opts.page ?? 1,
+          page_size: opts.pageSize ?? 200,
+        })
+      ),
     exportTemplate: () => {
       return fetch(`${API_BASE}${API_PREFIX}/admin/export-template`, {
         headers: {

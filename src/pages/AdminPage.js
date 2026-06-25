@@ -81,6 +81,7 @@ import InputForm from '../components/InputForm';
 import ResearcherDataView from '../components/Admin/ResearcherDataView';
 import DashboardFilters from '../components/Dashboard/DashboardFilters';
 import { ConsentStatus } from '../components/Consent/PrivacyConsentPanel';
+import { DetailModal } from './ResearcherPage';
 import {
   canUsePermission,
   getAdminPermissionLabels,
@@ -919,52 +920,58 @@ function CustomModal({
         sx={{ p: 2, justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}
       >
         <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={
-              isDownloading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                <Download />
-              )
-            }
-            onClick={onDownloadDocx}
-            disabled={isDownloading || isPdfDownloading}
-            sx={{ borderRadius: 2 }}
-          >
-            {pt('downloadWord')}
-          </Button>
-          <FormControl size="small" sx={{ minWidth: 90 }}>
-            <InputLabel>{pt('pdfLang')}</InputLabel>
-            <Select
-              value={pdfLang}
-              label={pt('pdfLang')}
-              onChange={(e) => setPdfLang(e.target.value)}
+          {onDownloadDocx && (
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={
+                isDownloading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <Download />
+                )
+              }
+              onClick={onDownloadDocx}
+              disabled={isDownloading || isPdfDownloading}
+              sx={{ borderRadius: 2 }}
             >
-              {LANGUAGES.map((l) => (
-                <MenuItem key={l.code} value={l.code}>
-                  {l.flag} {l.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={
-              isPdfDownloading ? (
-                <CircularProgress size={20} color="inherit" />
-              ) : (
-                <Download />
-              )
-            }
-            onClick={onDownloadPdf}
-            disabled={isDownloading || isPdfDownloading}
-            sx={{ borderRadius: 2 }}
-          >
-            {pt('downloadPdf')}
-          </Button>
+              {pt('downloadWord')}
+            </Button>
+          )}
+          {onDownloadPdf && (
+            <FormControl size="small" sx={{ minWidth: 90 }}>
+              <InputLabel>{pt('pdfLang')}</InputLabel>
+              <Select
+                value={pdfLang}
+                label={pt('pdfLang')}
+                onChange={(e) => setPdfLang(e.target.value)}
+              >
+                {LANGUAGES.map((l) => (
+                  <MenuItem key={l.code} value={l.code}>
+                    {l.flag} {l.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
+          {onDownloadPdf && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={
+                isPdfDownloading ? (
+                  <CircularProgress size={20} color="inherit" />
+                ) : (
+                  <Download />
+                )
+              }
+              onClick={onDownloadPdf}
+              disabled={isDownloading || isPdfDownloading}
+              sx={{ borderRadius: 2 }}
+            >
+              {pt('downloadPdf')}
+            </Button>
+          )}
         </Box>
         <Button variant="outlined" onClick={onClose} sx={{ borderRadius: 2 }}>
           {pt('close')}
@@ -987,7 +994,7 @@ export default function AdminPage() {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(isAssistant ? 1 : 0);
   const [raw, setRaw] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -1407,7 +1414,7 @@ export default function AdminPage() {
         somatotype: value('somatotype'),
         idealWeight: value('ideal_weight', 'idealWeight'),
         weightDiff: value('weight_diff', 'weightDiff'),
-        weightRange: value('ideal_weight_range', 'weightRange'),
+        weightRange: value('ideal_weight_range', 'weight_range', 'weightRange'),
         chest: value('chest'),
         waist: value('waist'),
         head: value('head'),
@@ -1429,7 +1436,12 @@ export default function AdminPage() {
         hmai: value('hmai'),
         mii: value('mii'),
         adi: value('adi'),
-        tbwPercent: value('tbw_percent', 'total_body_water', 'totalBodyWater'),
+        tbwPercent: value(
+          'tbw_percent',
+          'tbw',
+          'total_body_water',
+          'totalBodyWater'
+        ),
         fatPercent: value('fat_percent', 'fatPercent'),
         fatMass: value('fat_mass', 'fatMass'),
         muscleMass: value('muscle_mass', 'muscleMass'),
@@ -1453,7 +1465,7 @@ export default function AdminPage() {
     setXlsxPreviewOpen(true);
     setXlsxPreviewLoading(true);
     try {
-      const resp = await AdminApi.analyses.list({
+      const resp = await AdminApi.analyses.previewXlsx({
         q: dashFilters.q,
         gender: dashFilters.gender,
         ageMin: dashFilters.age_min,
@@ -1462,6 +1474,7 @@ export default function AdminPage() {
         dateTo: dashFilters.date_to,
         region: dashFilters.region,
         somatotype: dashFilters.somatotype,
+        lang,
         sortKey: sort.key === 'createdAt' ? 'created_at' : sort.key,
         sortDir: sort.dir,
         page: 1,
@@ -1477,7 +1490,7 @@ export default function AdminPage() {
     } finally {
       setXlsxPreviewLoading(false);
     }
-  }, [dashFilters, mapXlsxPreviewRow, pt, raw, sort, totalCount]);
+  }, [dashFilters, lang, mapXlsxPreviewRow, pt, raw, sort, totalCount]);
 
   const handleExportXlsx = useCallback(async () => {
     setExportingXlsx(true);
@@ -1560,7 +1573,7 @@ export default function AdminPage() {
         id: 1,
         label: pt('data'),
         icon: <ListIcon />,
-        roles: ['admin', 'superadmin'],
+        roles: ['admin', 'superadmin', 'field_assistant'],
         content: (
           <Box sx={{ py: 2 }}>
             <Box
@@ -1752,7 +1765,7 @@ export default function AdminPage() {
   }
 
   // Check role for authenticated users
-  if (user.role !== 'admin' && user.role !== 'superadmin') {
+  if (user.role !== 'admin' && user.role !== 'superadmin' && user.role !== 'field_assistant') {
     return (
       <Container maxWidth="sm" sx={{ py: 8 }}>
         <Typography variant="h5" textAlign="center">
@@ -1832,6 +1845,7 @@ export default function AdminPage() {
                   display: 'none',
                 },
                 scrollbarWidth: 'none',
+                display: user?.role === 'field_assistant' ? 'none' : 'block',
               }}
             >
               <Tabs
@@ -2009,9 +2023,9 @@ export default function AdminPage() {
         <CustomModal
           title={pt('detailsTitle')}
           onClose={() => setViewRow(null)}
-          onDownloadDocx={handleDownloadDocx}
+          onDownloadDocx={!isAssistant ? handleDownloadDocx : undefined}
           isDownloading={downloadingDocx}
-          onDownloadPdf={handleDownloadPdf}
+          onDownloadPdf={!isAssistant ? handleDownloadPdf : undefined}
           isPdfDownloading={downloadingPdf}
           pdfLang={pdfLang}
           setPdfLang={setPdfLang}
@@ -2020,7 +2034,7 @@ export default function AdminPage() {
             record={viewRow}
             lang={lang}
             downloading={downloadingConsentDocx}
-            onDownloadDocx={handleDownloadConsentDocx}
+            onDownloadDocx={!isAssistant ? handleDownloadConsentDocx : undefined}
           />
           <Table size="small">
             <TableBody>
@@ -2067,6 +2081,16 @@ export default function AdminPage() {
                   <TableCell>{viewRow.doctorNote}</TableCell>
                 </TableRow>
               )}
+              {Object.keys(viewRow).map(key => {
+                const excluded = ['id', 'idCode', 'lastName', 'firstName', 'createdAt', 'updatedAt', 'region', 'parentsPhone', 'bmi', 'bmiStatus', 'doctorNote', 'is_deleted', 'deleted_at', 'deleted_by', 'created_by_id', 'created_by_name', 'created_by_role', 'deleted_by_name', 'deleted_by_role', 'full_name', 'id_code'];
+                if (excluded.includes(key) || viewRow[key] === null || viewRow[key] === undefined || viewRow[key] === '') return null;
+                return (
+                  <TableRow key={key}>
+                    <TableCell sx={{ textTransform: 'capitalize', color: 'text.secondary' }}>{key.replace(/_/g, ' ')}</TableCell>
+                    <TableCell><strong>{String(viewRow[key])}</strong></TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CustomModal>

@@ -515,12 +515,16 @@ export default function Header() {
       section: 'analyze',
       icon: <AnalyticsIcon />,
     },
-    {
-      label: 'Izlanuvchi panel',
-      to: '/researcher?section=panel',
-      section: 'panel',
-      icon: <AdminPanelSettingsIcon />,
-    },
+    ...(isResearcherAssistant
+      ? []
+      : [
+          {
+            label: 'Izlanuvchi panel',
+            to: '/researcher?section=panel',
+            section: 'panel',
+            icon: <AdminPanelSettingsIcon />,
+          },
+        ]),
   ];
 
   const activeNavSx = {
@@ -787,27 +791,25 @@ export default function Header() {
               ))
             ) : (
               <>
-                {user?.role !== 'field_assistant' && (
-                  <Tooltip title={t('homeTooltip')}>
-                    <Button
-                      component={NavLink}
-                      to={homePath}
-                      end
-                      sx={{
-                        ...navButtonSx,
-                        ...(isResearcherHome ? activeNavSx : {}),
-                      }}
-                      startIcon={<HomeIcon fontSize="small" />}
+                <Tooltip title={t('homeTooltip')}>
+                  <Button
+                    component={NavLink}
+                    to={homePath}
+                    end
+                    sx={{
+                      ...navButtonSx,
+                      ...(isResearcherHome ? activeNavSx : {}),
+                    }}
+                    startIcon={<HomeIcon fontSize="small" />}
+                  >
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: 'none', md: 'inline' } }}
                     >
-                      <Box
-                        component="span"
-                        sx={{ display: { xs: 'none', md: 'inline' } }}
-                      >
-                        {t('home')}
-                      </Box>
-                    </Button>
-                  </Tooltip>
-                )}
+                      {user?.role === 'field_assistant' ? 'Mening ma\'lumotlarim' : t('home')}
+                    </Box>
+                  </Button>
+                </Tooltip>
 
                 <Tooltip title={t('analyzeTooltip')}>
                   <Button
@@ -1671,23 +1673,21 @@ export default function Header() {
                 ))
               ) : (
                 <>
-                  {user?.role !== 'field_assistant' && (
-                    <Button
-                      component={NavLink}
-                      to={homePath}
-                      end
-                      sx={{
-                        ...navButtonSx,
-                        justifyContent: 'flex-start',
-                        py: 1.5,
-                        ...(isResearcherHome ? activeNavSx : {}),
-                      }}
-                      startIcon={<HomeIcon />}
-                      onClick={() => setDrawerOpen(false)}
-                    >
-                      {t('home')}
-                    </Button>
-                  )}
+                  <Button
+                    component={NavLink}
+                    to={homePath}
+                    end
+                    sx={{
+                      ...navButtonSx,
+                      justifyContent: 'flex-start',
+                      py: 1.5,
+                      ...(isResearcherHome ? activeNavSx : {}),
+                    }}
+                    startIcon={<HomeIcon />}
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    {user?.role === 'field_assistant' ? 'Mening ma\'lumotlarim' : t('home')}
+                  </Button>
                   <Button
                     component={NavLink}
                     to={analyzePath}

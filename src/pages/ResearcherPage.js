@@ -166,7 +166,7 @@ const getDateLocale = (lang) => {
 /* ════════════════════════════════════════════════════
    DETAIL MODAL
 ════════════════════════════════════════════════════ */
-const DetailModal = ({
+export const DetailModal = ({
   record: incomingRecord,
   open,
   onClose,
@@ -441,13 +441,15 @@ const DetailModal = ({
           </Stack>
         )}
         <Box flex={1} />
-        <Button
-          startIcon={<Edit />}
-          variant="contained"
-          onClick={() => onEdit(record)}
-        >
-          {tr('edit')}
-        </Button>
+        {!isAssistant && (
+          <Button
+            startIcon={<Edit />}
+            variant="contained"
+            onClick={() => onEdit(record)}
+          >
+            {tr('edit')}
+          </Button>
+        )}
         {isSuperAdmin && (
           <Button
             startIcon={<DeleteForever />}
@@ -1026,15 +1028,17 @@ const RecordsTable = ({
                     </Tooltip>
                     {!showDeleted && (
                       <>
-                        <Tooltip title={tr('edit')}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => onEdit(row)}
-                          >
-                            <Edit fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        {!isAssistant && (
+                          <Tooltip title={tr('edit')}>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => onEdit(row)}
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
                         {!isAssistant && (
                           <Tooltip title={tr('softDelete')}>
                             <IconButton
