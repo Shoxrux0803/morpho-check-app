@@ -32,6 +32,7 @@ import MedicalServicesOutlinedIcon from '@mui/icons-material/MedicalServicesOutl
 import RestaurantMenuOutlinedIcon from '@mui/icons-material/RestaurantMenuOutlined';
 import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
+import Face6Icon from '@mui/icons-material/Face6';
 import GrowthChart from './Charts/GrowthChart';
 import PersonOutline from '@mui/icons-material/PersonOutline';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -1813,6 +1814,20 @@ export default function AnalysisResults({
                   {cleanAdviceText(advices?.general) || '—'}
                 </Typography>
               </Box>
+
+              {advices?.play_preschool && (
+                <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.light', borderRadius: 2, color: 'warning.contrastText' }}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <Face6Icon />
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      O'yin va maktabgacha ta'lim
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {cleanAdviceText(advices?.play_preschool)}
+                  </Typography>
+                </Box>
+              )}
 
               <Grid container spacing={3}>
                 {[

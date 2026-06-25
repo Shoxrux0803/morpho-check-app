@@ -58,6 +58,19 @@ const emptyFormData = {
   consentGuardianRelationship: '',
   consentGuardianPhone: '',
   consentPolicyVersion: 'helsinki-declaration-consent-v1',
+  ppe_group_play: '',
+  ppe_physical_activity: '',
+  ppe_fatigue_activity: '',
+  ppe_peer_interaction: '',
+  ppe_preschool_routines: '',
+  ppe_motor_confidence: '',
+  ppe_structured_activities: '',
+  ppe_daily_physical_activity: '',
+  ppe_outdoor_play: '',
+  ppe_fatigue_home: '',
+  ppe_sleep_routine: '',
+  ppe_screen_time: '',
+  ppe_appetite: '',
 };
 
 const loadDraft = () => {
@@ -316,6 +329,21 @@ export default function MorphoCheckPro() {
         bodyLength:
           formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || '',
+        playPreschoolEngagement: JSON.stringify({
+          ppe_group_play: formData.ppe_group_play || '',
+          ppe_physical_activity: formData.ppe_physical_activity || '',
+          ppe_fatigue_activity: formData.ppe_fatigue_activity || '',
+          ppe_peer_interaction: formData.ppe_peer_interaction || '',
+          ppe_preschool_routines: formData.ppe_preschool_routines || '',
+          ppe_motor_confidence: formData.ppe_motor_confidence || '',
+          ppe_structured_activities: formData.ppe_structured_activities || '',
+          ppe_daily_physical_activity: formData.ppe_daily_physical_activity || '',
+          ppe_outdoor_play: formData.ppe_outdoor_play || '',
+          ppe_fatigue_home: formData.ppe_fatigue_home || '',
+          ppe_sleep_routine: formData.ppe_sleep_routine || '',
+          ppe_screen_time: formData.ppe_screen_time || '',
+          ppe_appetite: formData.ppe_appetite || '',
+        }),
         ...consentPayload,
       };
 

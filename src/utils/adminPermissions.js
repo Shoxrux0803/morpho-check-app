@@ -10,6 +10,7 @@ export const ADMIN_PERMISSION_DEFAULTS = {
   calf_circumference: true,
   foot_length: true,
   bioimpedance: true,
+  play_preschool_engagement: true,
 };
 
 const permissionLabels = {
@@ -25,6 +26,7 @@ const permissionLabels = {
     calf_circumference: 'Boldir aylanasi',
     foot_length: 'Oyoq panja uzunligi',
     bioimpedance: 'Bioimpedans tahlili',
+    play_preschool_engagement: "O'yin va maktabgacha ta'lim",
   },
   ru: {
     shoulder_length: '????? ?????',
@@ -38,6 +40,7 @@ const permissionLabels = {
     calf_circumference: '?????????? ??????',
     foot_length: '????? ?????',
     bioimpedance: '?????????????? ??????',
+    play_preschool_engagement: 'Игра и дошкольное образование',
   },
   en: {
     shoulder_length: 'Shoulder length',
@@ -51,6 +54,7 @@ const permissionLabels = {
     calf_circumference: 'Calf circumference',
     foot_length: 'Foot length',
     bioimpedance: 'Bioimpedance analysis',
+    play_preschool_engagement: 'Play & Preschool Engagement',
   },
   kz: {
     shoulder_length: '??? ????????',
@@ -64,6 +68,7 @@ const permissionLabels = {
     calf_circumference: '?????? ????????',
     foot_length: '????? ????????',
     bioimpedance: '??????????? ???????',
+    play_preschool_engagement: 'Ойын және мектепке дейінгі білім',
   },
   ky: {
     shoulder_length: '???? ????????',
@@ -77,6 +82,7 @@ const permissionLabels = {
     calf_circumference: '?????? ????????',
     foot_length: '????? ????????',
     bioimpedance: '??????????? ????????',
+    play_preschool_engagement: 'Оюн жана мектепке чейинки билим',
   },
   tg: {
     shoulder_length: '??????? ????',
@@ -90,6 +96,7 @@ const permissionLabels = {
     calf_circumference: '????? ???',
     foot_length: '??????? ????????',
     bioimpedance: '??????? ???????????',
+    play_preschool_engagement: 'Бозӣ ва таълими томактабӣ',
   },
   tm: {
     shoulder_length: 'Yelka uzynlygy',
@@ -103,6 +110,7 @@ const permissionLabels = {
     calf_circumference: 'Boldur aylawy',
     foot_length: 'Ayak dabanynyn uzynlygy',
     bioimpedance: 'Bioimpedans analizi',
+    play_preschool_engagement: 'Oýun we mekdebe çenli bilim',
   },
   tr: {
     shoulder_length: 'Omuz uzunlugu',
@@ -116,6 +124,7 @@ const permissionLabels = {
     calf_circumference: 'Baldir cevresi',
     foot_length: 'Ayak uzunlugu',
     bioimpedance: 'Bioempedans analizi',
+    play_preschool_engagement: 'Oyun ve Okul Öncesi Eğitim',
   },
 };
 

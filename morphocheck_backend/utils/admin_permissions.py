@@ -15,6 +15,7 @@ PERMISSION_KEYS = (
     "calf_circumference",
     "foot_length",
     "bioimpedance",
+    "play_preschool_engagement",
 )
 
 DEFAULT_ADMIN_PERMISSIONS = {key: True for key in PERMISSION_KEYS}
@@ -105,6 +106,9 @@ def filter_payload_by_permissions(payload: dict[str, Any], permissions: dict[str
         if isinstance(analysis, dict) and isinstance(analysis.get("indices"), dict):
             for key in (*BIOIMPEDANCE_INDEX_KEYS, "z_body_length", "advice"):
                 analysis["indices"].pop(key, None)
+    if not permissions.get("play_preschool_engagement", True):
+        data.pop("play_preschool_engagement", None)
+        data.pop("playPreschoolEngagement", None)
     analysis = data.get("analysis")
     if isinstance(analysis, dict) and isinstance(analysis.get("indices"), dict):
         has_any_anthropometry = any(

@@ -74,6 +74,7 @@ class PatientAnalysis(Base):
     recommendations = Column(Text, nullable=False)
     ai_recommendations = Column(Text, nullable=True)
     doctor_note = Column(Text, nullable=True)
+    play_preschool_engagement = Column(Text, nullable=True)
 
     consent_confirmed = Column(Integer, default=0, nullable=False, index=True)
     consent_guardian_name = Column(String(255), nullable=True)

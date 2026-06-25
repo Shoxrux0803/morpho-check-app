@@ -1,6 +1,7 @@
 # morphocheck_backend/services/analyze_service.py
 import datetime
 import logging
+import json
 import os
 import re
 from typing import Any, Dict, Optional, Tuple
@@ -1153,6 +1154,7 @@ def generate_advices(
     gender: str,
     all_settings: Dict[str, Any],
     bio_data: dict = None,
+    ppe_data: str = None,
     lang: str = "uz",
 ) -> Dict[str, str]:
     bmi_range = get_bmi_range_by_age_and_gender(age, gender)
@@ -1213,5 +1215,64 @@ def generate_advices(
                     res["general"] = adv
                 else:
                     res["general"] += " " + adv
+
+    # 3. Play & Preschool Engagement based advice
+    if ppe_data:
+        try:
+            ppe = json.loads(ppe_data)
+            ppe_advices = []
+            
+            # Contextual analysis of PPE
+            if ppe.get("ppe_group_play") == "Low" or ppe.get("ppe_peer_interaction") == "Rare":
+                if lang == "ru":
+                    ppe_advices.append("Рекомендуется вовлекать ребенка в совместные игры для развития социальных навыков.")
+                elif lang == "en":
+                    ppe_advices.append("Encourage the child to participate in group games to develop social skills.")
+                else:
+                    ppe_advices.append("Bolani ijtimoiy ko'nikmalarni rivojlantirish uchun jamoaviy o'yinlarga jalb qilish tavsiya etiladi.")
+                    
+            if ppe.get("ppe_physical_activity") == "Low" or ppe.get("ppe_daily_physical_activity") == "<1 hour":
+                if lang == "ru":
+                    ppe_advices.append("Необходимо увеличить ежедневную физическую активность (минимум 1-2 часа активных игр).")
+                elif lang == "en":
+                    ppe_advices.append("It is necessary to increase daily physical activity (at least 1-2 hours of active play).")
+                else:
+                    ppe_advices.append("Kundalik jismoniy faollikni oshirish zarur (kamida 1-2 soat faol o'yinlar).")
+                    
+            if ppe.get("ppe_screen_time") == ">2 hours":
+                if lang == "ru":
+                    ppe_advices.append("Следует ограничить время перед экраном (менее 1-2 часов в день).")
+                elif lang == "en":
+                    ppe_advices.append("Screen time should be limited (less than 1-2 hours per day).")
+                else:
+                    ppe_advices.append("Ekran oldidagi vaqtni cheklash lozim (kuniga 1-2 soatdan kam).")
+                    
+            if ppe.get("ppe_sleep_routine") == "Irregular" or ppe.get("ppe_fatigue_activity") == "High" or ppe.get("ppe_fatigue_home") == "Often":
+                if lang == "ru":
+                    ppe_advices.append("Обратите внимание на режим сна и отдыха, ребенок часто испытывает утомляемость.")
+                elif lang == "en":
+                    ppe_advices.append("Pay attention to sleep and rest routines, the child often experiences fatigue.")
+                else:
+                    ppe_advices.append("Uyqu va dam olish rejimiga e'tibor qarating, bolada toliqish holatlari ko'p uchraydi.")
+                    
+            if ppe.get("ppe_appetite") == "Poor":
+                if lang == "ru":
+                    ppe_advices.append("Сниженный аппетит может требовать коррекции рациона и консультации педиатра.")
+                elif lang == "en":
+                    ppe_advices.append("Poor appetite may require diet correction and a pediatrician consultation.")
+                else:
+                    ppe_advices.append("Ishtahaning pastligi ovqatlanish ratsionini to'g'rilashni talab qilishi mumkin.")
+            
+            if ppe_advices:
+                res["play_preschool"] = " ".join(ppe_advices)
+            else:
+                if lang == "ru":
+                    res["play_preschool"] = "Показатели активности и социализации в пределах возрастной нормы."
+                elif lang == "en":
+                    res["play_preschool"] = "Activity and socialization indicators are within the age norm."
+                else:
+                    res["play_preschool"] = "Faollik va ijtimoiylashuv ko'rsatkichlari yosh normasiga mos keladi."
+        except Exception as e:
+            logger.error(f"Error parsing ppe_data: {e}")
 
     return {key: _clean_advice_text(value) for key, value in res.items()}

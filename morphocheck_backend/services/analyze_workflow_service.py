@@ -77,6 +77,7 @@ def build_fast_analysis_context(
         gender_norm,
         all_settings,
         bio_data=analysis["indices"],
+        ppe_data=getattr(data, "play_preschool_engagement", None),
         lang=lang,
     )
     ml_predictions = get_ml_predictions(
@@ -405,6 +406,7 @@ def build_pdf_report_data_by_id(
         (mini.gender or "").lower(),
         all_settings,
         bio_data=analysis["indices"],
+        ppe_data=getattr(rec, "play_preschool_engagement", None),
         lang=lang,
     )
     ai_preds = get_ml_predictions(

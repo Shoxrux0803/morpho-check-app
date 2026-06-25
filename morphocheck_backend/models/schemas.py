@@ -78,6 +78,7 @@ class PatientData(BaseModel):
     acm: Optional[float] = Field(None, alias="acm", ge=0, le=100)
     visceral_fat: Optional[float] = Field(None, alias="visceralFat", ge=0, le=60)
     doctor_note: Optional[str] = Field(None, alias="doctorNote", max_length=2000)
+    play_preschool_engagement: Optional[str] = Field(None, alias="playPreschoolEngagement")
 
     class Config:
         populate_by_name = True
