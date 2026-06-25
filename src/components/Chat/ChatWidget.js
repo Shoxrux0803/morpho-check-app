@@ -10,6 +10,8 @@ const VIEWS = {
   LIST: 'LIST',
   CHAT: 'CHAT',
   BROADCAST: 'BROADCAST',
+  MONITORING_LIST: 'MONITORING_LIST',
+  MONITORING_CHAT: 'MONITORING_CHAT',
 };
 
 const MESSAGE_REACTIONS = ['👍', '❤️', '🙌', '😁', '😊'];
@@ -19,27 +21,11 @@ const ChatWidget = () => {
   const { mode } = useThemeMode();
   const { t } = useLanguage();
   const isDark = mode === 'dark';
+  const isAdmin = user?.role === 'superadmin';
+  const isListUser = user?.role === 'superadmin' || user?.role === 'admin' || user?.role === 'field_assistant';
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState(VIEWS.LIST);
-  // Set initial view once user is available
-  useEffect(() => {
-    if (user) {
-      if (user.role === 'superadmin') {
-        if (!selectedUser) setCurrentView(VIEWS.LIST);
-      } else {
-        setCurrentView(VIEWS.CHAT);
-      }
-    }
-  }, [user?.role, isOpen]);
-
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 900);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -53,6 +39,36 @@ const ChatWidget = () => {
   const [loading, setLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, messageId: null, content: '' });
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [monitoringPairs, setMonitoringPairs] = useState([]);
+  const [selectedMonitoringPair, setSelectedMonitoringPair] = useState(null);
+
+  useEffect(() => {
+    const handleClick = () => setContextMenu({ visible: false, x: 0, y: 0, messageId: null, content: '' });
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
+
+
+  // Set initial view once user is available
+  useEffect(() => {
+    if (user) {
+      if (isListUser) {
+        if (!selectedUser) setCurrentView(VIEWS.LIST);
+      } else {
+        setCurrentView(VIEWS.CHAT);
+      }
+    }
+  }, [user?.role, isOpen, isListUser, selectedUser]);
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 900);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const API_BASE = (
     process.env.REACT_APP_API_URL || 'http://localhost:8000/api'
@@ -61,8 +77,6 @@ const ChatWidget = () => {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-
-  const isAdmin = user?.role === 'superadmin';
 
   const quickPhrases = useMemo(() => {
     return isAdmin
@@ -88,25 +102,31 @@ const ChatWidget = () => {
 
   useEffect(() => {
     if (user) {
-      if (isAdmin && currentView === VIEWS.LIST) {
+      if (isListUser && currentView === VIEWS.LIST) {
         fetchConversations();
+      } else if (currentView === VIEWS.MONITORING_LIST) {
+        fetchMonitoringPairs();
       } else if (
         currentView === VIEWS.CHAT ||
         currentView === VIEWS.BROADCAST
       ) {
         fetchMessages();
+      } else if (currentView === VIEWS.MONITORING_CHAT) {
+        fetchMonitoringHistory();
       }
 
       const interval = setInterval(() => {
-        if (isAdmin && currentView === VIEWS.LIST) fetchConversations();
+        if (isListUser && currentView === VIEWS.LIST) fetchConversations();
+        else if (currentView === VIEWS.MONITORING_LIST) fetchMonitoringPairs();
         else if (currentView === VIEWS.CHAT || currentView === VIEWS.BROADCAST)
           fetchMessages();
+        else if (currentView === VIEWS.MONITORING_CHAT) fetchMonitoringHistory();
         fetchTypingStatus();
       }, 5000);
 
       return () => clearInterval(interval);
     }
-  }, [user, currentView, selectedUser]);
+  }, [user, currentView, selectedUser, selectedMonitoringPair]);
 
   useEffect(() => {
     if (
@@ -162,6 +182,26 @@ const ChatWidget = () => {
     window.dispatchEvent(new CustomEvent('admin-chat-toggled', { detail: { isOpen } }));
   }, [isOpen]);
 
+  const fetchMonitoringPairs = async () => {
+    try {
+      const data = await chatService.getMonitoringPairs();
+      setMonitoringPairs(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchMonitoringHistory = async () => {
+    if (!selectedMonitoringPair) return;
+    try {
+      const data = await chatService.getMonitoringHistory(selectedMonitoringPair.admin_id, selectedMonitoringPair.assistant_id);
+      const sorted = [...data].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+      setMessages(sorted);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const fetchConversations = async () => {
     try {
       const data = await chatService.getSuperadminConversations();
@@ -180,10 +220,10 @@ const ChatWidget = () => {
   const fetchMessages = async () => {
     try {
       let data;
-      if (isAdmin) {
+      if (isListUser) {
         if (selectedUser?.id) {
           data = await chatService.getHistoryWithUser(selectedUser.id);
-        } else if (currentView === VIEWS.BROADCAST) {
+        } else if (currentView === VIEWS.BROADCAST && isAdmin) {
           // Broadcast is a special case, we can fetch all broadcast messages
           data = await chatService.getMessages('broadcast');
         } else {
@@ -223,12 +263,12 @@ const ChatWidget = () => {
 
   const handleMarkRead = async () => {
     try {
-      if (isAdmin && selectedUser?.id) {
+      if (isListUser && selectedUser?.id) {
         await chatService.markUserMessagesRead(selectedUser.id);
         fetchConversations();
       } else {
         await chatService.markAllRead();
-        if (!isAdmin) setUnreadCount(0);
+        if (!isListUser) setUnreadCount(0);
         else fetchConversations();
       }
     } catch (error) {
@@ -241,8 +281,16 @@ const ChatWidget = () => {
     if (!finalContent.trim() && !fileUrl) return;
 
     try {
-      const recipientId = isAdmin
-        ? currentView === VIEWS.BROADCAST
+      if (editingMessageId) {
+        await chatService.editMessage(editingMessageId, finalContent);
+        setEditingMessageId(null);
+        setContent('');
+        setTimeout(fetchMessages, 300);
+        return;
+      }
+
+      const recipientId = isListUser
+        ? currentView === VIEWS.BROADCAST && isAdmin
           ? null
           : selectedUser?.id
         : null;
@@ -366,7 +414,7 @@ const ChatWidget = () => {
         bottom: isMobile ? '12px' : '30px',
         left: isMobile ? '12px' : 'auto',
         right: isMobile ? 'auto' : '30px',
-        zIndex: 1000,
+        zIndex: 9999,
       }}
     >
       <AnimatePresence>
@@ -383,8 +431,8 @@ const ChatWidget = () => {
             exit={{ opacity: 0, scale: 0.5, borderRadius: '50%' }}
             style={{
               width: isMobile ? 'calc(100vw - 24px)' : '400px',
-              height: isMobile ? 'calc(100dvh - 88px)' : '650px',
-              maxHeight: isMobile ? 'calc(100dvh - 88px)' : '90vh',
+              height: isMobile ? 'calc(100dvh - 40px)' : '650px',
+              maxHeight: isMobile ? 'calc(100dvh - 40px)' : '90vh',
               background: isDark
                 ? 'rgba(18, 18, 18, 0.45)'
                 : 'rgba(255, 255, 255, 0.45)',
@@ -428,11 +476,15 @@ const ChatWidget = () => {
               <div
                 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
               >
-                {isAdmin && currentView !== VIEWS.LIST && (
+                {isListUser && currentView !== VIEWS.LIST && (
                   <IconButton
                     onClick={() => {
-                      setCurrentView(VIEWS.LIST);
-                      setSelectedUser(null);
+                      if (currentView === VIEWS.MONITORING_CHAT) {
+                        setCurrentView(VIEWS.MONITORING_LIST);
+                      } else {
+                        setCurrentView(VIEWS.LIST);
+                        setSelectedUser(null);
+                      }
                     }}
                     color="#fff"
                     bg="rgba(255,255,255,0.2)"
@@ -459,6 +511,10 @@ const ChatWidget = () => {
                     )}
                     {currentView === VIEWS.LIST
                       ? t('messages')
+                      : currentView === VIEWS.MONITORING_LIST
+                      ? 'Chat Nazorati'
+                      : currentView === VIEWS.MONITORING_CHAT
+                      ? `${selectedMonitoringPair?.admin_name} ↔ ${selectedMonitoringPair?.assistant_name}`
                       : selectedUser?.name || t('chat')}
                   </h6>
                   {currentView === VIEWS.CHAT && (
@@ -507,7 +563,7 @@ const ChatWidget = () => {
               }}
             >
               <AnimatePresence mode="wait">
-                {currentView === VIEWS.LIST ? (
+                {currentView === VIEWS.LIST && (
                   /* Conversation List */
                   <motion.div
                     key="list-view"
@@ -545,6 +601,7 @@ const ChatWidget = () => {
                     )}
 
                     {/* Broadcast Item */}
+                    {isAdmin && (
                     <div
                       onClick={() => {
                         setCurrentView(VIEWS.BROADCAST);
@@ -595,6 +652,55 @@ const ChatWidget = () => {
                         </div>
                       </div>
                     </div>
+                    )}
+
+                    {/* Monitoring Item */}
+                    {isAdmin && (
+                    <div
+                      onClick={() => {
+                        setCurrentView(VIEWS.MONITORING_LIST);
+                      }}
+                      style={{
+                        padding: '12px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '15px',
+                        cursor: 'pointer',
+                        borderBottom: isDark
+                          ? '1px solid #222'
+                          : '1px solid #eee',
+                        background: 'transparent',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          color: '#fff',
+                          boxShadow: '0 4px 10px rgba(16,185,129,0.3)',
+                        }}
+                      >
+                        <i
+                          className="bi bi-shield-lock-fill"
+                          style={{ fontSize: '20px' }}
+                        ></i>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: '700', fontSize: '14px' }}>
+                          Chat Nazorati
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#888' }}>
+                          Adminlar va assistentlar yozishmalari
+                        </div>
+                      </div>
+                    </div>
+                    )}
+
 
                     {filteredConversations.length === 0 ? (
                       <div
@@ -748,7 +854,136 @@ const ChatWidget = () => {
                       ))
                     )}
                   </motion.div>
-                ) : (
+                )}
+
+                {/* Monitoring List View */}
+                {currentView === VIEWS.MONITORING_LIST && (
+                  <motion.div
+                    key="monitoring-list-view"
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    exit={{ x: -20, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <div
+                      onClick={() => setCurrentView(VIEWS.LIST)}
+                      style={{
+                        padding: '15px 20px',
+                        cursor: 'pointer',
+                        color: isDark ? '#10b981' : '#059669',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontWeight: '600',
+                        borderBottom: isDark ? '1px solid #222' : '1px solid #eee',
+                      }}
+                    >
+                      <i className="bi bi-arrow-left"></i>
+                      Orqaga
+                    </div>
+
+                    {monitoringPairs.length === 0 ? (
+                      <div
+                        style={{
+                          textAlign: 'center',
+                          padding: '40px',
+                          color: '#888',
+                        }}
+                      >
+                        <i
+                          className="bi bi-shield-lock"
+                          style={{ fontSize: '40px', opacity: 0.2 }}
+                        ></i>
+                        <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                          Yozishmalar mavjud emas
+                        </div>
+                      </div>
+                    ) : (
+                      monitoringPairs.map((pair) => (
+                        <motion.div
+                          key={`${pair.admin_id}-${pair.assistant_id}`}
+                          whileHover={{ backgroundColor: isDark ? '#2c2c2c' : '#f8f9fa' }}
+                          onClick={() => {
+                            setSelectedMonitoringPair(pair);
+                            setCurrentView(VIEWS.MONITORING_CHAT);
+                          }}
+                          style={{
+                            padding: '15px 20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px',
+                            cursor: 'pointer',
+                            borderBottom: isDark ? '1px solid #222' : '1px solid #eee',
+                          }}
+                        >
+                          <div style={{ position: 'relative' }}>
+                            <div
+                              style={{
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                background: '#10b981',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                color: '#fff',
+                                fontSize: '18px',
+                                fontWeight: '700',
+                              }}
+                            >
+                              <i className="bi bi-people-fill"></i>
+                            </div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'baseline',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontWeight: '600',
+                                  fontSize: '14px',
+                                  color: isDark ? '#fff' : '#000',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                              >
+                                {pair.admin_name} ↔ {pair.assistant_name}
+                              </div>
+                              <div style={{ fontSize: '10px', color: '#888' }}>
+                                {formatTime(pair.last_message_time)}
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '12px',
+                                color: '#888',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}
+                            >
+                              {pair.last_message || 'Yozishma boshlanmagan'}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
+                  </motion.div>
+                )}
+
+                {(currentView === VIEWS.CHAT || currentView === VIEWS.BROADCAST || currentView === VIEWS.MONITORING_CHAT) && (
                   /* Individual Chat View */
                   <motion.div
                     key={`chat-${selectedUser?.id || 'broadcast'}`}
@@ -802,29 +1037,53 @@ const ChatWidget = () => {
                     <div
                       style={{ flex: 1, overflowY: 'auto', padding: '15px' }}
                     >
-                      {messages.map((msg, i) => (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          key={msg.id || i}
-                          onMouseEnter={() => setHoveredMessageId(msg.id)}
-                          onMouseLeave={() => setHoveredMessageId(null)}
-                          style={{
-                            marginBottom: msg.reaction ? '24px' : '15px',
-                            textAlign:
-                              msg.sender_id === user.id ? 'right' : 'left',
-                            position: 'relative',
-                            zIndex: hoveredMessageId === msg.id ? 50 : 1,
-                          }}
-                        >
-                          <div
+                      {messages.map((msg, i) => {
+                        const isMine = currentView === VIEWS.MONITORING_CHAT
+                          ? msg.sender_id === selectedMonitoringPair?.admin_id
+                          : msg.sender_id === user.id;
+
+                        const senderName = currentView === VIEWS.MONITORING_CHAT
+                          ? (msg.sender_id === selectedMonitoringPair?.admin_id
+                            ? selectedMonitoringPair?.admin_name
+                            : selectedMonitoringPair?.assistant_name)
+                          : '';
+
+                        return (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            key={msg.id || i}
+                            onMouseEnter={() => setHoveredMessageId(msg.id)}
+                            onMouseLeave={() => setHoveredMessageId(null)}
                             style={{
-                              display: 'inline-block',
+                              marginBottom: msg.reaction ? '24px' : '15px',
+                              textAlign: isMine ? 'right' : 'left',
+                              position: 'relative',
+                              zIndex: hoveredMessageId === msg.id ? 50 : 1,
+                            }}
+                        >
+                          {currentView === VIEWS.MONITORING_CHAT && (
+                            <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px', padding: isMine ? '0 15px 0 0' : '0 0 0 15px' }}>
+                              {senderName}
+                            </div>
+                          )}
+                          <div
+                            onContextMenu={(e) => {
+                              if (isAdmin && msg.sender_id === user.id) {
+                                e.preventDefault();
+                                setContextMenu({
+                                  visible: true,
+                                  x: e.pageX,
+                                  y: e.pageY,
+                                  messageId: msg.id,
+                                  content: msg.content
+                                });
+                              }
+                            }}
+                            style={{
+                              display: 'flex',
                               alignItems: 'center',
-                              justifyContent:
-                                msg.sender_id === user.id
-                                  ? 'flex-end'
-                                  : 'flex-start',
+                              justifyContent: isMine ? 'flex-end' : 'flex-start',
                               maxWidth: '100%',
                               position: 'relative',
                             }}
@@ -833,24 +1092,21 @@ const ChatWidget = () => {
                               style={{
                                 display: 'inline-block',
                                 padding: '10px 15px',
-                                borderRadius:
-                                  msg.sender_id === user.id
-                                    ? '18px 18px 4px 18px'
-                                    : '18px 18px 18px 4px',
-                                background:
-                                  msg.sender_id === user.id
-                                    ? currentView === VIEWS.BROADCAST
-                                      ? '#ff9500'
-                                      : '#0f766e'
-                                    : isDark
-                                      ? '#333'
-                                      : '#fff',
-                                color:
-                                  msg.sender_id === user.id
-                                    ? '#fff'
-                                    : isDark
-                                      ? '#eee'
-                                      : '#333',
+                                borderRadius: isMine
+                                  ? '18px 18px 4px 18px'
+                                  : '18px 18px 18px 4px',
+                                background: isMine
+                                  ? currentView === VIEWS.BROADCAST
+                                    ? '#ff9500'
+                                    : '#0f766e'
+                                  : isDark
+                                    ? '#333'
+                                    : '#fff',
+                                color: isMine
+                                  ? '#fff'
+                                  : isDark
+                                    ? '#eee'
+                                    : '#333',
                                 maxWidth: '80%',
                                 boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
                                 fontSize: '14px',
@@ -885,6 +1141,7 @@ const ChatWidget = () => {
                                     </a>
                                   ) : (
                                     <div
+                                      onClick={() => window.open(`${API_BASE}${msg.file_url}`, '_blank')}
                                       style={{
                                         background: isDark
                                           ? 'rgba(255,255,255,0.05)'
@@ -897,6 +1154,7 @@ const ChatWidget = () => {
                                         border: isDark
                                           ? '1px solid rgba(255,255,255,0.1)'
                                           : '1px solid rgba(0,0,0,0.05)',
+                                        cursor: 'pointer',
                                       }}
                                     >
                                       <div
@@ -904,10 +1162,9 @@ const ChatWidget = () => {
                                           width: '40px',
                                           height: '40px',
                                           borderRadius: '10px',
-                                          background:
-                                            msg.sender_id === user.id
-                                              ? 'rgba(255,255,255,0.2)'
-                                              : '#0f766e',
+                                          background: isMine
+                                            ? 'rgba(255,255,255,0.2)'
+                                            : '#0f766e',
                                           display: 'flex',
                                           justifyContent: 'center',
                                           alignItems: 'center',
@@ -927,12 +1184,11 @@ const ChatWidget = () => {
                                             whiteSpace: 'nowrap',
                                             overflow: 'hidden',
                                             textOverflow: 'ellipsis',
-                                            color:
-                                              msg.sender_id === user.id
-                                                ? '#fff'
-                                                : isDark
-                                                  ? '#eee'
-                                                  : '#333',
+                                            color: isMine
+                                              ? '#fff'
+                                              : isDark
+                                                ? '#eee'
+                                                : '#333',
                                           }}
                                         >
                                           {msg.content.replace(
@@ -947,10 +1203,9 @@ const ChatWidget = () => {
                                           rel="noreferrer"
                                           style={{
                                             fontSize: '11px',
-                                            color:
-                                              msg.sender_id === user.id
-                                                ? 'rgba(255,255,255,0.8)'
-                                                : '#0f766e',
+                                            color: isMine
+                                              ? 'rgba(255,255,255,0.8)'
+                                              : '#0f766e',
                                             textDecoration: 'none',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -1120,11 +1375,13 @@ const ChatWidget = () => {
                             </AnimatePresence>
                           </div>
                         </motion.div>
-                      ))}
+                        );
+                      })}
                       <div ref={messagesEndRef} />
                     </div>
 
                     {/* Input Area */}
+                    {currentView !== VIEWS.MONITORING_CHAT && (
                     <div
                       style={{
                         padding: '15px',
@@ -1132,7 +1389,13 @@ const ChatWidget = () => {
                         borderTop: '1px solid rgba(0,0,0,0.05)',
                       }}
                     >
-                      <div style={{ display: 'flex', gap: '10px' }}>
+                      {editingMessageId && (
+                        <div style={{ padding: '8px 15px', fontSize: '12px', color: '#888', display: 'flex', justifyContent: 'space-between', backgroundColor: isDark ? '#2a2a2a' : '#f8f9fa', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                          <span>Tahrirlanmoqda...</span>
+                          <i className="bi bi-x-circle-fill" style={{ cursor: 'pointer', color: '#ff3b30' }} onClick={() => { setEditingMessageId(null); setContent(''); }}></i>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: '10px', marginTop: editingMessageId ? '10px' : '0' }}>
                         <button
                           onClick={() => fileInputRef.current.click()}
                           style={{
@@ -1199,6 +1462,7 @@ const ChatWidget = () => {
                         </button>
                       </div>
                     </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -1251,6 +1515,47 @@ const ChatWidget = () => {
           </motion.button>
         )}
       </AnimatePresence>
+      {contextMenu.visible && (
+        <div
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            backgroundColor: isDark ? '#333' : '#fff',
+            border: `1px solid ${isDark ? '#444' : '#ddd'}`,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            borderRadius: '8px',
+            zIndex: 9999,
+            overflow: 'hidden',
+            minWidth: '150px'
+          }}
+        >
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setContent(contextMenu.content);
+              setEditingMessageId(contextMenu.messageId);
+              setContextMenu({ ...contextMenu, visible: false });
+            }}
+            style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: `1px solid ${isDark ? '#444' : '#eee'}`, display: 'flex', alignItems: 'center', gap: '8px', color: isDark ? '#fff' : '#000' }}
+          >
+            <i className="bi bi-pencil"></i> Tahrirlash
+          </div>
+          <div
+            onClick={async (e) => {
+              e.stopPropagation();
+              setContextMenu({ ...contextMenu, visible: false });
+              if (window.confirm("Xabarni o'chirishni xohlaysizmi?")) {
+                await chatService.deleteMessage(contextMenu.messageId);
+                fetchMessages();
+              }
+            }}
+            style={{ padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: '#ff3b30' }}
+          >
+            <i className="bi bi-trash"></i> O'chirish
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -419,8 +419,9 @@ const AIAssistantWidget = () => {
         position: 'fixed',
         bottom: { xs: 92, md: 30 },
         left: { xs: 16, md: 'auto' },
-        right: { xs: 'auto', md: 110 },
-        zIndex: 1000,
+        right: (!isOpen && isAdminChatOpen) ? { xs: 'auto', md: 450 } : { xs: 'auto', md: 110 },
+        zIndex: 9999,
+        transition: 'right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
     >
       {/* Floating Action Button — Living Robot */}
@@ -438,13 +439,13 @@ const AIAssistantWidget = () => {
             overflow: 'visible',
             width: 64,
             height: 64,
-            transform: (!isOpen && isAdminChatOpen) ? (isMobile ? 'none' : 'translateX(-325px) rotate(15deg) translateY(-10px)') : 'none',
+            transform: 'none',
             '&:hover': {
-              transform: (!isOpen && isAdminChatOpen) ? 'translateX(-325px) rotate(15deg) translateY(-10px) scale(1.05)' : 'scale(1.08)',
+              transform: 'scale(1.08)',
               background: 'transparent',
             },
             '&:active': {
-              transform: (!isOpen && isAdminChatOpen) ? 'translateX(-325px) rotate(15deg) translateY(-10px) scale(0.96)' : 'scale(0.96)',
+              transform: 'scale(0.96)',
             },
             transition: 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             zIndex: 1001,
@@ -470,6 +471,7 @@ const AIAssistantWidget = () => {
               passwordVisible={passwordVisible}
               size={64}
               isTalking={isTalking}
+              isMobile={isMobile}
             />
           )}
         </Fab>
@@ -501,8 +503,8 @@ const AIAssistantWidget = () => {
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                height: isMobile ? 'calc(100dvh - 92px)' : '600px',
-                maxHeight: isMobile ? 'calc(100dvh - 92px)' : '90vh',
+                height: isMobile ? 'calc(100dvh - 40px)' : '600px',
+                maxHeight: isMobile ? 'calc(100dvh - 40px)' : '90vh',
                 background: isDark
                   ? 'rgba(18, 18, 18, 0.45)'
                   : 'rgba(255, 255, 255, 0.45)',
@@ -548,11 +550,11 @@ const AIAssistantWidget = () => {
                   zIndex: 1,
                 }}>
                   <RobotAvatar
-                    size={56}
-                    compact={true}
-                    isTalking={isTalking}
                     isOpen={true}
                     passwordVisible={null}
+                    size={56}
+                    isTalking={isTalking}
+                    isMobile={isMobile}
                   />
                   {/* Talking pulse ring */}
                   {isTalking && (

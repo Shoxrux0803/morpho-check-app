@@ -133,4 +133,36 @@ export const chatService = {
     });
     return response.data;
   },
+
+  editMessage: async (messageId, content) => {
+    const response = await axios.put(
+      `${API_BASE_URL}/chat/message/${messageId}`,
+      { content },
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  deleteMessage: async (messageId) => {
+    const response = await axios.delete(
+      `${API_BASE_URL}/chat/message/${messageId}`,
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
+
+  getMonitoringPairs: async () => {
+    const response = await axios.get(`${API_BASE_URL}/chat/monitoring/pairs`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  getMonitoringHistory: async (adminId, assistantId) => {
+    const response = await axios.get(
+      `${API_BASE_URL}/chat/monitoring/history/${adminId}/${assistantId}`,
+      { headers: getAuthHeader() }
+    );
+    return response.data;
+  },
 };

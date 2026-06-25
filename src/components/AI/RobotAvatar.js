@@ -511,7 +511,7 @@ const Scarf = ({ size }) => (
 );
 
 // ── Speech Bubble ─────────────────────────────────────────────────────────────
-const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
+const SpeechBubble = ({ message, visible, onDismiss, isTalking, isMobile }) => {
   const { lang } = useLanguage();
   const aiDict = AI_TRANSLATIONS[lang] || AI_TRANSLATIONS['uz'];
 
@@ -520,7 +520,9 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
     <div
       onClick={onDismiss}
       style={{
-        position: 'absolute', bottom: '82px', right: '-12px',
+        position: 'absolute', bottom: '82px',
+        right: isMobile ? 'auto' : '-12px',
+        left: isMobile ? '-12px' : 'auto',
         background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(12px)',
         borderRadius: '16px 16px 4px 16px',
@@ -530,7 +532,7 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
         border: '1px solid rgba(69, 243, 255, 0.15)',
         zIndex: 10, cursor: 'pointer',
         animation: 'bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        transformOrigin: 'bottom right',
+        transformOrigin: isMobile ? 'bottom left' : 'bottom right',
       }}
     >
       {isTalking && (
@@ -554,9 +556,12 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking }) => {
         {message}
       </p>
       <div style={{
-        position: 'absolute', bottom: '-9px', right: '22px',
+        position: 'absolute', bottom: '-9px',
+        right: isMobile ? 'auto' : '22px',
+        left: isMobile ? '32px' : 'auto',
         width: 0, height: 0,
-        borderLeft: '11px solid transparent',
+        borderLeft: isMobile ? 'none' : '11px solid transparent',
+        borderRight: isMobile ? '11px solid transparent' : 'none',
         borderTop: '10px solid rgba(15, 23, 42, 0.95)',
       }} />
     </div>
@@ -572,6 +577,7 @@ const RobotAvatar = ({
   size            = 64,
   compact         = false,
   isTalking       = false,
+  isMobile        = false,
 }) => {
   injectCSS();
   const { lang } = useLanguage();
@@ -1167,6 +1173,7 @@ const RobotAvatar = ({
           visible={bubble.visible && !isOpen}
           onDismiss={dismissBubble}
           isTalking={isTalkingInternal}
+          isMobile={isMobile}
         />
       )}
 

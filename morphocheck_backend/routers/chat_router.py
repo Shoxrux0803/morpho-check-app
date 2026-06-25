@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from models.chat import ChatMessage
@@ -146,9 +147,18 @@ def send_message(
         )
         if not recipient:
             raise HTTPException(status_code=404, detail="Qabul qiluvchi topilmadi")
-        if current_user.role != "superadmin" and recipient.role != "superadmin":
+            
+        is_authorized = False
+        if current_user.role == "superadmin" or recipient.role == "superadmin":
+            is_authorized = True
+        elif current_user.role == "admin" and recipient.role == "field_assistant" and recipient.supervisor_id == current_user.id:
+            is_authorized = True
+        elif current_user.role == "field_assistant" and recipient.role == "admin" and current_user.supervisor_id == recipient.id:
+            is_authorized = True
+            
+        if not is_authorized:
             raise HTTPException(
-                status_code=403, detail="Faqat super admin bilan yozish mumkin"
+                status_code=403, detail="Siz bu foydalanuvchi bilan yoza olmaysiz"
             )
 
     new_msg = ChatMessage(
@@ -219,18 +229,46 @@ def get_conversations(
 ):
     # Determine which users should be visible to current_user
     if current_user.role == "superadmin":
-        # Superadmin sees only active admins and researchers
+        # Superadmin sees active admins, researchers, and field assistants
         visible_users = (
             db.query(User)
             .filter(
                 User.id != current_user.id,
-                User.role.in_(["admin", "researcher"]),
+                User.role.in_(["admin", "researcher", "field_assistant"]),
                 _active_user_filter(),
             )
             .all()
         )
+    elif current_user.role == "admin":
+        # Admin sees Superadmin + their field assistants
+        visible_users = (
+            db.query(User)
+            .filter(
+                or_(
+                    User.role == "superadmin",
+                    (User.role == "field_assistant") & (User.supervisor_id == current_user.id)
+                ),
+                User.id != current_user.id,
+                _active_user_filter()
+            )
+            .all()
+        )
+    elif current_user.role == "field_assistant":
+        # Field Assistant sees Superadmin + their admin
+        conditions = [User.role == "superadmin"]
+        if current_user.supervisor_id:
+            conditions.append(User.id == current_user.supervisor_id)
+        visible_users = (
+            db.query(User)
+            .filter(
+                or_(*conditions),
+                User.id != current_user.id,
+                _active_user_filter()
+            )
+            .all()
+        )
     else:
-        # Regular users and Admins ONLY see active Superadmins
+        # Regular users ONLY see active Superadmins
         visible_users = (
             db.query(User)
             .filter(User.role == "superadmin", _active_user_filter())
@@ -314,10 +352,16 @@ def get_chat_history(
     if not target_user:
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     if current_user.role == "superadmin":
-        if target_user.role not in ["admin", "researcher"]:
+        if target_user.role not in ["admin", "researcher", "field_assistant"]:
             raise HTTPException(
                 status_code=403, detail="Bu foydalanuvchi chat ro'yxatida mavjud emas"
             )
+    elif current_user.role == "admin":
+        if target_user.role != "superadmin" and not (target_user.role == "field_assistant" and target_user.supervisor_id == current_user.id):
+            raise HTTPException(status_code=403, detail="Siz bu foydalanuvchi bilan yozisha olmaysiz")
+    elif current_user.role == "field_assistant":
+        if target_user.role != "superadmin" and target_user.id != current_user.supervisor_id:
+            raise HTTPException(status_code=403, detail="Siz bu foydalanuvchi bilan yozisha olmaysiz")
     elif target_user.role != "superadmin":
         raise HTTPException(
             status_code=403, detail="Faqat super admin bilan yozish mumkin"
@@ -476,3 +520,156 @@ def get_typing_status(current_user: User = Depends(get_current_user)):
         for uid, status in typing_statuses.items()
         if uid != current_user.id
     ]
+
+
+class ChatMessageUpdate(BaseModel):
+    content: str
+
+
+@router.put("/message/{message_id}", response_model=ChatMessageOut)
+def edit_message(
+    message_id: int,
+    payload: ChatMessageUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    msg = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Xabar topilmadi")
+    if current_user.role != "superadmin":
+        raise HTTPException(
+            status_code=403, detail="Faqat superadmin xabarni tahrirlay oladi"
+        )
+    if msg.sender_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Faqat o'z xabaringizni tahrirlashingiz mumkin"
+        )
+
+    msg.content = payload.content
+    db.commit()
+    db.refresh(msg)
+    return _hydrate_messages(db, [msg])[0]
+
+
+@router.delete("/message/{message_id}")
+def delete_message(
+    message_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    msg = db.query(ChatMessage).filter(ChatMessage.id == message_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Xabar topilmadi")
+    if current_user.role != "superadmin":
+        raise HTTPException(
+            status_code=403, detail="Faqat superadmin xabarni o'chira oladi"
+        )
+    if msg.sender_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="Faqat o'z xabaringizni o'chirishingiz mumkin"
+        )
+
+    db.delete(msg)
+    db.commit()
+    return {"status": "success"}
+
+
+class MonitoringPairOut(BaseModel):
+    admin_id: int
+    admin_name: str
+    assistant_id: int
+    assistant_name: str
+    last_message: Optional[str] = None
+    last_message_time: Optional[datetime] = None
+
+
+@router.get("/monitoring/pairs", response_model=List[MonitoringPairOut])
+def get_monitoring_pairs(
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+):
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    assistants = (
+        db.query(User)
+        .filter(
+            User.role == "field_assistant",
+            User.supervisor_id.isnot(None),
+            _active_user_filter(),
+        )
+        .all()
+    )
+
+    results = []
+    for ast in assistants:
+        admin = (
+            db.query(User)
+            .filter(User.id == ast.supervisor_id, _active_user_filter())
+            .first()
+        )
+        if not admin:
+            continue
+
+        last_msg = (
+            db.query(ChatMessage)
+            .filter(
+                (
+                    (ChatMessage.sender_id == admin.id)
+                    & (ChatMessage.recipient_id == ast.id)
+                )
+                | (
+                    (ChatMessage.sender_id == ast.id)
+                    & (ChatMessage.recipient_id == admin.id)
+                )
+            )
+            .order_by(ChatMessage.created_at.desc())
+            .first()
+        )
+
+        results.append(
+            {
+                "admin_id": admin.id,
+                "admin_name": admin.name,
+                "assistant_id": ast.id,
+                "assistant_name": ast.name,
+                "last_message": last_msg.content if last_msg else None,
+                "last_message_time": last_msg.created_at if last_msg else None,
+            }
+        )
+
+    results.sort(
+        key=lambda x: x["last_message_time"].timestamp()
+        if x["last_message_time"]
+        else 0,
+        reverse=True,
+    )
+    return results
+
+
+@router.get("/monitoring/history/{admin_id}/{assistant_id}", response_model=List[ChatMessageOut])
+def get_monitoring_history(
+    admin_id: int,
+    assistant_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Not authorized")
+
+    messages = (
+        db.query(ChatMessage)
+        .filter(
+            (
+                (ChatMessage.sender_id == admin_id)
+                & (ChatMessage.recipient_id == assistant_id)
+            )
+            | (
+                (ChatMessage.sender_id == assistant_id)
+                & (ChatMessage.recipient_id == admin_id)
+            )
+        )
+        .order_by(ChatMessage.created_at.asc())
+        .all()
+    )
+
+    return _hydrate_messages(db, messages)
