@@ -44,6 +44,8 @@ import {
   canUsePermission,
   normalizeAdminPermissions,
 } from '../utils/adminPermissions';
+import { getPlayPreschoolAdvice } from '../utils/playPreschoolAdvice';
+import { getPlayPreschoolText } from '../utils/playPreschoolI18n';
 
 export default function AnalysisResults({
   formData,
@@ -65,6 +67,14 @@ export default function AnalysisResults({
   const canShowBioimpedance = canUsePermission(
     adminPermissions,
     'bioimpedance'
+  );
+  const canShowActivityAdvice = canUsePermission(
+    adminPermissions,
+    'activity_advice'
+  );
+  const canShowPlayPreschoolAdvice = canUsePermission(
+    adminPermissions,
+    'play_preschool_engagement'
   );
   const canShowDetailedIndices = [
     'shoulder_length',
@@ -93,6 +103,7 @@ export default function AnalysisResults({
 
   const analysis = root?.analysis ?? null;
   const advices = root?.advices ?? null;
+  const playPreschoolAdvice = getPlayPreschoolAdvice(lang);
   const measurements = root?.measurements ?? null;
   const patientInfo = root?.patient_info ?? null;
   const riskFlags = root?.risk_flags ?? root?.growth_standards?.metrics ?? null;
@@ -1815,17 +1826,97 @@ export default function AnalysisResults({
                 </Typography>
               </Box>
 
-              {advices?.play_preschool && (
-                <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.light', borderRadius: 2, color: 'warning.contrastText' }}>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <Face6Icon />
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      O'yin va maktabgacha ta'lim
-                    </Typography>
+              {canShowPlayPreschoolAdvice && advices?.play_preschool && (
+                <Box
+                  sx={(theme) => ({
+                    mb: 3,
+                    p: { xs: 2, sm: 2.5 },
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    border: '1px solid',
+                    borderColor:
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(94, 234, 212, 0.26)'
+                        : 'rgba(13, 148, 136, 0.22)',
+                    background:
+                      theme.palette.mode === 'dark'
+                        ? 'linear-gradient(135deg, rgba(15, 118, 110, 0.34), rgba(30, 41, 59, 0.6))'
+                        : 'linear-gradient(135deg, #ecfeff 0%, #f0fdf4 52%, #eff6ff 100%)',
+                  })}
+                >
+                  <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        placeItems: 'center',
+                        width: 42,
+                        height: 42,
+                        borderRadius: 2.5,
+                        color: '#fff',
+                        background: 'linear-gradient(135deg, #0f766e, #0284c7)',
+                        boxShadow: '0 8px 18px rgba(14, 116, 144, 0.24)',
+                      }}
+                    >
+                      <Face6Icon />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle1" fontWeight={800}>
+                        {getPlayPreschoolText(lang, 'title')}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {playPreschoolAdvice.plan}
+                      </Typography>
+                    </Box>
                   </Stack>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+
+                  <Typography variant="body2" sx={{ mt: 2, lineHeight: 1.65 }}>
                     {cleanAdviceText(advices?.play_preschool)}
                   </Typography>
+
+                  <Divider sx={{ my: 2, borderColor: 'rgba(13, 148, 136, 0.18)' }} />
+
+                  <Grid container spacing={1.25}>
+                    {playPreschoolAdvice.tips.map((tip, index) => (
+                      <Grid key={tip} item xs={12} md={6}>
+                        <Stack
+                          direction="row"
+                          spacing={1.25}
+                          alignItems="flex-start"
+                          sx={{
+                            height: '100%',
+                            p: 1.25,
+                            borderRadius: 2,
+                            bgcolor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(255,255,255,0.055)'
+                                : 'rgba(255,255,255,0.72)',
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              flex: '0 0 auto',
+                              width: 25,
+                              height: 25,
+                              borderRadius: '50%',
+                              display: 'grid',
+                              placeItems: 'center',
+                              mt: 0.1,
+                              color: '#0f766e',
+                              bgcolor: 'rgba(20, 184, 166, 0.14)',
+                              fontSize: 12,
+                              fontWeight: 800,
+                            }}
+                          >
+                            {index + 1}
+                          </Box>
+                          <Typography variant="body2" sx={{ lineHeight: 1.55 }}>
+                            {tip}
+                          </Typography>
+                        </Stack>
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Box>
               )}
 
@@ -1840,7 +1931,11 @@ export default function AnalysisResults({
                   { key: 'nutrition', title: t('nutrition') },
                   { key: 'activity', title: t('activity') },
                   { key: 'checkups', title: t('checkups') },
-                ].map(({ key, title, icon }) => (
+                ]
+                  .filter(
+                    ({ key }) => key !== 'activity' || canShowActivityAdvice
+                  )
+                  .map(({ key, title, icon }) => (
                   <Grid key={key} item xs={12} md={6}>
                     <Paper
                       variant="outlined"

@@ -94,11 +94,11 @@ PDF_LABELS = {
         "unit_day": "kun",
         "ai_parent_tips_title": "MORPHOAI: OTA-ONALAR UCHUN QISQA MASLAHATLAR",
         "adv_sport": "Sportga yo'naltirish",
-        "adv_specialist": "👨‍⚕️ Mutaxassis",
-        "adv_nutrition": "🍎 Ovqatlanish",
-        "adv_activity": "🏃 Jismoniy faollik",
-        "adv_checkups": "🏥 Tekshiruvlar",
-        "adv_play_preschool": "🧩 O'yin va maktabgacha ta'lim",
+        "adv_specialist": "Mutaxassis",
+        "adv_nutrition": "Ovqatlanish",
+        "adv_activity": "Jismoniy faollik",
+        "adv_checkups": "Tekshiruvlar",
+        "adv_play_preschool": "O'yin va maktabgacha ta'lim",
         "adv_sport": "Sportga yo'naltirish",
         "adv_general": "📝 Umumiy tavsiya",
     },
@@ -637,6 +637,112 @@ PDF_LABELS["tr"] = {
     "adv_play_preschool": "Oyun ve Okul Öncesi Eğitim",
     "adv_general": "Genel oneri",
     "detailed_advices_label": "EK TALIMATLAR:",
+}
+
+
+
+PLAY_PRESCHOOL_PDF_TIPS = {
+    "uz": [
+        "Har kuni 15–20 daqiqalik navbatli o‘yin o‘ynang: salomlashish, kutish va ulashishni namuna qiling.",
+        "Har kuni yugurish, to‘p, raqs yoki sayr kabi faol o‘yin uchun vaqt ajrating.",
+        "Uyqu va dam olish vaqtini bir xil saqlang; toliqishda tinch o‘yin va erta uyquni tanlang.",
+        "Ekran o‘rniga rasm, kitob yoki birgalikdagi o‘yinni taklif qiling.",
+        "Tarbiyachi bilan haftasiga bir marta qaysi o‘yinlar bolaga yordam berishini muhokama qiling.",
+    ],
+    "en": [
+        "Use a 15–20 minute turn-taking game each day; model greeting, waiting, and sharing.",
+        "Make time every day for running, ball games, dancing, or a walk.",
+        "Keep sleep and rest times consistent; choose calm play and an earlier bedtime when tired.",
+        "Offer drawing, books, or shared play instead of extra screen time.",
+        "Have a short weekly check-in with the teacher about what helps the child engage.",
+    ],
+    "ru": [
+        "Ежедневно играйте 15–20 минут в игру с очередностью; показывайте приветствие, ожидание и обмен игрушками.",
+        "Каждый день оставляйте время для бега, мяча, танцев или прогулки.",
+        "Соблюдайте постоянное время сна и отдыха; при усталости выбирайте спокойную игру и ранний сон.",
+        "Вместо дополнительного экрана предложите рисование, книги или совместную игру.",
+        "Раз в неделю обсуждайте с воспитателем, что помогает ребенку включаться.",
+    ],
+    "kz": [
+        "Күн сайын 15–20 минут кезектесіп ойнаңыз: амандасу, күту және бөлісуді үлгі етіңіз.",
+        "Күн сайын жүгіру, доп, би немесе серуенге уақыт бөліңіз.",
+        "Ұйқы мен демалыс уақытын тұрақты ұстаңыз; шаршағанда тыныш ойын мен ерте ұйқыны таңдаңыз.",
+        "Қосымша экранның орнына сурет, кітап немесе бірге ойнауды ұсыныңыз.",
+        "Аптасына бір рет тәрбиешімен балаға не көмектесетінін талқылаңыз.",
+    ],
+    "ky": [
+        "Күн сайын 15–20 мүнөт кезектешип ойноңуз: саламдашуу, күтүү жана бөлүшүүнү көрсөтүңүз.",
+        "Күн сайын чуркоо, топ, бий же сейил үчүн убакыт бөлүңүз.",
+        "Уйку жана эс алуу убактысын туруктуу кармаңыз; чарчаганда тынч оюн жана эрте уйкуну тандаңыз.",
+        "Кошумча экрандын ордуна сүрөт, китеп же бирге ойноону сунуштаңыз.",
+        "Аптасына бир жолу тарбиячы менен балага эмне жардам берерин талкуулаңыз.",
+    ],
+    "tg": [
+        "Ҳар рӯз 15–20 дақиқа навбатдорӣ бозӣ кунед: салом, интизорӣ ва мубодиларо нишон диҳед.",
+        "Ҳар рӯз барои давидан, тӯббозӣ, рақс ё сайругашт вақт ҷудо кунед.",
+        "Вақти хоб ва истироҳатро мунтазам нигоҳ доред; ҳангоми хастагӣ бозии ором ва хоби барвақтро интихоб кунед.",
+        "Ба ҷойи экрани иловагӣ расмкашӣ, китоб ё бозии якҷоя пешниҳод кунед.",
+        "Ҳафтае як бор бо мураббӣ чизҳои кӯмаккунандаро муҳокима кунед.",
+    ],
+    "tm": [
+        "Her gün 15–20 minut nobatlaşyp oýnaň: salamlaşmagy, garaşmagy we paýlaşmagy görkeziň.",
+        "Her gün ylgaw, top, tans ýa-da gezelenç üçin wagt bölüň.",
+        "Uky we dynç alyş wagtyny durnukly saklaň; ýadawlykda asuda oýun we irki uky saýlaň.",
+        "Goşmaça ekranyň ýerine surat, kitap ýa-da bilelikdäki oýny hödürläň.",
+        "Hepdede bir gezek terbiýeçi bilen nämäniň kömek edýändigini maslahatlaşyň.",
+    ],
+    "tr": [
+        "Her gün 15–20 dakika sırayla oynayın; selamlaşmayı, beklemeyi ve paylaşmayı örnekleyin.",
+        "Her gün koşma, top, dans veya yürüyüş için zaman ayırın.",
+        "Uyku ve dinlenme saatlerini düzenli tutun; yorgunlukta sakin oyun ve erken uyku seçin.",
+        "Ek ekran yerine resim, kitap veya birlikte oyun önerin.",
+        "Haftada bir öğretmenle çocuğa nelerin yardımcı olduğunu konuşun.",
+    ],
+}
+
+
+
+PDF_DEFAULT_ADDITIONAL_INSTRUCTIONS = {
+    "uz": [
+        "Kun davomida yetarli suv ichish va muntazam ovqatlanish rejimiga rioya qiling.",
+        "Har kuni bolaning yoshiga mos faol o‘yin hamda ochiq havoda sayr uchun vaqt ajrating.",
+        "Uyqu, ishtaha yoki umumiy holatda barqaror o‘zgarish bo‘lsa, mutaxassis bilan maslahatlashing.",
+    ],
+    "en": [
+        "Maintain adequate water intake and regular meals throughout the day.",
+        "Allow time every day for age-appropriate active play and outdoor walks.",
+        "Consult a specialist if sleep, appetite, or general wellbeing changes persistently.",
+    ],
+    "ru": [
+        "Соблюдайте достаточный питьевой режим и регулярное питание в течение дня.",
+        "Каждый день выделяйте время для активной игры по возрасту и прогулки на свежем воздухе.",
+        "При стойких изменениях сна, аппетита или самочувствия обратитесь к специалисту.",
+    ],
+    "kz": [
+        "Күні бойы жеткілікті су ішу мен тұрақты тамақтану тәртібін сақтаңыз.",
+        "Күн сайын жасына сай қимылды ойын мен таза ауада серуендеуге уақыт бөліңіз.",
+        "Ұйқы, тәбет немесе жалпы жағдай тұрақты өзгерсе, маманмен кеңесіңіз.",
+    ],
+    "ky": [
+        "Күн бою жетиштүү суу ичүүнү жана үзгүлтүксүз тамактанууну сактаңыз.",
+        "Күн сайын жашына ылайык кыймылдуу оюнга жана сыртта сейилдөөгө убакыт бөлүңүз.",
+        "Уйку, табит же жалпы абал туруктуу өзгөрсө, адиске кайрылыңыз.",
+    ],
+    "tg": [
+        "Дар давоми рӯз нӯшидани оби кофӣ ва ғизои мунтазамро риоя кунед.",
+        "Ҳар рӯз барои бозии фаъоли мувофиқ ба синну сол ва сайругашт дар ҳавои кушод вақт ҷудо кунед.",
+        "Ҳангоми тағйироти доимии хоб, иштиҳо ё ҳолати умумӣ бо мутахассис машварат кунед.",
+    ],
+    "tm": [
+        "Günüň dowamynda ýeterlik suw içmegi we yzygiderli iýmitlenmegi saklaň.",
+        "Her gün ýaşyna laýyk işjeň oýun we açyk howada gezelenç üçin wagt bölüň.",
+        "Uky, işdä ýa-da umumy ýagdaýda dowamly üýtgeşme bolsa, hünärmen bilen maslahatlaşyň.",
+    ],
+    "tr": [
+        "Gün boyunca yeterli su tüketimini ve düzenli öğünleri koruyun.",
+        "Her gün yaşa uygun hareketli oyun ve açık havada yürüyüş için zaman ayırın.",
+        "Uyku, iştah veya genel durumda kalıcı değişiklikler olursa bir uzmana danışın.",
+    ],
 }
 
 
@@ -1285,13 +1391,70 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
                 )
             )
             elements.append(cat_table)
-            elements.append(Spacer(1, 15))
+            elements.append(Spacer(1, 10))
 
-    # 2. Detailed advice list (from Bioimpedance/Indices)
-    detailed = analysis_data_dict.get("indices", {})
-    advice_list = detailed.get("advice", [])
+            if advices_dict.get("play_preschool"):
+                preschool_tips = PLAY_PRESCHOOL_PDF_TIPS.get(
+                    lang, PLAY_PRESCHOOL_PDF_TIPS["en"]
+                )
+                preschool_title = L.get(
+                    "adv_play_preschool", "Play & Preschool Engagement"
+                )
+                elements.append(
+                    Paragraph(
+                        f"<b>{html.escape(preschool_title)}</b>",
+                        styles["Normal"],
+                    )
+                )
+                tip_rows = [
+                    [
+                        Paragraph(
+                            f"{index}. {html.escape(tip)}",
+                            styles["Normal"],
+                        )
+                    ]
+                    for index, tip in enumerate(preschool_tips, start=1)
+                ]
+                tips_table = Table(tip_rows, colWidths=[6.0 * inch])
+                tips_table.setStyle(
+                    TableStyle(
+                        [
+                            ("FONTNAME", (0, 0), (-1, -1), font_name),
+                            ("FONTSIZE", (0, 0), (-1, -1), 9),
+                            ("LEADING", (0, 0), (-1, -1), 13),
+                            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#e8f8f5")),
+                            ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#a3e4d7")),
+                            ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#c7e8e2")),
+                            ("PADDING", (0, 0), (-1, -1), 7),
+                        ]
+                    )
+                )
+                elements.append(tips_table)
+                elements.append(Spacer(1, 15))
 
-    if advice_list:
+    # 2. Additional instructions from detailed indices, with a useful
+    # fallback for reports that have no bioimpedance-specific advice.
+    if data.get("show_additional_instructions", True):
+        detailed = analysis_data_dict.get("indices", {})
+        advice_list = detailed.get("advice", [])
+
+        advice_elements = []
+        for item in advice_list:
+            item_clean = str(item).strip()
+            if not any(item_clean in str(value) for value in advices_dict.values()):
+                advice_elements.append(
+                    [Paragraph(html.escape(report_text(item, lang)), styles["Normal"])]
+                )
+
+        if not advice_elements:
+            fallback_tips = PDF_DEFAULT_ADDITIONAL_INSTRUCTIONS.get(
+                lang, PDF_DEFAULT_ADDITIONAL_INSTRUCTIONS["en"]
+            )
+            advice_elements = [
+                [Paragraph(f"{index}. {html.escape(tip)}", styles["Normal"])]
+                for index, tip in enumerate(fallback_tips, start=1)
+            ]
+
         elements.append(
             Paragraph(
                 L.get("detailed_advices_label", "QO'SHIMCHA KO'RSATMALAR:"),
@@ -1299,37 +1462,21 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
             )
         )
         elements.append(Spacer(1, 5))
-
-        advice_elements = []
-        for item in advice_list:
-            # Avoid showing items already present in categorized advice
-            item_clean = str(item).strip()
-            already_shown = False
-            for v in advices_dict.values():
-                if item_clean in str(v):
-                    already_shown = True
-                    break
-
-            if not already_shown:
-                p = Paragraph(report_text(item, lang), styles["Normal"])
-                bullet_p = Paragraph("•", styles["Normal"])
-                advice_elements.append([bullet_p, p])
-
-        if advice_elements:
-            advice_table = Table(advice_elements, colWidths=[0.2 * inch, 5.8 * inch])
-            advice_table.setStyle(
-                TableStyle(
-                    [
-                        ("FONTNAME", (0, 0), (-1, -1), font_name),
-                        ("FONTSIZE", (0, 0), (-1, -1), 9),
-                        ("PADDING", (0, 0), (-1, -1), 4),
-                        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                    ]
-                )
+        advice_table = Table(advice_elements, colWidths=[6.0 * inch])
+        advice_table.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), font_name),
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("LEADING", (0, 0), (-1, -1), 13),
+                    ("PADDING", (0, 0), (-1, -1), 6),
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f8fafc")),
+                    ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#d5dbdb")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.25, colors.HexColor("#e5e7eb")),
+                ]
             )
-            elements.append(advice_table)
-    else:
-        elements.append(Paragraph(L["no_advice"], styles["Normal"]))
+        )
+        elements.append(advice_table)
     elements.append(Spacer(1, 30))
 
     # Yakuniy qism

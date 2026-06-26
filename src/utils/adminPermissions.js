@@ -11,6 +11,8 @@ export const ADMIN_PERMISSION_DEFAULTS = {
   foot_length: true,
   bioimpedance: true,
   play_preschool_engagement: true,
+  activity_advice: true,
+  additional_instructions: true,
 };
 
 const permissionLabels = {
@@ -27,6 +29,8 @@ const permissionLabels = {
     foot_length: 'Oyoq panja uzunligi',
     bioimpedance: 'Bioimpedans tahlili',
     play_preschool_engagement: "O'yin va maktabgacha ta'lim",
+    activity_advice: 'Jismoniy faollik',
+    additional_instructions: "Qo‘shimcha ko‘rsatmalar (PDF)",
   },
   ru: {
     shoulder_length: '????? ?????',
@@ -41,6 +45,8 @@ const permissionLabels = {
     foot_length: '????? ?????',
     bioimpedance: '?????????????? ??????',
     play_preschool_engagement: 'Игра и дошкольное образование',
+    activity_advice: 'Физическая активность',
+    additional_instructions: 'Дополнительные указания (PDF)',
   },
   en: {
     shoulder_length: 'Shoulder length',
@@ -55,6 +61,8 @@ const permissionLabels = {
     foot_length: 'Foot length',
     bioimpedance: 'Bioimpedance analysis',
     play_preschool_engagement: 'Play & Preschool Engagement',
+    activity_advice: 'Physical activity',
+    additional_instructions: 'Additional instructions (PDF)',
   },
   kz: {
     shoulder_length: '??? ????????',
@@ -69,6 +77,8 @@ const permissionLabels = {
     foot_length: '????? ????????',
     bioimpedance: '??????????? ???????',
     play_preschool_engagement: 'Ойын және мектепке дейінгі білім',
+    activity_advice: 'Дене белсенділігі',
+    additional_instructions: 'Қосымша нұсқаулар (PDF)',
   },
   ky: {
     shoulder_length: '???? ????????',
@@ -83,6 +93,8 @@ const permissionLabels = {
     foot_length: '????? ????????',
     bioimpedance: '??????????? ????????',
     play_preschool_engagement: 'Оюн жана мектепке чейинки билим',
+    activity_advice: 'Физикалык активдүүлүк',
+    additional_instructions: 'Кошумча көрсөтмөлөр (PDF)',
   },
   tg: {
     shoulder_length: '??????? ????',
@@ -97,6 +109,8 @@ const permissionLabels = {
     foot_length: '??????? ????????',
     bioimpedance: '??????? ???????????',
     play_preschool_engagement: 'Бозӣ ва таълими томактабӣ',
+    activity_advice: 'Фаъолияти ҷисмонӣ',
+    additional_instructions: 'Дастурҳои иловагӣ (PDF)',
   },
   tm: {
     shoulder_length: 'Yelka uzynlygy',
@@ -111,6 +125,8 @@ const permissionLabels = {
     foot_length: 'Ayak dabanynyn uzynlygy',
     bioimpedance: 'Bioimpedans analizi',
     play_preschool_engagement: 'Oýun we mekdebe çenli bilim',
+    activity_advice: 'Fiziki işjeňlik',
+    additional_instructions: 'Goşmaça görkezmeler (PDF)',
   },
   tr: {
     shoulder_length: 'Omuz uzunlugu',
@@ -125,6 +141,8 @@ const permissionLabels = {
     foot_length: 'Ayak uzunlugu',
     bioimpedance: 'Bioempedans analizi',
     play_preschool_engagement: 'Oyun ve Okul Öncesi Eğitim',
+    activity_advice: 'Fiziksel aktivite',
+    additional_instructions: 'Ek talimatlar (PDF)',
   },
 };
 

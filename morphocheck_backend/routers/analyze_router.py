@@ -71,9 +71,14 @@ def generate_pdf_report_endpoint(
     data: PatientData,
     lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_user),
 ):
     try:
         report_data = build_pdf_report_data(data, db, lang=lang)
+        if current_user:
+            report_data = filter_payload_by_permissions(
+                report_data, get_effective_admin_permissions(current_user)
+            )
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
         return StreamingResponse(
             pdf_buffer,
@@ -107,6 +112,9 @@ def generate_pdf_by_patient_id(
 
     try:
         report_data = build_pdf_report_data_by_id(patient_id, db, lang=lang)
+        report_data = filter_payload_by_permissions(
+            report_data, get_effective_admin_permissions(current_user)
+        )
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
         return StreamingResponse(
             pdf_buffer,

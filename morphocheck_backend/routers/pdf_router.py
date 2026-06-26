@@ -92,6 +92,7 @@ async def generate_pdf_endpoint(
             gender_norm,
             all_settings,
             bio_data=analysis.get("indices"),
+            ppe_data=getattr(request_data, "play_preschool_engagement", None),
             lang=lang,
         )
 
@@ -279,6 +280,7 @@ async def generate_pdf_by_id_endpoint(
             (rec.gender or "").lower(),
             all_settings,
             bio_data=analysis["indices"],
+            ppe_data=getattr(rec, "play_preschool_engagement", None),
             lang=lang,
         )
 

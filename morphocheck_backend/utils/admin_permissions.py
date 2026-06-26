@@ -16,6 +16,8 @@ PERMISSION_KEYS = (
     "foot_length",
     "bioimpedance",
     "play_preschool_engagement",
+    "activity_advice",
+    "additional_instructions",
 )
 
 DEFAULT_ADMIN_PERMISSIONS = {key: True for key in PERMISSION_KEYS}
@@ -106,6 +108,16 @@ def filter_payload_by_permissions(payload: dict[str, Any], permissions: dict[str
         if isinstance(analysis, dict) and isinstance(analysis.get("indices"), dict):
             for key in (*BIOIMPEDANCE_INDEX_KEYS, "z_body_length", "advice"):
                 analysis["indices"].pop(key, None)
+    advices = data.get("advices")
+    if isinstance(advices, dict):
+        if not permissions.get("activity_advice", True):
+            advices.pop("activity", None)
+        if not permissions.get("play_preschool_engagement", True):
+            advices.pop("play_preschool", None)
+
+    if not permissions.get("additional_instructions", True):
+        data["show_additional_instructions"] = False
+
     if not permissions.get("play_preschool_engagement", True):
         data.pop("play_preschool_engagement", None)
         data.pop("playPreschoolEngagement", None)
