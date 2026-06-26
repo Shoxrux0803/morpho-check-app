@@ -59,6 +59,7 @@ import {
   normalizeAdminPermissions,
 } from '../utils/adminPermissions';
 import { useGrowthAnalytics } from '../hooks/useGrowthAnalytics';
+import { getPlayPreschoolText } from '../utils/playPreschoolI18n';
 import {
   CONSENT_POLICY_VERSION,
   PrivacyConsentPanel,
@@ -83,6 +84,7 @@ export default function InputForm({
   onBulkUpdate,
 }) {
   const { lang, t } = useLanguage();
+  const ppe = (key) => getPlayPreschoolText(lang, key);
   const { isAuthenticated, user } = useAuth();
   const btnRef = useRef(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -980,112 +982,112 @@ export default function InputForm({
                     <Face6Icon />
                   </Box>
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    O'yin va maktabgacha ta'lim (Play & Preschool Engagement)
+                    {ppe('title')}
                   </Typography>
                 </Stack>
                 <Alert severity="info" sx={{ mb: 4, borderRadius: 2 }}>
-                  This module does not assess cognitive performance, psychological development or pedagogical achievement. It provides contextual indicators of play participation and preschool engagement.
+                  {ppe('description')}
                 </Alert>
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                <Grid container columnSpacing={3} rowSpacing={2}>
+                  <Grid size={12}>
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
-                      Teacher Checklist (O'qituvchi/Tarbiyachi uchun so'rov)
+                      {ppe('teacherChecklist')}
                     </Typography>
                     <Divider sx={{ mb: 3 }} />
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Participation in group play (Guruh o'yinlaridagi ishtiroki)" name="ppe_group_play" value={formData.ppe_group_play} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="High">High (Yuqori)</MenuItem>
-                      <MenuItem value="Medium">Medium (O'rtacha)</MenuItem>
-                      <MenuItem value="Low">Low (Past)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('groupPlay')} name="ppe_group_play" value={formData.ppe_group_play} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="High">{ppe('high')}</MenuItem>
+                      <MenuItem value="Medium">{ppe('medium')}</MenuItem>
+                      <MenuItem value="Low">{ppe('low')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Physical activity level (Jismoniy faollik darajasi)" name="ppe_physical_activity" value={formData.ppe_physical_activity} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="High">High (Yuqori)</MenuItem>
-                      <MenuItem value="Medium">Medium (O'rtacha)</MenuItem>
-                      <MenuItem value="Low">Low (Past)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('physicalActivity')} name="ppe_physical_activity" value={formData.ppe_physical_activity} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="High">{ppe('high')}</MenuItem>
+                      <MenuItem value="Medium">{ppe('medium')}</MenuItem>
+                      <MenuItem value="Low">{ppe('low')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Fatigue during activity (Mashg'ulot davomidagi toliqish)" name="ppe_fatigue_activity" value={formData.ppe_fatigue_activity} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="None">None (Yo'q)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('activityFatigue')} name="ppe_fatigue_activity" value={formData.ppe_fatigue_activity} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="None">{ppe('none')}</MenuItem>
                       <MenuItem value="Moderate">Moderate (O'rtacha)</MenuItem>
-                      <MenuItem value="High">High (Yuqori)</MenuItem>
+                      <MenuItem value="High">{ppe('high')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Peer interaction (Tengdoshlari bilan muloqoti)" name="ppe_peer_interaction" value={formData.ppe_peer_interaction} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Active">Active (Faol)</MenuItem>
-                      <MenuItem value="Occasional">Occasional (Vaqti-vaqti bilan)</MenuItem>
-                      <MenuItem value="Rare">Rare (Kamdan-kam)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('peerInteraction')} name="ppe_peer_interaction" value={formData.ppe_peer_interaction} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Active">{ppe('active')}</MenuItem>
+                      <MenuItem value="Occasional">{ppe('occasional')}</MenuItem>
+                      <MenuItem value="Rare">{ppe('rare')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Engagement in preschool routines (Bog'cha tartibiga kirishishi)" name="ppe_preschool_routines" value={formData.ppe_preschool_routines} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Fully engaged">Fully engaged (To'liq qo'shilgan)</MenuItem>
-                      <MenuItem value="Partially engaged">Partially engaged (Qisman qo'shilgan)</MenuItem>
-                      <MenuItem value="Reluctant">Reluctant (Xohishsiz)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('preschoolRoutines')} name="ppe_preschool_routines" value={formData.ppe_preschool_routines} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Fully engaged">{ppe('fullyEngaged')}</MenuItem>
+                      <MenuItem value="Partially engaged">{ppe('partiallyEngaged')}</MenuItem>
+                      <MenuItem value="Reluctant">{ppe('reluctant')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Motor confidence (Harakatdagi ishonch)" name="ppe_motor_confidence" value={formData.ppe_motor_confidence} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Confident">Confident (Ishonchli)</MenuItem>
-                      <MenuItem value="Hesitant">Hesitant (Ikkilanuvchan)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('motorConfidence')} name="ppe_motor_confidence" value={formData.ppe_motor_confidence} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Confident">{ppe('confident')}</MenuItem>
+                      <MenuItem value="Hesitant">{ppe('hesitant')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Participation in structured activities (Tuzilgan mashg'ulotlardagi ishtiroki)" name="ppe_structured_activities" value={formData.ppe_structured_activities} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Active">Active (Faol)</MenuItem>
-                      <MenuItem value="Passive">Passive (Sust)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('structuredActivities')} name="ppe_structured_activities" value={formData.ppe_structured_activities} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Active">{ppe('active')}</MenuItem>
+                      <MenuItem value="Passive">{ppe('passive')}</MenuItem>
                     </Field>
                   </Grid>
 
-                  <Grid item xs={12} sx={{ mt: 2 }}>
+                  <Grid size={12} sx={{ mt: 0 }}>
                     <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
-                      Parent Brief Questions (Ota-onalar uchun qisqa savollar)
+                      {ppe('parentQuestions')}
                     </Typography>
-                    <Divider sx={{ mb: 3 }} />
+                    <Divider sx={{ mb: 1 }} />
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Daily physical activity (Kundalik jismoniy faollik)" name="ppe_daily_physical_activity" value={formData.ppe_daily_physical_activity} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value=">2 hours">&gt;2 hours (2 soatdan ko'p)</MenuItem>
-                      <MenuItem value="1-2 hours">1-2 hours (1-2 soat)</MenuItem>
-                      <MenuItem value="<1 hour">&lt;1 hour (1 soatdan kam)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('dailyActivity')} name="ppe_daily_physical_activity" value={formData.ppe_daily_physical_activity} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value=">2 hours">{ppe('more2Hours')}</MenuItem>
+                      <MenuItem value="1-2 hours">{ppe('oneTo2Hours')}</MenuItem>
+                      <MenuItem value="<1 hour">{ppe('less1Hour')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Outdoor play (Ochiq havodagi o'yinlar)" name="ppe_outdoor_play" value={formData.ppe_outdoor_play} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value=">1 hour">&gt;1 hour (1 soatdan ko'p)</MenuItem>
-                      <MenuItem value="30-60 mins">30-60 mins</MenuItem>
-                      <MenuItem value="<30 mins">&lt;30 mins (30 daqiqadan kam)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('outdoorPlay')} name="ppe_outdoor_play" value={formData.ppe_outdoor_play} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value=">1 hour">{ppe('more1Hour')}</MenuItem>
+                      <MenuItem value="30-60 mins">{ppe('30To60Mins')}</MenuItem>
+                      <MenuItem value="<30 mins">{ppe('less30Mins')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Fatigue at home (Uy sharoitidagi toliqish)" name="ppe_fatigue_home" value={formData.ppe_fatigue_home} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Rarely">Rarely (Kamdan-kam)</MenuItem>
-                      <MenuItem value="Sometimes">Sometimes (Ba'zan)</MenuItem>
-                      <MenuItem value="Often">Often (Tez-tez)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('homeFatigue')} name="ppe_fatigue_home" value={formData.ppe_fatigue_home} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Rarely">{ppe('rare')}</MenuItem>
+                      <MenuItem value="Sometimes">{ppe('sometimes')}</MenuItem>
+                      <MenuItem value="Often">{ppe('often')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Sleep routine (Uyqu rejimi)" name="ppe_sleep_routine" value={formData.ppe_sleep_routine} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Regular">Regular (Muntazam)</MenuItem>
-                      <MenuItem value="Irregular">Irregular (Buzilgan/Noto'g'ri)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('sleepRoutine')} name="ppe_sleep_routine" value={formData.ppe_sleep_routine} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Regular">{ppe('regular')}</MenuItem>
+                      <MenuItem value="Irregular">{ppe('irregular')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Screen time (Ekran oldidagi vaqt)" name="ppe_screen_time" value={formData.ppe_screen_time} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="<1 hour">&lt;1 hour (1 soatdan kam)</MenuItem>
-                      <MenuItem value="1-2 hours">1-2 hours (1-2 soat)</MenuItem>
-                      <MenuItem value=">2 hours">&gt;2 hours (2 soatdan ko'p)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('screenTime')} name="ppe_screen_time" value={formData.ppe_screen_time} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="<1 hour">{ppe('less1Hour')}</MenuItem>
+                      <MenuItem value="1-2 hours">{ppe('oneTo2Hours')}</MenuItem>
+                      <MenuItem value=">2 hours">{ppe('more2Hours')}</MenuItem>
                     </Field>
                   </Grid>
-                  <Grid item xs={12} md={6}>
-                    <Field fullWidth select label="Appetite / general eating behavior (Ishtaha / ovqatlanish xulq-atvori)" name="ppe_appetite" value={formData.ppe_appetite} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Good">Good (Yaxshi)</MenuItem>
-                      <MenuItem value="Fair">Fair (O'rtacha)</MenuItem>
-                      <MenuItem value="Poor">Poor (Sust/Yomon)</MenuItem>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Field fullWidth select label={ppe('appetite')} name="ppe_appetite" value={formData.ppe_appetite} onChange={handleInputChange} sx={inputSx}>
+                      <MenuItem value="Good">{ppe('good')}</MenuItem>
+                      <MenuItem value="Fair">{ppe('fair')}</MenuItem>
+                      <MenuItem value="Poor">{ppe('poor')}</MenuItem>
                     </Field>
                   </Grid>
                 </Grid>
