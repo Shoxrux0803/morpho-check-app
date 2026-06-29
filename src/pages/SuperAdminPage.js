@@ -2732,76 +2732,242 @@ const SuperAdminPage = () => {
 
       case 3:
         return (
-          <Stack spacing={3}>
+          <Stack spacing={2.5}>
             <Box
-              display="flex"
-              flexDirection={{ xs: 'column', sm: 'row' }}
-              justifyContent="space-between"
-              alignItems={{ xs: 'flex-start', sm: 'center' }}
-              gap={2}
+              component={motion.div}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 4,
+                p: { xs: 2, md: 2.5 },
+                border: '1px solid',
+                borderColor: isDark
+                  ? 'rgba(255,255,255,0.10)'
+                  : 'rgba(20,184,166,0.16)',
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(15,23,42,0.92), rgba(17,94,89,0.45))'
+                  : 'linear-gradient(135deg, rgba(240,253,250,0.96), rgba(255,255,255,0.9) 52%, rgba(239,246,255,0.95))',
+                boxShadow: isDark
+                  ? '0 22px 52px rgba(0,0,0,0.26)'
+                  : '0 22px 52px rgba(15,118,110,0.10)',
+              }}
             >
-              <Typography variant="h4" fontWeight={800}>
-                {pt('adminManagement')}
-              </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <Button
-                  variant="outlined"
-                  startIcon={<Visibility />}
-                  onClick={handleOpenAdminReport}
-                  disabled={adminsLoading}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {reportLabels.preview}
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<Add />}
-                  onClick={() => {
-                    blurActiveElement();
-                    setCurrentAdmin(null);
-                    setAdminForm(normalizeAdminForm());
-                    setShowAdminPassword(false);
-                    setShowCurrentAdminPassword(false);
-                    setAdminDialogOpen(true);
-                  }}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {pt('newAdmin')}
-                </Button>
-              </Stack>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: { xs: 'column', lg: 'row' },
+                  justifyContent: 'space-between',
+                  alignItems: { xs: 'stretch', lg: 'flex-start' },
+                  gap: 2,
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                <Stack spacing={1.25} sx={{ maxWidth: 680 }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Avatar
+                      sx={{
+                        width: 42,
+                        height: 42,
+                        bgcolor: isDark
+                          ? 'rgba(45,212,191,0.18)'
+                          : 'rgba(13,148,136,0.12)',
+                        color: isDark ? '#5eead4' : '#0f766e',
+                      }}
+                    >
+                      <Security />
+                    </Avatar>
+                    <Box>
+                      <Typography
+                        variant="h4"
+                        fontWeight={900}
+                        sx={{
+                          fontSize: { xs: '1.45rem', md: '2rem' },
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {pt('adminManagement')}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mt: 0.35 }}
+                      >
+                        {admins.length} {pt('admins')} - {reportLabels.admins}{' '}
+                        va {reportLabels.researchers}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    useFlexGap
+                    flexWrap="wrap"
+                    sx={{ pt: 0.5 }}
+                  >
+                    {[
+                      [reportLabels.total, adminReportSummary.total, 'primary'],
+                      [
+                        reportLabels.superadmins,
+                        adminReportSummary.superadmins,
+                        'error',
+                      ],
+                      [reportLabels.admins, adminReportSummary.admins, 'info'],
+                      [
+                        reportLabels.researchers,
+                        adminReportSummary.researchers,
+                        'success',
+                      ],
+                    ].map(([label, value, color]) => (
+                      <Chip
+                        key={label}
+                        label={`${label}: ${value}`}
+                        color={color}
+                        variant={isDark ? 'filled' : 'outlined'}
+                        sx={{
+                          height: 32,
+                          borderRadius: 2,
+                          fontWeight: 800,
+                          bgcolor:
+                            isDark && color !== 'error'
+                              ? 'rgba(255,255,255,0.08)'
+                              : undefined,
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                </Stack>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Visibility />}
+                    onClick={handleOpenAdminReport}
+                    disabled={adminsLoading}
+                    sx={{
+                      minHeight: 44,
+                      borderRadius: 2,
+                      px: 2,
+                      bgcolor: isDark
+                        ? 'rgba(255,255,255,0.04)'
+                        : 'rgba(255,255,255,0.72)',
+                    }}
+                  >
+                    {reportLabels.preview}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => {
+                      blurActiveElement();
+                      setCurrentAdmin(null);
+                      setAdminForm(normalizeAdminForm());
+                      setShowAdminPassword(false);
+                      setShowCurrentAdminPassword(false);
+                      setAdminDialogOpen(true);
+                    }}
+                    sx={{
+                      minHeight: 44,
+                      borderRadius: 2,
+                      px: 2.25,
+                      fontWeight: 800,
+                      boxShadow: '0 12px 24px rgba(20,184,166,0.25)',
+                    }}
+                  >
+                    {pt('newAdmin')}
+                  </Button>
+                </Stack>
+              </Box>
             </Box>
 
             <TableContainer
               component={GlassPaper}
-              sx={{ mt: 2, overflow: 'auto' }}
+              sx={{
+                overflow: 'auto',
+                borderRadius: 4,
+                borderColor: isDark
+                  ? 'rgba(255,255,255,0.10)'
+                  : 'rgba(15,118,110,0.10)',
+                boxShadow: isDark
+                  ? '0 18px 42px rgba(0,0,0,0.22)'
+                  : '0 18px 42px rgba(15,118,110,0.07)',
+              }}
             >
               <Table
                 size="small"
-                sx={{ minWidth: { xs: 300, sm: 500, md: 800 } }}
+                sx={{
+                  minWidth: { xs: 680, md: 900 },
+                  '& .MuiTableCell-root': {
+                    borderBottomColor: isDark
+                      ? 'rgba(255,255,255,0.07)'
+                      : 'rgba(15,23,42,0.06)',
+                  },
+                }}
               >
-                <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
+                <TableHead
+                  sx={{
+                    bgcolor: isDark
+                      ? 'rgba(15,23,42,0.64)'
+                      : 'rgba(248,250,252,0.92)',
+                    '& th': {
+                      py: 1.5,
+                      color: 'text.secondary',
+                      fontSize: '0.72rem',
+                      fontWeight: 900,
+                      letterSpacing: 0,
+                      textTransform: 'uppercase',
+                    },
+                  }}
+                >
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt('name')}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt('role')}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>
-                      {pt('phone')}
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }} align="right">
-                      {pt('actions')}
-                    </TableCell>
+                    <TableCell>{pt('name')}</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>{pt('role')}</TableCell>
+                    <TableCell>{pt('phone')}</TableCell>
+                    <TableCell>{pt('status')}</TableCell>
+                    <TableCell align="right">{pt('actions')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {adminsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                         <CircularProgress />
+                      </TableCell>
+                    </TableRow>
+                  ) : admins.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                        <Stack spacing={1} alignItems="center">
+                          <Avatar
+                            sx={{
+                              width: 48,
+                              height: 48,
+                              bgcolor: 'primary.light',
+                              color: 'primary.main',
+                            }}
+                          >
+                            <People />
+                          </Avatar>
+                          <Typography fontWeight={800}>{pt('noData')}</Typography>
+                        </Stack>
                       </TableCell>
                     </TableRow>
                   ) : (
                     admins.map((admin) => (
-                      <TableRow key={admin.id} hover>
+                      <TableRow
+                        key={admin.id}
+                        hover
+                        sx={{
+                          '&:hover': {
+                            bgcolor: isDark
+                              ? 'rgba(45,212,191,0.06)'
+                              : 'rgba(20,184,166,0.05)',
+                          },
+                        }}
+                      >
                         <TableCell>
                           <Stack
                             direction="row"
@@ -2810,71 +2976,153 @@ const SuperAdminPage = () => {
                           >
                             <Avatar
                               sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: 'primary.light',
+                                width: 38,
+                                height: 38,
+                                bgcolor:
+                                  admin.role === 'superadmin'
+                                    ? 'error.light'
+                                    : admin.role === 'researcher'
+                                      ? 'success.light'
+                                      : 'primary.light',
+                                color:
+                                  admin.role === 'superadmin'
+                                    ? 'error.dark'
+                                    : admin.role === 'researcher'
+                                      ? 'success.dark'
+                                      : 'primary.dark',
+                                fontWeight: 900,
                               }}
                             >
-                              {admin.name.charAt(0)}
+                              {(admin.name || admin.email || '?')
+                                .charAt(0)
+                                .toUpperCase()}
                             </Avatar>
-                            <Typography variant="body2" fontWeight={600}>
-                              {admin.name}
-                            </Typography>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography variant="body2" fontWeight={800}>
+                                {admin.name || '-'}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ display: { xs: 'block', md: 'none' } }}
+                              >
+                                {admin.email}
+                              </Typography>
+                            </Box>
                           </Stack>
                         </TableCell>
-                        <TableCell>{admin.email}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {admin.email}
+                          </Typography>
+                        </TableCell>
                         <TableCell>
                           <Chip
                             label={admin.role.toUpperCase()}
                             size="small"
                             color={
-                              admin.role === 'superadmin' ? 'error' : 'primary'
+                              admin.role === 'superadmin'
+                                ? 'error'
+                                : admin.role === 'researcher'
+                                  ? 'success'
+                                  : 'primary'
                             }
                             variant="outlined"
+                            sx={{
+                              borderRadius: 1.5,
+                              fontWeight: 900,
+                              minWidth: 96,
+                            }}
                           />
                         </TableCell>
-                        <TableCell>{admin.phone || '-'}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2">
+                            {admin.phone || '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={pt('active')}
+                            size="small"
+                            color="success"
+                            sx={{
+                              borderRadius: 1.5,
+                              fontWeight: 800,
+                              bgcolor: isDark
+                                ? 'rgba(34,197,94,0.18)'
+                                : 'rgba(220,252,231,0.95)',
+                              color: isDark ? '#86efac' : 'success.dark',
+                            }}
+                          />
+                        </TableCell>
                         <TableCell align="right">
                           <Stack
                             direction="row"
-                            spacing={1}
+                            spacing={0.75}
                             justifyContent="flex-end"
                           >
-                            <IconButton
-                              size="small"
-                              onClick={() => {
-                                blurActiveElement();
-                                setCurrentAdmin(admin);
-                                const normalizedPair = normalizeCoordinatePair(
-                                  admin.latitude,
-                                  admin.longitude
-                                );
-                                setAdminForm({
-                                  ...normalizeAdminForm(admin),
-                                  latitude:
-                                    normalizedPair?.latitude ??
-                                    admin.latitude ??
-                                    '',
-                                  longitude:
-                                    normalizedPair?.longitude ??
-                                    admin.longitude ??
-                                    '',
-                                });
-                                setShowAdminPassword(false);
-                                setShowCurrentAdminPassword(false);
-                                setAdminDialogOpen(true);
-                              }}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              color="error"
-                              onClick={() => handleDeleteAdmin(admin.id)}
-                              disabled={admin.id === user.id}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
+                            <Tooltip title={pt('edit')}>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => {
+                                  blurActiveElement();
+                                  setCurrentAdmin(admin);
+                                  const normalizedPair = normalizeCoordinatePair(
+                                    admin.latitude,
+                                    admin.longitude
+                                  );
+                                  setAdminForm({
+                                    ...normalizeAdminForm(admin),
+                                    latitude:
+                                      normalizedPair?.latitude ??
+                                      admin.latitude ??
+                                      '',
+                                    longitude:
+                                      normalizedPair?.longitude ??
+                                      admin.longitude ??
+                                      '',
+                                  });
+                                  setShowAdminPassword(false);
+                                  setShowCurrentAdminPassword(false);
+                                  setAdminDialogOpen(true);
+                                }}
+                                sx={{
+                                  bgcolor: isDark
+                                    ? 'rgba(59,130,246,0.10)'
+                                    : 'rgba(219,234,254,0.9)',
+                                  '&:hover': {
+                                    bgcolor: isDark
+                                      ? 'rgba(59,130,246,0.18)'
+                                      : 'rgba(191,219,254,1)',
+                                  },
+                                }}
+                              >
+                                <Edit fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={pt('delete')}>
+                              <span>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={() => handleDeleteAdmin(admin.id)}
+                                  disabled={admin.id === user.id}
+                                  sx={{
+                                    bgcolor: isDark
+                                      ? 'rgba(239,68,68,0.10)'
+                                      : 'rgba(254,226,226,0.85)',
+                                    '&:hover': {
+                                      bgcolor: isDark
+                                        ? 'rgba(239,68,68,0.18)'
+                                        : 'rgba(254,202,202,0.95)',
+                                    },
+                                  }}
+                                >
+                                  <Delete fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
                           </Stack>
                         </TableCell>
                       </TableRow>

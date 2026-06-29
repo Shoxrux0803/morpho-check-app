@@ -46,7 +46,6 @@ import {
   TablePagination,
   Stack,
   Avatar,
-  Tooltip,
 } from '@mui/material';
 import {
   Delete,
@@ -59,7 +58,6 @@ import {
   Visibility,
   Assessment,
   BiotechOutlined,
-  Logout,
   Refresh,
   ErrorOutline,
   CheckCircle,
@@ -2099,17 +2097,6 @@ export default function AdminPage() {
                   />
                 ))}
               </Tabs>
-            </Box>
-            <Box sx={{ ml: 2 }}>
-              <Tooltip title={pt('logout')}>
-                <IconButton
-                  onClick={() => setLogoutDialogOpen(true)}
-                  color="error"
-                  size="small"
-                >
-                  <Logout />
-                </IconButton>
-              </Tooltip>
             </Box>
           </Toolbar>
         </Container>
