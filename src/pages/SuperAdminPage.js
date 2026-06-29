@@ -1949,8 +1949,8 @@ const SuperAdminPage = () => {
     setDeletedLoading(true);
     try {
       const [analysisResult, researchResult] = await Promise.allSettled([
-        AdminApi.analyses.deletedList({ show_deleted: true, page_size: 100 }),
-        ResearchApi.deletedList(),
+        AdminApi.analyses.deletedList({ page_size: 500 }),
+        ResearchApi.deletedList({ page_size: 500 }),
       ]);
 
       if (analysisResult.status === 'rejected') {

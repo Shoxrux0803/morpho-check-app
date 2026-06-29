@@ -521,15 +521,14 @@ export const AdminApi = {
     deletedList: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
+        if (key !== 'show_deleted' && value !== undefined && value !== null && value !== '') {
           queryParams.append(key, value.toString());
         }
       });
-      queryParams.set('show_deleted', 'true');
-      if (!queryParams.has('page_size')) queryParams.set('page_size', '50');
+      if (!queryParams.has('page_size')) queryParams.set('page_size', '500');
 
       const resp = await fetch(
-        `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
+        `${API_BASE}${API_PREFIX}/admin/deleted-analyses?${queryParams.toString()}`,
         {
           method: 'GET',
           headers: {
@@ -1131,6 +1130,7 @@ export const ResearchApi = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
+    if (!q.has('page_size')) q.set('page_size', '500');
     const token =
       localStorage.getItem('access_token') ||
       localStorage.getItem('token') ||

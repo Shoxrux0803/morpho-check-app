@@ -118,15 +118,16 @@ export const AdminApi = {
     restore: (ids) =>
       call(`/admin/analyses/restore`, { method: 'POST', body: { ids } }),
     // O'chirilganlarni ko'rish
-    deletedList: (opts = {}) =>
-      call(
-        withQuery('/admin/analyses', {
-          ...opts,
-          show_deleted: true,
+    deletedList: (opts = {}) => {
+      const { show_deleted, ...rest } = opts;
+      return call(
+        withQuery('/admin/deleted-analyses', {
+          ...rest,
           page: opts.page ?? 1,
-          page_size: opts.pageSize ?? 50,
+          page_size: opts.pageSize ?? 500,
         })
-      ),
+      );
+    },
     exportXlsx: (params) => {
       const q = withQuery('/admin/export-xlsx', params);
       return fetch(`${API_BASE}${API_PREFIX}${q}`, {
