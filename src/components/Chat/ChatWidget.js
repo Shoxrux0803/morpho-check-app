@@ -459,30 +459,27 @@ const ChatWidget = () => {
           <motion.div
             key="chat-window"
             layoutId="chat-box"
-            initial={{ opacity: 0, scale: 0.5, borderRadius: '50%' }}
-            animate={{
-              opacity: 1,
-              scale: 1,
-              borderRadius: isMobile ? '18px' : '24px',
+            className={isDark ? 'premium-chat-glow-dark' : 'premium-chat-glow-light'}
+            transition={{
+              type: 'spring',
+              damping: 26,
+              stiffness: 240,
             }}
-            exit={{ opacity: 0, scale: 0.5, borderRadius: '50%' }}
             style={{
               width: isMobile ? 'calc(100vw - 24px)' : '400px',
               height: isMobile ? 'calc(100dvh - 40px)' : '650px',
               maxHeight: isMobile ? 'calc(100dvh - 40px)' : '90vh',
               background: isDark
-                ? 'rgba(18, 18, 18, 0.45)'
-                : 'rgba(255, 255, 255, 0.45)',
-              backdropFilter: 'blur(24px) saturate(180%)',
+                ? 'rgba(15, 15, 20, 0.82)'
+                : 'rgba(255, 255, 255, 0.88)',
+              backdropFilter: isMobile ? 'none' : 'blur(20px)',
               boxShadow: isDark
-                ? '0 8px 32px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05)'
-                : '0 8px 32px rgba(31,38,135,0.15), inset 0 0 0 1px rgba(255,255,255,0.6)',
+                ? '0 12px 40px rgba(0,0,0,0.4)'
+                : '0 12px 40px rgba(31,38,135,0.08)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              border: isDark
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid rgba(255, 255, 255, 0.4)',
+              border: '1px solid',
               marginBottom: isMobile ? '0' : '10px',
               color: isDark ? '#fff' : '#000',
               transformOrigin: isMobile ? 'bottom left' : 'bottom right',
@@ -491,23 +488,33 @@ const ChatWidget = () => {
               borderRadius: isMobile ? '18px' : '24px',
             }}
           >
-            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Header */}
             <div
               style={{
-                padding: '15px 20px',
+                padding: '16px 20px',
                 background:
                   currentView === VIEWS.BROADCAST
-                    ? 'linear-gradient(135deg, rgba(255,149,0,0.7) 0%, rgba(255,94,0,0.7) 100%)'
-                    : isDark
-                      ? 'linear-gradient(135deg, rgba(15,118,110,0.6) 0%, rgba(37,99,235,0.6) 100%)'
-                      : 'linear-gradient(135deg, rgba(15,118,110,0.7) 0%, rgba(37,99,235,0.7) 100%)',
-                backdropFilter: 'blur(10px)',
+                    ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
+                    : 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
                 color: '#fff',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 zIndex: 10,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.12)',
               }}
             >
               <div
@@ -604,10 +611,11 @@ const ChatWidget = () => {
                   /* Conversation List */
                   <motion.div
                     key="list-view"
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
+                    initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                    transition={{ type: 'spring', damping: 22, stiffness: 220 }}
                     style={{
                       flex: 1,
                       display: 'flex',
@@ -756,139 +764,147 @@ const ChatWidget = () => {
                         </p>
                       </div>
                     ) : (
-                      filteredConversations.map((conv, idx) => (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.05 }}
-                          key={conv.user_id}
-                          onClick={() => openConversation(conv)}
-                          style={{
-                            padding: '12px 20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '15px',
-                            cursor: 'pointer',
-                            borderBottom: isDark
-                              ? '1px solid #222'
-                              : '1px solid #eee',
-                            transition: 'background 0.2s',
-                            background: isDark ? 'transparent' : 'transparent',
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = isDark
-                              ? '#2c2c2c'
-                              : '#f1f3f5')
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = 'transparent')
-                          }
-                        >
-                          <div style={{ position: 'relative' }}>
-                            <div
-                              style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                background: '#0f766e',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                color: '#fff',
-                                fontSize: '18px',
-                                fontWeight: '700',
-                              }}
-                            >
-                              {conv.user_name.charAt(0)}
-                            </div>
-                            {conv.unread_count > 0 && (
+                      filteredConversations.map((conv, idx) => {
+                        const hash = conv.user_name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                        const gradIndex = hash % 5;
+                        return (
+                          <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            whileHover={{ 
+                              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
+                              x: 4
+                            }}
+                            transition={{ 
+                              type: 'spring', 
+                              stiffness: 300, 
+                              damping: 22,
+                              delay: idx * 0.03 
+                            }}
+                            key={conv.user_id}
+                            onClick={() => openConversation(conv)}
+                            style={{
+                              padding: '12px 20px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '15px',
+                              cursor: 'pointer',
+                              borderBottom: isDark
+                                ? '1px solid rgba(255,255,255,0.05)'
+                                : '1px solid rgba(0,0,0,0.05)',
+                            }}
+                          >
+                            <div style={{ position: 'relative' }}>
                               <div
+                                className={`avatar-gradient-${gradIndex}`}
                                 style={{
-                                  position: 'absolute',
-                                  top: '-2px',
-                                  right: '-2px',
-                                  background: '#ff3b30',
-                                  color: '#fff',
-                                  borderRadius: '50%',
-                                  minWidth: '18px',
-                                  height: '18px',
-                                  padding: '0 5px',
-                                  fontSize: '10px',
-                                  fontWeight: 'bold',
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '14px',
                                   display: 'flex',
                                   justifyContent: 'center',
                                   alignItems: 'center',
-                                  border:
-                                    '2px solid ' +
-                                    (isDark ? '#1e1e1e' : '#fff'),
-                                }}
-                              >
-                                {conv.unread_count}
-                              </div>
-                            )}
-                          </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'baseline',
-                              }}
-                            >
-                              <div
-                                style={{
+                                  color: '#fff',
+                                  fontSize: '18px',
                                   fontWeight: '700',
-                                  fontSize: '14px',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
+                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                                 }}
                               >
-                                {conv.user_name}
+                                {conv.user_name.charAt(0).toUpperCase()}
                               </div>
-                              <div style={{ fontSize: '10px', color: '#888' }}>
-                                {formatTime(conv.last_message_time)}
-                              </div>
+                              {conv.unread_count > 0 && (
+                                <div
+                                  className="pulse-badge"
+                                  style={{
+                                    position: 'absolute',
+                                    top: '-4px',
+                                    right: '-4px',
+                                    background: '#ff3b30',
+                                    color: '#fff',
+                                    borderRadius: '50%',
+                                    minWidth: '18px',
+                                    height: '18px',
+                                    padding: '0 5px',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    border:
+                                      '2px solid ' +
+                                      (isDark ? '#1a1a24' : '#fff'),
+                                  }}
+                                >
+                                  {conv.unread_count}
+                                </div>
+                              )}
                             </div>
-                            <div
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                              }}
-                            >
+                            <div style={{ flex: 1, minWidth: 0 }}>
                               <div
                                 style={{
-                                  fontSize: '12px',
-                                  color:
-                                    conv.unread_count > 0
-                                      ? isDark
-                                        ? '#fff'
-                                        : '#000'
-                                      : '#888',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  fontWeight:
-                                    conv.unread_count > 0 ? '600' : '400',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'baseline',
+                                  marginBottom: '3px',
                                 }}
                               >
-                                {conv.is_last_message_mine && (
-                                  <span
-                                    style={{
-                                      color: '#0f766e',
-                                      marginRight: '4px',
-                                    }}
-                                  >
-                                    {t('you')}
-                                  </span>
-                                )}
-                                {conv.last_message}
+                                <div
+                                  style={{
+                                    fontWeight: '700',
+                                    fontSize: '14px',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    color: isDark ? '#fff' : '#1f2937',
+                                  }}
+                                >
+                                  {conv.user_name}
+                                </div>
+                                <div style={{ fontSize: '10px', color: '#888' }}>
+                                  {formatTime(conv.last_message_time)}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: '12px',
+                                    color:
+                                      conv.unread_count > 0
+                                        ? isDark
+                                          ? '#fff'
+                                          : '#000'
+                                        : '#888',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    fontWeight:
+                                      conv.unread_count > 0 ? '600' : '400',
+                                  }}
+                                >
+                                  {conv.is_last_message_mine && (
+                                    <span
+                                      style={{
+                                        color: '#14b8a6',
+                                        marginRight: '4px',
+                                        fontWeight: '600',
+                                      }}
+                                    >
+                                      {t('you')}
+                                    </span>
+                                  )}
+                                  {conv.last_message}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))
+                          </motion.div>
+                        );
+                      })
                     )}
                   </motion.div>
                 )}
@@ -897,10 +913,11 @@ const ChatWidget = () => {
                 {currentView === VIEWS.MONITORING_LIST && (
                   <motion.div
                     key="monitoring-list-view"
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: -20, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
+                    initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                    transition={{ type: 'spring', damping: 22, stiffness: 220 }}
                     style={{
                       flex: 1,
                       display: 'flex',
@@ -1032,10 +1049,10 @@ const ChatWidget = () => {
                   /* Individual Chat View */
                   <motion.div
                     key={`chat-${selectedUser?.id || 'broadcast'}`}
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    exit={{ x: 20, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, x: 30, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, x: 30, filter: 'blur(4px)' }}
+                    transition={{ type: 'spring', damping: 22, stiffness: 220 }}
                     onAnimationComplete={() => scrollToBottom('auto')}
                     style={{
                       flex: 1,
@@ -1080,6 +1097,7 @@ const ChatWidget = () => {
                       </div>
                     )}
                     <div
+                      className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
                       style={{ flex: 1, overflowY: 'auto', padding: '15px' }}
                     >
                       {messages.map((msg, i) => {
@@ -1095,10 +1113,18 @@ const ChatWidget = () => {
                               : selectedMonitoringPair?.assistant_name
                             : '';
 
+                        const isRecent = messages.length - i <= 15;
+
                         return (
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
+                            initial={isRecent ? { opacity: 0, y: 15, scale: 0.95 } : false}
+                            animate={isRecent ? { opacity: 1, y: 0, scale: 1 } : false}
+                            transition={{
+                              type: 'spring',
+                              stiffness: 350,
+                              damping: 25,
+                              delay: isRecent ? (15 - (messages.length - i)) * 0.025 : 0,
+                            }}
                             key={msg.id || i}
                             onMouseEnter={() => setHoveredMessageId(msg.id)}
                             onMouseLeave={() => setHoveredMessageId(null)}
@@ -1154,30 +1180,37 @@ const ChatWidget = () => {
                                 position: 'relative',
                               }}
                             >
-                              <div
+                              <motion.div
+                                whileHover={{ scale: 1.01 }}
                                 style={{
                                   display: 'inline-block',
-                                  padding: '10px 15px',
+                                  padding: '10px 16px',
                                   borderRadius: isMine
                                     ? '18px 18px 4px 18px'
                                     : '18px 18px 18px 4px',
                                   background: isMine
                                     ? currentView === VIEWS.BROADCAST
-                                      ? '#ff9500'
-                                      : '#0f766e'
+                                      ? 'linear-gradient(135deg, #ff9500 0%, #ffa502 100%)'
+                                      : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)'
                                     : isDark
-                                      ? '#333'
-                                      : '#fff',
+                                      ? 'rgba(255, 255, 255, 0.08)'
+                                      : 'rgba(255, 255, 255, 0.9)',
                                   color: isMine
                                     ? '#fff'
                                     : isDark
-                                      ? '#eee'
-                                      : '#333',
+                                      ? '#f3f4f6'
+                                      : '#1f2937',
                                   maxWidth: '80%',
-                                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                  boxShadow: isDark
+                                    ? '0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
+                                    : '0 4px 15px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.4)',
+                                  border: isDark
+                                    ? '1px solid rgba(255, 255, 255, 0.05)'
+                                    : '1px solid rgba(0, 0, 0, 0.04)',
                                   fontSize: '14px',
                                   position: 'relative',
                                   textAlign: 'left',
+                                  backdropFilter: isMine ? 'none' : 'blur(8px)',
                                 }}
                               >
                                 {msg.file_url && (
@@ -1263,7 +1296,7 @@ const ChatWidget = () => {
                                             }}
                                           >
                                             {msg.content.replace(
-                                              /^(Fayl|File|Файл|Файлды|Fayly|Dosya|Файлдар):\s*/i,
+                                              /^(Fayl|File|Файл|Файлды|Fayly|Dosya|Файлdar):\s*/i,
                                               ''
                                             )}
                                           </div>
@@ -1345,55 +1378,48 @@ const ChatWidget = () => {
                                     <motion.div
                                       initial={{
                                         opacity: 0,
-                                        x: msg.sender_id === user.id ? 8 : -8,
+                                        y: 8,
                                         scale: 0.9,
                                         filter: 'blur(4px)',
                                       }}
                                       animate={{
                                         opacity: 1,
-                                        x: 0,
+                                        y: 0,
                                         scale: 1,
                                         filter: 'blur(0px)',
                                       }}
                                       exit={{
                                         opacity: 0,
-                                        x: msg.sender_id === user.id ? 6 : -6,
+                                        y: 6,
                                         scale: 0.92,
                                         filter: 'blur(4px)',
                                       }}
                                       transition={{
                                         type: 'spring',
-                                        stiffness: 420,
-                                        damping: 28,
-                                        mass: 0.7,
+                                        stiffness: 450,
+                                        damping: 26,
                                       }}
                                       style={{
                                         position: 'absolute',
-                                        top: '0',
-                                        right:
-                                          msg.sender_id === user.id
-                                            ? 'calc(100% + 8px)'
-                                            : 'auto',
-                                        left:
-                                          msg.sender_id === user.id
-                                            ? 'auto'
-                                            : 'calc(100% + 8px)',
+                                        bottom: i === 0 ? 'auto' : 'calc(100% + 6px)',
+                                        top: i === 0 ? 'calc(100% + 6px)' : 'auto',
+                                        right: msg.sender_id === user.id ? '0' : 'auto',
+                                        left: msg.sender_id === user.id ? 'auto' : '0',
                                         zIndex: 100,
                                         display: 'flex',
-                                        flexDirection: 'column',
+                                        flexDirection: 'row',
                                         alignItems: 'center',
-                                        gap: '3px',
-                                        padding: '3px',
-                                        borderRadius: '18px',
+                                        gap: '5px',
+                                        padding: '4px 6px',
+                                        borderRadius: '24px',
                                         background: isDark
-                                          ? 'rgba(32,32,32,0.94)'
-                                          : 'rgba(255,255,255,0.96)',
+                                          ? 'rgba(28, 28, 35, 0.92)'
+                                          : 'rgba(255, 255, 255, 0.95)',
                                         border: isDark
-                                          ? '1px solid rgba(255,255,255,0.12)'
-                                          : '1px solid rgba(15,23,42,0.1)',
-                                        boxShadow:
-                                          '0 12px 28px rgba(15,23,42,0.18)',
-                                        backdropFilter: 'blur(14px)',
+                                          ? '1px solid rgba(255,255,255,0.1)'
+                                          : '1px solid rgba(0,0,0,0.08)',
+                                        boxShadow: '0 10px 25px rgba(0,0,0,0.18)',
+                                        backdropFilter: 'blur(12px)',
                                       }}
                                     >
                                       {MESSAGE_REACTIONS.map(
@@ -1407,25 +1433,23 @@ const ChatWidget = () => {
                                             title={reaction}
                                             initial={{
                                               opacity: 0,
-                                              y: 6,
-                                              scale: 0.8,
+                                              scale: 0.85,
                                             }}
                                             animate={{
                                               opacity: 1,
-                                              y: 0,
                                               scale: 1,
                                             }}
                                             transition={{
-                                              delay: index * 0.025,
+                                              delay: index * 0.02,
                                               type: 'spring',
-                                              stiffness: 520,
-                                              damping: 24,
+                                              stiffness: 500,
+                                              damping: 22,
                                             }}
-                                            whileHover={{ scale: 1.16 }}
-                                            whileTap={{ scale: 0.92 }}
+                                            whileHover={{ scale: 1.25, rotate: 8 }}
+                                            whileTap={{ scale: 0.88 }}
                                             style={{
-                                              width: '30px',
-                                              height: '30px',
+                                              width: '28px',
+                                              height: '28px',
                                               borderRadius: '50%',
                                               border:
                                                 msg.reaction === reaction
@@ -1456,11 +1480,55 @@ const ChatWidget = () => {
                                     </motion.div>
                                   )}
                                 </AnimatePresence>
-                              </div>
+                              </motion.div>
                             </div>
                           </motion.div>
                         );
                       })}
+                      {currentView === VIEWS.CHAT && typingUsers.some(u => u.id === selectedUser?.id) && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 12px',
+                            marginTop: '8px',
+                            marginBottom: '4px',
+                            maxWidth: '120px',
+                            borderRadius: '14px 14px 14px 4px',
+                            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            {[0, 1, 2].map((dot) => (
+                              <motion.span
+                                key={dot}
+                                animate={{ y: [0, -4, 0] }}
+                                transition={{
+                                  duration: 0.8,
+                                  repeat: Infinity,
+                                  delay: dot * 0.15,
+                                  ease: "easeInOut"
+                                }}
+                                style={{
+                                  width: '5px',
+                                  height: '5px',
+                                  borderRadius: '50%',
+                                  background: '#0f766e',
+                                  display: 'inline-block',
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <span style={{ fontSize: '11px', color: '#888', fontWeight: '500' }}>
+                            {t('typing')}
+                          </span>
+                        </motion.div>
+                      )}
                       <div ref={messagesEndRef} />
                     </div>
 
@@ -1468,9 +1536,12 @@ const ChatWidget = () => {
                     {currentView !== VIEWS.MONITORING_CHAT && (
                       <div
                         style={{
-                          padding: '15px',
-                          background: isDark ? '#1e1e1e' : '#fff',
-                          borderTop: '1px solid rgba(0,0,0,0.05)',
+                          padding: '12px 18px',
+                          background: isDark ? 'rgba(24, 24, 28, 0.8)' : 'rgba(255, 255, 255, 0.85)',
+                          backdropFilter: isMobile ? 'none' : 'blur(10px)',
+                          borderTop: isDark
+                            ? '1px solid rgba(255, 255, 255, 0.05)'
+                            : '1px solid rgba(0, 0, 0, 0.05)',
                         }}
                       >
                         {editingMessageId && (
@@ -1483,6 +1554,8 @@ const ChatWidget = () => {
                               justifyContent: 'space-between',
                               backgroundColor: isDark ? '#2a2a2a' : '#f8f9fa',
                               borderBottom: '1px solid rgba(0,0,0,0.05)',
+                              borderRadius: '8px',
+                              marginBottom: '8px',
                             }}
                           >
                             <span>Tahrirlanmoqda...</span>
@@ -1500,20 +1573,27 @@ const ChatWidget = () => {
                           style={{
                             display: 'flex',
                             gap: '10px',
-                            marginTop: editingMessageId ? '10px' : '0',
+                            alignItems: 'center',
                           }}
                         >
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.12, rotate: 15 }}
+                            whileTap={{ scale: 0.9 }}
                             onClick={() => fileInputRef.current.click()}
                             style={{
                               background: 'none',
                               border: 'none',
-                              fontSize: '20px',
-                              color: '#888',
+                              fontSize: '22px',
+                              color: '#0f766e',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              padding: 0,
                             }}
                           >
                             <i className="bi bi-paperclip"></i>
-                          </button>
+                          </motion.button>
                           <input
                             type="file"
                             ref={fileInputRef}
@@ -1537,15 +1617,20 @@ const ChatWidget = () => {
                             }
                             style={{
                               flex: 1,
-                              border: 'none',
-                              background: isDark ? '#333' : '#f1f3f5',
-                              borderRadius: '20px',
-                              padding: '8px 15px',
+                              border: isDark
+                                ? '1px solid rgba(255, 255, 255, 0.1)'
+                                : '1px solid rgba(0, 0, 0, 0.08)',
+                              background: isDark ? 'rgba(0, 0, 0, 0.2)' : '#f3f4f6',
+                              borderRadius: '24px',
+                              padding: '10px 18px',
                               color: isDark ? '#fff' : '#000',
                               outline: 'none',
+                              fontSize: '14px',
                             }}
                           />
-                          <button
+                          <motion.button
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.92 }}
                             onClick={() => handleSend()}
                             disabled={!content.trim() && !isUploading}
                             style={{
@@ -1554,8 +1639,8 @@ const ChatWidget = () => {
                               borderRadius: '50%',
                               background:
                                 currentView === VIEWS.BROADCAST
-                                  ? '#ff9500'
-                                  : '#0f766e',
+                                  ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
+                                  : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
                               color: '#fff',
                               border: 'none',
                               display: 'flex',
@@ -1563,12 +1648,13 @@ const ChatWidget = () => {
                               alignItems: 'center',
                               boxShadow:
                                 currentView === VIEWS.BROADCAST
-                                  ? '0 4px 10px rgba(255,149,0,0.3)'
-                                  : '0 4px 10px rgba(15,118,110,0.24)',
+                                  ? '0 4px 12px rgba(255,149,0,0.3)'
+                                  : '0 4px 12px rgba(15,118,110,0.24)',
+                              cursor: 'pointer',
                             }}
                           >
                             <i className="bi bi-send-fill"></i>
-                          </button>
+                          </motion.button>
                         </div>
                       </div>
                     )}
@@ -1576,11 +1662,26 @@ const ChatWidget = () => {
                 )}
               </AnimatePresence>
             </div>
+            </motion.div>
           </motion.div>
         ) : (
           /* Floating Button */
           <motion.button
+            className="float-chat-button"
             layoutId="chat-box"
+            transition={{
+              type: 'spring',
+              damping: 26,
+              stiffness: 240,
+            }}
+            whileHover={{ 
+              scale: 1.08, 
+              rotate: 5, 
+              boxShadow: isDark 
+                ? '0 8px 25px rgba(20,184,166,0.35)' 
+                : '0 8px 25px rgba(37,99,235,0.25)' 
+            }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => setIsOpen(true)}
             style={{
               width: '65px',
@@ -1601,6 +1702,7 @@ const ChatWidget = () => {
             <i className="bi bi-chat-dots-fill"></i>
             {unreadCount > 0 && (
               <div
+                className="pulse-badge"
                 style={{
                   position: 'absolute',
                   top: '-5px',
@@ -1608,14 +1710,14 @@ const ChatWidget = () => {
                   background: '#ff3b30',
                   color: '#fff',
                   borderRadius: '50%',
-                  minWidth: '24px',
-                  height: '24px',
+                  minWidth: '22px',
+                  height: '22px',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 'bold',
-                  border: '3px solid #fff',
+                  border: '2px solid ' + (isDark ? '#121212' : '#fff'),
                 }}
               >
                 {unreadCount}

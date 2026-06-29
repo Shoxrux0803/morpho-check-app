@@ -823,3 +823,83 @@ textarea {
     font-size: clamp(18px, 4vw, 28px);
   }
 }
+
+/* ===== Premium Admin Chat Styles ===== */
+.premium-chat-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.premium-chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.premium-chat-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(15, 118, 110, 0.25);
+  border-radius: 10px;
+}
+.premium-chat-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 118, 110, 0.45);
+}
+
+.dark-mode-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+.dark-mode-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+@keyframes float-animation {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+.float-chat-button {
+  animation: float-animation 4s ease-in-out infinite;
+}
+
+@keyframes border-glow {
+  0%, 100% {
+    border-color: rgba(15, 118, 110, 0.25);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    border-color: rgba(37, 99, 235, 0.45);
+    box-shadow: 0 12px 45px rgba(37, 99, 235, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.premium-chat-glow-dark {
+  animation: border-glow 8s infinite ease-in-out;
+}
+
+@keyframes border-glow-light {
+  0%, 100% {
+    border-color: rgba(15, 118, 110, 0.18);
+    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+  50% {
+    border-color: rgba(37, 99, 235, 0.3);
+    box-shadow: 0 12px 45px rgba(37, 99, 235, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+  }
+}
+
+.premium-chat-glow-light {
+  animation: border-glow-light 8s infinite ease-in-out;
+}
+
+/* Custom avatar gradients */
+.avatar-gradient-0 { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%) !important; }
+.avatar-gradient-1 { background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%) !important; }
+.avatar-gradient-2 { background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%) !important; }
+.avatar-gradient-3 { background: linear-gradient(135deg, #db2777 0%, #f472b6 100%) !important; }
+.avatar-gradient-4 { background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%) !important; }
+
+/* Unread Badge Pulse */
+@keyframes badge-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6); }
+  70% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+}
+.pulse-badge {
+  animation: badge-pulse 2s infinite;
+}
+
