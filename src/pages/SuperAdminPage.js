@@ -98,6 +98,7 @@ import SuperAdminRegionalMap from '../components/Dashboard/SuperAdminRegionalMap
 import ScientificAnalysis from '../components/Dashboard/ScientificAnalysis';
 import ClinicalCMS from '../components/Admin/ClinicalCMS';
 import AdminActivity from '../components/Admin/AdminActivity';
+import SecuritySettings from '../components/Admin/SecuritySettings';
 import RoleSettingsCMS from '../components/Admin/RoleSettingsCMS';
 import DashboardFilters from '../components/Dashboard/DashboardFilters';
 
@@ -3161,41 +3162,7 @@ const SuperAdminPage = () => {
             <Typography variant="h4" fontWeight={800}>
               {pt('security')}
             </Typography>
-            <GlassPaper
-              sx={{ p: { xs: 2, md: 4 }, maxWidth: 600, width: '100%' }}
-            >
-              <Typography variant="h6" gutterBottom>
-                {pt('changePassword')}
-              </Typography>
-              <TextField
-                fullWidth
-                label={pt('currentPassword')}
-                type="password"
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label={pt('newPassword')}
-                type="password"
-                margin="normal"
-              />
-              <TextField
-                fullWidth
-                label={pt('confirmNewPassword')}
-                type="password"
-                margin="normal"
-              />
-              <Button
-                variant="contained"
-                sx={{
-                  mt: 3,
-                  borderRadius: 2,
-                  width: { xs: '100%', sm: 'auto' },
-                }}
-              >
-                {pt('update')}
-              </Button>
-            </GlassPaper>
+            <SecuritySettings />
           </Stack>
         );
       case 6: {

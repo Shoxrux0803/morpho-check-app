@@ -287,6 +287,28 @@ export async function updateUserProfile(profileData) {
   return data;
 }
 
+export async function changePassword(currentPassword, newPassword) {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/change-password`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  return data;
+}
+
 /* -------------------- ANALYSIS HISTORY -------------------- */
 export async function getAnalysisHistory(page = 1, limit = 10) {
   const resp = await fetch(
@@ -1311,6 +1333,7 @@ const apiService = {
   register,
   getUserProfile,
   updateUserProfile,
+  changePassword,
   getAnalysisHistory,
   getAnalysisById,
   deleteAnalysis,

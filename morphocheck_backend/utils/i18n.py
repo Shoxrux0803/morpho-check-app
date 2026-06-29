@@ -272,6 +272,18 @@ I18N_DICTIONARY: Dict[str, Dict[str, str]] = {
         "en": "Passwords do not match",
         "tr": "Şifreler eşleşmiyor",
     },
+    "Joriy parol noto'g'ri": {
+        "uz": "Joriy parol noto'g'ri",
+        "ru": "Неверный текущий пароль",
+        "en": "Current password is incorrect",
+        "tr": "Mevcut şifre yanlış",
+    },
+    "Parol muvaffaqiyatli o'zgartirildi": {
+        "uz": "Parol muvaffaqiyatli o'zgartirildi",
+        "ru": "Пароль успешно изменен",
+        "en": "Password changed successfully",
+        "tr": "Şifre başarıyla değiştirildi",
+    },
     "Noto'g'ri foydalanuvchi roli": {
         "uz": "Noto'g'ri foydalanuvchi roli",
         "ru": "Неверная роль пользователя",

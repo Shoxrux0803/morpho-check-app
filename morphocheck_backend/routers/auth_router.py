@@ -360,3 +360,51 @@ def read_users_me(
     data["internal_chat_enabled"] = setting.internal_chat_enabled if setting else True
     
     return data
+
+
+from pydantic import BaseModel
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+def change_password(
+    data: PasswordChangeRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verify current password
+    if not verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Joriy parol noto'g'ri")
+
+    # Password strength validation
+    new_pwd = data.new_password
+    if len(new_pwd) < 8:
+        raise HTTPException(status_code=400, detail="Parol kamida 8 ta belgidan iborat bo'lishi kerak")
+    if not any(c.isupper() for c in new_pwd):
+        raise HTTPException(status_code=400, detail="Parolda kamida 1 ta katta harf bo'lishi kerak")
+    if not any(c.islower() for c in new_pwd):
+        raise HTTPException(status_code=400, detail="Parolda kamida 1 ta kichik harf bo'lishi kerak")
+    if not any(c.isdigit() for c in new_pwd):
+        raise HTTPException(status_code=400, detail="Parolda kamida 1 ta raqam bo'lishi kerak")
+
+    # Update password
+    current_user.hashed_password = get_password_hash(new_pwd)
+    current_user.plain_password = new_pwd
+    
+    # Audit log
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="CHANGE_PASSWORD",
+        target_type="User",
+        target_id=current_user.id,
+        details=f"Foydalanuvchi parolini o'zgartirdi: {current_user.email}",
+        request=request,
+    )
+    
+    db.commit()
+    return {"message": "Parol muvaffaqiyatli o'zgartirildi"}
+
