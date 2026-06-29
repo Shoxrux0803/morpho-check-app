@@ -4244,24 +4244,43 @@ const SuperAdminPage = () => {
     { icon: <SettingsSuggest />, label: t('chatSettingsTitle') },
   ];
 
+  const isMapTab = activeTab === 2;
+
   return (
     <Box
       sx={{
         bgcolor: 'background.default',
-        minHeight: activeTab === 2 ? 'calc(100dvh - 80px)' : '100vh',
-        pb: activeTab === 2 ? 0 : 10,
+        height: isMapTab && !isMobile ? 'calc(100vh - 64px)' : 'auto',
+        minHeight: isMapTab && !isMobile ? 'calc(100vh - 64px)' : '100vh',
+        pb: isMapTab && !isMobile ? 0 : 10,
+        overflow: isMapTab && !isMobile ? 'hidden' : 'auto',
+        display: isMapTab && !isMobile ? 'flex' : 'block',
+        flexDirection: 'column',
       }}
     >
       <Container
         maxWidth={false}
         sx={{
-          py: { xs: 1, md: 1.5 },
+          py: isMapTab && !isMobile ? 1.5 : { xs: 1, md: 1.5 },
           pr: { xs: 1.5, sm: 2, md: 4 },
           pl: { xs: 1.5, sm: 2, md: '324px' },
           maxWidth: '100%',
+          height: isMapTab && !isMobile ? '100%' : 'auto',
+          display: isMapTab && !isMobile ? 'flex' : 'block',
+          flexDirection: 'column',
+          minHeight: 0,
         }}
       >
-        <Stack direction="column" spacing={3} alignItems="stretch">
+        <Stack
+          direction="column"
+          spacing={isMapTab ? 1.5 : 3}
+          alignItems="stretch"
+          sx={{
+            height: isMapTab && !isMobile ? '100%' : 'auto',
+            minHeight: 0,
+            flex: isMapTab && !isMobile ? 1 : 'auto',
+          }}
+        >
           {/* Sidebar Tabs */}
           <Box
             sx={{
@@ -4463,6 +4482,11 @@ const SuperAdminPage = () => {
             sx={{
               ...scrollableContentSx,
               width: '100%',
+              height: isMapTab && !isMobile ? '100%' : 'auto',
+              display: isMapTab && !isMobile ? 'flex' : 'block',
+              flexDirection: 'column',
+              minHeight: 0,
+              flex: isMapTab && !isMobile ? 1 : 'auto',
             }}
           >
             {/* Premium Header */}
@@ -4571,6 +4595,13 @@ const SuperAdminPage = () => {
                   damping: 28,
                   mass: 0.8,
                 }}
+                style={{
+                  height: isMapTab && !isMobile ? '100%' : 'auto',
+                  display: isMapTab && !isMobile ? 'flex' : 'block',
+                  flexDirection: 'column',
+                  minHeight: 0,
+                  flex: isMapTab && !isMobile ? 1 : 'auto',
+                }}
               >
                 <Box
                   sx={{
@@ -4578,6 +4609,11 @@ const SuperAdminPage = () => {
                       xs: activeTab === 0 || activeTab === 1 ? 720 : 0,
                       md: 0,
                     },
+                    height: isMapTab && !isMobile ? '100%' : 'auto',
+                    display: isMapTab && !isMobile ? 'flex' : 'block',
+                    flexDirection: 'column',
+                    minHeight: 0,
+                    flex: isMapTab && !isMobile ? 1 : 'auto',
                   }}
                 >
                   {renderTabContent()}

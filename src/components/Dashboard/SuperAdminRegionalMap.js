@@ -3396,10 +3396,11 @@ export default function SuperAdminRegionalMap({
   return (
     <Box
       sx={{
-        height: { lg: 'calc(100dvh - 144px)' },
+        height: { lg: '100%' },
         minHeight: 0,
         display: { lg: 'flex' },
         flexDirection: 'column',
+        flex: { lg: 1 },
       }}
     >
       <Box
