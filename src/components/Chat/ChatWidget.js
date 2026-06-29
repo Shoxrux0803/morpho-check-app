@@ -5,6 +5,7 @@ import { chatService } from '../../services/chatService';
 import { toast } from 'react-hot-toast';
 import { useThemeMode } from '../../providers/ThemeProviderMUI';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
 
 const VIEWS = {
   LIST: 'LIST',
@@ -28,6 +29,11 @@ const ChatWidget = () => {
     user?.role === 'field_assistant';
 
   const [isOpen, setIsOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    message: '',
+    onConfirm: null,
+  });
   const [currentView, setCurrentView] = useState(VIEWS.LIST);
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -1653,13 +1659,17 @@ const ChatWidget = () => {
             <i className="bi bi-pencil"></i> Tahrirlash
           </div>
           <div
-            onClick={async (e) => {
+            onClick={(e) => {
               e.stopPropagation();
               setContextMenu({ ...contextMenu, visible: false });
-              if (window.confirm("Xabarni o'chirishni xohlaysizmi?")) {
-                await chatService.deleteMessage(contextMenu.messageId);
-                fetchMessages();
-              }
+              setConfirmDialog({
+                open: true,
+                message: "Xabarni o'chirishni xohlaysizmi?",
+                onConfirm: async () => {
+                  await chatService.deleteMessage(contextMenu.messageId);
+                  fetchMessages();
+                }
+              });
             }}
             style={{
               padding: '10px 16px',
@@ -1674,6 +1684,57 @@ const ChatWidget = () => {
           </div>
         </div>
       )}
+
+      {/* Custom Confirm Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+        PaperProps={{
+          sx: {
+            background: isDark ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+            p: 1,
+            minWidth: 280,
+            maxWidth: 400,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>
+          {t('confirm') || 'Tasdiqlash'}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: isDark ? '#ccc' : '#444' }}>
+            {confirmDialog.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            {t('cancel') || 'Bekor qilish'}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={async () => {
+              if (confirmDialog.onConfirm) {
+                await confirmDialog.onConfirm();
+              }
+              setConfirmDialog(prev => ({ ...prev, open: false }));
+            }}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+            autoFocus
+          >
+            {t('delete') || "O'chirish"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

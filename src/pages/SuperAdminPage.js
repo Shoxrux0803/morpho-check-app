@@ -74,6 +74,7 @@ import {
   ContentCopy,
   Public,
   GetApp,
+  WarningAmber,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -1417,6 +1418,25 @@ const SuperAdminPage = () => {
   const [selectedAuditLog, setSelectedAuditLog] = useState(null);
   const [isAuditDrawerOpen, setIsAuditDrawerOpen] = useState(false);
 
+  // Custom Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    title: '',
+    message: '',
+    onConfirm: null,
+    isDestructive: false,
+  });
+
+  const showConfirm = (message, onConfirm, isDestructive = false, title = '') => {
+    setConfirmDialog({
+      open: true,
+      title: title,
+      message: message,
+      onConfirm: onConfirm,
+      isDestructive: isDestructive,
+    });
+  };
+
   // Dashboard Stats State
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -2256,7 +2276,7 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteAdmin = async (id) => {
-    if (window.confirm(pt('adminDeleteConfirm'))) {
+    showConfirm(pt('adminDeleteConfirm'), async () => {
       try {
         const deleteUser = AdminApi.users.delete || AdminApi.users.remove;
         await deleteUser(id);
@@ -2266,7 +2286,7 @@ const SuperAdminPage = () => {
       } catch (err) {
         toast.error('Xatolik: ' + err.message);
       }
-    }
+    }, true);
   };
 
   const handleRestoreAnalysis = async (rowOrId) => {
@@ -2311,7 +2331,7 @@ const SuperAdminPage = () => {
           );
     if (!row) return;
 
-    if (window.confirm(pt('hardDeleteDataConfirm'))) {
+    showConfirm(pt('hardDeleteDataConfirm'), async () => {
       try {
         if (row.__deletedSource === 'research') {
           await ResearchApi.hardDelete(row.id);
@@ -2323,7 +2343,7 @@ const SuperAdminPage = () => {
       } catch (err) {
         toast.error('Xatolik: ' + err.message);
       }
-    }
+    }, true);
   };
 
   const handleCreateBackup = async () => {
@@ -2340,9 +2360,7 @@ const SuperAdminPage = () => {
   };
 
   const handleRestoreBackup = async (filename) => {
-    if (
-      window.confirm(pt('backupRestoreConfirm').replace('{filename}', filename))
-    ) {
+    showConfirm(pt('backupRestoreConfirm').replace('{filename}', filename), async () => {
       setBackupLoading(true);
       try {
         await AdminApi.backup.restore(filename);
@@ -2352,11 +2370,11 @@ const SuperAdminPage = () => {
       } finally {
         setBackupLoading(false);
       }
-    }
+    }, false);
   };
 
   const handleDeleteBackup = async (filename) => {
-    if (window.confirm(`${pt('delete')}: ${filename}?`)) {
+    showConfirm(`${pt('delete')}: ${filename}?`, async () => {
       try {
         await AdminApi.backup.delete(filename);
         toast.success(pt('fileDeleted'));
@@ -2364,11 +2382,11 @@ const SuperAdminPage = () => {
       } catch (err) {
         toast.error('Xatolik: ' + err.message);
       }
-    }
+    }, true);
   };
 
   const handleClearAudit = async () => {
-    if (window.confirm(pt('clearAuditConfirm'))) {
+    showConfirm(pt('clearAuditConfirm'), async () => {
       try {
         await AdminApi.auditLogs.clear();
         toast.success(pt('auditCleared'));
@@ -2376,7 +2394,7 @@ const SuperAdminPage = () => {
       } catch (err) {
         toast.error('Xatolik: ' + err.message);
       }
-    }
+    }, true);
   };
 
   if (authLoading) {
@@ -5174,6 +5192,66 @@ const SuperAdminPage = () => {
           </Dialog>
         )}
       </Container>
+
+      {/* Custom Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+        PaperProps={{
+          sx: {
+            background: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+            p: 1,
+            minWidth: 320,
+            maxWidth: 440,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+            zIndex: 1600
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <WarningAmber color={confirmDialog.isDestructive ? "error" : "primary"} sx={{ fontSize: 28 }} />
+          {confirmDialog.title || (lang === 'uz' ? 'Tasdiqlash' : lang === 'ru' ? 'Подтверждение' : 'Confirmation')}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.95rem', lineHeight: 1.5 }}>
+            {confirmDialog.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, pt: 1.5, gap: 1 }}>
+          <Button
+            variant="outlined"
+            onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+          >
+            {lang === 'uz' ? 'Bekor qilish' : lang === 'ru' ? 'Отмена' : 'Cancel'}
+          </Button>
+          <Button
+            variant="contained"
+            color={confirmDialog.isDestructive ? "error" : "primary"}
+            onClick={async () => {
+              if (confirmDialog.onConfirm) {
+                await confirmDialog.onConfirm();
+              }
+              setConfirmDialog(prev => ({ ...prev, open: false }));
+            }}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              boxShadow: confirmDialog.isDestructive
+                ? '0 4px 12px rgba(244, 67, 54, 0.2)'
+                : '0 4px 12px rgba(33, 150, 243, 0.2)'
+            }}
+            autoFocus
+          >
+            {lang === 'uz' ? 'Ha, tasdiqlayman' : lang === 'ru' ? 'Да, подтверждаю' : 'Yes, confirm'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
