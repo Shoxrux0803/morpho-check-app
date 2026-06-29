@@ -5,7 +5,7 @@ import Grow from '@mui/material/Grow';
 export const THEME_VARIANTS = ['neo', 'ocean', 'sunset', 'minimal'];
 
 // Variant ranglari - oldin define qilish
-const getVariantColors = (isDark, variant = 'neo') => {
+export const getVariantColors = (isDark, variant = 'neo') => {
   const variants = {
     neo: {
       primary: isDark ? '#5eead4' : '#0f766e',
