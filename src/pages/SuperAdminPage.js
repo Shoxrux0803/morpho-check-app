@@ -354,7 +354,7 @@ const AUDIT_ACTION_LABELS = {
     download: 'Жүктөө',
     downloaded: 'Жүктөлдү',
     export: 'Экспорт',
-    exported: 'Экспорттолду',
+  },
 };
 
 const CONFIRM_MESSAGES = {
