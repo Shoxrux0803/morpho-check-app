@@ -5195,64 +5195,82 @@ const SuperAdminPage = () => {
       </Container>
 
       {/* Custom Confirmation Dialog */}
-      <Dialog
-        open={confirmDialog.open}
-        onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
-        PaperProps={{
-          sx: {
-            background: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
-            p: 1,
-            minWidth: 320,
-            maxWidth: 440,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-            zIndex: 1600
-          }
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 800, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <WarningAmber color={confirmDialog.isDestructive ? "error" : "primary"} sx={{ fontSize: 28 }} />
-          {confirmDialog.title || (lang === 'uz' ? 'Tasdiqlash' : lang === 'ru' ? 'Подтверждение' : 'Confirmation')}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.95rem', lineHeight: 1.5 }}>
-            {confirmDialog.message}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2, pt: 1.5, gap: 1 }}>
-          <Button
-            variant="outlined"
-            onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
-          >
-            {lang === 'uz' ? 'Bekor qilish' : lang === 'ru' ? 'Отмена' : 'Cancel'}
-          </Button>
-          <Button
-            variant="contained"
-            color={confirmDialog.isDestructive ? "error" : "primary"}
-            onClick={async () => {
-              if (confirmDialog.onConfirm) {
-                await confirmDialog.onConfirm();
+      {(() => {
+        const CONFIRM_TRANSLATIONS = {
+          uz: { title: 'Tasdiqlash', cancel: 'Bekor qilish', confirm: 'Ha, tasdiqlayman' },
+          ru: { title: 'Подтверждение', cancel: 'Отмена', confirm: 'Да, подтверждаю' },
+          en: { title: 'Confirmation', cancel: 'Cancel', confirm: 'Yes, confirm' },
+          tr: { title: 'Onay', cancel: 'İptal', confirm: 'Evet, onayla' },
+          tm: { title: 'Tassyklamak', cancel: 'Bes et', confirm: 'Hawa, tassykla' },
+          tg: { title: 'Тасдиқкунӣ', cancel: 'Рад кардан', confirm: 'Бале, тасдиқ мекунам' },
+          kz: { title: 'Растау', cancel: 'Бас тарту', confirm: 'Иә, растаймын' },
+          ky: { title: 'Ырастоо', cancel: 'Жокко чыгаруу', confirm: 'Ооба, ырастайм' }
+        };
+        const getConfirmText = (key) => {
+          const trans = CONFIRM_TRANSLATIONS[lang] || CONFIRM_TRANSLATIONS['en'];
+          return trans[key] || CONFIRM_TRANSLATIONS['en'][key];
+        };
+        return (
+          <Dialog
+            open={confirmDialog.open}
+            onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            PaperProps={{
+              sx: {
+                background: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: 3,
+                border: '1px solid',
+                borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                p: 1,
+                minWidth: 320,
+                maxWidth: 440,
+                boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                zIndex: 1600
               }
-              setConfirmDialog(prev => ({ ...prev, open: false }));
             }}
-            sx={{
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              boxShadow: confirmDialog.isDestructive
-                ? '0 4px 12px rgba(244, 67, 54, 0.2)'
-                : '0 4px 12px rgba(33, 150, 243, 0.2)'
-            }}
-            autoFocus
           >
-            {lang === 'uz' ? 'Ha, tasdiqlayman' : lang === 'ru' ? 'Да, подтверждаю' : 'Yes, confirm'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+            <DialogTitle sx={{ fontWeight: 800, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <WarningAmber color={confirmDialog.isDestructive ? "error" : "primary"} sx={{ fontSize: 28 }} />
+              {confirmDialog.title || getConfirmText('title')}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.95rem', lineHeight: 1.5 }}>
+                {confirmDialog.message}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2, pt: 1.5, gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+              >
+                {getConfirmText('cancel')}
+              </Button>
+              <Button
+                variant="contained"
+                color={confirmDialog.isDestructive ? "error" : "primary"}
+                onClick={async () => {
+                  if (confirmDialog.onConfirm) {
+                    await confirmDialog.onConfirm();
+                  }
+                  setConfirmDialog(prev => ({ ...prev, open: false }));
+                }}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  boxShadow: confirmDialog.isDestructive
+                    ? '0 4px 12px rgba(244, 67, 54, 0.2)'
+                    : '0 4px 12px rgba(33, 150, 243, 0.2)'
+                }}
+                autoFocus
+              >
+                {getConfirmText('confirm')}
+              </Button>
+            </DialogActions>
+          </Dialog>
+        );
+      })()}
     </Box>
   );
 };
