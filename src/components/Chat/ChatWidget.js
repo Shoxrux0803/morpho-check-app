@@ -1075,10 +1075,20 @@ const ChatWidget = () => {
                             onContextMenu={(e) => {
                               if (isAdmin && msg.sender_id === user.id) {
                                 e.preventDefault();
+                                const menuWidth = 160;
+                                const menuHeight = 100;
+                                let x = e.pageX;
+                                let y = e.pageY;
+                                if (x + menuWidth > window.innerWidth) {
+                                  x = window.innerWidth - menuWidth - 10;
+                                }
+                                if (y + menuHeight > window.innerHeight) {
+                                  y = window.innerHeight - menuHeight - 10;
+                                }
                                 setContextMenu({
                                   visible: true,
-                                  x: e.pageX,
-                                  y: e.pageY,
+                                  x: x,
+                                  y: y,
                                   messageId: msg.id,
                                   content: msg.content
                                 });
@@ -1272,111 +1282,111 @@ const ChatWidget = () => {
                                   {msg.reaction}
                                 </div>
                               )}
+                              <AnimatePresence>
+                                {hoveredMessageId === msg.id && (
+                                  <motion.div
+                                    initial={{
+                                      opacity: 0,
+                                      x: msg.sender_id === user.id ? 8 : -8,
+                                      scale: 0.9,
+                                      filter: 'blur(4px)',
+                                    }}
+                                    animate={{
+                                      opacity: 1,
+                                      x: 0,
+                                      scale: 1,
+                                      filter: 'blur(0px)',
+                                    }}
+                                    exit={{
+                                      opacity: 0,
+                                      x: msg.sender_id === user.id ? 6 : -6,
+                                      scale: 0.92,
+                                      filter: 'blur(4px)',
+                                    }}
+                                    transition={{
+                                      type: 'spring',
+                                      stiffness: 420,
+                                      damping: 28,
+                                      mass: 0.7,
+                                    }}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '0',
+                                      right:
+                                        msg.sender_id === user.id
+                                          ? 'calc(100% + 8px)'
+                                          : 'auto',
+                                      left:
+                                        msg.sender_id === user.id
+                                          ? 'auto'
+                                          : 'calc(100% + 8px)',
+                                      zIndex: 100,
+                                      display: 'flex',
+                                      flexDirection: 'column',
+                                      alignItems: 'center',
+                                      gap: '3px',
+                                      padding: '3px',
+                                      borderRadius: '18px',
+                                      background: isDark
+                                        ? 'rgba(32,32,32,0.94)'
+                                        : 'rgba(255,255,255,0.96)',
+                                      border: isDark
+                                        ? '1px solid rgba(255,255,255,0.12)'
+                                        : '1px solid rgba(15,23,42,0.1)',
+                                      boxShadow:
+                                        '0 12px 28px rgba(15,23,42,0.18)',
+                                      backdropFilter: 'blur(14px)',
+                                    }}
+                                  >
+                                    {MESSAGE_REACTIONS.map((reaction, index) => (
+                                      <motion.button
+                                        key={`${msg.id || i}-${reaction}`}
+                                        type="button"
+                                        onClick={() =>
+                                          handleReaction(msg.id, reaction)
+                                        }
+                                        title={reaction}
+                                        initial={{ opacity: 0, y: 6, scale: 0.8 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        transition={{
+                                          delay: index * 0.025,
+                                          type: 'spring',
+                                          stiffness: 520,
+                                          damping: 24,
+                                        }}
+                                        whileHover={{ scale: 1.16 }}
+                                        whileTap={{ scale: 0.92 }}
+                                        style={{
+                                          width: '30px',
+                                          height: '30px',
+                                          borderRadius: '50%',
+                                          border:
+                                            msg.reaction === reaction
+                                              ? '1px solid #0f766e'
+                                              : '1px solid transparent',
+                                          background:
+                                            msg.reaction === reaction
+                                              ? isDark
+                                                ? 'rgba(20,184,166,0.24)'
+                                                : 'rgba(15,118,110,0.12)'
+                                              : 'transparent',
+                                          cursor: msg.id ? 'pointer' : 'default',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          fontSize: '15px',
+                                          lineHeight: 1,
+                                          padding: 0,
+                                        }}
+                                        disabled={!msg.id}
+                                      >
+                                        {reaction}
+                                      </motion.button>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
-                            <AnimatePresence>
-                              {hoveredMessageId === msg.id && (
-                                <motion.div
-                                  initial={{
-                                    opacity: 0,
-                                    x: msg.sender_id === user.id ? 8 : -8,
-                                    scale: 0.9,
-                                    filter: 'blur(4px)',
-                                  }}
-                                  animate={{
-                                    opacity: 1,
-                                    x: 0,
-                                    scale: 1,
-                                    filter: 'blur(0px)',
-                                  }}
-                                  exit={{
-                                    opacity: 0,
-                                    x: msg.sender_id === user.id ? 6 : -6,
-                                    scale: 0.92,
-                                    filter: 'blur(4px)',
-                                  }}
-                                  transition={{
-                                    type: 'spring',
-                                    stiffness: 420,
-                                    damping: 28,
-                                    mass: 0.7,
-                                  }}
-                                  style={{
-                                    position: 'absolute',
-                                    top: '0',
-                                    right:
-                                      msg.sender_id === user.id
-                                        ? 'calc(100% + 8px)'
-                                        : 'auto',
-                                    left:
-                                      msg.sender_id === user.id
-                                        ? 'auto'
-                                        : 'calc(100% + 8px)',
-                                    zIndex: 100,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'center',
-                                    gap: '3px',
-                                    padding: '3px',
-                                    borderRadius: '18px',
-                                    background: isDark
-                                      ? 'rgba(32,32,32,0.94)'
-                                      : 'rgba(255,255,255,0.96)',
-                                    border: isDark
-                                      ? '1px solid rgba(255,255,255,0.12)'
-                                      : '1px solid rgba(15,23,42,0.1)',
-                                    boxShadow:
-                                      '0 12px 28px rgba(15,23,42,0.18)',
-                                    backdropFilter: 'blur(14px)',
-                                  }}
-                                >
-                                  {MESSAGE_REACTIONS.map((reaction, index) => (
-                                    <motion.button
-                                      key={`${msg.id || i}-${reaction}`}
-                                      type="button"
-                                      onClick={() =>
-                                        handleReaction(msg.id, reaction)
-                                      }
-                                      title={reaction}
-                                      initial={{ opacity: 0, y: 6, scale: 0.8 }}
-                                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                                      transition={{
-                                        delay: index * 0.025,
-                                        type: 'spring',
-                                        stiffness: 520,
-                                        damping: 24,
-                                      }}
-                                      whileHover={{ scale: 1.16 }}
-                                      whileTap={{ scale: 0.92 }}
-                                      style={{
-                                        width: '30px',
-                                        height: '30px',
-                                        borderRadius: '50%',
-                                        border:
-                                          msg.reaction === reaction
-                                            ? '1px solid #0f766e'
-                                            : '1px solid transparent',
-                                        background:
-                                          msg.reaction === reaction
-                                            ? isDark
-                                              ? 'rgba(20,184,166,0.24)'
-                                              : 'rgba(15,118,110,0.12)'
-                                            : 'transparent',
-                                        cursor: msg.id ? 'pointer' : 'default',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '15px',
-                                        lineHeight: 1,
-                                        padding: 0,
-                                      }}
-                                      disabled={!msg.id}
-                                    >
-                                      {reaction}
-                                    </motion.button>
-                                  ))}
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
                           </div>
                         </motion.div>
                         );
