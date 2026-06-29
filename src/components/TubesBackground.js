@@ -41,10 +41,10 @@ export default function TubesBackground() {
   const getColors = (isDark, weather) => {
     let tubesColors = isDark
       ? ['#f967fb', '#53bc28', '#6958d5']
-      : ['#0ea5e9', '#10b981', '#6366f1'];
+      : ['#0369a1', '#047857', '#4338ca'];
     let lightsColors = isDark
       ? ['#83f36e', '#fe8a2e', '#ff008a', '#60aed5']
-      : ['#38bdf8', '#34d399', '#818cf8', '#f472b6'];
+      : ['#0284c7', '#059669', '#4f46e5', '#be185d'];
 
     if (weather) {
       const { temp, code } = weather;
@@ -58,19 +58,27 @@ export default function TubesBackground() {
         code >= 95
       ) {
         // Rainy/Stormy -> Deep blues
-        tubesColors = ['#00bfff', '#1e90ff', '#0000ff'];
-        lightsColors = ['#87ceeb', '#4682b4', '#4169e1', '#0000cd'];
+        tubesColors = isDark
+          ? ['#00bfff', '#1e90ff', '#0000ff']
+          : ['#075985', '#1d4ed8', '#3730a3'];
+        lightsColors = isDark
+          ? ['#87ceeb', '#4682b4', '#4169e1', '#0000cd']
+          : ['#0369a1', '#1e40af', '#312e81', '#0f766e'];
       } else if ((code >= 71 && code <= 86) || temp <= 5) {
         // Snowy/Cold -> Ice colors
-        tubesColors = ['#e0ffff', '#add8e6', '#b0e0e6'];
-        lightsColors = ['#ffffff', '#f0f8ff', '#e6e6fa', '#d8bfd8'];
+        tubesColors = isDark
+          ? ['#e0ffff', '#add8e6', '#b0e0e6']
+          : ['#0f766e', '#2563eb', '#7c3aed'];
+        lightsColors = isDark
+          ? ['#ffffff', '#f0f8ff', '#e6e6fa', '#d8bfd8']
+          : ['#0d9488', '#1d4ed8', '#6d28d9', '#be185d'];
       }
     }
 
     return {
       tubes: tubesColors,
       lights: lightsColors,
-      bg: isDark ? '#000000' : '#f8fafc',
+      bg: isDark ? '#000000' : '#ffffff',
     };
   };
 
@@ -275,7 +283,17 @@ export default function TubesBackground() {
         pointerEvents: 'none',
       }}
     >
-      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      <div
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          filter:
+            mode === 'dark'
+              ? 'none'
+              : 'invert(1) hue-rotate(180deg) saturate(1.8) contrast(1.12)',
+        }}
+      />
 
       {/* Blur Overlay to improve text readability and ensure correct theme tint */}
       <div
@@ -288,7 +306,7 @@ export default function TubesBackground() {
           backgroundColor:
             mode === 'dark'
               ? 'rgba(0, 0, 0, 0.5)'
-              : 'rgba(248, 250, 252, 0.88)',
+              : 'rgba(255, 255, 255, 0.18)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
           transition: 'background-color 0.5s ease',

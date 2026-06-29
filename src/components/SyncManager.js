@@ -26,9 +26,20 @@ import {
 import { useOfflineSync } from '../providers/OfflineSyncProvider';
 import { useLanguage } from '../contexts/LanguageContext';
 
+const blurActiveElement = () => {
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur();
+  }
+};
+
 export default function SyncManager({ open, onClose, onEditItem }) {
   const { queue, isSyncing, removeFromQueue, syncManual } = useOfflineSync();
   const { t } = useLanguage();
+
+  const handleClose = () => {
+    blurActiveElement();
+    onClose();
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -60,7 +71,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 30 }}
     >
       <Box sx={{ width: 350, p: 3 }}>
@@ -73,7 +84,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
           }}
         >
           <Typography variant="h6">{t('syncManagerTitle')}</Typography>
-          <IconButton onClick={onClose}>
+          <IconButton onClick={handleClose}>
             <CloseIcon />
           </IconButton>
         </Box>

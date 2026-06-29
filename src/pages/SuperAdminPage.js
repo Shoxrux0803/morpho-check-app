@@ -1556,6 +1556,17 @@ const SuperAdminPage = () => {
     });
   };
 
+  const openAuditDrawer = (log) => {
+    blurActiveElement();
+    setSelectedAuditLog(log);
+    setIsAuditDrawerOpen(true);
+  };
+
+  const closeAuditDrawer = () => {
+    blurActiveElement();
+    setIsAuditDrawerOpen(false);
+  };
+
   // Dashboard Stats State
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -4084,7 +4095,7 @@ const SuperAdminPage = () => {
                               bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03) !important' : 'rgba(0,0,0,0.01) !important',
                             }
                           }}
-                          onClick={() => { setSelectedAuditLog(log); setIsAuditDrawerOpen(true); }}
+                          onClick={() => openAuditDrawer(log)}
                         >
                           <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
                             {new Date(log.created_at).toLocaleString()}
@@ -4140,7 +4151,7 @@ const SuperAdminPage = () => {
                             <IconButton
                               size="small"
                               color="primary"
-                              onClick={() => { setSelectedAuditLog(log); setIsAuditDrawerOpen(true); }}
+                              onClick={() => openAuditDrawer(log)}
                             >
                               <ChevronRight />
                             </IconButton>
@@ -4172,7 +4183,7 @@ const SuperAdminPage = () => {
             <Drawer
               anchor="right"
               open={isAuditDrawerOpen}
-              onClose={() => setIsAuditDrawerOpen(false)}
+              onClose={closeAuditDrawer}
               sx={{ zIndex: 1500 }}
               PaperProps={{
                 sx: {
@@ -4192,7 +4203,7 @@ const SuperAdminPage = () => {
                     <Typography variant="h6" fontWeight={800} display="flex" alignItems="center" gap={1}>
                       <Info color="primary" /> {t('eventDetails')}
                     </Typography>
-                    <IconButton onClick={() => setIsAuditDrawerOpen(false)}>
+                    <IconButton onClick={closeAuditDrawer}>
                       <Close />
                     </IconButton>
                   </Box>

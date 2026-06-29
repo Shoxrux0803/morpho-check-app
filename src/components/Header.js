@@ -321,6 +321,7 @@ export default function Header() {
   // ── Liquid glass filter for header ──────────────────────────────────────────
   const headerGlassLayerRef = useRef(null);
   const headerFilterIdRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
   if (!headerFilterIdRef.current) headerFilterIdRef.current = nextFilterId();
 
   useEffect(() => {
@@ -354,15 +355,21 @@ export default function Header() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const openLogoutDialog = () => {
+  const closeDrawer = (restoreFocus = true) => {
     blurActiveElement();
     setDrawerOpen(false);
+    if (restoreFocus) {
+      window.requestAnimationFrame(() => mobileMenuButtonRef.current?.focus());
+    }
+  };
+
+  const openLogoutDialog = () => {
+    closeDrawer(false);
     setLogoutDialogOpen(true);
   };
 
   const openSyncManager = () => {
-    blurActiveElement();
-    setDrawerOpen(false);
+    closeDrawer(false);
     setSyncOpen(true);
   };
 
@@ -1611,6 +1618,7 @@ export default function Header() {
 
           {/* Mobile Menu Button (xs to lg) */}
           <IconButton
+            ref={mobileMenuButtonRef}
             color="inherit"
             onClick={openDrawer}
             sx={{ display: { xs: 'flex', md: 'none' }, ml: 1 }}
@@ -1624,7 +1632,7 @@ export default function Header() {
           <Drawer
             anchor="right"
             open={drawerOpen}
-            onClose={() => setDrawerOpen(false)}
+            onClose={() => closeDrawer()}
             sx={{ zIndex: (theme) => theme.zIndex.drawer + 30 }}
             PaperProps={{
               sx: {
@@ -1646,7 +1654,7 @@ export default function Header() {
               <Typography variant="h6" fontWeight="900">
                 Menu
               </Typography>
-              <IconButton onClick={() => setDrawerOpen(false)}>
+              <IconButton onClick={() => closeDrawer()}>
                 <CheckIcon />
               </IconButton>
             </Box>
@@ -1668,7 +1676,7 @@ export default function Header() {
                         : {}),
                     }}
                     startIcon={item.icon}
-                    onClick={() => setDrawerOpen(false)}
+                    onClick={() => closeDrawer()}
                   >
                     {item.label}
                   </Button>
@@ -1686,7 +1694,7 @@ export default function Header() {
                       ...(isResearcherHome ? activeNavSx : {}),
                     }}
                     startIcon={<HomeIcon />}
-                    onClick={() => setDrawerOpen(false)}
+                    onClick={() => closeDrawer()}
                   >
                     {user?.role === 'field_assistant'
                       ? "Mening ma'lumotlarim"
@@ -1701,7 +1709,7 @@ export default function Header() {
                       py: 1.5,
                     }}
                     startIcon={<AnalyticsIcon />}
-                    onClick={() => setDrawerOpen(false)}
+                    onClick={() => closeDrawer()}
                   >
                     {t('analyze')}
                   </Button>
@@ -1713,7 +1721,7 @@ export default function Header() {
                   to="/admin"
                   sx={{ ...navButtonSx, justifyContent: 'flex-start', py: 1.5 }}
                   startIcon={<AdminPanelSettingsIcon />}
-                  onClick={() => setDrawerOpen(false)}
+                  onClick={() => closeDrawer()}
                 >
                   {t('adminPanel')}
                 </Button>
@@ -1724,7 +1732,7 @@ export default function Header() {
                   to="/superadmin"
                   sx={{ ...navButtonSx, justifyContent: 'flex-start', py: 1.5 }}
                   startIcon={<AdminPanelSettingsIcon color="primary" />}
-                  onClick={() => setDrawerOpen(false)}
+                  onClick={() => closeDrawer()}
                 >
                   Super Admin
                 </Button>
@@ -1735,7 +1743,7 @@ export default function Header() {
                 to={guidelinesPath}
                 sx={{ ...navButtonSx, justifyContent: 'flex-start', py: 1.5 }}
                 startIcon={<HelpOutlineIcon />}
-                onClick={() => setDrawerOpen(false)}
+                onClick={() => closeDrawer()}
               >
                 {guidelinesCopy.label}
               </Button>

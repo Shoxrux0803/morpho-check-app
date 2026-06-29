@@ -26,6 +26,8 @@ const installDevConsoleNoiseFilter = () => {
     'MUI Grid: The `sm` prop has been removed',
     'MUI Grid: The `md` prop has been removed',
     'MUI Grid: The `lg` prop has been removed',
+    'WARNING: Multiple instances of Three.js being imported.',
+    'Blocked aria-hidden on an element because its descendant retained focus.',
   ];
 
   const shouldIgnore = (args) =>
