@@ -101,6 +101,147 @@ const ScrollProgress = ({ progress, color }) => (
   />
 );
 
+const DeepAnalyticsSection = ({ theme, mode, t }) => {
+  const containerRef = useRef(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const y1 = useTransform(scrollYProgress, [0, 1], [80, -80]);
+  const y2 = useTransform(scrollYProgress, [0, 1], [-80, 80]);
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
+
+  return (
+    <Box ref={containerRef} sx={{ py: { xs: 10, md: 20 }, position: 'relative', zIndex: 10, overflow: 'hidden' }}>
+      <Container maxWidth="xl">
+        <Grid container spacing={8} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: '-20%' }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+              <Typography variant="overline" color="primary.main" fontWeight="900" letterSpacing={2}>
+                Data-Driven Healthcare
+              </Typography>
+              <Typography variant="h2" fontWeight="900" gutterBottom sx={{ mt: 2, mb: 4, lineHeight: 1.1, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
+                Chuqur tahlil va <br/> AI diagnostika
+              </Typography>
+              <Typography variant="h6" color="text.secondary" sx={{ mb: 6, fontWeight: 400, lineHeight: 1.8, maxWidth: 600 }}>
+                MorphoCheck Pro tizimi JSST standartlari asosida bolalar o'sishini 99.8% aniqlikda tahlil qiladi. Z-score ko'rsatkichlari, tana massasi indeksi (BMI) va somatotipni avtomatik hisoblab, shifokorlarga tayyor klinik xulosalar taqdim etadi.
+              </Typography>
+              
+              <Stack spacing={4}>
+                {[
+                  { value: '99.8%', label: "Tahlil aniqligi", icon: Activity },
+                  { value: '0.5s', label: "AI qayta ishlash tezligi", icon: Zap },
+                  { value: '100+', label: "Klinik parametrlar", icon: Microscope }
+                ].map((stat, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: i * 0.15 }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <Box sx={{ width: 60, height: 60, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <stat.icon size={28} />
+                      </Box>
+                      <Box>
+                        <Typography variant="h4" fontWeight="900" sx={{ background: `linear-gradient(to right, ${theme.palette.primary.main}, #0f766e)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                          {stat.value}
+                        </Typography>
+                        <Typography variant="body1" color="text.secondary" fontWeight="600">
+                          {stat.label}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                ))}
+              </Stack>
+            </motion.div>
+          </Grid>
+          
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: { xs: 4, md: 8 }, position: 'relative', minHeight: { md: '600px' }, py: { xs: 4, md: 0 } }}>
+              
+              {/* Background glowing circle */}
+              <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }}>
+                <motion.div style={{ opacity }}>
+                  <Box sx={{
+                    width: { xs: 300, md: 450 },
+                    height: { xs: 300, md: 450 },
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.12)} 0%, transparent 70%)`,
+                  }} />
+                </motion.div>
+              </Box>
+
+              <Box component={motion.div} style={{ y: y1 }} sx={{ zIndex: 2, alignSelf: { xs: 'center', md: 'flex-end' } }}>
+                <Card sx={{ 
+                  p: 3, 
+                  width: { xs: 280, sm: 320, md: 340 }, 
+                  background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.6)} 0%, ${alpha(theme.palette.background.default, 0.4)} 100%)`,
+                  backdropFilter: 'blur(30px)',
+                  borderRadius: '24px',
+                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                  boxShadow: `0 30px 60px ${alpha('#000', 0.2)}`
+                }}>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>Z-Score O'zgarish Dinamikasi</Typography>
+                  <Box sx={{ height: 120, mt: 2, display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+                    {[40, 70, 45, 90, 65, 85, 100].map((h, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ height: 0 }}
+                        whileInView={{ height: `${h}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1, delay: i * 0.1, ease: 'easeOut' }}
+                        style={{ flex: 1, background: `linear-gradient(to top, ${theme.palette.primary.main}, #0f766e)`, borderRadius: '4px' }}
+                      />
+                    ))}
+                  </Box>
+                </Card>
+              </Box>
+
+              <Box component={motion.div} style={{ y: y2 }} sx={{ zIndex: 3, alignSelf: { xs: 'center', md: 'flex-start' }, ml: { md: 4 } }}>
+                <Card sx={{ 
+                  p: 3, 
+                  width: { xs: 280, sm: 300, md: 320 }, 
+                  background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.7)} 0%, ${alpha(theme.palette.background.default, 0.5)} 100%)`,
+                  backdropFilter: 'blur(30px)',
+                  borderRadius: '24px',
+                  border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                  boxShadow: `0 30px 60px ${alpha('#000', 0.2)}`
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main }}>
+                      <Activity size={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" fontWeight="800">Somatotip</Typography>
+                      <Typography variant="caption" color="text.secondary">AI xulosasi</Typography>
+                    </Box>
+                  </Box>
+                  <Typography variant="body1" fontWeight="700" color="secondary.main">
+                    Mezosomatik tip
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Tana tuzilishi proporsional rivojlangan, muskullar massasi normal darajada.
+                  </Typography>
+                </Card>
+              </Box>
+              
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
+  );
+};
+
 const StickyScrollStory = ({ theme, mode, fadeInUp, t }) => {
   const sectionRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -769,6 +910,8 @@ export default function IntroPage() {
         </Container>
       </Box>
 
+      <DeepAnalyticsSection theme={theme} mode={mode} t={t} />
+
       {/* Features Section */}
       <Box sx={{ py: 20, position: 'relative', zIndex: 10 }}>
         <Container maxWidth="lg">
@@ -796,62 +939,79 @@ export default function IntroPage() {
             </motion.div>
           </Box>
 
-          <Grid container spacing={4}>
-            {[
-              {
-                icon: ShieldCheck,
-                title: t('feat1Title'),
-                desc: t('feat1Desc'),
-                color: '#3b82f6',
-              },
-              {
-                icon: Activity,
-                title: t('feat2Title'),
-                desc: t('feat2Desc'),
-                color: '#10b981',
-              },
-              {
-                icon: FileText,
-                title: t('feat3Title'),
-                desc: t('feat3Desc'),
-                color: '#f59e0b',
-              },
-            ].map((feature, i) => (
-              <Grid item xs={12} md={4} key={i}>
-                <motion.div
-                  {...fadeInUp}
-                  transition={{ delay: i * 0.15 + 0.3 }}
-                >
-                  <Card sx={styles.premiumCard}>
-                    <CardContent sx={{ p: 5 }}>
-                      <Box
-                        sx={{
-                          mb: 4,
-                          p: 2.5,
-                          display: 'inline-flex',
-                          borderRadius: '20px',
-                          bgcolor: alpha(feature.color, 0.1),
-                          color: feature.color,
-                        }}
-                      >
-                        <feature.icon size={40} strokeWidth={1.5} />
-                      </Box>
-                      <Typography variant="h5" fontWeight="900" gutterBottom>
-                        {feature.title}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        color="text.secondary"
-                        sx={{ lineHeight: 1.7 }}
-                      >
-                        {feature.desc}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </Grid>
-            ))}
-          </Grid>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-10%' }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.2 }
+              }
+            }}
+          >
+            <Grid container spacing={4}>
+              {[
+                {
+                  icon: ShieldCheck,
+                  title: t('feat1Title'),
+                  desc: t('feat1Desc'),
+                  color: '#3b82f6',
+                },
+                {
+                  icon: Activity,
+                  title: t('feat2Title'),
+                  desc: t('feat2Desc'),
+                  color: '#10b981',
+                },
+                {
+                  icon: FileText,
+                  title: t('feat3Title'),
+                  desc: t('feat3Desc'),
+                  color: '#f59e0b',
+                },
+              ].map((feature, i) => (
+                <Grid item xs={12} md={4} key={i}>
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, y: 50, scale: 0.95 },
+                      visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' } }
+                    }}
+                    whileHover={{ y: -10 }}
+                  >
+                    <Card sx={{ ...styles.premiumCard, height: '100%' }}>
+                      <CardContent sx={{ p: 5 }}>
+                        <Box
+                          sx={{
+                            mb: 4,
+                            p: 2.5,
+                            display: 'inline-flex',
+                            borderRadius: '20px',
+                            bgcolor: alpha(feature.color, 0.1),
+                            color: feature.color,
+                            boxShadow: `0 8px 32px ${alpha(feature.color, 0.2)}`
+                          }}
+                        >
+                          <feature.icon size={40} strokeWidth={1.5} />
+                        </Box>
+                        <Typography variant="h5" fontWeight="900" gutterBottom>
+                          {feature.title}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          color="text.secondary"
+                          sx={{ lineHeight: 1.7 }}
+                        >
+                          {feature.desc}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </motion.div>
         </Container>
       </Box>
 
@@ -878,44 +1038,76 @@ export default function IntroPage() {
             </Typography>
           </Box>
 
-          <Grid container spacing={4}>
-            {[
-              { step: '01', title: t('step1Title'), desc: t('step1Desc') },
-              { step: '02', title: t('step2Title'), desc: t('step2Desc') },
-              { step: '03', title: t('step3Title'), desc: t('step3Desc') },
-            ].map((item, i) => (
-              <Grid item xs={12} md={4} key={i}>
-                <Box sx={{ position: 'relative' }}>
-                  <Typography
-                    variant="h1"
-                    sx={{
-                      position: 'absolute',
-                      top: -40,
-                      left: { xs: 0, sm: -10 },
-                      fontSize: { xs: '5rem', sm: '8rem' },
-                      fontWeight: 900,
-                      opacity: 0.05,
-                      color: theme.palette.primary.main,
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-10%' }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.3 }
+              }
+            }}
+          >
+            <Grid container spacing={4}>
+              {[
+                { step: '01', title: t('step1Title'), desc: t('step1Desc') },
+                { step: '02', title: t('step2Title'), desc: t('step2Desc') },
+                { step: '03', title: t('step3Title'), desc: t('step3Desc') },
+              ].map((item, i) => (
+                <Grid item xs={12} md={4} key={i}>
+                  <motion.div
+                    variants={{
+                      hidden: { opacity: 0, x: -30 },
+                      visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: 'easeOut' } }
                     }}
+                    whileHover={{ scale: 1.02 }}
                   >
-                    {item.step}
-                  </Typography>
-                  <Box sx={{ pt: 4 }}>
-                    <Typography variant="h4" fontWeight="900" gutterBottom>
-                      {item.title}
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      color="text.secondary"
-                      sx={{ fontSize: '1.1rem' }}
-                    >
-                      {item.desc}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Grid>
-            ))}
-          </Grid>
+                    <Box sx={{ 
+                      position: 'relative', 
+                      p: 4, 
+                      borderRadius: '24px',
+                      background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.4)} 0%, ${alpha(theme.palette.background.default, 0.2)} 100%)`,
+                      border: `1px solid ${alpha(theme.palette.text.primary, 0.05)}`,
+                      boxShadow: `0 20px 40px ${alpha('#000', 0.05)}`,
+                      overflow: 'hidden'
+                    }}>
+                      <Typography
+                        variant="h1"
+                        sx={{
+                          position: 'absolute',
+                          top: -20,
+                          right: -10,
+                          fontSize: { xs: '6rem', sm: '10rem' },
+                          fontWeight: 900,
+                          opacity: 0.03,
+                          color: theme.palette.primary.main,
+                          lineHeight: 1,
+                          pointerEvents: 'none'
+                        }}
+                      >
+                        {item.step}
+                      </Typography>
+                      <Box sx={{ position: 'relative', zIndex: 1 }}>
+                        <Typography variant="h4" fontWeight="900" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box component="span" sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'primary.main', display: 'inline-block' }} />
+                          {item.title}
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          color="text.secondary"
+                          sx={{ fontSize: '1.1rem', lineHeight: 1.8, mt: 2 }}
+                        >
+                          {item.desc}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </motion.div>
         </Container>
       </Box>
 
