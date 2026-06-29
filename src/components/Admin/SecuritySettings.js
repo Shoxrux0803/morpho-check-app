@@ -48,7 +48,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Foydalanuvchi roli',
     lastActive: 'Oxirgi faollik',
     securityTip: 'Xavfsizlik boʻyicha tavsiya',
-    securityTipText: 'Hisobingiz xavfsizligini taʼminlash uchun parolingizni har 3 oyda oʻzgartirib turishni va boshqa saytlarda ishlatilmagan noyob paroldan foydalanishni tavsiya etamiz.',
+    securityTipText:
+      'Hisobingiz xavfsizligini taʼminlash uchun parolingizni har 3 oyda oʻzgartirib turishni va boshqa saytlarda ishlatilmagan noyob paroldan foydalanishni tavsiya etamiz.',
     successMessage: 'Parol muvaffaqiyatli oʻzgartirildi!',
     errorMessage: 'Xatolik yuz berdi',
   },
@@ -68,7 +69,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Роль пользователя',
     lastActive: 'Последняя активность',
     securityTip: 'Рекомендация по безопасности',
-    securityTipText: 'Для обеспечения безопасности вашей учетной записи мы рекомендуем менять пароль каждые 3 месяца и использовать уникальный пароль, который не используется на других сайтах.',
+    securityTipText:
+      'Для обеспечения безопасности вашей учетной записи мы рекомендуем менять пароль каждые 3 месяца и использовать уникальный пароль, который не используется на других сайтах.',
     successMessage: 'Пароль успешно изменен!',
     errorMessage: 'Произошла ошибка',
   },
@@ -88,7 +90,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'User Role',
     lastActive: 'Last Active',
     securityTip: 'Security Tip',
-    securityTipText: 'To keep your account secure, we recommend changing your password every 3 months and using a unique password not used on other sites.',
+    securityTipText:
+      'To keep your account secure, we recommend changing your password every 3 months and using a unique password not used on other sites.',
     successMessage: 'Password changed successfully!',
     errorMessage: 'An error occurred',
   },
@@ -108,7 +111,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Kullanıcı Rolü',
     lastActive: 'Son Aktif',
     securityTip: 'Güvenlik İpucu',
-    securityTipText: 'Hesabınızı güvende tutmak için şifrenizi her 3 ayda bir değiştirmenizi ve başka sitelerde kullanılmayan benzersiz bir şifre kullanmanızı öneririz.',
+    securityTipText:
+      'Hesabınızı güvende tutmak için şifrenizi her 3 ayda bir değiştirmenizi ve başka sitelerde kullanılmayan benzersiz bir şifre kullanmanızı öneririz.',
     successMessage: 'Şifre başarıyla değiştirildi!',
     errorMessage: 'Bir hata oluştu',
   },
@@ -128,7 +132,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Нақши корбар',
     lastActive: 'Фаъолияти охирин',
     securityTip: 'Маслиҳати амниятӣ',
-    securityTipText: 'Барои бехатарии ҳисоби худ, тавсия медиҳем, ки пароли худро ҳар 3 моҳ иваз кунед ва пароли беҳамтоеро истифода баред, ки дар сайтҳои дигар истифода намешавад.',
+    securityTipText:
+      'Барои бехатарии ҳисоби худ, тавсия медиҳем, ки пароли худро ҳар 3 моҳ иваз кунед ва пароли беҳамтоеро истифода баред, ки дар сайтҳои дигар истифода намешавад.',
     successMessage: 'Парол бо муваффақият иваз карда шуд!',
     errorMessage: 'Хатогӣ рух дод',
   },
@@ -148,7 +153,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Пайдаланушы рөлі',
     lastActive: 'Соңғы белсенділік',
     securityTip: 'Қауіпсіздік кеңесі',
-    securityTipText: 'Тіркелгіңіздің қауіпсіздігін қамтамасыз ету үшін құпия сөзді әр 3 ай сайын өзгертуді және басқа сайттарда қолданылмайтын бірегей құпия сөзді пайдалануды ұсынамыз.',
+    securityTipText:
+      'Тіркелгіңіздің қауіпсіздігін қамтамасыз ету үшін құпия сөзді әр 3 ай сайын өзгертуді және басқа сайттарда қолданылмайтын бірегей құпия сөзді пайдалануды ұсынамыз.',
     successMessage: 'Құпия сөз сәтті өзгертілді!',
     errorMessage: 'Қате орын алды',
   },
@@ -168,7 +174,8 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Колдонуучунун ролу',
     lastActive: 'Акыркы активдүүлүк',
     securityTip: 'Коопсуздук кеңеши',
-    securityTipText: 'Аккаунтуңуздун коопсуздугун камсыз кылуу үчүн сөз айкашыңызды ар 3 ай сайын өзгөртүп турууну жана башка сайттарда колдонулбаган уникалдуу сөз айкашын колдонууну сунуштайбыз.',
+    securityTipText:
+      'Аккаунтуңуздун коопсуздугун камсыз кылуу үчүн сөз айкашыңызды ар 3 ай сайын өзгөртүп турууну жана башка сайттарда колдонулбаган уникалдуу сөз айкашын колдонууну сунуштайбыз.',
     successMessage: 'Сөз айкашы ийгиликтүү өзгөртүлдү!',
     errorMessage: 'Ката кетти',
   },
@@ -188,10 +195,11 @@ const LOCAL_TRANSLATIONS = {
     userRole: 'Ulanyjy roly',
     lastActive: 'Soňky işjeňlik',
     securityTip: 'Howpsuzlyk maslahaty',
-    securityTipText: 'Hasabyňyzyň howpsuzlygyny üpjün etmek üçin paroluňyzy her 3 aýdan bir gezek üýtgetmegi we başga saýtlarda ulanylmadyk üýtgeşik paroly ulanmagy maslahat berýäris.',
+    securityTipText:
+      'Hasabyňyzyň howpsuzlygyny üpjün etmek üçin paroluňyzy her 3 aýdan bir gezek üýtgetmegi we başga saýtlarda ulanylmadyk üýtgeşik paroly ulanmagy maslahat berýäris.',
     successMessage: 'Parol üstünlikli üýtgedildi!',
     errorMessage: 'Ýalňyşlyk ýüze çykdy',
-  }
+  },
 };
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -211,7 +219,8 @@ const GlassPaper = ({ children, sx = {} }) => (
           : 'rgba(0, 0, 0, 0.05)',
       p: { xs: 2.5, md: 4 },
       overflow: 'hidden',
-      transition: 'background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
+      transition:
+        'background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease',
       boxShadow: (theme) =>
         theme.palette.mode === 'dark'
           ? '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
@@ -223,11 +232,65 @@ const GlassPaper = ({ children, sx = {} }) => (
   </Paper>
 );
 
+const visibilityButtonSx = {
+  width: 36,
+  height: 36,
+  flex: '0 0 36px',
+  '& .MuiSvgIcon-root': {
+    fontSize: 22,
+  },
+};
+
+const passwordFieldSx = (masked, extraRootSx = {}) => ({
+  '& .MuiOutlinedInput-root': {
+    minHeight: 56,
+    borderRadius: 3,
+    transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
+    backgroundColor: (theme) =>
+      theme.palette.mode === 'dark'
+        ? 'rgba(255,255,255,0.02)'
+        : 'rgba(0,0,0,0.01)',
+    '&.Mui-focused': {
+      '& fieldset': {
+        borderColor: 'primary.main',
+        borderWidth: '2px',
+        boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
+      },
+    },
+    ...extraRootSx,
+  },
+  '& .MuiInputBase-input': {
+    fontFamily: 'inherit',
+    height: '1.4375em',
+    WebkitTextSecurity: masked ? 'disc' : 'none',
+  },
+  '& .MuiInputAdornment-positionEnd': {
+    width: 40,
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginLeft: 1,
+  },
+  '& .MuiInputAdornment-positionStart': {
+    flexShrink: 0,
+  },
+  '& .MuiInputLabel-root': {
+    transform: 'translate(42px, 16px) scale(1)',
+  },
+  '& .MuiInputLabel-shrink': {
+    transform: 'translate(14px, -9px) scale(0.75)',
+  },
+  '& .MuiFormHelperText-root': {
+    minHeight: 20,
+    marginTop: 0.5,
+  },
+});
+
 export default function SecuritySettings() {
   const { lang } = useLanguage();
   const { user } = useAuth();
   const pt = (key) => pageT(lang, key);
-  const lt = (key) => LOCAL_TRANSLATIONS[lang]?.[key] || LOCAL_TRANSLATIONS['ru'][key] || key;
+  const lt = (key) =>
+    LOCAL_TRANSLATIONS[lang]?.[key] || LOCAL_TRANSLATIONS['ru'][key] || key;
 
   // States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -243,7 +306,7 @@ export default function SecuritySettings() {
   const hasUpper = /[A-Z]/.test(newPassword);
   const hasLower = /[a-z]/.test(newPassword);
   const hasDigit = /[0-9]/.test(newPassword);
-  
+
   // Calculate Strength Score
   const getStrengthScore = () => {
     if (!newPassword) return 0;
@@ -320,7 +383,8 @@ export default function SecuritySettings() {
                 sx={{
                   p: 1.2,
                   borderRadius: 2.5,
-                  background: 'linear-gradient(135deg, #3f51b5 0%, #2196f3 100%)',
+                  background:
+                    'linear-gradient(135deg, #3f51b5 0%, #2196f3 100%)',
                   color: 'white',
                   display: 'flex',
                   mr: 2,
@@ -339,7 +403,7 @@ export default function SecuritySettings() {
                 <TextField
                   fullWidth
                   label={pt('currentPassword')}
-                  type={showCurrent ? 'text' : 'password'}
+                  type="text"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   variant="outlined"
@@ -358,45 +422,20 @@ export default function SecuritySettings() {
                           onMouseDown={(e) => e.preventDefault()}
                           edge="end"
                           size="small"
+                          sx={visibilityButtonSx}
                         >
                           {showCurrent ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 3,
-                      transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(255,255,255,0.02)'
-                          : 'rgba(0,0,0,0.01)',
-                      '&.Mui-focused': {
-                        '& fieldset': {
-                          borderColor: 'primary.main',
-                          borderWidth: '2px',
-                          boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
-                        },
-                      },
-                    },
-                    '& input': {
-                      fontFamily: 'inherit',
-                      height: '1.4375em',
-                    },
-                    '& .MuiInputLabel-root': {
-                      transform: 'translate(42px, 16px) scale(1)',
-                    },
-                    '& .MuiInputLabel-shrink': {
-                      transform: 'translate(14px, -9px) scale(0.75)',
-                    },
-                  }}
+                  sx={passwordFieldSx(!showCurrent)}
                 />
 
                 <TextField
                   fullWidth
                   label={pt('newPassword')}
-                  type={showNew ? 'text' : 'password'}
+                  type="text"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   variant="outlined"
@@ -415,56 +454,33 @@ export default function SecuritySettings() {
                           onMouseDown={(e) => e.preventDefault()}
                           edge="end"
                           size="small"
+                          sx={visibilityButtonSx}
                         >
                           {showNew ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 3,
-                      transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(255,255,255,0.02)'
-                          : 'rgba(0,0,0,0.01)',
-                      '&.Mui-focused': {
-                        '& fieldset': {
-                          borderColor: 'primary.main',
-                          borderWidth: '2px',
-                          boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
-                        },
-                      },
-                    },
-                    '& input': {
-                      fontFamily: 'inherit',
-                      height: '1.4375em',
-                    },
-                    '& .MuiInputLabel-root': {
-                      transform: 'translate(42px, 16px) scale(1)',
-                    },
-                    '& .MuiInputLabel-shrink': {
-                      transform: 'translate(14px, -9px) scale(0.75)',
-                    },
-                  }}
+                  sx={passwordFieldSx(!showNew)}
                 />
 
                 <TextField
                   fullWidth
                   label={pt('confirmNewPassword')}
-                  type={showConfirm ? 'text' : 'password'}
+                  type="text"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   variant="outlined"
                   required
-                  error={Boolean(confirmPassword && newPassword !== confirmPassword)}
+                  error={Boolean(
+                    confirmPassword && newPassword !== confirmPassword
+                  )}
                   helperText={
                     confirmPassword && newPassword !== confirmPassword
                       ? lt('mismatch')
                       : confirmPassword && newPassword === confirmPassword
-                      ? lt('match')
-                      : ''
+                        ? lt('match')
+                        : ''
                   }
                   FormHelperTextProps={{
                     sx: {
@@ -489,42 +505,25 @@ export default function SecuritySettings() {
                           onMouseDown={(e) => e.preventDefault()}
                           edge="end"
                           size="small"
+                          sx={visibilityButtonSx}
                         >
                           {showConfirm ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 3,
-                      transition: 'background-color 0.2s, border-color 0.2s, box-shadow 0.2s',
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(255,255,255,0.02)'
-                          : 'rgba(0,0,0,0.01)',
-                      '&.Mui-focused': {
-                        '& fieldset': {
-                          borderColor: (theme) =>
-                            confirmPassword && newPassword !== confirmPassword
-                              ? theme.palette.error.main
-                              : 'primary.main',
-                          borderWidth: '2px',
-                          boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
-                        },
+                  sx={passwordFieldSx(!showConfirm, {
+                    '&.Mui-focused': {
+                      '& fieldset': {
+                        borderColor: (theme) =>
+                          confirmPassword && newPassword !== confirmPassword
+                            ? theme.palette.error.main
+                            : 'primary.main',
+                        borderWidth: '2px',
+                        boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
                       },
                     },
-                    '& input': {
-                      fontFamily: 'inherit',
-                      height: '1.4375em',
-                    },
-                    '& .MuiInputLabel-root': {
-                      transform: 'translate(42px, 16px) scale(1)',
-                    },
-                    '& .MuiInputLabel-shrink': {
-                      transform: 'translate(14px, -9px) scale(0.75)',
-                    },
-                  }}
+                  })}
                 />
 
                 <Box sx={{ mt: 1.5 }}>
@@ -592,8 +591,17 @@ export default function SecuritySettings() {
               {/* Password Strength indicator */}
               {newPassword && (
                 <Box mb={3.5}>
-                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.2}>
-                    <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={1.2}
+                  >
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      fontWeight={600}
+                    >
                       {lt('passwordStrength')}:
                     </Typography>
                     <Typography
@@ -611,7 +619,9 @@ export default function SecuritySettings() {
                       height: 8,
                       borderRadius: 4,
                       backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.06)'
+                          : 'rgba(0,0,0,0.06)',
                       '& .MuiLinearProgress-bar': {
                         borderRadius: 4,
                         backgroundColor: getStrengthColor(),
@@ -676,7 +686,9 @@ export default function SecuritySettings() {
                       p: 1.2,
                       borderRadius: 2.5,
                       backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.04)'
+                          : 'rgba(0,0,0,0.03)',
                       color: 'primary.main',
                       display: 'flex',
                       mr: 2,
@@ -685,7 +697,11 @@ export default function SecuritySettings() {
                     <Person fontSize="small" />
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={500}
+                    >
                       User
                     </Typography>
                     <Typography variant="body2" fontWeight={700}>
@@ -700,7 +716,9 @@ export default function SecuritySettings() {
                       p: 1.2,
                       borderRadius: 2.5,
                       backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                        theme.palette.mode === 'dark'
+                          ? 'rgba(255,255,255,0.04)'
+                          : 'rgba(0,0,0,0.03)',
                       color: 'primary.main',
                       display: 'flex',
                       mr: 2,
@@ -709,10 +727,22 @@ export default function SecuritySettings() {
                     <AdminPanelSettings fontSize="small" />
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={500}
+                    >
                       {lt('userRole')}
                     </Typography>
-                    <Typography variant="body2" fontWeight={700} sx={{ textTransform: 'uppercase', fontSize: '0.8rem', letterSpacing: '0.5px' }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={700}
+                      sx={{
+                        textTransform: 'uppercase',
+                        fontSize: '0.8rem',
+                        letterSpacing: '0.5px',
+                      }}
+                    >
                       {user?.role || 'superadmin'}
                     </Typography>
                   </Box>
@@ -746,10 +776,20 @@ export default function SecuritySettings() {
                   }}
                 />
                 <Box>
-                  <Typography variant="body2" fontWeight={800} color="#2196f3" mb={0.5}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={800}
+                    color="#2196f3"
+                    mb={0.5}
+                  >
                     {lt('securityTip')}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ lineHeight: 1.45, fontWeight: 500 }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    sx={{ lineHeight: 1.45, fontWeight: 500 }}
+                  >
                     {lt('securityTipText')}
                   </Typography>
                 </Box>
