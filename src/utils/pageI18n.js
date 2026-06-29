@@ -500,7 +500,7 @@ const dictionaries = {
     time: 'Time',
     user: 'User',
     action: 'Action',
-    object: 'Object',
+    object: 'Record',
     clear: 'Clear',
     backupsTitle: 'Backups',
     createBackup: 'Create backup',

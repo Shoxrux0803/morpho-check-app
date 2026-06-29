@@ -337,6 +337,7 @@ const AUDIT_TARGET_LABELS_RU = {
   Backup: 'Резервная копия',
   PDF: 'PDF-отчет',
   DOCX: 'DOCX-документ',
+  ResearchRecord: 'Запись исследования',
 };
 
 const AUDIT_TARGET_LABELS_EN = {
@@ -347,6 +348,7 @@ const AUDIT_TARGET_LABELS_EN = {
   Backup: 'Backup',
   PDF: 'PDF report',
   DOCX: 'DOCX document',
+  ResearchRecord: 'Research record',
 };
 
 const AUDIT_TARGET_LABELS_TR = {
@@ -357,6 +359,7 @@ const AUDIT_TARGET_LABELS_TR = {
   Backup: 'Yedek',
   PDF: 'PDF raporu',
   DOCX: 'DOCX belgesi',
+  ResearchRecord: 'Araştırma kaydı',
 };
 
 const AUDIT_TARGET_LABELS_KZ = {
@@ -367,6 +370,7 @@ const AUDIT_TARGET_LABELS_KZ = {
   Backup: 'Сақтық көшірме',
   PDF: 'PDF есеп',
   DOCX: 'DOCX құжат',
+  ResearchRecord: 'Зерттеу жазбасы',
 };
 
 const AUDIT_TARGET_LABELS_KY = {
@@ -377,6 +381,7 @@ const AUDIT_TARGET_LABELS_KY = {
   Backup: 'Камдык көчүрмө',
   PDF: 'PDF отчет',
   DOCX: 'DOCX документ',
+  ResearchRecord: 'Изилдөө жазуусу',
 };
 const AUDIT_JSON_KEY_LABELS_RU = {
   action: 'Действие',
@@ -398,8 +403,8 @@ const AUDIT_JSON_KEY_LABELS_RU = {
 
 const AUDIT_JSON_KEY_LABELS_EN = {
   action: 'Action',
-  target_type: 'Object type',
-  target_id: 'Object ID',
+  target_type: 'Record type',
+  target_id: 'Record ID',
   details: 'Details',
   user_id: 'User ID',
   user_name: 'User',
@@ -521,6 +526,10 @@ const AUDIT_DETAIL_PATTERNS_RU = [
     /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
     'Анкета пациента (DOCX) скачана: $1',
   ],
+  [
+    /^(.+?) roli uchun Chat holati o'?zgartirildi:\s*AI=(True|False),\s*Ichki=(True|False)$/i,
+    'Статус чата для роли $1 изменен: ИИ=$2, Внутренний=$3',
+  ],
 ];
 
 const AUDIT_DETAIL_REPLACEMENTS_RU = [
@@ -637,7 +646,11 @@ const AUDIT_DETAIL_PATTERNS_EN = [
   ],
   [
     /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
-    'Patient form (DOCX) downloaded: $1',
+    'Patient questionnaire (DOCX) downloaded: $1',
+  ],
+  [
+    /^(.+?) roli uchun Chat holati o'?zgartirildi:\s*AI=(True|False),\s*Ichki=(True|False)$/i,
+    'Chat status for $1 role changed: AI=$2, Internal=$3',
   ],
 ];
 
@@ -755,7 +768,11 @@ const AUDIT_DETAIL_PATTERNS_TR = [
   ],
   [
     /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
-    'Hasta formu (DOCX) indirildi: $1',
+    'Hasta anketi (DOCX) indirildi: $1',
+  ],
+  [
+    /^(.+?) roli uchun Chat holati o'?zgartirildi:\s*AI=(True|False),\s*Ichki=(True|False)$/i,
+    '$1 rolü için Sohbet durumu değiştirildi: AI=$2, Dahili=$3',
   ],
 ];
 
@@ -980,6 +997,10 @@ const AUDIT_DETAIL_PATTERNS_KY = [
   [
     /^Bemor anketasi \(DOCX\) yuklab olindi:\s*(.*)$/i,
     'Бейтап анкетасы (DOCX) жүктөлдү: $1',
+  ],
+  [
+    /^(.+?) roli uchun Chat holati o'?zgartirildi:\s*AI=(True|False),\s*Ichki=(True|False)$/i,
+    '$1 ролу үчүн Чат абалы өзгөртүлдү: AI=$2, Ички=$3',
   ],
 ];
 

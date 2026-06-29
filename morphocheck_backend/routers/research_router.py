@@ -18,6 +18,7 @@ from models.schemas import ResearchRecordCreate, ResearchRecordOut
 from models.user import User
 from models.userdata import ResearchRecord
 from routers.auth_router import get_current_user
+from utils.audit_helper import record_audit_log
 from services.consent_docx import generate_consent_docx
 from services.indices_service import calculate_detailed_indices
 from services.research_docx import generate_researcher_docx
@@ -2361,6 +2362,15 @@ def create_research_record(
     except Exception:
         pass
 
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="create",
+        target_type="ResearchRecord",
+        target_id=record.id,
+        details=f"Yangi tadqiqot ma'lumoti yaratildi: {record.full_name}"
+    )
+
     return record
 
 
@@ -2408,6 +2418,14 @@ def update_research_record(
         record.consent_confirmed_at = datetime.utcnow()
     db.commit()
     db.refresh(record)
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="update",
+        target_type="ResearchRecord",
+        target_id=record.id,
+        details=f"Tadqiqot ma'lumoti yangilandi: {record.full_name}"
+    )
     return record
 
 
@@ -2430,6 +2448,14 @@ def delete_research_record(
     record.deleted_by_id = current_user.id
     record.deleted_at = datetime.utcnow()
     db.commit()
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="delete",
+        target_type="ResearchRecord",
+        target_id=record.id,
+        details=f"Tadqiqot ma'lumoti savatga yuborildi: {record.full_name}"
+    )
     return {"status": "ok", "message": "Soft o'chirildi"}
 
 
@@ -2445,8 +2471,17 @@ def hard_delete_research_record(
     record = db.get(ResearchRecord, record_id)
     if not record:
         raise HTTPException(status_code=404, detail="Ma'lumot topilmadi")
+    record_name = record.full_name
     db.delete(record)
     db.commit()
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="hard_delete",
+        target_type="ResearchRecord",
+        target_id=record_id,
+        details=f"Tadqiqot ma'lumoti butunlay o'chirildi: {record_name} (ID: {record_id})"
+    )
     return {"status": "ok", "message": "Bazadan butunlay o'chirildi"}
 
 
@@ -2466,6 +2501,14 @@ def restore_research_record(
     record.deleted_by_id = None
     record.deleted_at = None
     db.commit()
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="restore",
+        target_type="ResearchRecord",
+        target_id=record.id,
+        details=f"Tadqiqot ma'lumoti savatdan tiklandi: {record.full_name}"
+    )
     return {"status": "ok", "message": "Tiklandi"}
 
 
