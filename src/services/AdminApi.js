@@ -2,6 +2,7 @@
 // proxy (package.json "proxy": "http://localhost:8000") orqali CORS bartaraf etiladi.
 const API_BASE = process.env.REACT_APP_API_URL || '';
 const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
+const MAX_API_PAGE_SIZE = 200;
 
 // Token: localStorage ustuvor, bo'lmasa .env dagi
 const getToken = () => {
@@ -16,7 +17,11 @@ const getToken = () => {
 const withQuery = (path, params = {}) => {
   const qs = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') qs.set(k, v);
+    if (v !== undefined && v !== null && v !== '') {
+      const isPageSize = k === 'page_size' || k === 'pageSize';
+      const nextValue = isPageSize ? Math.min(Number(v), MAX_API_PAGE_SIZE) : v;
+      qs.set(k, Number.isFinite(nextValue) ? nextValue : v);
+    }
   });
   const q = qs.toString();
   return `${path}${q ? `?${q}` : ''}`;
@@ -124,7 +129,7 @@ export const AdminApi = {
         withQuery('/admin/deleted-analyses', {
           ...rest,
           page: opts.page ?? 1,
-          page_size: opts.pageSize ?? 500,
+          page_size: opts.pageSize ?? MAX_API_PAGE_SIZE,
         })
       );
     },

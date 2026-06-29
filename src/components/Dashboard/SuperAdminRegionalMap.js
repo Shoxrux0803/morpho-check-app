@@ -1521,7 +1521,7 @@ const normalizeListResponse = (value) =>
         : [];
 
 const loadAllUsers = async () => {
-  const pageSize = 500;
+  const pageSize = 200;
   const rows = [];
   for (let page = 1; page <= 100; page += 1) {
     const value = await AdminApi.users.list({
@@ -2560,8 +2560,8 @@ export default function SuperAdminRegionalMap({
     try {
       const [analysisResult, researchResult, userResult] =
         await Promise.allSettled([
-          AdminApi.analyses.list({ page: 1, page_size: 500, pageSize: 500 }),
-          ResearchApi.list({ page: 1, page_size: 500, pageSize: 500 }),
+          AdminApi.analyses.list({ page: 1, page_size: 200, pageSize: 200 }),
+          ResearchApi.list({ page: 1, page_size: 200, pageSize: 200 }),
           loadAllUsers(),
         ]);
       if (analysisResult.status === 'fulfilled') {

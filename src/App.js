@@ -10,7 +10,7 @@ import {
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, toast, useToasterStore } from 'react-hot-toast';
 
 // ==== Styles (doimo tepada) ====
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -43,6 +43,21 @@ const PrivacyCompliancePage = lazy(
   () => import('./pages/PrivacyCompliancePage')
 );
 const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard')); // 3-bosqich
+const MAX_VISIBLE_TOASTS = 3;
+
+function ToastLimit() {
+  const { toasts } = useToasterStore();
+
+  useEffect(() => {
+    const visibleToasts = toasts.filter((item) => item.visible);
+
+    visibleToasts.slice(MAX_VISIBLE_TOASTS).forEach((item) => {
+      toast.dismiss(item.id);
+    });
+  }, [toasts]);
+
+  return null;
+}
 
 // 404
 const NotFound = () => (
@@ -341,6 +356,7 @@ export default function App() {
 
   return (
     <LanguageProvider>
+      <ToastLimit />
       <Toaster
         position="top-right"
         reverseOrder={false}

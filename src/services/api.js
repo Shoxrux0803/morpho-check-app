@@ -4,6 +4,16 @@
 // Production da REACT_APP_API_URL ni to'liq URL ga o'rnating.
 export const API_BASE = process.env.REACT_APP_API_URL || '';
 export const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
+const MAX_API_PAGE_SIZE = 200;
+
+function clampPageSize(queryParams) {
+  ['page_size', 'pageSize'].forEach((key) => {
+    const value = Number(queryParams.get(key));
+    if (Number.isFinite(value) && value > MAX_API_PAGE_SIZE) {
+      queryParams.set(key, String(MAX_API_PAGE_SIZE));
+    }
+  });
+}
 
 /* -------------------- Yordamchi: xatoni ajratib olish -------------------- */
 async function parseError(resp) {
@@ -418,6 +428,8 @@ export const AdminApi = {
         }
       });
 
+      clampPageSize(queryParams);
+
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
         {
@@ -558,7 +570,9 @@ export const AdminApi = {
           queryParams.append(key, value.toString());
         }
       });
-      if (!queryParams.has('page_size')) queryParams.set('page_size', '500');
+      clampPageSize(queryParams);
+      if (!queryParams.has('page_size'))
+        queryParams.set('page_size', String(MAX_API_PAGE_SIZE));
 
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/deleted-analyses?${queryParams.toString()}`,
@@ -1027,6 +1041,7 @@ export const ResearchApi = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
+    clampPageSize(q);
     const token =
       localStorage.getItem('access_token') ||
       localStorage.getItem('token') ||
@@ -1162,7 +1177,8 @@ export const ResearchApi = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
-    if (!q.has('page_size')) q.set('page_size', '500');
+    clampPageSize(q);
+    if (!q.has('page_size')) q.set('page_size', String(MAX_API_PAGE_SIZE));
     const token =
       localStorage.getItem('access_token') ||
       localStorage.getItem('token') ||
