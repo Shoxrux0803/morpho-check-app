@@ -50,6 +50,10 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
     height: '4px',
     background: 'linear-gradient(90deg, #3B82F6 0%, #8B5CF6 100%)',
   },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(3, 2),
+    borderRadius: 18,
+  },
 }));
 
 const RoleCard = styled(Box)(({ theme }) => ({
@@ -76,6 +80,18 @@ const RoleCard = styled(Box)(({ theme }) => ({
         : '0 8px 24px rgba(0,0,0,0.06)',
     border: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
   },
+  [theme.breakpoints.down('md')]: {
+    alignItems: 'stretch',
+    flexDirection: 'column',
+    gap: theme.spacing(2),
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+    borderRadius: 14,
+    '&:hover': {
+      transform: 'none',
+    },
+  },
 }));
 
 const IconWrapper = styled(Avatar)(({ theme, customcolor }) => ({
@@ -89,6 +105,11 @@ const IconWrapper = styled(Avatar)(({ theme, customcolor }) => ({
   '.role-card:hover &': {
     transform: 'scale(1.1) rotate(5deg)',
     backgroundColor: alpha(customcolor, 0.25),
+  },
+  [theme.breakpoints.down('sm')]: {
+    width: 42,
+    height: 42,
+    marginRight: theme.spacing(1.5),
   },
 }));
 
@@ -248,23 +269,30 @@ const RoleSettingsCMS = () => {
   return (
     <Fade in={true} timeout={800}>
       <StyledPaper>
-        <Box display="flex" alignItems="center" gap={2} mb={1}>
+        <Box
+          display="flex"
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          gap={2}
+          mb={1}
+        >
           <Avatar
             sx={{
               bgcolor: alpha('#3B82F6', 0.1),
               color: '#3B82F6',
-              width: 48,
-              height: 48,
+              width: { xs: 44, sm: 48 },
+              height: { xs: 44, sm: 48 },
               borderRadius: 2,
+              flexShrink: 0,
             }}
           >
             <SettingsSuggest fontSize="medium" />
           </Avatar>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="h5"
               fontWeight={800}
               color={theme.palette.mode === 'dark' ? '#fff' : '#0f172a'}
+              sx={{ fontSize: { xs: '1.15rem', sm: '1.5rem' } }}
             >
               {t('chatSettingsTitle')}
             </Typography>
@@ -275,13 +303,14 @@ const RoleSettingsCMS = () => {
                   ? 'rgba(255,255,255,0.6)'
                   : 'rgba(0,0,0,0.6)'
               }
+              sx={{ lineHeight: 1.55 }}
             >
               {t('chatSettingsDesc')}
             </Typography>
           </Box>
         </Box>
 
-        <Stack spacing={2} mt={5}>
+        <Stack spacing={2} mt={{ xs: 3, sm: 5 }}>
           {settings
             .filter((s) => targetRoles.includes(s.role_name))
             .map((setting, index) => {
@@ -299,7 +328,7 @@ const RoleSettingsCMS = () => {
                   key={setting.role_name}
                 >
                   <RoleCard className="role-card">
-                    <Box display="flex" alignItems="center">
+                    <Box display="flex" alignItems="center" minWidth={0}>
                       <IconWrapper customcolor={config.color}>
                         <RoleIcon />
                       </IconWrapper>
@@ -312,6 +341,10 @@ const RoleSettingsCMS = () => {
                               ? '#f8fafc'
                               : '#1e293b'
                           }
+                          sx={{
+                            overflowWrap: 'anywhere',
+                            lineHeight: 1.35,
+                          }}
                         >
                           {config.label}
                         </Typography>
@@ -333,6 +366,11 @@ const RoleSettingsCMS = () => {
                       gap={4}
                       alignItems="center"
                       flexWrap="wrap"
+                      sx={{
+                        justifyContent: { xs: 'stretch', md: 'flex-end' },
+                        gap: { xs: 1.25, sm: 2, md: 4 },
+                        width: { xs: '100%', md: 'auto' },
+                      }}
                     >
                       <Box
                         display="flex"
@@ -342,6 +380,13 @@ const RoleSettingsCMS = () => {
                           p: 1,
                           pr: 2,
                           borderRadius: 2,
+                          flex: {
+                            xs: '1 1 100%',
+                            sm: '1 1 230px',
+                            md: '0 0 auto',
+                          },
+                          minWidth: 0,
+                          justifyContent: 'space-between',
                           bgcolor:
                             theme.palette.mode === 'dark'
                               ? 'rgba(0,0,0,0.2)'
@@ -382,6 +427,13 @@ const RoleSettingsCMS = () => {
                           p: 1,
                           pr: 2,
                           borderRadius: 2,
+                          flex: {
+                            xs: '1 1 100%',
+                            sm: '1 1 230px',
+                            md: '0 0 auto',
+                          },
+                          minWidth: 0,
+                          justifyContent: 'space-between',
                           bgcolor:
                             theme.palette.mode === 'dark'
                               ? 'rgba(0,0,0,0.2)'
