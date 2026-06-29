@@ -241,7 +241,7 @@ const AI_TRANSLATIONS = {
   }
 };
 
-const WELCOME_KEY = 'morpho-robot-welcomed-v6';
+const WELCOME_KEY = 'morpho-robot-welcomed-test-3';
 const INTERVAL_MS = 3 * 60 * 1000;
 
 function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
@@ -511,11 +511,15 @@ const Scarf = ({ size }) => (
 );
 
 // ── Speech Bubble ─────────────────────────────────────────────────────────────
-const SpeechBubble = ({ message, visible, onDismiss, isTalking, isMobile }) => {
+const SpeechBubble = ({ message, visible, onDismiss, isTyping, isMobile }) => {
   const { lang } = useLanguage();
   const aiDict = AI_TRANSLATIONS[lang] || AI_TRANSLATIONS['uz'];
 
   if (!visible) return null;
+  
+  const borderColor = '#00509d';
+  const bgColor = '#f8f9fa';
+
   return (
     <div
       onClick={onDismiss}
@@ -523,46 +527,53 @@ const SpeechBubble = ({ message, visible, onDismiss, isTalking, isMobile }) => {
         position: 'absolute', bottom: '82px',
         right: isMobile ? 'auto' : '-12px',
         left: isMobile ? '-12px' : 'auto',
-        background: 'rgba(15, 23, 42, 0.95)',
-        backdropFilter: 'blur(12px)',
-        borderRadius: '16px 16px 4px 16px',
-        padding: '12px 18px',
-        minWidth: '180px', maxWidth: '250px',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08)',
-        border: '1px solid rgba(69, 243, 255, 0.15)',
+        background: bgColor,
+        borderRadius: '24px',
+        padding: isTyping ? '12px 20px' : '14px 22px',
+        minWidth: isTyping ? 'auto' : '180px', maxWidth: '280px',
+        border: `6px solid ${borderColor}`,
+        boxShadow: '0 12px 30px rgba(0,0,0,0.3), inset 0 6px 12px rgba(255,255,255,1), inset 0 -4px 8px rgba(0,0,0,0.06)',
         zIndex: 10, cursor: 'pointer',
         animation: 'bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
         transformOrigin: isMobile ? 'bottom left' : 'bottom right',
       }}
     >
-      {isTalking && (
-        <div style={{ display: 'flex', gap: '5px', marginBottom: '8px', alignItems: 'center' }}>
-          {[0, 0.12, 0.24].map((d, i) => (
+      {isTyping ? (
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', height: '19px' }}>
+          {[0, 0.16, 0.32].map((d, i) => (
             <div key={i} style={{
-              width: '5px', height: '5px', borderRadius: '50%',
-              background: '#45f3ff',
-              boxShadow: '0 0 8px #45f3ff',
-              animation: `emo-headphone-pulse 0.6s ease-in-out ${d}s infinite`,
+              width: '8px', height: '8px', borderRadius: '50%',
+              background: borderColor,
+              animation: `emo-headphone-pulse 0.8s ease-in-out ${d}s infinite`,
             }} />
           ))}
-          <span style={{ fontSize: '10px', color: '#64748b', marginLeft: '4px', fontFamily: 'monospace' }}>{aiDict.talking}</span>
+          <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '6px', fontFamily: 'monospace', fontWeight: 600 }}>{aiDict.talking}</span>
         </div>
+      ) : (
+        <p style={{
+          margin: 0, fontSize: '15px', color: '#1e293b',
+          fontWeight: 600, lineHeight: 1.5, whiteSpace: 'pre-line',
+          fontFamily: 'Inter, Segoe UI, sans-serif',
+          textAlign: 'center',
+        }}>
+          {message}
+        </p>
       )}
-      <p style={{
-        margin: 0, fontSize: '13px', color: '#f1f5f9',
-        fontWeight: 600, lineHeight: 1.5, whiteSpace: 'pre-line',
-        fontFamily: 'Inter, Segoe UI, sans-serif',
-      }}>
-        {message}
-      </p>
+
+      {/* Flawless CSS Diamond Tail */}
       <div style={{
-        position: 'absolute', bottom: '-9px',
-        right: isMobile ? 'auto' : '22px',
-        left: isMobile ? '32px' : 'auto',
-        width: 0, height: 0,
-        borderLeft: isMobile ? 'none' : '11px solid transparent',
-        borderRight: isMobile ? '11px solid transparent' : 'none',
-        borderTop: '10px solid rgba(15, 23, 42, 0.95)',
+        position: 'absolute',
+        bottom: '-12px',
+        right: isMobile ? 'auto' : '36px',
+        left: isMobile ? '36px' : 'auto',
+        width: '24px',
+        height: '24px',
+        backgroundColor: bgColor,
+        borderBottom: `6px solid ${borderColor}`,
+        borderRight: `6px solid ${borderColor}`,
+        transform: 'rotate(45deg)',
+        zIndex: 2,
+        borderRadius: '0 0 4px 0', // slightly rounded tip
       }} />
     </div>
   );
@@ -612,25 +623,37 @@ const RobotAvatar = ({
   const talking    = isTalking || isTalkingInternal;
 
   // Speech bubble
-  const [bubble, setBubble] = useState({ visible: false, message: '' });
+  const [bubble, setBubble] = useState({ visible: false, message: '', isTyping: false });
   const proMsgIdx     = useRef(0);
   const bubbleDismiss = useRef(null);
+  const typingTimerRef = useRef(null);
   const moodTimerRef  = useRef(null);
 
   const dismissBubble = useCallback(() => {
-    setBubble({ visible: false, message: '' });
+    setBubble({ visible: false, message: '', isTyping: false });
     setIsTalkingInternal(false);
     if (bubbleDismiss.current) clearTimeout(bubbleDismiss.current);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
   }, []);
 
   const showBubble = useCallback((msg, durationMs = 7000) => {
-    setBubble({ visible: true, message: msg });
-    setIsTalkingInternal(true);
     if (bubbleDismiss.current) clearTimeout(bubbleDismiss.current);
-    bubbleDismiss.current = setTimeout(() => {
-      setBubble({ visible: false, message: '' });
-      setIsTalkingInternal(false);
-    }, durationMs);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+
+    setBubble({ visible: true, message: '', isTyping: true });
+    setIsTalkingInternal(true);
+
+    const typingDuration = 1500 + Math.random() * 1000;
+
+    typingTimerRef.current = setTimeout(() => {
+      setBubble({ visible: true, message: msg, isTyping: false });
+      
+      setTimeout(() => setIsTalkingInternal(false), 2000);
+      
+      bubbleDismiss.current = setTimeout(() => {
+        setBubble({ visible: false, message: '', isTyping: false });
+      }, durationMs);
+    }, typingDuration);
   }, []);
 
   // ── Welcome ─────────────────────────────────────────────────────────────────
@@ -1172,7 +1195,7 @@ const RobotAvatar = ({
           message={bubble.message}
           visible={bubble.visible && !isOpen}
           onDismiss={dismissBubble}
-          isTalking={isTalkingInternal}
+          isTyping={bubble.isTyping}
           isMobile={isMobile}
         />
       )}
