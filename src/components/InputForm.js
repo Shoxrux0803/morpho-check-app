@@ -115,7 +115,8 @@ export default function InputForm({
   const showBioimpedance =
     isPrivilegedInput && canUsePermission(adminPermissions, 'bioimpedance');
   const showPlayPreschoolEngagement =
-    isPrivilegedInput && canUsePermission(adminPermissions, 'play_preschool_engagement');
+    isPrivilegedInput &&
+    canUsePermission(adminPermissions, 'play_preschool_engagement');
 
   const validateAnthro = (form) => {
     const errs = [];
@@ -484,9 +485,13 @@ export default function InputForm({
   ];
 
   const stepIndexPersonalInfo = steps.indexOf(t('personalInfo'));
-  const stepIndexPPE = showPlayPreschoolEngagement ? steps.indexOf("O'yin va maktabgacha ta'lim") : -1;
+  const stepIndexPPE = showPlayPreschoolEngagement
+    ? steps.indexOf("O'yin va maktabgacha ta'lim")
+    : -1;
   const stepIndexAnthro = steps.indexOf(t('anthroMeasurements'));
-  const stepIndexBio = showBioimpedance ? steps.indexOf(t('bioimpedanceAnalysis')) : -1;
+  const stepIndexBio = showBioimpedance
+    ? steps.indexOf(t('bioimpedanceAnalysis'))
+    : -1;
 
   // Custom step connector
   const QontoConnector = styled(StepConnector)(({ theme }) => ({
@@ -977,8 +982,21 @@ export default function InputForm({
                   borderColor: 'divider',
                 }}
               >
-                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-                  <Box sx={{ bgcolor: 'warning.main', color: '#fff', p: 1, borderRadius: 2, display: 'flex' }}>
+                <Stack
+                  direction="row"
+                  spacing={1.5}
+                  alignItems="center"
+                  sx={{ mb: 2 }}
+                >
+                  <Box
+                    sx={{
+                      bgcolor: 'warning.main',
+                      color: '#fff',
+                      p: 1,
+                      borderRadius: 2,
+                      display: 'flex',
+                    }}
+                  >
                     <Face6Icon />
                   </Box>
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -990,101 +1008,223 @@ export default function InputForm({
                 </Alert>
                 <Grid container columnSpacing={3} rowSpacing={2}>
                   <Grid size={12}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}
+                    >
                       {ppe('teacherChecklist')}
                     </Typography>
                     <Divider sx={{ mb: 3 }} />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('groupPlay')} name="ppe_group_play" value={formData.ppe_group_play} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('groupPlay')}
+                      name="ppe_group_play"
+                      value={formData.ppe_group_play}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="High">{ppe('high')}</MenuItem>
                       <MenuItem value="Medium">{ppe('medium')}</MenuItem>
                       <MenuItem value="Low">{ppe('low')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('physicalActivity')} name="ppe_physical_activity" value={formData.ppe_physical_activity} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('physicalActivity')}
+                      name="ppe_physical_activity"
+                      value={formData.ppe_physical_activity}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="High">{ppe('high')}</MenuItem>
                       <MenuItem value="Medium">{ppe('medium')}</MenuItem>
                       <MenuItem value="Low">{ppe('low')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('activityFatigue')} name="ppe_fatigue_activity" value={formData.ppe_fatigue_activity} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('activityFatigue')}
+                      name="ppe_fatigue_activity"
+                      value={formData.ppe_fatigue_activity}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="None">{ppe('none')}</MenuItem>
                       <MenuItem value="Moderate">Moderate (O'rtacha)</MenuItem>
                       <MenuItem value="High">{ppe('high')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('peerInteraction')} name="ppe_peer_interaction" value={formData.ppe_peer_interaction} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('peerInteraction')}
+                      name="ppe_peer_interaction"
+                      value={formData.ppe_peer_interaction}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="Active">{ppe('active')}</MenuItem>
-                      <MenuItem value="Occasional">{ppe('occasional')}</MenuItem>
+                      <MenuItem value="Occasional">
+                        {ppe('occasional')}
+                      </MenuItem>
                       <MenuItem value="Rare">{ppe('rare')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('preschoolRoutines')} name="ppe_preschool_routines" value={formData.ppe_preschool_routines} onChange={handleInputChange} sx={inputSx}>
-                      <MenuItem value="Fully engaged">{ppe('fullyEngaged')}</MenuItem>
-                      <MenuItem value="Partially engaged">{ppe('partiallyEngaged')}</MenuItem>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('preschoolRoutines')}
+                      name="ppe_preschool_routines"
+                      value={formData.ppe_preschool_routines}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
+                      <MenuItem value="Fully engaged">
+                        {ppe('fullyEngaged')}
+                      </MenuItem>
+                      <MenuItem value="Partially engaged">
+                        {ppe('partiallyEngaged')}
+                      </MenuItem>
                       <MenuItem value="Reluctant">{ppe('reluctant')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('motorConfidence')} name="ppe_motor_confidence" value={formData.ppe_motor_confidence} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('motorConfidence')}
+                      name="ppe_motor_confidence"
+                      value={formData.ppe_motor_confidence}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="Confident">{ppe('confident')}</MenuItem>
                       <MenuItem value="Hesitant">{ppe('hesitant')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('structuredActivities')} name="ppe_structured_activities" value={formData.ppe_structured_activities} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('structuredActivities')}
+                      name="ppe_structured_activities"
+                      value={formData.ppe_structured_activities}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="Active">{ppe('active')}</MenuItem>
                       <MenuItem value="Passive">{ppe('passive')}</MenuItem>
                     </Field>
                   </Grid>
 
                   <Grid size={12} sx={{ mt: 0 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 600, mb: 1, color: 'text.secondary' }}
+                    >
                       {ppe('parentQuestions')}
                     </Typography>
                     <Divider sx={{ mb: 1 }} />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('dailyActivity')} name="ppe_daily_physical_activity" value={formData.ppe_daily_physical_activity} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('dailyActivity')}
+                      name="ppe_daily_physical_activity"
+                      value={formData.ppe_daily_physical_activity}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value=">2 hours">{ppe('more2Hours')}</MenuItem>
-                      <MenuItem value="1-2 hours">{ppe('oneTo2Hours')}</MenuItem>
+                      <MenuItem value="1-2 hours">
+                        {ppe('oneTo2Hours')}
+                      </MenuItem>
                       <MenuItem value="<1 hour">{ppe('less1Hour')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('outdoorPlay')} name="ppe_outdoor_play" value={formData.ppe_outdoor_play} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('outdoorPlay')}
+                      name="ppe_outdoor_play"
+                      value={formData.ppe_outdoor_play}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value=">1 hour">{ppe('more1Hour')}</MenuItem>
-                      <MenuItem value="30-60 mins">{ppe('30To60Mins')}</MenuItem>
+                      <MenuItem value="30-60 mins">
+                        {ppe('30To60Mins')}
+                      </MenuItem>
                       <MenuItem value="<30 mins">{ppe('less30Mins')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('homeFatigue')} name="ppe_fatigue_home" value={formData.ppe_fatigue_home} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('homeFatigue')}
+                      name="ppe_fatigue_home"
+                      value={formData.ppe_fatigue_home}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="Rarely">{ppe('rare')}</MenuItem>
                       <MenuItem value="Sometimes">{ppe('sometimes')}</MenuItem>
                       <MenuItem value="Often">{ppe('often')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('sleepRoutine')} name="ppe_sleep_routine" value={formData.ppe_sleep_routine} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('sleepRoutine')}
+                      name="ppe_sleep_routine"
+                      value={formData.ppe_sleep_routine}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="Regular">{ppe('regular')}</MenuItem>
                       <MenuItem value="Irregular">{ppe('irregular')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('screenTime')} name="ppe_screen_time" value={formData.ppe_screen_time} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('screenTime')}
+                      name="ppe_screen_time"
+                      value={formData.ppe_screen_time}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="<1 hour">{ppe('less1Hour')}</MenuItem>
-                      <MenuItem value="1-2 hours">{ppe('oneTo2Hours')}</MenuItem>
+                      <MenuItem value="1-2 hours">
+                        {ppe('oneTo2Hours')}
+                      </MenuItem>
                       <MenuItem value=">2 hours">{ppe('more2Hours')}</MenuItem>
                     </Field>
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
-                    <Field fullWidth select label={ppe('appetite')} name="ppe_appetite" value={formData.ppe_appetite} onChange={handleInputChange} sx={inputSx}>
+                    <Field
+                      fullWidth
+                      select
+                      label={ppe('appetite')}
+                      name="ppe_appetite"
+                      value={formData.ppe_appetite}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    >
                       <MenuItem value="Good">{ppe('good')}</MenuItem>
                       <MenuItem value="Fair">{ppe('fair')}</MenuItem>
                       <MenuItem value="Poor">{ppe('poor')}</MenuItem>
@@ -1092,11 +1232,29 @@ export default function InputForm({
                   </Grid>
                 </Grid>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-                  <Button variant="outlined" onClick={prevStep} startIcon={<ArrowBackIcon />} size="large" sx={{ borderRadius: 3 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    mt: 4,
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    onClick={prevStep}
+                    startIcon={<ArrowBackIcon />}
+                    size="large"
+                    sx={{ borderRadius: 3 }}
+                  >
                     {t('back')}
                   </Button>
-                  <Button variant="contained" onClick={nextStep} endIcon={<ArrowForwardIcon />} size="large" sx={{ borderRadius: 3, px: 4 }}>
+                  <Button
+                    variant="contained"
+                    onClick={nextStep}
+                    endIcon={<ArrowForwardIcon />}
+                    size="large"
+                    sx={{ borderRadius: 3, px: 4 }}
+                  >
                     {t('next')}
                   </Button>
                 </Box>

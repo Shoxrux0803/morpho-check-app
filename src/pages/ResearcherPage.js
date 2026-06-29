@@ -1080,6 +1080,7 @@ const RecordsTable = ({
 /* ════════════════════════════════════════════════════
    RESEARCH ANALYTICS (Professional Dashboard)
 ════════════════════════════════════════════════════ */
+// eslint-disable-next-line no-unused-vars
 const ResearchAnalytics = ({ data, isDark }) => {
   const { lang } = useLanguage();
   const tr = useCallback((key) => researcherT(lang, key), [lang]);

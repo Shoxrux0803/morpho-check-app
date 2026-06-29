@@ -190,7 +190,9 @@ const AIAssistantWidget = () => {
   const [passwordVisible, setPasswordVisible] = useState(null);
 
   useEffect(() => {
-    const isLoginPage = !isAuthenticated && (location.pathname === '/admin' || location.pathname === '/login');
+    const isLoginPage =
+      !isAuthenticated &&
+      (location.pathname === '/admin' || location.pathname === '/login');
     if (!isLoginPage) {
       setPasswordVisible(null);
       return;
@@ -201,7 +203,8 @@ const AIAssistantWidget = () => {
       setPasswordVisible(e.detail?.visible ?? false);
     };
     window.addEventListener('robot-password-toggle', handleToggle);
-    return () => window.removeEventListener('robot-password-toggle', handleToggle);
+    return () =>
+      window.removeEventListener('robot-password-toggle', handleToggle);
   }, [location.pathname, isAuthenticated]);
 
   useEffect(() => {
@@ -421,7 +424,8 @@ const AIAssistantWidget = () => {
       setIsAdminChatOpen(e.detail?.isOpen || false);
     };
     window.addEventListener('admin-chat-toggled', handleAdminChat);
-    return () => window.removeEventListener('admin-chat-toggled', handleAdminChat);
+    return () =>
+      window.removeEventListener('admin-chat-toggled', handleAdminChat);
   }, []);
 
   if (loading) {
@@ -442,7 +446,10 @@ const AIAssistantWidget = () => {
         position: 'fixed',
         bottom: { xs: 92, md: 30 },
         left: { xs: 16, md: 'auto' },
-        right: (!isOpen && isAdminChatOpen) ? { xs: 'auto', md: 450 } : { xs: 'auto', md: 110 },
+        right:
+          !isOpen && isAdminChatOpen
+            ? { xs: 'auto', md: 450 }
+            : { xs: 'auto', md: 110 },
         zIndex: 9999,
         transition: 'right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
@@ -559,19 +566,27 @@ const AIAssistantWidget = () => {
                 }}
               >
                 {/* Background shimmer */}
-                <Box sx={{
-                  position: 'absolute', inset: 0,
-                  background: 'radial-gradient(circle at 15% 50%, rgba(100,181,246,0.15) 0%, transparent 60%)',
-                  pointerEvents: 'none',
-                }} />
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    background:
+                      'radial-gradient(circle at 15% 50%, rgba(100,181,246,0.15) 0%, transparent 60%)',
+                    pointerEvents: 'none',
+                  }}
+                />
 
                 {/* Robot avatar in header */}
-                <Box sx={{
-                  width: 56, height: 56, flexShrink: 0,
-                  position: 'relative',
-                  filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))',
-                  zIndex: 1,
-                }}>
+                <Box
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    flexShrink: 0,
+                    position: 'relative',
+                    filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))',
+                    zIndex: 1,
+                  }}
+                >
                   <RobotAvatar
                     isOpen={true}
                     passwordVisible={null}
@@ -581,38 +596,56 @@ const AIAssistantWidget = () => {
                   />
                   {/* Talking pulse ring */}
                   {isTalking && (
-                    <Box sx={{
-                      position: 'absolute', inset: '-4px',
-                      borderRadius: '50%',
-                      border: '2px solid rgba(100,181,246,0.8)',
-                      animation: 'pulse-ring 1s ease-out infinite',
-                      '@keyframes pulse-ring': {
-                        '0%':   { transform: 'scale(0.95)', opacity: 1 },
-                        '100%': { transform: 'scale(1.15)', opacity: 0 },
-                      },
-                    }} />
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        inset: '-4px',
+                        borderRadius: '50%',
+                        border: '2px solid rgba(100,181,246,0.8)',
+                        animation: 'pulse-ring 1s ease-out infinite',
+                        '@keyframes pulse-ring': {
+                          '0%': { transform: 'scale(0.95)', opacity: 1 },
+                          '100%': { transform: 'scale(1.15)', opacity: 0 },
+                        },
+                      }}
+                    />
                   )}
                 </Box>
 
                 <Box sx={{ flex: 1, zIndex: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                    <Typography variant="subtitle1" fontWeight="bold" sx={{ fontSize: '0.95rem' }}>
+                    <Typography
+                      variant="subtitle1"
+                      fontWeight="bold"
+                      sx={{ fontSize: '0.95rem' }}
+                    >
                       MorphoAI
                     </Typography>
                     {/* Online indicator */}
-                    <Box sx={{
-                      width: 7, height: 7, borderRadius: '50%',
-                      bgcolor: isTalking ? '#ffd54f' : '#69f0ae',
-                      boxShadow: isTalking ? '0 0 6px #ffd54f' : '0 0 6px #69f0ae',
-                      animation: 'pulse-dot 2s ease-in-out infinite',
-                      '@keyframes pulse-dot': {
-                        '0%,100%': { opacity: 1 },
-                        '50%':     { opacity: 0.4 },
-                      },
-                    }} />
+                    <Box
+                      sx={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: '50%',
+                        bgcolor: isTalking ? '#ffd54f' : '#69f0ae',
+                        boxShadow: isTalking
+                          ? '0 0 6px #ffd54f'
+                          : '0 0 6px #69f0ae',
+                        animation: 'pulse-dot 2s ease-in-out infinite',
+                        '@keyframes pulse-dot': {
+                          '0%,100%': { opacity: 1 },
+                          '50%': { opacity: 0.4 },
+                        },
+                      }}
+                    />
                   </Box>
-                  <Typography variant="caption" sx={{ opacity: 0.75, display: 'block' }}>
-                    {isTalking ? '🤖 Javob yozmoqda...' : '✨ Powered by Gemini'}
+                  <Typography
+                    variant="caption"
+                    sx={{ opacity: 0.75, display: 'block' }}
+                  >
+                    {isTalking
+                      ? '🤖 Javob yozmoqda...'
+                      : '✨ Powered by Gemini'}
                   </Typography>
                 </Box>
 

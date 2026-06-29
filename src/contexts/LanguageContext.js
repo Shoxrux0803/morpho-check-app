@@ -17,10 +17,10 @@ export const LANGUAGES = [
 
 const translations = {
   tg: {
-
     // Chat Settings
     chatSettingsTitle: 'Танзимоти чат',
-    chatSettingsDesc: 'Дар ин ҷо шумо метавонед намоёнӣ ва фаъолияти AI Чат ва Чати дохилиро барои нақшҳои гуногун фаъол ё ғайрифаъол кунед.',
+    chatSettingsDesc:
+      'Дар ин ҷо шумо метавонед намоёнӣ ва фаъолияти AI Чат ва Чати дохилиро барои нақшҳои гуногун фаъол ё ғайрифаъол кунед.',
     aiChatLabel: 'AI Чат',
     internalChatLabel: 'Чати дохилӣ',
     settingUpdated: 'барои танзимот нав карда шуд',
@@ -357,10 +357,10 @@ const translations = {
   },
 
   uz: {
-
     // Chat Settings
     chatSettingsTitle: 'Chat Sozlamalari',
-    chatSettingsDesc: 'Bu yerdan qaysi rollar uchun AI Chat yordamchisi va Ichki Chat ko\'rinishi hamda ishlashini yoqib yoki o\'chirib qo\'yishingiz mumkin.',
+    chatSettingsDesc:
+      "Bu yerdan qaysi rollar uchun AI Chat yordamchisi va Ichki Chat ko'rinishi hamda ishlashini yoqib yoki o'chirib qo'yishingiz mumkin.",
     aiChatLabel: 'AI Chat',
     internalChatLabel: 'Ichki Chat',
     settingUpdated: 'uchun sozlama yangilandi',
@@ -369,7 +369,7 @@ const translations = {
     roleResearcher: 'Izlanuvchilar (Researcher)',
     roleUser: 'Oddiy foydalanuvchilar (User)',
     roleFieldAssistant: 'Yordamchilar (Field Assistant)',
-    roleGuest: 'Mehmonlar (Ro\'yxatdan o\'tmaganlar)',
+    roleGuest: "Mehmonlar (Ro'yxatdan o'tmaganlar)",
 
     // Header
     home: 'Asosiy',
@@ -714,22 +714,22 @@ const translations = {
     quickPhraseThanks: 'Rahmat!',
     clinicalRiskSystem: 'Klinik risk flag tizimi',
     progressTrackingLabel: 'Progress tracking',
-    compareWithPrevious: 'Oldingi o\'lchov bilan solishtirish',
-    changeInMonths: 'oy ichidagi o\'zgarish',
+    compareWithPrevious: "Oldingi o'lchov bilan solishtirish",
+    changeInMonths: "oy ichidagi o'zgarish",
     forParents: 'Ota-ona uchun',
     clinicalNotes: 'Klinik izoh',
     nutritionPlan: 'Nutrition plan',
-    aiNoResponse: 'AI javob qaytarmadi. Iltimos, qayta urinib ko\'ring.',
+    aiNoResponse: "AI javob qaytarmadi. Iltimos, qayta urinib ko'ring.",
     networkError: 'Internet/API sozlamalarini tekshiring.',
     aiAssistantError: 'AI yordamchini chaqirishda xatolik yuz berdi.',
-    noPreviousMeasurement: 'Bu bola uchun oldingi o\'lchov topilmadi.',
+    noPreviousMeasurement: "Bu bola uchun oldingi o'lchov topilmadi.",
   },
 
   ru: {
-
     // Chat Settings
     chatSettingsTitle: 'Настройки чата',
-    chatSettingsDesc: 'Здесь вы можете включить или отключить видимость и работу AI Чата и Внутреннего чата для разных ролей.',
+    chatSettingsDesc:
+      'Здесь вы можете включить или отключить видимость и работу AI Чата и Внутреннего чата для разных ролей.',
     aiChatLabel: 'AI Чат',
     internalChatLabel: 'Внутренний Чат',
     settingUpdated: 'настройки обновлены для',
@@ -1088,10 +1088,10 @@ const translations = {
   },
 
   en: {
-
     // Chat Settings
     chatSettingsTitle: 'Chat Settings',
-    chatSettingsDesc: 'Here you can enable or disable the visibility and functionality of the AI Chat Assistant and Internal Chat for different roles.',
+    chatSettingsDesc:
+      'Here you can enable or disable the visibility and functionality of the AI Chat Assistant and Internal Chat for different roles.',
     aiChatLabel: 'AI Chat',
     internalChatLabel: 'Internal Chat',
     settingUpdated: 'setting updated for',
@@ -1450,10 +1450,10 @@ const translations = {
   },
 
   kz: {
-
     // Chat Settings
     chatSettingsTitle: 'Чат параметрлері',
-    chatSettingsDesc: 'Осы жерден әртүрлі рөлдер үшін AI чат және Ішкі чат көрінісі мен жұмысын қосуға немесе өшіруге болады.',
+    chatSettingsDesc:
+      'Осы жерден әртүрлі рөлдер үшін AI чат және Ішкі чат көрінісі мен жұмысын қосуға немесе өшіруге болады.',
     aiChatLabel: 'AI Чат',
     internalChatLabel: 'Ішкі Чат',
     settingUpdated: 'үшін параметр жаңартылды',

@@ -45,8 +45,7 @@ export default function GrowthGalaxy({ mode, colorPalette }) {
           height: '100%',
           overflow: 'hidden',
           borderRadius: { xs: 3.2, md: 5 },
-          background:
-            `radial-gradient(circle at 22% 20%, ${colors[0]}40, transparent 28%), radial-gradient(circle at 82% 82%, ${colors[1]}40, transparent 31%), linear-gradient(145deg, ${colors[2]}20 0%, ${colors[0]}30 48%, ${colors[1]}20 100%)`,
+          background: `radial-gradient(circle at 22% 20%, ${colors[0]}40, transparent 28%), radial-gradient(circle at 82% 82%, ${colors[1]}40, transparent 31%), linear-gradient(145deg, ${colors[2]}20 0%, ${colors[0]}30 48%, ${colors[1]}20 100%)`,
           isolation: 'isolate',
         }}
       >
@@ -148,26 +147,27 @@ export default function GrowthGalaxy({ mode, colorPalette }) {
                     : 'none',
               }}
             >
-              {(ring === 0 ? dynamicOrbitDots : dynamicOrbitDots.slice(0, 2)).map(
-                (dot, index) => (
-                  <Box
-                    key={dot.color}
-                    component={motion.span}
-                    animate={reduced ? undefined : { scale: [0.75, 1.3, 0.75] }}
-                    transition={{ duration: 2 + index, repeat: Infinity }}
-                    sx={{
-                      position: 'absolute',
-                      width: dot.size - ring * 2,
-                      height: dot.size - ring * 2,
-                      top: dot.top,
-                      left: dot.left,
-                      borderRadius: '50%',
-                      bgcolor: dot.color,
-                      boxShadow: `0 0 24px ${dot.color}`,
-                    }}
-                  />
-                )
-              )}
+              {(ring === 0
+                ? dynamicOrbitDots
+                : dynamicOrbitDots.slice(0, 2)
+              ).map((dot, index) => (
+                <Box
+                  key={dot.color}
+                  component={motion.span}
+                  animate={reduced ? undefined : { scale: [0.75, 1.3, 0.75] }}
+                  transition={{ duration: 2 + index, repeat: Infinity }}
+                  sx={{
+                    position: 'absolute',
+                    width: dot.size - ring * 2,
+                    height: dot.size - ring * 2,
+                    top: dot.top,
+                    left: dot.left,
+                    borderRadius: '50%',
+                    bgcolor: dot.color,
+                    boxShadow: `0 0 24px ${dot.color}`,
+                  }}
+                />
+              ))}
             </Box>
           ))}
 
@@ -192,8 +192,7 @@ export default function GrowthGalaxy({ mode, colorPalette }) {
               bgcolor: 'rgba(255,255,255,.14)',
               backdropFilter: 'blur(22px) saturate(170%)',
               border: '1px solid rgba(255,255,255,.3)',
-              boxShadow:
-                `inset 0 1px 1px rgba(255,255,255,.5), 0 30px 70px rgba(0,28,48,.38), 0 0 65px ${colors[0]}40`,
+              boxShadow: `inset 0 1px 1px rgba(255,255,255,.5), 0 30px 70px rgba(0,28,48,.38), 0 0 65px ${colors[0]}40`,
             }}
           >
             <Box

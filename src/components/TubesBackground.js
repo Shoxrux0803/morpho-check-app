@@ -18,47 +18,59 @@ export default function TubesBackground() {
   // Parallax effect on scroll
   useEffect(() => {
     const handleScroll = () => {
-      if (!appRef.current || !appRef.current.three || !appRef.current.three.camera) return;
+      if (
+        !appRef.current ||
+        !appRef.current.three ||
+        !appRef.current.three.camera
+      )
+        return;
       const scrollY = window.scrollY;
-      const maxScroll = Math.max(1, document.body.scrollHeight - window.innerHeight);
+      const maxScroll = Math.max(
+        1,
+        document.body.scrollHeight - window.innerHeight
+      );
       const scrollRatio = Math.min(scrollY / maxScroll, 1);
-      
+
       // Default Z is 5. Pushing back to 20 for depth effect
-      appRef.current.three.camera.position.z = 5 + (scrollRatio * 15);
+      appRef.current.three.camera.position.z = 5 + scrollRatio * 15;
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const getColors = (isDark, weather) => {
-    let tubesColors = isDark 
-      ? ["#f967fb", "#53bc28", "#6958d5"] 
-      : ["#0ea5e9", "#10b981", "#6366f1"];
-    let lightsColors = isDark 
-      ? ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"]
-      : ["#38bdf8", "#34d399", "#818cf8", "#f472b6"];
+    let tubesColors = isDark
+      ? ['#f967fb', '#53bc28', '#6958d5']
+      : ['#0ea5e9', '#10b981', '#6366f1'];
+    let lightsColors = isDark
+      ? ['#83f36e', '#fe8a2e', '#ff008a', '#60aed5']
+      : ['#38bdf8', '#34d399', '#818cf8', '#f472b6'];
 
     if (weather) {
       const { temp, code } = weather;
       if (temp >= 28) {
         // Hot weather -> Fire colors
-        tubesColors = ["#ff4500", "#ff8c00", "#ff003c"]; 
-        lightsColors = ["#ff6347", "#ff4500", "#ffa500", "#ff8c00"];
-      } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) {
+        tubesColors = ['#ff4500', '#ff8c00', '#ff003c'];
+        lightsColors = ['#ff6347', '#ff4500', '#ffa500', '#ff8c00'];
+      } else if (
+        (code >= 51 && code <= 67) ||
+        (code >= 80 && code <= 82) ||
+        code >= 95
+      ) {
         // Rainy/Stormy -> Deep blues
-        tubesColors = ["#00bfff", "#1e90ff", "#0000ff"]; 
-        lightsColors = ["#87ceeb", "#4682b4", "#4169e1", "#0000cd"];
+        tubesColors = ['#00bfff', '#1e90ff', '#0000ff'];
+        lightsColors = ['#87ceeb', '#4682b4', '#4169e1', '#0000cd'];
       } else if ((code >= 71 && code <= 86) || temp <= 5) {
         // Snowy/Cold -> Ice colors
-        tubesColors = ["#e0ffff", "#add8e6", "#b0e0e6"]; 
-        lightsColors = ["#ffffff", "#f0f8ff", "#e6e6fa", "#d8bfd8"];
+        tubesColors = ['#e0ffff', '#add8e6', '#b0e0e6'];
+        lightsColors = ['#ffffff', '#f0f8ff', '#e6e6fa', '#d8bfd8'];
       }
     }
 
     return {
       tubes: tubesColors,
       lights: lightsColors,
-      bg: isDark ? '#000000' : '#f8fafc'
+      bg: isDark ? '#000000' : '#f8fafc',
     };
   };
 
@@ -81,7 +93,7 @@ export default function TubesBackground() {
       if (containerRef.current) {
         containerRef.current.innerHTML = '';
       }
-      
+
       const canvasEl = document.createElement('canvas');
       canvasEl.id = 'tubes-canvas';
       canvasEl.style.width = '100%';
@@ -203,25 +215,35 @@ export default function TubesBackground() {
       document.head.appendChild(script);
 
       // Wait a bit for module to load
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 600));
 
       if (window.initTubesAnim && canvasEl) {
         try {
           // Pass the INITIAL theme colors based on current mode
-          const isDarkNow = document.documentElement.classList.contains('dark') || document.body.dataset.theme === 'dark' || (window.localStorage.getItem('theme') === 'dark');
+          const isDarkNow =
+            document.documentElement.classList.contains('dark') ||
+            document.body.dataset.theme === 'dark' ||
+            window.localStorage.getItem('theme') === 'dark';
           appRef.current = window.initTubesAnim(canvasEl, getColors(isDarkNow));
 
           const handleClick = () => {
             if (!appRef.current) return;
-            const rc = (c) => new Array(c).fill(0).map(() => "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
+            const rc = (c) =>
+              new Array(c).fill(0).map(
+                () =>
+                  '#' +
+                  Math.floor(Math.random() * 16777215)
+                    .toString(16)
+                    .padStart(6, '0')
+              );
             appRef.current.tubes.setColors(rc(3));
             appRef.current.tubes.setLightsColors(rc(4));
           };
-          
+
           window.addEventListener('click', handleClick);
           window._tubesClick = handleClick;
         } catch (err) {
-          console.error("Tubes Anim Error:", err);
+          console.error('Tubes Anim Error:', err);
         }
       }
     };
@@ -247,27 +269,30 @@ export default function TubesBackground() {
         bottom: 0,
         left: 0,
         overflow: 'hidden',
-        zIndex: 0, 
+        zIndex: 0,
         backgroundColor: currentTheme.bg,
         transition: 'background-color 0.5s ease',
-        pointerEvents: 'none'
+        pointerEvents: 'none',
       }}
     >
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-      
+
       {/* Blur Overlay to improve text readability and ensure correct theme tint */}
-      <div 
+      <div
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: mode === 'dark' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(248, 250, 252, 0.88)',
+          backgroundColor:
+            mode === 'dark'
+              ? 'rgba(0, 0, 0, 0.5)'
+              : 'rgba(248, 250, 252, 0.88)',
           backdropFilter: 'blur(6px)',
           WebkitBackdropFilter: 'blur(6px)',
           transition: 'background-color 0.5s ease',
-          zIndex: 1
+          zIndex: 1,
         }}
       />
     </div>

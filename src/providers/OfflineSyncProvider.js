@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import { get, set, del } from 'idb-keyval';
+import { get, set } from 'idb-keyval';
 import { postAnalysis } from '../services/api';
 import { toast } from 'react-hot-toast';
 

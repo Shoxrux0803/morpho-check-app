@@ -314,7 +314,9 @@ const AdminTable = ({
                         {(!isDeleted || isSuperAdmin) && (
                           <Tooltip
                             title={
-                              isDeleted ? t('viewDeletedData') : t('detailsTitle')
+                              isDeleted
+                                ? t('viewDeletedData')
+                                : t('detailsTitle')
                             }
                           >
                             <IconButton

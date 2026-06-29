@@ -113,7 +113,15 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
 
   return (
-    <Box ref={containerRef} sx={{ py: { xs: 10, md: 20 }, position: 'relative', zIndex: 10, overflow: 'hidden' }}>
+    <Box
+      ref={containerRef}
+      sx={{
+        py: { xs: 10, md: 20 },
+        position: 'relative',
+        zIndex: 10,
+        overflow: 'hidden',
+      }}
+    >
       <Container maxWidth="xl">
         <Grid container spacing={8} alignItems="center">
           <Grid item xs={12} md={6}>
@@ -123,23 +131,54 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
               viewport={{ once: true, margin: '-20%' }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
             >
-              <Typography variant="overline" color="primary.main" fontWeight="900" letterSpacing={2}>
+              <Typography
+                variant="overline"
+                color="primary.main"
+                fontWeight="900"
+                letterSpacing={2}
+              >
                 Data-Driven Healthcare
               </Typography>
-              <Typography variant="h2" fontWeight="900" gutterBottom sx={{ mt: 2, mb: 4, lineHeight: 1.1, fontSize: { xs: '2.5rem', md: '3.5rem' } }}>
-                Chuqur tahlil va <br/> AI diagnostika
+              <Typography
+                variant="h2"
+                fontWeight="900"
+                gutterBottom
+                sx={{
+                  mt: 2,
+                  mb: 4,
+                  lineHeight: 1.1,
+                  fontSize: { xs: '2.5rem', md: '3.5rem' },
+                }}
+              >
+                Chuqur tahlil va <br /> AI diagnostika
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ mb: 6, fontWeight: 400, lineHeight: 1.8, maxWidth: 600 }}>
-                MorphoCheck Pro tizimi JSST standartlari asosida bolalar o'sishini 99.8% aniqlikda tahlil qiladi. Z-score ko'rsatkichlari, tana massasi indeksi (BMI) va somatotipni avtomatik hisoblab, shifokorlarga tayyor klinik xulosalar taqdim etadi.
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                sx={{ mb: 6, fontWeight: 400, lineHeight: 1.8, maxWidth: 600 }}
+              >
+                MorphoCheck Pro tizimi JSST standartlari asosida bolalar
+                o'sishini 99.8% aniqlikda tahlil qiladi. Z-score
+                ko'rsatkichlari, tana massasi indeksi (BMI) va somatotipni
+                avtomatik hisoblab, shifokorlarga tayyor klinik xulosalar taqdim
+                etadi.
               </Typography>
-              
+
               <Stack spacing={4}>
                 {[
-                  { value: '99.8%', label: "Tahlil aniqligi", icon: Activity },
-                  { value: '0.5s', label: "AI qayta ishlash tezligi", icon: Zap },
-                  { value: '100+', label: "Klinik parametrlar", icon: Microscope }
+                  { value: '99.8%', label: 'Tahlil aniqligi', icon: Activity },
+                  {
+                    value: '0.5s',
+                    label: 'AI qayta ishlash tezligi',
+                    icon: Zap,
+                  },
+                  {
+                    value: '100+',
+                    label: 'Klinik parametrlar',
+                    icon: Microscope,
+                  },
                 ].map((stat, i) => (
-                  <motion.div 
+                  <motion.div
                     key={i}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -147,14 +186,37 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
                     transition={{ duration: 0.5, delay: i * 0.15 }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                      <Box sx={{ width: 60, height: 60, borderRadius: '16px', bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Box
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          borderRadius: '16px',
+                          bgcolor: alpha(theme.palette.primary.main, 0.1),
+                          color: theme.palette.primary.main,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
                         <stat.icon size={28} />
                       </Box>
                       <Box>
-                        <Typography variant="h4" fontWeight="900" sx={{ background: `linear-gradient(to right, ${theme.palette.primary.main}, #0f766e)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        <Typography
+                          variant="h4"
+                          fontWeight="900"
+                          sx={{
+                            background: `linear-gradient(to right, ${theme.palette.primary.main}, #0f766e)`,
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                          }}
+                        >
                           {stat.value}
                         </Typography>
-                        <Typography variant="body1" color="text.secondary" fontWeight="600">
+                        <Typography
+                          variant="body1"
+                          color="text.secondary"
+                          fontWeight="600"
+                        >
                           {stat.label}
                         </Typography>
                       </Box>
@@ -164,76 +226,160 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
               </Stack>
             </motion.div>
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: { xs: 4, md: 8 }, position: 'relative', minHeight: { md: '600px' }, py: { xs: 4, md: 0 } }}>
-              
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                gap: { xs: 4, md: 8 },
+                position: 'relative',
+                minHeight: { md: '600px' },
+                py: { xs: 4, md: 0 },
+              }}
+            >
               {/* Background glowing circle */}
-              <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 0,
+                  pointerEvents: 'none',
+                }}
+              >
                 <motion.div style={{ opacity }}>
-                  <Box sx={{
-                    width: { xs: 300, md: 450 },
-                    height: { xs: 300, md: 450 },
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.12)} 0%, transparent 70%)`,
-                  }} />
+                  <Box
+                    sx={{
+                      width: { xs: 300, md: 450 },
+                      height: { xs: 300, md: 450 },
+                      borderRadius: '50%',
+                      background: `radial-gradient(circle, ${alpha(theme.palette.primary.main, 0.12)} 0%, transparent 70%)`,
+                    }}
+                  />
                 </motion.div>
               </Box>
 
-              <Box component={motion.div} style={{ y: y1 }} sx={{ zIndex: 2, alignSelf: { xs: 'center', md: 'flex-end' } }}>
-                <Card sx={{ 
-                  p: 3, 
-                  width: { xs: 280, sm: 320, md: 340 }, 
-                  background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.6)} 0%, ${alpha(theme.palette.background.default, 0.4)} 100%)`,
-                  backdropFilter: 'blur(30px)',
-                  borderRadius: '24px',
-                  border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                  boxShadow: `0 30px 60px ${alpha('#000', 0.2)}`
-                }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>Z-Score O'zgarish Dinamikasi</Typography>
-                  <Box sx={{ height: 120, mt: 2, display: 'flex', alignItems: 'flex-end', gap: 1 }}>
+              <Box
+                component={motion.div}
+                style={{ y: y1 }}
+                sx={{ zIndex: 2, alignSelf: { xs: 'center', md: 'flex-end' } }}
+              >
+                <Card
+                  sx={{
+                    p: 3,
+                    width: { xs: 280, sm: 320, md: 340 },
+                    background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.6)} 0%, ${alpha(theme.palette.background.default, 0.4)} 100%)`,
+                    backdropFilter: 'blur(30px)',
+                    borderRadius: '24px',
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                    boxShadow: `0 30px 60px ${alpha('#000', 0.2)}`,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Z-Score O'zgarish Dinamikasi
+                  </Typography>
+                  <Box
+                    sx={{
+                      height: 120,
+                      mt: 2,
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      gap: 1,
+                    }}
+                  >
                     {[40, 70, 45, 90, 65, 85, 100].map((h, i) => (
-                      <motion.div 
+                      <motion.div
                         key={i}
                         initial={{ height: 0 }}
                         whileInView={{ height: `${h}%` }}
                         viewport={{ once: true }}
-                        transition={{ duration: 1, delay: i * 0.1, ease: 'easeOut' }}
-                        style={{ flex: 1, background: `linear-gradient(to top, ${theme.palette.primary.main}, #0f766e)`, borderRadius: '4px' }}
+                        transition={{
+                          duration: 1,
+                          delay: i * 0.1,
+                          ease: 'easeOut',
+                        }}
+                        style={{
+                          flex: 1,
+                          background: `linear-gradient(to top, ${theme.palette.primary.main}, #0f766e)`,
+                          borderRadius: '4px',
+                        }}
                       />
                     ))}
                   </Box>
                 </Card>
               </Box>
 
-              <Box component={motion.div} style={{ y: y2 }} sx={{ zIndex: 3, alignSelf: { xs: 'center', md: 'flex-start' }, ml: { md: 4 } }}>
-                <Card sx={{ 
-                  p: 3, 
-                  width: { xs: 280, sm: 300, md: 320 }, 
-                  background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.7)} 0%, ${alpha(theme.palette.background.default, 0.5)} 100%)`,
-                  backdropFilter: 'blur(30px)',
-                  borderRadius: '24px',
-                  border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
-                  boxShadow: `0 30px 60px ${alpha('#000', 0.2)}`
-                }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Box sx={{ p: 1.5, borderRadius: '12px', bgcolor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main }}>
+              <Box
+                component={motion.div}
+                style={{ y: y2 }}
+                sx={{
+                  zIndex: 3,
+                  alignSelf: { xs: 'center', md: 'flex-start' },
+                  ml: { md: 4 },
+                }}
+              >
+                <Card
+                  sx={{
+                    p: 3,
+                    width: { xs: 280, sm: 300, md: 320 },
+                    background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.7)} 0%, ${alpha(theme.palette.background.default, 0.5)} 100%)`,
+                    backdropFilter: 'blur(30px)',
+                    borderRadius: '24px',
+                    border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                    boxShadow: `0 30px 60px ${alpha('#000', 0.2)}`,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        borderRadius: '12px',
+                        bgcolor: alpha(theme.palette.secondary.main, 0.1),
+                        color: theme.palette.secondary.main,
+                      }}
+                    >
                       <Activity size={24} />
                     </Box>
                     <Box>
-                      <Typography variant="h6" fontWeight="800">Somatotip</Typography>
-                      <Typography variant="caption" color="text.secondary">AI xulosasi</Typography>
+                      <Typography variant="h6" fontWeight="800">
+                        Somatotip
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        AI xulosasi
+                      </Typography>
                     </Box>
                   </Box>
-                  <Typography variant="body1" fontWeight="700" color="secondary.main">
+                  <Typography
+                    variant="body1"
+                    fontWeight="700"
+                    color="secondary.main"
+                  >
                     Mezosomatik tip
                   </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Tana tuzilishi proporsional rivojlangan, muskullar massasi normal darajada.
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    Tana tuzilishi proporsional rivojlangan, muskullar massasi
+                    normal darajada.
                   </Typography>
                 </Card>
               </Box>
-              
             </Box>
           </Grid>
         </Grid>
@@ -322,7 +468,9 @@ const StickyScrollStory = ({ theme, mode, fadeInUp, t }) => {
                           : alpha(theme.palette.background.paper, 0.05),
                         backdropFilter: 'blur(16px)',
                         WebkitBackdropFilter: 'blur(16px)',
-                        boxShadow: isActive ? `0 8px 32px ${alpha(step.color, 0.2)}` : 'none',
+                        boxShadow: isActive
+                          ? `0 8px 32px ${alpha(step.color, 0.2)}`
+                          : 'none',
                         transition: 'all 0.35s ease',
                       }}
                     >
@@ -385,7 +533,10 @@ const StickyScrollStory = ({ theme, mode, fadeInUp, t }) => {
                         ),
                         backdropFilter: 'blur(16px)',
                         WebkitBackdropFilter: 'blur(16px)',
-                        boxShadow: activeIndex === index ? `0 8px 32px ${alpha(step.color, 0.2)}` : 'none',
+                        boxShadow:
+                          activeIndex === index
+                            ? `0 8px 32px ${alpha(step.color, 0.2)}`
+                            : 'none',
                       }}
                     >
                       <Typography
@@ -443,8 +594,10 @@ export default function IntroPage() {
     if (!weather) return undefined;
     const { temp, code } = weather;
     if (temp >= 28) return ['#ff8c00', '#ff4500', '#ffffff'];
-    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) return ['#00bfff', '#1e90ff', '#ffffff'];
-    if ((code >= 71 && code <= 86) || temp <= 5) return ['#add8e6', '#e0ffff', '#ffffff'];
+    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95)
+      return ['#00bfff', '#1e90ff', '#ffffff'];
+    if ((code >= 71 && code <= 86) || temp <= 5)
+      return ['#add8e6', '#e0ffff', '#ffffff'];
     return undefined; // Default
   };
 
@@ -947,8 +1100,8 @@ export default function IntroPage() {
               hidden: { opacity: 0 },
               visible: {
                 opacity: 1,
-                transition: { staggerChildren: 0.2 }
-              }
+                transition: { staggerChildren: 0.2 },
+              },
             }}
           >
             <Grid container spacing={4}>
@@ -976,7 +1129,12 @@ export default function IntroPage() {
                   <motion.div
                     variants={{
                       hidden: { opacity: 0, y: 50, scale: 0.95 },
-                      visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' } }
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        scale: 1,
+                        transition: { duration: 0.6, ease: 'easeOut' },
+                      },
                     }}
                     whileHover={{ y: -10 }}
                   >
@@ -990,7 +1148,7 @@ export default function IntroPage() {
                             borderRadius: '20px',
                             bgcolor: alpha(feature.color, 0.1),
                             color: feature.color,
-                            boxShadow: `0 8px 32px ${alpha(feature.color, 0.2)}`
+                            boxShadow: `0 8px 32px ${alpha(feature.color, 0.2)}`,
                           }}
                         >
                           <feature.icon size={40} strokeWidth={1.5} />
@@ -1046,8 +1204,8 @@ export default function IntroPage() {
               hidden: { opacity: 0 },
               visible: {
                 opacity: 1,
-                transition: { staggerChildren: 0.3 }
-              }
+                transition: { staggerChildren: 0.3 },
+              },
             }}
           >
             <Grid container spacing={4}>
@@ -1060,19 +1218,25 @@ export default function IntroPage() {
                   <motion.div
                     variants={{
                       hidden: { opacity: 0, x: -30 },
-                      visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: 'easeOut' } }
+                      visible: {
+                        opacity: 1,
+                        x: 0,
+                        transition: { duration: 0.7, ease: 'easeOut' },
+                      },
                     }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    <Box sx={{ 
-                      position: 'relative', 
-                      p: 4, 
-                      borderRadius: '24px',
-                      background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.4)} 0%, ${alpha(theme.palette.background.default, 0.2)} 100%)`,
-                      border: `1px solid ${alpha(theme.palette.text.primary, 0.05)}`,
-                      boxShadow: `0 20px 40px ${alpha('#000', 0.05)}`,
-                      overflow: 'hidden'
-                    }}>
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        p: 4,
+                        borderRadius: '24px',
+                        background: `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.4)} 0%, ${alpha(theme.palette.background.default, 0.2)} 100%)`,
+                        border: `1px solid ${alpha(theme.palette.text.primary, 0.05)}`,
+                        boxShadow: `0 20px 40px ${alpha('#000', 0.05)}`,
+                        overflow: 'hidden',
+                      }}
+                    >
                       <Typography
                         variant="h1"
                         sx={{
@@ -1084,14 +1248,28 @@ export default function IntroPage() {
                           opacity: 0.03,
                           color: theme.palette.primary.main,
                           lineHeight: 1,
-                          pointerEvents: 'none'
+                          pointerEvents: 'none',
                         }}
                       >
                         {item.step}
                       </Typography>
                       <Box sx={{ position: 'relative', zIndex: 1 }}>
-                        <Typography variant="h4" fontWeight="900" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Box component="span" sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: 'primary.main', display: 'inline-block' }} />
+                        <Typography
+                          variant="h4"
+                          fontWeight="900"
+                          gutterBottom
+                          sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                        >
+                          <Box
+                            component="span"
+                            sx={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main',
+                              display: 'inline-block',
+                            }}
+                          />
                           {item.title}
                         </Typography>
                         <Typography

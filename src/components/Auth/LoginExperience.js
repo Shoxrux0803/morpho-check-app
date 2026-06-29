@@ -340,7 +340,9 @@ export default function LoginExperience({
                               const next = !showPassword;
                               setShowPassword(next);
                               window.dispatchEvent(
-                                new CustomEvent('robot-password-toggle', { detail: { visible: next } })
+                                new CustomEvent('robot-password-toggle', {
+                                  detail: { visible: next },
+                                })
                               );
                             }}
                           >

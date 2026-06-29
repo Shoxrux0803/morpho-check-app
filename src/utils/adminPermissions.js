@@ -30,7 +30,7 @@ const permissionLabels = {
     bioimpedance: 'Bioimpedans tahlili',
     play_preschool_engagement: "O'yin va maktabgacha ta'lim",
     activity_advice: 'Jismoniy faollik',
-    additional_instructions: "Qo‘shimcha ko‘rsatmalar (PDF)",
+    additional_instructions: 'Qo‘shimcha ko‘rsatmalar (PDF)',
   },
   ru: {
     shoulder_length: '????? ?????',

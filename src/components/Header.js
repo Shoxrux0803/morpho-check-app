@@ -806,7 +806,9 @@ export default function Header() {
                       component="span"
                       sx={{ display: { xs: 'none', md: 'inline' } }}
                     >
-                      {user?.role === 'field_assistant' ? 'Mening ma\'lumotlarim' : t('home')}
+                      {user?.role === 'field_assistant'
+                        ? "Mening ma'lumotlarim"
+                        : t('home')}
                     </Box>
                   </Button>
                 </Tooltip>
@@ -1686,7 +1688,9 @@ export default function Header() {
                     startIcon={<HomeIcon />}
                     onClick={() => setDrawerOpen(false)}
                   >
-                    {user?.role === 'field_assistant' ? 'Mening ma\'lumotlarim' : t('home')}
+                    {user?.role === 'field_assistant'
+                      ? "Mening ma'lumotlarim"
+                      : t('home')}
                   </Button>
                   <Button
                     component={NavLink}

@@ -1,6 +1,12 @@
 import React from 'react';
 import { Box, useMediaQuery } from '@mui/material';
-import { motion, useMotionValue, useTransform, useSpring, useMotionTemplate } from 'framer-motion';
+import {
+  motion,
+  useMotionValue,
+  useTransform,
+  useSpring,
+  useMotionTemplate,
+} from 'framer-motion';
 import logo from '../assets/morphocheck-logo.svg';
 
 export default function Logo3D({ mode, colorPalette }) {
@@ -87,7 +93,10 @@ export default function Logo3D({ mode, colorPalette }) {
             position: 'absolute',
             inset: 0,
             borderRadius: { xs: 5, md: 7 },
-            bgcolor: mode === 'dark' ? 'rgba(12,20,34,0.45)' : 'rgba(255,255,255,0.35)',
+            bgcolor:
+              mode === 'dark'
+                ? 'rgba(12,20,34,0.45)'
+                : 'rgba(255,255,255,0.35)',
             backdropFilter: 'blur(40px) saturate(250%)', // Increased blur and saturation
             border: `1px solid ${mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.35)'}`,
             boxShadow: `0 30px 60px ${mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(15,50,70,0.2)'}`,
@@ -106,25 +115,29 @@ export default function Logo3D({ mode, colorPalette }) {
         />
 
         {/* 3D Glass Slab Thickness Layers (stacked transparent border shells) */}
-        {!reduced && Array.from({ length: 6 }).map((_, i) => {
-          const zOffset = (i + 1) * 5; // 5px to 30px thickness
-          return (
-            <Box
-              key={i}
-              aria-hidden="true"
-              sx={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: { xs: 5, md: 7 },
-                // Create solid edge highlights using stacked fine borders
-                border: `1.5px solid ${mode === 'dark' ? `rgba(255,255,255,${0.04 + i * 0.02})` : `rgba(255,255,255,${0.12 + i * 0.05})`}`,
-                bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.005)' : 'rgba(255,255,255,0.02)',
-                transform: `translateZ(${zOffset}px)`,
-                pointerEvents: 'none',
-              }}
-            />
-          );
-        })}
+        {!reduced &&
+          Array.from({ length: 6 }).map((_, i) => {
+            const zOffset = (i + 1) * 5; // 5px to 30px thickness
+            return (
+              <Box
+                key={i}
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: { xs: 5, md: 7 },
+                  // Create solid edge highlights using stacked fine borders
+                  border: `1.5px solid ${mode === 'dark' ? `rgba(255,255,255,${0.04 + i * 0.02})` : `rgba(255,255,255,${0.12 + i * 0.05})`}`,
+                  bgcolor:
+                    mode === 'dark'
+                      ? 'rgba(255,255,255,0.005)'
+                      : 'rgba(255,255,255,0.02)',
+                  transform: `translateZ(${zOffset}px)`,
+                  pointerEvents: 'none',
+                }}
+              />
+            );
+          })}
 
         {/* Front Glass Face: Specular Refraction & Fluid Flow */}
         <Box
@@ -138,9 +151,10 @@ export default function Logo3D({ mode, colorPalette }) {
             inset: 0,
             borderRadius: { xs: 5, md: 7 },
             border: `1.5px solid ${mode === 'dark' ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.95)'}`, // Sharper outer border
-            boxShadow: mode === 'dark'
-              ? `inset 0 2px 4px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3)`
-              : `inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.1)`,
+            boxShadow:
+              mode === 'dark'
+                ? `inset 0 2px 4px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.3)`
+                : `inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.1)`,
             pointerEvents: 'none',
             overflow: 'hidden',
           }}
@@ -171,13 +185,13 @@ export default function Logo3D({ mode, colorPalette }) {
         {Array.from({ length: layersCount }).map((_, i) => {
           const isLast = i === layersCount - 1;
           const zOffset = i * 1.2; // 1.2px step between logo layers
-          
+
           return (
             <Box
               key={i}
               component="img"
               src={logo}
-              alt={isLast ? "MorphoCheck Logo" : ""}
+              alt={isLast ? 'MorphoCheck Logo' : ''}
               aria-hidden={!isLast}
               sx={{
                 position: 'absolute',

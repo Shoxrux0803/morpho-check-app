@@ -1874,7 +1874,9 @@ export default function AnalysisResults({
                     {cleanAdviceText(advices?.play_preschool)}
                   </Typography>
 
-                  <Divider sx={{ my: 2, borderColor: 'rgba(13, 148, 136, 0.18)' }} />
+                  <Divider
+                    sx={{ my: 2, borderColor: 'rgba(13, 148, 136, 0.18)' }}
+                  />
 
                   <Grid container spacing={1.25}>
                     {playPreschoolAdvice.tips.map((tip, index) => (
@@ -1936,28 +1938,28 @@ export default function AnalysisResults({
                     ({ key }) => key !== 'activity' || canShowActivityAdvice
                   )
                   .map(({ key, title, icon }) => (
-                  <Grid key={key} item xs={12} md={6}>
-                    <Paper
-                      variant="outlined"
-                      sx={{ p: 2, borderRadius: 2, height: '100%' }}
-                    >
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        alignItems="center"
-                        sx={{ mb: 1 }}
+                    <Grid key={key} item xs={12} md={6}>
+                      <Paper
+                        variant="outlined"
+                        sx={{ p: 2, borderRadius: 2, height: '100%' }}
                       >
-                        {icon}
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {title}
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          sx={{ mb: 1 }}
+                        >
+                          {icon}
+                          <Typography variant="subtitle1" fontWeight={600}>
+                            {title}
+                          </Typography>
+                        </Stack>
+                        <Typography variant="body2">
+                          {cleanAdviceText(advices?.[key]) || '—'}
                         </Typography>
-                      </Stack>
-                      <Typography variant="body2">
-                        {cleanAdviceText(advices?.[key]) || '—'}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-                ))}
+                      </Paper>
+                    </Grid>
+                  ))}
               </Grid>
 
               <Stack

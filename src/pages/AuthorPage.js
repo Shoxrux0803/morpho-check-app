@@ -1,6 +1,6 @@
 // src/pages/AuthorPage.js
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Container,
   Typography,
@@ -15,20 +15,15 @@ import {
   useTheme,
   Button,
   Avatar,
-  Tooltip,
   Paper,
 } from '@mui/material';
 import {
   ArrowLeft,
-  ExternalLink,
-  BookOpen,
   GraduationCap,
-  FlaskConical,
   Award,
   Globe,
   Mail,
   Phone,
-  BarChart2,
   Users,
   FileText,
   Calendar,
@@ -167,7 +162,7 @@ export default function AuthorPage() {
       zIndex: -1,
       borderRadius: 'inherit',
       background: `linear-gradient(145deg, ${alpha(theme.palette.common.white, isDark ? 0.1 : 0.3)} 0%, transparent 50%, ${alpha(theme.palette.common.white, isDark ? 0.05 : 0.1)} 100%)`,
-    }
+    },
   };
 
   const gradientText = {
@@ -413,13 +408,16 @@ export default function AuthorPage() {
                           '&:hover': {
                             transform: 'translateY(-4px)',
                             boxShadow: `0 12px 28px ${alpha(stat.color, 0.25)}`,
-                          }
+                          },
                         }}
                       >
                         <Typography
                           variant="h4"
                           fontWeight={900}
-                          sx={{ color: stat.color, textShadow: `0 0 20px ${alpha(stat.color, 0.4)}` }}
+                          sx={{
+                            color: stat.color,
+                            textShadow: `0 0 20px ${alpha(stat.color, 0.4)}`,
+                          }}
                         >
                           {stat.value}
                         </Typography>

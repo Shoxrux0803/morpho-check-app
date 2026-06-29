@@ -29,9 +29,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Divider,
   Chip,
-  Collapse,
   Grid,
   useTheme,
   useMediaQuery,
@@ -61,13 +59,9 @@ import {
   Refresh,
   CloudUpload,
   Download,
-  FilterList,
-  Search,
   DeleteForever,
-  FitnessCenter,
   Place,
   Close,
-  InfoOutlined,
   MyLocation,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
@@ -1314,7 +1308,8 @@ const SuperAdminPage = () => {
     admin_permissions: normalizeAdminPermissions(),
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
-  const [showCurrentAdminPassword, setShowCurrentAdminPassword] = useState(false);
+  const [showCurrentAdminPassword, setShowCurrentAdminPassword] =
+    useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
@@ -1728,6 +1723,7 @@ const SuperAdminPage = () => {
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     adminForm.district,
     adminForm.region,
@@ -1754,6 +1750,7 @@ const SuperAdminPage = () => {
       if (activeTab === 6) fetchAuditLogs();
       if (activeTab === 7) fetchBackups();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, activeTab, dashFilters]);
 
   const getAdminReportRows = useCallback(
@@ -3535,7 +3532,9 @@ const SuperAdminPage = () => {
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() =>
-                              setShowCurrentAdminPassword(!showCurrentAdminPassword)
+                              setShowCurrentAdminPassword(
+                                !showCurrentAdminPassword
+                              )
                             }
                             edge="end"
                           >

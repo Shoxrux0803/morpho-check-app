@@ -29,13 +29,16 @@ async function parseError(resp) {
 
 /* -------------------- PUBLIC CHAT STATUS -------------------- */
 export async function getPublicChatStatus() {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/ai/chat/public-status?_t=${Date.now()}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-store',
-  });
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/ai/chat/public-status?_t=${Date.now()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    }
+  );
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -244,14 +247,17 @@ export async function register(userData) {
 }
 
 export async function getUserProfile() {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/me?_t=${Date.now()}`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-store',
-  });
+  const resp = await fetch(
+    `${API_BASE}${API_PREFIX}/auth/me?_t=${Date.now()}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    }
+  );
 
   if (!resp.ok) {
     const msg = await parseError(resp);
@@ -521,7 +527,12 @@ export const AdminApi = {
     deletedList: async (params = {}) => {
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
-        if (key !== 'show_deleted' && value !== undefined && value !== null && value !== '') {
+        if (
+          key !== 'show_deleted' &&
+          value !== undefined &&
+          value !== null &&
+          value !== ''
+        ) {
           queryParams.append(key, value.toString());
         }
       });
@@ -902,7 +913,6 @@ export const AdminApi = {
       return resp.json();
     },
   },
-
 
   stats: async (params = {}) => {
     const queryParams = new URLSearchParams();
