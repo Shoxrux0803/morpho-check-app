@@ -64,6 +64,7 @@ const COPY = {
     confirmed: 'Rozilik tasdiqlangan',
     missing: 'Rozilik hali tasdiqlanmagan',
     language: 'Til',
+    relationships: { mother: 'Ona', father: 'Ota', guardian: 'Qonuniy vasiy' },
   },
   en: {
     title: 'Parent/guardian consent under the Declaration of Helsinki',
@@ -89,6 +90,7 @@ const COPY = {
     confirmed: 'Consent confirmed',
     missing: 'Consent not confirmed yet',
     language: 'Language',
+    relationships: { mother: 'Mother', father: 'Father', guardian: 'Legal guardian' },
   },
   tr: {
     title: 'Helsinki Bildirgesi kapsaminda ebeveyn/vasi onami',
@@ -113,6 +115,7 @@ const COPY = {
     confirmed: 'Onam onaylandi',
     missing: 'Onam henuz onaylanmadi',
     language: 'Dil',
+    relationships: { mother: 'Anne', father: 'Baba', guardian: 'Yasal vasi' },
   },
   ru: {
     title: 'Конфиденциальность и согласие родителя/представителя',
@@ -138,6 +141,7 @@ const COPY = {
     confirmed: 'Согласие подтверждено',
     missing: 'Согласие еще не подтверждено',
     language: 'Язык',
+    relationships: { mother: 'Мать', father: 'Отец', guardian: 'Законный опекун' },
   },
   kz: {
     title: 'Құпиялылық және ата-ана/өкіл келісімі',
@@ -163,6 +167,7 @@ const COPY = {
     confirmed: 'Келісім расталды',
     missing: 'Келісім әлі расталмаған',
     language: 'Тіл',
+    relationships: { mother: 'Анасы', father: 'Әкесі', guardian: 'Заңды өкілі' },
   },
   ky: {
     title: 'Купуялык жана ата-эне/өкүл макулдугу',
@@ -188,6 +193,7 @@ const COPY = {
     confirmed: 'Макулдук тастыкталды',
     missing: 'Макулдук тастыктала элек',
     language: 'Тил',
+    relationships: { mother: 'Энеси', father: 'Атасы', guardian: 'Мыйзамдуу өкүлү' },
   },
   tg: {
     title: 'Махфият ва розигии волид/васӣ',
@@ -212,6 +218,7 @@ const COPY = {
     confirmed: 'Розигӣ тасдиқ шуд',
     missing: 'Розигӣ ҳанӯз тасдиқ нашудааст',
     language: 'Забон',
+    relationships: { mother: 'Модар', father: 'Падар', guardian: 'Васии қонунӣ' },
   },
   tm: {
     title: 'Helsinki deklarasiýasy esasynda ene-ata/hossar razylygy',
@@ -237,6 +244,7 @@ const COPY = {
     confirmed: 'Razylyk tassyklandy',
     missing: 'Razylyk entek tassyklanmady',
     language: 'Dil',
+    relationships: { mother: 'Ejesi', father: 'Kakasy', guardian: 'Kanuny hossary' },
   },
 };
 
@@ -645,7 +653,7 @@ export function PrivacyConsentPanel({
             >
               {CONSENT_RELATIONSHIPS.map((item) => (
                 <MenuItem key={item.value} value={item.value}>
-                  {item.label}
+                  {copy.relationships?.[item.value] || item.label}
                 </MenuItem>
               ))}
             </FieldComponent>

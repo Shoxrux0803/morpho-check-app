@@ -3020,7 +3020,22 @@ def get_role_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin), # Any admin can view
 ):
+    roles = ["admin", "researcher", "user", "guest", "field_assistant"]
     settings = db.query(RoleSettings).all()
+    existing_roles = {s.role_name for s in settings}
+    
+    missing_roles = [r for r in roles if r not in existing_roles]
+    if missing_roles:
+        for r in missing_roles:
+            new_setting = RoleSettings(
+                role_name=r,
+                ai_chat_enabled=True,
+                internal_chat_enabled=True
+            )
+            db.add(new_setting)
+        db.commit()
+        settings = db.query(RoleSettings).all()
+        
     return settings
 
 @router.put("/role-settings/{role_name}", response_model=RoleSettingsOut)
