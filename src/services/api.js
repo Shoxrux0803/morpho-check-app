@@ -27,6 +27,25 @@ async function parseError(resp) {
   }
 }
 
+/* -------------------- PUBLIC CHAT STATUS -------------------- */
+export async function getPublicChatStatus() {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/ai/chat/public-status?_t=${Date.now()}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    cache: 'no-store',
+  });
+
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+
+  const data = await resp.json();
+  return data;
+}
+
 /* -------------------- ANALYSIS -------------------- */
 /**
  * Backend /api/analyze/full dan kelgan javobni { data: <backendBody> } ko'rinishida qaytaramiz,
@@ -225,12 +244,13 @@ export async function register(userData) {
 }
 
 export async function getUserProfile() {
-  const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/me`, {
+  const resp = await fetch(`${API_BASE}${API_PREFIX}/auth/me?_t=${Date.now()}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
       'Content-Type': 'application/json',
     },
+    cache: 'no-store',
   });
 
   if (!resp.ok) {
@@ -848,6 +868,42 @@ export const AdminApi = {
       return resp.json();
     },
   },
+
+  roleSettings: {
+    list: async () => {
+      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/role-settings`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+    update: async (role_name, data) => {
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/role-settings/${role_name}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+  },
+
 
   stats: async (params = {}) => {
     const queryParams = new URLSearchParams();

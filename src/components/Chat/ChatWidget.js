@@ -406,6 +406,10 @@ const ChatWidget = () => {
 
   if (!user) return null;
 
+  if (user && user.role !== 'superadmin' && user.internal_chat_enabled === false) {
+    return null;
+  }
+
   return (
     <div
       className="chat-widget-wrapper"

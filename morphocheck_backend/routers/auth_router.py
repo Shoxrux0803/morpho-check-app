@@ -347,7 +347,16 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.get("/me", response_model=UserOut)
-def read_users_me(current_user: User = Depends(get_current_user)):
+def read_users_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     data = UserOut.model_validate(current_user).model_dump()
     data["admin_permissions"] = get_effective_admin_permissions(current_user)
+    
+    from models.settings import RoleSettings
+    setting = db.query(RoleSettings).filter(RoleSettings.role_name == current_user.role).first()
+    data["ai_chat_enabled"] = setting.ai_chat_enabled if setting else True
+    data["internal_chat_enabled"] = setting.internal_chat_enabled if setting else True
+    
     return data

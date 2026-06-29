@@ -3028,3 +3028,48 @@ def clear_audit_logs(
     )
 
     return {"deleted": count}
+
+
+# --- Role Settings ---
+from models.settings import RoleSettings
+from models.schemas import RoleSettingsOut, RoleSettingsUpdate
+
+@router.get("/role-settings", response_model=List[RoleSettingsOut])
+def get_role_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin), # Any admin can view
+):
+    settings = db.query(RoleSettings).all()
+    return settings
+
+@router.put("/role-settings/{role_name}", response_model=RoleSettingsOut)
+def update_role_setting(
+    role_name: str,
+    update_data: RoleSettingsUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin), # Only superadmin can edit
+):
+    setting = db.query(RoleSettings).filter(RoleSettings.role_name == role_name).first()
+    if not setting:
+        raise HTTPException(status_code=404, detail="Role setting topilmadi")
+    
+    update_dict = update_data.model_dump(exclude_unset=True)
+    if "ai_chat_enabled" in update_dict:
+        setting.ai_chat_enabled = update_dict["ai_chat_enabled"]
+    if "internal_chat_enabled" in update_dict:
+        setting.internal_chat_enabled = update_dict["internal_chat_enabled"]
+
+    db.commit()
+    db.refresh(setting)
+    
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="UPDATE",
+        target_type="RoleSettings",
+        details=f"{role_name} roli uchun Chat holati o'zgartirildi: AI={setting.ai_chat_enabled}, Ichki={setting.internal_chat_enabled}",
+        request=request,
+    )
+    
+    return setting

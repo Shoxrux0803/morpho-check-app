@@ -17,6 +17,20 @@ export const LANGUAGES = [
 
 const translations = {
   tg: {
+
+    // Chat Settings
+    chatSettingsTitle: 'Танзимоти чат',
+    chatSettingsDesc: 'Дар ин ҷо шумо метавонед намоёнӣ ва фаъолияти AI Чат ва Чати дохилиро барои нақшҳои гуногун фаъол ё ғайрифаъол кунед.',
+    aiChatLabel: 'AI Чат',
+    internalChatLabel: 'Чати дохилӣ',
+    settingUpdated: 'барои танзимот нав карда шуд',
+    settingError: 'Хатогӣ рух дод',
+    roleAdminExt: 'Маъмурон (Admin)',
+    roleResearcher: 'Тадқиқотчиён (Researcher)',
+    roleUser: 'Истифодабарандагони оддӣ (User)',
+    roleFieldAssistant: 'Ёварон (Field Assistant)',
+    roleGuest: 'Меҳмонон (Ба қайд гирифта нашудаанд)',
+
     // Header
     home: 'Асосӣ',
     homeTooltip: 'Саҳифаи асосӣ',
@@ -343,6 +357,20 @@ const translations = {
   },
 
   uz: {
+
+    // Chat Settings
+    chatSettingsTitle: 'Chat Sozlamalari',
+    chatSettingsDesc: 'Bu yerdan qaysi rollar uchun AI Chat yordamchisi va Ichki Chat ko\'rinishi hamda ishlashini yoqib yoki o\'chirib qo\'yishingiz mumkin.',
+    aiChatLabel: 'AI Chat',
+    internalChatLabel: 'Ichki Chat',
+    settingUpdated: 'uchun sozlama yangilandi',
+    settingError: 'Xatolik yuz berdi',
+    roleAdminExt: 'Administratorlar (Admin)',
+    roleResearcher: 'Izlanuvchilar (Researcher)',
+    roleUser: 'Oddiy foydalanuvchilar (User)',
+    roleFieldAssistant: 'Yordamchilar (Field Assistant)',
+    roleGuest: 'Mehmonlar (Ro\'yxatdan o\'tmaganlar)',
+
     // Header
     home: 'Asosiy',
     homeTooltip: 'Asosiy sahifa',
@@ -698,6 +726,20 @@ const translations = {
   },
 
   ru: {
+
+    // Chat Settings
+    chatSettingsTitle: 'Настройки чата',
+    chatSettingsDesc: 'Здесь вы можете включить или отключить видимость и работу AI Чата и Внутреннего чата для разных ролей.',
+    aiChatLabel: 'AI Чат',
+    internalChatLabel: 'Внутренний Чат',
+    settingUpdated: 'настройки обновлены для',
+    settingError: 'Произошла ошибка',
+    roleAdminExt: 'Администраторы (Admin)',
+    roleResearcher: 'Исследователи (Researcher)',
+    roleUser: 'Обычные пользователи (User)',
+    roleFieldAssistant: 'Ассистенты (Field Assistant)',
+    roleGuest: 'Гости (Незарегистрированные)',
+
     home: 'Главная',
     homeTooltip: 'Главная страница',
     analyzeTooltip: 'MorphoCheck Pro',
@@ -1046,6 +1088,20 @@ const translations = {
   },
 
   en: {
+
+    // Chat Settings
+    chatSettingsTitle: 'Chat Settings',
+    chatSettingsDesc: 'Here you can enable or disable the visibility and functionality of the AI Chat Assistant and Internal Chat for different roles.',
+    aiChatLabel: 'AI Chat',
+    internalChatLabel: 'Internal Chat',
+    settingUpdated: 'setting updated for',
+    settingError: 'An error occurred',
+    roleAdminExt: 'Administrators (Admin)',
+    roleResearcher: 'Researchers (Researcher)',
+    roleUser: 'Regular Users (User)',
+    roleFieldAssistant: 'Assistants (Field Assistant)',
+    roleGuest: 'Guests (Unregistered)',
+
     home: 'Home',
     homeTooltip: 'Home page',
     analyzeTooltip: 'MorphoCheck Pro',
@@ -1394,6 +1450,20 @@ const translations = {
   },
 
   kz: {
+
+    // Chat Settings
+    chatSettingsTitle: 'Чат параметрлері',
+    chatSettingsDesc: 'Осы жерден әртүрлі рөлдер үшін AI чат және Ішкі чат көрінісі мен жұмысын қосуға немесе өшіруге болады.',
+    aiChatLabel: 'AI Чат',
+    internalChatLabel: 'Ішкі Чат',
+    settingUpdated: 'үшін параметр жаңартылды',
+    settingError: 'Қате пайда болды',
+    roleAdminExt: 'Әкімшілер (Admin)',
+    roleResearcher: 'Зерттеушілер (Researcher)',
+    roleUser: 'Қарапайым пайдаланушылар (User)',
+    roleFieldAssistant: 'Көмекшілер (Field Assistant)',
+    roleGuest: 'Қонақтар (Тіркелмегендер)',
+
     home: 'Басты бет',
     homeTooltip: 'Басты бет',
     analyzeTooltip: 'MorphoCheck Pro',

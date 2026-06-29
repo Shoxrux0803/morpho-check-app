@@ -7,10 +7,12 @@ from typing import Dict, List, Optional
 import google.generativeai as genai
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from models.user import User
 from routers.auth_router import get_current_user
+from utils.database import get_db
 from services.ai_advice_service import generate_parent_tips
 from services.nlp_service import analyze_text
 from utils.i18n import request_lang
@@ -83,9 +85,27 @@ class TextAnalysisRequest(BaseModel):
     lang: str = "uz"
 
 
+@router.get("/chat/public-status")
+def get_public_chat_status(db: Session = Depends(get_db)):
+    from models.settings import RoleSettings
+    setting = db.query(RoleSettings).filter(RoleSettings.role_name == "guest").first()
+    return {"ai_chat_enabled": setting.ai_chat_enabled if setting else True}
+
+
+
 @router.post("/chat")
-async def ai_chat(req: ChatRequest, current_user: User = Depends(get_current_user)):
+async def ai_chat(
+    req: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     try:
+        if current_user.role != "superadmin":
+            from models.settings import RoleSettings
+            setting = db.query(RoleSettings).filter(RoleSettings.role_name == current_user.role).first()
+            if setting and not setting.ai_chat_enabled:
+                raise HTTPException(status_code=403, detail="Sizning rolingiz uchun AI Chat o'chirilgan.")
+
         context_data_str = (
             json.dumps(req.context_data) if req.context_data else "None provided"
         )

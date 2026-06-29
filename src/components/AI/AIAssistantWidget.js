@@ -173,7 +173,18 @@ const AIAssistantWidget = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
   const { lang } = useLanguage();
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
+  const [guestEnabled, setGuestEnabled] = useState(true);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      import('../../services/api').then(({ getPublicChatStatus }) => {
+        getPublicChatStatus()
+          .then((res) => setGuestEnabled(res.ai_chat_enabled))
+          .catch(() => setGuestEnabled(false));
+      });
+    }
+  }, [isAuthenticated]);
 
   // Password visibility tracking for login page robot eyes
   const [passwordVisible, setPasswordVisible] = useState(null);
@@ -412,6 +423,18 @@ const AIAssistantWidget = () => {
     window.addEventListener('admin-chat-toggled', handleAdminChat);
     return () => window.removeEventListener('admin-chat-toggled', handleAdminChat);
   }, []);
+
+  if (loading) {
+    return null;
+  }
+
+  if (user && user.role !== 'superadmin' && user.ai_chat_enabled === false) {
+    return null;
+  }
+
+  if (!isAuthenticated && guestEnabled === false) {
+    return null;
+  }
 
   return (
     <Box

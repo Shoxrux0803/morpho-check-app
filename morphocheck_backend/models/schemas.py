@@ -453,9 +453,12 @@ class UserOut(BaseModel):
     admin_permissions: Optional[dict[str, bool]] = Field(
         default_factory=lambda: dict(DEFAULT_ADMIN_PERMISSIONS)
     )
+    ai_chat_enabled: Optional[bool] = True
+    internal_chat_enabled: Optional[bool] = True
     is_deleted: Optional[int] = 0
     deleted_at: Optional[datetime.datetime] = None
     deleted_by_id: Optional[int] = None
+    ai_chat_enabled: Optional[bool] = None
 
     @field_validator("admin_permissions", mode="before")
     @classmethod
@@ -723,6 +726,21 @@ class ResearchRecordOut(ResearchRecordCreate):
     deleted_by_id: Optional[int] = None
     deleted_by_name: Optional[str] = None
     deleted_at: Optional[datetime.datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class RoleSettingsBase(BaseModel):
+    ai_chat_enabled: Optional[bool] = True
+    internal_chat_enabled: Optional[bool] = True
+
+class RoleSettingsUpdate(RoleSettingsBase):
+    pass
+
+class RoleSettingsOut(RoleSettingsBase):
+    role_name: str
+    updated_at: datetime.datetime
 
     class Config:
         from_attributes = True

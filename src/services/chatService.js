@@ -53,6 +53,9 @@ export const chatService = {
   },
 
   getTypingStatus: async () => {
+    if (!localStorage.getItem('token')) {
+      return [];
+    }
     const response = await axios.get(`${API_BASE_URL}/chat/typing-status`, {
       headers: getAuthHeader(),
     });

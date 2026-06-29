@@ -91,6 +91,7 @@ import SuperAdminRegionalMap from '../components/Dashboard/SuperAdminRegionalMap
 import ScientificAnalysis from '../components/Dashboard/ScientificAnalysis';
 import ClinicalCMS from '../components/Admin/ClinicalCMS';
 import AdminActivity from '../components/Admin/AdminActivity';
+import RoleSettingsCMS from '../components/Admin/RoleSettingsCMS';
 import DashboardFilters from '../components/Dashboard/DashboardFilters';
 
 const PAGE_LABELS = {
@@ -1245,7 +1246,7 @@ const SuperAdminPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const { user, login: authLogin, logout, loading: authLoading } = useAuth();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const adminPermissionLabels = getAdminPermissionLabels(lang);
   const apt = useCallback((key) => getAdminPermissionText(lang, key), [lang]);
@@ -3131,6 +3132,8 @@ const SuperAdminPage = () => {
         return <ClinicalCMS />;
       case 9:
         return <AdminActivity />;
+      case 10:
+        return <RoleSettingsCMS />;
       default:
         return null;
     }
@@ -3393,6 +3396,11 @@ const SuperAdminPage = () => {
                   icon={<AutoGraph />}
                   iconPosition="start"
                   label={pt('topChart')}
+                />
+                <Tab
+                  icon={<SettingsSuggest />}
+                  iconPosition="start"
+                  label={t('chatSettingsTitle')}
                 />
               </Tabs>
 
