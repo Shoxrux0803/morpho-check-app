@@ -93,7 +93,7 @@ export default function SyncManager({ open, onClose, onEditItem }) {
         <Divider />
 
         {queue.length === 0 ? (
-          <Box sx={{ py: 4, textAlignment: 'center', opacity: 0.6 }}>
+          <Box sx={{ py: 4, textAlign: 'center', opacity: 0.6 }}>
             <Typography align="center">{t('noPendingItems')}</Typography>
           </Box>
         ) : (

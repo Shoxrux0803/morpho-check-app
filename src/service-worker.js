@@ -97,8 +97,10 @@ async function syncPendingRecords() {
     if (item.status === 'syncing') continue; // Avoid double sync if tab is also syncing
 
     try {
+      const API_BASE = process.env.REACT_APP_API_URL || '';
+      const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
       const response = await fetch(
-        '/api/analyze/full?lang=' + (item.lang || 'uz'),
+        `${API_BASE}${API_PREFIX}/analyze/full?lang=${item.lang || 'uz'}`,
         {
           method: 'POST',
           headers: {

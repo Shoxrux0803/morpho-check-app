@@ -35,25 +35,37 @@ export const OfflineSyncProvider = ({ children }) => {
     }
   }, []);
 
-  // Update online status
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
-
   // Load queue on init
   const loadQueue = useCallback(async () => {
     const stored = (await get(QUEUE_KEY)) || [];
     setQueue(stored);
   }, []);
+
+  // Update online status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'SYNC_UPDATED') {
+        loadQueue();
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleMessage);
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleMessage);
+      }
+    };
+  }, [loadQueue]);
 
   useEffect(() => {
     loadQueue();
