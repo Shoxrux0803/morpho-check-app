@@ -723,6 +723,67 @@ const localizedFeatureName = (item, lang = 'uz') => {
   return localizedSuffix(fallback, level, lang);
 };
 
+const recordMatchesBoundary = (record, level, props, parentRegion, parentDistrict) => {
+  // 1. Check Region Match
+  if (parentRegion) {
+    const regionKey = canonicalRegionName(featureName(parentRegion));
+    const recordRegion = canonicalRegionName(record.region || record.settlement || record.birth_place);
+    if (regionKey !== recordRegion) return false;
+  } else if (level === 1) {
+    const regionKey = canonicalRegionName(featureName(props));
+    const recordRegion = canonicalRegionName(record.region || record.settlement || record.birth_place);
+    if (regionKey !== recordRegion) return false;
+  }
+
+  // 2. Check District Match
+  if (level === 2) {
+    const boundaryDistrict = baseName(featureName(props));
+    const recordDistrict = baseName(record.district);
+    if (boundaryDistrict !== recordDistrict) return false;
+  } else if (level === 3 && parentDistrict) {
+    const parentDistrictKey = baseName(featureName(parentDistrict));
+    const recordDistrict = baseName(record.district);
+    if (parentDistrictKey !== recordDistrict) return false;
+  }
+
+  // 3. Check Mahalla Match
+  if (level === 3) {
+    const boundaryMahalla = baseName(featureName(props));
+    const recordMahalla = baseName(record.mahalla || record.settlement);
+    if (
+      boundaryMahalla !== recordMahalla &&
+      !recordMahalla.includes(boundaryMahalla) &&
+      !boundaryMahalla.includes(recordMahalla)
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const getBoundaryContext = (level, props, selectedPath, boundaryIndex) => {
+  const parentDistrict =
+    level === 3
+      ? (boundaryIndex?.levels?.['2'] || []).find(
+          (item) => String(item.id) === String(props.parent_id)
+        )
+      : null;
+  const parentRegion =
+    level === 1
+      ? props
+      : level === 2
+        ? selectedPath.region ||
+          (boundaryIndex?.levels?.['1'] || []).find(
+            (item) => String(item.id) === String(props.parent_id)
+          )
+        : selectedPath.region ||
+          (boundaryIndex?.levels?.['1'] || []).find(
+            (item) => String(item.id) === String(parentDistrict?.parent_id)
+          );
+  return { parentRegion, parentDistrict };
+};
+
 const parseMaybeJson = (value) => {
   if (typeof value !== 'string') return value;
   try {
@@ -1482,19 +1543,19 @@ const loadAllUsers = async () => {
 const StatPill = ({ label, value, color = 'primary.main' }) => (
   <Box
     sx={{
-      px: 1.5,
-      py: 1,
+      px: 1.25,
+      py: 0.5,
       borderRadius: 1.5,
       border: '1px solid',
       borderColor: 'divider',
       bgcolor: 'background.paper',
-      minWidth: 100,
+      minWidth: 90,
     }}
   >
-    <Typography variant="caption" color="text.secondary" fontWeight={700}>
+    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.68rem', display: 'block', mb: 0.1 }}>
       {label}
     </Typography>
-    <Typography variant="h6" fontWeight={800} sx={{ color, lineHeight: 1.1 }}>
+    <Typography variant="body2" fontWeight={800} sx={{ color, lineHeight: 1.1 }}>
       {value}
     </Typography>
   </Box>
@@ -1700,10 +1761,19 @@ export default function SuperAdminRegionalMap({
       ...researchRecords.map((item) => ({
         ...item,
         __source: 'research_record',
-        __type: 'researcher',
+        __type: 'research_record',
       })),
     ],
     [analyses, researchRecords, userRows]
+  );
+
+  const patientRecords = useMemo(
+    () =>
+      allRecords.filter(
+        (row) =>
+          row.__source === 'analysis' || row.__source === 'research_record'
+      ),
+    [allRecords]
   );
 
   useEffect(() => {
@@ -1908,35 +1978,19 @@ export default function SuperAdminRegionalMap({
 
   const selectedRecords = useMemo(() => {
     if (!selected) return allRecords;
-    const regionKey = selectedPath.region
-      ? canonicalRegionName(featureName(selectedPath.region))
-      : '';
-    const districtKey = selectedPath.district
-      ? baseName(featureName(selectedPath.district))
-      : '';
-    const mahallaKey = selectedPath.mahalla
-      ? baseName(featureName(selectedPath.mahalla))
-      : '';
+    const level = Number(selected.admin_leve || selected.admin_level || 1);
+    const props = selected.properties || selected || {};
+    const { parentRegion, parentDistrict } = getBoundaryContext(
+      level,
+      props,
+      selectedPath,
+      boundaryIndex
+    );
 
-    return allRecords.filter((record) => {
-      const text = normalizeText(
-        [
-          record.region,
-          record.district,
-          record.address,
-          record.settlement,
-          record.school_name,
-          record.birth_place,
-        ]
-          .filter(Boolean)
-          .join(' ')
-      );
-      if (regionKey && !text.includes(regionKey)) return false;
-      if (districtKey && !text.includes(districtKey)) return false;
-      if (mahallaKey && !text.includes(mahallaKey)) return false;
-      return true;
-    });
-  }, [allRecords, selected, selectedPath]);
+    return allRecords.filter((record) =>
+      recordMatchesBoundary(record, level, props, parentRegion, parentDistrict)
+    );
+  }, [allRecords, selected, selectedPath, boundaryIndex]);
 
   const regionMetrics = useMemo(() => {
     const byRegion = new Map();
@@ -2029,22 +2083,6 @@ export default function SuperAdminRegionalMap({
     return Number.isFinite(fallbackArea) && fallbackArea > 0 ? fallbackArea : 0;
   }, [selected, visibleGeoJson]);
 
-  const getAnalysisLocationText = useCallback((record) => {
-    return baseName(
-      [
-        record.region,
-        record.district,
-        record.mahalla,
-        record.address,
-        record.settlement,
-        record.school_name,
-        record.birth_place,
-      ]
-        .filter(Boolean)
-        .join(' ')
-    );
-  }, []);
-
   const getBoundaryPatientCount = useCallback(
     (featureOrItem) => {
       const props = featureOrItem?.properties || featureOrItem || {};
@@ -2058,54 +2096,24 @@ export default function SuperAdminRegionalMap({
         if (fromStats) return fromStats;
       }
 
-      const boundaryKey =
-        level === 1
-          ? canonicalRegionName(featureName(props))
-          : baseName(featureName(props));
-      const parentDistrict =
-        level === 3
-          ? (boundaryIndex?.levels?.['2'] || []).find(
-              (item) => String(item.id) === String(props.parent_id)
-            )
-          : null;
-      const parentRegion =
-        level === 1
-          ? props
-          : level === 2
-            ? selectedPath.region ||
-              (boundaryIndex?.levels?.['1'] || []).find(
-                (item) => String(item.id) === String(props.parent_id)
-              )
-            : selectedPath.region ||
-              (boundaryIndex?.levels?.['1'] || []).find(
-                (item) => String(item.id) === String(parentDistrict?.parent_id)
-              );
-      const regionKey = parentRegion
-        ? canonicalRegionName(featureName(parentRegion))
-        : '';
-      const districtKey =
-        level === 2
-          ? baseName(featureName(props))
-          : parentDistrict
-            ? baseName(featureName(parentDistrict))
-            : '';
+      const { parentRegion, parentDistrict } = getBoundaryContext(
+        level,
+        props,
+        selectedPath,
+        boundaryIndex
+      );
 
-      return analyses.filter((record) => {
-        const text = getAnalysisLocationText(record);
-        if (level === 1) return text.includes(boundaryKey);
-        if (regionKey && !text.includes(regionKey)) return false;
-        if (level === 2) return text.includes(boundaryKey);
-        if (districtKey && !text.includes(districtKey)) return false;
-        return text.includes(boundaryKey);
-      }).length;
+      return patientRecords.filter((record) =>
+        recordMatchesBoundary(
+          record,
+          level,
+          props,
+          parentRegion,
+          parentDistrict
+        )
+      ).length;
     },
-    [
-      analyses,
-      boundaryIndex,
-      getAnalysisLocationText,
-      regionMetrics,
-      selectedPath.region,
-    ]
+    [boundaryIndex, patientRecords, regionMetrics, selectedPath]
   );
 
   const enrichBoundaryPatientData = useCallback(
@@ -3396,8 +3404,8 @@ export default function SuperAdminRegionalMap({
     >
       <Box
         sx={{
-          mb: 2,
-          p: 2.5,
+          mb: 1,
+          p: 1.25,
           borderRadius: 2,
           border: '1px solid',
           borderColor: isDark
@@ -3409,16 +3417,17 @@ export default function SuperAdminRegionalMap({
         <Stack
           direction={{ xs: 'column', lg: 'row' }}
           justifyContent="space-between"
-          spacing={2}
+          alignItems={{ xs: 'flex-start', lg: 'center' }}
+          spacing={1.5}
         >
           <Box>
-            <Stack direction="row" spacing={1} alignItems="center" mb={0.5}>
-              <Public color="primary" />
-              <Typography variant="h4" fontWeight={900}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Public color="primary" sx={{ fontSize: 20 }} />
+              <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
                 {mt.title}
               </Typography>
             </Stack>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="caption" color="text.secondary">
               {mt.subtitle}
             </Typography>
           </Box>
@@ -3439,7 +3448,7 @@ export default function SuperAdminRegionalMap({
               color="#7c3aed"
             />
             {dataLoading && (
-              <Chip label={mt.analyticsLoading} sx={{ fontWeight: 800 }} />
+              <Chip label={mt.analyticsLoading} size="small" sx={{ fontWeight: 800 }} />
             )}
           </Stack>
         </Stack>

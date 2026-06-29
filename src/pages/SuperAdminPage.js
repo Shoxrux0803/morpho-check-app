@@ -112,6 +112,65 @@ const PAGE_LABELS = {
   ky: { scientificAnalysis: 'Илимий талдоо' },
 };
 
+const HEADER_LABELS = {
+  uz: {
+    systemStatus: 'Tizim holati',
+    active: 'Faol',
+    database: 'Ma’lumotlar bazasi',
+    optimal: 'Optimal',
+    totalAdmins: 'Jami adminlar',
+  },
+  ru: {
+    systemStatus: 'Статус системы',
+    active: 'Активен',
+    database: 'База данных',
+    optimal: 'Оптимально',
+    totalAdmins: 'Всего админов',
+  },
+  en: {
+    systemStatus: 'System Status',
+    active: 'Active',
+    database: 'Database',
+    optimal: 'Optimal',
+    totalAdmins: 'Total Admins',
+  },
+  tr: {
+    systemStatus: 'Sistem Durumu',
+    active: 'Aktif',
+    database: 'Veritabanı',
+    optimal: 'Optimal',
+    totalAdmins: 'Toplam Admin',
+  },
+  tm: {
+    systemStatus: 'Ulgam ýagdaýy',
+    active: 'Aktiw',
+    database: 'Maglumatlar bazasy',
+    optimal: 'Optimal',
+    totalAdmins: 'Jemi adminler',
+  },
+  tg: {
+    systemStatus: 'Ҳолати система',
+    active: 'Фаъол',
+    database: 'Базаи маълумотҳо',
+    optimal: 'Оптималӣ',
+    totalAdmins: 'Ҳамаи админҳо',
+  },
+  kz: {
+    systemStatus: 'Жүйе күйі',
+    active: 'Белсенді',
+    database: 'Деректер базасы',
+    optimal: 'Оптималды',
+    totalAdmins: 'Барлық админдер',
+  },
+  ky: {
+    systemStatus: 'Системанын абалы',
+    active: 'Активдүү',
+    database: 'Маалыматтар базасы',
+    optimal: 'Оптималдуу',
+    totalAdmins: 'Жалпы админдер',
+  },
+};
+
 const RESEARCH_TYPE_OPTIONS = ['PhD', 'DSc', 'Magistrlik', 'Grant loyihasi'];
 
 const ADMIN_REPORT_LABELS = {
@@ -4171,6 +4230,20 @@ const SuperAdminPage = () => {
     superadmins: admins.filter((item) => item.role === 'superadmin').length,
   };
 
+  const tabItems = [
+    { icon: <Dashboard />, label: pt('dashboard') },
+    { icon: <AutoGraph />, label: pageLabels.scientificAnalysis },
+    { icon: <Place />, label: pt('regionalMap') },
+    { icon: <People />, label: pt('admins') },
+    { icon: <RestoreFromTrash />, label: pt('deleted') },
+    { icon: <Security />, label: pt('security') },
+    { icon: <History />, label: pt('auditLog') },
+    { icon: <Storage />, label: pt('backup') },
+    { icon: <SettingsSuggest />, label: pt('clinicalCms') },
+    { icon: <AutoGraph />, label: pt('topChart') },
+    { icon: <SettingsSuggest />, label: t('chatSettingsTitle') },
+  ];
+
   return (
     <Box
       sx={{
@@ -4182,7 +4255,7 @@ const SuperAdminPage = () => {
       <Container
         maxWidth={false}
         sx={{
-          py: { xs: 2, md: 4 },
+          py: { xs: 1, md: 1.5 },
           pr: { xs: 1.5, sm: 2, md: 4 },
           pl: { xs: 1.5, sm: 2, md: '324px' },
           maxWidth: '100%',
@@ -4201,6 +4274,7 @@ const SuperAdminPage = () => {
               left: { md: 24 },
               zIndex: { md: 10 },
               height: { md: 'calc(100vh - 104px)' },
+              isolation: 'isolate',
             }}
           >
             <GlassPaper
@@ -4222,7 +4296,7 @@ const SuperAdminPage = () => {
               <Box
                 sx={{
                   p: { xs: 1, md: 1.2 },
-                  mb: { xs: 1, md: 1.1 },
+                  mb: { xs: 1, md: 1.5 },
                   textAlign: { xs: 'left', md: 'center' },
                   display: 'flex',
                   alignItems: 'center',
@@ -4263,169 +4337,95 @@ const SuperAdminPage = () => {
                 </Box>
               </Box>
 
-              <Tabs
-                orientation={isMobile ? 'horizontal' : 'vertical'}
-                variant={isMobile ? 'scrollable' : 'standard'}
-                scrollButtons={isMobile ? 'auto' : false}
-                value={activeTab}
-                onChange={(e, v) => setActiveTab(v)}
+              {/* Custom Nav Items with framer-motion layoutId sliding active state */}
+              <Box
                 sx={{
+                  display: 'flex',
+                  flexDirection: isMobile ? 'row' : 'column',
+                  gap: 0.75,
+                  overflowX: isMobile ? 'auto' : 'visible',
+                  pb: isMobile ? 1.5 : 0,
                   flex: { md: '1 1 auto' },
                   minHeight: { md: 0 },
-                  overflow: { md: 'hidden' },
-                  '& .MuiTabs-scroller': {
-                    overflowY: { md: 'hidden !important' },
-                    overflowX: { xs: 'auto', md: 'hidden' },
-                    pr: { md: 0 },
-                    '&::-webkit-scrollbar': {
-                      display: 'none',
-                    },
-                    scrollbarWidth: 'none',
-                  },
-                  '& .MuiTabs-flexContainer': {
-                    gap: { xs: 0.75, md: 0 },
-                  },
-                  '& .MuiTabs-indicator': { display: 'none' },
-                  '& .MuiTab-root': {
-                    position: 'relative',
-                    overflow: 'hidden',
-                    isolation: 'isolate',
-                    borderRadius: 999,
-                    mb: { xs: 0, md: 0.65 },
-                    mr: { xs: 0, md: 0 },
-                    minWidth: { xs: 'max-content', md: '100%' },
-                    maxWidth: { xs: 'none', md: '100%' },
-                    px: { xs: 1.35, sm: 1.7, md: 1.65 },
-                    py: { xs: 0.82, sm: 1, md: 0.78 },
-                    alignItems: 'center',
-                    justifyContent: { xs: 'center', md: 'flex-start' },
-                    textAlign: { xs: 'center', md: 'left' },
-                    minHeight: { xs: 40, sm: 44, md: 40 },
-                    textTransform: 'none',
-                    fontWeight: 800,
-                    fontSize: { xs: '0.76rem', sm: '0.82rem', md: '0.8rem' },
-                    letterSpacing: 0,
-                    whiteSpace: 'nowrap',
-                    color: isDark
-                      ? 'rgba(226, 232, 240, 0.72)'
-                      : 'rgba(51, 65, 85, 0.78)',
-                    border: '1px solid',
-                    borderColor: isDark
-                      ? 'rgba(148, 163, 184, 0.18)'
-                      : 'rgba(15, 118, 110, 0.12)',
-                    background: isDark
-                      ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.42), rgba(30, 41, 59, 0.22))'
-                      : 'linear-gradient(135deg, rgba(255, 255, 255, 0.54), rgba(240, 253, 250, 0.28))',
-                    boxShadow: isDark
-                      ? 'inset 0 1px 0 rgba(255,255,255,0.07), 0 6px 16px rgba(0,0,0,0.14)'
-                      : 'inset 0 1px 0 rgba(255,255,255,0.62), 0 6px 16px rgba(15,23,42,0.05)',
-                    backdropFilter: 'blur(14px) saturate(160%)',
-                    WebkitBackdropFilter: 'blur(14px) saturate(160%)',
-                    transition:
-                      'transform 0.22s ease, color 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      zIndex: -1,
-                      borderRadius: 'inherit',
-                      background:
-                        'linear-gradient(135deg, rgba(255,255,255,0.48), rgba(255,255,255,0.05) 45%, rgba(94,234,212,0.14))',
-                      opacity: 0,
-                      transition: 'opacity 0.22s ease',
-                    },
-                    '& .MuiTab-iconWrapper': {
-                      mr: { xs: 0.65, sm: 0.85, md: 0.95 },
-                      fontSize: { xs: 18, sm: 19, md: 18 },
-                      color: 'inherit',
-                      filter: 'drop-shadow(0 2px 6px rgba(45, 212, 191, 0.14))',
-                    },
-                    '&.Mui-selected': {
-                      color: '#ecfeff',
-                      borderColor: isDark
-                        ? 'rgba(94, 234, 212, 0.46)'
-                        : 'rgba(20, 184, 166, 0.42)',
-                      background:
-                        'linear-gradient(135deg, rgba(20,184,166,0.95), rgba(37,99,235,0.88) 52%, rgba(139,92,246,0.88))',
-                      boxShadow:
-                        'inset 0 1px 0 rgba(255,255,255,0.38), 0 9px 22px rgba(20,184,166,0.18), 0 4px 14px rgba(37,99,235,0.14)',
-                      transform: 'translateY(-1px)',
-                      '&::before': {
-                        opacity: 1,
-                      },
-                    },
-                    '&:hover': {
-                      color: isDark ? '#f8fafc' : 'primary.main',
-                      borderColor: isDark
-                        ? 'rgba(94, 234, 212, 0.32)'
-                        : 'rgba(20, 184, 166, 0.28)',
-                      transform: 'translateY(-1px)',
-                      boxShadow: isDark
-                        ? 'inset 0 1px 0 rgba(255,255,255,0.10), 0 9px 20px rgba(0,0,0,0.20)'
-                        : 'inset 0 1px 0 rgba(255,255,255,0.70), 0 9px 20px rgba(15,23,42,0.08)',
-                      '&::before': {
-                        opacity: 0.75,
-                      },
-                    },
-                  },
+                  '&::-webkit-scrollbar': { display: 'none' },
+                  scrollbarWidth: 'none',
                 }}
               >
-                <Tab
-                  icon={<Dashboard />}
-                  iconPosition="start"
-                  label={pt('dashboard')}
-                />
-                <Tab
-                  icon={<AutoGraph />}
-                  iconPosition="start"
-                  label={pageLabels.scientificAnalysis}
-                />
-                <Tab
-                  icon={<Place />}
-                  iconPosition="start"
-                  label={pt('regionalMap')}
-                />
-                <Tab
-                  icon={<People />}
-                  iconPosition="start"
-                  label={pt('admins')}
-                />
-                <Tab
-                  icon={<RestoreFromTrash />}
-                  iconPosition="start"
-                  label={pt('deleted')}
-                />
-                <Tab
-                  icon={<Security />}
-                  iconPosition="start"
-                  label={pt('security')}
-                />
-                <Tab
-                  icon={<History />}
-                  iconPosition="start"
-                  label={pt('auditLog')}
-                />
-                <Tab
-                  icon={<Storage />}
-                  iconPosition="start"
-                  label={pt('backup')}
-                />
-                <Tab
-                  icon={<SettingsSuggest />}
-                  iconPosition="start"
-                  label={pt('clinicalCms')}
-                />
-                <Tab
-                  icon={<AutoGraph />}
-                  iconPosition="start"
-                  label={pt('topChart')}
-                />
-                <Tab
-                  icon={<SettingsSuggest />}
-                  iconPosition="start"
-                  label={t('chatSettingsTitle')}
-                />
-              </Tabs>
+                {tabItems.map((item, index) => {
+                  const isSelected = activeTab === index;
+                  return (
+                    <Box
+                      key={index}
+                      component={motion.div}
+                      onClick={() => setActiveTab(index)}
+                      whileHover={{ scale: 1.015 }}
+                      whileTap={{ scale: 0.985 }}
+                      sx={{
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: { xs: 'center', md: 'flex-start' },
+                        px: { xs: 2, md: 2.25 },
+                        py: { xs: 1, md: 1.15 },
+                        borderRadius: 3,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        color: isSelected
+                          ? '#ffffff'
+                          : isDark
+                            ? 'rgba(255, 255, 255, 0.7)'
+                            : 'rgba(15, 118, 110, 0.8)',
+                        transition: 'color 0.25s ease',
+                        userSelect: 'none',
+                      }}
+                    >
+                      {/* Sliding Gradient Background for Active Tab */}
+                      {isSelected && (
+                        <Box
+                          component={motion.div}
+                          layoutId="activeTabIndicator"
+                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: 3,
+                            background: 'linear-gradient(135deg, #14b8a6 0%, #2563eb 50%, #8b5cf6 100%)',
+                            boxShadow: '0 8px 20px rgba(37, 99, 235, 0.25)',
+                            zIndex: -1,
+                          }}
+                        />
+                      )}
+                      
+                      {/* Inactive Hover / Border style */}
+                      {!isSelected && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: 3,
+                            border: '1px solid',
+                            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,118,110,0.08)',
+                            bgcolor: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(15,118,110,0.01)',
+                            zIndex: -2,
+                            opacity: 0,
+                            transition: 'opacity 0.2s ease',
+                            '&:hover': {
+                              opacity: 1,
+                            }
+                          }}
+                        />
+                      )}
+
+                      <Box sx={{ mr: 1.25, display: 'flex', alignItems: 'center', opacity: isSelected ? 1 : 0.8 }}>
+                        {item.icon}
+                      </Box>
+                      <Typography variant="body2" fontWeight={800} sx={{ fontSize: '0.82rem' }}>
+                        {item.label}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
 
               <Box
                 mt="auto"
@@ -4465,13 +4465,112 @@ const SuperAdminPage = () => {
               width: '100%',
             }}
           >
+            {/* Premium Header */}
+            <Box
+              component={motion.div}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', lg: 'row' },
+                justifyContent: 'space-between',
+                alignItems: { xs: 'flex-start', lg: 'center' },
+                gap: 1.5,
+                mb: 1.5,
+                p: 1.5,
+                borderRadius: 3,
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)'
+                  : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 250, 0.5) 100%)',
+                border: '1px solid',
+                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 118, 110, 0.08)',
+                backdropFilter: 'blur(15px)',
+                boxShadow: isDark
+                  ? '0 10px 30px rgba(0,0,0,0.15)'
+                  : '0 10px 30px rgba(100, 116, 139, 0.02)',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                <Typography
+                  variant="h5"
+                  fontWeight={900}
+                  sx={{
+                    background: isDark
+                      ? 'linear-gradient(90deg, #38bdf8 0%, #2dd4bf 100%)'
+                      : 'linear-gradient(90deg, #0f766e 0%, #2563eb 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {tabItems[activeTab].label}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                  {new Date().toLocaleDateString(lang, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                </Typography>
+              </Box>
+
+              {/* Quick System Stats */}
+              <Stack direction="row" spacing={1.5} sx={{ width: { xs: '100%', lg: 'auto' }, overflowX: 'auto', py: 0.2 }}>
+                {[
+                  { label: HEADER_LABELS[lang]?.totalAdmins, value: adminReportSummary.admins + adminReportSummary.researchers, icon: <People sx={{ fontSize: 16 }} />, color: 'primary' },
+                  { label: HEADER_LABELS[lang]?.systemStatus, value: HEADER_LABELS[lang]?.active, icon: <Security sx={{ fontSize: 16 }} />, color: 'success' },
+                  { label: HEADER_LABELS[lang]?.database, value: HEADER_LABELS[lang]?.optimal, icon: <Storage sx={{ fontSize: 16 }} />, color: 'info' }
+                ].map((stat, idx) => (
+                  <Box
+                    key={idx}
+                    component={motion.div}
+                    whileHover={{ y: -2, scale: 1.01 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 2,
+                      bgcolor: isDark ? 'rgba(30, 41, 59, 0.5)' : 'rgba(255, 255, 255, 0.9)',
+                      border: '1px solid',
+                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.01)',
+                    }}
+                  >
+                    <Avatar
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        bgcolor: `${stat.color}.light`,
+                        color: `${stat.color}.main`,
+                      }}
+                    >
+                      {stat.icon}
+                    </Avatar>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem', fontWeight: 600 }}>
+                        {stat.label}:
+                      </Typography>
+                      <Typography variant="caption" fontWeight={800} color="text.primary">
+                        {stat.value}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 28,
+                  mass: 0.8,
+                }}
               >
                 <Box
                   sx={{

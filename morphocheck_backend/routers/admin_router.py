@@ -1069,8 +1069,13 @@ def stats(
 
     # Filter analyses stats by ownership and exclusion of deleted records
     analysis_q = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 0)
-    if current_user.role != "superadmin":
+    if current_user.role == "field_assistant":
         analysis_q = analysis_q.filter(PatientAnalysis.created_by_id == current_user.id)
+    elif current_user.role != "superadmin":
+        assistant_ids = db.query(User.id).filter(User.supervisor_id == current_user.id, User.role == "field_assistant").subquery()
+        analysis_q = analysis_q.filter(
+            (PatientAnalysis.created_by_id == current_user.id) | (PatientAnalysis.created_by_id.in_(assistant_ids))
+        )
 
     # Apply Filters
     if gender:

@@ -512,6 +512,15 @@ def research_record_to_dict(record: ResearchRecord, current_user: Optional[User]
     payload["deleted_by_name"] = (
         record.deleted_by.name if getattr(record, "deleted_by", None) else None
     )
+    payload["region"] = (
+        record.created_by.region if getattr(record, "created_by", None) else None
+    )
+    payload["district"] = (
+        record.created_by.district if getattr(record, "created_by", None) else None
+    )
+    payload["mahalla"] = (
+        record.created_by.mahalla if getattr(record, "created_by", None) else None
+    )
     return payload
 
 
