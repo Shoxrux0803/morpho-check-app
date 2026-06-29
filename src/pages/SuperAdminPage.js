@@ -355,7 +355,65 @@ const AUDIT_ACTION_LABELS = {
     downloaded: 'Жүктөлдү',
     export: 'Экспорт',
     exported: 'Экспорттолду',
+};
+
+const CONFIRM_MESSAGES = {
+  uz: {
+    adminDeleteConfirm: "Haqiqatan ham bu adminni o'chirmoqchimisiz?",
+    hardDeleteDataConfirm: "Ushbu ma'lumotni butunlay o'chirib tashlamoqchimisiz? Uni qayta tiklab bo'lmaydi!",
+    backupRestoreConfirm: "Haqiqatan ham '{filename}' zaxira nusxasini tiklamoqchimisiz? Joriy ma'lumotlar almashtirilishi mumkin.",
+    deleteBackupConfirm: "Haqiqatan ham '{filename}' zaxira faylini o'chirmoqchimisiz?",
+    clearAuditConfirm: "Barcha jurnallarni tozalamoqchimisiz?"
   },
+  ru: {
+    adminDeleteConfirm: "Вы действительно хотите удалить этого админа?",
+    hardDeleteDataConfirm: "Вы действительно хотите безвозвратно удалить эти данные? Это действие нельзя отменить!",
+    backupRestoreConfirm: "Вы действительно хотите восстановить резервную копию '{filename}'? Текущие данные могут быть перезаписаны.",
+    deleteBackupConfirm: "Вы действительно хотите удалить файл резервной копии '{filename}'?",
+    clearAuditConfirm: "Очистить все записи журнала?"
+  },
+  en: {
+    adminDeleteConfirm: "Do you really want to delete this admin?",
+    hardDeleteDataConfirm: "Do you really want to permanently delete this data? This action cannot be undone!",
+    backupRestoreConfirm: "Do you really want to restore the backup '{filename}'? Current data might be overwritten.",
+    deleteBackupConfirm: "Do you really want to delete the backup file '{filename}'?",
+    clearAuditConfirm: "Clear all audit log entries?"
+  },
+  tr: {
+    adminDeleteConfirm: "Bu yöneticiyi gerçekten silmek istiyor musunuz?",
+    hardDeleteDataConfirm: "Bu verileri kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!",
+    backupRestoreConfirm: "'{filename}' yedeklemesini gerçekten geri yüklemek istiyor musunuz? Mevcut verilerin üzerine yazılabilir.",
+    deleteBackupConfirm: "'{filename}' yedekleme dosyasını gerçekten silmek istiyor musunuz?",
+    clearAuditConfirm: "Tüm günlük kayıtlarını temizlemek istiyor musunuz?"
+  },
+  tm: {
+    adminDeleteConfirm: "Bu admini pozmak isleýärsinizmi?",
+    hardDeleteDataConfirm: "Bu maglumaty hemişelik pozmak isleýärsinizmi? Bu hereketi yza alyp bolmaz!",
+    backupRestoreConfirm: "'{filename}' ätiýaçlyk nusgasyny dikeltmek isleýärsinizmi? Häzirki maglumatlar täzelenip biler.",
+    deleteBackupConfirm: "'{filename}' ätiýaçlyk faýlyny pozmak isleýärsinizmi?",
+    clearAuditConfirm: "Ähli žurnal ýazgylaryny arassalamak isleýärsinizmi?"
+  },
+  tg: {
+    adminDeleteConfirm: "Оё шумо дар ҳақиқат мехоҳед ин админро нест кунед?",
+    hardDeleteDataConfirm: "Оё шумо дар ҳақиқат мехоҳед ин маълумотро ба таври ҳамешагӣ нест кунед? Ин амалро бекор карда намешавад!",
+    backupRestoreConfirm: "Оё шумо дар ҳақиқат мехоҳед нусхаи эҳтиётии '{filename}'-ро барқарор кунед? Маалумоти ҷорӣ метавонад иваз карда шавад.",
+    deleteBackupConfirm: "Оё шумо дар ҳақиқат мехоҳед файли нусхаи эҳтиётии '{filename}'-ро нест кунед?",
+    clearAuditConfirm: "Оё шумо мехоҳед ҳамаи журналҳоро тоза кунед?"
+  },
+  kz: {
+    adminDeleteConfirm: "Бұл админді шынымен жойғыңыз келе ме?",
+    hardDeleteDataConfirm: "Бұл мәліметтерді біржола жойғыңыз келе ме? Бұл әрекетті қайтару мүмкін емес!",
+    backupRestoreConfirm: "'{filename}' сақтық көшірмесін шынымен қалпына келтіргіңіз келе ме? Ағымдағы мәліметтер ауыстырылуы мүмкін.",
+    deleteBackupConfirm: "'{filename}' сақтық көшірме файлын шынымен жойғыңыз келе ме?",
+    clearAuditConfirm: "Барлық журнал жазбаларын тазалайсыз ба?"
+  },
+  ky: {
+    adminDeleteConfirm: "Бул админди чын эле өчүрөсүзбү?",
+    hardDeleteDataConfirm: "Бул маалыматты биротоло өчүрүүнү каалайсызбы? Бул аракетти жокко чыгаруу мүмкүн эмес!",
+    backupRestoreConfirm: "'{filename}' камдык көчүрмөсүн чын эле калыбына келтиргиңиз келеби? Учурдагы маалыматтар алмаштырылышы мүмкүн.",
+    deleteBackupConfirm: "'{filename}' камдык көчүрмө файлын чын эле өчүрөсүзбү?",
+    clearAuditConfirm: "Аудит журналын тазалоону ырастайсызбы?"
+  }
 };
 
 const AUDIT_TARGET_LABELS_RU = {
@@ -2277,7 +2335,8 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteAdmin = async (id) => {
-    showConfirm(pt('adminDeleteConfirm'), async () => {
+    const msg = CONFIRM_MESSAGES[lang]?.adminDeleteConfirm || CONFIRM_MESSAGES['en'].adminDeleteConfirm;
+    showConfirm(msg, async () => {
       try {
         const deleteUser = AdminApi.users.delete || AdminApi.users.remove;
         await deleteUser(id);
@@ -2332,7 +2391,8 @@ const SuperAdminPage = () => {
           );
     if (!row) return;
 
-    showConfirm(pt('hardDeleteDataConfirm'), async () => {
+    const msg = CONFIRM_MESSAGES[lang]?.hardDeleteDataConfirm || CONFIRM_MESSAGES['en'].hardDeleteDataConfirm;
+    showConfirm(msg, async () => {
       try {
         if (row.__deletedSource === 'research') {
           await ResearchApi.hardDelete(row.id);
@@ -2361,7 +2421,8 @@ const SuperAdminPage = () => {
   };
 
   const handleRestoreBackup = async (filename) => {
-    showConfirm(pt('backupRestoreConfirm').replace('{filename}', filename), async () => {
+    const msg = (CONFIRM_MESSAGES[lang]?.backupRestoreConfirm || CONFIRM_MESSAGES['en'].backupRestoreConfirm).replace('{filename}', filename);
+    showConfirm(msg, async () => {
       setBackupLoading(true);
       try {
         await AdminApi.backup.restore(filename);
@@ -2375,7 +2436,8 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteBackup = async (filename) => {
-    showConfirm(`${pt('delete')}: ${filename}?`, async () => {
+    const msg = (CONFIRM_MESSAGES[lang]?.deleteBackupConfirm || CONFIRM_MESSAGES['en'].deleteBackupConfirm).replace('{filename}', filename);
+    showConfirm(msg, async () => {
       try {
         await AdminApi.backup.delete(filename);
         toast.success(pt('fileDeleted'));
@@ -2387,7 +2449,8 @@ const SuperAdminPage = () => {
   };
 
   const handleClearAudit = async () => {
-    showConfirm(pt('clearAuditConfirm'), async () => {
+    const msg = CONFIRM_MESSAGES[lang]?.clearAuditConfirm || CONFIRM_MESSAGES['en'].clearAuditConfirm;
+    showConfirm(msg, async () => {
       try {
         await AdminApi.auditLogs.clear();
         toast.success(pt('auditCleared'));
@@ -3164,6 +3227,151 @@ const SuperAdminPage = () => {
             exportSuccess: 'Export completed successfully',
             copied: 'Copied',
             detailsCol: 'Details',
+          },
+          tr: {
+            description: 'Sistemdeki tüm eylemlerin ve olayların güvenlik günlüğü',
+            export: 'Dışa Aktar',
+            totalEvents: 'Toplam Olay',
+            activeOperators: 'Aktif Operatörler',
+            securityEvents: 'Güvenlik',
+            frequentAction: 'Sık Yapılan Eylem',
+            searchPlaceholder: 'IP, nesne veya metne göre ara...',
+            action: 'Eylem',
+            operator: 'Operatör',
+            allOperators: 'Tüm Operatörler',
+            object: 'Nesne',
+            resetFilters: 'Filtreleri Temizle',
+            noEvents: 'Olay bulunamadı',
+            rowsPerPage: 'Sayfa başına satır:',
+            eventDetails: 'Olay Detayları',
+            systemTime: 'Sistem Zamanı:',
+            performedAction: 'Gerçekleştirilen Eylem:',
+            systemObject: 'Sistem Nesnesi:',
+            operatorInfo: 'Operatör Bilgileri',
+            ipAddress: 'IP Adresi:',
+            detailsTitle: 'Detaylar',
+            formattedData: 'BİÇİMLENDİRİLMİŞ VERİ',
+            rawJson: 'HAM JSON VERİSİ',
+            noDataExport: 'Dışa aktarılacak veri yok',
+            exportSuccess: 'Dışa aktarma başarıyla tamamlandı',
+            copied: 'Kopyalandı',
+            detailsCol: 'Detaylar',
+          },
+          tm: {
+            description: 'Ulgamdaky ähli hereketleriň we wakalaryň howpsuzlyk žurnaly',
+            export: 'Eksport',
+            totalEvents: 'Jami wakalar',
+            activeOperators: 'Aktiw operatorlar',
+            securityEvents: 'Howpsuzlyk',
+            frequentAction: 'Köp ýerine ýetirilýän hereket',
+            searchPlaceholder: 'IP, obýekt ýa-da tekst boýunça gözleg...',
+            action: 'Hereket',
+            operator: 'Operator',
+            allOperators: 'Ähli operatorlar',
+            object: 'Obýekt',
+            resetFilters: 'Süzgüji arassala',
+            noEvents: 'Waka tapylmady',
+            rowsPerPage: 'Setirleriň sany:',
+            eventDetails: 'Waka jikme-jikleri',
+            systemTime: 'Ulgam wagty:',
+            performedAction: 'Ýerine ýetirilen hereket:',
+            systemObject: 'Ulgam obýekti:',
+            operatorInfo: 'Operator maglumatlary',
+            ipAddress: 'IP salgysy:',
+            detailsTitle: 'Jikme-jiklikler',
+            formattedData: 'FORMATLANAN MAGLUMAT',
+            rawJson: 'ASYL JSON MAGLUMATY',
+            noDataExport: 'Eksport etmek üçin maglumat ýok',
+            exportSuccess: 'Eksport üstünlikli tamamlandy',
+            copied: 'Nusgalandy',
+            detailsCol: 'Jikme-jik',
+          },
+          tg: {
+            description: 'Журнали амниятӣ барои ҳамаи амалҳо ва рӯйдодҳо дар система',
+            export: 'Экспорт',
+            totalEvents: 'Ҳамаи рӯйдодҳо',
+            activeOperators: 'Операторони фаъол',
+            securityEvents: 'Амният',
+            frequentAction: 'Амали бештар иҷрошуда',
+            searchPlaceholder: 'Ҷустуҷӯ аз рӯи IP, объект ё матн...',
+            action: 'Амал',
+            operator: 'Оператор',
+            allOperators: 'Ҳамаи операторон',
+            object: 'Объект',
+            resetFilters: 'Тоза кардани филтрҳо',
+            noEvents: 'Рӯйдодҳо ёфт нашуданд',
+            rowsPerPage: 'Шумораи сатрҳо:',
+            eventDetails: 'Тафсилоти рӯйдод',
+            systemTime: 'Вақти система:',
+            performedAction: 'Амали иҷрошуда:',
+            systemObject: 'Объекти система:',
+            operatorInfo: 'Маълумоти оператор',
+            ipAddress: 'Суроғаи IP:',
+            detailsTitle: 'Тафсилот',
+            formattedData: 'МАЪЛУМОТИ ФОРМАТШУДА',
+            rawJson: 'МАЪЛУМОТИ АСЛИИ JSON',
+            noDataExport: 'Маълумот барои экспорт мавҷуд нест',
+            exportSuccess: 'Экспорт бомуваффақият иҷро шуд',
+            copied: 'Нусхабардорӣ шуд',
+            detailsCol: 'Тафсилот',
+          },
+          kz: {
+            description: 'Жүйедегі барлық әрекеттер мен оқиғалардың қауіпсіздік журналы',
+            export: 'Экспорт',
+            totalEvents: 'Барлық оқиғалар',
+            activeOperators: 'Белсенді операторлар',
+            securityEvents: 'Қауіпсіздік',
+            frequentAction: 'Жиі жасалатын әрекет',
+            searchPlaceholder: 'IP, объект немесе мәтін бойынша іздеу...',
+            action: 'Әрекет',
+            operator: 'Оператор',
+            allOperators: 'Барлық операторлар',
+            object: 'Объект',
+            resetFilters: 'Сүзгіні тазалау',
+            noEvents: 'Оқиғалар табылмады',
+            rowsPerPage: 'Жолдар саны:',
+            eventDetails: 'Оқиға егжей-тегжейі',
+            systemTime: 'Жүйе уақыты:',
+            performedAction: 'Орындалған әрекет:',
+            systemObject: 'Жүйе объектісі:',
+            operatorInfo: 'Оператор мәліметтері',
+            ipAddress: 'IP мекенжайы:',
+            detailsTitle: 'Толық мәліметтер',
+            formattedData: 'ПІШІМДЕЛГЕН МӘЛІМЕТТЕР',
+            rawJson: 'БАСТАПҚЫ JSON МӘЛІМЕТІ',
+            noDataExport: 'Экспорттау үшін мәлімет жоқ',
+            exportSuccess: 'Экспорт сәтті аяқталды',
+            copied: 'Көшірілді',
+            detailsCol: 'Толығырақ',
+          },
+          ky: {
+            description: 'Системадагы бардык аракеттердин жана окуялардын коопсуздук журналы',
+            export: 'Экспорт',
+            totalEvents: 'Бардык окуялар',
+            activeOperators: 'Активдүү операторлор',
+            securityEvents: 'Коопсуздук',
+            frequentAction: 'Көп аткарылган аракет',
+            searchPlaceholder: 'IP, объект же текст боюнча издөө...',
+            action: 'Аракет',
+            operator: 'Operator',
+            allOperators: 'Бардык операторлор',
+            object: 'Объект',
+            resetFilters: 'Чыпканы тазалоо',
+            noEvents: 'Окуялар табылган жок',
+            rowsPerPage: 'Саптардын саны:',
+            eventDetails: 'Окуянын чоо-жайы',
+            systemTime: 'Система убактысы:',
+            performedAction: 'Аткарылган аракет:',
+            systemObject: 'Система объектиси:',
+            operatorInfo: 'Оператордун маалыматы',
+            ipAddress: 'IP дареги:',
+            detailsTitle: 'Чоо-жайы',
+            formattedData: 'ФОРМАТТАЛГАН МААЛЫМАТ',
+            rawJson: 'БАСТАПКЫ JSON МААЛЫМАТЫ',
+            noDataExport: 'Экспорттоо үчүн маалымат жок',
+            exportSuccess: 'Экспорт ийгиликтүү аяктады',
+            copied: 'Көчүрүлдү',
+            detailsCol: 'Чоо-жайы',
           }
         };
 
