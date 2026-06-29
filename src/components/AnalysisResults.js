@@ -72,6 +72,7 @@ export default function AnalysisResults({
     adminPermissions,
     'activity_advice'
   );
+  const canShowSportAdvice = canUsePermission(adminPermissions, 'sport_advice');
   const canShowPlayPreschoolAdvice = canUsePermission(
     adminPermissions,
     'play_preschool_engagement'
@@ -1934,9 +1935,11 @@ export default function AnalysisResults({
                   { key: 'activity', title: t('activity') },
                   { key: 'checkups', title: t('checkups') },
                 ]
-                  .filter(
-                    ({ key }) => key !== 'activity' || canShowActivityAdvice
-                  )
+                  .filter(({ key }) => {
+                    if (key === 'activity') return canShowActivityAdvice;
+                    if (key === 'sport') return canShowSportAdvice;
+                    return true;
+                  })
                   .map(({ key, title, icon }) => (
                     <Grid key={key} item xs={12} md={6}>
                       <Paper

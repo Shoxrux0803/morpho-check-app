@@ -39,6 +39,22 @@ def _frontend_base_url(request: Request) -> str:
     return str(request.base_url).rstrip("/")
 
 
+def _can_download_patient_report(
+    db: Session, current_user: User, rec: PatientAnalysis
+) -> bool:
+    if current_user.role == "superadmin":
+        return True
+    if rec.created_by_id == current_user.id:
+        return True
+    creator = db.get(User, rec.created_by_id)
+    return bool(
+        creator
+        and creator.role == "field_assistant"
+        and creator.supervisor_id == current_user.id
+        and getattr(creator, "is_deleted", 0) != 1
+    )
+
+
 class PDFRequest(BaseModel):
     patient_data: dict
     analysis: dict
@@ -191,7 +207,7 @@ async def generate_pdf_by_id_endpoint(
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
-    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+    if not _can_download_patient_report(db, current_user, rec):
         raise HTTPException(
             status_code=403, detail="Ushbu hisobotni yuklab olishga huquqingiz yo'q"
         )
@@ -388,7 +404,7 @@ async def generate_docx_by_id_endpoint(
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
-    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+    if not _can_download_patient_report(db, current_user, rec):
         raise HTTPException(
             status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q"
         )
@@ -560,7 +576,7 @@ async def generate_consent_docx_by_id_endpoint(
     rec = db.query(PatientAnalysis).filter(PatientAnalysis.id == patient_id).first()
     if not rec:
         raise HTTPException(status_code=404, detail=f"Bemor topilmadi: id={patient_id}")
-    if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
+    if not _can_download_patient_report(db, current_user, rec):
         raise HTTPException(
             status_code=403, detail="Ushbu hujjatni yuklab olishga huquqingiz yo'q"
         )

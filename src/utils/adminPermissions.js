@@ -12,6 +12,7 @@ export const ADMIN_PERMISSION_DEFAULTS = {
   bioimpedance: true,
   play_preschool_engagement: true,
   activity_advice: true,
+  sport_advice: true,
   additional_instructions: true,
 };
 
@@ -30,6 +31,7 @@ const permissionLabels = {
     bioimpedance: 'Bioimpedans tahlili',
     play_preschool_engagement: "O'yin va maktabgacha ta'lim",
     activity_advice: 'Jismoniy faollik',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Qo‘shimcha ko‘rsatmalar (PDF)',
   },
   ru: {
@@ -46,6 +48,7 @@ const permissionLabels = {
     bioimpedance: '?????????????? ??????',
     play_preschool_engagement: 'Игра и дошкольное образование',
     activity_advice: 'Физическая активность',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Дополнительные указания (PDF)',
   },
   en: {
@@ -62,6 +65,7 @@ const permissionLabels = {
     bioimpedance: 'Bioimpedance analysis',
     play_preschool_engagement: 'Play & Preschool Engagement',
     activity_advice: 'Physical activity',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Additional instructions (PDF)',
   },
   kz: {
@@ -78,6 +82,7 @@ const permissionLabels = {
     bioimpedance: '??????????? ???????',
     play_preschool_engagement: 'Ойын және мектепке дейінгі білім',
     activity_advice: 'Дене белсенділігі',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Қосымша нұсқаулар (PDF)',
   },
   ky: {
@@ -94,6 +99,7 @@ const permissionLabels = {
     bioimpedance: '??????????? ????????',
     play_preschool_engagement: 'Оюн жана мектепке чейинки билим',
     activity_advice: 'Физикалык активдүүлүк',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Кошумча көрсөтмөлөр (PDF)',
   },
   tg: {
@@ -110,6 +116,7 @@ const permissionLabels = {
     bioimpedance: '??????? ???????????',
     play_preschool_engagement: 'Бозӣ ва таълими томактабӣ',
     activity_advice: 'Фаъолияти ҷисмонӣ',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Дастурҳои иловагӣ (PDF)',
   },
   tm: {
@@ -126,6 +133,7 @@ const permissionLabels = {
     bioimpedance: 'Bioimpedans analizi',
     play_preschool_engagement: 'Oýun we mekdebe çenli bilim',
     activity_advice: 'Fiziki işjeňlik',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Goşmaça görkezmeler (PDF)',
   },
   tr: {
@@ -142,6 +150,7 @@ const permissionLabels = {
     bioimpedance: 'Bioempedans analizi',
     play_preschool_engagement: 'Oyun ve Okul Öncesi Eğitim',
     activity_advice: 'Fiziksel aktivite',
+    sport_advice: "Sportga yo'naltirish",
     additional_instructions: 'Ek talimatlar (PDF)',
   },
 };

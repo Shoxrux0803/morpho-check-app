@@ -17,6 +17,7 @@ PERMISSION_KEYS = (
     "bioimpedance",
     "play_preschool_engagement",
     "activity_advice",
+    "sport_advice",
     "additional_instructions",
 )
 
@@ -112,6 +113,8 @@ def filter_payload_by_permissions(payload: dict[str, Any], permissions: dict[str
     if isinstance(advices, dict):
         if not permissions.get("activity_advice", True):
             advices.pop("activity", None)
+        if not permissions.get("sport_advice", True):
+            advices.pop("sport", None)
         if not permissions.get("play_preschool_engagement", True):
             advices.pop("play_preschool", None)
 
