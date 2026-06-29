@@ -2750,52 +2750,8 @@ async def import_analyses_xlsx(
     }
 
 
-# ----------------- AUDIT LOGS ------------------
+# ----------------- AUDIT LOGS (Removed duplicate, see lower implementation) ------------------
 
-
-@router.get("/audit-logs", response_model=dict)
-def list_audit_logs(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_superadmin),
-    page: int = 1,
-    page_size: int = 50,
-    action: Optional[str] = Query(None),
-    user_id: Optional[int] = Query(None),
-):
-    """Faqat Super Admin uchun: tizimdagi barcha loglarni ko'rish."""
-    query = db.query(AuditLog)
-
-    if action:
-        query = query.filter(AuditLog.action == action)
-    if user_id:
-        query = query.filter(AuditLog.user_id == user_id)
-
-    total = query.count()
-
-    logs_db = (
-        query.order_by(AuditLog.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
-
-    # Map to schema with user names
-    items = []
-    for log in logs_db:
-        item = {
-            "id": log.id,
-            "user_id": log.user_id,
-            "action": log.action,
-            "target_type": log.target_type,
-            "target_id": log.target_id,
-            "details": log.details,
-            "ip_address": log.ip_address,
-            "created_at": log.created_at,
-            "user_name": log.user.name if log.user else "Mehmon",
-        }
-        items.append(item)
-
-    return {"items": items, "total": total}
 
 
 # ----------------- ADMIN ACTIVITY -----------------
@@ -2970,11 +2926,30 @@ def list_audit_logs(
     page: int = 1,
     page_size: int = 50,
     action: Optional[str] = Query(None),
+    user_id: Optional[int] = Query(None),
+    target_type: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
 ):
+    from sqlalchemy import or_
     query = db.query(AuditLog).options(joinedload(AuditLog.user))
 
-    if action:
+    if action and action != "ALL":
         query = query.filter(AuditLog.action == action)
+    if user_id:
+        query = query.filter(AuditLog.user_id == user_id)
+    if target_type and target_type != "ALL":
+        query = query.filter(AuditLog.target_type == target_type)
+    if search:
+        search_filter = f"%{search}%"
+        query = query.outerjoin(AuditLog.user).filter(
+            or_(
+                AuditLog.details.ilike(search_filter),
+                AuditLog.ip_address.ilike(search_filter),
+                AuditLog.target_type.ilike(search_filter),
+                User.name.ilike(search_filter),
+                User.email.ilike(search_filter),
+            )
+        )
 
     total = query.count()
     logs_db = (
@@ -2990,7 +2965,8 @@ def list_audit_logs(
             {
                 "id": log.id,
                 "user_id": log.user_id,
-                "user_name": log.user.name if log.user else "Noma'lum",
+                "user_name": log.user.name if log.user else ("Mehmon" if log.user_id is None else "Noma'lum"),
+                "user_email": log.user.email if log.user else None,
                 "action": log.action,
                 "target_type": log.target_type,
                 "target_id": log.target_id,
