@@ -137,7 +137,7 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
                 fontWeight="900"
                 letterSpacing={2}
               >
-                Data-Driven Healthcare
+                {t('dataDrivenHealth')}
               </Typography>
               <Typography
                 variant="h2"
@@ -149,32 +149,31 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
                   lineHeight: 1.1,
                   fontSize: { xs: '2.5rem', md: '3.5rem' },
                 }}
-              >
-                Chuqur tahlil va <br /> AI diagnostika
-              </Typography>
+                dangerouslySetInnerHTML={{ __html: t('deepAnalysisAndAi') }}
+              />
               <Typography
                 variant="h6"
                 color="text.secondary"
                 sx={{ mb: 6, fontWeight: 400, lineHeight: 1.8, maxWidth: 600 }}
               >
-                MorphoCheck Pro tizimi JSST standartlari asosida bolalar
-                o'sishini 99.8% aniqlikda tahlil qiladi. Z-score
-                ko'rsatkichlari, tana massasi indeksi (BMI) va somatotipni
-                avtomatik hisoblab, shifokorlarga tayyor klinik xulosalar taqdim
-                etadi.
+                {t('morphoProDesc')}
               </Typography>
 
               <Stack spacing={4}>
                 {[
-                  { value: '99.8%', label: 'Tahlil aniqligi', icon: Activity },
+                  {
+                    value: '99.8%',
+                    label: t('analysisAccuracy'),
+                    icon: Activity,
+                  },
                   {
                     value: '0.5s',
-                    label: 'AI qayta ishlash tezligi',
+                    label: t('aiProcessingSpeed'),
                     icon: Zap,
                   },
                   {
                     value: '100+',
-                    label: 'Klinik parametrlar',
+                    label: t('clinicalParams'),
                     icon: Microscope,
                   },
                 ].map((stat, i) => (
@@ -283,7 +282,7 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
                     color="text.secondary"
                     gutterBottom
                   >
-                    Z-Score O'zgarish Dinamikasi
+                    {t('zscoreDynamics')}
                   </Typography>
                   <Box
                     sx={{
@@ -356,10 +355,10 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
                     </Box>
                     <Box>
                       <Typography variant="h6" fontWeight="800">
-                        Somatotip
+                        {t('somatotypeTitle')}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        AI xulosasi
+                        {t('aiConclusion')}
                       </Typography>
                     </Box>
                   </Box>
@@ -368,15 +367,14 @@ const DeepAnalyticsSection = ({ theme, mode, t }) => {
                     fontWeight="700"
                     color="secondary.main"
                   >
-                    Mezosomatik tip
+                    {t('mesosomaticType')}
                   </Typography>
                   <Typography
                     variant="body2"
                     color="text.secondary"
                     sx={{ mt: 1 }}
                   >
-                    Tana tuzilishi proporsional rivojlangan, muskullar massasi
-                    normal darajada.
+                    {t('mesosomaticDesc')}
                   </Typography>
                 </Card>
               </Box>
@@ -900,9 +898,9 @@ export default function IntroPage() {
                       sx={{ mb: 5, maxWidth: 680 }}
                     >
                       {[
-                        { icon: ShieldCheck, text: 'WHO standartlari' },
-                        { icon: BarChart3, text: 'Z-score monitoring' },
-                        { icon: Microscope, text: 'AI klinik tahlil' },
+                        { icon: ShieldCheck, text: t('whoStandards') },
+                        { icon: BarChart3, text: t('zscoreMonitoring') },
+                        { icon: Microscope, text: t('aiClinicalAnalysis') },
                       ].map((item) => (
                         <Box key={item.text} sx={styles.featurePill}>
                           <item.icon
@@ -996,7 +994,7 @@ export default function IntroPage() {
                           },
                         }}
                       >
-                        Avtor haqida
+                        {t('aboutAuthor')}
                       </Button>
                     </Stack>
                   </motion.div>
@@ -1412,7 +1410,7 @@ export default function IntroPage() {
                     >
                       <Mail size={20} color={theme.palette.primary.main} />
                       <Typography variant="body2" fontWeight="700">
-                        Email Us
+                        {t('emailUs')}
                       </Typography>
                     </a>
                   </Stack>
@@ -1442,7 +1440,7 @@ export default function IntroPage() {
                     >
                       <Phone size={20} color={theme.palette.secondary.main} />
                       <Typography variant="body2" fontWeight="700">
-                        Call Support
+                        {t('callSupport')}
                       </Typography>
                     </a>
                   </Stack>

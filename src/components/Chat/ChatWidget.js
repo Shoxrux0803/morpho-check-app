@@ -5,7 +5,14 @@ import { chatService } from '../../services/chatService';
 import { toast } from 'react-hot-toast';
 import { useThemeMode } from '../../providers/ThemeProviderMUI';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from '@mui/material';
 
 const VIEWS = {
   LIST: 'LIST',
@@ -42,73 +49,86 @@ const ChatWidget = () => {
   const getTranslatedMessageContent = (content) => {
     if (typeof content !== 'string') return content;
     if (!content.includes('Xavfsizlik Hodisasi')) return content;
-    
+
     const TRANSLATIONS = {
       uz: {
         critical: 'CRITICAL Xavfsizlik Hodisasi',
         event: 'Hodisa',
         attempts: 'Urinishlar',
         details: "Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring",
-        settings: 'Security Settings'
+        settings: 'Security Settings',
       },
       ru: {
         critical: 'КРИТИЧЕСКОЕ событие безопасности',
         event: 'Событие',
         attempts: 'Попытки',
-        details: 'Для получения подробностей перейдите на страницу безопасности',
-        settings: 'Настройки безопасности'
+        details:
+          'Для получения подробностей перейдите на страницу безопасности',
+        settings: 'Настройки безопасности',
       },
       en: {
         critical: 'CRITICAL Security Event',
         event: 'Event',
         attempts: 'Attempts',
         details: 'For details, please visit the security page',
-        settings: 'Security Settings'
+        settings: 'Security Settings',
       },
       tr: {
         critical: 'KRİTİK Güvenlik Olayı',
         event: 'Olay',
         attempts: 'Denemeler',
         details: 'Ayrıntılar için güvenlik sayfasına gidin',
-        settings: 'Güvenlik Ayarları'
+        settings: 'Güvenlik Ayarları',
       },
       tg: {
         critical: 'Ҳодисаи КРИТИКИИ амниятӣ',
         event: 'Ҳодиса',
         attempts: 'Кӯшишҳо',
         details: 'Барои тафсилот ба саҳифаи амният гузаред',
-        settings: 'Танзимоти амният'
+        settings: 'Танзимоти амният',
       },
       kz: {
         critical: 'КРИТИКАЛЫҚ қауіпсіздік оқиғасы',
         event: 'Оқиға',
         attempts: 'Әрекеттер',
         details: 'Толық ақпарат алу үшін қауіпсіздік бетіне өтіңіз',
-        settings: 'Қауіпсіздік параметрлері'
+        settings: 'Қауіпсіздік параметрлері',
       },
       ky: {
         critical: 'КРИТИКАЛЫК коопсуздук окуясы',
         event: 'Окуя',
         attempts: 'Аракеттер',
         details: 'Толук маалымат үчүн коопсуздук барагына өтүңүз',
-        settings: 'Коопсуздук жөндөөлөрү'
+        settings: 'Коопсуздук жөндөөлөрү',
       },
       tm: {
         critical: 'KRITIK Howpsuzlyk wakasy',
         event: 'Waka',
         attempts: 'Synanyşyklar',
         details: 'Giňişleýin maglumat üçin howpsuzlyk sahypasyna geçiň',
-        settings: 'Howpsuzlyk sazlamalary'
-      }
+        settings: 'Howpsuzlyk sazlamalary',
+      },
     };
 
     const tMap = TRANSLATIONS[lang] || TRANSLATIONS.uz;
     let translatedContent = content;
-    translatedContent = translatedContent.replace(/CRITICAL Xavfsizlik Hodisasi/g, tMap.critical);
+    translatedContent = translatedContent.replace(
+      /CRITICAL Xavfsizlik Hodisasi/g,
+      tMap.critical
+    );
     translatedContent = translatedContent.replace(/Hodisa:/g, tMap.event + ':');
-    translatedContent = translatedContent.replace(/Urinishlar:/g, tMap.attempts + ':');
-    translatedContent = translatedContent.replace(/Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring:/g, tMap.details + ':');
-    translatedContent = translatedContent.replace(/\\[Security Settings\\]/g, '[' + tMap.settings + ']');
+    translatedContent = translatedContent.replace(
+      /Urinishlar:/g,
+      tMap.attempts + ':'
+    );
+    translatedContent = translatedContent.replace(
+      /Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring:/g,
+      tMap.details + ':'
+    );
+    translatedContent = translatedContent.replace(
+      /\\[Security Settings\\]/g,
+      '[' + tMap.settings + ']'
+    );
 
     return translatedContent;
   };
@@ -515,13 +535,17 @@ const ChatWidget = () => {
     }
   };
 
-  const filteredConversations = conversations.filter((c) =>
-    (getTranslatedUserName(c.user_name) || '').toLowerCase().includes(searchQuery.toLowerCase())
-  ).sort((a, b) => {
-    if (a.user_name === 'Xavfsizlik xabarlari') return -1;
-    if (b.user_name === 'Xavfsizlik xabarlari') return 1;
-    return 0; // The original list is already sorted by unread/time from backend
-  });
+  const filteredConversations = conversations
+    .filter((c) =>
+      (getTranslatedUserName(c.user_name) || '')
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (a.user_name === 'Xavfsizlik xabarlari') return -1;
+      if (b.user_name === 'Xavfsizlik xabarlari') return 1;
+      return 0; // The original list is already sorted by unread/time from backend
+    });
 
   const openConversation = (conv) => {
     setSelectedUser({ id: conv.user_id, name: conv.user_name });
@@ -555,7 +579,9 @@ const ChatWidget = () => {
           <motion.div
             key="chat-window"
             layoutId="chat-box"
-            className={isDark ? 'premium-chat-glow-dark' : 'premium-chat-glow-light'}
+            className={
+              isDark ? 'premium-chat-glow-dark' : 'premium-chat-glow-light'
+            }
             transition={{
               type: 'spring',
               damping: 26,
@@ -598,477 +624,163 @@ const ChatWidget = () => {
               }}
             >
               {/* Header */}
-            <div
-              style={{
-                padding: '16px 20px',
-                background:
-                  currentView === VIEWS.BROADCAST
-                    ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
-                    : 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
-                color: '#fff',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                zIndex: 10,
-                boxShadow: '0 4px 15px rgba(0,0,0,0.12)',
-              }}
-            >
               <div
-                style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+                style={{
+                  padding: '16px 20px',
+                  background:
+                    currentView === VIEWS.BROADCAST
+                      ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
+                      : 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
+                  color: '#fff',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  zIndex: 10,
+                  boxShadow: '0 4px 15px rgba(0,0,0,0.12)',
+                }}
               >
-                {isListUser && currentView !== VIEWS.LIST && (
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+                >
+                  {isListUser && currentView !== VIEWS.LIST && (
+                    <IconButton
+                      onClick={() => {
+                        if (currentView === VIEWS.MONITORING_CHAT) {
+                          setCurrentView(VIEWS.MONITORING_LIST);
+                        } else {
+                          setCurrentView(VIEWS.LIST);
+                          setSelectedUser(null);
+                        }
+                      }}
+                      color="#fff"
+                      bg="rgba(255,255,255,0.2)"
+                    >
+                      <i
+                        className="bi bi-chevron-left"
+                        style={{ fontWeight: 'bold' }}
+                      ></i>
+                    </IconButton>
+                  )}
+                  <div>
+                    <h6
+                      style={{
+                        margin: 0,
+                        fontWeight: '700',
+                        fontSize: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      {currentView === VIEWS.BROADCAST && (
+                        <i className="bi bi-megaphone-fill"></i>
+                      )}
+                      {currentView === VIEWS.LIST
+                        ? t('messages')
+                        : currentView === VIEWS.MONITORING_LIST
+                          ? 'Chat Nazorati'
+                          : currentView === VIEWS.MONITORING_CHAT
+                            ? `${selectedMonitoringPair?.admin_name} ↔ ${selectedMonitoringPair?.assistant_name}`
+                            : getTranslatedUserName(selectedUser?.name) ||
+                              t('chat')}
+                    </h6>
+                    {currentView === VIEWS.CHAT && (
+                      <div style={{ fontSize: '10px', opacity: 0.8 }}>
+                        {typingUsers.some((u) => u.id === selectedUser?.id)
+                          ? t('typing')
+                          : t('online')}
+                      </div>
+                    )}
+                    {currentView === VIEWS.BROADCAST && (
+                      <div style={{ fontSize: '10px', opacity: 0.8 }}>
+                        {t('broadcastDesc')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                  {currentView === VIEWS.LIST && (
+                    <IconButton
+                      onClick={() => setIsSearchOpen(!isSearchOpen)}
+                      color="#fff"
+                      bg="rgba(255,255,255,0.1)"
+                    >
+                      <i className="bi bi-search"></i>
+                    </IconButton>
+                  )}
                   <IconButton
-                    onClick={() => {
-                      if (currentView === VIEWS.MONITORING_CHAT) {
-                        setCurrentView(VIEWS.MONITORING_LIST);
-                      } else {
-                        setCurrentView(VIEWS.LIST);
-                        setSelectedUser(null);
-                      }
-                    }}
+                    onClick={() => setIsOpen(false)}
                     color="#fff"
                     bg="rgba(255,255,255,0.2)"
                   >
-                    <i
-                      className="bi bi-chevron-left"
-                      style={{ fontWeight: 'bold' }}
-                    ></i>
+                    <i className="bi bi-x-lg" style={{ fontSize: '12px' }}></i>
                   </IconButton>
-                )}
-                <div>
-                  <h6
-                    style={{
-                      margin: 0,
-                      fontWeight: '700',
-                      fontSize: '15px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    {currentView === VIEWS.BROADCAST && (
-                      <i className="bi bi-megaphone-fill"></i>
-                    )}
-                    {currentView === VIEWS.LIST
-                      ? t('messages')
-                      : currentView === VIEWS.MONITORING_LIST
-                        ? 'Chat Nazorati'
-                        : currentView === VIEWS.MONITORING_CHAT
-                          ? `${selectedMonitoringPair?.admin_name} ↔ ${selectedMonitoringPair?.assistant_name}`
-                          : getTranslatedUserName(selectedUser?.name) || t('chat')}
-                  </h6>
-                  {currentView === VIEWS.CHAT && (
-                    <div style={{ fontSize: '10px', opacity: 0.8 }}>
-                      {typingUsers.some((u) => u.id === selectedUser?.id)
-                        ? t('typing')
-                        : t('online')}
-                    </div>
-                  )}
-                  {currentView === VIEWS.BROADCAST && (
-                    <div style={{ fontSize: '10px', opacity: 0.8 }}>
-                      {t('broadcastDesc')}
-                    </div>
-                  )}
                 </div>
               </div>
-              <div className="d-flex align-items-center gap-2">
-                {currentView === VIEWS.LIST && (
-                  <IconButton
-                    onClick={() => setIsSearchOpen(!isSearchOpen)}
-                    color="#fff"
-                    bg="rgba(255,255,255,0.1)"
-                  >
-                    <i className="bi bi-search"></i>
-                  </IconButton>
-                )}
-                <IconButton
-                  onClick={() => setIsOpen(false)}
-                  color="#fff"
-                  bg="rgba(255,255,255,0.2)"
-                >
-                  <i className="bi bi-x-lg" style={{ fontSize: '12px' }}></i>
-                </IconButton>
-              </div>
-            </div>
 
-            {/* Content Area */}
-            <div
-              style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                background: 'transparent',
-                position: 'relative',
-              }}
-            >
-              <AnimatePresence mode="wait">
-                {currentView === VIEWS.LIST && (
-                  /* Conversation List */
-                  <motion.div
-                    key="list-view"
-                    className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
-                    initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
-                    transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflowY: 'auto',
-                    }}
-                  >
-                    {isSearchOpen && (
-                      <div style={{ padding: '10px 15px' }}>
-                        <input
-                          autoFocus
-                          type="text"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          placeholder={t('searchPlaceholder')}
-                          style={{
-                            width: '100%',
-                            background: isDark ? '#333' : '#fff',
-                            border: '1px solid rgba(0,0,0,0.1)',
-                            borderRadius: '12px',
-                            padding: '8px 15px',
-                            color: isDark ? '#fff' : '#000',
-                            outline: 'none',
-                            fontSize: '13px',
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    {/* Broadcast Item */}
-                    {isAdmin && (
-                      <div
-                        onClick={() => {
-                          setCurrentView(VIEWS.BROADCAST);
-                          setSelectedUser({ name: t('broadcastToAll') });
-                        }}
-                        style={{
-                          padding: '12px 20px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '15px',
-                          cursor: 'pointer',
-                          borderBottom: isDark
-                            ? '1px solid #222'
-                            : '1px solid #eee',
-                          background:
-                            currentView === VIEWS.BROADCAST
-                              ? isDark
-                                ? '#2c2c2c'
-                                : '#e9ecef'
-                              : 'transparent',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '50%',
-                            background:
-                              'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            color: '#fff',
-                            boxShadow: '0 4px 10px rgba(255,149,0,0.3)',
-                          }}
-                        >
-                          <i
-                            className="bi bi-megaphone-fill"
-                            style={{ fontSize: '20px' }}
-                          ></i>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '700', fontSize: '14px' }}>
-                            {t('broadcastTitle')}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#888' }}>
-                            {t('broadcastDesc')}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Monitoring Item */}
-                    {isAdmin && (
-                      <div
-                        onClick={() => {
-                          setCurrentView(VIEWS.MONITORING_LIST);
-                        }}
-                        style={{
-                          padding: '12px 20px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '15px',
-                          cursor: 'pointer',
-                          borderBottom: isDark
-                            ? '1px solid #222'
-                            : '1px solid #eee',
-                          background: 'transparent',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '50%',
-                            background:
-                              'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            color: '#fff',
-                            boxShadow: '0 4px 10px rgba(16,185,129,0.3)',
-                          }}
-                        >
-                          <i
-                            className="bi bi-shield-lock-fill"
-                            style={{ fontSize: '20px' }}
-                          ></i>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: '700', fontSize: '14px' }}>
-                            Chat Nazorati
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#888' }}>
-                            Adminlar va assistentlar yozishmalari
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {filteredConversations.length === 0 ? (
-                      <div
-                        style={{
-                          textAlign: 'center',
-                          padding: '40px',
-                          color: '#888',
-                        }}
-                      >
-                        <i
-                          className="bi bi-chat-dots"
-                          style={{ fontSize: '40px', opacity: 0.2 }}
-                        ></i>
-                        <p style={{ marginTop: '10px' }}>
-                          {t('noMessagesFound')}
-                        </p>
-                      </div>
-                    ) : (
-                      filteredConversations.map((conv, idx) => {
-                        const hash = conv.user_name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                        const gradIndex = hash % 5;
-                        return (
-                          <motion.div
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            whileHover={{ 
-                              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.03)',
-                              x: 4
-                            }}
-                            transition={{ 
-                              type: 'spring', 
-                              stiffness: 300, 
-                              damping: 22,
-                              delay: idx * 0.03 
-                            }}
-                            key={conv.user_id}
-                            onClick={() => openConversation(conv)}
-                            style={{
-                              padding: '12px 20px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '15px',
-                              cursor: 'pointer',
-                              borderBottom: isDark
-                                ? '1px solid rgba(255,255,255,0.05)'
-                                : '1px solid rgba(0,0,0,0.05)',
-                            }}
-                          >
-                            <div style={{ position: 'relative' }}>
-                              <div
-                                className={`avatar-gradient-${gradIndex}`}
-                                style={{
-                                  width: '48px',
-                                  height: '48px',
-                                  borderRadius: '14px',
-                                  display: 'flex',
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                  color: '#fff',
-                                  fontSize: '18px',
-                                  fontWeight: '700',
-                                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                }}
-                              >
-                                {getTranslatedUserName(conv.user_name).charAt(0).toUpperCase()}
-                              </div>
-                              {conv.unread_count > 0 && (
-                                <div
-                                  className="pulse-badge"
-                                  style={{
-                                    position: 'absolute',
-                                    top: '-4px',
-                                    right: '-4px',
-                                    background: '#ff3b30',
-                                    color: '#fff',
-                                    borderRadius: '50%',
-                                    minWidth: '18px',
-                                    height: '18px',
-                                    padding: '0 5px',
-                                    fontSize: '10px',
-                                    fontWeight: 'bold',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    border:
-                                      '2px solid ' +
-                                      (isDark ? '#1a1a24' : '#fff'),
-                                  }}
-                                >
-                                  {conv.unread_count}
-                                </div>
-                              )}
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'baseline',
-                                  marginBottom: '3px',
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    fontWeight: '700',
-                                    fontSize: '14px',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    color: isDark ? '#fff' : '#1f2937',
-                                  }}
-                                >
-                                  {getTranslatedUserName(conv.user_name)}
-                                </div>
-                                <div style={{ fontSize: '10px', color: '#888' }}>
-                                  {formatTime(conv.last_message_time)}
-                                </div>
-                              </div>
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    fontSize: '12px',
-                                    color:
-                                      conv.unread_count > 0
-                                        ? isDark
-                                          ? '#fff'
-                                          : '#000'
-                                        : '#888',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    fontWeight:
-                                      conv.unread_count > 0 ? '600' : '400',
-                                  }}
-                                >
-                                  {conv.is_last_message_mine && (
-                                    <span
-                                      style={{
-                                        color: '#14b8a6',
-                                        marginRight: '4px',
-                                        fontWeight: '600',
-                                      }}
-                                    >
-                                      {t('you')}
-                                    </span>
-                                  )}
-                                  {getTranslatedMessageContent(conv.last_message)}
-                                </div>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })
-                    )}
-                  </motion.div>
-                )}
-
-                {/* Monitoring List View */}
-                {currentView === VIEWS.MONITORING_LIST && (
-                  <motion.div
-                    key="monitoring-list-view"
-                    className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
-                    initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
-                    transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflowY: 'auto',
-                    }}
-                  >
-                    <div
-                      onClick={() => setCurrentView(VIEWS.LIST)}
+              {/* Content Area */}
+              <div
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  overflow: 'hidden',
+                  background: 'transparent',
+                  position: 'relative',
+                }}
+              >
+                <AnimatePresence mode="wait">
+                  {currentView === VIEWS.LIST && (
+                    /* Conversation List */
+                    <motion.div
+                      key="list-view"
+                      className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
+                      initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                      transition={{
+                        type: 'spring',
+                        damping: 22,
+                        stiffness: 220,
+                      }}
                       style={{
-                        padding: '15px 20px',
-                        cursor: 'pointer',
-                        color: isDark ? '#10b981' : '#059669',
+                        flex: 1,
                         display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        fontWeight: '600',
-                        borderBottom: isDark
-                          ? '1px solid #222'
-                          : '1px solid #eee',
+                        flexDirection: 'column',
+                        overflowY: 'auto',
                       }}
                     >
-                      <i className="bi bi-arrow-left"></i>
-                      Orqaga
-                    </div>
-
-                    {monitoringPairs.length === 0 ? (
-                      <div
-                        style={{
-                          textAlign: 'center',
-                          padding: '40px',
-                          color: '#888',
-                        }}
-                      >
-                        <i
-                          className="bi bi-shield-lock"
-                          style={{ fontSize: '40px', opacity: 0.2 }}
-                        ></i>
-                        <div style={{ marginTop: '10px', fontSize: '14px' }}>
-                          Yozishmalar mavjud emas
+                      {isSearchOpen && (
+                        <div style={{ padding: '10px 15px' }}>
+                          <input
+                            autoFocus
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={t('searchPlaceholder')}
+                            style={{
+                              width: '100%',
+                              background: isDark ? '#333' : '#fff',
+                              border: '1px solid rgba(0,0,0,0.1)',
+                              borderRadius: '12px',
+                              padding: '8px 15px',
+                              color: isDark ? '#fff' : '#000',
+                              outline: 'none',
+                              fontSize: '13px',
+                            }}
+                          />
                         </div>
-                      </div>
-                    ) : (
-                      monitoringPairs.map((pair) => (
-                        <motion.div
-                          key={`${pair.admin_id}-${pair.assistant_id}`}
-                          whileHover={{
-                            backgroundColor: isDark ? '#2c2c2c' : '#f8f9fa',
-                          }}
+                      )}
+
+                      {/* Broadcast Item */}
+                      {isAdmin && (
+                        <div
                           onClick={() => {
-                            setSelectedMonitoringPair(pair);
-                            setCurrentView(VIEWS.MONITORING_CHAT);
+                            setCurrentView(VIEWS.BROADCAST);
+                            setSelectedUser({ name: t('broadcastToAll') });
                           }}
                           style={{
-                            padding: '15px 20px',
+                            padding: '12px 20px',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '15px',
@@ -1076,694 +788,1111 @@ const ChatWidget = () => {
                             borderBottom: isDark
                               ? '1px solid #222'
                               : '1px solid #eee',
+                            background:
+                              currentView === VIEWS.BROADCAST
+                                ? isDark
+                                  ? '#2c2c2c'
+                                  : '#e9ecef'
+                                : 'transparent',
                           }}
                         >
-                          <div style={{ position: 'relative' }}>
+                          <div
+                            style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              background:
+                                'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              color: '#fff',
+                              boxShadow: '0 4px 10px rgba(255,149,0,0.3)',
+                            }}
+                          >
+                            <i
+                              className="bi bi-megaphone-fill"
+                              style={{ fontSize: '20px' }}
+                            ></i>
+                          </div>
+                          <div style={{ flex: 1 }}>
                             <div
-                              style={{
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                background: '#10b981',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                color: '#fff',
-                                fontSize: '18px',
-                                fontWeight: '700',
-                              }}
+                              style={{ fontWeight: '700', fontSize: '14px' }}
                             >
-                              <i className="bi bi-people-fill"></i>
+                              {t('broadcastTitle')}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#888' }}>
+                              {t('broadcastDesc')}
                             </div>
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                        </div>
+                      )}
+
+                      {/* Monitoring Item */}
+                      {isAdmin && (
+                        <div
+                          onClick={() => {
+                            setCurrentView(VIEWS.MONITORING_LIST);
+                          }}
+                          style={{
+                            padding: '12px 20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px',
+                            cursor: 'pointer',
+                            borderBottom: isDark
+                              ? '1px solid #222'
+                              : '1px solid #eee',
+                            background: 'transparent',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              background:
+                                'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              color: '#fff',
+                              boxShadow: '0 4px 10px rgba(16,185,129,0.3)',
+                            }}
+                          >
+                            <i
+                              className="bi bi-shield-lock-fill"
+                              style={{ fontSize: '20px' }}
+                            ></i>
+                          </div>
+                          <div style={{ flex: 1 }}>
                             <div
+                              style={{ fontWeight: '700', fontSize: '14px' }}
+                            >
+                              Chat Nazorati
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#888' }}>
+                              Adminlar va assistentlar yozishmalari
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {filteredConversations.length === 0 ? (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '40px',
+                            color: '#888',
+                          }}
+                        >
+                          <i
+                            className="bi bi-chat-dots"
+                            style={{ fontSize: '40px', opacity: 0.2 }}
+                          ></i>
+                          <p style={{ marginTop: '10px' }}>
+                            {t('noMessagesFound')}
+                          </p>
+                        </div>
+                      ) : (
+                        filteredConversations.map((conv, idx) => {
+                          const hash = conv.user_name
+                            .split('')
+                            .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+                          const gradIndex = hash % 5;
+                          return (
+                            <motion.div
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              whileHover={{
+                                backgroundColor: isDark
+                                  ? 'rgba(255, 255, 255, 0.04)'
+                                  : 'rgba(0, 0, 0, 0.03)',
+                                x: 4,
+                              }}
+                              transition={{
+                                type: 'spring',
+                                stiffness: 300,
+                                damping: 22,
+                                delay: idx * 0.03,
+                              }}
+                              key={conv.user_id}
+                              onClick={() => openConversation(conv)}
                               style={{
+                                padding: '12px 20px',
                                 display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'baseline',
-                                marginBottom: '4px',
+                                alignItems: 'center',
+                                gap: '15px',
+                                cursor: 'pointer',
+                                borderBottom: isDark
+                                  ? '1px solid rgba(255,255,255,0.05)'
+                                  : '1px solid rgba(0,0,0,0.05)',
                               }}
                             >
+                              <div style={{ position: 'relative' }}>
+                                <div
+                                  className={`avatar-gradient-${gradIndex}`}
+                                  style={{
+                                    width: '48px',
+                                    height: '48px',
+                                    borderRadius: '14px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    color: '#fff',
+                                    fontSize: '18px',
+                                    fontWeight: '700',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                  }}
+                                >
+                                  {getTranslatedUserName(conv.user_name)
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </div>
+                                {conv.unread_count > 0 && (
+                                  <div
+                                    className="pulse-badge"
+                                    style={{
+                                      position: 'absolute',
+                                      top: '-4px',
+                                      right: '-4px',
+                                      background: '#ff3b30',
+                                      color: '#fff',
+                                      borderRadius: '50%',
+                                      minWidth: '18px',
+                                      height: '18px',
+                                      padding: '0 5px',
+                                      fontSize: '10px',
+                                      fontWeight: 'bold',
+                                      display: 'flex',
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                      border:
+                                        '2px solid ' +
+                                        (isDark ? '#1a1a24' : '#fff'),
+                                    }}
+                                  >
+                                    {conv.unread_count}
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'baseline',
+                                    marginBottom: '3px',
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontWeight: '700',
+                                      fontSize: '14px',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      color: isDark ? '#fff' : '#1f2937',
+                                    }}
+                                  >
+                                    {getTranslatedUserName(conv.user_name)}
+                                  </div>
+                                  <div
+                                    style={{ fontSize: '10px', color: '#888' }}
+                                  >
+                                    {formatTime(conv.last_message_time)}
+                                  </div>
+                                </div>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: '12px',
+                                      color:
+                                        conv.unread_count > 0
+                                          ? isDark
+                                            ? '#fff'
+                                            : '#000'
+                                          : '#888',
+                                      whiteSpace: 'nowrap',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      fontWeight:
+                                        conv.unread_count > 0 ? '600' : '400',
+                                    }}
+                                  >
+                                    {conv.is_last_message_mine && (
+                                      <span
+                                        style={{
+                                          color: '#14b8a6',
+                                          marginRight: '4px',
+                                          fontWeight: '600',
+                                        }}
+                                      >
+                                        {t('you')}
+                                      </span>
+                                    )}
+                                    {getTranslatedMessageContent(
+                                      conv.last_message
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* Monitoring List View */}
+                  {currentView === VIEWS.MONITORING_LIST && (
+                    <motion.div
+                      key="monitoring-list-view"
+                      className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
+                      initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
+                      transition={{
+                        type: 'spring',
+                        damping: 22,
+                        stiffness: 220,
+                      }}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflowY: 'auto',
+                      }}
+                    >
+                      <div
+                        onClick={() => setCurrentView(VIEWS.LIST)}
+                        style={{
+                          padding: '15px 20px',
+                          cursor: 'pointer',
+                          color: isDark ? '#10b981' : '#059669',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          fontWeight: '600',
+                          borderBottom: isDark
+                            ? '1px solid #222'
+                            : '1px solid #eee',
+                        }}
+                      >
+                        <i className="bi bi-arrow-left"></i>
+                        Orqaga
+                      </div>
+
+                      {monitoringPairs.length === 0 ? (
+                        <div
+                          style={{
+                            textAlign: 'center',
+                            padding: '40px',
+                            color: '#888',
+                          }}
+                        >
+                          <i
+                            className="bi bi-shield-lock"
+                            style={{ fontSize: '40px', opacity: 0.2 }}
+                          ></i>
+                          <div style={{ marginTop: '10px', fontSize: '14px' }}>
+                            Yozishmalar mavjud emas
+                          </div>
+                        </div>
+                      ) : (
+                        monitoringPairs.map((pair) => (
+                          <motion.div
+                            key={`${pair.admin_id}-${pair.assistant_id}`}
+                            whileHover={{
+                              backgroundColor: isDark ? '#2c2c2c' : '#f8f9fa',
+                            }}
+                            onClick={() => {
+                              setSelectedMonitoringPair(pair);
+                              setCurrentView(VIEWS.MONITORING_CHAT);
+                            }}
+                            style={{
+                              padding: '15px 20px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '15px',
+                              cursor: 'pointer',
+                              borderBottom: isDark
+                                ? '1px solid #222'
+                                : '1px solid #eee',
+                            }}
+                          >
+                            <div style={{ position: 'relative' }}>
                               <div
                                 style={{
-                                  fontWeight: '600',
-                                  fontSize: '14px',
-                                  color: isDark ? '#fff' : '#000',
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '50%',
+                                  background: '#10b981',
+                                  display: 'flex',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  color: '#fff',
+                                  fontSize: '18px',
+                                  fontWeight: '700',
+                                }}
+                              >
+                                <i className="bi bi-people-fill"></i>
+                              </div>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'baseline',
+                                  marginBottom: '4px',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    color: isDark ? '#fff' : '#000',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                  }}
+                                >
+                                  {pair.admin_name} ↔ {pair.assistant_name}
+                                </div>
+                                <div
+                                  style={{ fontSize: '10px', color: '#888' }}
+                                >
+                                  {formatTime(pair.last_message_time)}
+                                </div>
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: '12px',
+                                  color: '#888',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                 }}
                               >
-                                {pair.admin_name} ↔ {pair.assistant_name}
-                              </div>
-                              <div style={{ fontSize: '10px', color: '#888' }}>
-                                {formatTime(pair.last_message_time)}
+                                {getTranslatedMessageContent(
+                                  pair.last_message
+                                ) || 'Yozishma boshlanmagan'}
                               </div>
                             </div>
-                            <div
+                          </motion.div>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+
+                  {(currentView === VIEWS.CHAT ||
+                    currentView === VIEWS.BROADCAST ||
+                    currentView === VIEWS.MONITORING_CHAT) && (
+                    /* Individual Chat View */
+                    <motion.div
+                      key={`chat-${selectedUser?.id || 'broadcast'}`}
+                      initial={{ opacity: 0, x: 30, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, x: 30, filter: 'blur(4px)' }}
+                      transition={{
+                        type: 'spring',
+                        damping: 22,
+                        stiffness: 220,
+                      }}
+                      onAnimationComplete={() => scrollToBottom('auto')}
+                      style={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                        position: 'relative',
+                      }}
+                      onDragOver={onDragOver}
+                      onDragLeave={onDragLeave}
+                      onDrop={onDrop}
+                    >
+                      {isDragOver && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'rgba(15,118,110,0.1)',
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 100,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            border: '2px dashed #0f766e',
+                            margin: '10px',
+                            borderRadius: '16px',
+                            color: '#0f766e',
+                            pointerEvents: 'none',
+                          }}
+                        >
+                          <i
+                            className="bi bi-cloud-arrow-up-fill"
+                            style={{ fontSize: '48px' }}
+                          ></i>
+                          <div style={{ fontWeight: '700', marginTop: '10px' }}>
+                            {t('dropFileHere')}
+                          </div>
+                        </div>
+                      )}
+                      <div
+                        className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
+                        style={{ flex: 1, overflowY: 'auto', padding: '15px' }}
+                      >
+                        {messages.map((msg, i) => {
+                          const isMine =
+                            currentView === VIEWS.MONITORING_CHAT
+                              ? msg.sender_id ===
+                                selectedMonitoringPair?.admin_id
+                              : msg.sender_id === user.id;
+
+                          const senderName =
+                            currentView === VIEWS.MONITORING_CHAT
+                              ? msg.sender_id ===
+                                selectedMonitoringPair?.admin_id
+                                ? selectedMonitoringPair?.admin_name
+                                : selectedMonitoringPair?.assistant_name
+                              : '';
+
+                          const isRecent = messages.length - i <= 15;
+
+                          return (
+                            <motion.div
+                              initial={
+                                isRecent
+                                  ? { opacity: 0, y: 15, scale: 0.95 }
+                                  : false
+                              }
+                              animate={
+                                isRecent
+                                  ? { opacity: 1, y: 0, scale: 1 }
+                                  : false
+                              }
+                              transition={{
+                                type: 'spring',
+                                stiffness: 350,
+                                damping: 25,
+                                delay: isRecent
+                                  ? (15 - (messages.length - i)) * 0.025
+                                  : 0,
+                              }}
+                              key={msg.id || i}
+                              onMouseEnter={() => setHoveredMessageId(msg.id)}
+                              onMouseLeave={() => setHoveredMessageId(null)}
                               style={{
-                                fontSize: '12px',
-                                color: '#888',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
+                                marginBottom: msg.reaction ? '24px' : '15px',
+                                textAlign: isMine ? 'right' : 'left',
+                                position: 'relative',
+                                zIndex: hoveredMessageId === msg.id ? 50 : 1,
                               }}
                             >
-                              {getTranslatedMessageContent(pair.last_message) || 'Yozishma boshlanmagan'}
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))
-                    )}
-                  </motion.div>
-                )}
-
-                {(currentView === VIEWS.CHAT ||
-                  currentView === VIEWS.BROADCAST ||
-                  currentView === VIEWS.MONITORING_CHAT) && (
-                  /* Individual Chat View */
-                  <motion.div
-                    key={`chat-${selectedUser?.id || 'broadcast'}`}
-                    initial={{ opacity: 0, x: 30, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, x: 30, filter: 'blur(4px)' }}
-                    transition={{ type: 'spring', damping: 22, stiffness: 220 }}
-                    onAnimationComplete={() => scrollToBottom('auto')}
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      overflow: 'hidden',
-                      position: 'relative',
-                    }}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={onDrop}
-                  >
-                    {isDragOver && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          background: 'rgba(15,118,110,0.1)',
-                          backdropFilter: 'blur(4px)',
-                          zIndex: 100,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          border: '2px dashed #0f766e',
-                          margin: '10px',
-                          borderRadius: '16px',
-                          color: '#0f766e',
-                          pointerEvents: 'none',
-                        }}
-                      >
-                        <i
-                          className="bi bi-cloud-arrow-up-fill"
-                          style={{ fontSize: '48px' }}
-                        ></i>
-                        <div style={{ fontWeight: '700', marginTop: '10px' }}>
-                          {t('dropFileHere')}
-                        </div>
-                      </div>
-                    )}
-                    <div
-                      className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
-                      style={{ flex: 1, overflowY: 'auto', padding: '15px' }}
-                    >
-                      {messages.map((msg, i) => {
-                        const isMine =
-                          currentView === VIEWS.MONITORING_CHAT
-                            ? msg.sender_id === selectedMonitoringPair?.admin_id
-                            : msg.sender_id === user.id;
-
-                        const senderName =
-                          currentView === VIEWS.MONITORING_CHAT
-                            ? msg.sender_id === selectedMonitoringPair?.admin_id
-                              ? selectedMonitoringPair?.admin_name
-                              : selectedMonitoringPair?.assistant_name
-                            : '';
-
-                        const isRecent = messages.length - i <= 15;
-
-                        return (
-                          <motion.div
-                            initial={isRecent ? { opacity: 0, y: 15, scale: 0.95 } : false}
-                            animate={isRecent ? { opacity: 1, y: 0, scale: 1 } : false}
-                            transition={{
-                              type: 'spring',
-                              stiffness: 350,
-                              damping: 25,
-                              delay: isRecent ? (15 - (messages.length - i)) * 0.025 : 0,
-                            }}
-                            key={msg.id || i}
-                            onMouseEnter={() => setHoveredMessageId(msg.id)}
-                            onMouseLeave={() => setHoveredMessageId(null)}
-                            style={{
-                              marginBottom: msg.reaction ? '24px' : '15px',
-                              textAlign: isMine ? 'right' : 'left',
-                              position: 'relative',
-                              zIndex: hoveredMessageId === msg.id ? 50 : 1,
-                            }}
-                          >
-                            {currentView === VIEWS.MONITORING_CHAT && (
+                              {currentView === VIEWS.MONITORING_CHAT && (
+                                <div
+                                  style={{
+                                    fontSize: '11px',
+                                    color: '#888',
+                                    marginBottom: '4px',
+                                    padding: isMine
+                                      ? '0 15px 0 0'
+                                      : '0 0 0 15px',
+                                  }}
+                                >
+                                  {senderName}
+                                </div>
+                              )}
                               <div
+                                onContextMenu={(e) => {
+                                  if (isAdmin && msg.sender_id === user.id) {
+                                    e.preventDefault();
+                                    const menuWidth = 160;
+                                    const menuHeight = 100;
+                                    let x = e.pageX;
+                                    let y = e.pageY;
+                                    if (x + menuWidth > window.innerWidth) {
+                                      x = window.innerWidth - menuWidth - 10;
+                                    }
+                                    if (y + menuHeight > window.innerHeight) {
+                                      y = window.innerHeight - menuHeight - 10;
+                                    }
+                                    setContextMenu({
+                                      visible: true,
+                                      x: x,
+                                      y: y,
+                                      messageId: msg.id,
+                                      content: msg.content,
+                                    });
+                                  }
+                                }}
                                 style={{
-                                  fontSize: '11px',
-                                  color: '#888',
-                                  marginBottom: '4px',
-                                  padding: isMine ? '0 15px 0 0' : '0 0 0 15px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: isMine
+                                    ? 'flex-end'
+                                    : 'flex-start',
+                                  maxWidth: '100%',
+                                  position: 'relative',
                                 }}
                               >
-                                {senderName}
+                                <motion.div
+                                  whileHover={{ scale: 1.01 }}
+                                  style={{
+                                    display: 'inline-block',
+                                    padding: '10px 16px',
+                                    borderRadius: isMine
+                                      ? '18px 18px 4px 18px'
+                                      : '18px 18px 18px 4px',
+                                    background: isMine
+                                      ? currentView === VIEWS.BROADCAST
+                                        ? 'linear-gradient(135deg, #ff9500 0%, #ffa502 100%)'
+                                        : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)'
+                                      : isDark
+                                        ? 'rgba(255, 255, 255, 0.08)'
+                                        : 'rgba(255, 255, 255, 0.9)',
+                                    color: isMine
+                                      ? '#fff'
+                                      : isDark
+                                        ? '#f3f4f6'
+                                        : '#1f2937',
+                                    maxWidth: '80%',
+                                    boxShadow: isDark
+                                      ? '0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
+                                      : '0 4px 15px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.4)',
+                                    border: isDark
+                                      ? '1px solid rgba(255, 255, 255, 0.05)'
+                                      : '1px solid rgba(0, 0, 0, 0.04)',
+                                    fontSize: '14px',
+                                    position: 'relative',
+                                    textAlign: 'left',
+                                    backdropFilter: isMine
+                                      ? 'none'
+                                      : 'blur(8px)',
+                                  }}
+                                >
+                                  {msg.file_url && (
+                                    <div
+                                      style={{
+                                        marginBottom: '8px',
+                                        maxWidth: '100%',
+                                      }}
+                                    >
+                                      {isImage(msg.file_url) ? (
+                                        <a
+                                          href={`${API_BASE}${msg.file_url}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                        >
+                                          <img
+                                            src={`${API_BASE}${msg.file_url}`}
+                                            alt="file"
+                                            style={{
+                                              maxWidth: '100%',
+                                              borderRadius: '12px',
+                                              border: isDark
+                                                ? '1px solid #444'
+                                                : '1px solid #eee',
+                                            }}
+                                          />
+                                        </a>
+                                      ) : (
+                                        <div
+                                          onClick={() =>
+                                            window.open(
+                                              `${API_BASE}${msg.file_url}`,
+                                              '_blank'
+                                            )
+                                          }
+                                          style={{
+                                            background: isDark
+                                              ? 'rgba(255,255,255,0.05)'
+                                              : 'rgba(0,0,0,0.03)',
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            border: isDark
+                                              ? '1px solid rgba(255,255,255,0.1)'
+                                              : '1px solid rgba(0,0,0,0.05)',
+                                            cursor: 'pointer',
+                                          }}
+                                        >
+                                          <div
+                                            style={{
+                                              width: '40px',
+                                              height: '40px',
+                                              borderRadius: '10px',
+                                              background: isMine
+                                                ? 'rgba(255,255,255,0.2)'
+                                                : '#0f766e',
+                                              display: 'flex',
+                                              justifyContent: 'center',
+                                              alignItems: 'center',
+                                              color: '#fff',
+                                              fontSize: '20px',
+                                            }}
+                                          >
+                                            <i
+                                              className={`bi ${getFileIcon(msg.file_url)}`}
+                                            ></i>
+                                          </div>
+                                          <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div
+                                              style={{
+                                                fontSize: '13px',
+                                                fontWeight: '600',
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                color: isMine
+                                                  ? '#fff'
+                                                  : isDark
+                                                    ? '#eee'
+                                                    : '#333',
+                                              }}
+                                            >
+                                              {getTranslatedMessageContent(
+                                                msg.content
+                                              ).replace(
+                                                /^(Fayl|File|Файл|Файлды|Fayly|Dosya|Файлdar):\s*/i,
+                                                ''
+                                              )}
+                                            </div>
+                                            <a
+                                              href={`${API_BASE}${msg.file_url}`}
+                                              download
+                                              target="_blank"
+                                              rel="noreferrer"
+                                              style={{
+                                                fontSize: '11px',
+                                                color: isMine
+                                                  ? 'rgba(255,255,255,0.8)'
+                                                  : '#0f766e',
+                                                textDecoration: 'none',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                marginTop: '2px',
+                                              }}
+                                            >
+                                              <i className="bi bi-download"></i>{' '}
+                                              {t('download')}
+                                            </a>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {getTranslatedMessageContent(msg.content)
+                                    .split(/(\[.*?\]\(.*?\))/g)
+                                    .map((part, i) => {
+                                      const match =
+                                        part.match(/\[(.*?)\]\((.*?)\)/);
+                                      if (match) {
+                                        return (
+                                          <a
+                                            key={i}
+                                            href={match[2]}
+                                            style={{
+                                              color: isDark
+                                                ? '#64b5f6'
+                                                : '#1976d2',
+                                              textDecoration: 'underline',
+                                            }}
+                                          >
+                                            {match[1]}
+                                          </a>
+                                        );
+                                      }
+                                      return (
+                                        <span
+                                          key={i}
+                                          style={{ whiteSpace: 'pre-wrap' }}
+                                        >
+                                          {part}
+                                        </span>
+                                      );
+                                    })}
+                                  <div
+                                    style={{
+                                      fontSize: '9px',
+                                      opacity: 0.6,
+                                      marginTop: '4px',
+                                      textAlign: 'right',
+                                    }}
+                                  >
+                                    {formatTime(msg.created_at)}
+                                    {msg.sender_id === user.id && (
+                                      <i
+                                        className={`bi bi-check2${msg.is_read ? '-all' : ''} ms-1`}
+                                      ></i>
+                                    )}
+                                  </div>
+                                  {msg.reaction && (
+                                    <div
+                                      style={{
+                                        position: 'absolute',
+                                        right:
+                                          msg.sender_id === user.id
+                                            ? '8px'
+                                            : 'auto',
+                                        left:
+                                          msg.sender_id === user.id
+                                            ? 'auto'
+                                            : '8px',
+                                        bottom: '-18px',
+                                        minWidth: '28px',
+                                        height: '24px',
+                                        borderRadius: '14px',
+                                        background: isDark ? '#242424' : '#fff',
+                                        border: isDark
+                                          ? '1px solid rgba(255,255,255,0.12)'
+                                          : '1px solid rgba(15,23,42,0.1)',
+                                        boxShadow:
+                                          '0 6px 14px rgba(15,23,42,0.16)',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '14px',
+                                        lineHeight: 1,
+                                      }}
+                                    >
+                                      {msg.reaction}
+                                    </div>
+                                  )}
+                                  <AnimatePresence>
+                                    {hoveredMessageId === msg.id && (
+                                      <motion.div
+                                        initial={{
+                                          opacity: 0,
+                                          y: 8,
+                                          scale: 0.9,
+                                          filter: 'blur(4px)',
+                                        }}
+                                        animate={{
+                                          opacity: 1,
+                                          y: 0,
+                                          scale: 1,
+                                          filter: 'blur(0px)',
+                                        }}
+                                        exit={{
+                                          opacity: 0,
+                                          y: 6,
+                                          scale: 0.92,
+                                          filter: 'blur(4px)',
+                                        }}
+                                        transition={{
+                                          type: 'spring',
+                                          stiffness: 450,
+                                          damping: 26,
+                                        }}
+                                        style={{
+                                          position: 'absolute',
+                                          bottom:
+                                            i === 0
+                                              ? 'auto'
+                                              : 'calc(100% + 6px)',
+                                          top:
+                                            i === 0
+                                              ? 'calc(100% + 6px)'
+                                              : 'auto',
+                                          right:
+                                            msg.sender_id === user.id
+                                              ? '0'
+                                              : 'auto',
+                                          left:
+                                            msg.sender_id === user.id
+                                              ? 'auto'
+                                              : '0',
+                                          zIndex: 100,
+                                          display: 'flex',
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          gap: '5px',
+                                          padding: '4px 6px',
+                                          borderRadius: '24px',
+                                          background: isDark
+                                            ? 'rgba(28, 28, 35, 0.92)'
+                                            : 'rgba(255, 255, 255, 0.95)',
+                                          border: isDark
+                                            ? '1px solid rgba(255,255,255,0.1)'
+                                            : '1px solid rgba(0,0,0,0.08)',
+                                          boxShadow:
+                                            '0 10px 25px rgba(0,0,0,0.18)',
+                                          backdropFilter: 'blur(12px)',
+                                        }}
+                                      >
+                                        {MESSAGE_REACTIONS.map(
+                                          (reaction, index) => (
+                                            <motion.button
+                                              key={`${msg.id || i}-${reaction}`}
+                                              type="button"
+                                              onClick={() =>
+                                                handleReaction(msg.id, reaction)
+                                              }
+                                              title={reaction}
+                                              initial={{
+                                                opacity: 0,
+                                                scale: 0.85,
+                                              }}
+                                              animate={{
+                                                opacity: 1,
+                                                scale: 1,
+                                              }}
+                                              transition={{
+                                                delay: index * 0.02,
+                                                type: 'spring',
+                                                stiffness: 500,
+                                                damping: 22,
+                                              }}
+                                              whileHover={{
+                                                scale: 1.25,
+                                                rotate: 8,
+                                              }}
+                                              whileTap={{ scale: 0.88 }}
+                                              style={{
+                                                width: '28px',
+                                                height: '28px',
+                                                borderRadius: '50%',
+                                                border:
+                                                  msg.reaction === reaction
+                                                    ? '1px solid #0f766e'
+                                                    : '1px solid transparent',
+                                                background:
+                                                  msg.reaction === reaction
+                                                    ? isDark
+                                                      ? 'rgba(20,184,166,0.24)'
+                                                      : 'rgba(15,118,110,0.12)'
+                                                    : 'transparent',
+                                                cursor: msg.id
+                                                  ? 'pointer'
+                                                  : 'default',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '15px',
+                                                lineHeight: 1,
+                                                padding: 0,
+                                              }}
+                                              disabled={!msg.id}
+                                            >
+                                              {reaction}
+                                            </motion.button>
+                                          )
+                                        )}
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </motion.div>
                               </div>
-                            )}
-                            <div
-                              onContextMenu={(e) => {
-                                if (isAdmin && msg.sender_id === user.id) {
-                                  e.preventDefault();
-                                  const menuWidth = 160;
-                                  const menuHeight = 100;
-                                  let x = e.pageX;
-                                  let y = e.pageY;
-                                  if (x + menuWidth > window.innerWidth) {
-                                    x = window.innerWidth - menuWidth - 10;
-                                  }
-                                  if (y + menuHeight > window.innerHeight) {
-                                    y = window.innerHeight - menuHeight - 10;
-                                  }
-                                  setContextMenu({
-                                    visible: true,
-                                    x: x,
-                                    y: y,
-                                    messageId: msg.id,
-                                    content: msg.content,
-                                  });
-                                }
-                              }}
+                            </motion.div>
+                          );
+                        })}
+                        {currentView === VIEWS.CHAT &&
+                          typingUsers.some(
+                            (u) => u.id === selectedUser?.id
+                          ) && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 10 }}
                               style={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: isMine
-                                  ? 'flex-end'
-                                  : 'flex-start',
-                                maxWidth: '100%',
-                                position: 'relative',
+                                gap: '8px',
+                                padding: '6px 12px',
+                                marginTop: '8px',
+                                marginBottom: '4px',
+                                maxWidth: '120px',
+                                borderRadius: '14px 14px 14px 4px',
+                                background: isDark
+                                  ? 'rgba(255,255,255,0.06)'
+                                  : 'rgba(0,0,0,0.03)',
+                                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
                               }}
                             >
-                              <motion.div
-                                whileHover={{ scale: 1.01 }}
+                              <div style={{ display: 'flex', gap: '3px' }}>
+                                {[0, 1, 2].map((dot) => (
+                                  <motion.span
+                                    key={dot}
+                                    animate={{ y: [0, -4, 0] }}
+                                    transition={{
+                                      duration: 0.8,
+                                      repeat: Infinity,
+                                      delay: dot * 0.15,
+                                      ease: 'easeInOut',
+                                    }}
+                                    style={{
+                                      width: '5px',
+                                      height: '5px',
+                                      borderRadius: '50%',
+                                      background: '#0f766e',
+                                      display: 'inline-block',
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                              <span
                                 style={{
-                                  display: 'inline-block',
-                                  padding: '10px 16px',
-                                  borderRadius: isMine
-                                    ? '18px 18px 4px 18px'
-                                    : '18px 18px 18px 4px',
-                                  background: isMine
-                                    ? currentView === VIEWS.BROADCAST
-                                      ? 'linear-gradient(135deg, #ff9500 0%, #ffa502 100%)'
-                                      : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)'
-                                    : isDark
-                                      ? 'rgba(255, 255, 255, 0.08)'
-                                      : 'rgba(255, 255, 255, 0.9)',
-                                  color: isMine
-                                    ? '#fff'
-                                    : isDark
-                                      ? '#f3f4f6'
-                                      : '#1f2937',
-                                  maxWidth: '80%',
-                                  boxShadow: isDark
-                                    ? '0 4px 15px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05)'
-                                    : '0 4px 15px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.4)',
-                                  border: isDark
-                                    ? '1px solid rgba(255, 255, 255, 0.05)'
-                                    : '1px solid rgba(0, 0, 0, 0.04)',
-                                  fontSize: '14px',
-                                  position: 'relative',
-                                  textAlign: 'left',
-                                  backdropFilter: isMine ? 'none' : 'blur(8px)',
+                                  fontSize: '11px',
+                                  color: '#888',
+                                  fontWeight: '500',
                                 }}
                               >
-                                {msg.file_url && (
-                                  <div
-                                    style={{
-                                      marginBottom: '8px',
-                                      maxWidth: '100%',
-                                    }}
-                                  >
-                                    {isImage(msg.file_url) ? (
-                                      <a
-                                        href={`${API_BASE}${msg.file_url}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                      >
-                                        <img
-                                          src={`${API_BASE}${msg.file_url}`}
-                                          alt="file"
-                                          style={{
-                                            maxWidth: '100%',
-                                            borderRadius: '12px',
-                                            border: isDark
-                                              ? '1px solid #444'
-                                              : '1px solid #eee',
-                                          }}
-                                        />
-                                      </a>
-                                    ) : (
-                                      <div
-                                        onClick={() =>
-                                          window.open(
-                                            `${API_BASE}${msg.file_url}`,
-                                            '_blank'
-                                          )
-                                        }
-                                        style={{
-                                          background: isDark
-                                            ? 'rgba(255,255,255,0.05)'
-                                            : 'rgba(0,0,0,0.03)',
-                                          padding: '12px',
-                                          borderRadius: '12px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          gap: '12px',
-                                          border: isDark
-                                            ? '1px solid rgba(255,255,255,0.1)'
-                                            : '1px solid rgba(0,0,0,0.05)',
-                                          cursor: 'pointer',
-                                        }}
-                                      >
-                                        <div
-                                          style={{
-                                            width: '40px',
-                                            height: '40px',
-                                            borderRadius: '10px',
-                                            background: isMine
-                                              ? 'rgba(255,255,255,0.2)'
-                                              : '#0f766e',
-                                            display: 'flex',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            color: '#fff',
-                                            fontSize: '20px',
-                                          }}
-                                        >
-                                          <i
-                                            className={`bi ${getFileIcon(msg.file_url)}`}
-                                          ></i>
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                          <div
-                                            style={{
-                                              fontSize: '13px',
-                                              fontWeight: '600',
-                                              whiteSpace: 'nowrap',
-                                              overflow: 'hidden',
-                                              textOverflow: 'ellipsis',
-                                              color: isMine
-                                                ? '#fff'
-                                                : isDark
-                                                  ? '#eee'
-                                                  : '#333',
-                                            }}
-                                          >
-                                            {getTranslatedMessageContent(msg.content).replace(
-                                              /^(Fayl|File|Файл|Файлды|Fayly|Dosya|Файлdar):\s*/i,
-                                              ''
-                                            )}
-                                          </div>
-                                          <a
-                                            href={`${API_BASE}${msg.file_url}`}
-                                            download
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            style={{
-                                              fontSize: '11px',
-                                              color: isMine
-                                                ? 'rgba(255,255,255,0.8)'
-                                                : '#0f766e',
-                                              textDecoration: 'none',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              gap: '4px',
-                                              marginTop: '2px',
-                                            }}
-                                          >
-                                            <i className="bi bi-download"></i>{' '}
-                                            {t('download')}
-                                          </a>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                {getTranslatedMessageContent(msg.content).split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
-                                  const match = part.match(/\[(.*?)\]\((.*?)\)/);
-                                  if (match) {
-                                    return <a key={i} href={match[2]} style={{ color: isDark ? '#64b5f6' : '#1976d2', textDecoration: 'underline' }}>{match[1]}</a>;
-                                  }
-                                  return <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{part}</span>;
-                                })}
-                                <div
-                                  style={{
-                                    fontSize: '9px',
-                                    opacity: 0.6,
-                                    marginTop: '4px',
-                                    textAlign: 'right',
-                                  }}
-                                >
-                                  {formatTime(msg.created_at)}
-                                  {msg.sender_id === user.id && (
-                                    <i
-                                      className={`bi bi-check2${msg.is_read ? '-all' : ''} ms-1`}
-                                    ></i>
-                                  )}
-                                </div>
-                                {msg.reaction && (
-                                  <div
-                                    style={{
-                                      position: 'absolute',
-                                      right:
-                                        msg.sender_id === user.id
-                                          ? '8px'
-                                          : 'auto',
-                                      left:
-                                        msg.sender_id === user.id
-                                          ? 'auto'
-                                          : '8px',
-                                      bottom: '-18px',
-                                      minWidth: '28px',
-                                      height: '24px',
-                                      borderRadius: '14px',
-                                      background: isDark ? '#242424' : '#fff',
-                                      border: isDark
-                                        ? '1px solid rgba(255,255,255,0.12)'
-                                        : '1px solid rgba(15,23,42,0.1)',
-                                      boxShadow:
-                                        '0 6px 14px rgba(15,23,42,0.16)',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontSize: '14px',
-                                      lineHeight: 1,
-                                    }}
-                                  >
-                                    {msg.reaction}
-                                  </div>
-                                )}
-                                <AnimatePresence>
-                                  {hoveredMessageId === msg.id && (
-                                    <motion.div
-                                      initial={{
-                                        opacity: 0,
-                                        y: 8,
-                                        scale: 0.9,
-                                        filter: 'blur(4px)',
-                                      }}
-                                      animate={{
-                                        opacity: 1,
-                                        y: 0,
-                                        scale: 1,
-                                        filter: 'blur(0px)',
-                                      }}
-                                      exit={{
-                                        opacity: 0,
-                                        y: 6,
-                                        scale: 0.92,
-                                        filter: 'blur(4px)',
-                                      }}
-                                      transition={{
-                                        type: 'spring',
-                                        stiffness: 450,
-                                        damping: 26,
-                                      }}
-                                      style={{
-                                        position: 'absolute',
-                                        bottom: i === 0 ? 'auto' : 'calc(100% + 6px)',
-                                        top: i === 0 ? 'calc(100% + 6px)' : 'auto',
-                                        right: msg.sender_id === user.id ? '0' : 'auto',
-                                        left: msg.sender_id === user.id ? 'auto' : '0',
-                                        zIndex: 100,
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        gap: '5px',
-                                        padding: '4px 6px',
-                                        borderRadius: '24px',
-                                        background: isDark
-                                          ? 'rgba(28, 28, 35, 0.92)'
-                                          : 'rgba(255, 255, 255, 0.95)',
-                                        border: isDark
-                                          ? '1px solid rgba(255,255,255,0.1)'
-                                          : '1px solid rgba(0,0,0,0.08)',
-                                        boxShadow: '0 10px 25px rgba(0,0,0,0.18)',
-                                        backdropFilter: 'blur(12px)',
-                                      }}
-                                    >
-                                      {MESSAGE_REACTIONS.map(
-                                        (reaction, index) => (
-                                          <motion.button
-                                            key={`${msg.id || i}-${reaction}`}
-                                            type="button"
-                                            onClick={() =>
-                                              handleReaction(msg.id, reaction)
-                                            }
-                                            title={reaction}
-                                            initial={{
-                                              opacity: 0,
-                                              scale: 0.85,
-                                            }}
-                                            animate={{
-                                              opacity: 1,
-                                              scale: 1,
-                                            }}
-                                            transition={{
-                                              delay: index * 0.02,
-                                              type: 'spring',
-                                              stiffness: 500,
-                                              damping: 22,
-                                            }}
-                                            whileHover={{ scale: 1.25, rotate: 8 }}
-                                            whileTap={{ scale: 0.88 }}
-                                            style={{
-                                              width: '28px',
-                                              height: '28px',
-                                              borderRadius: '50%',
-                                              border:
-                                                msg.reaction === reaction
-                                                  ? '1px solid #0f766e'
-                                                  : '1px solid transparent',
-                                              background:
-                                                msg.reaction === reaction
-                                                  ? isDark
-                                                    ? 'rgba(20,184,166,0.24)'
-                                                    : 'rgba(15,118,110,0.12)'
-                                                  : 'transparent',
-                                              cursor: msg.id
-                                                ? 'pointer'
-                                                : 'default',
-                                              display: 'flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              fontSize: '15px',
-                                              lineHeight: 1,
-                                              padding: 0,
-                                            }}
-                                            disabled={!msg.id}
-                                          >
-                                            {reaction}
-                                          </motion.button>
-                                        )
-                                      )}
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </motion.div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                      {currentView === VIEWS.CHAT && typingUsers.some(u => u.id === selectedUser?.id) && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 10 }}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '6px 12px',
-                            marginTop: '8px',
-                            marginBottom: '4px',
-                            maxWidth: '120px',
-                            borderRadius: '14px 14px 14px 4px',
-                            background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
-                            border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
-                          }}
-                        >
-                          <div style={{ display: 'flex', gap: '3px' }}>
-                            {[0, 1, 2].map((dot) => (
-                              <motion.span
-                                key={dot}
-                                animate={{ y: [0, -4, 0] }}
-                                transition={{
-                                  duration: 0.8,
-                                  repeat: Infinity,
-                                  delay: dot * 0.15,
-                                  ease: "easeInOut"
-                                }}
-                                style={{
-                                  width: '5px',
-                                  height: '5px',
-                                  borderRadius: '50%',
-                                  background: '#0f766e',
-                                  display: 'inline-block',
-                                }}
-                              />
-                            ))}
-                          </div>
-                          <span style={{ fontSize: '11px', color: '#888', fontWeight: '500' }}>
-                            {t('typing')}
-                          </span>
-                        </motion.div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
+                                {t('typing')}
+                              </span>
+                            </motion.div>
+                          )}
+                        <div ref={messagesEndRef} />
+                      </div>
 
-                    {/* Input Area */}
-                    {currentView !== VIEWS.MONITORING_CHAT && (
-                      <div
-                        style={{
-                          padding: '12px 18px',
-                          background: isDark ? 'rgba(24, 24, 28, 0.8)' : 'rgba(255, 255, 255, 0.85)',
-                          backdropFilter: isMobile ? 'none' : 'blur(10px)',
-                          borderTop: isDark
-                            ? '1px solid rgba(255, 255, 255, 0.05)'
-                            : '1px solid rgba(0, 0, 0, 0.05)',
-                        }}
-                      >
-                        {editingMessageId && (
-                          <div
-                            style={{
-                              padding: '8px 15px',
-                              fontSize: '12px',
-                              color: '#888',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              backgroundColor: isDark ? '#2a2a2a' : '#f8f9fa',
-                              borderBottom: '1px solid rgba(0,0,0,0.05)',
-                              borderRadius: '8px',
-                              marginBottom: '8px',
-                            }}
-                          >
-                            <span>Tahrirlanmoqda...</span>
-                            <i
-                              className="bi bi-x-circle-fill"
-                              style={{ cursor: 'pointer', color: '#ff3b30' }}
-                              onClick={() => {
-                                setEditingMessageId(null);
-                                setContent('');
-                              }}
-                            ></i>
-                          </div>
-                        )}
+                      {/* Input Area */}
+                      {currentView !== VIEWS.MONITORING_CHAT && (
                         <div
                           style={{
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'center',
+                            padding: '12px 18px',
+                            background: isDark
+                              ? 'rgba(24, 24, 28, 0.8)'
+                              : 'rgba(255, 255, 255, 0.85)',
+                            backdropFilter: isMobile ? 'none' : 'blur(10px)',
+                            borderTop: isDark
+                              ? '1px solid rgba(255, 255, 255, 0.05)'
+                              : '1px solid rgba(0, 0, 0, 0.05)',
                           }}
                         >
-                          <motion.button
-                            whileHover={{ scale: 1.12, rotate: 15 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => fileInputRef.current.click()}
+                          {editingMessageId && (
+                            <div
+                              style={{
+                                padding: '8px 15px',
+                                fontSize: '12px',
+                                color: '#888',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                backgroundColor: isDark ? '#2a2a2a' : '#f8f9fa',
+                                borderBottom: '1px solid rgba(0,0,0,0.05)',
+                                borderRadius: '8px',
+                                marginBottom: '8px',
+                              }}
+                            >
+                              <span>Tahrirlanmoqda...</span>
+                              <i
+                                className="bi bi-x-circle-fill"
+                                style={{ cursor: 'pointer', color: '#ff3b30' }}
+                                onClick={() => {
+                                  setEditingMessageId(null);
+                                  setContent('');
+                                }}
+                              ></i>
+                            </div>
+                          )}
+                          <div
                             style={{
-                              background: 'none',
-                              border: 'none',
-                              fontSize: '22px',
-                              color: '#0f766e',
-                              cursor: 'pointer',
                               display: 'flex',
-                              justifyContent: 'center',
+                              gap: '10px',
                               alignItems: 'center',
-                              padding: 0,
                             }}
                           >
-                            <i className="bi bi-paperclip"></i>
-                          </motion.button>
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            style={{ display: 'none' }}
-                            onChange={handleFileUpload}
-                          />
-                          <input
-                            type="text"
-                            value={content}
-                            onChange={(e) => {
-                              setContent(e.target.value);
-                              handleTyping();
-                            }}
-                            onKeyPress={(e) =>
-                              e.key === 'Enter' && handleSend()
-                            }
-                            placeholder={
-                              currentView === VIEWS.BROADCAST
-                                ? t('typeMessageAll')
-                                : t('typeMessage')
-                            }
-                            style={{
-                              flex: 1,
-                              border: isDark
-                                ? '1px solid rgba(255, 255, 255, 0.1)'
-                                : '1px solid rgba(0, 0, 0, 0.08)',
-                              background: isDark ? 'rgba(0, 0, 0, 0.2)' : '#f3f4f6',
-                              borderRadius: '24px',
-                              padding: '10px 18px',
-                              color: isDark ? '#fff' : '#000',
-                              outline: 'none',
-                              fontSize: '14px',
-                            }}
-                          />
-                          <motion.button
-                            whileHover={{ scale: 1.08 }}
-                            whileTap={{ scale: 0.92 }}
-                            onClick={() => handleSend()}
-                            disabled={!content.trim() && !isUploading}
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '50%',
-                              background:
+                            <motion.button
+                              whileHover={{ scale: 1.12, rotate: 15 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => fileInputRef.current.click()}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                fontSize: '22px',
+                                color: '#0f766e',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                padding: 0,
+                              }}
+                            >
+                              <i className="bi bi-paperclip"></i>
+                            </motion.button>
+                            <input
+                              type="file"
+                              ref={fileInputRef}
+                              style={{ display: 'none' }}
+                              onChange={handleFileUpload}
+                            />
+                            <input
+                              type="text"
+                              value={content}
+                              onChange={(e) => {
+                                setContent(e.target.value);
+                                handleTyping();
+                              }}
+                              onKeyPress={(e) =>
+                                e.key === 'Enter' && handleSend()
+                              }
+                              placeholder={
                                 currentView === VIEWS.BROADCAST
-                                  ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
-                                  : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
-                              color: '#fff',
-                              border: 'none',
-                              display: 'flex',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              boxShadow:
-                                currentView === VIEWS.BROADCAST
-                                  ? '0 4px 12px rgba(255,149,0,0.3)'
-                                  : '0 4px 12px rgba(15,118,110,0.24)',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            <i className="bi bi-send-fill"></i>
-                          </motion.button>
+                                  ? t('typeMessageAll')
+                                  : t('typeMessage')
+                              }
+                              style={{
+                                flex: 1,
+                                border: isDark
+                                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                                  : '1px solid rgba(0, 0, 0, 0.08)',
+                                background: isDark
+                                  ? 'rgba(0, 0, 0, 0.2)'
+                                  : '#f3f4f6',
+                                borderRadius: '24px',
+                                padding: '10px 18px',
+                                color: isDark ? '#fff' : '#000',
+                                outline: 'none',
+                                fontSize: '14px',
+                              }}
+                            />
+                            <motion.button
+                              whileHover={{ scale: 1.08 }}
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => handleSend()}
+                              disabled={!content.trim() && !isUploading}
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                background:
+                                  currentView === VIEWS.BROADCAST
+                                    ? 'linear-gradient(135deg, #ff9500 0%, #ff5e00 100%)'
+                                    : 'linear-gradient(135deg, #0f766e 0%, #14b8a6 100%)',
+                                color: '#fff',
+                                border: 'none',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                boxShadow:
+                                  currentView === VIEWS.BROADCAST
+                                    ? '0 4px 12px rgba(255,149,0,0.3)'
+                                    : '0 4px 12px rgba(15,118,110,0.24)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <i className="bi bi-send-fill"></i>
+                            </motion.button>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </motion.div>
           </motion.div>
         ) : (
@@ -1776,12 +1905,12 @@ const ChatWidget = () => {
               damping: 26,
               stiffness: 240,
             }}
-            whileHover={{ 
-              scale: 1.08, 
-              rotate: 5, 
-              boxShadow: isDark 
-                ? '0 8px 25px rgba(20,184,166,0.35)' 
-                : '0 8px 25px rgba(37,99,235,0.25)' 
+            whileHover={{
+              scale: 1.08,
+              rotate: 5,
+              boxShadow: isDark
+                ? '0 8px 25px rgba(20,184,166,0.35)'
+                : '0 8px 25px rgba(37,99,235,0.25)',
             }}
             whileTap={{ scale: 0.94 }}
             onClick={() => setIsOpen(true)}
@@ -1872,7 +2001,7 @@ const ChatWidget = () => {
                 onConfirm: async () => {
                   await chatService.deleteMessage(contextMenu.messageId);
                   fetchMessages();
-                }
+                },
               });
             }}
             style={{
@@ -1892,10 +2021,12 @@ const ChatWidget = () => {
       {/* Custom Confirm Dialog */}
       <Dialog
         open={confirmDialog.open}
-        onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+        onClose={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
         PaperProps={{
           sx: {
-            background: isDark ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+            background: isDark
+              ? 'rgba(30, 30, 40, 0.95)'
+              : 'rgba(255, 255, 255, 0.98)',
             backdropFilter: 'blur(20px)',
             borderRadius: 3,
             border: '1px solid',
@@ -1903,8 +2034,8 @@ const ChatWidget = () => {
             p: 1,
             minWidth: 280,
             maxWidth: 400,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
-          }
+            boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+          },
         }}
       >
         <DialogTitle sx={{ fontWeight: 'bold', pb: 1 }}>
@@ -1918,7 +2049,9 @@ const ChatWidget = () => {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             variant="outlined"
-            onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            onClick={() =>
+              setConfirmDialog((prev) => ({ ...prev, open: false }))
+            }
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
           >
             {t('cancel') || 'Bekor qilish'}
@@ -1930,7 +2063,7 @@ const ChatWidget = () => {
               if (confirmDialog.onConfirm) {
                 await confirmDialog.onConfirm();
               }
-              setConfirmDialog(prev => ({ ...prev, open: false }));
+              setConfirmDialog((prev) => ({ ...prev, open: false }));
             }}
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
             autoFocus

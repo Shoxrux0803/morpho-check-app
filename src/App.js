@@ -41,6 +41,7 @@ import AuthorPage from './pages/AuthorPage';
 import GuidelinesPage from './pages/GuidelinesPage';
 import PrivacyCompliancePage from './pages/PrivacyCompliancePage';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import NotFoundPage from './pages/NotFoundPage';
 const MAX_VISIBLE_TOASTS = 3;
 const CHUNK_RELOAD_KEY = 'morphocheck_chunk_reload_attempted';
 
@@ -58,7 +59,9 @@ const isChunkLoadError = (error) => {
 const clearBrowserBuildCache = async () => {
   if ('serviceWorker' in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(registrations.map((registration) => registration.unregister()));
+    await Promise.all(
+      registrations.map((registration) => registration.unregister())
+    );
   }
   if ('caches' in window) {
     const keys = await caches.keys();
@@ -120,14 +123,7 @@ function ToastLimit() {
   return null;
 }
 
-// 404
-const NotFound = () => (
-  <div className="container py-5">
-    <h3>404 — Sahifa topilmadi</h3>
-    <p>Manzil noto'g'ri yoki sahifa ko'chirilgan bo'lishi mumkin.</p>
-  </div>
-);
-
+// 404 removed in favor of NotFoundPage component
 // Page Transition komponenti
 const PageTransition = ({ children }) => (
   <motion.div
@@ -230,9 +226,20 @@ const RestrictedAccess = () => (
       alignItems: 'center',
     }}
   >
-    <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-      <h3 style={{ color: '#EF4444', marginBottom: '1rem', fontWeight: 800 }}>Faoliyatingiz vaqtinchalik cheklangan!</h3>
-      <p className="text-muted mb-0" style={{ fontSize: '1.1rem' }}>Adminlarga murojaat qiling!</p>
+    <div
+      style={{
+        padding: '2rem',
+        background: 'rgba(239, 68, 68, 0.1)',
+        borderRadius: '16px',
+        border: '1px solid rgba(239, 68, 68, 0.2)',
+      }}
+    >
+      <h3 style={{ color: '#EF4444', marginBottom: '1rem', fontWeight: 800 }}>
+        Faoliyatingiz vaqtinchalik cheklangan!
+      </h3>
+      <p className="text-muted mb-0" style={{ fontSize: '1.1rem' }}>
+        Adminlarga murojaat qiling!
+      </p>
     </div>
   </motion.div>
 );
@@ -348,13 +355,13 @@ const HomeWrapper = () => {
 
 const ProWrapper = () => {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <PageLoader />;
-  
+
   if (user?.is_restricted === 1) {
     return <RestrictedAccess />;
   }
-  
+
   return (
     <PageTransition>
       <MorphoCheckPro />
@@ -387,10 +394,7 @@ function AnimatedRoutes() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<HomeWrapper />} />
-          <Route
-            path="/morphocheck-pro"
-            element={<ProWrapper />}
-          />
+          <Route path="/morphocheck-pro" element={<ProWrapper />} />
           <Route
             path="/info"
             element={
@@ -443,7 +447,7 @@ function AnimatedRoutes() {
             path="*"
             element={
               <PageTransition>
-                <NotFound />
+                <NotFoundPage />
               </PageTransition>
             }
           />

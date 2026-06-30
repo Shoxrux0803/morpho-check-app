@@ -58,15 +58,11 @@ export default function FieldAssistantLocationTracker() {
       }
     };
 
-    watchId = navigator.geolocation.watchPosition(
-      sendPosition,
-      () => {},
-      {
-        enableHighAccuracy: true,
-        maximumAge: 15000,
-        timeout: 20000,
-      }
-    );
+    watchId = navigator.geolocation.watchPosition(sendPosition, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 15000,
+      timeout: 20000,
+    });
 
     return () => {
       cancelled = true;

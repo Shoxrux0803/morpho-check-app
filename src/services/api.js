@@ -958,14 +958,17 @@ export const AdminApi = {
   },
   activity: {
     updateLocation: async (payload) => {
-      const resp = await fetch(`${API_BASE}${API_PREFIX}/admin/activity/location`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/activity/location`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!resp.ok) {
         const msg = await parseError(resp);

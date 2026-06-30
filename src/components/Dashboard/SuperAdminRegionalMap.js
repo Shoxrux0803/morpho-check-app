@@ -726,15 +726,25 @@ const localizedFeatureName = (item, lang = 'uz') => {
   return localizedSuffix(fallback, level, lang);
 };
 
-const recordMatchesBoundary = (record, level, props, parentRegion, parentDistrict) => {
+const recordMatchesBoundary = (
+  record,
+  level,
+  props,
+  parentRegion,
+  parentDistrict
+) => {
   // 1. Check Region Match
   if (parentRegion) {
     const regionKey = canonicalRegionName(featureName(parentRegion));
-    const recordRegion = canonicalRegionName(record.region || record.settlement || record.birth_place);
+    const recordRegion = canonicalRegionName(
+      record.region || record.settlement || record.birth_place
+    );
     if (regionKey !== recordRegion) return false;
   } else if (level === 1) {
     const regionKey = canonicalRegionName(featureName(props));
-    const recordRegion = canonicalRegionName(record.region || record.settlement || record.birth_place);
+    const recordRegion = canonicalRegionName(
+      record.region || record.settlement || record.birth_place
+    );
     if (regionKey !== recordRegion) return false;
   }
 
@@ -1555,10 +1565,19 @@ const StatPill = ({ label, value, color = 'primary.main' }) => (
       minWidth: 90,
     }}
   >
-    <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ fontSize: '0.68rem', display: 'block', mb: 0.1 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      fontWeight={700}
+      sx={{ fontSize: '0.68rem', display: 'block', mb: 0.1 }}
+    >
       {label}
     </Typography>
-    <Typography variant="body2" fontWeight={800} sx={{ color, lineHeight: 1.1 }}>
+    <Typography
+      variant="body2"
+      fontWeight={800}
+      sx={{ color, lineHeight: 1.1 }}
+    >
       {value}
     </Typography>
   </Box>
@@ -1934,7 +1953,9 @@ export default function SuperAdminRegionalMap({
             .filter(
               (item) =>
                 item.__source === 'user' &&
-                ['admin', 'researcher', 'field_assistant'].includes(item.__type) &&
+                ['admin', 'researcher', 'field_assistant'].includes(
+                  item.__type
+                ) &&
                 !normalizeLngLat(
                   Number(item.longitude ?? item.lon ?? item.lng),
                   Number(item.latitude ?? item.lat)
@@ -3330,7 +3351,8 @@ export default function SuperAdminRegionalMap({
     (pin) => {
       if (pin?.type === 'admin') return mt.admin;
       if (pin?.type === 'researcher') return mt.researcher;
-      if (pin?.type === 'field_assistant') return mt.fieldAssistant || 'Field assistant';
+      if (pin?.type === 'field_assistant')
+        return mt.fieldAssistant || 'Field assistant';
       return pin?.role || pin?.type || '-';
     },
     [mt]
@@ -3456,7 +3478,11 @@ export default function SuperAdminRegionalMap({
           <Box>
             <Stack direction="row" spacing={1} alignItems="center">
               <Public color="primary" sx={{ fontSize: 20 }} />
-              <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>
+              <Typography
+                variant="h6"
+                fontWeight={800}
+                sx={{ lineHeight: 1.2 }}
+              >
                 {mt.title}
               </Typography>
             </Stack>
@@ -3481,7 +3507,11 @@ export default function SuperAdminRegionalMap({
               color="#7c3aed"
             />
             {dataLoading && (
-              <Chip label={mt.analyticsLoading} size="small" sx={{ fontWeight: 800 }} />
+              <Chip
+                label={mt.analyticsLoading}
+                size="small"
+                sx={{ fontWeight: 800 }}
+              />
             )}
           </Stack>
         </Stack>

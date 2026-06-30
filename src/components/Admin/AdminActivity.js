@@ -537,7 +537,12 @@ const ActivityCard = ({
                 >
                   {t.today}
                 </Typography>
-                <Typography variant="h5" fontWeight="900" color="primary" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+                <Typography
+                  variant="h5"
+                  fontWeight="900"
+                  color="primary"
+                  sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}
+                >
                   {admin.stats_today}
                 </Typography>
               </Paper>
@@ -559,7 +564,12 @@ const ActivityCard = ({
                 >
                   {t.week}
                 </Typography>
-                <Typography variant="h5" fontWeight="900" color="success.main" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+                <Typography
+                  variant="h5"
+                  fontWeight="900"
+                  color="success.main"
+                  sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}
+                >
                   {admin.stats_week || 0}
                 </Typography>
               </Paper>
@@ -581,7 +591,12 @@ const ActivityCard = ({
                 >
                   {t.month}
                 </Typography>
-                <Typography variant="h5" fontWeight="900" color="secondary" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
+                <Typography
+                  variant="h5"
+                  fontWeight="900"
+                  color="secondary"
+                  sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}
+                >
                   {admin.stats_month}
                 </Typography>
               </Paper>
@@ -763,7 +778,11 @@ export default function AdminActivity() {
           >
             {t.title}
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.85rem', md: '1rem' } }}>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ fontSize: { xs: '0.85rem', md: '1rem' } }}
+          >
             {t.usersOnline(onlineCount)} • {t.lastUpdate}:{' '}
             {lastUpdated.toLocaleTimeString()}
           </Typography>
@@ -788,38 +807,42 @@ export default function AdminActivity() {
             <ButtonGroup
               size="small"
               variant="outlined"
-              sx={{ bgcolor: 'background.paper', borderRadius: 2, flexShrink: 0 }}
+              sx={{
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                flexShrink: 0,
+              }}
             >
-            <Button
-              onClick={() => setRoleFilter('all')}
-              variant={roleFilter === 'all' ? 'contained' : 'outlined'}
-              sx={{ textTransform: 'none', fontWeight: 'bold' }}
-            >
-              {t.all}
-            </Button>
-            <Button
-              onClick={() => setRoleFilter('admin')}
-              variant={roleFilter === 'admin' ? 'contained' : 'outlined'}
-              sx={{ textTransform: 'none', fontWeight: 'bold' }}
-            >
-              {t.admins}
-            </Button>
-            <Button
-              onClick={() => setRoleFilter('researcher')}
-              variant={roleFilter === 'researcher' ? 'contained' : 'outlined'}
-              sx={{ textTransform: 'none', fontWeight: 'bold' }}
-            >
-              {t.researchers}
-            </Button>
-            <Button
-              onClick={() => setRoleFilter('field_assistant')}
-              variant={
-                roleFilter === 'field_assistant' ? 'contained' : 'outlined'
-              }
-              sx={{ textTransform: 'none', fontWeight: 'bold' }}
-            >
-              Field assistants
-            </Button>
+              <Button
+                onClick={() => setRoleFilter('all')}
+                variant={roleFilter === 'all' ? 'contained' : 'outlined'}
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+              >
+                {t.all}
+              </Button>
+              <Button
+                onClick={() => setRoleFilter('admin')}
+                variant={roleFilter === 'admin' ? 'contained' : 'outlined'}
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+              >
+                {t.admins}
+              </Button>
+              <Button
+                onClick={() => setRoleFilter('researcher')}
+                variant={roleFilter === 'researcher' ? 'contained' : 'outlined'}
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+              >
+                {t.researchers}
+              </Button>
+              <Button
+                onClick={() => setRoleFilter('field_assistant')}
+                variant={
+                  roleFilter === 'field_assistant' ? 'contained' : 'outlined'
+                }
+                sx={{ textTransform: 'none', fontWeight: 'bold' }}
+              >
+                Field assistants
+              </Button>
             </ButtonGroup>
           </Box>
 

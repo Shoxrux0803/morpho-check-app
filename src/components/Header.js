@@ -510,14 +510,14 @@ export default function Header() {
       ? []
       : [
           {
-            label: 'Asosiy',
+            label: t('home'),
             to: '/researcher?section=home',
             section: 'home',
             icon: <HomeIcon />,
           },
         ]),
     {
-      label: 'Tahlil qilish',
+      label: t('analyze'),
       to: '/researcher?section=analyze',
       section: 'analyze',
       icon: <AnalyticsIcon />,
@@ -526,7 +526,7 @@ export default function Header() {
       ? []
       : [
           {
-            label: 'Izlanuvchi panel',
+            label: t('adminPanel'),
             to: '/researcher?section=panel',
             section: 'panel',
             icon: <AdminPanelSettingsIcon />,
@@ -814,7 +814,7 @@ export default function Header() {
                       sx={{ display: { xs: 'none', md: 'inline' } }}
                     >
                       {user?.role === 'field_assistant'
-                        ? "Mening ma'lumotlarim"
+                        ? t('myRecords') || "Mening ma'lumotlarim"
                         : t('home')}
                     </Box>
                   </Button>

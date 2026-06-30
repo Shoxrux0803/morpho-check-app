@@ -8,7 +8,13 @@ function hexToRgba(hex, alpha) {
   const cleanHex = hex.replace('#', '');
   let targetHex = cleanHex;
   if (cleanHex.length === 3) {
-    targetHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
+    targetHex =
+      cleanHex[0] +
+      cleanHex[0] +
+      cleanHex[1] +
+      cleanHex[1] +
+      cleanHex[2] +
+      cleanHex[2];
   }
   if (targetHex.length !== 6) return `rgba(255,255,255,${alpha})`;
   const r = parseInt(targetHex.substring(0, 2), 16);
@@ -22,7 +28,13 @@ function hexToRgbOnly(hex) {
   const cleanHex = hex.replace('#', '');
   let targetHex = cleanHex;
   if (cleanHex.length === 3) {
-    targetHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
+    targetHex =
+      cleanHex[0] +
+      cleanHex[0] +
+      cleanHex[1] +
+      cleanHex[1] +
+      cleanHex[2] +
+      cleanHex[2];
   }
   if (targetHex.length !== 6) return '255, 255, 255';
   const r = parseInt(targetHex.substring(0, 2), 16);
@@ -45,7 +57,7 @@ export default function ThemeSync() {
     body.classList.toggle('bg-dark', on);
     body.classList.toggle('bg-light', !on);
     root?.classList.toggle('dark', on);
-    
+
     html.setAttribute('data-theme', mode);
     html.setAttribute('data-theme-variant', variant);
     body.setAttribute('data-theme-variant', variant);
@@ -73,21 +85,32 @@ export default function ThemeSync() {
 
     // RGB переменные для поддержки прозрачности в Bootstrap/кастомных стилях
     html.style.setProperty('--theme-primary-rgb', hexToRgbOnly(colors.primary));
-    html.style.setProperty('--theme-text-primary-rgb', hexToRgbOnly(textPrimary));
+    html.style.setProperty(
+      '--theme-text-primary-rgb',
+      hexToRgbOnly(textPrimary)
+    );
 
     // 3) Записываем переменные для стеклянного эффекта (.glass, .liquid-card и т.д.)
     const glassBg = on
       ? `linear-gradient(135deg, ${hexToRgba(colors.bgPaper, 0.58)}, ${hexToRgba(colors.bgDefault, 0.34)})`
       : `linear-gradient(135deg, ${hexToRgba(colors.bgPaper, 0.48)}, ${hexToRgba(colors.bgDefault, 0.2)})`;
-      
+
     const glassBgStrong = on
       ? `linear-gradient(135deg, ${hexToRgba(colors.bgPaper, 0.76)}, ${hexToRgba(colors.bgDefault, 0.56)})`
       : `linear-gradient(135deg, ${hexToRgba(colors.bgPaper, 0.66)}, ${hexToRgba(colors.bgDefault, 0.3)})`;
 
-    const glassBorder = on ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.64)';
-    const glassBorderSoft = on ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.46)';
-    const glassText = on ? 'rgba(235, 242, 255, 0.92)' : 'rgba(20, 25, 35, 0.9)';
-    const glassMuted = on ? 'rgba(205, 215, 232, 0.68)' : 'rgba(20, 25, 35, 0.68)';
+    const glassBorder = on
+      ? 'rgba(255, 255, 255, 0.2)'
+      : 'rgba(255, 255, 255, 0.64)';
+    const glassBorderSoft = on
+      ? 'rgba(255, 255, 255, 0.14)'
+      : 'rgba(255, 255, 255, 0.46)';
+    const glassText = on
+      ? 'rgba(235, 242, 255, 0.92)'
+      : 'rgba(20, 25, 35, 0.9)';
+    const glassMuted = on
+      ? 'rgba(205, 215, 232, 0.68)'
+      : 'rgba(20, 25, 35, 0.68)';
 
     html.style.setProperty('--mc-liquid-bg', glassBg);
     html.style.setProperty('--mc-liquid-bg-strong', glassBgStrong);
@@ -99,7 +122,7 @@ export default function ThemeSync() {
     // 4) Динамически устанавливаем фоновое изображение для body (эффект ауры)
     const auraDark = colors.auraDark || 'none';
     const auraLight = colors.auraLight || 'none';
-    
+
     const bodyBgImage = on
       ? `${auraDark}, radial-gradient(circle at 84% 16%, rgba(236,72,153,0.13), transparent 30%), radial-gradient(circle at 72% 82%, rgba(251,191,36,0.10), transparent 34%)`
       : `${auraLight}, radial-gradient(circle at 15% 20%, rgba(107,213,255,0.30), transparent 28%), radial-gradient(circle at 85% 15%, rgba(255,179,223,0.28), transparent 30%), radial-gradient(circle at 70% 80%, rgba(255,210,122,0.24), transparent 35%)`;
@@ -115,13 +138,15 @@ export default function ThemeSync() {
 
     if (process.env.NODE_ENV !== 'production') {
       console.debug(
-        '[ThemeSync] mode:', mode,
-        'variant:', variant,
-        'primary:', colors.primary
+        '[ThemeSync] mode:',
+        mode,
+        'variant:',
+        variant,
+        'primary:',
+        colors.primary
       );
     }
   }, [mode, variant]);
 
   return null;
 }
-

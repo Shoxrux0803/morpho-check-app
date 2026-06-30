@@ -68,8 +68,9 @@ const installDevConsoleNoiseFilter = () => {
   const isIgnoredResizeObserverError = (value) => {
     const message = String(value?.message || value || '');
     return (
-      message.includes('ResizeObserver loop completed with undelivered notifications') ||
-      message.includes('ResizeObserver loop limit exceeded')
+      message.includes(
+        'ResizeObserver loop completed with undelivered notifications'
+      ) || message.includes('ResizeObserver loop limit exceeded')
     );
   };
 
@@ -122,7 +123,9 @@ const clearDevelopmentCaches = async () => {
   if (process.env.NODE_ENV !== 'development') return;
   if ('serviceWorker' in navigator) {
     const registrations = await navigator.serviceWorker.getRegistrations();
-    await Promise.all(registrations.map((registration) => registration.unregister()));
+    await Promise.all(
+      registrations.map((registration) => registration.unregister())
+    );
   }
   if ('caches' in window) {
     const keys = await caches.keys();

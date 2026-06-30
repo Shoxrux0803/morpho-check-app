@@ -420,60 +420,84 @@ const AUDIT_ACTION_LABELS = {
 const CONFIRM_MESSAGES = {
   uz: {
     adminDeleteConfirm: "Haqiqatan ham bu adminni o'chirmoqchimisiz?",
-    hardDeleteDataConfirm: "Ushbu ma'lumotni butunlay o'chirib tashlamoqchimisiz? Uni qayta tiklab bo'lmaydi!",
-    backupRestoreConfirm: "Haqiqatan ham '{filename}' zaxira nusxasini tiklamoqchimisiz? Joriy ma'lumotlar almashtirilishi mumkin.",
-    deleteBackupConfirm: "Haqiqatan ham '{filename}' zaxira faylini o'chirmoqchimisiz?",
-    clearAuditConfirm: "Barcha jurnallarni tozalamoqchimisiz?"
+    hardDeleteDataConfirm:
+      "Ushbu ma'lumotni butunlay o'chirib tashlamoqchimisiz? Uni qayta tiklab bo'lmaydi!",
+    backupRestoreConfirm:
+      "Haqiqatan ham '{filename}' zaxira nusxasini tiklamoqchimisiz? Joriy ma'lumotlar almashtirilishi mumkin.",
+    deleteBackupConfirm:
+      "Haqiqatan ham '{filename}' zaxira faylini o'chirmoqchimisiz?",
+    clearAuditConfirm: 'Barcha jurnallarni tozalamoqchimisiz?',
   },
   ru: {
-    adminDeleteConfirm: "Вы действительно хотите удалить этого админа?",
-    hardDeleteDataConfirm: "Вы действительно хотите безвозвратно удалить эти данные? Это действие нельзя отменить!",
-    backupRestoreConfirm: "Вы действительно хотите восстановить резервную копию '{filename}'? Текущие данные могут быть перезаписаны.",
-    deleteBackupConfirm: "Вы действительно хотите удалить файл резервной копии '{filename}'?",
-    clearAuditConfirm: "Очистить все записи журнала?"
+    adminDeleteConfirm: 'Вы действительно хотите удалить этого админа?',
+    hardDeleteDataConfirm:
+      'Вы действительно хотите безвозвратно удалить эти данные? Это действие нельзя отменить!',
+    backupRestoreConfirm:
+      "Вы действительно хотите восстановить резервную копию '{filename}'? Текущие данные могут быть перезаписаны.",
+    deleteBackupConfirm:
+      "Вы действительно хотите удалить файл резервной копии '{filename}'?",
+    clearAuditConfirm: 'Очистить все записи журнала?',
   },
   en: {
-    adminDeleteConfirm: "Do you really want to delete this admin?",
-    hardDeleteDataConfirm: "Do you really want to permanently delete this data? This action cannot be undone!",
-    backupRestoreConfirm: "Do you really want to restore the backup '{filename}'? Current data might be overwritten.",
-    deleteBackupConfirm: "Do you really want to delete the backup file '{filename}'?",
-    clearAuditConfirm: "Clear all audit log entries?"
+    adminDeleteConfirm: 'Do you really want to delete this admin?',
+    hardDeleteDataConfirm:
+      'Do you really want to permanently delete this data? This action cannot be undone!',
+    backupRestoreConfirm:
+      "Do you really want to restore the backup '{filename}'? Current data might be overwritten.",
+    deleteBackupConfirm:
+      "Do you really want to delete the backup file '{filename}'?",
+    clearAuditConfirm: 'Clear all audit log entries?',
   },
   tr: {
-    adminDeleteConfirm: "Bu yöneticiyi gerçekten silmek istiyor musunuz?",
-    hardDeleteDataConfirm: "Bu verileri kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!",
-    backupRestoreConfirm: "'{filename}' yedeklemesini gerçekten geri yüklemek istiyor musunuz? Mevcut verilerin üzerine yazılabilir.",
-    deleteBackupConfirm: "'{filename}' yedekleme dosyasını gerçekten silmek istiyor musunuz?",
-    clearAuditConfirm: "Tüm günlük kayıtlarını temizlemek istiyor musunuz?"
+    adminDeleteConfirm: 'Bu yöneticiyi gerçekten silmek istiyor musunuz?',
+    hardDeleteDataConfirm:
+      'Bu verileri kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!',
+    backupRestoreConfirm:
+      "'{filename}' yedeklemesini gerçekten geri yüklemek istiyor musunuz? Mevcut verilerin üzerine yazılabilir.",
+    deleteBackupConfirm:
+      "'{filename}' yedekleme dosyasını gerçekten silmek istiyor musunuz?",
+    clearAuditConfirm: 'Tüm günlük kayıtlarını temizlemek istiyor musunuz?',
   },
   tm: {
-    adminDeleteConfirm: "Bu admini pozmak isleýärsinizmi?",
-    hardDeleteDataConfirm: "Bu maglumaty hemişelik pozmak isleýärsinizmi? Bu hereketi yza alyp bolmaz!",
-    backupRestoreConfirm: "'{filename}' ätiýaçlyk nusgasyny dikeltmek isleýärsinizmi? Häzirki maglumatlar täzelenip biler.",
-    deleteBackupConfirm: "'{filename}' ätiýaçlyk faýlyny pozmak isleýärsinizmi?",
-    clearAuditConfirm: "Ähli žurnal ýazgylaryny arassalamak isleýärsinizmi?"
+    adminDeleteConfirm: 'Bu admini pozmak isleýärsinizmi?',
+    hardDeleteDataConfirm:
+      'Bu maglumaty hemişelik pozmak isleýärsinizmi? Bu hereketi yza alyp bolmaz!',
+    backupRestoreConfirm:
+      "'{filename}' ätiýaçlyk nusgasyny dikeltmek isleýärsinizmi? Häzirki maglumatlar täzelenip biler.",
+    deleteBackupConfirm:
+      "'{filename}' ätiýaçlyk faýlyny pozmak isleýärsinizmi?",
+    clearAuditConfirm: 'Ähli žurnal ýazgylaryny arassalamak isleýärsinizmi?',
   },
   tg: {
-    adminDeleteConfirm: "Оё шумо дар ҳақиқат мехоҳед ин админро нест кунед?",
-    hardDeleteDataConfirm: "Оё шумо дар ҳақиқат мехоҳед ин маълумотро ба таври ҳамешагӣ нест кунед? Ин амалро бекор карда намешавад!",
-    backupRestoreConfirm: "Оё шумо дар ҳақиқат мехоҳед нусхаи эҳтиётии '{filename}'-ро барқарор кунед? Маалумоти ҷорӣ метавонад иваз карда шавад.",
-    deleteBackupConfirm: "Оё шумо дар ҳақиқат мехоҳед файли нусхаи эҳтиётии '{filename}'-ро нест кунед?",
-    clearAuditConfirm: "Оё шумо мехоҳед ҳамаи журналҳоро тоза кунед?"
+    adminDeleteConfirm: 'Оё шумо дар ҳақиқат мехоҳед ин админро нест кунед?',
+    hardDeleteDataConfirm:
+      'Оё шумо дар ҳақиқат мехоҳед ин маълумотро ба таври ҳамешагӣ нест кунед? Ин амалро бекор карда намешавад!',
+    backupRestoreConfirm:
+      "Оё шумо дар ҳақиқат мехоҳед нусхаи эҳтиётии '{filename}'-ро барқарор кунед? Маалумоти ҷорӣ метавонад иваз карда шавад.",
+    deleteBackupConfirm:
+      "Оё шумо дар ҳақиқат мехоҳед файли нусхаи эҳтиётии '{filename}'-ро нест кунед?",
+    clearAuditConfirm: 'Оё шумо мехоҳед ҳамаи журналҳоро тоза кунед?',
   },
   kz: {
-    adminDeleteConfirm: "Бұл админді шынымен жойғыңыз келе ме?",
-    hardDeleteDataConfirm: "Бұл мәліметтерді біржола жойғыңыз келе ме? Бұл әрекетті қайтару мүмкін емес!",
-    backupRestoreConfirm: "'{filename}' сақтық көшірмесін шынымен қалпына келтіргіңіз келе ме? Ағымдағы мәліметтер ауыстырылуы мүмкін.",
-    deleteBackupConfirm: "'{filename}' сақтық көшірме файлын шынымен жойғыңыз келе ме?",
-    clearAuditConfirm: "Барлық журнал жазбаларын тазалайсыз ба?"
+    adminDeleteConfirm: 'Бұл админді шынымен жойғыңыз келе ме?',
+    hardDeleteDataConfirm:
+      'Бұл мәліметтерді біржола жойғыңыз келе ме? Бұл әрекетті қайтару мүмкін емес!',
+    backupRestoreConfirm:
+      "'{filename}' сақтық көшірмесін шынымен қалпына келтіргіңіз келе ме? Ағымдағы мәліметтер ауыстырылуы мүмкін.",
+    deleteBackupConfirm:
+      "'{filename}' сақтық көшірме файлын шынымен жойғыңыз келе ме?",
+    clearAuditConfirm: 'Барлық журнал жазбаларын тазалайсыз ба?',
   },
   ky: {
-    adminDeleteConfirm: "Бул админди чын эле өчүрөсүзбү?",
-    hardDeleteDataConfirm: "Бул маалыматты биротоло өчүрүүнү каалайсызбы? Бул аракетти жокко чыгаруу мүмкүн эмес!",
-    backupRestoreConfirm: "'{filename}' камдык көчүрмөсүн чын эле калыбына келтиргиңиз келеби? Учурдагы маалыматтар алмаштырылышы мүмкүн.",
-    deleteBackupConfirm: "'{filename}' камдык көчүрмө файлын чын эле өчүрөсүзбү?",
-    clearAuditConfirm: "Аудит журналын тазалоону ырастайсызбы?"
-  }
+    adminDeleteConfirm: 'Бул админди чын эле өчүрөсүзбү?',
+    hardDeleteDataConfirm:
+      'Бул маалыматты биротоло өчүрүүнү каалайсызбы? Бул аракетти жокко чыгаруу мүмкүн эмес!',
+    backupRestoreConfirm:
+      "'{filename}' камдык көчүрмөсүн чын эле калыбына келтиргиңиз келеби? Учурдагы маалыматтар алмаштырылышы мүмкүн.",
+    deleteBackupConfirm:
+      "'{filename}' камдык көчүрмө файлын чын эле өчүрөсүзбү?",
+    clearAuditConfirm: 'Аудит журналын тазалоону ырастайсызбы?',
+  },
 };
 
 const AUDIT_TARGET_LABELS_RU = {
@@ -1306,7 +1330,8 @@ const formatAuditDetails = (details, lang) => {
               : lang === 'en'
                 ? AUDIT_JSON_KEY_LABELS_EN[key] || translateAuditText(key, lang)
                 : lang === 'tr'
-                  ? AUDIT_JSON_KEY_LABELS_TR[key] || translateAuditText(key, lang)
+                  ? AUDIT_JSON_KEY_LABELS_TR[key] ||
+                    translateAuditText(key, lang)
                   : lang === 'ru'
                     ? AUDIT_JSON_KEY_LABELS_RU[key] ||
                       translateAuditText(key, lang)
@@ -1558,7 +1583,12 @@ const SuperAdminPage = () => {
     isDestructive: false,
   });
 
-  const showConfirm = (message, onConfirm, isDestructive = false, title = '') => {
+  const showConfirm = (
+    message,
+    onConfirm,
+    isDestructive = false,
+    title = ''
+  ) => {
     setConfirmDialog({
       open: true,
       title: title,
@@ -2471,18 +2501,24 @@ const SuperAdminPage = () => {
   };
 
   const handleDeleteAdmin = async (id) => {
-    const msg = CONFIRM_MESSAGES[lang]?.adminDeleteConfirm || CONFIRM_MESSAGES['en'].adminDeleteConfirm;
-    showConfirm(msg, async () => {
-      try {
-        const deleteUser = AdminApi.users.delete || AdminApi.users.remove;
-        await deleteUser(id);
-        fetchAdmins();
-        fetchDeletedAdmins();
-        toast.success(pt('adminDeleted'));
-      } catch (err) {
-        toast.error('Xatolik: ' + err.message);
-      }
-    }, true);
+    const msg =
+      CONFIRM_MESSAGES[lang]?.adminDeleteConfirm ||
+      CONFIRM_MESSAGES['en'].adminDeleteConfirm;
+    showConfirm(
+      msg,
+      async () => {
+        try {
+          const deleteUser = AdminApi.users.delete || AdminApi.users.remove;
+          await deleteUser(id);
+          fetchAdmins();
+          fetchDeletedAdmins();
+          toast.success(pt('adminDeleted'));
+        } catch (err) {
+          toast.error('Xatolik: ' + err.message);
+        }
+      },
+      true
+    );
   };
 
   const handleRestoreAnalysis = async (rowOrId) => {
@@ -2527,20 +2563,26 @@ const SuperAdminPage = () => {
           );
     if (!row) return;
 
-    const msg = CONFIRM_MESSAGES[lang]?.hardDeleteDataConfirm || CONFIRM_MESSAGES['en'].hardDeleteDataConfirm;
-    showConfirm(msg, async () => {
-      try {
-        if (row.__deletedSource === 'research') {
-          await ResearchApi.hardDelete(row.id);
-        } else {
-          await AdminApi.analyses.hardDelete([row.id]);
+    const msg =
+      CONFIRM_MESSAGES[lang]?.hardDeleteDataConfirm ||
+      CONFIRM_MESSAGES['en'].hardDeleteDataConfirm;
+    showConfirm(
+      msg,
+      async () => {
+        try {
+          if (row.__deletedSource === 'research') {
+            await ResearchApi.hardDelete(row.id);
+          } else {
+            await AdminApi.analyses.hardDelete([row.id]);
+          }
+          toast.success(pt('hardDeleted'));
+          fetchDeletedAnalyses();
+        } catch (err) {
+          toast.error('Xatolik: ' + err.message);
         }
-        toast.success(pt('hardDeleted'));
-        fetchDeletedAnalyses();
-      } catch (err) {
-        toast.error('Xatolik: ' + err.message);
-      }
-    }, true);
+      },
+      true
+    );
   };
 
   const handleCreateBackup = async () => {
@@ -2557,44 +2599,64 @@ const SuperAdminPage = () => {
   };
 
   const handleRestoreBackup = async (filename) => {
-    const msg = (CONFIRM_MESSAGES[lang]?.backupRestoreConfirm || CONFIRM_MESSAGES['en'].backupRestoreConfirm).replace('{filename}', filename);
-    showConfirm(msg, async () => {
-      setBackupLoading(true);
-      try {
-        await AdminApi.backup.restore(filename);
-        toast.success(pt('restoredSuccessfully'));
-      } catch (err) {
-        toast.error('Xatolik: ' + err.message);
-      } finally {
-        setBackupLoading(false);
-      }
-    }, false);
+    const msg = (
+      CONFIRM_MESSAGES[lang]?.backupRestoreConfirm ||
+      CONFIRM_MESSAGES['en'].backupRestoreConfirm
+    ).replace('{filename}', filename);
+    showConfirm(
+      msg,
+      async () => {
+        setBackupLoading(true);
+        try {
+          await AdminApi.backup.restore(filename);
+          toast.success(pt('restoredSuccessfully'));
+        } catch (err) {
+          toast.error('Xatolik: ' + err.message);
+        } finally {
+          setBackupLoading(false);
+        }
+      },
+      false
+    );
   };
 
   const handleDeleteBackup = async (filename) => {
-    const msg = (CONFIRM_MESSAGES[lang]?.deleteBackupConfirm || CONFIRM_MESSAGES['en'].deleteBackupConfirm).replace('{filename}', filename);
-    showConfirm(msg, async () => {
-      try {
-        await AdminApi.backup.delete(filename);
-        toast.success(pt('fileDeleted'));
-        fetchBackups();
-      } catch (err) {
-        toast.error('Xatolik: ' + err.message);
-      }
-    }, true);
+    const msg = (
+      CONFIRM_MESSAGES[lang]?.deleteBackupConfirm ||
+      CONFIRM_MESSAGES['en'].deleteBackupConfirm
+    ).replace('{filename}', filename);
+    showConfirm(
+      msg,
+      async () => {
+        try {
+          await AdminApi.backup.delete(filename);
+          toast.success(pt('fileDeleted'));
+          fetchBackups();
+        } catch (err) {
+          toast.error('Xatolik: ' + err.message);
+        }
+      },
+      true
+    );
   };
 
   const handleClearAudit = async () => {
-    const msg = CONFIRM_MESSAGES[lang]?.clearAuditConfirm || CONFIRM_MESSAGES['en'].clearAuditConfirm;
-    showConfirm(msg, async () => {
-      try {
-        await AdminApi.auditLogs.clear();
-        toast.success(pt('auditCleared'));
-        fetchAuditLogs();
-      } catch (err) {
-        toast.error('Xatolik: ' + err.message);
-      }
-    }, true);
+    const msg =
+      CONFIRM_MESSAGES[lang]?.clearAuditConfirm ||
+      CONFIRM_MESSAGES['en'].clearAuditConfirm;
+    showConfirm(
+      msg,
+      async () => {
+        try {
+          await AdminApi.auditLogs.clear();
+          toast.success(pt('auditCleared'));
+          fetchAuditLogs();
+        } catch (err) {
+          toast.error('Xatolik: ' + err.message);
+        }
+      },
+      true
+    );
   };
 
   if (authLoading) {
@@ -3026,7 +3088,9 @@ const SuperAdminPage = () => {
                           >
                             <People />
                           </Avatar>
-                          <Typography fontWeight={800}>{pt('noData')}</Typography>
+                          <Typography fontWeight={800}>
+                            {pt('noData')}
+                          </Typography>
                         </Stack>
                       </TableCell>
                     </TableRow>
@@ -3143,10 +3207,11 @@ const SuperAdminPage = () => {
                                 onClick={() => {
                                   blurActiveElement();
                                   setCurrentAdmin(admin);
-                                  const normalizedPair = normalizeCoordinatePair(
-                                    admin.latitude,
-                                    admin.longitude
-                                  );
+                                  const normalizedPair =
+                                    normalizeCoordinatePair(
+                                      admin.latitude,
+                                      admin.longitude
+                                    );
                                   setAdminForm({
                                     ...normalizeAdminForm(admin),
                                     latitude:
@@ -3490,7 +3555,8 @@ const SuperAdminPage = () => {
       case 6: {
         const AUDIT_TRANSLATIONS = {
           uz: {
-            description: 'Tizimdagi barcha amallar va hodisalar xavfsizlik jurnali',
+            description:
+              'Tizimdagi barcha amallar va hodisalar xavfsizlik jurnali',
             export: 'Eksport',
             totalEvents: 'Jami hodisalar',
             activeOperators: 'Faol operatorlar',
@@ -3519,7 +3585,8 @@ const SuperAdminPage = () => {
             detailsCol: 'Batafsil',
           },
           ru: {
-            description: 'Журнал безопасности всех действий и событий в системе',
+            description:
+              'Журнал безопасности всех действий и событий в системе',
             export: 'Экспорт',
             totalEvents: 'Всего событий',
             activeOperators: 'Активные операторы',
@@ -3577,7 +3644,8 @@ const SuperAdminPage = () => {
             detailsCol: 'Details',
           },
           tr: {
-            description: 'Sistemdeki tüm eylemlerin ve olayların güvenlik günlüğü',
+            description:
+              'Sistemdeki tüm eylemlerin ve olayların güvenlik günlüğü',
             export: 'Dışa Aktar',
             totalEvents: 'Toplam Olay',
             activeOperators: 'Aktif Operatörler',
@@ -3606,7 +3674,8 @@ const SuperAdminPage = () => {
             detailsCol: 'Detaylar',
           },
           tm: {
-            description: 'Ulgamdaky ähli hereketleriň we wakalaryň howpsuzlyk žurnaly',
+            description:
+              'Ulgamdaky ähli hereketleriň we wakalaryň howpsuzlyk žurnaly',
             export: 'Eksport',
             totalEvents: 'Jami wakalar',
             activeOperators: 'Aktiw operatorlar',
@@ -3635,7 +3704,8 @@ const SuperAdminPage = () => {
             detailsCol: 'Jikme-jik',
           },
           tg: {
-            description: 'Журнали амниятӣ барои ҳамаи амалҳо ва рӯйдодҳо дар система',
+            description:
+              'Журнали амниятӣ барои ҳамаи амалҳо ва рӯйдодҳо дар система',
             export: 'Экспорт',
             totalEvents: 'Ҳамаи рӯйдодҳо',
             activeOperators: 'Операторони фаъол',
@@ -3664,7 +3734,8 @@ const SuperAdminPage = () => {
             detailsCol: 'Тафсилот',
           },
           kz: {
-            description: 'Жүйедегі барлық әрекеттер мен оқиғалардың қауіпсіздік журналы',
+            description:
+              'Жүйедегі барлық әрекеттер мен оқиғалардың қауіпсіздік журналы',
             export: 'Экспорт',
             totalEvents: 'Барлық оқиғалар',
             activeOperators: 'Белсенді операторлар',
@@ -3693,7 +3764,8 @@ const SuperAdminPage = () => {
             detailsCol: 'Толығырақ',
           },
           ky: {
-            description: 'Системадагы бардык аракеттердин жана окуялардын коопсуздук журналы',
+            description:
+              'Системадагы бардык аракеттердин жана окуялардын коопсуздук журналы',
             export: 'Экспорт',
             totalEvents: 'Бардык окуялар',
             activeOperators: 'Активдүү операторлор',
@@ -3720,21 +3792,29 @@ const SuperAdminPage = () => {
             exportSuccess: 'Экспорт ийгиликтүү аяктады',
             copied: 'Көчүрүлдү',
             detailsCol: 'Чоо-жайы',
-          }
+          },
         };
 
         const t = (key) => {
           const langKey = AUDIT_TRANSLATIONS[lang] ? lang : 'en';
-          return AUDIT_TRANSLATIONS[langKey][key] || AUDIT_TRANSLATIONS['en'][key] || key;
+          return (
+            AUDIT_TRANSLATIONS[langKey][key] ||
+            AUDIT_TRANSLATIONS['en'][key] ||
+            key
+          );
         };
 
         const getAuditStats = () => {
           const total = auditTotal;
-          const uniqueUsers = new Set(auditLogs.map(log => log.user_id).filter(Boolean)).size;
-          const securityEvents = auditLogs.filter(log => ['LOGIN', 'DELETE', 'CLEAR'].includes(log.action)).length;
-          
+          const uniqueUsers = new Set(
+            auditLogs.map((log) => log.user_id).filter(Boolean)
+          ).size;
+          const securityEvents = auditLogs.filter((log) =>
+            ['LOGIN', 'DELETE', 'CLEAR'].includes(log.action)
+          ).length;
+
           const actionCounts = {};
-          auditLogs.forEach(log => {
+          auditLogs.forEach((log) => {
             actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
           });
           let mostFrequentAction = '-';
@@ -3756,63 +3836,69 @@ const SuperAdminPage = () => {
             case 'CREATE':
               return {
                 sx: {
-                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.15) 100%)',
                   color: '#2e7d32',
                   border: '1px solid rgba(76, 175, 80, 0.25)',
                   fontWeight: 600,
                   borderRadius: '6px',
-                }
+                },
               };
             case 'UPDATE':
               return {
                 sx: {
-                  background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(255, 152, 0, 0.15) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(255, 152, 0, 0.15) 100%)',
                   color: '#b26a00',
                   border: '1px solid rgba(255, 152, 0, 0.25)',
                   fontWeight: 600,
                   borderRadius: '6px',
-                }
+                },
               };
             case 'DELETE':
             case 'CLEAR':
               return {
                 sx: {
-                  background: 'linear-gradient(135deg, rgba(244, 67, 54, 0.08) 0%, rgba(244, 67, 54, 0.15) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(244, 67, 54, 0.08) 0%, rgba(244, 67, 54, 0.15) 100%)',
                   color: '#d32f2f',
                   border: '1px solid rgba(244, 67, 54, 0.25)',
                   fontWeight: 600,
                   borderRadius: '6px',
-                }
+                },
               };
             case 'LOGIN':
               return {
                 sx: {
-                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(33, 150, 243, 0.15) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(33, 150, 243, 0.15) 100%)',
                   color: '#1565c0',
                   border: '1px solid rgba(33, 150, 243, 0.25)',
                   fontWeight: 600,
                   borderRadius: '6px',
-                }
+                },
               };
             case 'RESTORE':
               return {
                 sx: {
-                  background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.08) 0%, rgba(156, 39, 176, 0.15) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(156, 39, 176, 0.08) 0%, rgba(156, 39, 176, 0.15) 100%)',
                   color: '#7b1fa2',
                   border: '1px solid rgba(156, 39, 176, 0.25)',
                   fontWeight: 600,
                   borderRadius: '6px',
-                }
+                },
               };
             default:
               return {
                 sx: {
-                  background: 'linear-gradient(135deg, rgba(158, 158, 158, 0.08) 0%, rgba(158, 158, 158, 0.15) 100%)',
+                  background:
+                    'linear-gradient(135deg, rgba(158, 158, 158, 0.08) 0%, rgba(158, 158, 158, 0.15) 100%)',
                   color: '#616161',
                   border: '1px solid rgba(158, 158, 158, 0.25)',
                   fontWeight: 600,
                   borderRadius: '6px',
-                }
+                },
               };
           }
         };
@@ -3822,10 +3908,19 @@ const SuperAdminPage = () => {
             toast.error(t('noDataExport'));
             return;
           }
-          
-          const headers = [t('time'), t('operator'), 'Email', t('action'), t('object'), 'ID', t('detailsTitle'), 'IP'];
-          
-          const rows = auditLogs.map(log => [
+
+          const headers = [
+            t('time'),
+            t('operator'),
+            'Email',
+            t('action'),
+            t('object'),
+            'ID',
+            t('detailsTitle'),
+            'IP',
+          ];
+
+          const rows = auditLogs.map((log) => [
             new Date(log.created_at).toLocaleString(),
             log.user_name || 'System',
             log.user_email || '-',
@@ -3833,16 +3928,25 @@ const SuperAdminPage = () => {
             log.target_type || '-',
             log.target_id || '-',
             log.details || '',
-            log.ip_address || '-'
+            log.ip_address || '-',
           ]);
-          
-          const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
-            + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
-            
+
+          const csvContent =
+            'data:text/csv;charset=utf-8,\uFEFF' +
+            [
+              headers.join(','),
+              ...rows.map((e) =>
+                e.map((val) => `"${String(val).replace(/"/g, '""')}"`).join(',')
+              ),
+            ].join('\n');
+
           const encodedUri = encodeURI(csvContent);
-          const link = document.createElement("a");
-          link.setAttribute("href", encodedUri);
-          link.setAttribute("download", `audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
+          const link = document.createElement('a');
+          link.setAttribute('href', encodedUri);
+          link.setAttribute(
+            'download',
+            `audit_logs_${new Date().toISOString().split('T')[0]}.csv`
+          );
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -3860,14 +3964,26 @@ const SuperAdminPage = () => {
               gap={2}
             >
               <Box>
-                <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: -0.5 }}>
+                <Typography
+                  variant="h4"
+                  fontWeight={800}
+                  sx={{ letterSpacing: -0.5 }}
+                >
                   {pt('auditLog')}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 0.5 }}
+                >
                   {t('description')}
                 </Typography>
               </Box>
-              <Stack direction="row" spacing={1.5} width={{ xs: '100%', sm: 'auto' }}>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                width={{ xs: '100%', sm: 'auto' }}
+              >
                 <Button
                   startIcon={<GetApp />}
                   variant="outlined"
@@ -3876,7 +3992,7 @@ const SuperAdminPage = () => {
                     borderRadius: 2.5,
                     textTransform: 'none',
                     fontWeight: 600,
-                    width: { xs: '100%', sm: 'auto' }
+                    width: { xs: '100%', sm: 'auto' },
                   }}
                 >
                   {t('export')}
@@ -3894,7 +4010,7 @@ const SuperAdminPage = () => {
                     '&:hover': {
                       boxShadow: '0 6px 16px rgba(244, 67, 54, 0.3)',
                     },
-                    width: { xs: '100%', sm: 'auto' }
+                    width: { xs: '100%', sm: 'auto' },
                   }}
                 >
                   {pt('clear')}
@@ -3909,34 +4025,38 @@ const SuperAdminPage = () => {
                   title: t('totalEvents'),
                   value: auditTotal,
                   icon: <History sx={{ fontSize: 20 }} />,
-                  gradient: 'linear-gradient(135deg, rgba(33, 150, 243, 0.03) 0%, rgba(33, 150, 243, 0.07) 100%)',
+                  gradient:
+                    'linear-gradient(135deg, rgba(33, 150, 243, 0.03) 0%, rgba(33, 150, 243, 0.07) 100%)',
                   border: '1px solid rgba(33, 150, 243, 0.12)',
-                  color: '#2196f3'
+                  color: '#2196f3',
                 },
                 {
                   title: t('activeOperators'),
                   value: auditStats.uniqueUsers,
                   icon: <People sx={{ fontSize: 20 }} />,
-                  gradient: 'linear-gradient(135deg, rgba(76, 175, 80, 0.03) 0%, rgba(76, 175, 80, 0.07) 100%)',
+                  gradient:
+                    'linear-gradient(135deg, rgba(76, 175, 80, 0.03) 0%, rgba(76, 175, 80, 0.07) 100%)',
                   border: '1px solid rgba(76, 175, 80, 0.12)',
-                  color: '#4caf50'
+                  color: '#4caf50',
                 },
                 {
                   title: t('securityEvents'),
                   value: auditStats.securityEvents,
                   icon: <Security sx={{ fontSize: 20 }} />,
-                  gradient: 'linear-gradient(135deg, rgba(244, 67, 54, 0.03) 0%, rgba(244, 67, 54, 0.07) 100%)',
+                  gradient:
+                    'linear-gradient(135deg, rgba(244, 67, 54, 0.03) 0%, rgba(244, 67, 54, 0.07) 100%)',
                   border: '1px solid rgba(244, 67, 54, 0.12)',
-                  color: '#f44336'
+                  color: '#f44336',
                 },
                 {
                   title: t('frequentAction'),
                   value: formatAuditAction(auditStats.mostFrequentAction, lang),
                   icon: <AutoGraph sx={{ fontSize: 20 }} />,
-                  gradient: 'linear-gradient(135deg, rgba(156, 39, 176, 0.03) 0%, rgba(156, 39, 176, 0.07) 100%)',
+                  gradient:
+                    'linear-gradient(135deg, rgba(156, 39, 176, 0.03) 0%, rgba(156, 39, 176, 0.07) 100%)',
                   border: '1px solid rgba(156, 39, 176, 0.12)',
-                  color: '#9c27b0'
-                }
+                  color: '#9c27b0',
+                },
               ].map((card, i) => (
                 <Grid item xs={12} sm={6} md={3} key={i}>
                   <motion.div
@@ -3960,22 +4080,46 @@ const SuperAdminPage = () => {
                         backdropFilter: 'blur(20px)',
                       }}
                     >
-                      <Box sx={{
-                        p: 1.25,
-                        borderRadius: '8px',
-                        bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.8)',
-                        display: 'flex',
-                        color: card.color,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                        flexShrink: 0
-                      }}>
+                      <Box
+                        sx={{
+                          p: 1.25,
+                          borderRadius: '8px',
+                          bgcolor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(0, 0, 0, 0.2)'
+                              : 'rgba(255, 255, 255, 0.8)',
+                          display: 'flex',
+                          color: card.color,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                          flexShrink: 0,
+                        }}
+                      >
                         {card.icon}
                       </Box>
                       <Box minWidth={0} sx={{ flexGrow: 1 }}>
-                        <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          fontWeight={700}
+                          sx={{
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                            display: 'block',
+                          }}
+                        >
                           {card.title}
                         </Typography>
-                        <Typography variant="subtitle1" fontWeight={800} sx={{ color: card.color, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', mt: 0.25 }}>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight={800}
+                          sx={{
+                            color: card.color,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            mt: 0.25,
+                          }}
+                        >
                           {card.value}
                         </Typography>
                       </Box>
@@ -4014,20 +4158,31 @@ const SuperAdminPage = () => {
                   size="small"
                   placeholder={t('searchPlaceholder')}
                   value={auditSearch}
-                  onChange={(e) => { setAuditSearch(e.target.value); setAuditPage(1); }}
+                  onChange={(e) => {
+                    setAuditSearch(e.target.value);
+                    setAuditPage(1);
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Search sx={{ color: 'text.secondary', fontSize: 20 }} />
+                        <Search
+                          sx={{ color: 'text.secondary', fontSize: 20 }}
+                        />
                       </InputAdornment>
                     ),
                     endAdornment: auditSearch && (
                       <InputAdornment position="end">
-                        <IconButton size="small" onClick={() => { setAuditSearch(''); setAuditPage(1); }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setAuditSearch('');
+                            setAuditPage(1);
+                          }}
+                        >
                           <Clear sx={{ fontSize: 16 }} />
                         </IconButton>
                       </InputAdornment>
-                    )
+                    ),
                   }}
                 />
               </Box>
@@ -4040,12 +4195,18 @@ const SuperAdminPage = () => {
                 alignItems="center"
                 width="100%"
               >
-                <FormControl size="small" sx={{ flex: 1, minWidth: 120, width: '100%' }}>
+                <FormControl
+                  size="small"
+                  sx={{ flex: 1, minWidth: 120, width: '100%' }}
+                >
                   <InputLabel>{t('action')}</InputLabel>
                   <Select
                     value={auditActionFilter}
                     label={t('action')}
-                    onChange={(e) => { setAuditActionFilter(e.target.value); setAuditPage(1); }}
+                    onChange={(e) => {
+                      setAuditActionFilter(e.target.value);
+                      setAuditPage(1);
+                    }}
                   >
                     <MenuItem value="ALL">{pt('all')}</MenuItem>
                     <MenuItem value="LOGIN">LOGIN</MenuItem>
@@ -4056,15 +4217,21 @@ const SuperAdminPage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl size="small" sx={{ flex: 1.2, minWidth: 160, width: '100%' }}>
+                <FormControl
+                  size="small"
+                  sx={{ flex: 1.2, minWidth: 160, width: '100%' }}
+                >
                   <InputLabel>{t('operator')}</InputLabel>
                   <Select
                     value={auditUserFilter}
                     label={t('operator')}
-                    onChange={(e) => { setAuditUserFilter(e.target.value); setAuditPage(1); }}
+                    onChange={(e) => {
+                      setAuditUserFilter(e.target.value);
+                      setAuditPage(1);
+                    }}
                   >
                     <MenuItem value="">{t('allOperators')}</MenuItem>
-                    {admins.map(u => (
+                    {admins.map((u) => (
                       <MenuItem key={u.id} value={u.id}>
                         {u.name || u.email}
                       </MenuItem>
@@ -4072,12 +4239,18 @@ const SuperAdminPage = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl size="small" sx={{ flex: 1, minWidth: 120, width: '100%' }}>
+                <FormControl
+                  size="small"
+                  sx={{ flex: 1, minWidth: 120, width: '100%' }}
+                >
                   <InputLabel>{t('object')}</InputLabel>
                   <Select
                     value={auditTargetFilter}
                     label={t('object')}
-                    onChange={(e) => { setAuditTargetFilter(e.target.value); setAuditPage(1); }}
+                    onChange={(e) => {
+                      setAuditTargetFilter(e.target.value);
+                      setAuditPage(1);
+                    }}
                   >
                     <MenuItem value="ALL">{pt('all')}</MenuItem>
                     <MenuItem value="User">User</MenuItem>
@@ -4105,7 +4278,7 @@ const SuperAdminPage = () => {
                     height: 40,
                     whiteSpace: 'nowrap',
                     px: 3,
-                    width: { xs: '100%', md: 'auto' }
+                    width: { xs: '100%', md: 'auto' },
                   }}
                 >
                   {t('resetFilters')}
@@ -4116,20 +4289,45 @@ const SuperAdminPage = () => {
             {/* Table */}
             <TableContainer
               component={GlassPaper}
-              sx={{ overflow: 'auto', boxShadow: '0 4px 20px rgba(0,0,0,0.02)' }}
+              sx={{
+                overflow: 'auto',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+              }}
             >
               <Table
                 size="medium"
                 sx={{ minWidth: { xs: 300, sm: 500, md: 700, lg: 850 } }}
               >
-                <TableHead sx={{ bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
+                <TableHead
+                  sx={{
+                    bgcolor: (theme) =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255,255,255,0.02)'
+                        : 'rgba(0,0,0,0.01)',
+                  }}
+                >
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700, width: '180px' }}>{pt('time')}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{t('operator')}</TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: '120px' }}>{pt('action')}</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>{pt('object')}</TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: '150px' }}>{t('ipAddress').replace(':', '')}</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700, width: '100px' }}>{t('detailsCol')}</TableCell>
+                    <TableCell sx={{ fontWeight: 700, width: '180px' }}>
+                      {pt('time')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {t('operator')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, width: '120px' }}>
+                      {pt('action')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {pt('object')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700, width: '150px' }}>
+                      {t('ipAddress').replace(':', '')}
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ fontWeight: 700, width: '100px' }}
+                    >
+                      {t('detailsCol')}
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -4141,7 +4339,11 @@ const SuperAdminPage = () => {
                     </TableRow>
                   ) : auditLogs.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 8, color: 'text.secondary' }}>
+                      <TableCell
+                        colSpan={6}
+                        align="center"
+                        sx={{ py: 8, color: 'text.secondary' }}
+                      >
                         {t('noEvents')}
                       </TableCell>
                     </TableRow>
@@ -4155,28 +4357,62 @@ const SuperAdminPage = () => {
                           initial={{ opacity: 0, y: 4 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2, delay: Math.min(index * 0.03, 0.3) }}
+                          transition={{
+                            duration: 0.2,
+                            delay: Math.min(index * 0.03, 0.3),
+                          }}
                           sx={{
                             cursor: 'pointer',
                             '&:hover': {
-                              bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.03) !important' : 'rgba(0,0,0,0.01) !important',
-                            }
+                              bgcolor: (theme) =>
+                                theme.palette.mode === 'dark'
+                                  ? 'rgba(255,255,255,0.03) !important'
+                                  : 'rgba(0,0,0,0.01) !important',
+                            },
                           }}
                           onClick={() => openAuditDrawer(log)}
                         >
-                          <TableCell sx={{ fontSize: '0.85rem', color: 'text.secondary' }}>
+                          <TableCell
+                            sx={{
+                              fontSize: '0.85rem',
+                              color: 'text.secondary',
+                            }}
+                          >
                             {new Date(log.created_at).toLocaleString()}
                           </TableCell>
                           <TableCell>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
-                              <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32, fontSize: '0.9rem', fontWeight: 600 }}>
-                                {log.user_name ? log.user_name.charAt(0).toUpperCase() : 'S'}
+                            <Stack
+                              direction="row"
+                              spacing={1.5}
+                              alignItems="center"
+                            >
+                              <Avatar
+                                sx={{
+                                  bgcolor: 'primary.main',
+                                  width: 32,
+                                  height: 32,
+                                  fontSize: '0.9rem',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {log.user_name
+                                  ? log.user_name.charAt(0).toUpperCase()
+                                  : 'S'}
                               </Avatar>
                               <Box minWidth={0}>
-                                <Typography variant="body2" fontWeight={700} noWrap>
+                                <Typography
+                                  variant="body2"
+                                  fontWeight={700}
+                                  noWrap
+                                >
                                   {log.user_name || 'System'}
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary" noWrap display="block">
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  noWrap
+                                  display="block"
+                                >
                                   {log.user_email || 'system@morphocheck.uz'}
                                 </Typography>
                               </Box>
@@ -4201,20 +4437,36 @@ const SuperAdminPage = () => {
                                   {log.target_id ? ` #${log.target_id}` : ''}
                                 </Typography>
                               )}
-                              <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 280, textOverflow: 'ellipsis' }}>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                noWrap
+                                sx={{ maxWidth: 280, textOverflow: 'ellipsis' }}
+                              >
                                 {formatAuditDetails(log.details, lang)}
                               </Typography>
                             </Stack>
                           </TableCell>
                           <TableCell>
-                            <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                              color="text.secondary"
+                            >
                               <Public sx={{ fontSize: 16 }} />
-                              <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                              <Typography
+                                variant="body2"
+                                sx={{ fontFamily: 'monospace' }}
+                              >
                                 {log.ip_address || '127.0.0.1'}
                               </Typography>
                             </Stack>
                           </TableCell>
-                          <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                          <TableCell
+                            align="right"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <IconButton
                               size="small"
                               color="primary"
@@ -4229,7 +4481,7 @@ const SuperAdminPage = () => {
                   )}
                 </TableBody>
               </Table>
-              
+
               {/* Pagination */}
               <TablePagination
                 rowsPerPageOptions={[10, 25, 50, 100]}
@@ -4256,18 +4508,32 @@ const SuperAdminPage = () => {
                 sx: {
                   width: { xs: '100%', sm: 460, md: 520 },
                   p: 3,
-                  background: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                  background: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(30, 30, 40, 0.95)'
+                      : 'rgba(255, 255, 255, 0.98)',
                   backdropFilter: 'blur(20px)',
                   boxShadow: '-10px 0 30px rgba(0,0,0,0.15)',
-                  borderLeft: (theme) => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`
-                }
+                  borderLeft: (theme) =>
+                    `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+                },
               }}
             >
               {selectedAuditLog && (
                 <Stack spacing={3} sx={{ height: '100%' }}>
                   {/* Drawer Header */}
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6" fontWeight={800} display="flex" alignItems="center" gap={1}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
+                    <Typography
+                      variant="h6"
+                      fontWeight={800}
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                    >
                       <Info color="primary" /> {t('eventDetails')}
                     </Typography>
                     <IconButton onClick={closeAuditDrawer}>
@@ -4279,15 +4545,27 @@ const SuperAdminPage = () => {
 
                   {/* Event Meta */}
                   <Stack spacing={1.5}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">{t('systemTime')}</Typography>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {t('systemTime')}
+                      </Typography>
                       <Typography variant="body2" fontWeight={600}>
                         {new Date(selectedAuditLog.created_at).toLocaleString()}
                       </Typography>
                     </Box>
 
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">{t('performedAction')}</Typography>
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {t('performedAction')}
+                      </Typography>
                       <Chip
                         label={formatAuditAction(selectedAuditLog.action, lang)}
                         size="small"
@@ -4295,10 +4573,23 @@ const SuperAdminPage = () => {
                       />
                     </Box>
 
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="body2" color="text.secondary">{t('systemObject')}</Typography>
-                      <Typography variant="body2" fontWeight={700} color="primary">
-                        {formatAuditTarget(selectedAuditLog.target_type, lang)} {selectedAuditLog.target_id ? `#${selectedAuditLog.target_id}` : ''}
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {t('systemObject')}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={700}
+                        color="primary"
+                      >
+                        {formatAuditTarget(selectedAuditLog.target_type, lang)}{' '}
+                        {selectedAuditLog.target_id
+                          ? `#${selectedAuditLog.target_id}`
+                          : ''}
                       </Typography>
                     </Box>
                   </Stack>
@@ -4307,26 +4598,45 @@ const SuperAdminPage = () => {
 
                   {/* Operator Info */}
                   <Stack spacing={1.5}>
-                    <Typography variant="subtitle2" fontWeight={800} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight={800}
+                      color="text.secondary"
+                      sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                    >
                       {t('operatorInfo')}
                     </Typography>
                     <Box display="flex" alignItems="center" gap={2}>
-                      <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
-                        {selectedAuditLog.user_name ? selectedAuditLog.user_name.charAt(0).toUpperCase() : 'S'}
+                      <Avatar
+                        sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}
+                      >
+                        {selectedAuditLog.user_name
+                          ? selectedAuditLog.user_name.charAt(0).toUpperCase()
+                          : 'S'}
                       </Avatar>
                       <Box>
                         <Typography variant="body2" fontWeight={700}>
                           {selectedAuditLog.user_name || 'System'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {selectedAuditLog.user_email || 'system@morphocheck.uz'}
+                          {selectedAuditLog.user_email ||
+                            'system@morphocheck.uz'}
                         </Typography>
                       </Box>
                     </Box>
                     <Box display="flex" alignItems="center" gap={1} mt={0.5}>
                       <Public sx={{ fontSize: 18, color: 'text.secondary' }} />
                       <Typography variant="body2" color="text.secondary">
-                        {t('ipAddress')} <span style={{ fontWeight: 600, fontFamily: 'monospace', color: (theme) => theme.palette.text.primary }}>{selectedAuditLog.ip_address || '127.0.0.1'}</span>
+                        {t('ipAddress')}{' '}
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            fontFamily: 'monospace',
+                            color: (theme) => theme.palette.text.primary,
+                          }}
+                        >
+                          {selectedAuditLog.ip_address || '127.0.0.1'}
+                        </span>
                       </Typography>
                     </Box>
                   </Stack>
@@ -4334,16 +4644,38 @@ const SuperAdminPage = () => {
                   <Divider />
 
                   {/* Event Details Content */}
-                  <Box sx={{ flexGrow: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box display="flex" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle2" fontWeight={800} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <Box
+                    sx={{
+                      flexGrow: 1,
+                      overflow: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 2,
+                    }}
+                  >
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={800}
+                        color="text.secondary"
+                        sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}
+                      >
                         {t('detailsTitle')}
                       </Typography>
                       <Tooltip title={t('copied')}>
-                        <IconButton size="small" onClick={() => {
-                          navigator.clipboard.writeText(JSON.stringify(selectedAuditLog, null, 2));
-                          toast.success(t('copied'));
-                        }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              JSON.stringify(selectedAuditLog, null, 2)
+                            );
+                            toast.success(t('copied'));
+                          }}
+                        >
                           <ContentCopy sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
@@ -4351,14 +4683,30 @@ const SuperAdminPage = () => {
 
                     {/* Formatted View */}
                     <Box>
-                      <Typography variant="caption" color="text.secondary" fontWeight={700} gutterBottom display="block">
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={700}
+                        gutterBottom
+                        display="block"
+                      >
                         {t('formattedData')}
                       </Typography>
                       <Paper
                         variant="outlined"
-                        sx={{ p: 1.5, bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.01)' : 'rgba(0,0,0,0.01)', borderRadius: 2 }}
+                        sx={{
+                          p: 1.5,
+                          bgcolor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(255,255,255,0.01)'
+                              : 'rgba(0,0,0,0.01)',
+                          borderRadius: 2,
+                        }}
                       >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}
+                        >
                           {formatAuditDetails(selectedAuditLog.details, lang)}
                         </Typography>
                       </Paper>
@@ -4370,15 +4718,31 @@ const SuperAdminPage = () => {
                         const parsed = JSON.parse(selectedAuditLog.details);
                         if (parsed && typeof parsed === 'object') {
                           return (
-                            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 150 }}>
-                              <Typography variant="caption" color="text.secondary" fontWeight={700} gutterBottom display="block">
+                            <Box
+                              sx={{
+                                flexGrow: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                minHeight: 150,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                fontWeight={700}
+                                gutterBottom
+                                display="block"
+                              >
                                 {t('rawJson')}
                               </Typography>
                               <Paper
                                 variant="outlined"
                                 sx={{
                                   p: 1.5,
-                                  bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)',
+                                  bgcolor: (theme) =>
+                                    theme.palette.mode === 'dark'
+                                      ? 'rgba(0,0,0,0.2)'
+                                      : 'rgba(0,0,0,0.02)',
                                   fontFamily: 'monospace',
                                   fontSize: '0.8rem',
                                   whiteSpace: 'pre-wrap',
@@ -4386,7 +4750,7 @@ const SuperAdminPage = () => {
                                   overflow: 'auto',
                                   borderRadius: 2,
                                   flexGrow: 1,
-                                  maxHeight: '240px'
+                                  maxHeight: '240px',
                                 }}
                               >
                                 {JSON.stringify(parsed, null, 2)}
@@ -4696,18 +5060,23 @@ const SuperAdminPage = () => {
                         <Box
                           component={motion.div}
                           layoutId="activeTabIndicator"
-                          transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                          transition={{
+                            type: 'spring',
+                            stiffness: 380,
+                            damping: 30,
+                          }}
                           sx={{
                             position: 'absolute',
                             inset: 0,
                             borderRadius: 3,
-                            background: 'linear-gradient(135deg, #14b8a6 0%, #2563eb 50%, #8b5cf6 100%)',
+                            background:
+                              'linear-gradient(135deg, #14b8a6 0%, #2563eb 50%, #8b5cf6 100%)',
                             boxShadow: '0 8px 20px rgba(37, 99, 235, 0.25)',
                             zIndex: -1,
                           }}
                         />
                       )}
-                      
+
                       {/* Inactive Hover / Border style */}
                       {!isSelected && (
                         <Box
@@ -4716,22 +5085,37 @@ const SuperAdminPage = () => {
                             inset: 0,
                             borderRadius: 3,
                             border: '1px solid',
-                            borderColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,118,110,0.08)',
-                            bgcolor: isDark ? 'rgba(255,255,255,0.01)' : 'rgba(15,118,110,0.01)',
+                            borderColor: isDark
+                              ? 'rgba(255,255,255,0.06)'
+                              : 'rgba(15,118,110,0.08)',
+                            bgcolor: isDark
+                              ? 'rgba(255,255,255,0.01)'
+                              : 'rgba(15,118,110,0.01)',
                             zIndex: -2,
                             opacity: 0,
                             transition: 'opacity 0.2s ease',
                             '&:hover': {
                               opacity: 1,
-                            }
+                            },
                           }}
                         />
                       )}
 
-                      <Box sx={{ mr: 1.25, display: 'flex', alignItems: 'center', opacity: isSelected ? 1 : 0.8 }}>
+                      <Box
+                        sx={{
+                          mr: 1.25,
+                          display: 'flex',
+                          alignItems: 'center',
+                          opacity: isSelected ? 1 : 0.8,
+                        }}
+                      >
                         {item.icon}
                       </Box>
-                      <Typography variant="body2" fontWeight={800} sx={{ fontSize: '0.82rem' }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        sx={{ fontSize: '0.82rem' }}
+                      >
                         {item.label}
                       </Typography>
                     </Box>
@@ -4801,7 +5185,9 @@ const SuperAdminPage = () => {
                   ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)'
                   : 'linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 250, 0.5) 100%)',
                 border: '1px solid',
-                borderColor: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(15, 118, 110, 0.08)',
+                borderColor: isDark
+                  ? 'rgba(255, 255, 255, 0.08)'
+                  : 'rgba(15, 118, 110, 0.08)',
                 backdropFilter: 'blur(15px)',
                 boxShadow: isDark
                   ? '0 10px 30px rgba(0,0,0,0.15)'
@@ -4823,17 +5209,51 @@ const SuperAdminPage = () => {
                 >
                   {tabItems[activeTab].label}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                  {new Date().toLocaleDateString(lang, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={600}
+                >
+                  {new Date().toLocaleDateString(lang, {
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
                 </Typography>
               </Box>
 
               {/* Quick System Stats */}
-              <Stack direction="row" spacing={1.5} sx={{ width: { xs: '100%', lg: 'auto' }, overflowX: 'auto', py: 0.2 }}>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  width: { xs: '100%', lg: 'auto' },
+                  overflowX: 'auto',
+                  py: 0.2,
+                }}
+              >
                 {[
-                  { label: HEADER_LABELS[lang]?.totalAdmins, value: adminReportSummary.admins + adminReportSummary.researchers, icon: <People sx={{ fontSize: 16 }} />, color: 'primary' },
-                  { label: HEADER_LABELS[lang]?.systemStatus, value: HEADER_LABELS[lang]?.active, icon: <Security sx={{ fontSize: 16 }} />, color: 'success' },
-                  { label: HEADER_LABELS[lang]?.database, value: HEADER_LABELS[lang]?.optimal, icon: <Storage sx={{ fontSize: 16 }} />, color: 'info' }
+                  {
+                    label: HEADER_LABELS[lang]?.totalAdmins,
+                    value:
+                      adminReportSummary.admins +
+                      adminReportSummary.researchers,
+                    icon: <People sx={{ fontSize: 16 }} />,
+                    color: 'primary',
+                  },
+                  {
+                    label: HEADER_LABELS[lang]?.systemStatus,
+                    value: HEADER_LABELS[lang]?.active,
+                    icon: <Security sx={{ fontSize: 16 }} />,
+                    color: 'success',
+                  },
+                  {
+                    label: HEADER_LABELS[lang]?.database,
+                    value: HEADER_LABELS[lang]?.optimal,
+                    icon: <Storage sx={{ fontSize: 16 }} />,
+                    color: 'info',
+                  },
                 ].map((stat, idx) => (
                   <Box
                     key={idx}
@@ -4847,9 +5267,13 @@ const SuperAdminPage = () => {
                       px: 1.5,
                       py: 0.5,
                       borderRadius: 2,
-                      bgcolor: isDark ? 'rgba(30, 41, 59, 0.5)' : 'rgba(255, 255, 255, 0.9)',
+                      bgcolor: isDark
+                        ? 'rgba(30, 41, 59, 0.5)'
+                        : 'rgba(255, 255, 255, 0.9)',
                       border: '1px solid',
-                      borderColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+                      borderColor: isDark
+                        ? 'rgba(255, 255, 255, 0.05)'
+                        : 'rgba(0, 0, 0, 0.04)',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.01)',
                     }}
                   >
@@ -4863,11 +5287,21 @@ const SuperAdminPage = () => {
                     >
                       {stat.icon}
                     </Avatar>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem', fontWeight: 600 }}>
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontSize: '0.68rem', fontWeight: 600 }}
+                      >
                         {stat.label}:
                       </Typography>
-                      <Typography variant="caption" fontWeight={800} color="text.primary">
+                      <Typography
+                        variant="caption"
+                        fontWeight={800}
+                        color="text.primary"
+                      >
                         {stat.value}
                       </Typography>
                     </Box>
@@ -5352,21 +5786,43 @@ const SuperAdminPage = () => {
               <Stack spacing={1.5} sx={{ mt: 1 }}>
                 <Paper
                   variant="outlined"
-                  sx={{ p: 2, borderRadius: 1.5, borderColor: 'error.main', bgcolor: 'error.50' }}
+                  sx={{
+                    p: 2,
+                    borderRadius: 1.5,
+                    borderColor: 'error.main',
+                    bgcolor: 'error.50',
+                  }}
                 >
                   <FormControlLabel
-                    sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
-                    label={<Typography fontWeight={800} color="error.main">Faoliyatni cheklash</Typography>}
+                    sx={{
+                      m: 0,
+                      width: '100%',
+                      justifyContent: 'space-between',
+                    }}
+                    label={
+                      <Typography fontWeight={800} color="error.main">
+                        Faoliyatni cheklash
+                      </Typography>
+                    }
                     labelPlacement="start"
                     control={
                       <Switch
                         color="error"
                         checked={adminForm.is_restricted === 1}
-                        onChange={(e) => setAdminForm({ ...adminForm, is_restricted: e.target.checked ? 1 : 0 })}
+                        onChange={(e) =>
+                          setAdminForm({
+                            ...adminForm,
+                            is_restricted: e.target.checked ? 1 : 0,
+                          })
+                        }
                       />
                     }
                   />
-                  <Typography variant="caption" color="error.main" sx={{ display: 'block', mt: 1 }}>
+                  <Typography
+                    variant="caption"
+                    color="error.main"
+                    sx={{ display: 'block', mt: 1 }}
+                  >
                     Agar bu yoqilsa, foydalanuvchi tizimdan foydalana olmaydi.
                   </Typography>
                 </Paper>
@@ -5867,63 +6323,120 @@ const SuperAdminPage = () => {
       {/* Custom Confirmation Dialog */}
       {(() => {
         const CONFIRM_TRANSLATIONS = {
-          uz: { title: 'Tasdiqlash', cancel: 'Bekor qilish', confirm: 'Ha, tasdiqlayman' },
-          ru: { title: 'Подтверждение', cancel: 'Отмена', confirm: 'Да, подтверждаю' },
-          en: { title: 'Confirmation', cancel: 'Cancel', confirm: 'Yes, confirm' },
+          uz: {
+            title: 'Tasdiqlash',
+            cancel: 'Bekor qilish',
+            confirm: 'Ha, tasdiqlayman',
+          },
+          ru: {
+            title: 'Подтверждение',
+            cancel: 'Отмена',
+            confirm: 'Да, подтверждаю',
+          },
+          en: {
+            title: 'Confirmation',
+            cancel: 'Cancel',
+            confirm: 'Yes, confirm',
+          },
           tr: { title: 'Onay', cancel: 'İptal', confirm: 'Evet, onayla' },
-          tm: { title: 'Tassyklamak', cancel: 'Bes et', confirm: 'Hawa, tassykla' },
-          tg: { title: 'Тасдиқкунӣ', cancel: 'Рад кардан', confirm: 'Бале, тасдиқ мекунам' },
-          kz: { title: 'Растау', cancel: 'Бас тарту', confirm: 'Иә, растаймын' },
-          ky: { title: 'Ырастоо', cancel: 'Жокко чыгаруу', confirm: 'Ооба, ырастайм' }
+          tm: {
+            title: 'Tassyklamak',
+            cancel: 'Bes et',
+            confirm: 'Hawa, tassykla',
+          },
+          tg: {
+            title: 'Тасдиқкунӣ',
+            cancel: 'Рад кардан',
+            confirm: 'Бале, тасдиқ мекунам',
+          },
+          kz: {
+            title: 'Растау',
+            cancel: 'Бас тарту',
+            confirm: 'Иә, растаймын',
+          },
+          ky: {
+            title: 'Ырастоо',
+            cancel: 'Жокко чыгаруу',
+            confirm: 'Ооба, ырастайм',
+          },
         };
         const getConfirmText = (key) => {
-          const trans = CONFIRM_TRANSLATIONS[lang] || CONFIRM_TRANSLATIONS['en'];
+          const trans =
+            CONFIRM_TRANSLATIONS[lang] || CONFIRM_TRANSLATIONS['en'];
           return trans[key] || CONFIRM_TRANSLATIONS['en'][key];
         };
         return (
           <Dialog
             open={confirmDialog.open}
-            onClose={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+            onClose={() =>
+              setConfirmDialog((prev) => ({ ...prev, open: false }))
+            }
             PaperProps={{
               sx: {
-                background: (theme) => theme.palette.mode === 'dark' ? 'rgba(30, 30, 40, 0.95)' : 'rgba(255, 255, 255, 0.98)',
+                background: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(30, 30, 40, 0.95)'
+                    : 'rgba(255, 255, 255, 0.98)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: 3,
                 border: '1px solid',
-                borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+                borderColor: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(255,255,255,0.08)'
+                    : 'rgba(0,0,0,0.08)',
                 p: 1,
                 minWidth: 320,
                 maxWidth: 440,
                 boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                zIndex: 1600
-              }
+                zIndex: 1600,
+              },
             }}
           >
-            <DialogTitle sx={{ fontWeight: 800, pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <WarningAmber color={confirmDialog.isDestructive ? "error" : "primary"} sx={{ fontSize: 28 }} />
+            <DialogTitle
+              sx={{
+                fontWeight: 800,
+                pb: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+              }}
+            >
+              <WarningAmber
+                color={confirmDialog.isDestructive ? 'error' : 'primary'}
+                sx={{ fontSize: 28 }}
+              />
               {confirmDialog.title || getConfirmText('title')}
             </DialogTitle>
             <DialogContent>
-              <DialogContentText sx={{ color: 'text.primary', fontWeight: 500, fontSize: '0.95rem', lineHeight: 1.5 }}>
+              <DialogContentText
+                sx={{
+                  color: 'text.primary',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  lineHeight: 1.5,
+                }}
+              >
                 {confirmDialog.message}
               </DialogContentText>
             </DialogContent>
             <DialogActions sx={{ px: 3, pb: 2, pt: 1.5, gap: 1 }}>
               <Button
                 variant="outlined"
-                onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                onClick={() =>
+                  setConfirmDialog((prev) => ({ ...prev, open: false }))
+                }
                 sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
               >
                 {getConfirmText('cancel')}
               </Button>
               <Button
                 variant="contained"
-                color={confirmDialog.isDestructive ? "error" : "primary"}
+                color={confirmDialog.isDestructive ? 'error' : 'primary'}
                 onClick={async () => {
                   if (confirmDialog.onConfirm) {
                     await confirmDialog.onConfirm();
                   }
-                  setConfirmDialog(prev => ({ ...prev, open: false }));
+                  setConfirmDialog((prev) => ({ ...prev, open: false }));
                 }}
                 sx={{
                   borderRadius: 2,
@@ -5931,7 +6444,7 @@ const SuperAdminPage = () => {
                   fontWeight: 600,
                   boxShadow: confirmDialog.isDestructive
                     ? '0 4px 12px rgba(244, 67, 54, 0.2)'
-                    : '0 4px 12px rgba(33, 150, 243, 0.2)'
+                    : '0 4px 12px rgba(33, 150, 243, 0.2)',
                 }}
                 autoFocus
               >

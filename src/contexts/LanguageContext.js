@@ -2258,6 +2258,7 @@ translations.tg = {
   bmiForAgeChart: 'Графики BMI',
   loading: 'Бор шуда истодааст...',
   pageNotFound: 'Саҳифа ёфт нашуд',
+  pageNotFoundDesc: 'Суроға нодуруст аст ё саҳифа кӯчонида шудааст.',
   personalInfo: 'Маълумоти шахсӣ',
   firstNameLabel: 'Ном',
   lastNameLabel: 'Насаб',
@@ -3039,6 +3040,285 @@ translations.tm = {
   quickPhraseCheck: 'Hasabaty barlaň',
   quickPhraseThanks: 'Sag boluň!',
 };
+
+translations.en = {
+  ...translations.uz, // Fallback to uz for untranslated keys
+
+  // Header
+  home: 'Home',
+  homeTooltip: 'Main page',
+  analyze: 'Analyze',
+  analyzeTooltip: 'MorphoCheck Pro',
+  myRecords: 'My Records',
+  adminPanel: 'Admin Panel',
+  adminPanelTooltip: 'Management panel',
+  themeStyle: 'Theme Style',
+  lightTheme: 'Light theme',
+  darkTheme: 'Dark theme',
+  subtitle: 'Anthropometric analysis',
+  selectLang: 'Select Language',
+  roleAdmin: 'Admin',
+  roleSuperAdmin: 'Super Admin',
+
+  // IntroPage
+  newEra: 'A New Era in Healthcare',
+  heroTitle1: 'Digital',
+  heroTitle2: 'anthropometry',
+  heroDesc:
+    'MorphoCheck Pro is not just an analysis, but your personal digital health monitor. Z-score, somatotype, and AI recommendations — all in a professional format.',
+  enterSystem: 'Enter System',
+  details: 'Details',
+  users: 'Users',
+  accuracy: 'Analysis accuracy',
+  liveReport: 'Live report',
+  whyMorpho: 'Why MorphoCheck?',
+  whyDesc: 'A combination of the best technologies for professional analysis.',
+  feat1Title: 'Secure and Reliable',
+  feat1Desc:
+    'Your data is fully protected and analyzed according to international standards.',
+  feat2Title: 'Dynamic Monitoring',
+  feat2Desc:
+    'Track the results of each measurement in real-time and analyze changes.',
+  feat3Title: 'Professional Reports',
+  feat3Desc:
+    'Download detailed reports in PDF, DOCX, and Excel formats in seconds.',
+  allRights: 'All rights reserved.',
+  downloadDocx: 'Download Word',
+  processTitle: 'How it works?',
+  step1Title: 'Data Entry',
+  step1Desc: 'Enter anthropometric measurements into the system.',
+  step2Title: 'AI Analysis',
+  step2Desc: 'Artificial intelligence analyzes the data in seconds.',
+  step3Title: 'Get Report',
+  step3Desc: 'Download the ready professional report.',
+  trustedBy: 'Trusted Partners',
+  getStartedNow: 'Get Started Now',
+  storyTitle: 'From Clinical Analysis to Regional Monitoring',
+  storyDesc:
+    'MorphoCheck Pro analyzes measurements, isolates risk signals, and makes results understandable at the regional level.',
+  storyStep1Eyebrow: '01 / Collection',
+  storyStep1Title: 'Data is gathered in one place',
+  storyStep1Desc:
+    'Anthropometric measurements, region, and age groups are prepared for clinical analysis.',
+  storyStep1Metric: 'data signal',
+  storyStep2Eyebrow: '02 / Analysis',
+  storyStep2Title: 'WHO LMS and Z-score run automatically',
+  storyStep2Desc:
+    'The system calculates HAZ, BAZ, and SDS in real-time, isolating risk signals.',
+  storyStep2Metric: 'analysis sync',
+  storyStep3Eyebrow: '03 / Map',
+  storyStep3Title: 'Regional status comes alive with movement',
+  storyStep3Desc:
+    'The map layer shows clinical monitoring signals at the province level.',
+  storyStep3Metric: 'regional layers',
+  storyStep4Eyebrow: '04 / Report',
+  storyStep4Title: 'Results turn into reports',
+  storyStep4Desc:
+    'Ready-made analytical views and export paths open for doctors, admins, and researchers.',
+  storyStep4Metric: 'ready report',
+
+  infoTitle: 'Future Medicine',
+  infoSubtitle:
+    'Our platform helps you understand anthropometric data and monitor health with modern technologies.',
+  infoFeat1Title: 'Z-Score Analysis',
+  infoFeat1Desc:
+    'Real-time analysis of physical development indicators of children and adolescents according to WHO standards.',
+  infoFeat2Title: 'Heath-Carter Somatotype',
+  infoFeat2Desc:
+    'Scientific determination of body structure type and recommendations for sports selection.',
+  infoFeat3Title: 'AI Recommendations',
+  infoFeat3Desc:
+    'Personalized healthy lifestyle and nutrition recommendations based on analysis results with AI assistance.',
+  infoFeat4Title: 'Professional Reports',
+  infoFeat4Desc:
+    'Download international-level reports in PDF, DOCX, and Excel formats.',
+  whyUs: 'Why Us?',
+  whyList1: 'Full compliance with WHO standards',
+  whyList2: 'Specialized analysis for children and athletes',
+  whyList3: 'Cloud data storage and security',
+  whyList4: 'Dynamic analytical charts',
+  whyList5: 'Export options (PDF, DOCX, XLSX)',
+  tryNow: 'Try Now',
+  footerCopy: 'All rights reserved.',
+};
+
+if (!translations.tg) translations.tg = {};
+Object.assign(translations.tg, {
+  dataDrivenHealth: 'Тиббиёт дар асоси маълумот',
+  deepAnalysisAndAi: 'Таҳлили амиқ ва <br /> ташхиси AI',
+  morphoProDesc:
+    'Системаи MorphoCheck Pro рушди кӯдаконро дар асоси стандартҳои ТУТ бо дақиқии 99.8% таҳлил мекунад. Нишондиҳандаҳои Z-score, индекси массаи бадан (BMI) ва соматотипро худкор ҳисоб карда, ба табибон хулосаҳои клиникии тайёр медиҳад.',
+  analysisAccuracy: 'Дақиқии таҳлил',
+  aiProcessingSpeed: 'Суръати таҳлили AI',
+  clinicalParams: 'Параметрҳои клиникӣ',
+  zscoreDynamics: 'Динамикаи тағйироти Z-Score',
+  somatotypeTitle: 'Соматотип',
+  aiConclusion: 'Хулосаи AI',
+  mesosomaticType: 'Навъи мезосоматикӣ',
+  mesosomaticDesc:
+    'Сохти бадан мутаносиб рушд ёфтааст, массаи мушакҳо дар сатҳи муқаррарӣ мебошад.',
+  whoStandards: 'Стандартҳои ТУТ',
+  zscoreMonitoring: 'Мониторинги Z-score',
+  aiClinicalAnalysis: 'Таҳлили клиникии AI',
+  aboutAuthor: 'Дар бораи муаллиф',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.uz) translations.uz = {};
+Object.assign(translations.uz, {
+  dataDrivenHealth: 'Data-Driven Healthcare',
+  deepAnalysisAndAi: 'Chuqur tahlil va <br /> AI diagnostika',
+  morphoProDesc:
+    "MorphoCheck Pro tizimi JSST standartlari asosida bolalar o'sishini 99.8% aniqlikda tahlil qiladi. Z-score ko'rsatkichlari, tana massasi indeksi (BMI) va somatotipni avtomatik hisoblab, shifokorlarga tayyor klinik xulosalar taqdim etadi.",
+  analysisAccuracy: 'Tahlil aniqligi',
+  aiProcessingSpeed: 'AI qayta ishlash tezligi',
+  clinicalParams: 'Klinik parametrlar',
+  zscoreDynamics: "Z-Score O'zgarish Dinamikasi",
+  somatotypeTitle: 'Somatotip',
+  aiConclusion: 'AI xulosasi',
+  mesosomaticType: 'Mezosomatik tip',
+  mesosomaticDesc:
+    'Tana tuzilishi proporsional rivojlangan, muskullar massasi normal darajada.',
+  whoStandards: 'WHO standartlari',
+  zscoreMonitoring: 'Z-score monitoring',
+  aiClinicalAnalysis: 'AI klinik tahlil',
+  aboutAuthor: 'Avtor haqida',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.ru) translations.ru = {};
+Object.assign(translations.ru, {
+  dataDrivenHealth: 'Медицина на основе данных',
+  deepAnalysisAndAi: 'Глубокая аналитика и <br/> ИИ-диагностика',
+  morphoProDesc:
+    'Система MorphoCheck Pro анализирует рост детей по стандартам ВОЗ с точностью 99.8%. Автоматически рассчитывает Z-score, индекс массы тела (ИМТ) и соматотип, предоставляя врачам готовые клинические заключения.',
+  analysisAccuracy: 'Точность анализа',
+  aiProcessingSpeed: 'Скорость обработки ИИ',
+  clinicalParams: 'Клинические параметры',
+  zscoreDynamics: 'Динамика изменений Z-Score',
+  somatotypeTitle: 'Соматотип',
+  aiConclusion: 'Заключение ИИ',
+  mesosomaticType: 'Мезосоматический тип',
+  mesosomaticDesc:
+    'Пропорциональное развитие телосложения, мышечная масса в норме.',
+  whoStandards: 'Стандарты ВОЗ',
+  zscoreMonitoring: 'Мониторинг Z-score',
+  aiClinicalAnalysis: 'Клинический анализ ИИ',
+  aboutAuthor: 'Об авторе',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.kz) translations.kz = {};
+Object.assign(translations.kz, {
+  dataDrivenHealth: 'Деректерге негізделген денсаулық сақтау',
+  deepAnalysisAndAi: 'Терең талдау және <br /> ЖИ диагностикасы',
+  morphoProDesc:
+    'MorphoCheck Pro жүйесі ДДҰ стандарттары негізінде балалардың өсуін 99.8% дәлдікпен талдайды. Z-score көрсеткіштерін, дене салмағының индексін (ДМТ) және соматотипті автоматты түрде есептеп, дәрігерлерге дайын клиникалық қорытындылар береді.',
+  analysisAccuracy: 'Талдау дәлдігі',
+  aiProcessingSpeed: 'ЖИ өңдеу жылдамдығы',
+  clinicalParams: 'Клиникалық параметрлер',
+  zscoreDynamics: 'Z-Score Өзгеріс Динамикасы',
+  somatotypeTitle: 'Соматотип',
+  aiConclusion: 'ЖИ қорытындысы',
+  mesosomaticType: 'Мезосоматикалық тип',
+  mesosomaticDesc:
+    'Дене бітімі пропорционалды дамыған, бұлшықет массасы қалыпты деңгейде.',
+  whoStandards: 'ДДҰ стандарттары',
+  zscoreMonitoring: 'Z-score мониторингі',
+  aiClinicalAnalysis: 'ЖИ клиникалық талдауы',
+  aboutAuthor: 'Автор туралы',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.ky) translations.ky = {};
+Object.assign(translations.ky, {
+  dataDrivenHealth: 'Маалыматтарга негизделген медицина',
+  deepAnalysisAndAi: 'Терең талдоо жана <br /> КИ диагностикасы',
+  morphoProDesc:
+    'MorphoCheck Pro системасы ДССУ стандарттарынын негизинде балдардын өсүшүн 99.8% тактык менен талдайт. Z-score көрсөткүчтөрүн, дене салмагынын индексин (БМИ) жана соматотипти автоматтык түрдө эсептеп, дарыгерлерге даяр клиникалык корутундуларды берет.',
+  analysisAccuracy: 'Талдоо тактыгы',
+  aiProcessingSpeed: 'КИ иштетүү ылдамдыгы',
+  clinicalParams: 'Клиникалык параметрлер',
+  zscoreDynamics: 'Z-Score Өзгөрүү Динамикасы',
+  somatotypeTitle: 'Соматотип',
+  aiConclusion: 'КИ корутундусу',
+  mesosomaticType: 'Мезосоматикалык тип',
+  mesosomaticDesc:
+    'Дене түзүлүшү пропорционалдуу өнүккөн, булчуң массасы нормалдуу деңгээлде.',
+  whoStandards: 'ДССУ стандарттары',
+  zscoreMonitoring: 'Z-score мониторинги',
+  aiClinicalAnalysis: 'КИ клиникалык талдоосу',
+  aboutAuthor: 'Автор жөнүндө',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.tm) translations.tm = {};
+Object.assign(translations.tm, {
+  dataDrivenHealth: 'Maglumatlara esaslanýan saglygy goraýyş',
+  deepAnalysisAndAi: 'Çuňňur derňew we <br /> AI diagnostikasy',
+  morphoProDesc:
+    'MorphoCheck Pro ulgamy BSGG standartlary esasynda çagalaryň ösüşini 99.8% takyklyk bilen derňeýär. Z-score görkezijilerini, beden agramy indeksini (BMI) we somatotipi awtomatiki hasaplap, lukmanlara taýýar kliniki netijeleri berýär.',
+  analysisAccuracy: 'Derňew takyklygy',
+  aiProcessingSpeed: 'AI gaýtadan işlemek tizligi',
+  clinicalParams: 'Kliniki parametrler',
+  zscoreDynamics: 'Z-Score Üýtgeýiş Dinamikasy',
+  somatotypeTitle: 'Somatotip',
+  aiConclusion: 'AI netijesi',
+  mesosomaticType: 'Mezosomatik tip',
+  mesosomaticDesc:
+    'Beden gurluşy proporsional ösen, myşsa massasy kadaly derejede.',
+  whoStandards: 'BSGG standartlary',
+  zscoreMonitoring: 'Z-score monitoring',
+  aiClinicalAnalysis: 'AI kliniki derňewi',
+  aboutAuthor: 'Awtor hakynda',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.tr) translations.tr = {};
+Object.assign(translations.tr, {
+  dataDrivenHealth: 'Veriye Dayalı Sağlık',
+  deepAnalysisAndAi: 'Derin Analiz ve <br /> YZ Teşhisi',
+  morphoProDesc:
+    'MorphoCheck Pro sistemi, çocukların büyümesini DSÖ standartlarına göre %99.8 doğrulukla analiz eder. Z-skoru göstergelerini, vücut kitle indeksini (VKİ) ve somatotipi otomatik olarak hesaplayarak doktorlara hazır klinik sonuçlar sunar.',
+  analysisAccuracy: 'Analiz doğruluğu',
+  aiProcessingSpeed: 'YZ işlem hızı',
+  clinicalParams: 'Klinik parametreler',
+  zscoreDynamics: 'Z-Score Değişim Dinamikleri',
+  somatotypeTitle: 'Somatotip',
+  aiConclusion: 'YZ sonucu',
+  mesosomaticType: 'Mezosomatik tip',
+  mesosomaticDesc:
+    'Vücut yapısı orantılı gelişmiş, kas kütlesi normal seviyede.',
+  whoStandards: 'DSÖ standartları',
+  zscoreMonitoring: 'Z-skoru izleme',
+  aiClinicalAnalysis: 'YZ klinik analizi',
+  aboutAuthor: 'Yazar hakkında',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+if (!translations.en) translations.en = {};
+Object.assign(translations.en, {
+  dataDrivenHealth: 'Data-Driven Healthcare',
+  deepAnalysisAndAi: 'Deep Analysis & <br /> AI Diagnostics',
+  morphoProDesc:
+    'The MorphoCheck Pro system analyzes child growth based on WHO standards with 99.8% accuracy. It automatically calculates Z-score indicators, Body Mass Index (BMI), and somatotype, providing doctors with ready-made clinical conclusions.',
+  analysisAccuracy: 'Analysis accuracy',
+  aiProcessingSpeed: 'AI processing speed',
+  clinicalParams: 'Clinical parameters',
+  zscoreDynamics: 'Z-Score Change Dynamics',
+  somatotypeTitle: 'Somatotype',
+  aiConclusion: 'AI Conclusion',
+  mesosomaticType: 'Mesosomatic type',
+  mesosomaticDesc:
+    'Proportional body development, muscle mass is within normal limits.',
+  whoStandards: 'WHO standards',
+  zscoreMonitoring: 'Z-score monitoring',
+  aiClinicalAnalysis: 'AI clinical analysis',
+  aboutAuthor: 'About Author',
+  emailUs: 'Email Us',
+  callSupport: 'Call Support',
+});
+
 export function LanguageProvider({ children }) {
   const saved = localStorage.getItem('appLang');
   const initialLang = translations[saved] ? saved : DEFAULT_LANGUAGE;

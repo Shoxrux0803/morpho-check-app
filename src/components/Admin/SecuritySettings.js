@@ -56,21 +56,22 @@ const LOCAL_TRANSLATIONS = {
     errorMessage: 'Xatolik yuz berdi',
     securityEvents: 'Xavfsizlik xabarlari',
     securityEventsLoadError: 'Xavfsizlik xabarlari yuklanmadi',
-    securityEventsMarkedRead: 'Xavfsizlik xabarlari o\'qildi deb belgilandi',
-    securityEventsUpdateError: 'Xavfsizlik xabarlarini yangilab bo\'lmadi',
-    loginAttemptsAndBlocked: 'Kirish urinishlari va bloklangan so\'rovlar',
+    securityEventsMarkedRead: "Xavfsizlik xabarlari o'qildi deb belgilandi",
+    securityEventsUpdateError: "Xavfsizlik xabarlarini yangilab bo'lmadi",
+    loginAttemptsAndBlocked: "Kirish urinishlari va bloklangan so'rovlar",
     newCount: 'yangi',
-    criticalEventAlert: 'Critical xavfsizlik hodisasi bor. IP, email va vaqtni tekshiring.',
-    noSuspiciousLoginAttempts: 'Hozircha shubhali kirish urinishlari yo\'q.',
-    markAllRead: 'Barchasini o\'qilgan deb belgilash',
+    criticalEventAlert:
+      'Critical xavfsizlik hodisasi bor. IP, email va vaqtni tekshiring.',
+    noSuspiciousLoginAttempts: "Hozircha shubhali kirish urinishlari yo'q.",
+    markAllRead: "Barchasini o'qilgan deb belgilash",
     attempt: 'Urinish',
-    LOGIN_FAILED_UNKNOWN_USER: 'Noma\'lum email bilan kirish urinishi',
-    LOGIN_FAILED_BAD_PASSWORD: 'Noto\'g\'ri parol bilan kirish urinishi',
+    LOGIN_FAILED_UNKNOWN_USER: "Noma'lum email bilan kirish urinishi",
+    LOGIN_FAILED_BAD_PASSWORD: "Noto'g'ri parol bilan kirish urinishi",
     SUPERADMIN_NEW_DEVICE: 'Superadmin yangi qurilmadan kirishga urindi',
     SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tasdiqlash kodi xato kiritildi',
-    RATE_LIMIT_EXCEEDED: 'Juda ko\'p so\'rov yuborildi',
-  updatePasswordBtn: 'Parolni yangilash',
-    },
+    RATE_LIMIT_EXCEEDED: "Juda ko'p so'rov yuborildi",
+    updatePasswordBtn: 'Parolni yangilash',
+  },
   ru: {
     passwordStrength: 'Сложность пароля',
     weak: 'Слабый',
@@ -97,7 +98,8 @@ const LOCAL_TRANSLATIONS = {
     securityEventsUpdateError: 'Не удалось обновить сообщения безопасности',
     loginAttemptsAndBlocked: 'Попытки входа и заблокированные запросы',
     newCount: 'новые',
-    criticalEventAlert: 'Критическое событие безопасности. Проверьте IP, email и время.',
+    criticalEventAlert:
+      'Критическое событие безопасности. Проверьте IP, email и время.',
     noSuspiciousLoginAttempts: 'Пока нет подозрительных попыток входа.',
     markAllRead: 'Отметить все как прочитанные',
     attempt: 'Попытка',
@@ -106,8 +108,8 @@ const LOCAL_TRANSLATIONS = {
     SUPERADMIN_NEW_DEVICE: 'Суперадмин попытался войти с нового устройства',
     SUPERADMIN_VERIFICATION_FAILED: 'Неверный код подтверждения суперадмина',
     RATE_LIMIT_EXCEEDED: 'Слишком много запросов',
-  updatePasswordBtn: 'Обновить пароль',
-    },
+    updatePasswordBtn: 'Обновить пароль',
+  },
   en: {
     passwordStrength: 'Password Strength',
     weak: 'Weak',
@@ -141,10 +143,11 @@ const LOCAL_TRANSLATIONS = {
     LOGIN_FAILED_UNKNOWN_USER: 'Login attempt with unknown email',
     LOGIN_FAILED_BAD_PASSWORD: 'Login attempt with incorrect password',
     SUPERADMIN_NEW_DEVICE: 'Superadmin attempted to login from a new device',
-    SUPERADMIN_VERIFICATION_FAILED: 'Superadmin verification code entered incorrectly',
+    SUPERADMIN_VERIFICATION_FAILED:
+      'Superadmin verification code entered incorrectly',
     RATE_LIMIT_EXCEEDED: 'Too many requests',
-  updatePasswordBtn: 'Update Password',
-    },
+    updatePasswordBtn: 'Update Password',
+  },
   tr: {
     passwordStrength: 'Şifre Zorluğu',
     weak: 'Zayıf',
@@ -171,17 +174,19 @@ const LOCAL_TRANSLATIONS = {
     securityEventsUpdateError: 'Güvenlik mesajları güncellenemedi',
     loginAttemptsAndBlocked: 'Giriş denemeleri ve engellenen istekler',
     newCount: 'yeni',
-    criticalEventAlert: 'Kritik güvenlik olayı. IP, e-posta ve saati kontrol edin.',
+    criticalEventAlert:
+      'Kritik güvenlik olayı. IP, e-posta ve saati kontrol edin.',
     noSuspiciousLoginAttempts: 'Henüz şüpheli giriş denemesi yok.',
     markAllRead: 'Tümünü okundu olarak işaretle',
     attempt: 'Deneme',
     LOGIN_FAILED_UNKNOWN_USER: 'Bilinmeyen e-posta ile giriş denemesi',
     LOGIN_FAILED_BAD_PASSWORD: 'Yanlış şifre ile giriş denemesi',
-    SUPERADMIN_NEW_DEVICE: 'Süper admin yeni bir cihazdan giriş yapmaya çalıştı',
+    SUPERADMIN_NEW_DEVICE:
+      'Süper admin yeni bir cihazdan giriş yapmaya çalıştı',
     SUPERADMIN_VERIFICATION_FAILED: 'Süper admin doğrulama kodu yanlış girildi',
     RATE_LIMIT_EXCEEDED: 'Çok fazla istek',
-  updatePasswordBtn: 'Şifreyi Güncelle',
-    },
+    updatePasswordBtn: 'Şifreyi Güncelle',
+  },
   tg: {
     passwordStrength: 'Қуввати парол',
     weak: 'Заиф',
@@ -204,21 +209,24 @@ const LOCAL_TRANSLATIONS = {
     errorMessage: 'Хатогӣ рух дод',
     securityEvents: 'Паёмҳои амниятӣ',
     securityEventsLoadError: 'Боркунии паёмҳои амниятӣ ноком шуд',
-    securityEventsMarkedRead: 'Паёмҳои амниятӣ ҳамчун хондашуда қайд карда шуданд',
+    securityEventsMarkedRead:
+      'Паёмҳои амниятӣ ҳамчун хондашуда қайд карда шуданд',
     securityEventsUpdateError: 'Навсозии паёмҳои амниятӣ ноком шуд',
     loginAttemptsAndBlocked: 'Кӯшишҳои воридшавӣ ва дархостҳои басташуда',
     newCount: 'нав',
-    criticalEventAlert: 'Ҳодисаи муҳими амниятӣ. IP, почтаи электронӣ ва вақтро тафтиш кунед.',
+    criticalEventAlert:
+      'Ҳодисаи муҳими амниятӣ. IP, почтаи электронӣ ва вақтро тафтиш кунед.',
     noSuspiciousLoginAttempts: 'Ҳоло кӯшишҳои шубҳаноки воридшавӣ нест.',
     markAllRead: 'Ҳамаро ҳамчун хондашуда қайд кунед',
     attempt: 'Кӯшиш',
     LOGIN_FAILED_UNKNOWN_USER: 'Кӯшиши воридшавӣ бо почтаи электронии номаълум',
     LOGIN_FAILED_BAD_PASSWORD: 'Кӯшиши воридшавӣ бо пароли нодуруст',
     SUPERADMIN_NEW_DEVICE: 'Суперадмин аз дастгоҳи нав ворид шуданӣ шуд',
-    SUPERADMIN_VERIFICATION_FAILED: 'Рамзи тасдиқи суперадмин нодуруст ворид карда шуд',
+    SUPERADMIN_VERIFICATION_FAILED:
+      'Рамзи тасдиқи суперадмин нодуруст ворид карда шуд',
     RATE_LIMIT_EXCEEDED: 'Дархостҳои аз ҳад зиёд',
-  updatePasswordBtn: 'Навсозии парол',
-    },
+    updatePasswordBtn: 'Навсозии парол',
+  },
   kz: {
     passwordStrength: 'Құпия сөз күрделілігі',
     weak: 'Әлсіз',
@@ -242,10 +250,12 @@ const LOCAL_TRANSLATIONS = {
     securityEvents: 'Қауіпсіздік хабарламалары',
     securityEventsLoadError: 'Қауіпсіздік хабарламалары жүктелмеді',
     securityEventsMarkedRead: 'Қауіпсіздік хабарламалары оқылды деп белгіленді',
-    securityEventsUpdateError: 'Қауіпсіздік хабарламаларын жаңарту мүмкін болмады',
+    securityEventsUpdateError:
+      'Қауіпсіздік хабарламаларын жаңарту мүмкін болмады',
     loginAttemptsAndBlocked: 'Кіру әрекеттері және бұғатталған сұраулар',
     newCount: 'жаңа',
-    criticalEventAlert: 'Маңызды қауіпсіздік оқиғасы. IP, электрондық пошта және уақытты тексеріңіз.',
+    criticalEventAlert:
+      'Маңызды қауіпсіздік оқиғасы. IP, электрондық пошта және уақытты тексеріңіз.',
     noSuspiciousLoginAttempts: 'Әзірге күдікті кіру әрекеттері жоқ.',
     markAllRead: 'Барлығын оқылды деп белгілеу',
     attempt: 'Әрекет',
@@ -254,8 +264,8 @@ const LOCAL_TRANSLATIONS = {
     SUPERADMIN_NEW_DEVICE: 'Суперадмин жаңа құрылғыдан кіруге әрекет жасады',
     SUPERADMIN_VERIFICATION_FAILED: 'Суперадмин растау коды қате енгізілді',
     RATE_LIMIT_EXCEEDED: 'Тым көп сұрау',
-  updatePasswordBtn: 'Құпиясөзді жаңарту',
-    },
+    updatePasswordBtn: 'Құпиясөзді жаңарту',
+  },
   ky: {
     passwordStrength: 'Сөз айкаштын татаалдыгы',
     weak: 'Алсыз',
@@ -282,17 +292,19 @@ const LOCAL_TRANSLATIONS = {
     securityEventsUpdateError: 'Коопсуздук билдирүүлөрүн жаңыртуу мүмкүн эмес',
     loginAttemptsAndBlocked: 'Кирүү аракеттері жана бөгөттөлгөн сурамдар',
     newCount: 'жаңы',
-    criticalEventAlert: 'Критикалык коопсуздук окуясы. IP, электрондук почта жана убакытты текшериңиз.',
+    criticalEventAlert:
+      'Критикалык коопсуздук окуясы. IP, электрондук почта жана убакытты текшериңиз.',
     noSuspiciousLoginAttempts: 'Азырынча шектүү кирүү аракеттери жок.',
     markAllRead: 'Баарын окулду деп белгилөө',
     attempt: 'Аракет',
     LOGIN_FAILED_UNKNOWN_USER: 'Белгисиз электрондук почта менен кирүү аракети',
     LOGIN_FAILED_BAD_PASSWORD: 'Туура эмес сырсөз менен кирүү аракети',
     SUPERADMIN_NEW_DEVICE: 'Суперадмин жаңы түзмөктөн кирүүгө аракет кылды',
-    SUPERADMIN_VERIFICATION_FAILED: 'Суперадминдин тастыктоо коду туура эмес киргизилди',
+    SUPERADMIN_VERIFICATION_FAILED:
+      'Суперадминдин тастыктоо коду туура эмес киргизилди',
     RATE_LIMIT_EXCEEDED: 'Өтө көп сурам',
-  updatePasswordBtn: 'Сырсөздү жаңыртуу',
-    },
+    updatePasswordBtn: 'Сырсөздү жаңыртуу',
+  },
   tm: {
     passwordStrength: 'Paroluň kynlygy',
     weak: 'Gowşak',
@@ -319,17 +331,19 @@ const LOCAL_TRANSLATIONS = {
     securityEventsUpdateError: 'Howpsuzlyk habarlaryny täzeläp bolmady',
     loginAttemptsAndBlocked: 'Giriş synanyşyklary we beklenen islegler',
     newCount: 'täze',
-    criticalEventAlert: 'Möhüm howpsuzlyk wakasy. IP, e-poçta we wagty barlap görüň.',
+    criticalEventAlert:
+      'Möhüm howpsuzlyk wakasy. IP, e-poçta we wagty barlap görüň.',
     noSuspiciousLoginAttempts: 'Häzirlikçe şübheli giriş synanyşygy ýok.',
     markAllRead: 'Hemmesini okaldy diýip bellemek',
     attempt: 'Synanyşyk',
     LOGIN_FAILED_UNKNOWN_USER: 'Näbelli e-poçta bilen giriş synanyşygy',
     LOGIN_FAILED_BAD_PASSWORD: 'Nädogry parol bilen giriş synanyşygy',
     SUPERADMIN_NEW_DEVICE: 'Superadmin täze enjamdan girmäge synanyşdy',
-    SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tassyklama kody nädogry girizildi',
+    SUPERADMIN_VERIFICATION_FAILED:
+      'Superadmin tassyklama kody nädogry girizildi',
     RATE_LIMIT_EXCEEDED: 'Aşa köp isleg',
-  updatePasswordBtn: 'Paroly täzelemek',
-    },
+    updatePasswordBtn: 'Paroly täzelemek',
+  },
 };
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -361,9 +375,6 @@ const GlassPaper = ({ children, sx = {} }) => (
     {children}
   </Paper>
 );
-
-
-
 
 const severityColors = {
   low: 'default',
@@ -461,7 +472,10 @@ export default function SecuritySettings() {
     if (user?.role !== 'superadmin') return;
     setSecurityLoading(true);
     try {
-      const data = await AdminApi.securityEvents.list({ page: 1, page_size: 6 });
+      const data = await AdminApi.securityEvents.list({
+        page: 1,
+        page_size: 6,
+      });
       setSecurityEvents(data.items || []);
       setSecuritySummary({
         total: data.total || 0,
@@ -607,7 +621,12 @@ export default function SecuritySettings() {
 
       <Grid container spacing={4}>
         {/* Left Column: The Form */}
-        <Grid item xs={12} lg={7} sx={{ display: activeSecurityView === 'password' ? 'block' : 'none' }}>
+        <Grid
+          item
+          xs={12}
+          lg={7}
+          sx={{ display: activeSecurityView === 'password' ? 'block' : 'none' }}
+        >
           <GlassPaper>
             <Box display="flex" alignItems="center" mb={4}>
               <Box
@@ -811,7 +830,21 @@ export default function SecuritySettings() {
         </Grid>
 
         {/* Right Column: Live requirements checklist & Session info */}
-        <Grid item xs={12} md={activeSecurityView === 'alerts' ? 12 : 5} lg={activeSecurityView === 'alerts' ? 12 : 5} xl={activeSecurityView === 'alerts' ? 12 : 5} sx={{ transition: 'all 0.3s ease', ...(activeSecurityView === 'alerts' && { flexBasis: '100% !important', maxWidth: '100% !important', width: '100% !important' }) }}>
+        <Grid
+          item
+          xs={12}
+          md={activeSecurityView === 'alerts' ? 12 : 5}
+          lg={activeSecurityView === 'alerts' ? 12 : 5}
+          xl={activeSecurityView === 'alerts' ? 12 : 5}
+          sx={{
+            transition: 'all 0.3s ease',
+            ...(activeSecurityView === 'alerts' && {
+              flexBasis: '100% !important',
+              maxWidth: '100% !important',
+              width: '100% !important',
+            }),
+          }}
+        >
           <Stack spacing={4}>
             {user?.role === 'superadmin' && activeSecurityView === 'alerts' && (
               <GlassPaper
@@ -835,7 +868,11 @@ export default function SecuritySettings() {
                     <Typography variant="h6" fontWeight={850}>
                       {lt('securityEvents')}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={600}
+                    >
                       {lt('loginAttemptsAndBlocked')}
                     </Typography>
                   </Box>
@@ -886,7 +923,11 @@ export default function SecuritySettings() {
                               : 'rgba(0,0,0,0.025)',
                         }}
                       >
-                        <Box display="flex" justifyContent="space-between" gap={1}>
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          gap={1}
+                        >
                           <Typography variant="body2" fontWeight={800}>
                             {lt(event.event_type) || event.event_type}
                           </Typography>
@@ -897,16 +938,30 @@ export default function SecuritySettings() {
                             sx={{ height: 22, fontWeight: 800 }}
                           />
                         </Box>
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          {formatSecurityDate(event.created_at)} • IP: {event.ip_address || '-'} • {lt('attempt')}: {event.attempts || 1}
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
+                          {formatSecurityDate(event.created_at)} • IP:{' '}
+                          {event.ip_address || '-'} • {lt('attempt')}:{' '}
+                          {event.attempts || 1}
                         </Typography>
                         {event.email && (
-                          <Typography variant="caption" color="text.secondary" display="block">
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                          >
                             Email: {event.email}
                           </Typography>
                         )}
                         {event.details && (
-                          <Typography variant="caption" color="text.secondary" display="block">
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                          >
                             {event.details}
                           </Typography>
                         )}
@@ -924,7 +979,12 @@ export default function SecuritySettings() {
                   variant="outlined"
                   disabled={!securitySummary.unread || securityLoading}
                   onClick={handleMarkSecurityRead}
-                  sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+                  sx={{
+                    mt: 2,
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                  }}
                 >
                   {lt('markAllRead')}
                 </Button>
@@ -933,219 +993,219 @@ export default function SecuritySettings() {
 
             {activeSecurityView === 'password' && (
               <>
-            {/* Requirements Card */}
-            <GlassPaper>
-              <Typography variant="h6" fontWeight={800} mb={2.5}>
-                {lt('requirements')}
-              </Typography>
+                {/* Requirements Card */}
+                <GlassPaper>
+                  <Typography variant="h6" fontWeight={800} mb={2.5}>
+                    {lt('requirements')}
+                  </Typography>
 
-              {/* Password Strength indicator */}
-              {newPassword && (
-                <Box mb={3.5}>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    mb={1.2}
-                  >
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      fontWeight={600}
-                    >
-                      {lt('passwordStrength')}:
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight={800}
-                      sx={{ color: getStrengthColor() }}
-                    >
-                      {getStrengthText()}
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={(score / 4) * 100}
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(255,255,255,0.06)'
-                          : 'rgba(0,0,0,0.06)',
-                      '& .MuiLinearProgress-bar': {
-                        borderRadius: 4,
-                        backgroundColor: getStrengthColor(),
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              <Stack spacing={2}>
-                {requirementList.map((req, idx) => (
-                  <Box
-                    key={idx}
-                    display="flex"
-                    alignItems="center"
-                    sx={{
-                      transition: 'all 0.3s ease',
-                      opacity: req.met ? 1 : 0.65,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        mr: 1.8,
-                        display: 'flex',
-                        color: req.met ? '#4caf50' : 'text.secondary',
-                        transition: 'color 0.3s ease',
-                        transform: req.met ? 'scale(1.1)' : 'scale(1)',
-                      }}
-                    >
-                      {req.met ? (
-                        <CheckCircle fontSize="small" />
-                      ) : (
-                        <RadioButtonUnchecked fontSize="small" />
-                      )}
+                  {/* Password Strength indicator */}
+                  {newPassword && (
+                    <Box mb={3.5}>
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={1.2}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          fontWeight={600}
+                        >
+                          {lt('passwordStrength')}:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={800}
+                          sx={{ color: getStrengthColor() }}
+                        >
+                          {getStrengthText()}
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={(score / 4) * 100}
+                        sx={{
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(255,255,255,0.06)'
+                              : 'rgba(0,0,0,0.06)',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 4,
+                            backgroundColor: getStrengthColor(),
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                          },
+                        }}
+                      />
                     </Box>
-                    <Typography
-                      variant="body2"
-                      fontWeight={req.met ? 700 : 500}
-                      sx={{
-                        color: req.met ? 'text.primary' : 'text.secondary',
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      {req.label}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            </GlassPaper>
+                  )}
 
-            {/* Session Info Card */}
-            <GlassPaper>
-              <Typography variant="h6" fontWeight={800} mb={2.5}>
-                {lt('sessionInfo')}
-              </Typography>
+                  <Stack spacing={2}>
+                    {requirementList.map((req, idx) => (
+                      <Box
+                        key={idx}
+                        display="flex"
+                        alignItems="center"
+                        sx={{
+                          transition: 'all 0.3s ease',
+                          opacity: req.met ? 1 : 0.65,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            mr: 1.8,
+                            display: 'flex',
+                            color: req.met ? '#4caf50' : 'text.secondary',
+                            transition: 'color 0.3s ease',
+                            transform: req.met ? 'scale(1.1)' : 'scale(1)',
+                          }}
+                        >
+                          {req.met ? (
+                            <CheckCircle fontSize="small" />
+                          ) : (
+                            <RadioButtonUnchecked fontSize="small" />
+                          )}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight={req.met ? 700 : 500}
+                          sx={{
+                            color: req.met ? 'text.primary' : 'text.secondary',
+                            transition: 'all 0.3s ease',
+                          }}
+                        >
+                          {req.label}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </GlassPaper>
 
-              <Stack spacing={2.5}>
-                <Box display="flex" alignItems="center">
+                {/* Session Info Card */}
+                <GlassPaper>
+                  <Typography variant="h6" fontWeight={800} mb={2.5}>
+                    {lt('sessionInfo')}
+                  </Typography>
+
+                  <Stack spacing={2.5}>
+                    <Box display="flex" alignItems="center">
+                      <Box
+                        sx={{
+                          p: 1.2,
+                          borderRadius: 2.5,
+                          backgroundColor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(255,255,255,0.04)'
+                              : 'rgba(0,0,0,0.03)',
+                          color: 'primary.main',
+                          display: 'flex',
+                          mr: 2,
+                        }}
+                      >
+                        <Person fontSize="small" />
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          fontWeight={500}
+                        >
+                          User
+                        </Typography>
+                        <Typography variant="body2" fontWeight={700}>
+                          {user?.name || 'Super Admin'}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    <Box display="flex" alignItems="center">
+                      <Box
+                        sx={{
+                          p: 1.2,
+                          borderRadius: 2.5,
+                          backgroundColor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(255,255,255,0.04)'
+                              : 'rgba(0,0,0,0.03)',
+                          color: 'primary.main',
+                          display: 'flex',
+                          mr: 2,
+                        }}
+                      >
+                        <AdminPanelSettings fontSize="small" />
+                      </Box>
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          fontWeight={500}
+                        >
+                          {lt('userRole')}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          fontWeight={700}
+                          sx={{
+                            textTransform: 'uppercase',
+                            fontSize: '0.8rem',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          {user?.role || 'superadmin'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Stack>
+
                   <Box
                     sx={{
-                      p: 1.2,
-                      borderRadius: 2.5,
+                      mt: 3.5,
+                      p: 2,
+                      borderRadius: 3,
                       backgroundColor: (theme) =>
                         theme.palette.mode === 'dark'
-                          ? 'rgba(255,255,255,0.04)'
-                          : 'rgba(0,0,0,0.03)',
-                      color: 'primary.main',
-                      display: 'flex',
-                      mr: 2,
-                    }}
-                  >
-                    <Person fontSize="small" />
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={500}
-                    >
-                      User
-                    </Typography>
-                    <Typography variant="body2" fontWeight={700}>
-                      {user?.name || 'Super Admin'}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box display="flex" alignItems="center">
-                  <Box
-                    sx={{
-                      p: 1.2,
-                      borderRadius: 2.5,
-                      backgroundColor: (theme) =>
+                          ? 'rgba(33, 150, 243, 0.06)'
+                          : 'rgba(33, 150, 243, 0.03)',
+                      border: '1px solid',
+                      borderColor: (theme) =>
                         theme.palette.mode === 'dark'
-                          ? 'rgba(255,255,255,0.04)'
-                          : 'rgba(0,0,0,0.03)',
-                      color: 'primary.main',
+                          ? 'rgba(33, 150, 243, 0.15)'
+                          : 'rgba(33, 150, 243, 0.08)',
                       display: 'flex',
-                      mr: 2,
+                      alignItems: 'flex-start',
                     }}
                   >
-                    <AdminPanelSettings fontSize="small" />
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={500}
-                    >
-                      {lt('userRole')}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      fontWeight={700}
+                    <Info
+                      fontSize="small"
                       sx={{
-                        textTransform: 'uppercase',
-                        fontSize: '0.8rem',
-                        letterSpacing: '0.5px',
+                        color: '#2196f3',
+                        mr: 1.5,
+                        mt: 0.2,
                       }}
-                    >
-                      {user?.role || 'superadmin'}
-                    </Typography>
+                    />
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        fontWeight={800}
+                        color="#2196f3"
+                        mb={0.5}
+                      >
+                        {lt('securityTip')}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        display="block"
+                        sx={{ lineHeight: 1.45, fontWeight: 500 }}
+                      >
+                        {lt('securityTipText')}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              </Stack>
-
-              <Box
-                sx={{
-                  mt: 3.5,
-                  p: 2,
-                  borderRadius: 3,
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(33, 150, 243, 0.06)'
-                      : 'rgba(33, 150, 243, 0.03)',
-                  border: '1px solid',
-                  borderColor: (theme) =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(33, 150, 243, 0.15)'
-                      : 'rgba(33, 150, 243, 0.08)',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                }}
-              >
-                <Info
-                  fontSize="small"
-                  sx={{
-                    color: '#2196f3',
-                    mr: 1.5,
-                    mt: 0.2,
-                  }}
-                />
-                <Box>
-                  <Typography
-                    variant="body2"
-                    fontWeight={800}
-                    color="#2196f3"
-                    mb={0.5}
-                  >
-                    {lt('securityTip')}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    sx={{ lineHeight: 1.45, fontWeight: 500 }}
-                  >
-                    {lt('securityTipText')}
-                  </Typography>
-                </Box>
-              </Box>
-            </GlassPaper>
+                </GlassPaper>
               </>
             )}
           </Stack>
