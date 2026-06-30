@@ -20,7 +20,6 @@ import {
   Scale,
   ScanLine,
   ShieldCheck,
-  Target,
   TriangleRight,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -41,16 +40,6 @@ const toolMeta = [
   { icon: Scale, color: '#16a34a' },
   { icon: MoveHorizontal, color: '#f97316' },
   { icon: ScanLine, color: '#8b5cf6' },
-];
-
-const landmarkMeta = [
-  { top: '7%', left: '50%', color: '#0ea5e9' },
-  { top: '22%', left: '34%', color: '#16a34a' },
-  { top: '35%', left: '50%', color: '#f97316' },
-  { top: '50%', left: '50%', color: '#ef4444' },
-  { top: '57%', left: '36%', color: '#8b5cf6' },
-  { top: '65%', left: '62%', color: '#14b8a6' },
-  { top: '92%', left: '43%', color: '#64748b' },
 ];
 
 const guidelineCopy = {
@@ -568,192 +557,6 @@ function GlassPanel({ children, sx = {}, hover = true }) {
   );
 }
 
-function BodyLandmarkMap({ landmarks }) {
-  const theme = useTheme();
-
-  return (
-    <Box
-      sx={{
-        position: 'relative',
-        minHeight: { xs: 480, md: 560 },
-        display: 'grid',
-        placeItems: 'center',
-        perspective: 1200,
-      }}
-    >
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: '6% 10%',
-          borderRadius: 2,
-          background:
-            theme.palette.mode === 'dark'
-              ? `linear-gradient(140deg, ${alpha('#0ea5e9', 0.14)}, ${alpha('#16a34a', 0.1)}, ${alpha('#f97316', 0.08)})`
-              : `linear-gradient(140deg, ${alpha('#dbeafe', 0.86)}, ${alpha('#dcfce7', 0.78)}, ${alpha('#ffedd5', 0.62)})`,
-          transform: 'rotateX(7deg) rotateY(-8deg)',
-          boxShadow: `0 28px 70px ${alpha(theme.palette.primary.main, 0.18)}`,
-        }}
-      />
-
-      <Box
-        component="svg"
-        viewBox="0 0 260 520"
-        aria-label="Antropometrik landmarklar xaritasi"
-        sx={{
-          position: 'relative',
-          zIndex: 2,
-          width: { xs: 210, sm: 240, md: 260 },
-          height: 'auto',
-          filter: `drop-shadow(0 22px 34px ${alpha('#0f172a', 0.22)})`,
-          animation: 'bodyFloat 5s ease-in-out infinite',
-          '@keyframes bodyFloat': {
-            '0%, 100%': { transform: 'translateY(0) rotateX(0deg)' },
-            '50%': { transform: 'translateY(-8px) rotateX(2deg)' },
-          },
-        }}
-      >
-        <defs>
-          <linearGradient id="bodyGradient" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stopColor="#e0f2fe" />
-            <stop offset="45%" stopColor="#ccfbf1" />
-            <stop offset="100%" stopColor="#fed7aa" />
-          </linearGradient>
-        </defs>
-        <circle
-          cx="130"
-          cy="55"
-          r="34"
-          fill="url(#bodyGradient)"
-          stroke="#0f766e"
-          strokeWidth="3"
-        />
-        <path
-          d="M88 112 C98 92 162 92 172 112 L185 248 C188 275 166 294 148 270 L140 210 L120 210 L112 270 C94 294 72 275 75 248 Z"
-          fill="url(#bodyGradient)"
-          stroke="#0f766e"
-          strokeWidth="3"
-        />
-        <path
-          d="M85 135 C45 158 36 220 47 282"
-          fill="none"
-          stroke="#0ea5e9"
-          strokeWidth="16"
-          strokeLinecap="round"
-        />
-        <path
-          d="M175 135 C215 158 224 220 213 282"
-          fill="none"
-          stroke="#0ea5e9"
-          strokeWidth="16"
-          strokeLinecap="round"
-        />
-        <path
-          d="M111 272 C94 330 88 402 88 480"
-          fill="none"
-          stroke="#14b8a6"
-          strokeWidth="18"
-          strokeLinecap="round"
-        />
-        <path
-          d="M149 272 C166 330 172 402 172 480"
-          fill="none"
-          stroke="#14b8a6"
-          strokeWidth="18"
-          strokeLinecap="round"
-        />
-        <path
-          d="M76 181 H184"
-          stroke="#f97316"
-          strokeWidth="4"
-          strokeDasharray="9 9"
-        />
-        <path
-          d="M82 260 H178"
-          stroke="#ef4444"
-          strokeWidth="4"
-          strokeDasharray="9 9"
-        />
-      </Box>
-
-      {landmarks.map((point, index) => (
-        <Box
-          key={point.label}
-          sx={{
-            position: 'absolute',
-            zIndex: 3,
-            top: point.top,
-            left: point.left,
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
-          <Box
-            sx={{
-              width: 15,
-              height: 15,
-              borderRadius: '50%',
-              bgcolor: point.color,
-              border: '3px solid',
-              borderColor: theme.palette.background.paper,
-              boxShadow: `0 0 0 8px ${alpha(point.color, 0.18)}`,
-              animation: 'landmarkPulse 2.4s ease-in-out infinite',
-              animationDelay: `${index * 0.16}s`,
-              '@keyframes landmarkPulse': {
-                '0%, 100%': {
-                  transform: 'scale(1)',
-                  boxShadow: `0 0 0 7px ${alpha(point.color, 0.16)}`,
-                },
-                '50%': {
-                  transform: 'scale(1.18)',
-                  boxShadow: `0 0 0 13px ${alpha(point.color, 0.05)}`,
-                },
-              },
-            }}
-          />
-        </Box>
-      ))}
-    </Box>
-  );
-}
-
-function LandmarkList({ landmarks }) {
-  return (
-    <Stack spacing={1.2}>
-      {landmarks.map((point) => (
-        <Stack
-          key={point.label}
-          direction="row"
-          spacing={1.2}
-          alignItems="flex-start"
-          sx={{ minWidth: 0 }}
-        >
-          <Box
-            sx={{
-              mt: 0.45,
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              bgcolor: point.color,
-              flexShrink: 0,
-            }}
-          />
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={900} lineHeight={1.15}>
-              {point.label}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              fontWeight={700}
-            >
-              {point.desc}
-            </Typography>
-          </Box>
-        </Stack>
-      ))}
-    </Stack>
-  );
-}
-
 export default function GuidelinesPage() {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -763,11 +566,6 @@ export default function GuidelinesPage() {
   const tools = copy.tools.map((item, index) => ({
     ...item,
     ...toolMeta[index],
-  }));
-  const landmarks = copy.landmarks.map(([label, desc], index) => ({
-    label,
-    desc,
-    ...landmarkMeta[index],
   }));
 
   return (
@@ -807,7 +605,7 @@ export default function GuidelinesPage() {
         </motion.div>
 
         <Grid container spacing={3} alignItems="stretch">
-          <Grid item xs={12} lg={6}>
+          <Grid item xs={12} lg={8}>
             <motion.div initial="hidden" animate="visible" variants={fadeUp}>
               <Stack spacing={2.5} sx={{ maxWidth: 850 }}>
                 <Chip
@@ -864,40 +662,7 @@ export default function GuidelinesPage() {
                 </Grid>
               </Stack>
             </motion.div>
-          </Grid>
-
-          <Grid item xs={12} lg={6}>
-            <motion.div
-              custom={0.12}
-              initial="hidden"
-              animate="visible"
-              variants={fadeUp}
-            >
-              <GlassPanel hover={false}>
-                <Grid container spacing={0}>
-                  <Grid item xs={12} md={8}>
-                    <BodyLandmarkMap landmarks={landmarks} />
-                  </Grid>
-                  <Grid item xs={12} md={4}>
-                    <Box sx={{ p: { xs: 2.5, md: 3 }, height: '100%' }}>
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        alignItems="center"
-                        sx={{ mb: 2 }}
-                      >
-                        <Target size={20} color={theme.palette.primary.main} />
-                        <Typography variant="h6" fontWeight={900}>
-                          {copy.landmarksTitle}
-                        </Typography>
-                      </Stack>
-                      <LandmarkList landmarks={landmarks} />
-                    </Box>
-                  </Grid>
-                </Grid>
-              </GlassPanel>
-            </motion.div>
-          </Grid>
+          </Grid>{' '}
         </Grid>
 
         <Grid container spacing={2.5} sx={{ mt: { xs: 3, md: 5 } }}>
