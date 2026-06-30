@@ -406,7 +406,7 @@ const ActivityCard = ({
             : undefined,
         }}
       >
-        <CardContent sx={{ p: 3 }}>
+        <CardContent sx={{ p: { xs: 2, md: 3 } }}>
           <Box display="flex" gap={2} alignItems="flex-start" mb={2}>
             <Avatar
               sx={{
@@ -537,7 +537,7 @@ const ActivityCard = ({
                 >
                   {t.today}
                 </Typography>
-                <Typography variant="h5" fontWeight="900" color="primary">
+                <Typography variant="h5" fontWeight="900" color="primary" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                   {admin.stats_today}
                 </Typography>
               </Paper>
@@ -559,7 +559,7 @@ const ActivityCard = ({
                 >
                   {t.week}
                 </Typography>
-                <Typography variant="h5" fontWeight="900" color="success.main">
+                <Typography variant="h5" fontWeight="900" color="success.main" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                   {admin.stats_week || 0}
                 </Typography>
               </Paper>
@@ -581,7 +581,7 @@ const ActivityCard = ({
                 >
                   {t.month}
                 </Typography>
-                <Typography variant="h5" fontWeight="900" color="secondary">
+                <Typography variant="h5" fontWeight="900" color="secondary" sx={{ fontSize: { xs: '1.25rem', md: '1.5rem' } }}>
                   {admin.stats_month}
                 </Typography>
               </Paper>
@@ -753,16 +753,17 @@ export default function AdminActivity() {
         mb={4}
         gap={2}
       >
-        <Box>
+        <Box sx={{ maxWidth: '100%', wordBreak: 'break-word' }}>
           <Typography
             variant="h4"
             fontWeight="900"
             color="primary.main"
             gutterBottom
+            sx={{ fontSize: { xs: '1.75rem', md: '2.125rem' } }}
           >
             {t.title}
           </Typography>
-          <Typography variant="body1" color="text.secondary">
+          <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.85rem', md: '1rem' } }}>
             {t.usersOnline(onlineCount)} • {t.lastUpdate}:{' '}
             {lastUpdated.toLocaleTimeString()}
           </Typography>
@@ -770,15 +771,25 @@ export default function AdminActivity() {
 
         <Stack
           direction="row"
-          spacing={2}
+          spacing={1}
           alignItems="center"
           width={{ xs: '100%', md: 'auto' }}
         >
-          <ButtonGroup
-            size="small"
-            variant="outlined"
-            sx={{ bgcolor: 'background.paper', borderRadius: 2 }}
+          <Box
+            sx={{
+              display: 'flex',
+              overflowX: 'auto',
+              width: '100%',
+              pb: { xs: 0.5, md: 0 },
+              '&::-webkit-scrollbar': { display: 'none' },
+              scrollbarWidth: 'none',
+            }}
           >
+            <ButtonGroup
+              size="small"
+              variant="outlined"
+              sx={{ bgcolor: 'background.paper', borderRadius: 2, flexShrink: 0 }}
+            >
             <Button
               onClick={() => setRoleFilter('all')}
               variant={roleFilter === 'all' ? 'contained' : 'outlined'}
@@ -809,7 +820,8 @@ export default function AdminActivity() {
             >
               Field assistants
             </Button>
-          </ButtonGroup>
+            </ButtonGroup>
+          </Box>
 
           <Tooltip title={t.refresh}>
             <span>
