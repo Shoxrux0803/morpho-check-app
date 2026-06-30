@@ -1,4 +1,4 @@
-﻿import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Grid,
@@ -54,7 +54,23 @@ const LOCAL_TRANSLATIONS = {
       'Hisobingiz xavfsizligini taʼminlash uchun parolingizni har 3 oyda oʻzgartirib turishni va boshqa saytlarda ishlatilmagan noyob paroldan foydalanishni tavsiya etamiz.',
     successMessage: 'Parol muvaffaqiyatli oʻzgartirildi!',
     errorMessage: 'Xatolik yuz berdi',
-  },
+    securityEvents: 'Xavfsizlik xabarlari',
+    securityEventsLoadError: 'Xavfsizlik xabarlari yuklanmadi',
+    securityEventsMarkedRead: 'Xavfsizlik xabarlari o\'qildi deb belgilandi',
+    securityEventsUpdateError: 'Xavfsizlik xabarlarini yangilab bo\'lmadi',
+    loginAttemptsAndBlocked: 'Kirish urinishlari va bloklangan so\'rovlar',
+    newCount: 'yangi',
+    criticalEventAlert: 'Critical xavfsizlik hodisasi bor. IP, email va vaqtni tekshiring.',
+    noSuspiciousLoginAttempts: 'Hozircha shubhali kirish urinishlari yo\'q.',
+    markAllRead: 'Barchasini o\'qilgan deb belgilash',
+    attempt: 'Urinish',
+    LOGIN_FAILED_UNKNOWN_USER: 'Noma\'lum email bilan kirish urinishi',
+    LOGIN_FAILED_BAD_PASSWORD: 'Noto\'g\'ri parol bilan kirish urinishi',
+    SUPERADMIN_NEW_DEVICE: 'Superadmin yangi qurilmadan kirishga urindi',
+    SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tasdiqlash kodi xato kiritildi',
+    RATE_LIMIT_EXCEEDED: 'Juda ko\'p so\'rov yuborildi',
+  updatePasswordBtn: 'Parolni yangilash',
+    },
   ru: {
     passwordStrength: 'Сложность пароля',
     weak: 'Слабый',
@@ -75,7 +91,23 @@ const LOCAL_TRANSLATIONS = {
       'Для обеспечения безопасности вашей учетной записи мы рекомендуем менять пароль каждые 3 месяца и использовать уникальный пароль, который не используется на других сайтах.',
     successMessage: 'Пароль успешно изменен!',
     errorMessage: 'Произошла ошибка',
-  },
+    securityEvents: 'Сообщения безопасности',
+    securityEventsLoadError: 'Не удалось загрузить сообщения безопасности',
+    securityEventsMarkedRead: 'Сообщения безопасности отмечены как прочитанные',
+    securityEventsUpdateError: 'Не удалось обновить сообщения безопасности',
+    loginAttemptsAndBlocked: 'Попытки входа и заблокированные запросы',
+    newCount: 'новые',
+    criticalEventAlert: 'Критическое событие безопасности. Проверьте IP, email и время.',
+    noSuspiciousLoginAttempts: 'Пока нет подозрительных попыток входа.',
+    markAllRead: 'Отметить все как прочитанные',
+    attempt: 'Попытка',
+    LOGIN_FAILED_UNKNOWN_USER: 'Попытка входа с неизвестным email',
+    LOGIN_FAILED_BAD_PASSWORD: 'Попытка входа с неверным паролем',
+    SUPERADMIN_NEW_DEVICE: 'Суперадмин попытался войти с нового устройства',
+    SUPERADMIN_VERIFICATION_FAILED: 'Неверный код подтверждения суперадмина',
+    RATE_LIMIT_EXCEEDED: 'Слишком много запросов',
+  updatePasswordBtn: 'Обновить пароль',
+    },
   en: {
     passwordStrength: 'Password Strength',
     weak: 'Weak',
@@ -96,7 +128,23 @@ const LOCAL_TRANSLATIONS = {
       'To keep your account secure, we recommend changing your password every 3 months and using a unique password not used on other sites.',
     successMessage: 'Password changed successfully!',
     errorMessage: 'An error occurred',
-  },
+    securityEvents: 'Security Messages',
+    securityEventsLoadError: 'Failed to load security messages',
+    securityEventsMarkedRead: 'Security messages marked as read',
+    securityEventsUpdateError: 'Failed to update security messages',
+    loginAttemptsAndBlocked: 'Login attempts and blocked requests',
+    newCount: 'new',
+    criticalEventAlert: 'Critical security event. Check IP, email, and time.',
+    noSuspiciousLoginAttempts: 'No suspicious login attempts yet.',
+    markAllRead: 'Mark all as read',
+    attempt: 'Attempt',
+    LOGIN_FAILED_UNKNOWN_USER: 'Login attempt with unknown email',
+    LOGIN_FAILED_BAD_PASSWORD: 'Login attempt with incorrect password',
+    SUPERADMIN_NEW_DEVICE: 'Superadmin attempted to login from a new device',
+    SUPERADMIN_VERIFICATION_FAILED: 'Superadmin verification code entered incorrectly',
+    RATE_LIMIT_EXCEEDED: 'Too many requests',
+  updatePasswordBtn: 'Update Password',
+    },
   tr: {
     passwordStrength: 'Şifre Zorluğu',
     weak: 'Zayıf',
@@ -117,7 +165,23 @@ const LOCAL_TRANSLATIONS = {
       'Hesabınızı güvende tutmak için şifrenizi her 3 ayda bir değiştirmenizi ve başka sitelerde kullanılmayan benzersiz bir şifre kullanmanızı öneririz.',
     successMessage: 'Şifre başarıyla değiştirildi!',
     errorMessage: 'Bir hata oluştu',
-  },
+    securityEvents: 'Güvenlik Mesajları',
+    securityEventsLoadError: 'Güvenlik mesajları yüklenemedi',
+    securityEventsMarkedRead: 'Güvenlik mesajları okundu olarak işaretlendi',
+    securityEventsUpdateError: 'Güvenlik mesajları güncellenemedi',
+    loginAttemptsAndBlocked: 'Giriş denemeleri ve engellenen istekler',
+    newCount: 'yeni',
+    criticalEventAlert: 'Kritik güvenlik olayı. IP, e-posta ve saati kontrol edin.',
+    noSuspiciousLoginAttempts: 'Henüz şüpheli giriş denemesi yok.',
+    markAllRead: 'Tümünü okundu olarak işaretle',
+    attempt: 'Deneme',
+    LOGIN_FAILED_UNKNOWN_USER: 'Bilinmeyen e-posta ile giriş denemesi',
+    LOGIN_FAILED_BAD_PASSWORD: 'Yanlış şifre ile giriş denemesi',
+    SUPERADMIN_NEW_DEVICE: 'Süper admin yeni bir cihazdan giriş yapmaya çalıştı',
+    SUPERADMIN_VERIFICATION_FAILED: 'Süper admin doğrulama kodu yanlış girildi',
+    RATE_LIMIT_EXCEEDED: 'Çok fazla istek',
+  updatePasswordBtn: 'Şifreyi Güncelle',
+    },
   tg: {
     passwordStrength: 'Қуввати парол',
     weak: 'Заиф',
@@ -138,7 +202,23 @@ const LOCAL_TRANSLATIONS = {
       'Барои бехатарии ҳисоби худ, тавсия медиҳем, ки пароли худро ҳар 3 моҳ иваз кунед ва пароли беҳамтоеро истифода баред, ки дар сайтҳои дигар истифода намешавад.',
     successMessage: 'Парол бо муваффақият иваз карда шуд!',
     errorMessage: 'Хатогӣ рух дод',
-  },
+    securityEvents: 'Паёмҳои амниятӣ',
+    securityEventsLoadError: 'Боркунии паёмҳои амниятӣ ноком шуд',
+    securityEventsMarkedRead: 'Паёмҳои амниятӣ ҳамчун хондашуда қайд карда шуданд',
+    securityEventsUpdateError: 'Навсозии паёмҳои амниятӣ ноком шуд',
+    loginAttemptsAndBlocked: 'Кӯшишҳои воридшавӣ ва дархостҳои басташуда',
+    newCount: 'нав',
+    criticalEventAlert: 'Ҳодисаи муҳими амниятӣ. IP, почтаи электронӣ ва вақтро тафтиш кунед.',
+    noSuspiciousLoginAttempts: 'Ҳоло кӯшишҳои шубҳаноки воридшавӣ нест.',
+    markAllRead: 'Ҳамаро ҳамчун хондашуда қайд кунед',
+    attempt: 'Кӯшиш',
+    LOGIN_FAILED_UNKNOWN_USER: 'Кӯшиши воридшавӣ бо почтаи электронии номаълум',
+    LOGIN_FAILED_BAD_PASSWORD: 'Кӯшиши воридшавӣ бо пароли нодуруст',
+    SUPERADMIN_NEW_DEVICE: 'Суперадмин аз дастгоҳи нав ворид шуданӣ шуд',
+    SUPERADMIN_VERIFICATION_FAILED: 'Рамзи тасдиқи суперадмин нодуруст ворид карда шуд',
+    RATE_LIMIT_EXCEEDED: 'Дархостҳои аз ҳад зиёд',
+  updatePasswordBtn: 'Навсозии парол',
+    },
   kz: {
     passwordStrength: 'Құпия сөз күрделілігі',
     weak: 'Әлсіз',
@@ -159,7 +239,23 @@ const LOCAL_TRANSLATIONS = {
       'Тіркелгіңіздің қауіпсіздігін қамтамасыз ету үшін құпия сөзді әр 3 ай сайын өзгертуді және басқа сайттарда қолданылмайтын бірегей құпия сөзді пайдалануды ұсынамыз.',
     successMessage: 'Құпия сөз сәтті өзгертілді!',
     errorMessage: 'Қате орын алды',
-  },
+    securityEvents: 'Қауіпсіздік хабарламалары',
+    securityEventsLoadError: 'Қауіпсіздік хабарламалары жүктелмеді',
+    securityEventsMarkedRead: 'Қауіпсіздік хабарламалары оқылды деп белгіленді',
+    securityEventsUpdateError: 'Қауіпсіздік хабарламаларын жаңарту мүмкін болмады',
+    loginAttemptsAndBlocked: 'Кіру әрекеттері және бұғатталған сұраулар',
+    newCount: 'жаңа',
+    criticalEventAlert: 'Маңызды қауіпсіздік оқиғасы. IP, электрондық пошта және уақытты тексеріңіз.',
+    noSuspiciousLoginAttempts: 'Әзірге күдікті кіру әрекеттері жоқ.',
+    markAllRead: 'Барлығын оқылды деп белгілеу',
+    attempt: 'Әрекет',
+    LOGIN_FAILED_UNKNOWN_USER: 'Белгісіз электрондық поштамен кіру әрекеті',
+    LOGIN_FAILED_BAD_PASSWORD: 'Қате құпия сөзбен кіру әрекеті',
+    SUPERADMIN_NEW_DEVICE: 'Суперадмин жаңа құрылғыдан кіруге әрекет жасады',
+    SUPERADMIN_VERIFICATION_FAILED: 'Суперадмин растау коды қате енгізілді',
+    RATE_LIMIT_EXCEEDED: 'Тым көп сұрау',
+  updatePasswordBtn: 'Құпиясөзді жаңарту',
+    },
   ky: {
     passwordStrength: 'Сөз айкаштын татаалдыгы',
     weak: 'Алсыз',
@@ -180,7 +276,23 @@ const LOCAL_TRANSLATIONS = {
       'Аккаунтуңуздун коопсуздугун камсыз кылуу үчүн сөз айкашыңызды ар 3 ай сайын өзгөртүп турууну жана башка сайттарда колдонулбаган уникалдуу сөз айкашын колдонууну сунуштайбыз.',
     successMessage: 'Сөз айкашы ийгиликтүү өзгөртүлдү!',
     errorMessage: 'Ката кетти',
-  },
+    securityEvents: 'Коопсуздук билдирүүлөрү',
+    securityEventsLoadError: 'Коопсуздук билдирүүлөрүн жүктөө ишке ашкан жок',
+    securityEventsMarkedRead: 'Коопсуздук билдирүүлөрү окулду деп белгиленди',
+    securityEventsUpdateError: 'Коопсуздук билдирүүлөрүн жаңыртуу мүмкүн эмес',
+    loginAttemptsAndBlocked: 'Кирүү аракеттері жана бөгөттөлгөн сурамдар',
+    newCount: 'жаңы',
+    criticalEventAlert: 'Критикалык коопсуздук окуясы. IP, электрондук почта жана убакытты текшериңиз.',
+    noSuspiciousLoginAttempts: 'Азырынча шектүү кирүү аракеттери жок.',
+    markAllRead: 'Баарын окулду деп белгилөө',
+    attempt: 'Аракет',
+    LOGIN_FAILED_UNKNOWN_USER: 'Белгисиз электрондук почта менен кирүү аракети',
+    LOGIN_FAILED_BAD_PASSWORD: 'Туура эмес сырсөз менен кирүү аракети',
+    SUPERADMIN_NEW_DEVICE: 'Суперадмин жаңы түзмөктөн кирүүгө аракет кылды',
+    SUPERADMIN_VERIFICATION_FAILED: 'Суперадминдин тастыктоо коду туура эмес киргизилди',
+    RATE_LIMIT_EXCEEDED: 'Өтө көп сурам',
+  updatePasswordBtn: 'Сырсөздү жаңыртуу',
+    },
   tm: {
     passwordStrength: 'Paroluň kynlygy',
     weak: 'Gowşak',
@@ -201,7 +313,23 @@ const LOCAL_TRANSLATIONS = {
       'Hasabyňyzyň howpsuzlygyny üpjün etmek üçin paroluňyzy her 3 aýdan bir gezek üýtgetmegi we başga saýtlarda ulanylmadyk üýtgeşik paroly ulanmagy maslahat berýäris.',
     successMessage: 'Parol üstünlikli üýtgedildi!',
     errorMessage: 'Ýalňyşlyk ýüze çykdy',
-  },
+    securityEvents: 'Howpsuzlyk habarlary',
+    securityEventsLoadError: 'Howpsuzlyk habarlary ýüklendi',
+    securityEventsMarkedRead: 'Howpsuzlyk habarlary okaldy diýip bellendi',
+    securityEventsUpdateError: 'Howpsuzlyk habarlaryny täzeläp bolmady',
+    loginAttemptsAndBlocked: 'Giriş synanyşyklary we beklenen islegler',
+    newCount: 'täze',
+    criticalEventAlert: 'Möhüm howpsuzlyk wakasy. IP, e-poçta we wagty barlap görüň.',
+    noSuspiciousLoginAttempts: 'Häzirlikçe şübheli giriş synanyşygy ýok.',
+    markAllRead: 'Hemmesini okaldy diýip bellemek',
+    attempt: 'Synanyşyk',
+    LOGIN_FAILED_UNKNOWN_USER: 'Näbelli e-poçta bilen giriş synanyşygy',
+    LOGIN_FAILED_BAD_PASSWORD: 'Nädogry parol bilen giriş synanyşygy',
+    SUPERADMIN_NEW_DEVICE: 'Superadmin täze enjamdan girmäge synanyşdy',
+    SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tassyklama kody nädogry girizildi',
+    RATE_LIMIT_EXCEEDED: 'Aşa köp isleg',
+  updatePasswordBtn: 'Paroly täzelemek',
+    },
 };
 
 const GlassPaper = ({ children, sx = {} }) => (
@@ -235,13 +363,7 @@ const GlassPaper = ({ children, sx = {} }) => (
 );
 
 
-const SECURITY_EVENT_LABELS = {
-  LOGIN_FAILED_UNKNOWN_USER: 'Noma\'lum email bilan kirish urinishi',
-  LOGIN_FAILED_BAD_PASSWORD: 'Noto\'g\'ri parol bilan kirish urinishi',
-  SUPERADMIN_NEW_DEVICE: 'Superadmin yangi qurilmadan kirishga urindi',
-  SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tasdiqlash kodi xato kiritildi',
-  RATE_LIMIT_EXCEEDED: 'Juda ko\'p so\'rov yuborildi',
-};
+
 
 const severityColors = {
   low: 'default',
@@ -347,7 +469,7 @@ export default function SecuritySettings() {
         critical: data.critical || 0,
       });
     } catch (err) {
-      toast.error(err.message || 'Xavfsizlik xabarlari yuklanmadi');
+      toast.error(err.message || lt('securityEventsLoadError'));
     } finally {
       setSecurityLoading(false);
     }
@@ -364,9 +486,9 @@ export default function SecuritySettings() {
     try {
       await AdminApi.securityEvents.markRead();
       await loadSecurityEvents();
-      toast.success('Xavfsizlik xabarlari o\'qildi deb belgilandi');
+      toast.success(lt('securityEventsMarkedRead'));
     } catch (err) {
-      toast.error(err.message || 'Xavfsizlik xabarlarini yangilab bo\'lmadi');
+      toast.error(err.message || lt('securityEventsUpdateError'));
     } finally {
       setSecurityLoading(false);
     }
@@ -467,7 +589,7 @@ export default function SecuritySettings() {
           onClick={() => setActiveSecurityView('password')}
           sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
         >
-          Parolni yangilash
+          {lt('updatePasswordBtn')}
         </Button>
         {user?.role === 'superadmin' && (
           <Button
@@ -477,7 +599,7 @@ export default function SecuritySettings() {
             onClick={() => setActiveSecurityView('alerts')}
             sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
           >
-            Xavfsizlik xabarlari
+            {lt('securityEvents')}
             {securitySummary.unread > 0 ? ` (${securitySummary.unread})` : ''}
           </Button>
         )}
@@ -711,17 +833,17 @@ export default function SecuritySettings() {
                 >
                   <Box>
                     <Typography variant="h6" fontWeight={850}>
-                      Xavfsizlik xabarlari
+                      {lt('securityEvents')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                      Kirish urinishlari va bloklangan so'rovlar
+                      {lt('loginAttemptsAndBlocked')}
                     </Typography>
                   </Box>
                   <Stack direction="row" spacing={1}>
                     <Chip
                       size="small"
                       color={securitySummary.unread ? 'warning' : 'success'}
-                      label={`${securitySummary.unread} yangi`}
+                      label={`${securitySummary.unread} ${lt('newCount')}`}
                       sx={{ fontWeight: 800 }}
                     />
                     {securitySummary.critical > 0 && (
@@ -737,7 +859,7 @@ export default function SecuritySettings() {
 
                 {securitySummary.critical > 0 && (
                   <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
-                    Critical xavfsizlik hodisasi bor. IP, email va vaqtni tekshiring.
+                    {lt('criticalEventAlert')}
                   </Alert>
                 )}
 
@@ -766,7 +888,7 @@ export default function SecuritySettings() {
                       >
                         <Box display="flex" justifyContent="space-between" gap={1}>
                           <Typography variant="body2" fontWeight={800}>
-                            {SECURITY_EVENT_LABELS[event.event_type] || event.event_type}
+                            {lt(event.event_type) || event.event_type}
                           </Typography>
                           <Chip
                             size="small"
@@ -776,7 +898,7 @@ export default function SecuritySettings() {
                           />
                         </Box>
                         <Typography variant="caption" color="text.secondary" display="block">
-                          {formatSecurityDate(event.created_at)} � IP: {event.ip_address || '-'} � Urinish: {event.attempts || 1}
+                          {formatSecurityDate(event.created_at)} • IP: {event.ip_address || '-'} • {lt('attempt')}: {event.attempts || 1}
                         </Typography>
                         {event.email && (
                           <Typography variant="caption" color="text.secondary" display="block">
@@ -793,7 +915,7 @@ export default function SecuritySettings() {
                   </Stack>
                 ) : (
                   <Alert severity="success" sx={{ borderRadius: 2 }}>
-                    Hozircha shubhali kirish urinishlari yo'q.
+                    {lt('noSuspiciousLoginAttempts')}
                   </Alert>
                 )}
 
@@ -804,7 +926,7 @@ export default function SecuritySettings() {
                   onClick={handleMarkSecurityRead}
                   sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
                 >
-                  Hammasini o'qildi deb belgilash
+                  {lt('markAllRead')}
                 </Button>
               </GlassPaper>
             )}

@@ -20,7 +20,99 @@ const MESSAGE_REACTIONS = ['👍', '❤️', '🙌', '😁', '😊'];
 const ChatWidget = () => {
   const { user } = useAuth();
   const { mode } = useThemeMode();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+
+  const getTranslatedUserName = (name) => {
+    if (name === 'Xavfsizlik xabarlari') {
+      const SECURITY_MESSAGES_TRANSLATIONS = {
+        uz: 'Xavfsizlik xabarlari',
+        ru: 'Сообщения безопасности',
+        en: 'Security Messages',
+        tr: 'Güvenlik Mesajları',
+        tg: 'Паёмҳои амниятӣ',
+        kz: 'Қауіпсіздік хабарламалары',
+        ky: 'Коопсуздук билдирүүлөрү',
+        tm: 'Howpsuzlyk habarlary',
+      };
+      return SECURITY_MESSAGES_TRANSLATIONS[lang] || name;
+    }
+    return name;
+  };
+
+  const getTranslatedMessageContent = (content) => {
+    if (typeof content !== 'string') return content;
+    if (!content.includes('Xavfsizlik Hodisasi')) return content;
+    
+    const TRANSLATIONS = {
+      uz: {
+        critical: 'CRITICAL Xavfsizlik Hodisasi',
+        event: 'Hodisa',
+        attempts: 'Urinishlar',
+        details: "Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring",
+        settings: 'Security Settings'
+      },
+      ru: {
+        critical: 'КРИТИЧЕСКОЕ событие безопасности',
+        event: 'Событие',
+        attempts: 'Попытки',
+        details: 'Для получения подробностей перейдите на страницу безопасности',
+        settings: 'Настройки безопасности'
+      },
+      en: {
+        critical: 'CRITICAL Security Event',
+        event: 'Event',
+        attempts: 'Attempts',
+        details: 'For details, please visit the security page',
+        settings: 'Security Settings'
+      },
+      tr: {
+        critical: 'KRİTİK Güvenlik Olayı',
+        event: 'Olay',
+        attempts: 'Denemeler',
+        details: 'Ayrıntılar için güvenlik sayfasına gidin',
+        settings: 'Güvenlik Ayarları'
+      },
+      tg: {
+        critical: 'Ҳодисаи КРИТИКИИ амниятӣ',
+        event: 'Ҳодиса',
+        attempts: 'Кӯшишҳо',
+        details: 'Барои тафсилот ба саҳифаи амният гузаред',
+        settings: 'Танзимоти амният'
+      },
+      kz: {
+        critical: 'КРИТИКАЛЫҚ қауіпсіздік оқиғасы',
+        event: 'Оқиға',
+        attempts: 'Әрекеттер',
+        details: 'Толық ақпарат алу үшін қауіпсіздік бетіне өтіңіз',
+        settings: 'Қауіпсіздік параметрлері'
+      },
+      ky: {
+        critical: 'КРИТИКАЛЫК коопсуздук окуясы',
+        event: 'Окуя',
+        attempts: 'Аракеттер',
+        details: 'Толук маалымат үчүн коопсуздук барагына өтүңүз',
+        settings: 'Коопсуздук жөндөөлөрү'
+      },
+      tm: {
+        critical: 'KRITIK Howpsuzlyk wakasy',
+        event: 'Waka',
+        attempts: 'Synanyşyklar',
+        details: 'Giňişleýin maglumat üçin howpsuzlyk sahypasyna geçiň',
+        settings: 'Howpsuzlyk sazlamalary'
+      }
+    };
+
+    const tMap = TRANSLATIONS[lang] || TRANSLATIONS.uz;
+    let translatedContent = content;
+    translatedContent = translatedContent.replace(/CRITICAL Xavfsizlik Hodisasi/g, tMap.critical);
+    translatedContent = translatedContent.replace(/Hodisa:/g, tMap.event + ':');
+    translatedContent = translatedContent.replace(/Urinishlar:/g, tMap.attempts + ':');
+    translatedContent = translatedContent.replace(/Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring:/g, tMap.details + ':');
+    translatedContent = translatedContent.replace(/\\[Security Settings\\]/g, '[' + tMap.settings + ']');
+
+    return translatedContent;
+  };
+
   const isDark = mode === 'dark';
   const isAdmin = user?.role === 'superadmin';
   const isListUser =
@@ -424,7 +516,7 @@ const ChatWidget = () => {
   };
 
   const filteredConversations = conversations.filter((c) =>
-    c.user_name.toLowerCase().includes(searchQuery.toLowerCase())
+    (getTranslatedUserName(c.user_name) || '').toLowerCase().includes(searchQuery.toLowerCase())
   ).sort((a, b) => {
     if (a.user_name === 'Xavfsizlik xabarlari') return -1;
     if (b.user_name === 'Xavfsizlik xabarlari') return 1;
@@ -563,7 +655,7 @@ const ChatWidget = () => {
                         ? 'Chat Nazorati'
                         : currentView === VIEWS.MONITORING_CHAT
                           ? `${selectedMonitoringPair?.admin_name} ↔ ${selectedMonitoringPair?.assistant_name}`
-                          : selectedUser?.name || t('chat')}
+                          : getTranslatedUserName(selectedUser?.name) || t('chat')}
                   </h6>
                   {currentView === VIEWS.CHAT && (
                     <div style={{ fontSize: '10px', opacity: 0.8 }}>
@@ -814,7 +906,7 @@ const ChatWidget = () => {
                                   boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                                 }}
                               >
-                                {conv.user_name.charAt(0).toUpperCase()}
+                                {getTranslatedUserName(conv.user_name).charAt(0).toUpperCase()}
                               </div>
                               {conv.unread_count > 0 && (
                                 <div
@@ -862,7 +954,7 @@ const ChatWidget = () => {
                                     color: isDark ? '#fff' : '#1f2937',
                                   }}
                                 >
-                                  {conv.user_name}
+                                  {getTranslatedUserName(conv.user_name)}
                                 </div>
                                 <div style={{ fontSize: '10px', color: '#888' }}>
                                   {formatTime(conv.last_message_time)}
@@ -902,7 +994,7 @@ const ChatWidget = () => {
                                       {t('you')}
                                     </span>
                                   )}
-                                  {conv.last_message}
+                                  {getTranslatedMessageContent(conv.last_message)}
                                 </div>
                               </div>
                             </div>
@@ -1038,7 +1130,7 @@ const ChatWidget = () => {
                                 textOverflow: 'ellipsis',
                               }}
                             >
-                              {pair.last_message || 'Yozishma boshlanmagan'}
+                              {getTranslatedMessageContent(pair.last_message) || 'Yozishma boshlanmagan'}
                             </div>
                           </div>
                         </motion.div>
@@ -1299,7 +1391,7 @@ const ChatWidget = () => {
                                                   : '#333',
                                             }}
                                           >
-                                            {msg.content.replace(
+                                            {getTranslatedMessageContent(msg.content).replace(
                                               /^(Fayl|File|Файл|Файлды|Fayly|Dosya|Файлdar):\s*/i,
                                               ''
                                             )}
@@ -1329,7 +1421,7 @@ const ChatWidget = () => {
                                     )}
                                   </div>
                                 )}
-                                {msg.content.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
+                                {getTranslatedMessageContent(msg.content).split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
                                   const match = part.match(/\[(.*?)\]\((.*?)\)/);
                                   if (match) {
                                     return <a key={i} href={match[2]} style={{ color: isDark ? '#64b5f6' : '#1976d2', textDecoration: 'underline' }}>{match[1]}</a>;
