@@ -1462,6 +1462,7 @@ const SuperAdminPage = () => {
   const [adminReportDownloading, setAdminReportDownloading] = useState(false);
   const [adminDialogOpen, setAdminDialogOpen] = useState(false);
   const [adminDialogStep, setAdminDialogStep] = useState(0);
+  const [adminGeocoding, setAdminGeocoding] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [adminForm, setAdminForm] = useState({
     name: '',
@@ -1750,6 +1751,14 @@ const SuperAdminPage = () => {
     }
     return null;
   };
+  const getAdminLocationSearchText = useCallback(
+    (form = adminForm) =>
+      [form.address, form.mahalla, form.district, form.region, 'Uzbekistan']
+        .map((part) => String(part || '').trim())
+        .filter(Boolean)
+        .join(', '),
+    [adminForm]
+  );
   const MAX_MERCATOR = 20037508.342789244;
   const normalizeCoordinatePair = useCallback((latitude, longitude) => {
     const rawLat = Number(latitude);
@@ -2097,7 +2106,53 @@ const SuperAdminPage = () => {
     toast.success(pt('pinSelectedCenter'));
   };
 
-  const setAdminFormWithBoundaryCenter = (patch, options = {}) => {
+  const geocodeAdminLocation = async (form = adminForm) => {
+    const query = getAdminLocationSearchText(form);
+    if (!query || query === 'Uzbekistan') {
+      toast.error(pt('locationNotFound'));
+      return null;
+    }
+
+    setAdminGeocoding(true);
+    try {
+      const params = new URLSearchParams({
+        format: 'jsonv2',
+        q: query,
+        countrycodes: 'uz',
+        limit: '1',
+        addressdetails: '1',
+      });
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const [result] = await response.json();
+      const normalizedPair = result
+        ? normalizeCoordinatePair(result.lat, result.lon)
+        : null;
+
+      if (!normalizedPair) {
+        toast.error(pt('preciseLocationNotFound'));
+        return null;
+      }
+
+      setAdminForm((current) => ({
+        ...current,
+        latitude: normalizedPair.latitude.toFixed(6),
+        longitude: normalizedPair.longitude.toFixed(6),
+      }));
+      toast.success(pt('preciseLocationFound'));
+      return normalizedPair;
+    } catch (error) {
+      console.warn('Admin geocoding failed:', error);
+      toast.error(pt('preciseLocationNotFound'));
+      return null;
+    } finally {
+      setAdminGeocoding(false);
+    }
+  };
+
+  const setAdminFormWithBoundaryCenter = async (patch, options = {}) => {
     const nextForm = { ...adminForm, ...patch };
     const selectedMahalla = mahallaOptions.find(
       (item) => item.label === nextForm.mahalla
@@ -2106,30 +2161,29 @@ const SuperAdminPage = () => {
       nextForm.district,
       nextForm.region
     );
-    const selectedRegion = findBoundaryRegion(nextForm.region);
     const preferredBoundary =
       options.preferMahalla && selectedMahalla
         ? selectedMahalla
         : options.preferDistrict && selectedDistrict
           ? selectedDistrict
           : null;
-    const center =
-      getLocationCenter(preferredBoundary) ||
-      (options.fillFallbackCenter
-        ? getLocationCenter(selectedMahalla) ||
-          getLocationCenter(selectedDistrict) ||
-          getLocationCenter(selectedRegion)
-        : null);
+    const center = getLocationCenter(preferredBoundary);
 
-    setAdminForm({
-      ...nextForm,
-      ...(center
-        ? {
-            longitude: Number(center[0]).toFixed(6),
-            latitude: Number(center[1]).toFixed(6),
-          }
-        : {}),
-    });
+    setAdminForm({ ...nextForm });
+
+    if (options.geocode) {
+      const geocoded = await geocodeAdminLocation(nextForm);
+      if (geocoded) return;
+    }
+
+    if (options.fillFallbackCenter && center) {
+      setAdminForm((current) => ({
+        ...current,
+        longitude: Number(center[0]).toFixed(6),
+        latitude: Number(center[1]).toFixed(6),
+      }));
+      toast.success(pt('pinSelectedCenter'));
+    }
   };
 
   const resolveAdminBoundaryCenter = () => {
@@ -3809,8 +3863,12 @@ const SuperAdminPage = () => {
                   startIcon={<GetApp />}
                   variant="outlined"
                   onClick={handleExportCSV}
-                  sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 600 }}
-                  fullWidth={{ xs: true, sm: false }}
+                  sx={{
+                    borderRadius: 2.5,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    width: { xs: '100%', sm: 'auto' }
+                  }}
                 >
                   {t('export')}
                 </Button>
@@ -3826,9 +3884,9 @@ const SuperAdminPage = () => {
                     boxShadow: '0 4px 12px rgba(244, 67, 54, 0.2)',
                     '&:hover': {
                       boxShadow: '0 6px 16px rgba(244, 67, 54, 0.3)',
-                    }
+                    },
+                    width: { xs: '100%', sm: 'auto' }
                   }}
-                  fullWidth={{ xs: true, sm: false }}
                 >
                   {pt('clear')}
                 </Button>
@@ -5141,6 +5199,8 @@ const SuperAdminPage = () => {
                         region: e.target.value,
                         district: '',
                         mahalla: '',
+                        latitude: '',
+                        longitude: '',
                       })
                     }
                   >
@@ -5159,8 +5219,13 @@ const SuperAdminPage = () => {
                     label={pt('districtCity')}
                     onChange={(e) =>
                       setAdminFormWithBoundaryCenter(
-                        { district: e.target.value, mahalla: '' },
-                        { preferDistrict: true }
+                        {
+                          district: e.target.value,
+                          mahalla: '',
+                          latitude: '',
+                          longitude: '',
+                        },
+                        { preferDistrict: true, geocode: true }
                       )
                     }
                   >
@@ -5184,8 +5249,12 @@ const SuperAdminPage = () => {
                     label={pt('mahalla')}
                     onChange={(e) =>
                       setAdminFormWithBoundaryCenter(
-                        { mahalla: e.target.value },
-                        { preferMahalla: true, fillFallbackCenter: true }
+                        {
+                          mahalla: e.target.value,
+                          latitude: '',
+                          longitude: '',
+                        },
+                        { preferMahalla: true, geocode: true }
                       )
                     }
                   >
@@ -5217,6 +5286,15 @@ const SuperAdminPage = () => {
                   onChange={(e) =>
                     setAdminForm({ ...adminForm, address: e.target.value })
                   }
+                  onBlur={() => {
+                    if (
+                      adminForm.address ||
+                      adminForm.mahalla ||
+                      adminForm.district
+                    ) {
+                      geocodeAdminLocation(adminForm);
+                    }
+                  }}
                   helperText={pt('addressCoordinateHelp')}
                 />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
@@ -5242,9 +5320,31 @@ const SuperAdminPage = () => {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <Button
                     variant="outlined"
+                    startIcon={
+                      adminGeocoding ? (
+                        <CircularProgress size={18} />
+                      ) : (
+                        <Search />
+                      )
+                    }
+                    onClick={() => geocodeAdminLocation(adminForm)}
+                    disabled={
+                      adminGeocoding ||
+                      (!adminForm.region && !adminForm.address)
+                    }
+                    sx={{
+                      borderRadius: 1.5,
+                      textTransform: 'none',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {pt('findPreciseLocation')}
+                  </Button>
+                  <Button
+                    variant="outlined"
                     startIcon={<Place />}
                     onClick={setAdminPinFromBoundary}
-                    disabled={!adminForm.region}
+                    disabled={!adminForm.region || adminGeocoding}
                     sx={{
                       borderRadius: 1.5,
                       textTransform: 'none',
@@ -5257,6 +5357,7 @@ const SuperAdminPage = () => {
                     variant="contained"
                     startIcon={<MyLocation />}
                     onClick={useCurrentLocationForAdmin}
+                    disabled={adminGeocoding}
                     sx={{
                       borderRadius: 1.5,
                       textTransform: 'none',

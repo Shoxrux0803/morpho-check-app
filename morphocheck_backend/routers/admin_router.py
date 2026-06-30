@@ -55,6 +55,12 @@ logger = logging.getLogger(__name__)
 verify_admin = get_current_admin
 
 
+class LocationPing(BaseModel):
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+
+
 # --------------- Yordamchilar ------------------
 def split_name(full: Optional[str]) -> tuple[str, str]:
     if not full:
@@ -2770,6 +2776,33 @@ def ping_form_start(
     current_user.last_form_open_at = datetime.utcnow()
     db.commit()
     return {"status": "ok"}
+
+
+@router.post("/activity/location")
+def update_live_location(
+    payload: LocationPing,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Field assistant joriy koordinatasini SuperAdmin xaritasi uchun yangilaydi."""
+    if current_user.role != "field_assistant":
+        raise HTTPException(status_code=403, detail="Only field assistants can share live location")
+
+    lat = float(payload.latitude)
+    lng = float(payload.longitude)
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        raise HTTPException(status_code=422, detail="Invalid coordinates")
+
+    current_user.latitude = lat
+    current_user.longitude = lng
+    current_user.last_active_at = datetime.utcnow()
+    db.commit()
+    return {
+        "status": "ok",
+        "latitude": current_user.latitude,
+        "longitude": current_user.longitude,
+        "last_active_at": current_user.last_active_at,
+    }
 
 
 @router.get("/activity", response_model=dict)

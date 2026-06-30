@@ -234,5 +234,7 @@ export const AdminApi = {
     list: () => call('/admin/activity'),
     pingFormStart: () =>
       call('/admin/activity/ping-form-start', { method: 'POST' }),
+    updateLocation: (data) =>
+      call('/admin/activity/location', { method: 'POST', body: data }),
   },
 };

@@ -46,6 +46,7 @@ const SVG_HEIGHT = 760;
 const PIN_COLORS = {
   admin: '#2563eb',
   researcher: '#7c3aed',
+  field_assistant: '#f59e0b',
 };
 
 const MAP_I18N = {
@@ -62,6 +63,7 @@ const MAP_I18N = {
     admin: 'Admin',
     admins: 'Admin',
     researcher: 'Izlanuvchi',
+    fieldAssistant: 'Field assistant',
     nextLayer: 'Keyingi qatlam',
     area: 'Maydon',
     riskSignal: 'Klinik risk signali',
@@ -209,6 +211,7 @@ const MAP_I18N = {
     admin: 'Admin',
     admins: 'Admin',
     researcher: 'Researcher',
+    fieldAssistant: 'Field assistant',
     nextLayer: 'Next layer',
     area: 'Area',
     riskSignal: 'Clinical risk signal',
@@ -1751,7 +1754,12 @@ export default function SuperAdminRegionalMap({
         .map((item) => ({
           ...item,
           __source: 'user',
-          __type: item.role === 'researcher' ? 'researcher' : 'admin',
+          __type:
+            item.role === 'researcher'
+              ? 'researcher'
+              : item.role === 'field_assistant'
+                ? 'field_assistant'
+                : 'admin',
         })),
       ...analyses.map((item) => ({
         ...item,
@@ -1926,7 +1934,7 @@ export default function SuperAdminRegionalMap({
             .filter(
               (item) =>
                 item.__source === 'user' &&
-                ['admin', 'researcher'].includes(item.__type) &&
+                ['admin', 'researcher', 'field_assistant'].includes(item.__type) &&
                 !normalizeLngLat(
                   Number(item.longitude ?? item.lon ?? item.lng),
                   Number(item.latitude ?? item.lat)
@@ -2145,7 +2153,7 @@ export default function SuperAdminRegionalMap({
       .filter(
         (item) =>
           item.__source === 'user' &&
-          ['admin', 'researcher'].includes(item.__type)
+          ['admin', 'researcher', 'field_assistant'].includes(item.__type)
       )
       .map((item) => {
         const locationItem = normalizeLocationItem(item);
@@ -2586,6 +2594,23 @@ export default function SuperAdminRegionalMap({
 
   useEffect(() => {
     let mounted = true;
+    const refreshUsers = async () => {
+      try {
+        const users = await loadAllUsers();
+        if (mounted) setDirectoryUsers(normalizeListResponse(users));
+      } catch {
+        // Live user refresh is best-effort; keep the current map data.
+      }
+    };
+    const intervalId = window.setInterval(refreshUsers, 20000);
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
     Promise.all([
       fetch(`${BOUNDARY_BASE}/index.json`).then((response) => response.json()),
       fetch(`${BOUNDARY_BASE}/level1-preview.geojson`).then((response) =>
@@ -2679,6 +2704,8 @@ export default function SuperAdminRegionalMap({
             PIN_COLORS.admin,
             'researcher',
             PIN_COLORS.researcher,
+            'field_assistant',
+            PIN_COLORS.field_assistant,
             '#2563eb',
           ],
           'circle-opacity': 0.18,
@@ -2696,6 +2723,8 @@ export default function SuperAdminRegionalMap({
             6.5,
             'researcher',
             5.5,
+            'field_assistant',
+            6,
             4.5,
           ],
           'circle-color': [
@@ -2705,6 +2734,8 @@ export default function SuperAdminRegionalMap({
             PIN_COLORS.admin,
             'researcher',
             PIN_COLORS.researcher,
+            'field_assistant',
+            PIN_COLORS.field_assistant,
             '#2563eb',
           ],
           'circle-stroke-color': '#ffffff',
@@ -3299,6 +3330,7 @@ export default function SuperAdminRegionalMap({
     (pin) => {
       if (pin?.type === 'admin') return mt.admin;
       if (pin?.type === 'researcher') return mt.researcher;
+      if (pin?.type === 'field_assistant') return mt.fieldAssistant || 'Field assistant';
       return pin?.role || pin?.type || '-';
     },
     [mt]
@@ -3805,7 +3837,9 @@ export default function SuperAdminRegionalMap({
                   borderColor:
                     selectedPin.type === 'researcher'
                       ? 'rgba(124,58,237,0.45)'
-                      : 'rgba(37,99,235,0.45)',
+                      : selectedPin.type === 'field_assistant'
+                        ? 'rgba(245,158,11,0.45)'
+                        : 'rgba(37,99,235,0.45)',
                   bgcolor: isDark
                     ? 'rgba(15,23,42,0.96)'
                     : 'rgba(255,255,255,0.98)',

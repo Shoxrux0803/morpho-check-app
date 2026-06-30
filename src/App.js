@@ -1,5 +1,5 @@
 // src/App.js
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Component, Suspense, lazy, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -30,6 +30,7 @@ import MorphoProBackground from './components/MorphoProBackground';
 import TubesBackground from './components/TubesBackground';
 import { useThemeMode } from './providers/ThemeProviderMUI';
 import WelcomeOverlay from './components/WelcomeOverlay';
+import FieldAssistantLocationTracker from './components/FieldAssistantLocationTracker';
 
 // Lazy pages - YANGI SAHIFALAR QO'SHILDI
 const MorphoCheckPro = lazy(() => import('./pages/MorphoCheckPro'));
@@ -44,6 +45,69 @@ const PrivacyCompliancePage = lazy(
 );
 const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard')); // 3-bosqich
 const MAX_VISIBLE_TOASTS = 3;
+const CHUNK_RELOAD_KEY = 'morphocheck_chunk_reload_attempted';
+
+const isChunkLoadError = (error) => {
+  const message = String(error?.message || error || '');
+  const name = String(error?.name || '');
+  return (
+    name === 'ChunkLoadError' ||
+    message.includes('Loading chunk') ||
+    message.includes('ChunkLoadError') ||
+    message.includes('Failed to fetch dynamically imported module')
+  );
+};
+
+const clearBrowserBuildCache = async () => {
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+  }
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => caches.delete(key)));
+  }
+};
+
+class ChunkLoadBoundary extends Component {
+  state = { chunkError: false };
+
+  static getDerivedStateFromError(error) {
+    return isChunkLoadError(error) ? { chunkError: true } : null;
+  }
+
+  componentDidMount() {
+    if (!this.state.chunkError) sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+  }
+
+  componentDidCatch(error) {
+    if (!isChunkLoadError(error)) throw error;
+    if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === '1') return;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
+    clearBrowserBuildCache().finally(() => window.location.reload());
+  }
+
+  componentDidUpdate() {
+    if (!this.state.chunkError) sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+  }
+
+  render() {
+    if (!this.state.chunkError) return this.props.children;
+    return (
+      <div className="container py-5 text-center">
+        <h3>Ilova yangilandi</h3>
+        <p>Yangi fayllarni olish uchun sahifani qayta yuklang.</p>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => window.location.reload()}
+        >
+          Qayta yuklash
+        </button>
+      </div>
+    );
+  }
+}
 
 function ToastLimit() {
   const { toasts } = useToasterStore();
@@ -395,14 +459,17 @@ export default function App() {
             <ScrollToTop />
             {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
             <ThemeSync />
+            <FieldAssistantLocationTracker />
 
             <div className="App d-flex flex-column min-vh-100">
               <Header />
 
               <main className="flex-grow-1">
-                <Suspense fallback={<PageLoader />}>
-                  <AnimatedRoutes />
-                </Suspense>
+                <ChunkLoadBoundary>
+                  <Suspense fallback={<PageLoader />}>
+                    <AnimatedRoutes />
+                  </Suspense>
+                </ChunkLoadBoundary>
               </main>
 
               <ChatWidget />

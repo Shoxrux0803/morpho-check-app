@@ -106,7 +106,11 @@ const dictionaries = {
     mahallaNotFound: 'Mahalla qatlamlari topilmadi yoki tuman mos kelmadi',
     address: 'Aniq manzil',
     addressCoordinateHelp:
-      'Matnli manzildan aniq koordinata avtomatik topilmaydi. Exact pin uchun latitude va longitude kiriting yoki joriy lokatsiyani oling.',
+      "Manzil, mahalla yoki tuman tanlanganda aniq koordinata avtomatik qidiriladi. Kerak bo'lsa latitude va longitude qo'lda ham kiritish mumkin.",
+    findPreciseLocation: 'Aniq koordinatani topish',
+    preciseLocationFound: 'Aniq koordinata topildi',
+    preciseLocationNotFound:
+      "Aniq koordinata topilmadi. Manzilni to'liqroq kiriting yoki qo'lda latitude/longitude yozing.",
     pinRegionCenter: 'Hudud markaziga pin',
     getCurrentLocation: 'Joriy lokatsiyani olish',
     deletedDetails: "O'chirilgan ma'lumot tafsiloti",
@@ -518,7 +522,11 @@ const dictionaries = {
     mahallaNotFound: 'Mahalla layers were not found or district did not match',
     address: 'Exact address',
     addressCoordinateHelp:
-      'An exact pin is not detected automatically from a text address. Enter latitude and longitude or use the current location for a precise pin.',
+      'Precise coordinates are searched automatically when address, mahalla, or district is selected. Latitude and longitude can also be entered manually.',
+    findPreciseLocation: 'Find precise coordinates',
+    preciseLocationFound: 'Precise coordinates found',
+    preciseLocationNotFound:
+      'Precise coordinates were not found. Enter a fuller address or add latitude/longitude manually.',
     pinRegionCenter: 'Pin to region center',
     getCurrentLocation: 'Get current location',
     deletedDetails: 'Deleted data details',

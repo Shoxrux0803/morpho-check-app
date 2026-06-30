@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useThemeMode } from '../providers/ThemeProviderMUI';
 
 export default function TubesBackground() {
@@ -82,7 +82,10 @@ export default function TubesBackground() {
     };
   };
 
-  const currentTheme = getColors(mode === 'dark', weatherData);
+  const currentTheme = useMemo(
+    () => getColors(mode === 'dark', weatherData),
+    [mode, weatherData]
+  );
 
   // Update colors dynamically when mode or weather changes
   useEffect(() => {
@@ -90,7 +93,7 @@ export default function TubesBackground() {
       appRef.current.tubes.setColors(currentTheme.tubes);
       appRef.current.tubes.setLightsColors(currentTheme.lights);
     }
-  }, [mode, weatherData]);
+  }, [currentTheme]);
 
   useEffect(() => {
     if (initialized.current) return;
@@ -250,9 +253,7 @@ export default function TubesBackground() {
 
           window.addEventListener('click', handleClick);
           window._tubesClick = handleClick;
-        } catch (err) {
-          console.error('Tubes Anim Error:', err);
-        }
+        } catch {}
       }
     };
 
