@@ -55,6 +55,9 @@ class User(Base):
     deleted_at = Column(DateTime, nullable=True)
     deleted_by_id = Column(Integer, nullable=True)
 
+    # --- Restriction ---
+    is_restricted = Column(Integer, default=0, index=True)  # 0=Active, 1=Restricted
+
     __table_args__ = (
         Index("ix_users_role_active", "role", "is_deleted"),
         Index("ix_users_deleted_deleted_at", "is_deleted", "deleted_at"),

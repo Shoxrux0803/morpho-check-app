@@ -1494,6 +1494,7 @@ const SuperAdminPage = () => {
     scientific_supervisor: '',
     supervisor_id: '',
     admin_permissions: normalizeAdminPermissions(),
+    is_restricted: 0,
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
@@ -1527,6 +1528,7 @@ const SuperAdminPage = () => {
     scientific_supervisor: admin.scientific_supervisor || '',
     supervisor_id: admin.supervisor_id || '',
     admin_permissions: normalizeAdminPermissions(admin.admin_permissions),
+    is_restricted: admin.is_restricted || 0,
   });
 
   // Deleted Data State
@@ -5348,6 +5350,27 @@ const SuperAdminPage = () => {
             )}
             {adminDialogStep === 1 && (
               <Stack spacing={1.5} sx={{ mt: 1 }}>
+                <Paper
+                  variant="outlined"
+                  sx={{ p: 2, borderRadius: 1.5, borderColor: 'error.main', bgcolor: 'error.50' }}
+                >
+                  <FormControlLabel
+                    sx={{ m: 0, width: '100%', justifyContent: 'space-between' }}
+                    label={<Typography fontWeight={800} color="error.main">Faoliyatni cheklash</Typography>}
+                    labelPlacement="start"
+                    control={
+                      <Switch
+                        color="error"
+                        checked={adminForm.is_restricted === 1}
+                        onChange={(e) => setAdminForm({ ...adminForm, is_restricted: e.target.checked ? 1 : 0 })}
+                      />
+                    }
+                  />
+                  <Typography variant="caption" color="error.main" sx={{ display: 'block', mt: 1 }}>
+                    Agar bu yoqilsa, foydalanuvchi tizimdan foydalana olmaydi.
+                  </Typography>
+                </Paper>
+
                 <Alert severity="info">{apt('inheritanceInfo')}</Alert>
                 {adminForm.role !== 'admin' && (
                   <Alert severity="warning">{apt('adminOnlyWarning')}</Alert>

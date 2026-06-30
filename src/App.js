@@ -217,6 +217,26 @@ const PageLoader = () => (
   </motion.div>
 );
 
+const RestrictedAccess = () => (
+  <motion.div
+    initial={{ opacity: 0, scale: 0.95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    className="container py-5 text-center"
+    style={{
+      minHeight: '60vh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}
+  >
+    <div style={{ padding: '2rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '16px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+      <h3 style={{ color: '#EF4444', marginBottom: '1rem', fontWeight: 800 }}>Faoliyatingiz vaqtinchalik cheklangan!</h3>
+      <p className="text-muted mb-0" style={{ fontSize: '1.1rem' }}>Adminlarga murojaat qiling!</p>
+    </div>
+  </motion.div>
+);
+
 // Role-based Admin Wrapper (Data Dashboard)
 const AdminWrapper = () => {
   const { user, loading } = useAuth();
@@ -233,6 +253,10 @@ const AdminWrapper = () => {
   }
 
   // Redirect based on role if logged in
+  if (user.is_restricted === 1) {
+    return <RestrictedAccess />;
+  }
+
   if (user.role === 'researcher') {
     return <Navigate to="/researcher" replace />;
   }
@@ -276,6 +300,11 @@ const ResearcherWrapper = () => {
 
   const isResearcherAssistant =
     user?.role === 'field_assistant' && user?.supervisor_role === 'researcher';
+
+  if (user?.is_restricted === 1) {
+    return <RestrictedAccess />;
+  }
+
   if (
     user?.role === 'researcher' ||
     user?.role === 'superadmin' ||
@@ -317,6 +346,22 @@ const HomeWrapper = () => {
   );
 };
 
+const ProWrapper = () => {
+  const { user, loading } = useAuth();
+  
+  if (loading) return <PageLoader />;
+  
+  if (user?.is_restricted === 1) {
+    return <RestrictedAccess />;
+  }
+  
+  return (
+    <PageTransition>
+      <MorphoCheckPro />
+    </PageTransition>
+  );
+};
+
 // Animated Routes komponenti
 function AnimatedRoutes() {
   const location = useLocation();
@@ -344,11 +389,7 @@ function AnimatedRoutes() {
           <Route path="/" element={<HomeWrapper />} />
           <Route
             path="/morphocheck-pro"
-            element={
-              <PageTransition>
-                <MorphoCheckPro />
-              </PageTransition>
-            }
+            element={<ProWrapper />}
           />
           <Route
             path="/info"

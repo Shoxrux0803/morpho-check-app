@@ -302,6 +302,7 @@ class UserCreate(BaseModel):
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
     supervisor_id: Optional[int] = None
     admin_permissions: Optional[dict[str, bool]] = Field(default_factory=lambda: dict(DEFAULT_ADMIN_PERMISSIONS))
+    is_restricted: Optional[int] = 0
 
     @field_validator("admin_permissions", mode="before")
     @classmethod
@@ -392,6 +393,7 @@ class UserUpdate(BaseModel):
     scientific_supervisor: Optional[str] = Field(None, max_length=200)
     supervisor_id: Optional[int] = None
     admin_permissions: Optional[dict[str, bool]] = None
+    is_restricted: Optional[int] = 0
 
     @field_validator("admin_permissions", mode="before")
     @classmethod
@@ -452,6 +454,7 @@ class UserOut(BaseModel):
     admin_permissions: Optional[dict[str, bool]] = Field(
         default_factory=lambda: dict(DEFAULT_ADMIN_PERMISSIONS)
     )
+    is_restricted: Optional[int] = 0
     ai_chat_enabled: Optional[bool] = True
     internal_chat_enabled: Optional[bool] = True
     is_deleted: Optional[int] = 0
