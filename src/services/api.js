@@ -662,6 +662,48 @@ export const AdminApi = {
     },
   },
 
+  securityEvents: {
+    list: async (params = {}) => {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value.toString());
+        }
+      });
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/security-events?${queryParams.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+    markRead: async () => {
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/security-events/mark-read`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
+  },
   auditLogs: {
     list: async (params = {}) => {
       const queryParams = new URLSearchParams();

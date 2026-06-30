@@ -41,7 +41,7 @@ import {
   Divider,
   TablePagination,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import {
   Lock,
@@ -1436,6 +1436,17 @@ const SuperAdminPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('tab') === 'security') {
+      setActiveTab(5);
+    }
+  }, [location.search]);
+
   const { user, login: authLogin, logout, loading: authLoading } = useAuth();
   const { lang, t } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
@@ -1443,7 +1454,7 @@ const SuperAdminPage = () => {
   const apt = useCallback((key) => getAdminPermissionText(lang, key), [lang]);
   const pt = useCallback((key) => pageT(lang, key), [lang]);
   const reportLabels = ADMIN_REPORT_LABELS[lang] || ADMIN_REPORT_LABELS.uz;
-  const [activeTab, setActiveTab] = useState(0);
+
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: '',
@@ -1485,8 +1496,6 @@ const SuperAdminPage = () => {
     admin_permissions: normalizeAdminPermissions(),
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
-  const [showCurrentAdminPassword, setShowCurrentAdminPassword] =
-    useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
@@ -2930,7 +2939,6 @@ const SuperAdminPage = () => {
                       setCurrentAdmin(null);
                       setAdminForm(normalizeAdminForm());
                       setShowAdminPassword(false);
-                      setShowCurrentAdminPassword(false);
                       setAdminDialogOpen(true);
                     }}
                     sx={{
@@ -3149,7 +3157,6 @@ const SuperAdminPage = () => {
                                       '',
                                   });
                                   setShowAdminPassword(false);
-                                  setShowCurrentAdminPassword(false);
                                   setAdminDialogOpen(true);
                                 }}
                                 sx={{
@@ -4943,36 +4950,6 @@ const SuperAdminPage = () => {
                     setAdminForm({ ...adminForm, email: e.target.value })
                   }
                 />
-
-                {currentAdmin && (
-                  <TextField
-                    label="Joriy parol"
-                    type={showCurrentAdminPassword ? 'text' : 'password'}
-                    fullWidth
-                    value={currentAdmin.plain_password || 'Parol mavjud emas'}
-                    InputProps={{
-                      readOnly: true,
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() =>
-                              setShowCurrentAdminPassword(
-                                !showCurrentAdminPassword
-                              )
-                            }
-                            edge="end"
-                          >
-                            {showCurrentAdminPassword ? (
-                              <VisibilityOff />
-                            ) : (
-                              <Visibility />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-                )}
 
                 <TextField
                   label={

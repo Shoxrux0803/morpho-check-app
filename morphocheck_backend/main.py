@@ -31,6 +31,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from utils.i18n import I18nMiddleware, i18n_http_exception_handler, i18n_validation_exception_handler
 
 from models.base import Base
+from models.security_event import SecurityEvent  # noqa: F401
 from routers.admin_router import router as admin_router
 from routers.ai_router import router as ai_router
 from routers.analytics_router import router as analytics_router  # 3-bosqich
@@ -46,8 +47,9 @@ from routers.research_router import router as research_router
 from routers.utils_router import router as utils_router
 
 # DB init
-from utils.database import engine, get_db, init_db
+from utils.database import SessionLocal, engine, get_db, init_db
 from utils.rate_limit import limiter
+from utils.security_events import record_security_event
 
 API_PREFIX = os.getenv("API_PREFIX", "/api")
 
@@ -77,7 +79,23 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+async def security_rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    db = SessionLocal()
+    try:
+        record_security_event(
+            db,
+            "RATE_LIMIT_EXCEEDED",
+            request=request,
+            details=f"Rate limit exceeded on {request.method} {request.url.path}",
+            severity="high",
+        )
+    finally:
+        db.close()
+    return _rate_limit_exceeded_handler(request, exc)
+
+
+app.add_exception_handler(RateLimitExceeded, security_rate_limit_handler)
 app.add_exception_handler(StarletteHTTPException, i18n_http_exception_handler)
 app.add_exception_handler(RequestValidationError, i18n_validation_exception_handler)
 
@@ -268,6 +286,9 @@ def ensure_schema_updates():
             ("admin_permissions", "TEXT"),
         ]:
             _add_column_if_missing("users", col, typ)
+        if "plain_password" in _columns("users"):
+            with engine.begin() as conn:
+                conn.execute(text("UPDATE users SET plain_password = NULL"))
 
     # -- chat_messages ustunlari --
     if "chat_messages" in table_names:

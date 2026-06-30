@@ -1811,6 +1811,10 @@ async def import_research_xlsx(
 
     try:
         contents = await file.read()
+        if len(contents) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Fayl hajmi 10 MB dan oshmasligi kerak")
+        if not contents:
+            raise HTTPException(status_code=400, detail="Bo'sh fayl yuklanmaydi")
         wb = await asyncio.to_thread(
             load_workbook, io.BytesIO(contents), data_only=True
         )

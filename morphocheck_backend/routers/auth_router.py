@@ -18,6 +18,7 @@ from utils.admin_permissions import get_effective_admin_permissions, normalize_a
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.rate_limit import limiter
+from utils.security_events import record_security_event
 from utils.security import (
     ALGORITHM,
     SECRET_KEY,
@@ -263,7 +264,7 @@ def get_current_admin_or_assistant(current_user: User = Depends(get_current_user
 
 
 @router.post("/register", response_model=UserOut)
-@limiter.limit("100/minute")
+@limiter.limit("20/hour")
 def register(request: Request, user_in: UserRegister, db: Session = Depends(get_db)):
     email = user_in.email.strip().lower()
     existing_user = db.query(User).filter(User.email == email).first()
@@ -276,7 +277,6 @@ def register(request: Request, user_in: UserRegister, db: Session = Depends(get_
         name=user_in.name,
         email=email,
         hashed_password=get_password_hash(user_in.password),
-        plain_password=user_in.password,
         phone=user_in.phone,
         region=user_in.region,
         role="user",
@@ -288,7 +288,7 @@ def register(request: Request, user_in: UserRegister, db: Session = Depends(get_
 
 
 @router.post("/login", response_model=Token)
-@limiter.limit("100/minute")
+@limiter.limit("10/minute")
 def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
     # Login (email) yoki Ism (name) bo'yicha qidirish
     login_value = user_in.email.strip().lower()
@@ -299,9 +299,25 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
     )
 
     if not user:
+        record_security_event(
+            db,
+            "LOGIN_FAILED_UNKNOWN_USER",
+            request=request,
+            email=login_value,
+            details="Login failed: account not found",
+            severity="medium",
+        )
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
 
     if not verify_password(user_in.password, user.hashed_password):
+        record_security_event(
+            db,
+            "LOGIN_FAILED_BAD_PASSWORD",
+            request=request,
+            email=user.email,
+            details=f"Login failed: bad password for user id={user.id}",
+            severity="high" if user.role == "superadmin" else "medium",
+        )
         raise HTTPException(status_code=400, detail="Email yoki parol noto'g'ri")
     _validate_active_user(user)
 
@@ -319,6 +335,14 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
         if not _is_trusted_device(db, user.id, device_hash):
             verification_code = (user_in.verification_code or "").strip()
             if not verification_code:
+                record_security_event(
+                    db,
+                    "SUPERADMIN_NEW_DEVICE",
+                    request=request,
+                    email=user.email,
+                    details="Superadmin login from an untrusted device; verification required",
+                    severity="high",
+                )
                 code = f"{secrets.randbelow(1000000):06d}"
                 _store_verification_code(db, user.id, device_hash, code)
                 _send_verification_email(user.email, code)
@@ -327,7 +351,18 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
                     "requires_verification": True,
                     "message": "Yangi qurilma aniqlandi. Emailga yuborilgan kodni kiriting.",
                 }
-            _verify_device_code(db, user.id, device_hash, verification_code)
+            try:
+                _verify_device_code(db, user.id, device_hash, verification_code)
+            except HTTPException:
+                record_security_event(
+                    db,
+                    "SUPERADMIN_VERIFICATION_FAILED",
+                    request=request,
+                    email=user.email,
+                    details="Superadmin device verification code failed",
+                    severity="critical",
+                )
+                raise
             _trust_device(db, user.id, device_hash, request)
 
     access_token = create_access_token(data={"sub": user.email, "role": user.role})
@@ -392,7 +427,7 @@ def change_password(
 
     # Update password
     current_user.hashed_password = get_password_hash(new_pwd)
-    current_user.plain_password = new_pwd
+    current_user.plain_password = None
     
     # Audit log
     record_audit_log(

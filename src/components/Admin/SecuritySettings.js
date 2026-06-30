@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Grid,
@@ -11,6 +11,8 @@ import {
   LinearProgress,
   Paper,
   CircularProgress,
+  Chip,
+  Alert,
 } from '@mui/material';
 import {
   Visibility,
@@ -25,7 +27,7 @@ import {
   Person,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { changePassword } from '../../services/api';
+import { AdminApi, changePassword } from '../../services/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { pageT } from '../../utils/pageI18n';
@@ -232,6 +234,30 @@ const GlassPaper = ({ children, sx = {} }) => (
   </Paper>
 );
 
+
+const SECURITY_EVENT_LABELS = {
+  LOGIN_FAILED_UNKNOWN_USER: 'Noma\'lum email bilan kirish urinishi',
+  LOGIN_FAILED_BAD_PASSWORD: 'Noto\'g\'ri parol bilan kirish urinishi',
+  SUPERADMIN_NEW_DEVICE: 'Superadmin yangi qurilmadan kirishga urindi',
+  SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tasdiqlash kodi xato kiritildi',
+  RATE_LIMIT_EXCEEDED: 'Juda ko\'p so\'rov yuborildi',
+};
+
+const severityColors = {
+  low: 'default',
+  medium: 'warning',
+  high: 'error',
+  critical: 'error',
+};
+
+const formatSecurityDate = (value) => {
+  if (!value) return '-';
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return String(value);
+  }
+};
 const visibilityButtonSx = {
   width: 36,
   height: 36,
@@ -300,7 +326,51 @@ export default function SecuritySettings() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [securityEvents, setSecurityEvents] = useState([]);
+  const [securitySummary, setSecuritySummary] = useState({
+    total: 0,
+    unread: 0,
+    critical: 0,
+  });
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [activeSecurityView, setActiveSecurityView] = useState('password');
 
+  const loadSecurityEvents = useCallback(async () => {
+    if (user?.role !== 'superadmin') return;
+    setSecurityLoading(true);
+    try {
+      const data = await AdminApi.securityEvents.list({ page: 1, page_size: 6 });
+      setSecurityEvents(data.items || []);
+      setSecuritySummary({
+        total: data.total || 0,
+        unread: data.unread || 0,
+        critical: data.critical || 0,
+      });
+    } catch (err) {
+      toast.error(err.message || 'Xavfsizlik xabarlari yuklanmadi');
+    } finally {
+      setSecurityLoading(false);
+    }
+  }, [user?.role]);
+
+  useEffect(() => {
+    loadSecurityEvents();
+    const timer = setInterval(loadSecurityEvents, 30000);
+    return () => clearInterval(timer);
+  }, [loadSecurityEvents]);
+
+  const handleMarkSecurityRead = async () => {
+    setSecurityLoading(true);
+    try {
+      await AdminApi.securityEvents.markRead();
+      await loadSecurityEvents();
+      toast.success('Xavfsizlik xabarlari o\'qildi deb belgilandi');
+    } catch (err) {
+      toast.error(err.message || 'Xavfsizlik xabarlarini yangilab bo\'lmadi');
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
   // Password Validation Checks
   const hasMinLength = newPassword.length >= 8;
   const hasUpper = /[A-Z]/.test(newPassword);
@@ -374,9 +444,48 @@ export default function SecuritySettings() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1,
+          mb: 3,
+          p: 0.75,
+          borderRadius: 3,
+          width: 'fit-content',
+          maxWidth: '100%',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'rgba(255,255,255,0.05)'
+              : 'rgba(0,0,0,0.04)',
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Button
+          variant={activeSecurityView === 'password' ? 'contained' : 'text'}
+          startIcon={<Lock />}
+          onClick={() => setActiveSecurityView('password')}
+          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+        >
+          Parolni yangilash
+        </Button>
+        {user?.role === 'superadmin' && (
+          <Button
+            variant={activeSecurityView === 'alerts' ? 'contained' : 'text'}
+            color={securitySummary.critical > 0 ? 'error' : 'primary'}
+            startIcon={<AdminPanelSettings />}
+            onClick={() => setActiveSecurityView('alerts')}
+            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+          >
+            Xavfsizlik xabarlari
+            {securitySummary.unread > 0 ? ` (${securitySummary.unread})` : ''}
+          </Button>
+        )}
+      </Box>
+
       <Grid container spacing={4}>
         {/* Left Column: The Form */}
-        <Grid item xs={12} lg={7}>
+        <Grid item xs={12} lg={7} sx={{ display: activeSecurityView === 'password' ? 'block' : 'none' }}>
           <GlassPaper>
             <Box display="flex" alignItems="center" mb={4}>
               <Box
@@ -580,8 +689,128 @@ export default function SecuritySettings() {
         </Grid>
 
         {/* Right Column: Live requirements checklist & Session info */}
-        <Grid item xs={12} lg={5}>
+        <Grid item xs={12} md={activeSecurityView === 'alerts' ? 12 : 5} lg={activeSecurityView === 'alerts' ? 12 : 5} xl={activeSecurityView === 'alerts' ? 12 : 5} sx={{ transition: 'all 0.3s ease', ...(activeSecurityView === 'alerts' && { flexBasis: '100% !important', maxWidth: '100% !important', width: '100% !important' }) }}>
           <Stack spacing={4}>
+            {user?.role === 'superadmin' && activeSecurityView === 'alerts' && (
+              <GlassPaper
+                sx={{
+                  borderColor:
+                    securitySummary.critical > 0
+                      ? 'rgba(244, 67, 54, 0.45)'
+                      : securitySummary.unread > 0
+                        ? 'rgba(255, 152, 0, 0.35)'
+                        : undefined,
+                }}
+              >
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  gap={2}
+                  mb={2.5}
+                >
+                  <Box>
+                    <Typography variant="h6" fontWeight={850}>
+                      Xavfsizlik xabarlari
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                      Kirish urinishlari va bloklangan so'rovlar
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1}>
+                    <Chip
+                      size="small"
+                      color={securitySummary.unread ? 'warning' : 'success'}
+                      label={`${securitySummary.unread} yangi`}
+                      sx={{ fontWeight: 800 }}
+                    />
+                    {securitySummary.critical > 0 && (
+                      <Chip
+                        size="small"
+                        color="error"
+                        label={`${securitySummary.critical} critical`}
+                        sx={{ fontWeight: 800 }}
+                      />
+                    )}
+                  </Stack>
+                </Box>
+
+                {securitySummary.critical > 0 && (
+                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                    Critical xavfsizlik hodisasi bor. IP, email va vaqtni tekshiring.
+                  </Alert>
+                )}
+
+                {securityLoading ? (
+                  <Box display="flex" justifyContent="center" py={3}>
+                    <CircularProgress size={26} />
+                  </Box>
+                ) : securityEvents.length ? (
+                  <Stack spacing={1.5}>
+                    {securityEvents.map((event) => (
+                      <Box
+                        key={event.id}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor:
+                            event.status === 'new'
+                              ? 'rgba(255, 152, 0, 0.28)'
+                              : 'divider',
+                          bgcolor: (theme) =>
+                            theme.palette.mode === 'dark'
+                              ? 'rgba(255,255,255,0.035)'
+                              : 'rgba(0,0,0,0.025)',
+                        }}
+                      >
+                        <Box display="flex" justifyContent="space-between" gap={1}>
+                          <Typography variant="body2" fontWeight={800}>
+                            {SECURITY_EVENT_LABELS[event.event_type] || event.event_type}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            color={severityColors[event.severity] || 'default'}
+                            label={event.severity}
+                            sx={{ height: 22, fontWeight: 800 }}
+                          />
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          {formatSecurityDate(event.created_at)} � IP: {event.ip_address || '-'} � Urinish: {event.attempts || 1}
+                        </Typography>
+                        {event.email && (
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Email: {event.email}
+                          </Typography>
+                        )}
+                        {event.details && (
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {event.details}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Alert severity="success" sx={{ borderRadius: 2 }}>
+                    Hozircha shubhali kirish urinishlari yo'q.
+                  </Alert>
+                )}
+
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  disabled={!securitySummary.unread || securityLoading}
+                  onClick={handleMarkSecurityRead}
+                  sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+                >
+                  Hammasini o'qildi deb belgilash
+                </Button>
+              </GlassPaper>
+            )}
+
+            {activeSecurityView === 'password' && (
+              <>
             {/* Requirements Card */}
             <GlassPaper>
               <Typography variant="h6" fontWeight={800} mb={2.5}>
@@ -795,6 +1024,8 @@ export default function SecuritySettings() {
                 </Box>
               </Box>
             </GlassPaper>
+              </>
+            )}
           </Stack>
         </Grid>
       </Grid>

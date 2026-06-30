@@ -435,7 +435,6 @@ class UserOut(BaseModel):
     id: int
     name: str
     email: Optional[str] = None
-    plain_password: Optional[str] = None
     phone: Optional[str] = None
     role: str
     region: Optional[str] = None

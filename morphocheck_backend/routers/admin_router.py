@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from models.audit import AuditLog
 from models.payment import Payment
+from models.security_event import SecurityEvent
 from models.schemas import (
     PatientData,
     PaymentCreate,
@@ -450,7 +451,7 @@ def create_user(
         password = user_data.pop("password")
         if password:
             user_data["hashed_password"] = get_password_hash(password)
-            user_data["plain_password"] = password
+            user_data["plain_password"] = None
 
     # Remove password_confirm before DB model creation
     if "password_confirm" in user_data:
@@ -542,7 +543,7 @@ def update_user(
         password = update_data.pop("password")
         if password:
             user.hashed_password = get_password_hash(password)
-            user.plain_password = password
+            user.plain_password = None
 
     for k, v in update_data.items():
         setattr(user, k, v)
@@ -2393,6 +2394,10 @@ async def import_analyses_xlsx(
         raise HTTPException(400, "Faqat Excel fayllari (.xlsx, .xls) qabul qilinadi.")
 
     contents = await file.read()
+    if len(contents) > 10 * 1024 * 1024:
+        raise HTTPException(413, "Fayl hajmi 10 MB dan oshmasligi kerak.")
+    if not contents:
+        raise HTTPException(400, "Bo'sh fayl yuklanmaydi.")
     wb = load_workbook(BytesIO(contents), data_only=True)
     ws = wb.active
     import_permissions = get_effective_admin_permissions(current_user)
@@ -2955,6 +2960,84 @@ def get_admin_activity(
 
     return {"items": result}
 
+# ----------------- SECURITY EVENTS -------------------
+def _security_event_to_dict(event: SecurityEvent) -> dict:
+    return {
+        "id": event.id,
+        "event_type": event.event_type,
+        "severity": event.severity,
+        "status": event.status,
+        "email": event.email,
+        "ip_address": event.ip_address,
+        "user_agent": event.user_agent,
+        "method": event.method,
+        "path": event.path,
+        "details": event.details,
+        "attempts": event.attempts,
+        "created_at": event.created_at,
+        "read_at": event.read_at,
+    }
+
+
+@router.get("/security-events")
+def list_security_events(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+    page: int = 1,
+    page_size: int = 20,
+    status: Optional[str] = Query(None),
+    severity: Optional[str] = Query(None),
+):
+    page = max(1, int(page or 1))
+    page_size = min(100, max(1, int(page_size or 20)))
+    query = db.query(SecurityEvent)
+    if status and status != "ALL":
+        query = query.filter(SecurityEvent.status == status)
+    if severity and severity != "ALL":
+        query = query.filter(SecurityEvent.severity == severity)
+
+    total = query.count()
+    unread = db.query(SecurityEvent).filter(SecurityEvent.status == "new").count()
+    critical = db.query(SecurityEvent).filter(
+        SecurityEvent.status == "new",
+        SecurityEvent.severity == "critical",
+    ).count()
+    items = (
+        query.order_by(desc(SecurityEvent.created_at), desc(SecurityEvent.id))
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+    return {
+        "items": [_security_event_to_dict(item) for item in items],
+        "total": total,
+        "unread": unread,
+        "critical": critical,
+    }
+
+
+@router.post("/security-events/mark-read")
+def mark_security_events_read(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+):
+    now = datetime.utcnow()
+    updated = (
+        db.query(SecurityEvent)
+        .filter(SecurityEvent.status == "new")
+        .update({"status": "read", "read_at": now}, synchronize_session=False)
+    )
+    db.commit()
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="SECURITY_EVENTS_READ",
+        target_type="SecurityEvent",
+        details=f"Security event notifications marked as read: {updated}",
+        request=request,
+    )
+    return {"updated": updated}
 
 # ----------------- AUDIT LOGS -------------------
 @router.get("/audit-logs")

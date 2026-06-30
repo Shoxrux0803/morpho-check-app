@@ -7,6 +7,7 @@ from .chat import ChatMessage
 from .clinical import ClinicalSetting
 from .payment import Payment
 from .settings import RoleSettings
+from .security_event import SecurityEvent
 from .user import User
 from .userdata import PatientAnalysis
 
@@ -21,4 +22,5 @@ __all__ = [
     "ClinicalSetting",
     "ChatMessage",
     "RoleSettings",
+    "SecurityEvent",
 ]

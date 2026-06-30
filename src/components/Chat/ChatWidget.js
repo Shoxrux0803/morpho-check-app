@@ -425,7 +425,11 @@ const ChatWidget = () => {
 
   const filteredConversations = conversations.filter((c) =>
     c.user_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ).sort((a, b) => {
+    if (a.user_name === 'Xavfsizlik xabarlari') return -1;
+    if (b.user_name === 'Xavfsizlik xabarlari') return 1;
+    return 0; // The original list is already sorted by unread/time from backend
+  });
 
   const openConversation = (conv) => {
     setSelectedUser({ id: conv.user_id, name: conv.user_name });
@@ -1325,7 +1329,13 @@ const ChatWidget = () => {
                                     )}
                                   </div>
                                 )}
-                                {msg.content}
+                                {msg.content.split(/(\[.*?\]\(.*?\))/g).map((part, i) => {
+                                  const match = part.match(/\[(.*?)\]\((.*?)\)/);
+                                  if (match) {
+                                    return <a key={i} href={match[2]} style={{ color: isDark ? '#64b5f6' : '#1976d2', textDecoration: 'underline' }}>{match[1]}</a>;
+                                  }
+                                  return <span key={i} style={{ whiteSpace: 'pre-wrap' }}>{part}</span>;
+                                })}
                                 <div
                                   style={{
                                     fontSize: '9px',
