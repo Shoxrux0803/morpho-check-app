@@ -1,5 +1,5 @@
 // src/App.js
-import React, { Component, Suspense, useEffect } from 'react';
+import React, { Component, Suspense, useEffect, lazy } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -32,15 +32,15 @@ import { useThemeMode } from './providers/ThemeProviderMUI';
 import WelcomeOverlay from './components/WelcomeOverlay';
 import FieldAssistantLocationTracker from './components/FieldAssistantLocationTracker';
 
-import MorphoCheckPro from './pages/MorphoCheckPro';
-import AdminPage from './pages/AdminPage';
-import SuperAdminPage from './pages/SuperAdminPage';
-import ResearcherPage from './pages/ResearcherPage';
-import InfoDetail from './pages/InfoDetail';
-import AuthorPage from './pages/AuthorPage';
-import GuidelinesPage from './pages/GuidelinesPage';
-import PrivacyCompliancePage from './pages/PrivacyCompliancePage';
-import AnalyticsDashboard from './pages/AnalyticsDashboard';
+const MorphoCheckPro = lazy(() => import('./pages/MorphoCheckPro'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
+const SuperAdminPage = lazy(() => import('./pages/SuperAdminPage'));
+const ResearcherPage = lazy(() => import('./pages/ResearcherPage'));
+const InfoDetail = lazy(() => import('./pages/InfoDetail'));
+const AuthorPage = lazy(() => import('./pages/AuthorPage'));
+const GuidelinesPage = lazy(() => import('./pages/GuidelinesPage'));
+const PrivacyCompliancePage = lazy(() => import('./pages/PrivacyCompliancePage'));
+const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
 import NotFoundPage from './pages/NotFoundPage';
 const MAX_VISIBLE_TOASTS = 3;
 const CHUNK_RELOAD_KEY = 'morphocheck_chunk_reload_attempted';
