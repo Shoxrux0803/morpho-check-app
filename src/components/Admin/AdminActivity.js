@@ -876,7 +876,7 @@ export default function AdminActivity() {
           </Typography>
         </Box>
       ) : (
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence>
           {bestUser && (
             <Paper
               key="best-user-summary"
