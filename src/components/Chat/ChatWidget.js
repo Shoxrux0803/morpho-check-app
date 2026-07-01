@@ -729,7 +729,7 @@ const ChatWidget = () => {
                   position: 'relative',
                 }}
               >
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                   {currentView === VIEWS.LIST && (
                     /* Conversation List */
                     <motion.div
@@ -737,7 +737,6 @@ const ChatWidget = () => {
                       className={`premium-chat-scrollbar ${isDark ? 'dark-mode-scrollbar' : ''}`}
                       initial={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
                       animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0, x: -30, filter: 'blur(4px)' }}
                       transition={{
                         type: 'spring',
                         damping: 22,

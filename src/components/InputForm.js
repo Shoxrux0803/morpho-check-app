@@ -612,14 +612,13 @@ export default function InputForm({
           </Stepper>
         </Box>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence>
           {activeStep === stepIndexPersonalInfo && (
             <motion.div
               key="step0"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              exit="exit"
             >
               {/* ===== 1. Shaxsiy ma'lumotlar ===== */}
               <Paper

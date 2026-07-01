@@ -391,7 +391,7 @@ function AnimatedRoutes() {
           <WelcomeOverlay onComplete={completeLoginTransition} />
         )}
       </AnimatePresence>
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<HomeWrapper />} />
           <Route path="/morphocheck-pro" element={<ProWrapper />} />

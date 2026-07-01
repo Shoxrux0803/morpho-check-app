@@ -3249,12 +3249,11 @@ const ResearcherPage = () => {
 
         {/* ── Main Content Area ── */}
         <Box sx={{ minHeight: '70vh' }}>
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, scale: 0.99, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 1.01, y: -10 }}
               transition={{ duration: 0.3 }}
             >
               {activeTab === 0 && <ResearcherHome />}

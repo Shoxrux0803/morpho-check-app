@@ -5310,12 +5310,11 @@ const SuperAdminPage = () => {
               </Stack>
             </Box>
 
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               <motion.div
                 key={activeTab}
                 initial={{ opacity: 0, y: 15, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -15, scale: 0.98 }}
                 transition={{
                   type: 'spring',
                   stiffness: 300,

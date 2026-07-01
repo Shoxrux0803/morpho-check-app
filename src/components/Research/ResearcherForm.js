@@ -417,12 +417,11 @@ const ResearcherForm = ({ onSuccess }) => {
         ))}
       </Stepper>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key={activeStep}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
         >
           {activeStep === 0 ? (
