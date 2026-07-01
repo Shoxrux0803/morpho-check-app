@@ -287,8 +287,7 @@ def ensure_schema_updates():
         ]:
             _add_column_if_missing("users", col, typ)
         if "plain_password" in _columns("users"):
-            with engine.begin() as conn:
-                conn.execute(text("UPDATE users SET plain_password = NULL"))
+            pass
 
     # -- chat_messages ustunlari --
     if "chat_messages" in table_names:

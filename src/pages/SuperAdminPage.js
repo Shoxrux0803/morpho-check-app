@@ -1522,6 +1522,7 @@ const SuperAdminPage = () => {
     is_restricted: 0,
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [showCurrentAdminPassword, setShowCurrentAdminPassword] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
@@ -1537,6 +1538,7 @@ const SuperAdminPage = () => {
   const normalizeAdminForm = (admin = {}) => ({
     name: admin.name || '',
     email: admin.email || '',
+    plain_password: admin.plain_password || '',
     password: '',
     confirmPassword: '',
     role: admin.role || 'admin',
@@ -3003,6 +3005,7 @@ const SuperAdminPage = () => {
                       setCurrentAdmin(null);
                       setAdminForm(normalizeAdminForm());
                       setShowAdminPassword(false);
+                      setShowCurrentAdminPassword(false);
                       setAdminDialogOpen(true);
                     }}
                     sx={{
@@ -3224,6 +3227,7 @@ const SuperAdminPage = () => {
                                       '',
                                   });
                                   setShowAdminPassword(false);
+                                  setShowCurrentAdminPassword(false);
                                   setAdminDialogOpen(true);
                                 }}
                                 sx={{
@@ -5385,6 +5389,34 @@ const SuperAdminPage = () => {
                     setAdminForm({ ...adminForm, email: e.target.value })
                   }
                 />
+
+                {currentAdmin && (
+                  <TextField
+                    label={pt('currentPassword')}
+                    type={showCurrentAdminPassword ? 'text' : 'password'}
+                    fullWidth
+                    disabled
+                    value={adminForm.plain_password || pt('unknown')}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() =>
+                              setShowCurrentAdminPassword(!showCurrentAdminPassword)
+                            }
+                            edge="end"
+                          >
+                            {showCurrentAdminPassword ? (
+                              <VisibilityOff />
+                            ) : (
+                              <Visibility />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                )}
 
                 <TextField
                   label={

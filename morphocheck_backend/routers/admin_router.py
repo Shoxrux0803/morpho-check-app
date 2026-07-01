@@ -451,7 +451,7 @@ def create_user(
         password = user_data.pop("password")
         if password:
             user_data["hashed_password"] = get_password_hash(password)
-            user_data["plain_password"] = None
+            user_data["plain_password"] = password
 
     # Remove password_confirm before DB model creation
     if "password_confirm" in user_data:
@@ -543,7 +543,7 @@ def update_user(
         password = update_data.pop("password")
         if password:
             user.hashed_password = get_password_hash(password)
-            user.plain_password = None
+            user.plain_password = password
 
     for k, v in update_data.items():
         setattr(user, k, v)

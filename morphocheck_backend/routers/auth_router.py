@@ -427,7 +427,7 @@ def change_password(
 
     # Update password
     current_user.hashed_password = get_password_hash(new_pwd)
-    current_user.plain_password = None
+    current_user.plain_password = new_pwd
     
     # Audit log
     record_audit_log(
