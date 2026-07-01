@@ -25,6 +25,7 @@ from models.schemas import (
     UserCreate,
     UserOut,
     UserUpdate,
+    BlockIPRequest,
 )
 from models.user import User
 from models.userdata import PatientAnalysis, ResearchRecord
@@ -48,6 +49,7 @@ from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.security import get_password_hash
 from utils.translit import lat2cyr
+from utils.blocked_ips import block_ips, is_ip_blocked
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -2976,6 +2978,7 @@ def _security_event_to_dict(event: SecurityEvent) -> dict:
         "attempts": event.attempts,
         "created_at": event.created_at,
         "read_at": event.read_at,
+        "is_blocked": is_ip_blocked(event.ip_address) if event.ip_address else False,
     }
 
 
@@ -3038,6 +3041,27 @@ def mark_security_events_read(
         request=request,
     )
     return {"updated": updated}
+
+@router.post("/security-events/block-ips")
+def block_security_ips(
+    payload: BlockIPRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+):
+    from utils.blocked_ips import block_ips
+    
+    count = block_ips(db, payload.ips, payload.reason)
+    
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="BLOCK_IP",
+        target_type="BlockedIP",
+        details=f"{count} ta IP manzillar bloklandi: {payload.ips}",
+        request=request,
+    )
+    return {"blocked_count": count, "ips": payload.ips}
 
 # ----------------- AUDIT LOGS -------------------
 @router.get("/audit-logs")

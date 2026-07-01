@@ -10,6 +10,7 @@ from .settings import RoleSettings
 from .security_event import SecurityEvent
 from .user import User
 from .userdata import PatientAnalysis
+from .blocked_ip import BlockedIP
 
 __all__ = [
     "Base",
@@ -23,4 +24,5 @@ __all__ = [
     "ChatMessage",
     "RoleSettings",
     "SecurityEvent",
+    "BlockedIP",
 ]

@@ -67,14 +67,15 @@ def _get_or_create_security_bot(db: Session) -> User:
         db.refresh(bot)
     return bot
 
-def _notify_superadmins_of_critical_event(db: Session, event: SecurityEvent):
+def _notify_superadmins_of_security_event(db: Session, event: SecurityEvent):
     try:
         bot = _get_or_create_security_bot(db)
         superadmins = db.query(User).filter(User.role == "superadmin", User.is_deleted == 0).all()
         if not superadmins:
             return
             
-        message_content = f"⚠️ CRITICAL Xavfsizlik Hodisasi!\n\n"
+        severity_label = "CRITICAL 🔴" if event.severity == "critical" else "YUQORI 🟠" if event.severity == "high" else "O'RTA 🟡"
+        message_content = f"⚠️ {severity_label} Xavfsizlik Hodisasi!\n\n"
         message_content += f"Hodisa: {event.event_type}\n"
         if event.email:
             message_content += f"Email: {event.email}\n"
@@ -130,7 +131,6 @@ def record_security_event(
         db.rollback()
         print(f"Error saving security event: {exc}")
         
-    if event.severity == "critical":
-        _notify_superadmins_of_critical_event(db, event)
+    _notify_superadmins_of_security_event(db, event)
         
     return event

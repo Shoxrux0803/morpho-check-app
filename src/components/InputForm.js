@@ -479,14 +479,14 @@ export default function InputForm({
 
   const steps = [
     t('personalInfo'),
-    ...(showPlayPreschoolEngagement ? ["O'yin va maktabgacha ta'lim"] : []),
+    ...(showPlayPreschoolEngagement ? [ppe('title')] : []),
     t('anthroMeasurements'),
     ...(showBioimpedance ? [t('bioimpedanceAnalysis')] : []),
   ];
 
   const stepIndexPersonalInfo = steps.indexOf(t('personalInfo'));
   const stepIndexPPE = showPlayPreschoolEngagement
-    ? steps.indexOf("O'yin va maktabgacha ta'lim")
+    ? steps.indexOf(ppe('title'))
     : -1;
   const stepIndexAnthro = steps.indexOf(t('anthroMeasurements'));
   const stepIndexBio = showBioimpedance

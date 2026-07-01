@@ -703,6 +703,24 @@ export const AdminApi = {
       }
       return resp.json();
     },
+    blockIps: async (ips, reason = 'Blocked by Superadmin') => {
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/security-events/block-ips`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ips, reason }),
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
+    },
   },
   auditLogs: {
     list: async (params = {}) => {

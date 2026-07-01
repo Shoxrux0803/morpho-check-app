@@ -13,6 +13,7 @@ import {
   CircularProgress,
   Chip,
   Alert,
+  Checkbox,
 } from '@mui/material';
 import {
   Visibility,
@@ -35,6 +36,8 @@ import { toast } from 'react-hot-toast';
 
 const LOCAL_TRANSLATIONS = {
   uz: {
+    ipBlocked: 'IP BLOKLANGAN',
+    noIpAddressesToBlock: 'Tanlangan xabarlarda IP manzil mavjud emas',
     passwordStrength: 'Parol murakkabligi',
     weak: 'Zaif',
     medium: 'Oʻrtacha',
@@ -71,8 +74,14 @@ const LOCAL_TRANSLATIONS = {
     SUPERADMIN_VERIFICATION_FAILED: 'Superadmin tasdiqlash kodi xato kiritildi',
     RATE_LIMIT_EXCEEDED: "Juda ko'p so'rov yuborildi",
     updatePasswordBtn: 'Parolni yangilash',
+    blockSelectedIps: 'Tanlangan IP larni bloklash',
+    blockIp: 'IP ni bloklash',
+    ipsBlockedSuccess: 'IP manzillar muvaffaqiyatli bloklandi',
+    blockFailed: 'Bloklashda xatolik yuz berdi',
   },
   ru: {
+    ipBlocked: 'IP ЗАБЛОКИРОВАН',
+    noIpAddressesToBlock: 'Нет IP-адресов для блокировки',
     passwordStrength: 'Сложность пароля',
     weak: 'Слабый',
     medium: 'Средний',
@@ -109,8 +118,14 @@ const LOCAL_TRANSLATIONS = {
     SUPERADMIN_VERIFICATION_FAILED: 'Неверный код подтверждения суперадмина',
     RATE_LIMIT_EXCEEDED: 'Слишком много запросов',
     updatePasswordBtn: 'Обновить пароль',
+    blockSelectedIps: 'Блокировать выбранные IP',
+    blockIp: 'Блокировать IP',
+    ipsBlockedSuccess: 'IP-адреса успешно заблокированы',
+    blockFailed: 'Ошибка при блокировке',
   },
   en: {
+    ipBlocked: 'IP BLOCKED',
+    noIpAddressesToBlock: 'No IP addresses to block',
     passwordStrength: 'Password Strength',
     weak: 'Weak',
     medium: 'Medium',
@@ -147,8 +162,14 @@ const LOCAL_TRANSLATIONS = {
       'Superadmin verification code entered incorrectly',
     RATE_LIMIT_EXCEEDED: 'Too many requests',
     updatePasswordBtn: 'Update Password',
+    blockSelectedIps: 'Block Selected IPs',
+    blockIp: 'Block IP',
+    ipsBlockedSuccess: 'IP addresses successfully blocked',
+    blockFailed: 'Failed to block IPs',
   },
   tr: {
+    ipBlocked: 'IP ENGELLENDİ',
+    noIpAddressesToBlock: 'Engellenecek IP adresi yok',
     passwordStrength: 'Şifre Zorluğu',
     weak: 'Zayıf',
     medium: 'Orta',
@@ -186,8 +207,14 @@ const LOCAL_TRANSLATIONS = {
     SUPERADMIN_VERIFICATION_FAILED: 'Süper admin doğrulama kodu yanlış girildi',
     RATE_LIMIT_EXCEEDED: 'Çok fazla istek',
     updatePasswordBtn: 'Şifreyi Güncelle',
+    blockSelectedIps: 'Seçili IP leri Engelle',
+    blockIp: 'IP yi Engelle',
+    ipsBlockedSuccess: 'IP adresleri başarıyla engellendi',
+    blockFailed: 'Engelleme sırasında hata oluştu',
   },
   tg: {
+    ipBlocked: 'IP БЛОК КАРДА ШУД',
+    noIpAddressesToBlock: 'Суроғаҳои IP барои масдуд кардан вуҷуд надоранд',
     passwordStrength: 'Қуввати парол',
     weak: 'Заиф',
     medium: 'Миёна',
@@ -226,8 +253,14 @@ const LOCAL_TRANSLATIONS = {
       'Рамзи тасдиқи суперадмин нодуруст ворид карда шуд',
     RATE_LIMIT_EXCEEDED: 'Дархостҳои аз ҳад зиёд',
     updatePasswordBtn: 'Навсозии парол',
+    blockSelectedIps: 'Манъи IP-ҳои интихобшуда',
+    blockIp: 'Манъи IP',
+    ipsBlockedSuccess: 'IP-ҳо бо муваффақият манъ карда шуданд',
+    blockFailed: 'Хатогӣ ҳангоми манъ',
   },
   kz: {
+    ipBlocked: 'IP БҰҒАТТАЛДЫ',
+    noIpAddressesToBlock: 'Бұғаттайтын IP мекенжайлары жоқ',
     passwordStrength: 'Құпия сөз күрделілігі',
     weak: 'Әлсіз',
     medium: 'Орташа',
@@ -265,8 +298,14 @@ const LOCAL_TRANSLATIONS = {
     SUPERADMIN_VERIFICATION_FAILED: 'Суперадмин растау коды қате енгізілді',
     RATE_LIMIT_EXCEEDED: 'Тым көп сұрау',
     updatePasswordBtn: 'Құпиясөзді жаңарту',
+    blockSelectedIps: 'Таңдалған IP-лерді бұғаттау',
+    blockIp: 'IP-ді бұғаттау',
+    ipsBlockedSuccess: 'IP мекенжайлары сәтті бұғатталды',
+    blockFailed: 'Бұғаттау кезінде қате пайда болды',
   },
   ky: {
+    ipBlocked: 'IP БӨГӨТТӨЛДҮ',
+    noIpAddressesToBlock: 'Бөгөттөй турган IP даректер жок',
     passwordStrength: 'Сөз айкаштын татаалдыгы',
     weak: 'Алсыз',
     medium: 'Орточо',
@@ -304,8 +343,14 @@ const LOCAL_TRANSLATIONS = {
       'Суперадминдин тастыктоо коду туура эмес киргизилди',
     RATE_LIMIT_EXCEEDED: 'Өтө көп сурам',
     updatePasswordBtn: 'Сырсөздү жаңыртуу',
+    blockSelectedIps: 'Тандалган IP-лерди бөгөттөө',
+    blockIp: 'IP ни бөгөттөө',
+    ipsBlockedSuccess: 'IP даректер ийгиликтүү бөгөттөлдү',
+    blockFailed: 'Бөгөттөөдө ката кетти',
   },
   tm: {
+    ipBlocked: 'IP BEKLEDI',
+    noIpAddressesToBlock: 'Beklemek üçin IP salgylar ýok',
     passwordStrength: 'Paroluň kynlygy',
     weak: 'Gowşak',
     medium: 'Ortaça',
@@ -343,6 +388,10 @@ const LOCAL_TRANSLATIONS = {
       'Superadmin tassyklama kody nädogry girizildi',
     RATE_LIMIT_EXCEEDED: 'Aşa köp isleg',
     updatePasswordBtn: 'Paroly täzelemek',
+    blockSelectedIps: 'Saýlanan IP-leri beklemek',
+    blockIp: 'IP beklemek',
+    ipsBlockedSuccess: 'IP salgylary üstünlikli beklendi',
+    blockFailed: 'Beklemekde ýalňyşlyk',
   },
 };
 
@@ -467,6 +516,8 @@ export default function SecuritySettings() {
   });
   const [securityLoading, setSecurityLoading] = useState(false);
   const [activeSecurityView, setActiveSecurityView] = useState('password');
+  const [selectedEvents, setSelectedEvents] = useState([]);
+  const [blockingLoading, setBlockingLoading] = useState(false);
 
   const loadSecurityEvents = useCallback(async () => {
     if (user?.role !== 'superadmin') return;
@@ -505,6 +556,53 @@ export default function SecuritySettings() {
       toast.error(err.message || lt('securityEventsUpdateError'));
     } finally {
       setSecurityLoading(false);
+    }
+  };
+
+  const handleSelectEvent = (id) => {
+    setSelectedEvents((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllEvents = () => {
+    const unblockedEvents = securityEvents.filter((e) => !e.is_blocked);
+    if (unblockedEvents.length === 0) return;
+    
+    if (selectedEvents.length === unblockedEvents.length) {
+      setSelectedEvents([]);
+    } else {
+      setSelectedEvents(unblockedEvents.map((e) => e.id));
+    }
+  };
+
+  const handleBlockSelectedIps = async () => {
+    if (selectedEvents.length === 0) return;
+    
+    // Collect unique IPs from selected events
+    const ipsToBlock = Array.from(
+      new Set(
+        securityEvents
+          .filter((e) => selectedEvents.includes(e.id) && e.ip_address)
+          .map((e) => e.ip_address)
+      )
+    );
+
+    if (ipsToBlock.length === 0) {
+      toast.error(lt('noIpAddressesToBlock') || "Tanlangan xabarlarda IP manzil mavjud emas.");
+      return;
+    }
+
+    setBlockingLoading(true);
+    try {
+      await AdminApi.securityEvents.blockIps(ipsToBlock);
+      toast.success(lt('ipsBlockedSuccess'));
+      setSelectedEvents([]);
+      await loadSecurityEvents();
+    } catch (err) {
+      toast.error(err.message || lt('blockFailed'));
+    } finally {
+      setBlockingLoading(false);
     }
   };
   // Password Validation Checks
@@ -906,6 +1004,42 @@ export default function SecuritySettings() {
                   </Box>
                 ) : securityEvents.length ? (
                   <Stack spacing={1.5}>
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      justifyContent="space-between"
+                      sx={{ px: 1, pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}
+                    >
+                      <Box display="flex" alignItems="center">
+                        <Checkbox
+                          size="small"
+                          checked={
+                            securityEvents.filter(e => !e.is_blocked).length > 0 &&
+                            selectedEvents.length === securityEvents.filter(e => !e.is_blocked).length
+                          }
+                          indeterminate={
+                            selectedEvents.length > 0 &&
+                            selectedEvents.length < securityEvents.filter(e => !e.is_blocked).length
+                          }
+                          onChange={handleSelectAllEvents}
+                        />
+                        <Typography variant="caption" fontWeight={600} color="text.secondary">
+                          Барчасини танлаш
+                        </Typography>
+                      </Box>
+                      {selectedEvents.length > 0 && (
+                        <Button
+                          size="small"
+                          color="error"
+                          variant="contained"
+                          disabled={blockingLoading}
+                          onClick={handleBlockSelectedIps}
+                          sx={{ textTransform: 'none', fontWeight: 800, borderRadius: 2 }}
+                        >
+                          {blockingLoading ? <CircularProgress size={16} color="inherit" /> : lt('blockSelectedIps')}
+                        </Button>
+                      )}
+                    </Box>
                     {securityEvents.map((event) => (
                       <Box
                         key={event.id}
@@ -925,46 +1059,73 @@ export default function SecuritySettings() {
                       >
                         <Box
                           display="flex"
-                          justifyContent="space-between"
+                          alignItems="flex-start"
                           gap={1}
                         >
-                          <Typography variant="body2" fontWeight={800}>
-                            {lt(event.event_type) || event.event_type}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            color={severityColors[event.severity] || 'default'}
-                            label={event.severity}
-                            sx={{ height: 22, fontWeight: 800 }}
+                          <Checkbox
+                            size="medium"
+                            color="primary"
+                            checked={selectedEvents.includes(event.id) || event.is_blocked}
+                            disabled={event.is_blocked}
+                            onChange={() => handleSelectEvent(event.id)}
+                            sx={{ mt: -0.5, ml: -1 }}
                           />
+                          <Box flex={1}>
+                            <Box
+                              display="flex"
+                              justifyContent="space-between"
+                              gap={1}
+                            >
+                              <Typography variant="body2" fontWeight={800}>
+                                {lt(event.event_type) || event.event_type}
+                              </Typography>
+                              <Box display="flex" gap={1}>
+                                {event.is_blocked && (
+                                  <Chip
+                                    size="small"
+                                    color="error"
+                                    variant="outlined"
+                                    label={lt('ipBlocked')}
+                                    sx={{ height: 22, fontWeight: 800 }}
+                                  />
+                                )}
+                                <Chip
+                                  size="small"
+                                  color={severityColors[event.severity] || 'default'}
+                                  label={event.severity}
+                                  sx={{ height: 22, fontWeight: 800 }}
+                                />
+                              </Box>
+                            </Box>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              {formatSecurityDate(event.created_at)} • IP:{' '}
+                              {event.ip_address || '-'} • {lt('attempt')}:{' '}
+                              {event.attempts || 1}
+                            </Typography>
+                            {event.email && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
+                                Email: {event.email}
+                              </Typography>
+                            )}
+                            {event.details && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
+                                {event.details}
+                              </Typography>
+                            )}
+                          </Box>
                         </Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          display="block"
-                        >
-                          {formatSecurityDate(event.created_at)} • IP:{' '}
-                          {event.ip_address || '-'} • {lt('attempt')}:{' '}
-                          {event.attempts || 1}
-                        </Typography>
-                        {event.email && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                          >
-                            Email: {event.email}
-                          </Typography>
-                        )}
-                        {event.details && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            display="block"
-                          >
-                            {event.details}
-                          </Typography>
-                        )}
                       </Box>
                     ))}
                   </Stack>

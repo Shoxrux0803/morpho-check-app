@@ -61,6 +61,10 @@ async def lifespan(app: FastAPI):
     # Jadval(lar) mavjud bo'lmasa yaratadi + ulanishni tekshiradi
     init_db(lambda: Base.metadata.create_all(bind=engine))
     ensure_schema_updates()
+    
+    from utils.blocked_ips import load_blocked_ips_to_cache
+    load_blocked_ips_to_cache()
+    
     # 2-bosqich: TimescaleDB hypertable larni tekshirish va yaratish
     try:
         from utils.timescale import ensure_hypertables
@@ -127,6 +131,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(SecurityHeadersMiddleware)
 
+from fastapi.responses import JSONResponse
+from utils.security_events import get_request_ip
+from utils.blocked_ips import is_ip_blocked
+
+@app.middleware("http")
+async def check_blocked_ip_middleware(request: Request, call_next):
+    ip = get_request_ip(request)
+    if is_ip_blocked(ip):
+        return JSONResponse(status_code=403, content={"detail": "IP address is blocked due to security violations."})
+    return await call_next(request)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):

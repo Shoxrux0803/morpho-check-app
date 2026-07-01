@@ -747,3 +747,7 @@ class RoleSettingsOut(RoleSettingsBase):
 
     class Config:
         from_attributes = True
+
+class BlockIPRequest(BaseModel):
+    ips: list[str]
+    reason: Optional[str] = "Blocked by Superadmin"
