@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Sequence
 
 from fastapi import Request
 from sqlalchemy import or_
@@ -107,10 +107,18 @@ def record_security_event(
     email: Optional[str] = None,
     details: Optional[str] = None,
     severity: str = "medium",
+    threat_type: Optional[str] = None,
+    risk_score: int = 0,
+    action_taken: Optional[str] = None,
+    matched_signals: Optional[Sequence[str] | str] = None,
 ) -> SecurityEvent:
     normalized_email = _normalize_email(email)
     ip_address = get_request_ip(request)
     attempts = _calculate_attempts(db, event_type, normalized_email, ip_address)
+    if isinstance(matched_signals, (list, tuple, set)):
+        signals_text = "; ".join(str(item) for item in matched_signals)
+    else:
+        signals_text = matched_signals
     event = SecurityEvent(
         event_type=event_type,
         severity=_severity(severity, attempts),
@@ -121,6 +129,10 @@ def record_security_event(
         method=(request.method[:12] if request else None),
         path=(str(request.url.path)[:255] if request else None),
         details=(details[:1000] if details else None),
+        threat_type=(threat_type[:80] if threat_type else None),
+        risk_score=max(0, min(100, int(risk_score or 0))),
+        action_taken=(action_taken[:80] if action_taken else None),
+        matched_signals=(signals_text[:2000] if signals_text else None),
         attempts=attempts,
     )
     db.add(event)
@@ -130,7 +142,7 @@ def record_security_event(
     except Exception as exc:
         db.rollback()
         print(f"Error saving security event: {exc}")
-        
+
     _notify_superadmins_of_security_event(db, event)
-        
+
     return event

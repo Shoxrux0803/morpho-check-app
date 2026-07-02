@@ -16,6 +16,10 @@ class SecurityEvent(Base):
     method = Column(String(12), nullable=True)
     path = Column(String(255), nullable=True)
     details = Column(Text, nullable=True)
+    threat_type = Column(String(80), nullable=True, index=True)
+    risk_score = Column(Integer, nullable=False, default=0, index=True)
+    action_taken = Column(String(80), nullable=True)
+    matched_signals = Column(Text, nullable=True)
     attempts = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, server_default=func.now(), index=True)
     read_at = Column(DateTime, nullable=True, index=True)
@@ -25,4 +29,6 @@ class SecurityEvent(Base):
         Index("ix_security_events_type_created", "event_type", "created_at"),
         Index("ix_security_events_ip_created", "ip_address", "created_at"),
         Index("ix_security_events_email_created", "email", "created_at"),
+        Index("ix_security_events_threat_created", "threat_type", "created_at"),
+        Index("ix_security_events_risk_created", "risk_score", "created_at"),
     )

@@ -133,7 +133,8 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 from fastapi.responses import JSONResponse
 from utils.security_events import get_request_ip
-from utils.blocked_ips import is_ip_blocked
+from utils.threat_shield import assess_request_threat
+from utils.blocked_ips import block_ips, is_ip_blocked
 
 @app.middleware("http")
 async def check_blocked_ip_middleware(request: Request, call_next):
@@ -142,6 +143,65 @@ async def check_blocked_ip_middleware(request: Request, call_next):
         return JSONResponse(status_code=403, content={"detail": "IP address is blocked due to security violations."})
     return await call_next(request)
 
+@app.middleware("http")
+async def threat_shield_middleware(request: Request, call_next):
+    body = b""
+    if request.method in {"GET", "HEAD", "OPTIONS"}:
+        assessment = assess_request_threat(request)
+    else:
+        content_type = (request.headers.get("content-type") or "").lower()
+        if "multipart/form-data" not in content_type:
+            body = await request.body()
+        assessment = assess_request_threat(request, body)
+
+    if assessment.should_log:
+        db = SessionLocal()
+        try:
+            record_security_event(
+                db,
+                "THREAT_DETECTED",
+                request=request,
+                details=f"Threat shield detected {assessment.threat_type} on {request.method} {request.url.path}",
+                severity=assessment.severity,
+                threat_type=assessment.threat_type,
+                risk_score=assessment.risk_score,
+                action_taken=assessment.action,
+                matched_signals=assessment.signals,
+            )
+            if assessment.should_auto_block_ip:
+                ip = get_request_ip(request)
+                if ip:
+                    block_ips(
+                        db,
+                        [ip],
+                        f"Auto-blocked by Threat Shield: {assessment.threat_type}",
+                    )
+        finally:
+            db.close()
+
+    if assessment.should_block:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "detail": "Request blocked by Morpho Security Shield.",
+                "threat_type": assessment.threat_type,
+                "risk_score": assessment.risk_score,
+            },
+        )
+
+    if body:
+        body_sent = False
+
+        async def receive():
+            nonlocal body_sent
+            if body_sent:
+                return {"type": "http.request", "body": b"", "more_body": False}
+            body_sent = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        request._receive = receive
+
+    return await call_next(request)
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     debug = os.getenv("DEBUG", "false").lower() == "true"
@@ -303,12 +363,23 @@ def ensure_schema_updates():
         if "plain_password" in _columns("users"):
             pass
 
+    # -- security_events ustunlari --
+    if "security_events" in table_names:
+        for col, typ in [
+            ("threat_type", "VARCHAR(80)"),
+            ("risk_score", "INTEGER DEFAULT 0 NOT NULL"),
+            ("action_taken", "VARCHAR(80)"),
+            ("matched_signals", "TEXT"),
+        ]:
+            _add_column_if_missing("security_events", col, typ)
     # -- chat_messages ustunlari --
     if "chat_messages" in table_names:
         _add_column_if_missing("chat_messages", "reaction", "VARCHAR(8)")
 
     with engine.begin() as conn:
         indexes = [
+            ("security_events", "ix_security_events_threat_created", ("threat_type", "created_at")),
+            ("security_events", "ix_security_events_risk_created", ("risk_score", "created_at")),
             ("patient_analysis", "ix_patient_analysis_is_deleted", ("is_deleted",)),
             (
                 "patient_analysis",

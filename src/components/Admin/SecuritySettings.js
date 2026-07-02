@@ -15,18 +15,16 @@ import {
   Alert,
   Checkbox,
 } from '@mui/material';
-import {
-  Visibility,
-  VisibilityOff,
-  Lock,
-  LockOutlined,
-  CheckCircle,
-  RadioButtonUnchecked,
-  VpnKey,
-  Info,
-  AdminPanelSettings,
-  Person,
-} from '@mui/icons-material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Lock from '@mui/icons-material/Lock';
+import LockOutlined from '@mui/icons-material/LockOutlined';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import RadioButtonUnchecked from '@mui/icons-material/RadioButtonUnchecked';
+import VpnKey from '@mui/icons-material/VpnKey';
+import Info from '@mui/icons-material/Info';
+import AdminPanelSettings from '@mui/icons-material/AdminPanelSettings';
+import Person from '@mui/icons-material/Person';
 import { motion } from 'framer-motion';
 import { AdminApi, changePassword } from '../../services/api';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -66,6 +64,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Critical xavfsizlik hodisasi bor. IP, email va vaqtni tekshiring.',
     noSuspiciousLoginAttempts: "Hozircha shubhali kirish urinishlari yo'q.",
+    selectAll: 'Barchasini tanlash',
+    riskScore: 'Risk balli',
+    threatType: 'Tahdid turi',
+    actionTaken: 'Amal',
+    signals: 'Signallar',
+    falsePositive: 'Xato signal',
+    unblockIp: 'IP blokdan chiqarish',
+    falsePositiveSuccess: 'Xato signal deb belgilandi',
+    unblockSuccess: 'IP blokdan chiqarildi',
+    THREAT_DETECTED: 'Tahdid aniqlandi',
+    MALICIOUS_UPLOAD_DETECTED: 'Zararli fayl yuklash aniqlandi',
+    threatDetectedDetails: 'Security Shield tahdidni blokladi',
+    maliciousUploadDetails: 'Security Shield zararli yuklashni blokladi',
     markAllRead: "Barchasini o'qilgan deb belgilash",
     attempt: 'Urinish',
     location: 'Joylashuv',
@@ -113,6 +124,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Критическое событие безопасности. Проверьте IP, email и время.',
     noSuspiciousLoginAttempts: 'Пока нет подозрительных попыток входа.',
+    selectAll: 'Выбрать все',
+    riskScore: 'Оценка риска',
+    threatType: 'Тип угрозы',
+    actionTaken: 'Действие',
+    signals: 'Сигналы',
+    falsePositive: 'Ложная тревога',
+    unblockIp: 'Разблокировать IP',
+    falsePositiveSuccess: 'Отмечено как ложная тревога',
+    unblockSuccess: 'IP разблокирован',
+    THREAT_DETECTED: 'Обнаружена угроза',
+    MALICIOUS_UPLOAD_DETECTED: 'Обнаружена вредоносная загрузка',
+    threatDetectedDetails: 'Security Shield заблокировал угрозу',
+    maliciousUploadDetails: 'Security Shield заблокировал вредоносную загрузку',
     markAllRead: 'Отметить все как прочитанные',
     attempt: 'Попытка',
     LOGIN_FAILED_UNKNOWN_USER: 'Попытка входа с неизвестным email',
@@ -156,6 +180,19 @@ const LOCAL_TRANSLATIONS = {
     newCount: 'new',
     criticalEventAlert: 'Critical security event. Check IP, email, and time.',
     noSuspiciousLoginAttempts: 'No suspicious login attempts yet.',
+    selectAll: 'Select all',
+    riskScore: 'Risk score',
+    threatType: 'Threat type',
+    actionTaken: 'Action',
+    signals: 'Signals',
+    falsePositive: 'False positive',
+    unblockIp: 'Unblock IP',
+    falsePositiveSuccess: 'Marked as false positive',
+    unblockSuccess: 'IP unblocked',
+    THREAT_DETECTED: 'Threat detected',
+    MALICIOUS_UPLOAD_DETECTED: 'Malicious upload detected',
+    threatDetectedDetails: 'Security Shield blocked a threat',
+    maliciousUploadDetails: 'Security Shield blocked a malicious upload',
     markAllRead: 'Mark all as read',
     attempt: 'Attempt',
     location: 'Location',
@@ -204,6 +241,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Kritik güvenlik olayı. IP, e-posta ve saati kontrol edin.',
     noSuspiciousLoginAttempts: 'Henüz şüpheli giriş denemesi yok.',
+    selectAll: 'Tümünü seç',
+    riskScore: 'Risk puanı',
+    threatType: 'Tehdit türü',
+    actionTaken: 'İşlem',
+    signals: 'Sinyaller',
+    falsePositive: 'Yanlış alarm',
+    unblockIp: 'IP engelini kaldır',
+    falsePositiveSuccess: 'Yanlış alarm olarak işaretlendi',
+    unblockSuccess: 'IP engeli kaldırıldı',
+    THREAT_DETECTED: 'Tehdit algılandı',
+    MALICIOUS_UPLOAD_DETECTED: 'Zararlı yükleme algılandı',
+    threatDetectedDetails: 'Security Shield tehdidi engelledi',
+    maliciousUploadDetails: 'Security Shield zararlı yüklemeyi engelledi',
     markAllRead: 'Tümünü okundu olarak işaretle',
     attempt: 'Deneme',
     location: 'Konum',
@@ -253,6 +303,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Ҳодисаи муҳими амниятӣ. IP, почтаи электронӣ ва вақтро тафтиш кунед.',
     noSuspiciousLoginAttempts: 'Ҳоло кӯшишҳои шубҳаноки воридшавӣ нест.',
+    selectAll: 'Ҳамаро интихоб кунед',
+    riskScore: 'Холи хавф',
+    threatType: 'Навъи таҳдид',
+    actionTaken: 'Амал',
+    signals: 'Сигналҳо',
+    falsePositive: 'Огоҳии хато',
+    unblockIp: 'IP-ро кушодан',
+    falsePositiveSuccess: 'Ҳамчун огоҳии хато қайд шуд',
+    unblockSuccess: 'IP кушода шуд',
+    THREAT_DETECTED: 'Таҳдид ошкор шуд',
+    MALICIOUS_UPLOAD_DETECTED: 'Боркунии зараровар ошкор шуд',
+    threatDetectedDetails: 'Security Shield таҳдидро баст',
+    maliciousUploadDetails: 'Security Shield боркунии зарароварро баст',
     markAllRead: 'Ҳамаро ҳамчун хондашуда қайд кунед',
     attempt: 'Кӯшиш',
     LOGIN_FAILED_UNKNOWN_USER: 'Кӯшиши воридшавӣ бо почтаи электронии номаълум',
@@ -299,6 +362,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Маңызды қауіпсіздік оқиғасы. IP, электрондық пошта және уақытты тексеріңіз.',
     noSuspiciousLoginAttempts: 'Әзірге күдікті кіру әрекеттері жоқ.',
+    selectAll: 'Барлығын таңдау',
+    riskScore: 'Қауіп ұпайы',
+    threatType: 'Қауіп түрі',
+    actionTaken: 'Әрекет',
+    signals: 'Сигналдар',
+    falsePositive: 'Жалған дабыл',
+    unblockIp: 'IP бұғатын ашу',
+    falsePositiveSuccess: 'Жалған дабыл деп белгіленді',
+    unblockSuccess: 'IP бұғаты ашылды',
+    THREAT_DETECTED: 'Қауіп анықталды',
+    MALICIOUS_UPLOAD_DETECTED: 'Зиянды жүктеу анықталды',
+    threatDetectedDetails: 'Security Shield қауіпті бұғаттады',
+    maliciousUploadDetails: 'Security Shield зиянды жүктеуді бұғаттады',
     markAllRead: 'Барлығын оқылды деп белгілеу',
     attempt: 'Әрекет',
     LOGIN_FAILED_UNKNOWN_USER: 'Белгісіз электрондық поштамен кіру әрекеті',
@@ -343,6 +419,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Критикалык коопсуздук окуясы. IP, электрондук почта жана убакытты текшериңиз.',
     noSuspiciousLoginAttempts: 'Азырынча шектүү кирүү аракеттери жок.',
+    selectAll: 'Баарын тандоо',
+    riskScore: 'Коркунуч упайы',
+    threatType: 'Коркунуч түрү',
+    actionTaken: 'Аракет',
+    signals: 'Сигналдар',
+    falsePositive: 'Жалган белги',
+    unblockIp: 'IP бөгөтүн ачуу',
+    falsePositiveSuccess: 'Жалган белги деп белгиленди',
+    unblockSuccess: 'IP бөгөтү ачылды',
+    THREAT_DETECTED: 'Коркунуч аныкталды',
+    MALICIOUS_UPLOAD_DETECTED: 'Зыяндуу жүктөө аныкталды',
+    threatDetectedDetails: 'Security Shield коркунучту бөгөттөдү',
+    maliciousUploadDetails: 'Security Shield зыяндуу жүктөөнү бөгөттөдү',
     markAllRead: 'Баарын окулду деп белгилөө',
     attempt: 'Аракет',
     LOGIN_FAILED_UNKNOWN_USER: 'Белгисиз электрондук почта менен кирүү аракети',
@@ -388,6 +477,19 @@ const LOCAL_TRANSLATIONS = {
     criticalEventAlert:
       'Möhüm howpsuzlyk wakasy. IP, e-poçta we wagty barlap görüň.',
     noSuspiciousLoginAttempts: 'Häzirlikçe şübheli giriş synanyşygy ýok.',
+    selectAll: 'Hemmesini saýla',
+    riskScore: 'Risk baly',
+    threatType: 'Howp görnüşi',
+    actionTaken: 'Hereket',
+    signals: 'Signallar',
+    falsePositive: 'Ýalňyş duýduryş',
+    unblockIp: 'IP-ni açmak',
+    falsePositiveSuccess: 'Ýalňyş duýduryş hökmünde bellendi',
+    unblockSuccess: 'IP açyldy',
+    THREAT_DETECTED: 'Howp ýüze çykaryldy',
+    MALICIOUS_UPLOAD_DETECTED: 'Zyýanly ýükleme ýüze çykaryldy',
+    threatDetectedDetails: 'Security Shield howpy bekledi',
+    maliciousUploadDetails: 'Security Shield zyýanly ýüklemäni bekledi',
     markAllRead: 'Hemmesini okaldy diýip bellemek',
     attempt: 'Synanyşyk',
     LOGIN_FAILED_UNKNOWN_USER: 'Näbelli e-poçta bilen giriş synanyşygy',
@@ -401,6 +503,225 @@ const LOCAL_TRANSLATIONS = {
     blockIp: 'IP beklemek',
     ipsBlockedSuccess: 'IP salgylary üstünlikli beklendi',
     blockFailed: 'Beklemekde ýalňyşlyk',
+  },
+};
+
+const SECURITY_VALUE_LABELS = {
+  uz: {
+    criticalCount: 'kritik',
+    blockedIps: 'bloklangan IP',
+    highRiskEvents: 'yuqori risk',
+    low: 'past',
+    medium: "o'rtacha",
+    high: 'yuqori',
+    critical: 'kritik',
+    sql_injection: 'SQL inyeksiya',
+    xss: 'XSS hujum',
+    path_traversal: "Yo'lni aylanib o'tish",
+    scanner_bot: 'Skaner bot',
+    suspicious_client: 'Shubhali mijoz',
+    scanner_probe: 'Skaner tekshiruvi',
+    large_payload: 'Katta payload',
+    malicious_file: 'Zararli fayl',
+    archive_risk: 'Xavfli arxiv',
+    malware_signature: 'Malware belgisi',
+    file_spoofing: 'Fayl niqoblash',
+    xss_file: 'XSS fayl',
+    clean: 'toza',
+    block_request: "So'rov bloklandi",
+    auto_block_ip: 'IP avtomatik bloklandi',
+    monitor: 'Kuzatuv',
+    allow: 'Ruxsat',
+    marked_false_positive: 'Xato signal deb belgilandi',
+  },
+  ru: {
+    criticalCount: 'критические',
+    blockedIps: 'заблокированные IP',
+    highRiskEvents: 'высокий риск',
+    low: 'низкий',
+    medium: 'средний',
+    high: 'высокий',
+    critical: 'критический',
+    sql_injection: 'SQL-инъекция',
+    xss: 'XSS-атака',
+    path_traversal: 'Обход пути',
+    scanner_bot: 'Сканер-бот',
+    suspicious_client: 'Подозрительный клиент',
+    scanner_probe: 'Проверка сканером',
+    large_payload: 'Большая нагрузка',
+    malicious_file: 'Вредоносный файл',
+    archive_risk: 'Рискованный архив',
+    malware_signature: 'Сигнатура malware',
+    file_spoofing: 'Подмена файла',
+    xss_file: 'XSS-файл',
+    clean: 'чисто',
+    block_request: 'Запрос заблокирован',
+    auto_block_ip: 'IP заблокирован автоматически',
+    monitor: 'Наблюдение',
+    allow: 'Разрешено',
+    marked_false_positive: 'Отмечено как ложная тревога',
+  },
+  en: {
+    criticalCount: 'critical',
+    blockedIps: 'blocked IP',
+    highRiskEvents: 'high risk',
+    low: 'low',
+    medium: 'medium',
+    high: 'high',
+    critical: 'critical',
+    sql_injection: 'SQL injection',
+    xss: 'XSS attack',
+    path_traversal: 'Path traversal',
+    scanner_bot: 'Scanner bot',
+    suspicious_client: 'Suspicious client',
+    scanner_probe: 'Scanner probe',
+    large_payload: 'Large payload',
+    malicious_file: 'Malicious file',
+    archive_risk: 'Archive risk',
+    malware_signature: 'Malware signature',
+    file_spoofing: 'File spoofing',
+    xss_file: 'XSS file',
+    clean: 'clean',
+    block_request: 'Request blocked',
+    auto_block_ip: 'IP auto-blocked',
+    monitor: 'Monitor',
+    allow: 'Allowed',
+    marked_false_positive: 'Marked false positive',
+  },
+  tr: {
+    criticalCount: 'kritik',
+    blockedIps: 'engellenen IP',
+    highRiskEvents: 'yüksek risk',
+    low: 'düşük',
+    medium: 'orta',
+    high: 'yüksek',
+    critical: 'kritik',
+    sql_injection: 'SQL enjeksiyonu',
+    xss: 'XSS saldırısı',
+    path_traversal: 'Yol aşımı',
+    scanner_bot: 'Tarayıcı bot',
+    suspicious_client: 'Şüpheli istemci',
+    scanner_probe: 'Tarayıcı kontrolü',
+    large_payload: 'Büyük yük',
+    malicious_file: 'Zararlı dosya',
+    archive_risk: 'Arşiv riski',
+    malware_signature: 'Zararlı imza',
+    file_spoofing: 'Dosya sahteciliği',
+    xss_file: 'XSS dosyası',
+    clean: 'temiz',
+    block_request: 'İstek engellendi',
+    auto_block_ip: 'IP otomatik engellendi',
+    monitor: 'İzleme',
+    allow: 'İzin verildi',
+    marked_false_positive: 'Yanlış alarm işaretlendi',
+  },
+  tg: {
+    criticalCount: 'муҳим',
+    blockedIps: 'IP-ҳои баста',
+    highRiskEvents: 'хавфи баланд',
+    low: 'паст',
+    medium: 'миёна',
+    high: 'баланд',
+    critical: 'муҳим',
+    sql_injection: 'SQL-инъексия',
+    xss: 'Ҳамлаи XSS',
+    path_traversal: 'Гузариши роҳ',
+    scanner_bot: 'Боти сканер',
+    suspicious_client: 'Мизоҷи шубҳанок',
+    scanner_probe: 'Санҷиши сканер',
+    large_payload: 'Payload калон',
+    malicious_file: 'Файли зараровар',
+    archive_risk: 'Хавфи архив',
+    malware_signature: 'Имзои malware',
+    file_spoofing: 'Ниқобкунии файл',
+    xss_file: 'Файли XSS',
+    clean: 'тоза',
+    block_request: 'Дархост баста шуд',
+    auto_block_ip: 'IP худкор баста шуд',
+    monitor: 'Назорат',
+    allow: 'Иҷозат',
+    marked_false_positive: 'Огоҳии хато қайд шуд',
+  },
+  kz: {
+    criticalCount: 'критикалық',
+    blockedIps: 'бұғатталған IP',
+    highRiskEvents: 'жоғары қауіп',
+    low: 'төмен',
+    medium: 'орташа',
+    high: 'жоғары',
+    critical: 'критикалық',
+    sql_injection: 'SQL инъекция',
+    xss: 'XSS шабуыл',
+    path_traversal: 'Жолды айналып өту',
+    scanner_bot: 'Сканер бот',
+    suspicious_client: 'Күдікті клиент',
+    scanner_probe: 'Сканер тексеруі',
+    large_payload: 'Үлкен payload',
+    malicious_file: 'Зиянды файл',
+    archive_risk: 'Архив қаупі',
+    malware_signature: 'Malware белгісі',
+    file_spoofing: 'Файлды бүркемелеу',
+    xss_file: 'XSS файл',
+    clean: 'таза',
+    block_request: 'Сұрау бұғатталды',
+    auto_block_ip: 'IP автоматты бұғатталды',
+    monitor: 'Бақылау',
+    allow: 'Рұқсат',
+    marked_false_positive: 'Жалған дабыл деп белгіленді',
+  },
+  ky: {
+    criticalCount: 'критикалык',
+    blockedIps: 'бөгөттөлгөн IP',
+    highRiskEvents: 'жогорку коркунуч',
+    low: 'төмөн',
+    medium: 'орточо',
+    high: 'жогорку',
+    critical: 'критикалык',
+    sql_injection: 'SQL инъекция',
+    xss: 'XSS чабуул',
+    path_traversal: 'Жолду айланып өтүү',
+    scanner_bot: 'Сканер бот',
+    suspicious_client: 'Шектүү кардар',
+    scanner_probe: 'Сканер текшерүүсү',
+    large_payload: 'Чоң payload',
+    malicious_file: 'Зыяндуу файл',
+    archive_risk: 'Архив коркунучу',
+    malware_signature: 'Malware белгиси',
+    file_spoofing: 'Файлды жашыруу',
+    xss_file: 'XSS файл',
+    clean: 'таза',
+    block_request: 'Сурам бөгөттөлдү',
+    auto_block_ip: 'IP автоматтык бөгөттөлдү',
+    monitor: 'Көзөмөл',
+    allow: 'Уруксат',
+    marked_false_positive: 'Жалган белги деп белгиленди',
+  },
+  tm: {
+    criticalCount: 'möhüm',
+    blockedIps: 'beklenen IP',
+    highRiskEvents: 'ýokary risk',
+    low: 'pes',
+    medium: 'ortaça',
+    high: 'ýokary',
+    critical: 'möhüm',
+    sql_injection: 'SQL sanjymy',
+    xss: 'XSS hüjümi',
+    path_traversal: 'Ýol aýlawy',
+    scanner_bot: 'Skaner bot',
+    suspicious_client: 'Şübheli müşderi',
+    scanner_probe: 'Skaner barlagy',
+    large_payload: 'Uly payload',
+    malicious_file: 'Zyýanly faýl',
+    archive_risk: 'Arhiw riski',
+    malware_signature: 'Malware belgisi',
+    file_spoofing: 'Faýl gizlemek',
+    xss_file: 'XSS faýl',
+    clean: 'arassa',
+    block_request: 'Isleg beklenildi',
+    auto_block_ip: 'IP awtomatik beklenildi',
+    monitor: 'Gözegçilik',
+    allow: 'Rugsat',
+    marked_false_positive: 'Ýalňyş duýduryş diýlip bellendi',
   },
 };
 
@@ -555,8 +876,48 @@ export default function SecuritySettings() {
   const { lang } = useLanguage();
   const { user } = useAuth();
   const pt = (key) => pageT(lang, key);
-  const lt = (key) =>
-    LOCAL_TRANSLATIONS[lang]?.[key] || LOCAL_TRANSLATIONS['ru'][key] || key;
+  const lt = useCallback(
+    (key) =>
+      LOCAL_TRANSLATIONS[lang]?.[key] || LOCAL_TRANSLATIONS['ru'][key] || key,
+    [lang]
+  );
+  const sl = useCallback(
+    (key) =>
+      SECURITY_VALUE_LABELS[lang]?.[key] ||
+      SECURITY_VALUE_LABELS.en[key] ||
+      String(key || '-').replace(/_/g, ' '),
+    [lang]
+  );
+  const formatSecurityEventDetails = useCallback(
+    (event) => {
+      if (!event) return '';
+
+      const requestTarget = [event.method, event.path]
+        .filter(Boolean)
+        .join(' ');
+      if (event.event_type === 'THREAT_DETECTED') {
+        return [
+          lt('threatDetectedDetails'),
+          sl(event.threat_type),
+          requestTarget,
+        ]
+          .filter(Boolean)
+          .join(' - ');
+      }
+      if (event.event_type === 'MALICIOUS_UPLOAD_DETECTED') {
+        return [
+          lt('maliciousUploadDetails'),
+          sl(event.threat_type),
+          requestTarget,
+        ]
+          .filter(Boolean)
+          .join(' - ');
+      }
+
+      return event.details || '';
+    },
+    [lt, sl]
+  );
 
   // States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -571,6 +932,9 @@ export default function SecuritySettings() {
     total: 0,
     unread: 0,
     critical: 0,
+    blocked: 0,
+    highRisk: 0,
+    threatSummary: [],
   });
   const [securityLoading, setSecurityLoading] = useState(false);
   const [activeSecurityView, setActiveSecurityView] = useState('password');
@@ -590,13 +954,16 @@ export default function SecuritySettings() {
         total: data.total || 0,
         unread: data.unread || 0,
         critical: data.critical || 0,
+        blocked: data.blocked || 0,
+        highRisk: data.high_risk || 0,
+        threatSummary: data.threat_summary || [],
       });
     } catch (err) {
       toast.error(err.message || lt('securityEventsLoadError'));
     } finally {
       setSecurityLoading(false);
     }
-  }, [user?.role]);
+  }, [lt, user?.role]);
 
   useEffect(() => {
     loadSecurityEvents();
@@ -662,6 +1029,34 @@ export default function SecuritySettings() {
       await loadSecurityEvents();
     } catch (err) {
       toast.error(err.message || lt('blockFailed'));
+    } finally {
+      setBlockingLoading(false);
+    }
+  };
+
+  const handleUnblockEventIp = async (event) => {
+    if (!event?.ip_address) return;
+    setBlockingLoading(true);
+    try {
+      await AdminApi.securityEvents.unblockIps([event.ip_address]);
+      toast.success(lt('unblockSuccess'));
+      await loadSecurityEvents();
+    } catch (err) {
+      toast.error(err.message || lt('blockFailed'));
+    } finally {
+      setBlockingLoading(false);
+    }
+  };
+
+  const handleFalsePositive = async (event) => {
+    if (!event?.id) return;
+    setBlockingLoading(true);
+    try {
+      await AdminApi.securityEvents.markFalsePositive(event.id);
+      toast.success(lt('falsePositiveSuccess'));
+      await loadSecurityEvents();
+    } catch (err) {
+      toast.error(err.message || lt('securityEventsUpdateError'));
     } finally {
       setBlockingLoading(false);
     }
@@ -1035,7 +1430,7 @@ export default function SecuritySettings() {
                       {lt('loginAttemptsAndBlocked')}
                     </Typography>
                   </Box>
-                  <Stack direction="row" spacing={1}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     <Chip
                       size="small"
                       color={securitySummary.unread ? 'warning' : 'success'}
@@ -1046,13 +1441,47 @@ export default function SecuritySettings() {
                       <Chip
                         size="small"
                         color="error"
-                        label={`${securitySummary.critical} critical`}
+                        label={`${securitySummary.critical} ${sl('criticalCount')}`}
                         sx={{ fontWeight: 800 }}
                       />
                     )}
+                    <Chip
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      label={`${securitySummary.blocked || 0} ${sl('blockedIps')}`}
+                      sx={{ fontWeight: 800 }}
+                    />
+                    <Chip
+                      size="small"
+                      color={
+                        securitySummary.highRisk || 0 ? 'error' : 'success'
+                      }
+                      variant="outlined"
+                      label={`${securitySummary.highRisk || 0} ${sl('highRiskEvents')}`}
+                      sx={{ fontWeight: 800 }}
+                    />
                   </Stack>
                 </Box>
 
+                {securitySummary.threatSummary?.length > 0 && (
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    flexWrap="wrap"
+                    useFlexGap
+                    sx={{ mb: 2 }}
+                  >
+                    {securitySummary.threatSummary.map((item) => (
+                      <Chip
+                        key={item.threat_type}
+                        size="small"
+                        label={`${sl(item.threat_type)}: ${item.count}`}
+                        sx={{ fontWeight: 800 }}
+                      />
+                    ))}
+                  </Stack>
+                )}
                 {securitySummary.critical > 0 && (
                   <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
                     {lt('criticalEventAlert')}
@@ -1097,7 +1526,7 @@ export default function SecuritySettings() {
                           fontWeight={600}
                           color="text.secondary"
                         >
-                          Барчасини танлаш
+                          {lt('selectAll')}
                         </Typography>
                       </Box>
                       {selectedEvents.length > 0 && (
@@ -1157,7 +1586,7 @@ export default function SecuritySettings() {
                               gap={1}
                             >
                               <Typography variant="body2" fontWeight={800}>
-                                {lt(event.event_type) || event.event_type}
+                                {lt(event.event_type)}
                               </Typography>
                               <Box display="flex" gap={1}>
                                 {event.is_blocked && (
@@ -1174,7 +1603,20 @@ export default function SecuritySettings() {
                                   color={
                                     severityColors[event.severity] || 'default'
                                   }
-                                  label={event.severity}
+                                  label={sl(event.severity)}
+                                  sx={{ height: 22, fontWeight: 800 }}
+                                />
+                                <Chip
+                                  size="small"
+                                  color={
+                                    (event.risk_score || 0) >= 75
+                                      ? 'error'
+                                      : (event.risk_score || 0) >= 45
+                                        ? 'warning'
+                                        : 'success'
+                                  }
+                                  variant="outlined"
+                                  label={`${lt('riskScore')}: ${event.risk_score || 0}`}
                                   sx={{ height: 22, fontWeight: 800 }}
                                 />
                               </Box>
@@ -1206,6 +1648,26 @@ export default function SecuritySettings() {
                               {getSecurityMetaLabel(lt, 'app', 'App')}:{' '}
                               {getSecurityProgramLabel(event)}
                             </Typography>
+                            {(event.threat_type || event.action_taken) && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                              >
+                                {lt('threatType')}: {sl(event.threat_type)} -{' '}
+                                {lt('actionTaken')}: {sl(event.action_taken)}
+                              </Typography>
+                            )}
+                            {event.matched_signals && (
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                                sx={{ wordBreak: 'break-word' }}
+                              >
+                                {lt('signals')}: {event.matched_signals}
+                              </Typography>
+                            )}
                             {event.email && (
                               <Typography
                                 variant="caption"
@@ -1215,15 +1677,50 @@ export default function SecuritySettings() {
                                 Email: {event.email}
                               </Typography>
                             )}
-                            {event.details && (
+                            {formatSecurityEventDetails(event) && (
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
                                 display="block"
                               >
-                                {event.details}
+                                {formatSecurityEventDetails(event)}
                               </Typography>
                             )}
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              flexWrap="wrap"
+                              useFlexGap
+                              sx={{ mt: 1 }}
+                            >
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                disabled={
+                                  blockingLoading ||
+                                  event.status === 'false_positive'
+                                }
+                                onClick={() => handleFalsePositive(event)}
+                                sx={{ textTransform: 'none', fontWeight: 800 }}
+                              >
+                                {lt('falsePositive')}
+                              </Button>
+                              {event.is_blocked && event.ip_address && (
+                                <Button
+                                  size="small"
+                                  color="warning"
+                                  variant="outlined"
+                                  disabled={blockingLoading}
+                                  onClick={() => handleUnblockEventIp(event)}
+                                  sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 800,
+                                  }}
+                                >
+                                  {lt('unblockIp')}
+                                </Button>
+                              )}
+                            </Stack>
                           </Box>
                         </Box>
                       </Box>

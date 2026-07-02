@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -14,6 +14,8 @@ from models.chat import ChatMessage
 from models.user import User
 from routers.auth_router import get_current_user
 from utils.database import get_db
+from utils.security_events import record_security_event
+from utils.threat_shield import scan_uploaded_file
 
 router = APIRouter(tags=["Chat"])
 ALLOWED_REACTIONS = {"👍", "❤️", "🙌", "😁", "😊"}
@@ -464,7 +466,10 @@ def react_to_message(
 
 @router.post("/upload")
 async def upload_chat_file(
-    file: UploadFile = File(...), current_user: User = Depends(get_current_user)
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     file_ext = os.path.splitext(file.filename or "")[1].lower()
     if file_ext not in ALLOWED_UPLOAD_EXTENSIONS:
@@ -480,6 +485,26 @@ async def upload_chat_file(
     if not content:
         raise HTTPException(status_code=400, detail="Bo'sh fayl yuklanmaydi")
 
+    assessment = scan_uploaded_file(file.filename, content, file.content_type)
+    if assessment.should_log:
+        record_security_event(
+            db,
+            "MALICIOUS_UPLOAD_DETECTED",
+            request=request,
+            email=current_user.email,
+            details=f"Upload blocked/flagged: {file.filename}",
+            severity=assessment.severity,
+            threat_type=assessment.threat_type,
+            risk_score=assessment.risk_score,
+            action_taken=assessment.action,
+            matched_signals=assessment.signals,
+        )
+    if assessment.should_block:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Fayl Morpho Security Shield tomonidan bloklandi: {assessment.threat_type}",
+        )
+
     UPLOAD_DIR = os.path.join("uploads", "chat")
     if not os.path.exists(UPLOAD_DIR):
         os.makedirs(UPLOAD_DIR)
@@ -491,7 +516,6 @@ async def upload_chat_file(
         buffer.write(content)
 
     return {"file_url": f"/uploads/chat/{unique_filename}"}
-
 
 @router.post("/typing")
 def update_typing_status(current_user: User = Depends(get_current_user)):

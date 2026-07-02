@@ -16,6 +16,7 @@ from sqlalchemy import asc, case, desc, func, or_
 from sqlalchemy.orm import Session, joinedload
 
 from models.audit import AuditLog
+from models.blocked_ip import BlockedIP
 from models.payment import Payment
 from models.security_event import SecurityEvent
 from models.schemas import (
@@ -2978,12 +2979,15 @@ def _security_event_to_dict(event: SecurityEvent) -> dict:
         "method": event.method,
         "path": event.path,
         "details": event.details,
+        "threat_type": event.threat_type,
+        "risk_score": event.risk_score or 0,
+        "action_taken": event.action_taken,
+        "matched_signals": event.matched_signals,
         "attempts": event.attempts,
         "created_at": event.created_at,
         "read_at": event.read_at,
         "is_blocked": is_ip_blocked(event.ip_address) if event.ip_address else False,
     }
-
 
 @router.get("/security-events")
 def list_security_events(
@@ -3008,6 +3012,16 @@ def list_security_events(
         SecurityEvent.status == "new",
         SecurityEvent.severity == "critical",
     ).count()
+    blocked = db.query(BlockedIP).count()
+    high_risk = db.query(SecurityEvent).filter(SecurityEvent.risk_score >= 75).count()
+    threat_rows = (
+        db.query(SecurityEvent.threat_type, func.count(SecurityEvent.id))
+        .filter(SecurityEvent.threat_type.isnot(None))
+        .group_by(SecurityEvent.threat_type)
+        .order_by(desc(func.count(SecurityEvent.id)))
+        .limit(8)
+        .all()
+    )
     items = (
         query.order_by(desc(SecurityEvent.created_at), desc(SecurityEvent.id))
         .offset((page - 1) * page_size)
@@ -3019,8 +3033,12 @@ def list_security_events(
         "total": total,
         "unread": unread,
         "critical": critical,
+        "blocked": blocked,
+        "high_risk": high_risk,
+        "threat_summary": [
+            {"threat_type": row[0], "count": int(row[1] or 0)} for row in threat_rows
+        ],
     }
-
 
 @router.post("/security-events/mark-read")
 def mark_security_events_read(
@@ -3065,6 +3083,59 @@ def block_security_ips(
         request=request,
     )
     return {"blocked_count": count, "ips": payload.ips}
+
+@router.post("/security-events/{event_id}/false-positive")
+def mark_security_event_false_positive(
+    event_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+):
+    event = db.get(SecurityEvent, event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Security event not found")
+    event.status = "false_positive"
+    event.action_taken = "marked_false_positive"
+    event.read_at = datetime.utcnow()
+    db.commit()
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="SECURITY_FALSE_POSITIVE",
+        target_type="SecurityEvent",
+        details=f"Security event {event_id} marked as false positive",
+        request=request,
+    )
+    return {"updated": 1, "event_id": event_id}
+
+
+@router.post("/security-events/unblock-ips")
+def unblock_security_ips(
+    payload: BlockIPRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+):
+    from utils.blocked_ips import BLOCKED_IPS_CACHE
+
+    removed = 0
+    for ip in payload.ips:
+        if not ip:
+            continue
+        deleted = db.query(BlockedIP).filter(BlockedIP.ip_address == ip).delete()
+        if deleted:
+            removed += int(deleted)
+        BLOCKED_IPS_CACHE.discard(ip)
+    db.commit()
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="UNBLOCK_IP",
+        target_type="BlockedIP",
+        details=f"{removed} ta IP blokdan chiqarildi: {payload.ips}",
+        request=request,
+    )
+    return {"unblocked_count": removed, "ips": payload.ips}
 
 # ----------------- AUDIT LOGS -------------------
 @router.get("/audit-logs")
