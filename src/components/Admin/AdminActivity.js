@@ -265,6 +265,39 @@ ACTIVITY_I18N.tr = {
   noResearchers: 'Araştırmacı bulunamadı',
 };
 
+ACTIVITY_I18N.ky = {
+  typing: '• жазып жатат...',
+  sec: 'сек',
+  min: 'мүн',
+  best: 'Эң мыкты',
+  researcher: 'Изилдөөчү',
+  admin: 'Админ',
+  today: 'Бүгүн',
+  week: 'Апта',
+  month: 'Ушул ай',
+  monthShort: 'Ай',
+  ratingScore: 'Рейтинг балы',
+  perRecord: '1 жазууга:',
+  totalEntered: 'Бардыгы киргизилген:',
+  unit: 'даана',
+  activeTime: 'Эң активдүү убактысы:',
+  lastActivity: 'Акыркы активдүүлүк:',
+  refreshError: 'Маалыматтарды жаңылоодо ката кетти!',
+  title: 'Топ чарт',
+  usersOnline: (count) => `Азыр ${count} колдонуучу онлайн`,
+  lastUpdate: 'Акыркы жаңылоо',
+  all: 'Бардыгы',
+  admins: 'Админдер',
+  researchers: 'Изилдөөчүлөр',
+  refresh: 'Жаңылоо',
+  loading: 'Маалыматтар жүктөлүүдө...',
+  bestResult: 'Эң жакшы натыйжа',
+  oneRecord: '1 жазуу',
+  noUsers: 'Колдонуучулар табылган жок',
+  noAdmins: 'Админдер табылган жок',
+  noResearchers: 'Изилдөөчүлөр табылган жок',
+};
+
 const StatusBadge = ({ status, isTyping, t }) => {
   const colors = {
     online: '#10B981',
@@ -327,6 +360,7 @@ const localeByLang = {
   ru: 'ru-RU',
   en: 'en-US',
   kz: 'kk-KZ',
+  ky: 'ky-KG',
 };
 
 const getScore = (admin) =>
@@ -750,6 +784,7 @@ export default function AdminActivity() {
   }, [fetchActivity]);
 
   const filteredData = data
+    .filter((a) => a.name !== 'Xavfsizlik xabarlari')
     .filter((a) => {
       if (roleFilter === 'all') return true;
       return a.role === roleFilter;
