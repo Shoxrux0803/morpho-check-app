@@ -11,5 +11,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Loyiha fayllarini nusxalash
 COPY . .
 
-# FastAPI serverini ishga tushirish
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# FastAPI serverini ishga tushirish (Production mode)
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS:-4}"]
