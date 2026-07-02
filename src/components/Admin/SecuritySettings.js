@@ -1761,7 +1761,8 @@ export default function SecuritySettings() {
                     fontWeight: 800,
                   }}
                 >
-                  </Button>
+                  {lt('markAllRead')}
+                </Button>
                 </GlassPaper>
               </motion.div>
             )}
