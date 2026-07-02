@@ -68,6 +68,9 @@ const LOCAL_TRANSLATIONS = {
     noSuspiciousLoginAttempts: "Hozircha shubhali kirish urinishlari yo'q.",
     markAllRead: "Barchasini o'qilgan deb belgilash",
     attempt: 'Urinish',
+    location: 'Joylashuv',
+    device: 'Qurilma',
+    app: 'Dastur',
     LOGIN_FAILED_UNKNOWN_USER: "Noma'lum email bilan kirish urinishi",
     LOGIN_FAILED_BAD_PASSWORD: "Noto'g'ri parol bilan kirish urinishi",
     SUPERADMIN_NEW_DEVICE: 'Superadmin yangi qurilmadan kirishga urindi',
@@ -155,6 +158,9 @@ const LOCAL_TRANSLATIONS = {
     noSuspiciousLoginAttempts: 'No suspicious login attempts yet.',
     markAllRead: 'Mark all as read',
     attempt: 'Attempt',
+    location: 'Location',
+    device: 'Device',
+    app: 'App',
     LOGIN_FAILED_UNKNOWN_USER: 'Login attempt with unknown email',
     LOGIN_FAILED_BAD_PASSWORD: 'Login attempt with incorrect password',
     SUPERADMIN_NEW_DEVICE: 'Superadmin attempted to login from a new device',
@@ -200,6 +206,9 @@ const LOCAL_TRANSLATIONS = {
     noSuspiciousLoginAttempts: 'Henüz şüpheli giriş denemesi yok.',
     markAllRead: 'Tümünü okundu olarak işaretle',
     attempt: 'Deneme',
+    location: 'Konum',
+    device: 'Cihaz',
+    app: 'Uygulama',
     LOGIN_FAILED_UNKNOWN_USER: 'Bilinmeyen e-posta ile giriş denemesi',
     LOGIN_FAILED_BAD_PASSWORD: 'Yanlış şifre ile giriş denemesi',
     SUPERADMIN_NEW_DEVICE:
@@ -440,6 +449,55 @@ const formatSecurityDate = (value) => {
     return String(value);
   }
 };
+const getSecurityMetaLabel = (translate, key, fallback) => {
+  const value = translate(key);
+  return value === key ? fallback : value;
+};
+
+const detectProgramFromUserAgent = (userAgent) => {
+  const ua = (userAgent || '').toLowerCase();
+  if (!ua) return 'Unknown app';
+  if (ua.includes('edg/')) return 'Microsoft Edge';
+  if (ua.includes('opr/') || ua.includes('opera')) return 'Opera';
+  if (ua.includes('samsungbrowser')) return 'Samsung Internet';
+  if (ua.includes('firefox/')) return 'Firefox';
+  if (ua.includes('chrome/') || ua.includes('crios/')) return 'Chrome';
+  if (ua.includes('safari/')) return 'Safari';
+  if (ua.includes('postmanruntime')) return 'Postman';
+  if (ua.includes('curl/')) return 'curl';
+  if (ua.includes('python-requests')) return 'Python requests';
+  return 'Unknown app';
+};
+
+const detectDeviceFromUserAgent = (userAgent) => {
+  const ua = (userAgent || '').toLowerCase();
+  if (!ua) return 'Unknown device';
+  const os = ua.includes('windows')
+    ? 'Windows'
+    : ua.includes('android')
+      ? 'Android'
+      : ua.includes('iphone') || ua.includes('ipad')
+        ? 'iOS'
+        : ua.includes('mac os') || ua.includes('macintosh')
+          ? 'macOS'
+          : ua.includes('linux')
+            ? 'Linux'
+            : 'Unknown';
+  const type =
+    ua.includes('ipad') || ua.includes('tablet')
+      ? 'tablet'
+      : ua.includes('mobile') || ua.includes('iphone') || ua.includes('android')
+        ? 'phone'
+        : 'desktop';
+  return `${os} ${type}`;
+};
+
+const getSecurityLocationLabel = (event) =>
+  event?.ip_location?.label || 'Unknown location';
+const getSecurityDeviceLabel = (event) =>
+  event?.client_info?.device || detectDeviceFromUserAgent(event?.user_agent);
+const getSecurityProgramLabel = (event) =>
+  event?.client_info?.program || detectProgramFromUserAgent(event?.user_agent);
 const visibilityButtonSx = {
   width: 36,
   height: 36,
@@ -568,7 +626,7 @@ export default function SecuritySettings() {
   const handleSelectAllEvents = () => {
     const unblockedEvents = securityEvents.filter((e) => !e.is_blocked);
     if (unblockedEvents.length === 0) return;
-    
+
     if (selectedEvents.length === unblockedEvents.length) {
       setSelectedEvents([]);
     } else {
@@ -578,7 +636,7 @@ export default function SecuritySettings() {
 
   const handleBlockSelectedIps = async () => {
     if (selectedEvents.length === 0) return;
-    
+
     // Collect unique IPs from selected events
     const ipsToBlock = Array.from(
       new Set(
@@ -589,7 +647,10 @@ export default function SecuritySettings() {
     );
 
     if (ipsToBlock.length === 0) {
-      toast.error(lt('noIpAddressesToBlock') || "Tanlangan xabarlarda IP manzil mavjud emas.");
+      toast.error(
+        lt('noIpAddressesToBlock') ||
+          'Tanlangan xabarlarda IP manzil mavjud emas.'
+      );
       return;
     }
 
@@ -1008,22 +1069,34 @@ export default function SecuritySettings() {
                       display="flex"
                       alignItems="center"
                       justifyContent="space-between"
-                      sx={{ px: 1, pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}
+                      sx={{
+                        px: 1,
+                        pb: 1,
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                      }}
                     >
                       <Box display="flex" alignItems="center">
                         <Checkbox
                           size="small"
                           checked={
-                            securityEvents.filter(e => !e.is_blocked).length > 0 &&
-                            selectedEvents.length === securityEvents.filter(e => !e.is_blocked).length
+                            securityEvents.filter((e) => !e.is_blocked).length >
+                              0 &&
+                            selectedEvents.length ===
+                              securityEvents.filter((e) => !e.is_blocked).length
                           }
                           indeterminate={
                             selectedEvents.length > 0 &&
-                            selectedEvents.length < securityEvents.filter(e => !e.is_blocked).length
+                            selectedEvents.length <
+                              securityEvents.filter((e) => !e.is_blocked).length
                           }
                           onChange={handleSelectAllEvents}
                         />
-                        <Typography variant="caption" fontWeight={600} color="text.secondary">
+                        <Typography
+                          variant="caption"
+                          fontWeight={600}
+                          color="text.secondary"
+                        >
                           Барчасини танлаш
                         </Typography>
                       </Box>
@@ -1034,9 +1107,17 @@ export default function SecuritySettings() {
                           variant="contained"
                           disabled={blockingLoading}
                           onClick={handleBlockSelectedIps}
-                          sx={{ textTransform: 'none', fontWeight: 800, borderRadius: 2 }}
+                          sx={{
+                            textTransform: 'none',
+                            fontWeight: 800,
+                            borderRadius: 2,
+                          }}
                         >
-                          {blockingLoading ? <CircularProgress size={16} color="inherit" /> : lt('blockSelectedIps')}
+                          {blockingLoading ? (
+                            <CircularProgress size={16} color="inherit" />
+                          ) : (
+                            lt('blockSelectedIps')
+                          )}
                         </Button>
                       )}
                     </Box>
@@ -1057,15 +1138,14 @@ export default function SecuritySettings() {
                               : 'rgba(0,0,0,0.025)',
                         }}
                       >
-                        <Box
-                          display="flex"
-                          alignItems="flex-start"
-                          gap={1}
-                        >
+                        <Box display="flex" alignItems="flex-start" gap={1}>
                           <Checkbox
                             size="medium"
                             color="primary"
-                            checked={selectedEvents.includes(event.id) || event.is_blocked}
+                            checked={
+                              selectedEvents.includes(event.id) ||
+                              event.is_blocked
+                            }
                             disabled={event.is_blocked}
                             onChange={() => handleSelectEvent(event.id)}
                             sx={{ mt: -0.5, ml: -1 }}
@@ -1091,7 +1171,9 @@ export default function SecuritySettings() {
                                 )}
                                 <Chip
                                   size="small"
-                                  color={severityColors[event.severity] || 'default'}
+                                  color={
+                                    severityColors[event.severity] || 'default'
+                                  }
                                   label={event.severity}
                                   sx={{ height: 22, fontWeight: 800 }}
                                 />
@@ -1102,9 +1184,27 @@ export default function SecuritySettings() {
                               color="text.secondary"
                               display="block"
                             >
-                              {formatSecurityDate(event.created_at)} • IP:{' '}
-                              {event.ip_address || '-'} • {lt('attempt')}:{' '}
+                              {formatSecurityDate(event.created_at)} - IP:{' '}
+                              {event.ip_address || '-'} - {lt('attempt')}:{' '}
                               {event.attempts || 1}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              {getSecurityMetaLabel(lt, 'location', 'Location')}
+                              : {getSecurityLocationLabel(event)}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                            >
+                              {getSecurityMetaLabel(lt, 'device', 'Device')}:{' '}
+                              {getSecurityDeviceLabel(event)} -{' '}
+                              {getSecurityMetaLabel(lt, 'app', 'App')}:{' '}
+                              {getSecurityProgramLabel(event)}
                             </Typography>
                             {event.email && (
                               <Typography

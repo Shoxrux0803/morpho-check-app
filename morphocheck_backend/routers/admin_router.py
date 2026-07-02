@@ -50,6 +50,7 @@ from utils.database import get_db
 from utils.security import get_password_hash
 from utils.translit import lat2cyr
 from utils.blocked_ips import block_ips, is_ip_blocked
+from utils.client_intel import describe_ip_location, describe_user_agent
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -2971,7 +2972,9 @@ def _security_event_to_dict(event: SecurityEvent) -> dict:
         "status": event.status,
         "email": event.email,
         "ip_address": event.ip_address,
+        "ip_location": describe_ip_location(event.ip_address),
         "user_agent": event.user_agent,
+        "client_info": describe_user_agent(event.user_agent),
         "method": event.method,
         "path": event.path,
         "details": event.details,
