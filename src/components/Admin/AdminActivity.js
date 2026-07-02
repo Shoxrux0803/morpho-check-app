@@ -312,6 +312,14 @@ const formatAvgMinutes = (seconds = 0, t = ACTIVITY_I18N.uz) => {
   return `${minutes.toFixed(minutes >= 10 ? 0 : 1)} ${t.min}`;
 };
 
+const formatDateTime = (dateString) => {
+  if (!dateString) return '-';
+  const d = new Date(dateString);
+  const date = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${date} ${time}`;
+};
+
 const localeByLang = {
   uz: 'uz-UZ',
   tg: 'tg-TJ',
@@ -696,9 +704,7 @@ const ActivityCard = ({
                 </Typography>
               </Box>
               <Typography variant="caption" fontWeight="bold">
-                {admin.last_active_at
-                  ? new Date(admin.last_active_at).toLocaleTimeString(locale)
-                  : '-'}
+                {formatDateTime(admin.last_active_at)}
               </Typography>
             </Box>
           </Stack>
