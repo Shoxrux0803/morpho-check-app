@@ -4,6 +4,10 @@ from functools import lru_cache
 from urllib.error import URLError
 from urllib.request import Request as UrlRequest, urlopen
 
+DEMO_IP_LOCATIONS = {
+    "203.0.113.42": {"label": "Tashkent, Uzbekistan", "city": "Tashkent", "country": "Uzbekistan", "source": "demo"},
+}
+
 
 def _clean_ip(ip_address: str | None) -> str:
     value = (ip_address or "").strip()
@@ -20,6 +24,8 @@ def describe_ip_location(ip_address: str | None) -> dict:
         return {"label": "Unknown location", "city": None, "country": None, "source": "empty"}
     if ip == "testclient":
         return {"label": "Test client", "city": None, "country": None, "source": "test"}
+    if ip in DEMO_IP_LOCATIONS:
+        return DEMO_IP_LOCATIONS[ip]
 
     try:
         parsed = ipaddress.ip_address(ip)

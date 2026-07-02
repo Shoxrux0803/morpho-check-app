@@ -5,6 +5,38 @@
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0d6efd" />
+    <script>
+      (function () {
+        var resizeObserverMessages = [
+          'ResizeObserver loop completed with undelivered notifications',
+          'ResizeObserver loop limit exceeded'
+        ];
+        var isResizeObserverMessage = function (value) {
+          var message = String((value && value.message) || value || '');
+          return resizeObserverMessages.some(function (item) {
+            return message.indexOf(item) !== -1;
+          });
+        };
+        window.addEventListener(
+          'error',
+          function (event) {
+            if (!isResizeObserverMessage(event.error || event.message)) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          },
+          true
+        );
+        window.addEventListener(
+          'unhandledrejection',
+          function (event) {
+            if (!isResizeObserverMessage(event.reason)) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          },
+          true
+        );
+      })();
+    </script>
     <meta
       name="description"
       content="MorphoCheck Pro - Advanced Anthropometric Analysis and Performance Optimization"

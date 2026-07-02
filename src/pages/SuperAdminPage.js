@@ -5166,6 +5166,7 @@ const SuperAdminPage = () => {
               height: isMapTab && !isMobile ? '100%' : 'auto',
               display: isMapTab && !isMobile ? 'flex' : 'block',
               flexDirection: 'column',
+              overflowX: 'hidden',
               minHeight: 0,
               flex: isMapTab && !isMobile ? 1 : 'auto',
             }}
@@ -5231,9 +5232,12 @@ const SuperAdminPage = () => {
               <Stack
                 direction="row"
                 spacing={1.5}
+                useFlexGap
                 sx={{
                   width: { xs: '100%', lg: 'auto' },
-                  overflowX: 'auto',
+                  maxWidth: '100%',
+                  flexWrap: 'wrap',
+                  overflowX: 'hidden',
                   py: 0.2,
                 }}
               >
@@ -5268,6 +5272,7 @@ const SuperAdminPage = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 1,
+                      maxWidth: '100%',
                       px: 1.5,
                       py: 0.5,
                       borderRadius: 2,

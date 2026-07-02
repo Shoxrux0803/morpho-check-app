@@ -17,7 +17,6 @@
  */
 import React, { useRef, useEffect, useCallback } from 'react';
 import {
-  supportsBackdropFilterUrl,
   injectFilter,
   removeFilter,
   nextFilterId,
@@ -53,6 +52,8 @@ export default function LiquidGlass({
 }) {
   const containerRef = useRef(null);
   const filterLayerRef = useRef(null);
+  const frameRef = useRef(null);
+  const lastSizeRef = useRef({ width: 0, height: 0 });
   // Stable, unique filter ID per component instance
   const filterIdRef = useRef(null);
   if (!filterIdRef.current) filterIdRef.current = nextFilterId();
@@ -74,6 +75,10 @@ export default function LiquidGlass({
     const w = Math.round(rect.width);
     const h = Math.round(rect.height);
     if (!w || !h) return;
+    if (lastSizeRef.current.width === w && lastSizeRef.current.height === h) {
+      return;
+    }
+    lastSizeRef.current = { width: w, height: h };
 
     // Size the filter layer to match content
     filterLayer.style.width = `${w}px`;
@@ -96,11 +101,20 @@ export default function LiquidGlass({
 
   // ── Mount / resize observer ──────────────────────────────────────────────────
   useEffect(() => {
-    redraw();
-    const ro = new ResizeObserver(redraw);
+    const scheduleRedraw = () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        redraw();
+      });
+    };
+
+    scheduleRedraw();
+    const ro = new ResizeObserver(scheduleRedraw);
     if (containerRef.current) ro.observe(containerRef.current);
     return () => {
       ro.disconnect();
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
       removeFilter(filterId);
     };
   }, [redraw, filterId]);
