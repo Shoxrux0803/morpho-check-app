@@ -25,7 +25,7 @@ import VpnKey from '@mui/icons-material/VpnKey';
 import Info from '@mui/icons-material/Info';
 import AdminPanelSettings from '@mui/icons-material/AdminPanelSettings';
 import Person from '@mui/icons-material/Person';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AdminApi, changePassword } from '../../services/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -1174,14 +1174,21 @@ export default function SecuritySettings() {
       </Box>
 
       <Grid container spacing={4}>
-        {/* Left Column: The Form */}
-        <Grid
-          item
-          xs={12}
-          lg={7}
-          sx={{ display: activeSecurityView === 'password' ? 'block' : 'none' }}
-        >
-          <GlassPaper>
+        <AnimatePresence mode="wait">
+          {/* Left Column: The Form */}
+          {activeSecurityView === 'password' && (
+            <Grid
+              item
+              xs={12}
+              lg={7}
+              component={motion.div}
+              key="password-form"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <GlassPaper>
             <Box display="flex" alignItems="center" mb={4}>
               <Box
                 sx={{
@@ -1381,7 +1388,9 @@ export default function SecuritySettings() {
               </Stack>
             </form>
           </GlassPaper>
-        </Grid>
+            </Grid>
+          )}
+        </AnimatePresence>
 
         {/* Right Column: Live requirements checklist & Session info */}
         <Grid
@@ -1400,17 +1409,25 @@ export default function SecuritySettings() {
           }}
         >
           <Stack spacing={4}>
-            {user?.role === 'superadmin' && activeSecurityView === 'alerts' && (
-              <GlassPaper
-                sx={{
-                  borderColor:
-                    securitySummary.critical > 0
-                      ? 'rgba(244, 67, 54, 0.45)'
-                      : securitySummary.unread > 0
-                        ? 'rgba(255, 152, 0, 0.35)'
-                        : undefined,
-                }}
-              >
+            <AnimatePresence mode="wait">
+              {user?.role === 'superadmin' && activeSecurityView === 'alerts' && (
+                <motion.div
+                  key="alerts-view"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <GlassPaper
+                    sx={{
+                      borderColor:
+                        securitySummary.critical > 0
+                          ? 'rgba(244, 67, 54, 0.45)'
+                          : securitySummary.unread > 0
+                            ? 'rgba(255, 152, 0, 0.35)'
+                            : undefined,
+                    }}
+                  >
                 <Box
                   display="flex"
                   alignItems="center"
@@ -1744,13 +1761,19 @@ export default function SecuritySettings() {
                     fontWeight: 800,
                   }}
                 >
-                  {lt('markAllRead')}
-                </Button>
-              </GlassPaper>
+                  </Button>
+                </GlassPaper>
+              </motion.div>
             )}
 
             {activeSecurityView === 'password' && (
-              <>
+              <motion.div
+                key="password-reqs"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.3 }}
+              >
                 {/* Requirements Card */}
                 <GlassPaper>
                   <Typography variant="h6" fontWeight={800} mb={2.5}>
@@ -1964,8 +1987,9 @@ export default function SecuritySettings() {
                     </Box>
                   </Box>
                 </GlassPaper>
-              </>
+              </motion.div>
             )}
+            </AnimatePresence>
           </Stack>
         </Grid>
       </Grid>
