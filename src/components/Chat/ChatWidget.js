@@ -727,6 +727,7 @@ const ChatWidget = () => {
                   overflow: 'hidden',
                   background: 'transparent',
                   position: 'relative',
+                  minHeight: 0,
                 }}
               >
                 <AnimatePresence>
@@ -743,7 +744,10 @@ const ChatWidget = () => {
                         stiffness: 220,
                       }}
                       style={{
-                        flex: 1,
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         overflowY: 'auto',
@@ -913,7 +917,6 @@ const ChatWidget = () => {
                                 type: 'spring',
                                 stiffness: 300,
                                 damping: 22,
-                                delay: idx * 0.03,
                               }}
                               key={conv.user_id}
                               onClick={() => openConversation(conv)}
@@ -1063,7 +1066,10 @@ const ChatWidget = () => {
                         stiffness: 220,
                       }}
                       style={{
-                        flex: 1,
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         overflowY: 'auto',
@@ -1207,11 +1213,13 @@ const ChatWidget = () => {
                       }}
                       onAnimationComplete={() => scrollToBottom('auto')}
                       style={{
-                        flex: 1,
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
                         overflow: 'hidden',
-                        position: 'relative',
                       }}
                       onDragOver={onDragOver}
                       onDragLeave={onDragLeave}
