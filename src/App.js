@@ -12,12 +12,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Toaster, toast, useToasterStore } from 'react-hot-toast';
 
-// ==== Styles (doimo tepada) ====
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import './styles/motion.css';
-import './index.css';
-
 // ==== Pages & Components ====
 import Header from './components/Header';
 import { OfflineSyncProvider } from './providers/OfflineSyncProvider';
@@ -26,9 +20,6 @@ import IntroPage from './pages/IntroPage';
 import ThemeSync from './components/ThemeSync';
 import ChatWidget from './components/Chat/ChatWidget';
 import AIAssistantWidget from './components/AI/AIAssistantWidget';
-import MorphoProBackground from './components/MorphoProBackground';
-import TubesBackground from './components/TubesBackground';
-import { useThemeMode } from './providers/ThemeProviderMUI';
 import WelcomeOverlay from './components/WelcomeOverlay';
 import FieldAssistantLocationTracker from './components/FieldAssistantLocationTracker';
 
@@ -39,7 +30,9 @@ const ResearcherPage = lazy(() => import('./pages/ResearcherPage'));
 const InfoDetail = lazy(() => import('./pages/InfoDetail'));
 const AuthorPage = lazy(() => import('./pages/AuthorPage'));
 const GuidelinesPage = lazy(() => import('./pages/GuidelinesPage'));
-const PrivacyCompliancePage = lazy(() => import('./pages/PrivacyCompliancePage'));
+const PrivacyCompliancePage = lazy(
+  () => import('./pages/PrivacyCompliancePage')
+);
 const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
 import NotFoundPage from './pages/NotFoundPage';
 const MAX_VISIBLE_TOASTS = 3;
@@ -127,13 +120,13 @@ function ToastLimit() {
 // Page Transition komponenti
 const PageTransition = ({ children }) => (
   <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -20, scale: 1.02 }}
+    initial={{ opacity: 0.01 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
     transition={{
       type: 'tween',
-      ease: 'easeInOut',
-      duration: 0.3,
+      ease: [0.22, 1, 0.36, 1],
+      duration: 0.32,
     }}
     style={{
       width: '100%',
@@ -156,7 +149,9 @@ const ConditionalFooter = () => {
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    });
   }, [pathname]);
   return null;
 }
@@ -372,26 +367,16 @@ const ProWrapper = () => {
 // Animated Routes komponenti
 function AnimatedRoutes() {
   const location = useLocation();
-  const { mode } = useThemeMode();
   const { justLoggedIn, completeLoginTransition } = useAuth();
-
-  const publicRoutes = [
-    '/',
-    '/info',
-    '/author',
-    '/guidelines',
-    '/privacy-compliance',
-  ];
-  const showBg = publicRoutes.includes(location.pathname);
 
   return (
     <>
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {justLoggedIn && (
           <WelcomeOverlay onComplete={completeLoginTransition} />
         )}
       </AnimatePresence>
-      <AnimatePresence>
+      <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<HomeWrapper />} />
           <Route path="/morphocheck-pro" element={<ProWrapper />} />
@@ -452,6 +437,24 @@ function AnimatedRoutes() {
             }
           />
         </Routes>
+      </AnimatePresence>
+      <AnimatePresence initial={false}>
+        <motion.div
+          key={`${location.pathname}${location.search}`}
+          aria-hidden="true"
+          initial={{ opacity: 0.18 }}
+          animate={{ opacity: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 1020,
+            pointerEvents: 'none',
+            background:
+              'linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(248, 194, 113, 0.08))',
+          }}
+        />
       </AnimatePresence>
     </>
   );
