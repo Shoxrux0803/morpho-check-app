@@ -1096,7 +1096,7 @@ function FlowDiagram({ copy }) {
   const nodes = copy.flowNodes;
 
   return (
-    <Grid container spacing={1.5}>
+    <Grid container spacing={1.4} sx={{ mt: { xs: 2, md: 1.5 } }}>
       {nodes.map((node, index) => (
         <Grid
           item
@@ -1108,40 +1108,78 @@ function FlowDiagram({ copy }) {
           <Box
             sx={{
               height: '100%',
-              p: 2,
-              borderRadius: 1.5,
-              border: `1px solid ${alpha(node.color, mode === 'dark' ? 0.36 : 0.22)}`,
-              bgcolor: alpha(node.color, mode === 'dark' ? 0.12 : 0.08),
+              minHeight: 88,
+              p: 1.8,
+              borderRadius: 2,
+              border: `1px solid ${alpha(node.color, mode === 'dark' ? 0.36 : 0.2)}`,
+              bgcolor:
+                mode === 'dark'
+                  ? `linear-gradient(135deg, ${alpha(node.color, 0.18)}, ${alpha(theme.palette.background.paper, 0.44)})`
+                  : `linear-gradient(135deg, ${alpha(node.color, 0.12)}, ${alpha(theme.palette.background.paper, 0.92)})`,
+              boxShadow: `0 14px 32px ${alpha(node.color, mode === 'dark' ? 0.16 : 0.1)}`,
               position: 'relative',
-              '&:after':
-                index < nodes.length - 1
-                  ? {
-                      content: '""',
-                      position: 'absolute',
-                      right: { xs: '50%', md: -12 },
-                      bottom: { xs: -12, md: '50%' },
-                      width: { xs: 1, md: 24 },
-                      height: { xs: 24, md: 1 },
-                      bgcolor: alpha(theme.palette.text.primary, 0.22),
-                    }
-                  : {},
+              overflow: 'hidden',
+              transition:
+                'transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+              '&:before': {
+                content: '""',
+                position: 'absolute',
+                inset: '0 auto 0 0',
+                width: 4,
+                bgcolor: node.color,
+                opacity: mode === 'dark' ? 0.85 : 0.72,
+              },
+              '&:hover': {
+                transform: 'translateY(-2px)',
+                borderColor: alpha(node.color, 0.45),
+                boxShadow: `0 18px 42px ${alpha(node.color, mode === 'dark' ? 0.22 : 0.16)}`,
+              },
             }}
           >
             <Stack
               direction="row"
               spacing={1}
               alignItems="center"
+              justifyContent="space-between"
               sx={{ mb: 1 }}
             >
-              <CircleDot size={16} color={node.color} />
-              <Typography variant="subtitle2" fontWeight={800}>
-                {node.title}
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Box
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: node.color,
+                    bgcolor: alpha(node.color, mode === 'dark' ? 0.18 : 0.13),
+                    border: `1px solid ${alpha(node.color, 0.22)}`,
+                    flexShrink: 0,
+                  }}
+                >
+                  <CircleDot size={15} />
+                </Box>
+                <Typography variant="subtitle2" fontWeight={900}>
+                  {node.title}
+                </Typography>
+              </Stack>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: node.color,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  opacity: 0.8,
+                }}
+              >
+                {String(index + 1).padStart(2, '0')}
               </Typography>
             </Stack>
             <Typography
               variant="caption"
               color="text.secondary"
               fontWeight={800}
+              sx={{ display: 'block', pl: 4.6, lineHeight: 1.35 }}
             >
               {node.desc}
             </Typography>
