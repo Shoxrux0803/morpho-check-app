@@ -46,7 +46,7 @@ import Badge from '@mui/material/Badge';
 
 import { useThemeMode } from '../providers/ThemeProviderMUI';
 import { THEME_VARIANTS } from '../theme/muiTheme';
-import logo from '../assets/morphocheck-logo.png';
+import logo from '../assets/morphocheck-logo.svg';
 import { useLanguage, LANGUAGES } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useOfflineSync } from '../providers/OfflineSyncProvider';

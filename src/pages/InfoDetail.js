@@ -38,7 +38,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../providers/ThemeProviderMUI';
 import { useLanguage } from '../contexts/LanguageContext';
-import logo from '../assets/morphocheck-logo.png';
+import logo from '../assets/morphocheck-logo.svg';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
