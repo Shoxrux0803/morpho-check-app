@@ -62,14 +62,14 @@ const blurActiveElement = () => {
   }
 };
 
-const getThemeVariantLabel = (value) =>
+const getThemeVariantLabel = (value, t) =>
   value === 'neo'
-    ? 'Neo (Aurora)'
+    ? t('themeVariantNeo')
     : value === 'ocean'
-      ? 'Ocean'
+      ? t('themeVariantOcean')
       : value === 'sunset'
-        ? 'Sunset'
-        : 'Minimal';
+        ? t('themeVariantSunset')
+        : t('themeVariantMinimal');
 
 const languageOptions = [...LANGUAGES].sort((a, b) =>
   a.code === 'en' ? -1 : b.code === 'en' ? 1 : 0
@@ -560,12 +560,12 @@ export default function Header() {
   const modeSwitcherOptions = [
     {
       value: 'light',
-      label: 'Light',
+      label: t('lightMode'),
       icon: <Brightness7Icon fontSize="small" />,
     },
     {
       value: 'dark',
-      label: 'Dark',
+      label: t('darkMode'),
       icon: <Brightness4Icon fontSize="small" />,
     },
   ];
@@ -946,10 +946,10 @@ export default function Header() {
               </IconButton>
             </Tooltip>
 
-            <Tooltip title="Settings">
+            <Tooltip title={t('settingsTitle')}>
               <IconButton
                 onClick={openSettings}
-                aria-label="Settings"
+                aria-label={t('settingsTitle')}
                 sx={{
                   color: 'text.secondary',
                   transition:
@@ -1280,10 +1280,10 @@ export default function Header() {
                       fontWeight={900}
                       lineHeight={1.1}
                     >
-                      Settings
+                      {t('settingsTitle')}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Theme and language
+                      {t('settingsSubtitle')}
                     </Typography>
                   </Box>
                 </Stack>
@@ -1299,7 +1299,7 @@ export default function Header() {
                     color="text.secondary"
                     fontWeight={900}
                   >
-                    Mode
+                    {t('settingsMode')}
                   </Typography>
                   <Box
                     sx={{
@@ -1467,7 +1467,7 @@ export default function Header() {
                           '&:hover': { transform: 'translateY(-2px)' },
                         }}
                       >
-                        {getThemeVariantLabel(v)}
+                        {getThemeVariantLabel(v, t)}
                       </Button>
                     ))}
                   </Stack>
@@ -1511,7 +1511,8 @@ export default function Header() {
                             {selectedLang.flag}
                           </Box>
                           <Typography variant="body2" fontWeight={700}>
-                            {selectedLang.label}
+                            {t(`language_${selectedLang.code}`) ||
+                              selectedLang.label}
                           </Typography>
                         </Stack>
                       ) : null;
@@ -1565,7 +1566,7 @@ export default function Header() {
                             variant="body2"
                             fontWeight={lang === l.code ? 800 : 600}
                           >
-                            {l.label}
+                            {t(`language_${l.code}`) || l.label}
                           </Typography>
                           {lang === l.code && (
                             <CheckIcon
@@ -1781,7 +1782,7 @@ export default function Header() {
                   textTransform: 'none',
                 }}
               >
-                Settings
+                {t('settingsTitle')}
               </Button>
 
               <Button
