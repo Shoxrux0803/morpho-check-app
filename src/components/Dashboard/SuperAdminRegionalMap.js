@@ -14,10 +14,13 @@ import {
   Chip,
   CircularProgress,
   Divider,
+  MenuItem,
   IconButton,
   LinearProgress,
   Paper,
+  Select,
   Stack,
+  TextField,
   Tooltip,
   Typography,
   useTheme,
@@ -137,6 +140,39 @@ const MAP_I18N = {
     overweight: 'Ortiqcha',
     obese: 'Semizlik',
     coverage: 'Qamrov',
+    metricLayer: 'Rang qatlami',
+    timeFilter: 'Vaqt filtri',
+    metricDefault: 'Standart',
+    metricRisk: 'Risk',
+    metricCoverage: 'Qamrov',
+    metricAnalyses: 'Analiz soni',
+    metricBmi: "O'rtacha BMI",
+    metricZRisk: 'Z-score risk',
+    metricActivity: 'Admin/izlanuvchi',
+    timeAll: 'Barchasi',
+    timeToday: 'Bugun',
+    time7d: '7 kun',
+    time30d: '30 kun',
+    timeYear: 'Yil',
+    timeCustom: 'Custom',
+    dateFrom: 'Boshlanish',
+    dateTo: 'Tugash',
+    trend: 'Trend',
+    trendUp: 'Risk oshgan',
+    trendDown: 'Risk pasaygan',
+    trendFlat: 'Barqaror',
+    qualityScore: 'Monitoring sifati',
+    topProblemAreas: 'Top muammo hududlar',
+    highestRisk: 'Eng yuqori risk',
+    lowestCoverage: 'Qamrov past',
+    mostPatients: "Ko'p patient",
+    emptyMahallas: "Bo'sh mahallalar",
+    riskReasons: 'Risk sabablari',
+    noPatientData: "Patient ma'lumoti yo'q",
+    latestAnalysis: 'Oxirgi analiz',
+    avgBmi: "O'rtacha BMI",
+    zRisk: 'Z-risk',
+    patientCount: 'Patient',
   },
   ru: {
     country: 'Узбекистан',
@@ -1455,6 +1491,182 @@ const distributedPointInBoundary = (boundary, seed) => {
   return [lng, lat];
 };
 
+const METRIC_LAYERS = [
+  { key: 'default', labelKey: 'metricDefault' },
+  { key: 'risk', labelKey: 'metricRisk' },
+  { key: 'coverage', labelKey: 'metricCoverage' },
+  { key: 'analyses', labelKey: 'metricAnalyses' },
+  { key: 'avgBmi', labelKey: 'metricBmi' },
+  { key: 'zRisk', labelKey: 'metricZRisk' },
+  { key: 'activity', labelKey: 'metricActivity' },
+];
+
+const TIME_FILTERS = [
+  { key: 'all', labelKey: 'timeAll', days: null },
+  { key: 'today', labelKey: 'timeToday', days: 1 },
+  { key: '7d', labelKey: 'time7d', days: 7 },
+  { key: '30d', labelKey: 'time30d', days: 30 },
+  { key: 'year', labelKey: 'timeYear', days: 365 },
+  { key: 'custom', labelKey: 'timeCustom', days: null },
+];
+
+const dateKeys = [
+  'created_at',
+  'createdAt',
+  'date',
+  'analysis_date',
+  'exam_date',
+];
+
+const getRecordDate = (row = {}) => {
+  for (const key of dateKeys) {
+    const value = row[key];
+    if (!value) continue;
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
+  return null;
+};
+
+const getTimeWindowStart = (timeFilter) => {
+  const option = TIME_FILTERS.find((item) => item.key === timeFilter);
+  if (!option?.days) return null;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  if (option.days > 1) start.setDate(start.getDate() - option.days + 1);
+  return start;
+};
+
+const recordInTimeWindow = (
+  row,
+  timeFilter,
+  customFrom = '',
+  customTo = ''
+) => {
+  if (row.__source === 'user') return true;
+  const date = getRecordDate(row);
+  if (timeFilter === 'custom') {
+    if (!date) return false;
+    const from = customFrom ? new Date(`${customFrom}T00:00:00`) : null;
+    const to = customTo ? new Date(`${customTo}T23:59:59`) : null;
+    if (from && date < from) return false;
+    if (to && date > to) return false;
+    return Boolean(from || to);
+  }
+  const start = getTimeWindowStart(timeFilter);
+  if (!start) return true;
+  return date ? date >= start : false;
+};
+const getBmiValue = (row) =>
+  getNumericValue(row, ['bmi', 'analysis.bmi', 'result.bmi', 'metrics.bmi']);
+
+const getZValue = (row) =>
+  getNumericValue(row, [
+    'z_score',
+    'zScore',
+    'bmi_z_score',
+    'z_bmi',
+    'analysis.z_score',
+    'result.z_score',
+  ]);
+
+const getRiskReasons = (row) => {
+  const bmi = getBmiValue(row);
+  const z = getZValue(row);
+  return {
+    underweight: Number.isFinite(bmi) && bmi < 18.5,
+    overweight: Number.isFinite(bmi) && bmi >= 25 && bmi < 30,
+    obese: Number.isFinite(bmi) && bmi >= 30,
+    zLow: Number.isFinite(z) && z < -2,
+    zHigh: Number.isFinite(z) && z > 2,
+  };
+};
+
+const isRiskRecord = (row) => Object.values(getRiskReasons(row)).some(Boolean);
+
+const average = (values = []) => {
+  const numeric = values.filter(Number.isFinite);
+  return numeric.length
+    ? numeric.reduce((sum, value) => sum + value, 0) / numeric.length
+    : 0;
+};
+
+const formatMetricNumber = (value, digits = 1) => {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n === 0) return '0';
+  return n.toFixed(digits).replace(/\.0$/, '');
+};
+
+const metricScaleColor = (value, stops) => {
+  const n = Number(value) || 0;
+  for (const stop of stops) {
+    if (n <= stop.max) return stop.color;
+  }
+  return stops[stops.length - 1]?.color || '#64748b';
+};
+
+const getMetricColor = (metricLayer, stats) => {
+  if (metricLayer === 'risk') return getRiskColor(stats.riskRate);
+  if (metricLayer === 'coverage') {
+    return metricScaleColor(stats.coverageQuality, [
+      { max: 0, color: '#94a3b8' },
+      { max: 34, color: '#dc2626' },
+      { max: 67, color: '#f59e0b' },
+      { max: 100, color: '#16a34a' },
+    ]);
+  }
+  if (metricLayer === 'analyses') {
+    return metricScaleColor(stats.patientCount, [
+      { max: 0, color: '#94a3b8' },
+      { max: 4, color: '#93c5fd' },
+      { max: 14, color: '#2563eb' },
+      { max: Number.POSITIVE_INFINITY, color: '#1d4ed8' },
+    ]);
+  }
+  if (metricLayer === 'avgBmi') {
+    return metricScaleColor(stats.avgBmi, [
+      { max: 0, color: '#94a3b8' },
+      { max: 18.49, color: '#3b82f6' },
+      { max: 24.99, color: '#16a34a' },
+      { max: 29.99, color: '#f59e0b' },
+      { max: Number.POSITIVE_INFINITY, color: '#dc2626' },
+    ]);
+  }
+  if (metricLayer === 'zRisk') return getRiskColor(stats.zRiskRate);
+  if (metricLayer === 'activity') {
+    return metricScaleColor(stats.activityCount, [
+      { max: 0, color: '#94a3b8' },
+      { max: 1, color: '#a78bfa' },
+      { max: 3, color: '#7c3aed' },
+      { max: Number.POSITIVE_INFINITY, color: '#5b21b6' },
+    ]);
+  }
+  return null;
+};
+
+const getTrendInfo = (records = []) => {
+  const dated = records
+    .map((record) => ({ record, date: getRecordDate(record) }))
+    .filter((item) => item.date);
+  if (dated.length < 4)
+    return { direction: 'flat', delta: 0, currentRate: 0, previousRate: 0 };
+  dated.sort((a, b) => a.date - b.date);
+  const midpoint = Math.floor(dated.length / 2);
+  const previous = dated.slice(0, midpoint).map((item) => item.record);
+  const current = dated.slice(midpoint).map((item) => item.record);
+  const previousRate = pct(
+    previous.filter(isRiskRecord).length,
+    previous.length
+  );
+  const currentRate = pct(current.filter(isRiskRecord).length, current.length);
+  const delta = currentRate - previousRate;
+  return {
+    direction: delta > 3 ? 'up' : delta < -3 ? 'down' : 'flat',
+    delta,
+    currentRate,
+    previousRate,
+  };
+};
 const getRiskColor = (riskRate) => {
   if (riskRate >= 45) return '#dc2626';
   if (riskRate >= 25) return '#f59e0b';
@@ -1524,6 +1736,8 @@ const addBoundaryLayers = (map, level, beforeId, isDark) => {
           meta.selected,
           ['boolean', ['feature-state', 'hover'], false],
           meta.hover,
+          ['!=', ['coalesce', ['get', 'metric_color'], ''], ''],
+          ['get', 'metric_color'],
           ['boolean', ['get', 'has_patient_data'], false],
           PATIENT_BOUNDARY_COLOR,
           meta.color,
@@ -1938,6 +2152,10 @@ export default function SuperAdminRegionalMap({
   const [loadingRows, setLoadingRows] = useState(false);
   const [loadingBoundary, setLoadingBoundary] = useState(false);
   const [satelliteEnabled, setSatelliteEnabled] = useState(false);
+  const [metricLayer, setMetricLayer] = useState('risk');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
 
   const userRows = directoryUsers.length ? directoryUsers : admins;
 
@@ -1969,13 +2187,12 @@ export default function SuperAdminRegionalMap({
     [analyses, researchRecords, userRows]
   );
 
-  const patientRecords = useMemo(
+  const filteredAllRecords = useMemo(
     () =>
-      allRecords.filter(
-        (row) =>
-          row.__source === 'analysis' || row.__source === 'research_record'
+      allRecords.filter((row) =>
+        recordInTimeWindow(row, timeFilter, customDateFrom, customDateTo)
       ),
-    [allRecords]
+    [allRecords, customDateFrom, customDateTo, timeFilter]
   );
 
   useEffect(() => {
@@ -2181,7 +2398,7 @@ export default function SuperAdminRegionalMap({
   ]);
 
   const selectedRecords = useMemo(() => {
-    if (!selected) return allRecords;
+    if (!selected) return filteredAllRecords;
     const level = Number(selected.admin_leve || selected.admin_level || 1);
     const props = selected.properties || selected || {};
     const { parentRegion, parentDistrict } = getBoundaryContext(
@@ -2191,71 +2408,161 @@ export default function SuperAdminRegionalMap({
       boundaryIndex
     );
 
-    return allRecords.filter((record) =>
+    return filteredAllRecords.filter((record) =>
       recordMatchesBoundary(record, level, props, parentRegion, parentDistrict)
     );
-  }, [allRecords, selected, selectedPath, boundaryIndex]);
+  }, [filteredAllRecords, selected, selectedPath, boundaryIndex]);
 
-  const regionMetrics = useMemo(() => {
-    const byRegion = new Map();
-    (boundaryIndex?.levels?.['1'] || []).forEach((region) => {
-      byRegion.set(region.id, {
-        analyses: 0,
-        admins: 0,
-        researchers: 0,
-        risk: 0,
-        riskRate: 0,
-      });
-    });
-
-    (stats?.by_region || []).forEach((row) => {
-      const region = level1ByName.get(canonicalRegionName(row.region));
-      const metric = region ? byRegion.get(region.id) : null;
-      if (metric) metric.analyses = row.count || 0;
-    });
-
-    (stats?.top_risk_regions || []).forEach((row) => {
-      const region = level1ByName.get(canonicalRegionName(row.region));
-      const metric = region ? byRegion.get(region.id) : null;
-      if (metric) {
-        metric.risk = row.count || 0;
-        metric.riskRate = Number(row.risk_rate || 0);
-      }
-    });
-
-    allRecords.forEach((row) => {
-      const region = level1ByName.get(
-        canonicalRegionName(row.region || row.settlement || row.address)
+  const calculateBoundaryStats = useCallback(
+    (featureOrItem) => {
+      const props = featureOrItem?.properties || featureOrItem || {};
+      const level = Number(props.admin_leve || props.admin_level || 1);
+      const { parentRegion, parentDistrict } = getBoundaryContext(
+        level,
+        props,
+        selectedPath,
+        boundaryIndex
       );
-      const metric = region ? byRegion.get(region.id) : null;
-      if (!metric) return;
-      if (row.__type === 'admin') metric.admins += 1;
-      if (row.__type === 'researcher') metric.researchers += 1;
-    });
-
-    return byRegion;
-  }, [allRecords, boundaryIndex, level1ByName, stats]);
+      const scopedRecords = filteredAllRecords.filter((record) =>
+        recordMatchesBoundary(
+          record,
+          level,
+          props,
+          parentRegion,
+          parentDistrict
+        )
+      );
+      const clinicalRows = scopedRecords.filter(
+        (record) =>
+          record.__source === 'analysis' ||
+          record.__source === 'research_record'
+      );
+      const bmiValues = clinicalRows.map(getBmiValue).filter(Number.isFinite);
+      const zValues = clinicalRows.map(getZValue).filter(Number.isFinite);
+      const riskRows = clinicalRows.filter(isRiskRecord);
+      const reasonCounts = clinicalRows.reduce(
+        (acc, row) => {
+          const reasons = getRiskReasons(row);
+          Object.entries(reasons).forEach(([key, active]) => {
+            if (active) acc[key] += 1;
+          });
+          return acc;
+        },
+        { underweight: 0, overweight: 0, obese: 0, zLow: 0, zHigh: 0 }
+      );
+      const latestDate = clinicalRows
+        .map(getRecordDate)
+        .filter(Boolean)
+        .sort((a, b) => b - a)[0];
+      const recentStart = getTimeWindowStart('30d');
+      const hasRecent =
+        latestDate && recentStart ? latestDate >= recentStart : false;
+      const adminCount = scopedRecords.filter(
+        (record) => record.__type === 'admin'
+      ).length;
+      const researcherCount = scopedRecords.filter(
+        (record) => record.__type === 'researcher'
+      ).length;
+      const zRiskCount = zValues.filter(
+        (value) => value < -2 || value > 2
+      ).length;
+      const statsValue = {
+        patientCount: clinicalRows.length,
+        riskCount: riskRows.length,
+        riskRate: pct(riskRows.length, clinicalRows.length),
+        avgBmi: average(bmiValues),
+        avgZ: average(zValues),
+        zRiskCount,
+        zRiskRate: pct(zRiskCount, zValues.length),
+        adminCount,
+        researcherCount,
+        activityCount: adminCount + researcherCount,
+        latestDate,
+        hasRecent,
+        reasonCounts,
+      };
+      statsValue.coverageQuality = Math.min(
+        100,
+        (statsValue.patientCount > 0 ? 40 : 0) +
+          (statsValue.adminCount > 0 ? 20 : 0) +
+          (statsValue.researcherCount > 0 ? 20 : 0) +
+          (statsValue.hasRecent ? 20 : 0)
+      );
+      statsValue.metricColor = getMetricColor(metricLayer, statsValue);
+      return statsValue;
+    },
+    [boundaryIndex, filteredAllRecords, metricLayer, selectedPath]
+  );
+  const selectedBoundaryStats = useMemo(() => {
+    if (selected) return calculateBoundaryStats(selected);
+    const clinicalRows = selectedRecords.filter(
+      (row) => row.__source === 'analysis' || row.__source === 'research_record'
+    );
+    const bmiValues = clinicalRows.map(getBmiValue).filter(Number.isFinite);
+    const zValues = clinicalRows.map(getZValue).filter(Number.isFinite);
+    const riskRows = clinicalRows.filter(isRiskRecord);
+    const reasonCounts = clinicalRows.reduce(
+      (acc, row) => {
+        const reasons = getRiskReasons(row);
+        Object.entries(reasons).forEach(([key, active]) => {
+          if (active) acc[key] += 1;
+        });
+        return acc;
+      },
+      { underweight: 0, overweight: 0, obese: 0, zLow: 0, zHigh: 0 }
+    );
+    const latestDate = clinicalRows
+      .map(getRecordDate)
+      .filter(Boolean)
+      .sort((a, b) => b - a)[0];
+    const recentStart = getTimeWindowStart('30d');
+    const adminCount = selectedRecords.filter(
+      (row) => row.__type === 'admin'
+    ).length;
+    const researcherCount = selectedRecords.filter(
+      (row) => row.__type === 'researcher'
+    ).length;
+    const zRiskCount = zValues.filter(
+      (value) => value < -2 || value > 2
+    ).length;
+    const statsValue = {
+      patientCount: clinicalRows.length,
+      riskCount: riskRows.length,
+      riskRate: pct(riskRows.length, clinicalRows.length),
+      avgBmi: average(bmiValues),
+      avgZ: average(zValues),
+      zRiskCount,
+      zRiskRate: pct(zRiskCount, zValues.length),
+      adminCount,
+      researcherCount,
+      activityCount: adminCount + researcherCount,
+      latestDate,
+      hasRecent: latestDate && recentStart ? latestDate >= recentStart : false,
+      reasonCounts,
+    };
+    statsValue.coverageQuality = Math.min(
+      100,
+      (statsValue.patientCount > 0 ? 40 : 0) +
+        (statsValue.adminCount > 0 ? 20 : 0) +
+        (statsValue.researcherCount > 0 ? 20 : 0) +
+        (statsValue.hasRecent ? 20 : 0)
+    );
+    statsValue.metricColor = getMetricColor(metricLayer, statsValue);
+    return statsValue;
+  }, [calculateBoundaryStats, metricLayer, selected, selectedRecords]);
 
   const selectedMetric = useMemo(() => {
     const analyses = selectedRecords.filter(
       (row) => row.__type === 'analysis'
     ).length;
-    const admins = selectedRecords.filter(
-      (row) => row.__type === 'admin'
-    ).length;
-    const researchers = selectedRecords.filter(
-      (row) => row.__type === 'researcher'
-    ).length;
-    const regionRisk =
-      selected?.admin_leve === 1 ? regionMetrics.get(selected.id) || {} : {};
     return {
       analyses,
-      admins,
-      researchers,
-      risk: regionRisk.risk || 0,
-      riskRate: regionRisk.riskRate || 0,
+      admins: selectedBoundaryStats.adminCount || 0,
+      researchers: selectedBoundaryStats.researcherCount || 0,
+      risk: selectedBoundaryStats.riskCount || 0,
+      riskRate: selectedBoundaryStats.riskRate || 0,
     };
-  }, [regionMetrics, selected, selectedRecords]);
+  }, [selectedBoundaryStats, selectedRecords]);
 
   const selectedAreaSquareMeters = useMemo(() => {
     if (!selected) return 0;
@@ -2288,42 +2595,14 @@ export default function SuperAdminRegionalMap({
   }, [selected, visibleGeoJson]);
 
   const getBoundaryPatientCount = useCallback(
-    (featureOrItem) => {
-      const props = featureOrItem?.properties || featureOrItem || {};
-      const level = Number(props.admin_leve || 1);
-      const id = props.id;
-
-      if (level === 1) {
-        const fromStats =
-          regionMetrics.get(id)?.analyses ||
-          regionMetrics.get(Number(id))?.analyses;
-        if (fromStats) return fromStats;
-      }
-
-      const { parentRegion, parentDistrict } = getBoundaryContext(
-        level,
-        props,
-        selectedPath,
-        boundaryIndex
-      );
-
-      return patientRecords.filter((record) =>
-        recordMatchesBoundary(
-          record,
-          level,
-          props,
-          parentRegion,
-          parentDistrict
-        )
-      ).length;
-    },
-    [boundaryIndex, patientRecords, regionMetrics, selectedPath]
+    (featureOrItem) => calculateBoundaryStats(featureOrItem).patientCount,
+    [calculateBoundaryStats]
   );
-
   const enrichBoundaryPatientData = useCallback(
     (geoJson = EMPTY_COLLECTION) => ({
       ...geoJson,
       features: (geoJson.features || []).map((feature) => {
+        const metricStats = calculateBoundaryStats(feature);
         const patientCount = getBoundaryPatientCount(feature);
         return {
           ...feature,
@@ -2331,11 +2610,24 @@ export default function SuperAdminRegionalMap({
             ...feature.properties,
             patient_count: patientCount,
             has_patient_data: patientCount > 0,
+            risk_count: metricStats.riskCount,
+            risk_rate: metricStats.riskRate,
+            avg_bmi: metricStats.avgBmi,
+            avg_z: metricStats.avgZ,
+            z_risk_count: metricStats.zRiskCount,
+            z_risk_rate: metricStats.zRiskRate,
+            admin_count: metricStats.adminCount,
+            researcher_count: metricStats.researcherCount,
+            coverage_quality: metricStats.coverageQuality,
+            latest_analysis: metricStats.latestDate
+              ? metricStats.latestDate.toISOString()
+              : '',
+            metric_color: metricStats.metricColor || '',
           },
         };
       }),
     }),
-    [getBoundaryPatientCount]
+    [calculateBoundaryStats, getBoundaryPatientCount]
   );
 
   const enrichedVisibleGeoJson = useMemo(
@@ -2530,8 +2822,9 @@ export default function SuperAdminRegionalMap({
   );
 
   const getSvgFill = useCallback(
-    (level, active, hovered, patientCount = 0) => {
+    (level, active, hovered, patientCount = 0, metricColor = '') => {
       if (active) return mapColors.selected;
+      if (metricColor) return hovered ? mapColors.selected : metricColor;
       if (patientCount > 0)
         return hovered ? mapColors.patientHover : mapColors.patient;
       if (level === 1)
@@ -3700,9 +3993,9 @@ export default function SuperAdminRegionalMap({
   const panelMetricTiles = useMemo(
     () => [
       {
-        label: mt.coverageIndex,
-        value: `${regionalPanelSummary.coveragePct}%`,
-        detail: `${regionalPanelSummary.clinicalCount} / ${Math.max(childCount, 1)} ${mt.coverage || 'qamrov'}`,
+        label: mt.qualityScore || MAP_I18N.uz.qualityScore,
+        value: `${selectedBoundaryStats.coverageQuality || 0}%`,
+        detail: `${selectedBoundaryStats.patientCount || 0} ${mt.patientCount || MAP_I18N.uz.patientCount} / ${selectedBoundaryStats.adminCount || 0} ${mt.admin} / ${selectedBoundaryStats.researcherCount || 0} ${mt.researcher}`,
         color: '#0f766e',
         icon: <Speed sx={{ fontSize: 18 }} />,
       },
@@ -3734,6 +4027,7 @@ export default function SuperAdminRegionalMap({
       mt,
       regionalPanelSummary,
       selectedAreaSquareMeters,
+      selectedBoundaryStats,
       selectedMetric,
     ]
   );
@@ -3830,6 +4124,179 @@ export default function SuperAdminRegionalMap({
     ]
   );
 
+  const metricLayerOptions = useMemo(
+    () =>
+      METRIC_LAYERS.map((option) => ({
+        ...option,
+        label:
+          mt[option.labelKey] || MAP_I18N.uz[option.labelKey] || option.key,
+      })),
+    [mt]
+  );
+
+  const timeFilterOptions = useMemo(
+    () =>
+      TIME_FILTERS.map((option) => ({
+        ...option,
+        label:
+          mt[option.labelKey] || MAP_I18N.uz[option.labelKey] || option.key,
+      })),
+    [mt]
+  );
+
+  const trendInfo = useMemo(
+    () =>
+      getTrendInfo(
+        selectedRecords.filter(
+          (row) =>
+            row.__source === 'analysis' || row.__source === 'research_record'
+        )
+      ),
+    [selectedRecords]
+  );
+
+  const trendLabel =
+    trendInfo.direction === 'up'
+      ? mt.trendUp || MAP_I18N.uz.trendUp
+      : trendInfo.direction === 'down'
+        ? mt.trendDown || MAP_I18N.uz.trendDown
+        : mt.trendFlat || MAP_I18N.uz.trendFlat;
+
+  const riskReasonRows = useMemo(
+    () => [
+      {
+        label: mt.underweight,
+        value: selectedBoundaryStats.reasonCounts?.underweight || 0,
+        color: '#3b82f6',
+      },
+      {
+        label: mt.overweight,
+        value: selectedBoundaryStats.reasonCounts?.overweight || 0,
+        color: '#f59e0b',
+      },
+      {
+        label: mt.obese,
+        value: selectedBoundaryStats.reasonCounts?.obese || 0,
+        color: '#dc2626',
+      },
+      {
+        label: 'Z < -2',
+        value: selectedBoundaryStats.reasonCounts?.zLow || 0,
+        color: '#2563eb',
+      },
+      {
+        label: 'Z > +2',
+        value: selectedBoundaryStats.reasonCounts?.zHigh || 0,
+        color: '#b91c1c',
+      },
+    ],
+    [mt, selectedBoundaryStats]
+  );
+
+  const visibleProblemRows = useMemo(
+    () =>
+      (enrichedVisibleGeoJson.features || []).map((feature) => {
+        const props = feature.properties || {};
+        return {
+          feature,
+          props,
+          id: props.boundary_id || feature.id,
+          level: Number(props.admin_leve || 1),
+          name: localizedFeatureName(props, lang),
+          patientCount: Number(props.patient_count || 0),
+          riskRate: Number(props.risk_rate || 0),
+          riskCount: Number(props.risk_count || 0),
+          coverageQuality: Number(props.coverage_quality || 0),
+          avgBmi: Number(props.avg_bmi || 0),
+          zRiskRate: Number(props.z_risk_rate || 0),
+        };
+      }),
+    [enrichedVisibleGeoJson, lang]
+  );
+
+  const topRiskAreas = useMemo(
+    () =>
+      visibleProblemRows
+        .filter((row) => row.patientCount > 0)
+        .sort((a, b) => b.riskRate - a.riskRate || b.riskCount - a.riskCount)
+        .slice(0, 5),
+    [visibleProblemRows]
+  );
+
+  const lowCoverageAreas = useMemo(
+    () =>
+      visibleProblemRows
+        .sort(
+          (a, b) =>
+            a.coverageQuality - b.coverageQuality ||
+            a.patientCount - b.patientCount
+        )
+        .slice(0, 5),
+    [visibleProblemRows]
+  );
+
+  const highPatientAreas = useMemo(
+    () =>
+      visibleProblemRows
+        .filter((row) => row.patientCount > 0)
+        .sort((a, b) => b.patientCount - a.patientCount)
+        .slice(0, 5),
+    [visibleProblemRows]
+  );
+
+  const emptyMahallaCount = useMemo(
+    () =>
+      visibleProblemRows.filter(
+        (row) => row.level === 3 && row.patientCount === 0
+      ).length,
+    [visibleProblemRows]
+  );
+
+  const handleProblemAreaClick = useCallback(
+    (row) => {
+      if (!row?.feature) return;
+      const props = row.feature.properties || row.props || {};
+      selectBoundary(
+        {
+          ...props,
+          id: Number(props.id),
+          parent_id: Number(props.parent_id),
+          admin_leve: row.level,
+          bbox: getFeatureBounds(row.feature),
+          center: parseMaybeJson(props.center),
+          boundary_id: props.boundary_id || row.feature.id,
+          geometry: row.feature.geometry,
+        },
+        row.level
+      );
+    },
+    [selectBoundary]
+  );
+
+  const getBoundaryTooltipText = useCallback(
+    (featureOrProps) => {
+      const props = featureOrProps?.properties || featureOrProps || {};
+      const latest = props.latest_analysis
+        ? new Date(props.latest_analysis)
+        : null;
+      const latestLabel =
+        latest && !Number.isNaN(latest.getTime())
+          ? latest.toLocaleDateString(locale)
+          : mt.notSpecified;
+      return [
+        localizedFeatureName(props, lang),
+        `n=${Number(props.patient_count || 0)}`,
+        `${mt.riskSignal}: ${Number(props.risk_rate || 0)}%`,
+        `${mt.avgBmi || MAP_I18N.uz.avgBmi}: ${formatMetricNumber(props.avg_bmi)}`,
+        `${mt.zRisk || MAP_I18N.uz.zRisk}: ${Number(props.z_risk_rate || 0)}%`,
+        `${mt.admin}: ${Number(props.admin_count || 0)} / ${mt.researcher}: ${Number(
+          props.researcher_count || 0
+        )}`,
+        `${mt.latestAnalysis || MAP_I18N.uz.latestAnalysis}: ${latestLabel}`,
+      ].join('\n');
+    },
+    [lang, locale, mt]
+  );
   const levelLabel = selected
     ? { 1: mt.region, 2: mt.district, 3: mt.mahalla }[selected.admin_leve]
     : mt.country;
@@ -3845,13 +4312,16 @@ export default function SuperAdminRegionalMap({
     [mt]
   );
 
-  const formatDateTime = (value) => {
-    if (!value) return '';
-    const date = new Date(value);
-    return Number.isNaN(date.getTime())
-      ? String(value)
-      : date.toLocaleString(locale);
-  };
+  const formatDateTime = useCallback(
+    (value) => {
+      if (!value) return '';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime())
+        ? String(value)
+        : date.toLocaleString(locale);
+    },
+    [locale]
+  );
 
   const selectedPinDetails = useMemo(() => {
     if (!selectedPin) return [];
@@ -3903,7 +4373,7 @@ export default function SuperAdminRegionalMap({
     return rows.filter(
       ([, value]) => value !== undefined && value !== null && value !== ''
     );
-  }, [getPinRoleLabel, lang, mt, selectedPin]);
+  }, [formatDateTime, getPinRoleLabel, lang, mt, selectedPin]);
 
   const handleChat = (pin = selectedPin) => {
     if (!pin?.userId) {
@@ -4178,7 +4648,13 @@ export default function SuperAdminRegionalMap({
                         data-boundary-id={boundaryId}
                         data-level={level}
                         d={path}
-                        fill={getSvgFill(level, active, hovered, patientCount)}
+                        fill={getSvgFill(
+                          level,
+                          active,
+                          hovered,
+                          patientCount,
+                          props.metric_color
+                        )}
                         fillOpacity={
                           (active
                             ? level === 1
@@ -4239,12 +4715,7 @@ export default function SuperAdminRegionalMap({
                           selectBoundary(item, level);
                         }}
                       >
-                        <title>
-                          {(
-                            mt.patientDataTooltip ||
-                            MAP_I18N.uz.patientDataTooltip
-                          )(localizedFeatureName(item, lang), patientCount)}
-                        </title>
+                        <title>{getBoundaryTooltipText(item)}</title>
                       </path>
                     );
                   })}
@@ -4382,7 +4853,9 @@ export default function SuperAdminRegionalMap({
                           fill={dotColor}
                           opacity="0.96"
                         />
-                        <title>{`${props.name} - ${props.role || props.type}`}</title>
+                        <title>
+                          {props.name || props.email || props.type || 'Pin'}
+                        </title>
                       </g>
                     );
                   })}
@@ -4727,6 +5200,83 @@ export default function SuperAdminRegionalMap({
               />
             </Stack>
           </Paper>
+          <Paper
+            elevation={0}
+            sx={{
+              position: 'absolute',
+              left: 16,
+              bottom: 16,
+              zIndex: 3,
+              p: 1,
+              borderRadius: 1.5,
+              border: '1px solid',
+              borderColor: isDark
+                ? 'rgba(148,163,184,0.24)'
+                : 'rgba(15,23,42,0.12)',
+              bgcolor: isDark ? 'rgba(15,23,42,0.9)' : 'rgba(255,255,255,0.94)',
+              backdropFilter: 'blur(10px)',
+              maxWidth: 'calc(100% - 88px)',
+            }}
+          >
+            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+              <Select
+                size="small"
+                value={metricLayer}
+                onChange={(event) => setMetricLayer(event.target.value)}
+                sx={{
+                  minWidth: 156,
+                  fontWeight: 900,
+                  bgcolor: 'background.paper',
+                  '& .MuiSelect-select': { py: 0.75 },
+                }}
+              >
+                {metricLayerOptions.map((option) => (
+                  <MenuItem key={option.key} value={option.key}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              <Select
+                size="small"
+                value={timeFilter}
+                onChange={(event) => setTimeFilter(event.target.value)}
+                sx={{
+                  minWidth: 112,
+                  fontWeight: 900,
+                  bgcolor: 'background.paper',
+                  '& .MuiSelect-select': { py: 0.75 },
+                }}
+              >
+                {timeFilterOptions.map((option) => (
+                  <MenuItem key={option.key} value={option.key}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+              {timeFilter === 'custom' && (
+                <>
+                  <TextField
+                    size="small"
+                    type="date"
+                    value={customDateFrom}
+                    onChange={(event) => setCustomDateFrom(event.target.value)}
+                    label={mt.dateFrom || MAP_I18N.uz.dateFrom}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ width: 148, bgcolor: 'background.paper' }}
+                  />
+                  <TextField
+                    size="small"
+                    type="date"
+                    value={customDateTo}
+                    onChange={(event) => setCustomDateTo(event.target.value)}
+                    label={mt.dateTo || MAP_I18N.uz.dateTo}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ width: 148, bgcolor: 'background.paper' }}
+                  />
+                </>
+              )}
+            </Stack>
+          </Paper>
           <Tooltip title={mt.selectedBack}>
             <IconButton
               onClick={zoomToSelected}
@@ -4914,6 +5464,232 @@ export default function SuperAdminRegionalMap({
                   <RegionalInsightRow key={item.label} {...item} />
                 ))}
               </Stack>
+            </Box>
+            <Box mt={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                <Speed sx={{ fontSize: 18, color: 'primary.main' }} />
+                <Typography variant="body2" fontWeight={900}>
+                  {mt.qualityScore || MAP_I18N.uz.qualityScore}
+                </Typography>
+              </Stack>
+              <Stack spacing={0.9}>
+                <Box>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    mb={0.45}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={800}
+                    >
+                      {mt.trend || MAP_I18N.uz.trend}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      fontWeight={900}
+                      sx={{
+                        color:
+                          trendInfo.direction === 'up'
+                            ? '#dc2626'
+                            : trendInfo.direction === 'down'
+                              ? '#0f766e'
+                              : 'text.secondary',
+                      }}
+                    >
+                      {trendLabel}{' '}
+                      {trendInfo.delta
+                        ? `(${trendInfo.delta > 0 ? '+' : ''}${trendInfo.delta}%)`
+                        : ''}
+                    </Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(
+                      selectedBoundaryStats.coverageQuality || 0,
+                      100
+                    )}
+                    sx={{
+                      height: 9,
+                      borderRadius: 5,
+                      bgcolor: 'rgba(100,116,139,0.14)',
+                      '& .MuiLinearProgress-bar': { bgcolor: '#0f766e' },
+                    }}
+                  />
+                </Box>
+                <Stack
+                  direction="row"
+                  spacing={0.75}
+                  useFlexGap
+                  flexWrap="wrap"
+                >
+                  {[
+                    [mt.patientExists, selectedBoundaryStats.patientCount > 0],
+                    [mt.admin, selectedBoundaryStats.adminCount > 0],
+                    [mt.researcher, selectedBoundaryStats.researcherCount > 0],
+                    [mt.lastActivity, selectedBoundaryStats.hasRecent],
+                  ].map(([label, active]) => (
+                    <Chip
+                      key={label}
+                      size="small"
+                      label={label}
+                      sx={{
+                        fontWeight: 800,
+                        bgcolor: active
+                          ? 'rgba(15,118,110,0.14)'
+                          : 'rgba(100,116,139,0.12)',
+                        color: active ? '#0f766e' : 'text.secondary',
+                      }}
+                    />
+                  ))}
+                </Stack>
+              </Stack>
+            </Box>
+
+            <Box mt={1.5}>
+              <Typography variant="body2" fontWeight={900} mb={1}>
+                {mt.riskReasons || MAP_I18N.uz.riskReasons}
+              </Typography>
+              <Stack spacing={0.75}>
+                {riskReasonRows.map((row) => (
+                  <Box key={row.label}>
+                    <Stack
+                      direction="row"
+                      justifyContent="space-between"
+                      mb={0.35}
+                    >
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={800}
+                      >
+                        {row.label}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        fontWeight={900}
+                        sx={{ color: row.color }}
+                      >
+                        {row.value}
+                      </Typography>
+                    </Stack>
+                    <Box
+                      sx={{
+                        height: 7,
+                        borderRadius: 4,
+                        bgcolor: 'rgba(100,116,139,0.14)',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          height: '100%',
+                          width: `${Math.max((row.value / Math.max(selectedBoundaryStats.patientCount || 1, 1)) * 100, row.value ? 7 : 0)}%`,
+                          borderRadius: 4,
+                          bgcolor: row.color,
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+
+            <Box mt={1.75}>
+              <Typography variant="body2" fontWeight={900} mb={1}>
+                {mt.topProblemAreas || MAP_I18N.uz.topProblemAreas}
+              </Typography>
+              {[
+                [
+                  mt.highestRisk || MAP_I18N.uz.highestRisk,
+                  topRiskAreas,
+                  (row) => `${row.riskRate}% / n=${row.patientCount}`,
+                  '#dc2626',
+                ],
+                [
+                  mt.lowestCoverage || MAP_I18N.uz.lowestCoverage,
+                  lowCoverageAreas,
+                  (row) => `${row.coverageQuality}% / n=${row.patientCount}`,
+                  '#f59e0b',
+                ],
+                [
+                  mt.mostPatients || MAP_I18N.uz.mostPatients,
+                  highPatientAreas,
+                  (row) => `n=${row.patientCount}`,
+                  '#2563eb',
+                ],
+              ].map(([title, rows, valueFn, color]) => (
+                <Box key={title} sx={{ mb: 1.1 }}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={0.5}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={900}
+                    >
+                      {title}
+                    </Typography>
+                    {title ===
+                      (mt.lowestCoverage || MAP_I18N.uz.lowestCoverage) &&
+                      emptyMahallaCount > 0 && (
+                        <Chip
+                          size="small"
+                          label={`${mt.emptyMahallas || MAP_I18N.uz.emptyMahallas}: ${emptyMahallaCount}`}
+                          sx={{ height: 22, fontWeight: 800 }}
+                        />
+                      )}
+                  </Stack>
+                  <Stack spacing={0.45}>
+                    {rows.length ? (
+                      rows.map((row) => (
+                        <Button
+                          key={`${title}-${row.id}`}
+                          size="small"
+                          onClick={() => handleProblemAreaClick(row)}
+                          sx={{
+                            justifyContent: 'space-between',
+                            gap: 1,
+                            borderRadius: 1,
+                            px: 1,
+                            py: 0.55,
+                            textTransform: 'none',
+                            bgcolor: 'rgba(100,116,139,0.08)',
+                            color: 'text.primary',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            fontWeight={800}
+                            noWrap
+                            sx={{ maxWidth: 170 }}
+                          >
+                            {row.name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            fontWeight={900}
+                            sx={{ color }}
+                          >
+                            {valueFn(row)}
+                          </Typography>
+                        </Button>
+                      ))
+                    ) : (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        fontWeight={700}
+                      >
+                        {mt.noPatientData || MAP_I18N.uz.noPatientData}
+                      </Typography>
+                    )}
+                  </Stack>
+                </Box>
+              ))}
             </Box>
             {selectedPin && (
               <Box

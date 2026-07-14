@@ -1189,205 +1189,215 @@ export default function SecuritySettings() {
               transition={{ duration: 0.3 }}
             >
               <GlassPaper>
-            <Box display="flex" alignItems="center" mb={4}>
-              <Box
-                sx={{
-                  p: 1.2,
-                  borderRadius: 2.5,
-                  background:
-                    'linear-gradient(135deg, #3f51b5 0%, #2196f3 100%)',
-                  color: 'white',
-                  display: 'flex',
-                  mr: 2,
-                  boxShadow: '0 4px 20px 0 rgba(33, 150, 243, 0.3)',
-                }}
-              >
-                <Lock />
-              </Box>
-              <Typography variant="h5" fontWeight={850} letterSpacing="-0.5px">
-                {pt('changePassword')}
-              </Typography>
-            </Box>
-
-            <form onSubmit={handleUpdatePassword}>
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  label={pt('currentPassword')}
-                  type="text"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  variant="outlined"
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <VpnKey sx={{ color: 'primary.main', mr: 0.5 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          type="button"
-                          onClick={() => setShowCurrent(!showCurrent)}
-                          onMouseDown={(e) => e.preventDefault()}
-                          edge="end"
-                          size="small"
-                          sx={visibilityButtonSx}
-                        >
-                          {showCurrent ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={passwordFieldSx(!showCurrent)}
-                />
-
-                <TextField
-                  fullWidth
-                  label={pt('newPassword')}
-                  type="text"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  variant="outlined"
-                  required
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockOutlined sx={{ color: 'primary.main', mr: 0.5 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          type="button"
-                          onClick={() => setShowNew(!showNew)}
-                          onMouseDown={(e) => e.preventDefault()}
-                          edge="end"
-                          size="small"
-                          sx={visibilityButtonSx}
-                        >
-                          {showNew ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={passwordFieldSx(!showNew)}
-                />
-
-                <TextField
-                  fullWidth
-                  label={pt('confirmNewPassword')}
-                  type="text"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  variant="outlined"
-                  required
-                  error={Boolean(
-                    confirmPassword && newPassword !== confirmPassword
-                  )}
-                  helperText={
-                    confirmPassword && newPassword !== confirmPassword
-                      ? lt('mismatch')
-                      : confirmPassword && newPassword === confirmPassword
-                        ? lt('match')
-                        : ''
-                  }
-                  FormHelperTextProps={{
-                    sx: {
-                      fontWeight: 600,
-                      color:
-                        confirmPassword && newPassword === confirmPassword
-                          ? '#4caf50 !important'
-                          : undefined,
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockOutlined sx={{ color: 'primary.main', mr: 0.5 }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          type="button"
-                          onClick={() => setShowConfirm(!showConfirm)}
-                          onMouseDown={(e) => e.preventDefault()}
-                          edge="end"
-                          size="small"
-                          sx={visibilityButtonSx}
-                        >
-                          {showConfirm ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={passwordFieldSx(!showConfirm, {
-                    '&.Mui-focused': {
-                      '& fieldset': {
-                        borderColor: (theme) =>
-                          confirmPassword && newPassword !== confirmPassword
-                            ? theme.palette.error.main
-                            : 'primary.main',
-                        borderWidth: '2px',
-                        boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
-                      },
-                    },
-                  })}
-                />
-
-                <Box sx={{ mt: 1.5 }}>
-                  <Button
-                    fullWidth
-                    size="large"
-                    type="submit"
-                    disabled={!isFormValid || loading}
+                <Box display="flex" alignItems="center" mb={4}>
+                  <Box
                     sx={{
-                      py: 2,
-                      borderRadius: 3.5,
-                      fontWeight: 750,
-                      textTransform: 'none',
-                      fontSize: '1.05rem',
-                      color: 'white !important',
-                      background: isFormValid
-                        ? 'linear-gradient(135deg, #3f51b5 0%, #2196f3 100%)'
-                        : 'rgba(255, 255, 255, 0.12)',
-                      boxShadow: isFormValid
-                        ? '0 6px 20px 0 rgba(33, 150, 243, 0.35)'
-                        : 'none',
-                      transition: 'all 0.3s ease',
-                      '&.Mui-disabled': {
-                        color: 'rgba(255, 255, 255, 0.3) !important',
-                        background: (theme) =>
-                          theme.palette.mode === 'dark'
-                            ? 'rgba(255, 255, 255, 0.05)'
-                            : 'rgba(0, 0, 0, 0.05)',
-                      },
-                      '&:hover': {
-                        background: isFormValid
-                          ? 'linear-gradient(135deg, #303f9f 0%, #1976d2 100%)'
-                          : undefined,
-                        boxShadow: isFormValid
-                          ? '0 8px 25px 0 rgba(33, 150, 243, 0.45)'
-                          : undefined,
-                        transform: isFormValid ? 'translateY(-1.5px)' : 'none',
-                      },
-                      '&:active': {
-                        transform: 'none',
-                      },
+                      p: 1.2,
+                      borderRadius: 2.5,
+                      background:
+                        'linear-gradient(135deg, #3f51b5 0%, #2196f3 100%)',
+                      color: 'white',
+                      display: 'flex',
+                      mr: 2,
+                      boxShadow: '0 4px 20px 0 rgba(33, 150, 243, 0.3)',
                     }}
                   >
-                    {loading ? (
-                      <CircularProgress size={24} color="inherit" />
-                    ) : (
-                      pt('update')
-                    )}
-                  </Button>
+                    <Lock />
+                  </Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight={850}
+                    letterSpacing="-0.5px"
+                  >
+                    {pt('changePassword')}
+                  </Typography>
                 </Box>
-              </Stack>
-            </form>
-          </GlassPaper>
+
+                <form onSubmit={handleUpdatePassword}>
+                  <Stack spacing={3}>
+                    <TextField
+                      fullWidth
+                      label={pt('currentPassword')}
+                      type="text"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      variant="outlined"
+                      required
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <VpnKey sx={{ color: 'primary.main', mr: 0.5 }} />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              type="button"
+                              onClick={() => setShowCurrent(!showCurrent)}
+                              onMouseDown={(e) => e.preventDefault()}
+                              edge="end"
+                              size="small"
+                              sx={visibilityButtonSx}
+                            >
+                              {showCurrent ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={passwordFieldSx(!showCurrent)}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label={pt('newPassword')}
+                      type="text"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      variant="outlined"
+                      required
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockOutlined
+                              sx={{ color: 'primary.main', mr: 0.5 }}
+                            />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              type="button"
+                              onClick={() => setShowNew(!showNew)}
+                              onMouseDown={(e) => e.preventDefault()}
+                              edge="end"
+                              size="small"
+                              sx={visibilityButtonSx}
+                            >
+                              {showNew ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={passwordFieldSx(!showNew)}
+                    />
+
+                    <TextField
+                      fullWidth
+                      label={pt('confirmNewPassword')}
+                      type="text"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      variant="outlined"
+                      required
+                      error={Boolean(
+                        confirmPassword && newPassword !== confirmPassword
+                      )}
+                      helperText={
+                        confirmPassword && newPassword !== confirmPassword
+                          ? lt('mismatch')
+                          : confirmPassword && newPassword === confirmPassword
+                            ? lt('match')
+                            : ''
+                      }
+                      FormHelperTextProps={{
+                        sx: {
+                          fontWeight: 600,
+                          color:
+                            confirmPassword && newPassword === confirmPassword
+                              ? '#4caf50 !important'
+                              : undefined,
+                        },
+                      }}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockOutlined
+                              sx={{ color: 'primary.main', mr: 0.5 }}
+                            />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              type="button"
+                              onClick={() => setShowConfirm(!showConfirm)}
+                              onMouseDown={(e) => e.preventDefault()}
+                              edge="end"
+                              size="small"
+                              sx={visibilityButtonSx}
+                            >
+                              {showConfirm ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={passwordFieldSx(!showConfirm, {
+                        '&.Mui-focused': {
+                          '& fieldset': {
+                            borderColor: (theme) =>
+                              confirmPassword && newPassword !== confirmPassword
+                                ? theme.palette.error.main
+                                : 'primary.main',
+                            borderWidth: '2px',
+                            boxShadow: '0 0 12px rgba(33, 150, 243, 0.25)',
+                          },
+                        },
+                      })}
+                    />
+
+                    <Box sx={{ mt: 1.5 }}>
+                      <Button
+                        fullWidth
+                        size="large"
+                        type="submit"
+                        disabled={!isFormValid || loading}
+                        sx={{
+                          py: 2,
+                          borderRadius: 3.5,
+                          fontWeight: 750,
+                          textTransform: 'none',
+                          fontSize: '1.05rem',
+                          color: 'white !important',
+                          background: isFormValid
+                            ? 'linear-gradient(135deg, #3f51b5 0%, #2196f3 100%)'
+                            : 'rgba(255, 255, 255, 0.12)',
+                          boxShadow: isFormValid
+                            ? '0 6px 20px 0 rgba(33, 150, 243, 0.35)'
+                            : 'none',
+                          transition: 'all 0.3s ease',
+                          '&.Mui-disabled': {
+                            color: 'rgba(255, 255, 255, 0.3) !important',
+                            background: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(255, 255, 255, 0.05)'
+                                : 'rgba(0, 0, 0, 0.05)',
+                          },
+                          '&:hover': {
+                            background: isFormValid
+                              ? 'linear-gradient(135deg, #303f9f 0%, #1976d2 100%)'
+                              : undefined,
+                            boxShadow: isFormValid
+                              ? '0 8px 25px 0 rgba(33, 150, 243, 0.45)'
+                              : undefined,
+                            transform: isFormValid
+                              ? 'translateY(-1.5px)'
+                              : 'none',
+                          },
+                          '&:active': {
+                            transform: 'none',
+                          },
+                        }}
+                      >
+                        {loading ? (
+                          <CircularProgress size={24} color="inherit" />
+                        ) : (
+                          pt('update')
+                        )}
+                      </Button>
+                    </Box>
+                  </Stack>
+                </form>
+              </GlassPaper>
             </Grid>
           )}
         </AnimatePresence>
@@ -1410,586 +1420,625 @@ export default function SecuritySettings() {
         >
           <Stack spacing={4}>
             <AnimatePresence mode="wait">
-              {user?.role === 'superadmin' && activeSecurityView === 'alerts' && (
+              {user?.role === 'superadmin' &&
+                activeSecurityView === 'alerts' && (
+                  <motion.div
+                    key="alerts-view"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <GlassPaper
+                      sx={{
+                        borderColor:
+                          securitySummary.critical > 0
+                            ? 'rgba(244, 67, 54, 0.45)'
+                            : securitySummary.unread > 0
+                              ? 'rgba(255, 152, 0, 0.35)'
+                              : undefined,
+                      }}
+                    >
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        gap={2}
+                        mb={2.5}
+                      >
+                        <Box>
+                          <Typography variant="h6" fontWeight={850}>
+                            {lt('securityEvents')}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            fontWeight={600}
+                          >
+                            {lt('loginAttemptsAndBlocked')}
+                          </Typography>
+                        </Box>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          <Chip
+                            size="small"
+                            color={
+                              securitySummary.unread ? 'warning' : 'success'
+                            }
+                            label={`${securitySummary.unread} ${lt('newCount')}`}
+                            sx={{ fontWeight: 800 }}
+                          />
+                          {securitySummary.critical > 0 && (
+                            <Chip
+                              size="small"
+                              color="error"
+                              label={`${securitySummary.critical} ${sl('criticalCount')}`}
+                              sx={{ fontWeight: 800 }}
+                            />
+                          )}
+                          <Chip
+                            size="small"
+                            color="error"
+                            variant="outlined"
+                            label={`${securitySummary.blocked || 0} ${sl('blockedIps')}`}
+                            sx={{ fontWeight: 800 }}
+                          />
+                          <Chip
+                            size="small"
+                            color={
+                              securitySummary.highRisk || 0
+                                ? 'error'
+                                : 'success'
+                            }
+                            variant="outlined"
+                            label={`${securitySummary.highRisk || 0} ${sl('highRiskEvents')}`}
+                            sx={{ fontWeight: 800 }}
+                          />
+                        </Stack>
+                      </Box>
+
+                      {securitySummary.threatSummary?.length > 0 && (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                          sx={{ mb: 2 }}
+                        >
+                          {securitySummary.threatSummary.map((item) => (
+                            <Chip
+                              key={item.threat_type}
+                              size="small"
+                              label={`${sl(item.threat_type)}: ${item.count}`}
+                              sx={{ fontWeight: 800 }}
+                            />
+                          ))}
+                        </Stack>
+                      )}
+                      {securitySummary.critical > 0 && (
+                        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                          {lt('criticalEventAlert')}
+                        </Alert>
+                      )}
+
+                      {securityLoading ? (
+                        <Box display="flex" justifyContent="center" py={3}>
+                          <CircularProgress size={26} />
+                        </Box>
+                      ) : securityEvents.length ? (
+                        <Stack spacing={1.5}>
+                          <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{
+                              px: 1,
+                              pb: 1,
+                              borderBottom: '1px solid',
+                              borderColor: 'divider',
+                            }}
+                          >
+                            <Box display="flex" alignItems="center">
+                              <Checkbox
+                                size="small"
+                                checked={
+                                  securityEvents.filter((e) => !e.is_blocked)
+                                    .length > 0 &&
+                                  selectedEvents.length ===
+                                    securityEvents.filter((e) => !e.is_blocked)
+                                      .length
+                                }
+                                indeterminate={
+                                  selectedEvents.length > 0 &&
+                                  selectedEvents.length <
+                                    securityEvents.filter((e) => !e.is_blocked)
+                                      .length
+                                }
+                                onChange={handleSelectAllEvents}
+                              />
+                              <Typography
+                                variant="caption"
+                                fontWeight={600}
+                                color="text.secondary"
+                              >
+                                {lt('selectAll')}
+                              </Typography>
+                            </Box>
+                            {selectedEvents.length > 0 && (
+                              <Button
+                                size="small"
+                                color="error"
+                                variant="contained"
+                                disabled={blockingLoading}
+                                onClick={handleBlockSelectedIps}
+                                sx={{
+                                  textTransform: 'none',
+                                  fontWeight: 800,
+                                  borderRadius: 2,
+                                }}
+                              >
+                                {blockingLoading ? (
+                                  <CircularProgress size={16} color="inherit" />
+                                ) : (
+                                  lt('blockSelectedIps')
+                                )}
+                              </Button>
+                            )}
+                          </Box>
+                          {securityEvents.map((event) => (
+                            <Box
+                              key={event.id}
+                              sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                border: '1px solid',
+                                borderColor:
+                                  event.status === 'new'
+                                    ? 'rgba(255, 152, 0, 0.28)'
+                                    : 'divider',
+                                bgcolor: (theme) =>
+                                  theme.palette.mode === 'dark'
+                                    ? 'rgba(255,255,255,0.035)'
+                                    : 'rgba(0,0,0,0.025)',
+                              }}
+                            >
+                              <Box
+                                display="flex"
+                                alignItems="flex-start"
+                                gap={1}
+                              >
+                                <Checkbox
+                                  size="medium"
+                                  color="primary"
+                                  checked={
+                                    selectedEvents.includes(event.id) ||
+                                    event.is_blocked
+                                  }
+                                  disabled={event.is_blocked}
+                                  onChange={() => handleSelectEvent(event.id)}
+                                  sx={{ mt: -0.5, ml: -1 }}
+                                />
+                                <Box flex={1}>
+                                  <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    gap={1}
+                                  >
+                                    <Typography
+                                      variant="body2"
+                                      fontWeight={800}
+                                    >
+                                      {lt(event.event_type)}
+                                    </Typography>
+                                    <Box display="flex" gap={1}>
+                                      {event.is_blocked && (
+                                        <Chip
+                                          size="small"
+                                          color="error"
+                                          variant="outlined"
+                                          label={lt('ipBlocked')}
+                                          sx={{ height: 22, fontWeight: 800 }}
+                                        />
+                                      )}
+                                      <Chip
+                                        size="small"
+                                        color={
+                                          severityColors[event.severity] ||
+                                          'default'
+                                        }
+                                        label={sl(event.severity)}
+                                        sx={{ height: 22, fontWeight: 800 }}
+                                      />
+                                      <Chip
+                                        size="small"
+                                        color={
+                                          (event.risk_score || 0) >= 75
+                                            ? 'error'
+                                            : (event.risk_score || 0) >= 45
+                                              ? 'warning'
+                                              : 'success'
+                                        }
+                                        variant="outlined"
+                                        label={`${lt('riskScore')}: ${event.risk_score || 0}`}
+                                        sx={{ height: 22, fontWeight: 800 }}
+                                      />
+                                    </Box>
+                                  </Box>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                  >
+                                    {formatSecurityDate(event.created_at)} - IP:{' '}
+                                    {event.ip_address || '-'} - {lt('attempt')}:{' '}
+                                    {event.attempts || 1}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                  >
+                                    {getSecurityMetaLabel(
+                                      lt,
+                                      'location',
+                                      'Location'
+                                    )}
+                                    : {getSecurityLocationLabel(event)}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    display="block"
+                                  >
+                                    {getSecurityMetaLabel(
+                                      lt,
+                                      'device',
+                                      'Device'
+                                    )}
+                                    : {getSecurityDeviceLabel(event)} -{' '}
+                                    {getSecurityMetaLabel(lt, 'app', 'App')}:{' '}
+                                    {getSecurityProgramLabel(event)}
+                                  </Typography>
+                                  {(event.threat_type ||
+                                    event.action_taken) && (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      display="block"
+                                    >
+                                      {lt('threatType')}:{' '}
+                                      {sl(event.threat_type)} -{' '}
+                                      {lt('actionTaken')}:{' '}
+                                      {sl(event.action_taken)}
+                                    </Typography>
+                                  )}
+                                  {event.matched_signals && (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      display="block"
+                                      sx={{ wordBreak: 'break-word' }}
+                                    >
+                                      {lt('signals')}: {event.matched_signals}
+                                    </Typography>
+                                  )}
+                                  {event.email && (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      display="block"
+                                    >
+                                      Email: {event.email}
+                                    </Typography>
+                                  )}
+                                  {formatSecurityEventDetails(event) && (
+                                    <Typography
+                                      variant="caption"
+                                      color="text.secondary"
+                                      display="block"
+                                    >
+                                      {formatSecurityEventDetails(event)}
+                                    </Typography>
+                                  )}
+                                  <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    flexWrap="wrap"
+                                    useFlexGap
+                                    sx={{ mt: 1 }}
+                                  >
+                                    <Button
+                                      size="small"
+                                      variant="outlined"
+                                      disabled={
+                                        blockingLoading ||
+                                        event.status === 'false_positive'
+                                      }
+                                      onClick={() => handleFalsePositive(event)}
+                                      sx={{
+                                        textTransform: 'none',
+                                        fontWeight: 800,
+                                      }}
+                                    >
+                                      {lt('falsePositive')}
+                                    </Button>
+                                    {event.is_blocked && event.ip_address && (
+                                      <Button
+                                        size="small"
+                                        color="warning"
+                                        variant="outlined"
+                                        disabled={blockingLoading}
+                                        onClick={() =>
+                                          handleUnblockEventIp(event)
+                                        }
+                                        sx={{
+                                          textTransform: 'none',
+                                          fontWeight: 800,
+                                        }}
+                                      >
+                                        {lt('unblockIp')}
+                                      </Button>
+                                    )}
+                                  </Stack>
+                                </Box>
+                              </Box>
+                            </Box>
+                          ))}
+                        </Stack>
+                      ) : (
+                        <Alert severity="success" sx={{ borderRadius: 2 }}>
+                          {lt('noSuspiciousLoginAttempts')}
+                        </Alert>
+                      )}
+
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        disabled={!securitySummary.unread || securityLoading}
+                        onClick={handleMarkSecurityRead}
+                        sx={{
+                          mt: 2,
+                          borderRadius: 2,
+                          textTransform: 'none',
+                          fontWeight: 800,
+                        }}
+                      >
+                        {lt('markAllRead')}
+                      </Button>
+                    </GlassPaper>
+                  </motion.div>
+                )}
+
+              {activeSecurityView === 'password' && (
                 <motion.div
-                  key="alerts-view"
+                  key="password-reqs"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <GlassPaper
-                    sx={{
-                      borderColor:
-                        securitySummary.critical > 0
-                          ? 'rgba(244, 67, 54, 0.45)'
-                          : securitySummary.unread > 0
-                            ? 'rgba(255, 152, 0, 0.35)'
-                            : undefined,
-                    }}
-                  >
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  gap={2}
-                  mb={2.5}
-                >
-                  <Box>
-                    <Typography variant="h6" fontWeight={850}>
-                      {lt('securityEvents')}
+                  {/* Requirements Card */}
+                  <GlassPaper>
+                    <Typography variant="h6" fontWeight={800} mb={2.5}>
+                      {lt('requirements')}
                     </Typography>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={600}
-                    >
-                      {lt('loginAttemptsAndBlocked')}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                    <Chip
-                      size="small"
-                      color={securitySummary.unread ? 'warning' : 'success'}
-                      label={`${securitySummary.unread} ${lt('newCount')}`}
-                      sx={{ fontWeight: 800 }}
-                    />
-                    {securitySummary.critical > 0 && (
-                      <Chip
-                        size="small"
-                        color="error"
-                        label={`${securitySummary.critical} ${sl('criticalCount')}`}
-                        sx={{ fontWeight: 800 }}
-                      />
-                    )}
-                    <Chip
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      label={`${securitySummary.blocked || 0} ${sl('blockedIps')}`}
-                      sx={{ fontWeight: 800 }}
-                    />
-                    <Chip
-                      size="small"
-                      color={
-                        securitySummary.highRisk || 0 ? 'error' : 'success'
-                      }
-                      variant="outlined"
-                      label={`${securitySummary.highRisk || 0} ${sl('highRiskEvents')}`}
-                      sx={{ fontWeight: 800 }}
-                    />
-                  </Stack>
-                </Box>
 
-                {securitySummary.threatSummary?.length > 0 && (
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    flexWrap="wrap"
-                    useFlexGap
-                    sx={{ mb: 2 }}
-                  >
-                    {securitySummary.threatSummary.map((item) => (
-                      <Chip
-                        key={item.threat_type}
-                        size="small"
-                        label={`${sl(item.threat_type)}: ${item.count}`}
-                        sx={{ fontWeight: 800 }}
-                      />
-                    ))}
-                  </Stack>
-                )}
-                {securitySummary.critical > 0 && (
-                  <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
-                    {lt('criticalEventAlert')}
-                  </Alert>
-                )}
-
-                {securityLoading ? (
-                  <Box display="flex" justifyContent="center" py={3}>
-                    <CircularProgress size={26} />
-                  </Box>
-                ) : securityEvents.length ? (
-                  <Stack spacing={1.5}>
-                    <Box
-                      display="flex"
-                      alignItems="center"
-                      justifyContent="space-between"
-                      sx={{
-                        px: 1,
-                        pb: 1,
-                        borderBottom: '1px solid',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Box display="flex" alignItems="center">
-                        <Checkbox
-                          size="small"
-                          checked={
-                            securityEvents.filter((e) => !e.is_blocked).length >
-                              0 &&
-                            selectedEvents.length ===
-                              securityEvents.filter((e) => !e.is_blocked).length
-                          }
-                          indeterminate={
-                            selectedEvents.length > 0 &&
-                            selectedEvents.length <
-                              securityEvents.filter((e) => !e.is_blocked).length
-                          }
-                          onChange={handleSelectAllEvents}
-                        />
-                        <Typography
-                          variant="caption"
-                          fontWeight={600}
-                          color="text.secondary"
+                    {/* Password Strength indicator */}
+                    {newPassword && (
+                      <Box mb={3.5}>
+                        <Box
+                          display="flex"
+                          justifyContent="space-between"
+                          alignItems="center"
+                          mb={1.2}
                         >
-                          {lt('selectAll')}
-                        </Typography>
-                      </Box>
-                      {selectedEvents.length > 0 && (
-                        <Button
-                          size="small"
-                          color="error"
-                          variant="contained"
-                          disabled={blockingLoading}
-                          onClick={handleBlockSelectedIps}
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            fontWeight={600}
+                          >
+                            {lt('passwordStrength')}:
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={800}
+                            sx={{ color: getStrengthColor() }}
+                          >
+                            {getStrengthText()}
+                          </Typography>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={(score / 4) * 100}
                           sx={{
-                            textTransform: 'none',
-                            fontWeight: 800,
-                            borderRadius: 2,
+                            height: 8,
+                            borderRadius: 4,
+                            backgroundColor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(255,255,255,0.06)'
+                                : 'rgba(0,0,0,0.06)',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 4,
+                              backgroundColor: getStrengthColor(),
+                              transition:
+                                'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            },
+                          }}
+                        />
+                      </Box>
+                    )}
+
+                    <Stack spacing={2}>
+                      {requirementList.map((req, idx) => (
+                        <Box
+                          key={idx}
+                          display="flex"
+                          alignItems="center"
+                          sx={{
+                            transition: 'all 0.3s ease',
+                            opacity: req.met ? 1 : 0.65,
                           }}
                         >
-                          {blockingLoading ? (
-                            <CircularProgress size={16} color="inherit" />
-                          ) : (
-                            lt('blockSelectedIps')
-                          )}
-                        </Button>
-                      )}
-                    </Box>
-                    {securityEvents.map((event) => (
-                      <Box
-                        key={event.id}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: '1px solid',
-                          borderColor:
-                            event.status === 'new'
-                              ? 'rgba(255, 152, 0, 0.28)'
-                              : 'divider',
-                          bgcolor: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? 'rgba(255,255,255,0.035)'
-                              : 'rgba(0,0,0,0.025)',
-                        }}
-                      >
-                        <Box display="flex" alignItems="flex-start" gap={1}>
-                          <Checkbox
-                            size="medium"
-                            color="primary"
-                            checked={
-                              selectedEvents.includes(event.id) ||
-                              event.is_blocked
-                            }
-                            disabled={event.is_blocked}
-                            onChange={() => handleSelectEvent(event.id)}
-                            sx={{ mt: -0.5, ml: -1 }}
-                          />
-                          <Box flex={1}>
-                            <Box
-                              display="flex"
-                              justifyContent="space-between"
-                              gap={1}
-                            >
-                              <Typography variant="body2" fontWeight={800}>
-                                {lt(event.event_type)}
-                              </Typography>
-                              <Box display="flex" gap={1}>
-                                {event.is_blocked && (
-                                  <Chip
-                                    size="small"
-                                    color="error"
-                                    variant="outlined"
-                                    label={lt('ipBlocked')}
-                                    sx={{ height: 22, fontWeight: 800 }}
-                                  />
-                                )}
-                                <Chip
-                                  size="small"
-                                  color={
-                                    severityColors[event.severity] || 'default'
-                                  }
-                                  label={sl(event.severity)}
-                                  sx={{ height: 22, fontWeight: 800 }}
-                                />
-                                <Chip
-                                  size="small"
-                                  color={
-                                    (event.risk_score || 0) >= 75
-                                      ? 'error'
-                                      : (event.risk_score || 0) >= 45
-                                        ? 'warning'
-                                        : 'success'
-                                  }
-                                  variant="outlined"
-                                  label={`${lt('riskScore')}: ${event.risk_score || 0}`}
-                                  sx={{ height: 22, fontWeight: 800 }}
-                                />
-                              </Box>
-                            </Box>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              display="block"
-                            >
-                              {formatSecurityDate(event.created_at)} - IP:{' '}
-                              {event.ip_address || '-'} - {lt('attempt')}:{' '}
-                              {event.attempts || 1}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              display="block"
-                            >
-                              {getSecurityMetaLabel(lt, 'location', 'Location')}
-                              : {getSecurityLocationLabel(event)}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              display="block"
-                            >
-                              {getSecurityMetaLabel(lt, 'device', 'Device')}:{' '}
-                              {getSecurityDeviceLabel(event)} -{' '}
-                              {getSecurityMetaLabel(lt, 'app', 'App')}:{' '}
-                              {getSecurityProgramLabel(event)}
-                            </Typography>
-                            {(event.threat_type || event.action_taken) && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                display="block"
-                              >
-                                {lt('threatType')}: {sl(event.threat_type)} -{' '}
-                                {lt('actionTaken')}: {sl(event.action_taken)}
-                              </Typography>
+                          <Box
+                            sx={{
+                              mr: 1.8,
+                              display: 'flex',
+                              color: req.met ? '#4caf50' : 'text.secondary',
+                              transition: 'color 0.3s ease',
+                              transform: req.met ? 'scale(1.1)' : 'scale(1)',
+                            }}
+                          >
+                            {req.met ? (
+                              <CheckCircle fontSize="small" />
+                            ) : (
+                              <RadioButtonUnchecked fontSize="small" />
                             )}
-                            {event.matched_signals && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                display="block"
-                                sx={{ wordBreak: 'break-word' }}
-                              >
-                                {lt('signals')}: {event.matched_signals}
-                              </Typography>
-                            )}
-                            {event.email && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                display="block"
-                              >
-                                Email: {event.email}
-                              </Typography>
-                            )}
-                            {formatSecurityEventDetails(event) && (
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                display="block"
-                              >
-                                {formatSecurityEventDetails(event)}
-                              </Typography>
-                            )}
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              flexWrap="wrap"
-                              useFlexGap
-                              sx={{ mt: 1 }}
-                            >
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                disabled={
-                                  blockingLoading ||
-                                  event.status === 'false_positive'
-                                }
-                                onClick={() => handleFalsePositive(event)}
-                                sx={{ textTransform: 'none', fontWeight: 800 }}
-                              >
-                                {lt('falsePositive')}
-                              </Button>
-                              {event.is_blocked && event.ip_address && (
-                                <Button
-                                  size="small"
-                                  color="warning"
-                                  variant="outlined"
-                                  disabled={blockingLoading}
-                                  onClick={() => handleUnblockEventIp(event)}
-                                  sx={{
-                                    textTransform: 'none',
-                                    fontWeight: 800,
-                                  }}
-                                >
-                                  {lt('unblockIp')}
-                                </Button>
-                              )}
-                            </Stack>
                           </Box>
+                          <Typography
+                            variant="body2"
+                            fontWeight={req.met ? 700 : 500}
+                            sx={{
+                              color: req.met
+                                ? 'text.primary'
+                                : 'text.secondary',
+                              transition: 'all 0.3s ease',
+                            }}
+                          >
+                            {req.label}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </GlassPaper>
+
+                  {/* Session Info Card */}
+                  <GlassPaper>
+                    <Typography variant="h6" fontWeight={800} mb={2.5}>
+                      {lt('sessionInfo')}
+                    </Typography>
+
+                    <Stack spacing={2.5}>
+                      <Box display="flex" alignItems="center">
+                        <Box
+                          sx={{
+                            p: 1.2,
+                            borderRadius: 2.5,
+                            backgroundColor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(255,255,255,0.04)'
+                                : 'rgba(0,0,0,0.03)',
+                            color: 'primary.main',
+                            display: 'flex',
+                            mr: 2,
+                          }}
+                        >
+                          <Person fontSize="small" />
+                        </Box>
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            User
+                          </Typography>
+                          <Typography variant="body2" fontWeight={700}>
+                            {user?.name || 'Super Admin'}
+                          </Typography>
                         </Box>
                       </Box>
-                    ))}
-                  </Stack>
-                ) : (
-                  <Alert severity="success" sx={{ borderRadius: 2 }}>
-                    {lt('noSuspiciousLoginAttempts')}
-                  </Alert>
-                )}
 
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  disabled={!securitySummary.unread || securityLoading}
-                  onClick={handleMarkSecurityRead}
-                  sx={{
-                    mt: 2,
-                    borderRadius: 2,
-                    textTransform: 'none',
-                    fontWeight: 800,
-                  }}
-                >
-                  {lt('markAllRead')}
-                </Button>
-                </GlassPaper>
-              </motion.div>
-            )}
-
-            {activeSecurityView === 'password' && (
-              <motion.div
-                key="password-reqs"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Requirements Card */}
-                <GlassPaper>
-                  <Typography variant="h6" fontWeight={800} mb={2.5}>
-                    {lt('requirements')}
-                  </Typography>
-
-                  {/* Password Strength indicator */}
-                  {newPassword && (
-                    <Box mb={3.5}>
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                        mb={1.2}
-                      >
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          fontWeight={600}
+                      <Box display="flex" alignItems="center">
+                        <Box
+                          sx={{
+                            p: 1.2,
+                            borderRadius: 2.5,
+                            backgroundColor: (theme) =>
+                              theme.palette.mode === 'dark'
+                                ? 'rgba(255,255,255,0.04)'
+                                : 'rgba(0,0,0,0.03)',
+                            color: 'primary.main',
+                            display: 'flex',
+                            mr: 2,
+                          }}
                         >
-                          {lt('passwordStrength')}:
-                        </Typography>
+                          <AdminPanelSettings fontSize="small" />
+                        </Box>
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            fontWeight={500}
+                          >
+                            {lt('userRole')}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            sx={{
+                              textTransform: 'uppercase',
+                              fontSize: '0.8rem',
+                              letterSpacing: '0.5px',
+                            }}
+                          >
+                            {user?.role || 'superadmin'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Stack>
+
+                    <Box
+                      sx={{
+                        mt: 3.5,
+                        p: 2,
+                        borderRadius: 3,
+                        backgroundColor: (theme) =>
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(33, 150, 243, 0.06)'
+                            : 'rgba(33, 150, 243, 0.03)',
+                        border: '1px solid',
+                        borderColor: (theme) =>
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(33, 150, 243, 0.15)'
+                            : 'rgba(33, 150, 243, 0.08)',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <Info
+                        fontSize="small"
+                        sx={{
+                          color: '#2196f3',
+                          mr: 1.5,
+                          mt: 0.2,
+                        }}
+                      />
+                      <Box>
                         <Typography
                           variant="body2"
                           fontWeight={800}
-                          sx={{ color: getStrengthColor() }}
+                          color="#2196f3"
+                          mb={0.5}
                         >
-                          {getStrengthText()}
+                          {lt('securityTip')}
                         </Typography>
-                      </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={(score / 4) * 100}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? 'rgba(255,255,255,0.06)'
-                              : 'rgba(0,0,0,0.06)',
-                          '& .MuiLinearProgress-bar': {
-                            borderRadius: 4,
-                            backgroundColor: getStrengthColor(),
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                          },
-                        }}
-                      />
-                    </Box>
-                  )}
-
-                  <Stack spacing={2}>
-                    {requirementList.map((req, idx) => (
-                      <Box
-                        key={idx}
-                        display="flex"
-                        alignItems="center"
-                        sx={{
-                          transition: 'all 0.3s ease',
-                          opacity: req.met ? 1 : 0.65,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            mr: 1.8,
-                            display: 'flex',
-                            color: req.met ? '#4caf50' : 'text.secondary',
-                            transition: 'color 0.3s ease',
-                            transform: req.met ? 'scale(1.1)' : 'scale(1)',
-                          }}
-                        >
-                          {req.met ? (
-                            <CheckCircle fontSize="small" />
-                          ) : (
-                            <RadioButtonUnchecked fontSize="small" />
-                          )}
-                        </Box>
-                        <Typography
-                          variant="body2"
-                          fontWeight={req.met ? 700 : 500}
-                          sx={{
-                            color: req.met ? 'text.primary' : 'text.secondary',
-                            transition: 'all 0.3s ease',
-                          }}
-                        >
-                          {req.label}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </GlassPaper>
-
-                {/* Session Info Card */}
-                <GlassPaper>
-                  <Typography variant="h6" fontWeight={800} mb={2.5}>
-                    {lt('sessionInfo')}
-                  </Typography>
-
-                  <Stack spacing={2.5}>
-                    <Box display="flex" alignItems="center">
-                      <Box
-                        sx={{
-                          p: 1.2,
-                          borderRadius: 2.5,
-                          backgroundColor: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? 'rgba(255,255,255,0.04)'
-                              : 'rgba(0,0,0,0.03)',
-                          color: 'primary.main',
-                          display: 'flex',
-                          mr: 2,
-                        }}
-                      >
-                        <Person fontSize="small" />
-                      </Box>
-                      <Box>
                         <Typography
                           variant="caption"
                           color="text.secondary"
-                          fontWeight={500}
+                          display="block"
+                          sx={{ lineHeight: 1.45, fontWeight: 500 }}
                         >
-                          User
-                        </Typography>
-                        <Typography variant="body2" fontWeight={700}>
-                          {user?.name || 'Super Admin'}
+                          {lt('securityTipText')}
                         </Typography>
                       </Box>
                     </Box>
-
-                    <Box display="flex" alignItems="center">
-                      <Box
-                        sx={{
-                          p: 1.2,
-                          borderRadius: 2.5,
-                          backgroundColor: (theme) =>
-                            theme.palette.mode === 'dark'
-                              ? 'rgba(255,255,255,0.04)'
-                              : 'rgba(0,0,0,0.03)',
-                          color: 'primary.main',
-                          display: 'flex',
-                          mr: 2,
-                        }}
-                      >
-                        <AdminPanelSettings fontSize="small" />
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          fontWeight={500}
-                        >
-                          {lt('userRole')}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          fontWeight={700}
-                          sx={{
-                            textTransform: 'uppercase',
-                            fontSize: '0.8rem',
-                            letterSpacing: '0.5px',
-                          }}
-                        >
-                          {user?.role || 'superadmin'}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Stack>
-
-                  <Box
-                    sx={{
-                      mt: 3.5,
-                      p: 2,
-                      borderRadius: 3,
-                      backgroundColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(33, 150, 243, 0.06)'
-                          : 'rgba(33, 150, 243, 0.03)',
-                      border: '1px solid',
-                      borderColor: (theme) =>
-                        theme.palette.mode === 'dark'
-                          ? 'rgba(33, 150, 243, 0.15)'
-                          : 'rgba(33, 150, 243, 0.08)',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                    }}
-                  >
-                    <Info
-                      fontSize="small"
-                      sx={{
-                        color: '#2196f3',
-                        mr: 1.5,
-                        mt: 0.2,
-                      }}
-                    />
-                    <Box>
-                      <Typography
-                        variant="body2"
-                        fontWeight={800}
-                        color="#2196f3"
-                        mb={0.5}
-                      >
-                        {lt('securityTip')}
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        sx={{ lineHeight: 1.45, fontWeight: 500 }}
-                      >
-                        {lt('securityTipText')}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </GlassPaper>
-              </motion.div>
-            )}
+                  </GlassPaper>
+                </motion.div>
+              )}
             </AnimatePresence>
           </Stack>
         </Grid>

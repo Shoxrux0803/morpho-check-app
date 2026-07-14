@@ -22,6 +22,7 @@ import ChatWidget from './components/Chat/ChatWidget';
 import AIAssistantWidget from './components/AI/AIAssistantWidget';
 import WelcomeOverlay from './components/WelcomeOverlay';
 import FieldAssistantLocationTracker from './components/FieldAssistantLocationTracker';
+import NotFoundPage from './pages/NotFoundPage';
 
 const MorphoCheckPro = lazy(() => import('./pages/MorphoCheckPro'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
@@ -34,7 +35,6 @@ const PrivacyCompliancePage = lazy(
   () => import('./pages/PrivacyCompliancePage')
 );
 const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'));
-import NotFoundPage from './pages/NotFoundPage';
 const MAX_VISIBLE_TOASTS = 3;
 const CHUNK_RELOAD_KEY = 'morphocheck_chunk_reload_attempted';
 
