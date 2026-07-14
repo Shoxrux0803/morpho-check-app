@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -1268,7 +1269,12 @@ const bboxArea = (bbox) => {
   return Math.abs((mercator[2] - mercator[0]) * (mercator[3] - mercator[1]));
 };
 
-const createProjector = (bbox, width = 1000, height = 650, padding = 18) => {
+const createProjector = (
+  bbox,
+  width = SVG_WIDTH,
+  height = SVG_HEIGHT,
+  padding = 18
+) => {
   const [minX, minY, maxX, maxY] =
     bboxToWebMercator(bbox) || bboxToWebMercator([55.9, 37.1, 73.3, 45.7]);
   const xSpan = Math.max(maxX - minX, 0.0001);
@@ -1471,6 +1477,23 @@ const getBoundaryLineWidthPaint = (level) => [
   level === 1 ? 1.25 : level === 2 ? 1.05 : 0.75,
 ];
 
+const getFeaturePickArea = (feature) =>
+  bboxArea(feature?.bbox || feature?.properties?.bbox);
+
+const pickSmallestFeature = (features = []) =>
+  [...features]
+    .filter((feature) => feature?.properties)
+    .sort((a, b) => getFeaturePickArea(a) - getFeaturePickArea(b))[0] || null;
+
+const pickBestRenderedBoundary = (features = []) =>
+  [...features]
+    .filter((feature) => feature?.properties)
+    .sort((a, b) => {
+      const levelA = Number(a.properties?.admin_leve || 0);
+      const levelB = Number(b.properties?.admin_leve || 0);
+      if (levelA !== levelB) return levelB - levelA;
+      return getFeaturePickArea(a) - getFeaturePickArea(b);
+    })[0] || null;
 const addBoundaryLayers = (map, level, beforeId, isDark) => {
   const meta = LEVEL_META[level];
   const beforeLayer = beforeId && map.getLayer(beforeId) ? beforeId : undefined;
@@ -2768,9 +2791,8 @@ export default function SuperAdminRegionalMap({
       [1, 2, 3].forEach((level) => {
         map.on('mousemove', LEVEL_META[level].fill, (event) => {
           map.getCanvas().style.cursor = 'pointer';
-          const id =
-            event.features?.[0]?.properties?.boundary_id ||
-            event.features?.[0]?.id;
+          const feature = pickSmallestFeature(event.features);
+          const id = feature?.properties?.boundary_id || feature?.id;
           if (!id) return;
           if (hoveredRef.current.id && hoveredRef.current.id !== id) {
             map.setFeatureState(
@@ -2801,32 +2823,50 @@ export default function SuperAdminRegionalMap({
           hoveredRef.current = { level: null, id: null };
         });
         map.on('click', LEVEL_META[level].fill, (event) => {
-          const props = event.features?.[0]?.properties;
-          if (!props) return;
+          if (event.originalEvent.__regionalBoundaryHandled) return;
+          if (
+            map.getLayer('regional-pins') &&
+            map.queryRenderedFeatures(event.point, {
+              layers: ['regional-pins'],
+            }).length
+          ) {
+            return;
+          }
+          event.originalEvent.__regionalBoundaryHandled = true;
+
+          const layers = [1, 2, 3]
+            .map((itemLevel) => LEVEL_META[itemLevel].fill)
+            .filter((layerId) => map.getLayer(layerId));
+          const feature = pickBestRenderedBoundary(
+            map.queryRenderedFeatures(event.point, { layers })
+          );
+          const props = feature?.properties;
+          const pickedLevel = Number(props?.admin_leve || level);
+          if (!props || !LEVEL_META[pickedLevel]) return;
+
           const id = Number(props.id);
           const fromIndex =
-            level < 3
-              ? (indexRef.current?.levels?.[String(level)] || []).find(
+            pickedLevel < 3
+              ? (indexRef.current?.levels?.[String(pickedLevel)] || []).find(
                   (item) => Number(item.id) === id
                 )
               : level3FeaturesRef.current.find(
-                  (feature) => Number(feature.properties?.id) === id
+                  (item) => Number(item.properties?.id) === id
                 )?.properties;
           selectBoundary(
             fromIndex || {
               ...props,
               id,
               parent_id: Number(props.parent_id),
-              admin_leve: Number(props.admin_leve),
+              admin_leve: pickedLevel,
               bbox: parseMaybeJson(props.bbox),
               center: parseMaybeJson(props.center),
-              geometry: event.features?.[0]?.geometry,
+              geometry: feature.geometry,
             },
-            level
+            pickedLevel
           );
         });
       });
-
       map.on('click', 'regional-pins', (event) => {
         event.preventDefault();
         const props = event.features?.[0]?.properties;
@@ -2874,6 +2914,12 @@ export default function SuperAdminRegionalMap({
     const source = mapRef.current?.getSource(PIN_SOURCE);
     if (source) source.setData(pinsGeoJson);
   }, [pinsGeoJson]);
+  const activeBoundaryLevel = useMemo(() => {
+    const firstFeature = visibleGeoJson.features?.[0];
+    return Number(
+      firstFeature?.properties?.admin_leve || selected?.admin_leve || 1
+    );
+  }, [selected?.admin_leve, visibleGeoJson]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -2892,14 +2938,23 @@ export default function SuperAdminRegionalMap({
     }
     [1, 2, 3].forEach((level) => {
       const meta = LEVEL_META[level];
+      const isActiveLayer = level === activeBoundaryLevel;
+      const visibility =
+        !satelliteEnabled || isActiveLayer ? 'visible' : 'none';
       if (map.getLayer(meta.fill)) {
+        map.setLayoutProperty(meta.fill, 'visibility', visibility);
         map.setPaintProperty(
           meta.fill,
           'fill-opacity',
-          satelliteEnabled ? 0.08 : getBoundaryFillOpacityPaint(level)
+          satelliteEnabled && isActiveLayer
+            ? 0.08
+            : satelliteEnabled
+              ? 0
+              : getBoundaryFillOpacityPaint(level)
         );
       }
       if (map.getLayer(meta.line)) {
+        map.setLayoutProperty(meta.line, 'visibility', visibility);
         map.setPaintProperty(
           meta.line,
           'line-color',
@@ -2910,18 +2965,20 @@ export default function SuperAdminRegionalMap({
         map.setPaintProperty(
           meta.line,
           'line-opacity',
-          satelliteEnabled
+          satelliteEnabled && isActiveLayer
             ? 0.92
-            : level === 1
-              ? 0.76
-              : level === 2
-                ? 0.64
-                : 0.5
+            : satelliteEnabled
+              ? 0
+              : level === 1
+                ? 0.76
+                : level === 2
+                  ? 0.64
+                  : 0.5
         );
         map.setPaintProperty(
           meta.line,
           'line-width',
-          satelliteEnabled
+          satelliteEnabled && isActiveLayer
             ? level === 1
               ? 3.8
               : level === 2
@@ -2931,7 +2988,7 @@ export default function SuperAdminRegionalMap({
         );
       }
     });
-  }, [isDark, mapColors.background, satelliteEnabled]);
+  }, [activeBoundaryLevel, isDark, mapColors.background, satelliteEnabled]);
 
   useEffect(() => {
     const firstFeature = enrichedVisibleGeoJson.features?.[0];
@@ -3085,15 +3142,41 @@ export default function SuperAdminRegionalMap({
     ];
   }, [svgMap, svgViewport]);
 
-  useEffect(() => {
+  const fitSatelliteToCurrentView = useCallback(() => {
     const map = mapRef.current;
-    if (!satelliteEnabled || !map || !svgLngLatBounds) return;
-    map.fitBounds(svgLngLatBounds, {
-      animate: false,
-      duration: 0,
-      padding: 0,
-    });
-  }, [satelliteEnabled, svgLngLatBounds]);
+    if (!map) return;
+    map.resize();
+
+    const selectedBounds = selected ? getBounds(selected.bbox) : null;
+    if (selectedBounds) {
+      map.fitBounds(selectedBounds, {
+        animate: false,
+        duration: 0,
+        padding: 22,
+      });
+      return;
+    }
+
+    if (svgLngLatBounds) {
+      map.fitBounds(svgLngLatBounds, {
+        animate: false,
+        duration: 0,
+        padding: 0,
+      });
+    }
+  }, [selected, svgLngLatBounds]);
+
+  const handleSatelliteToggle = useCallback(() => {
+    if (!satelliteEnabled) {
+      fitSatelliteToCurrentView();
+    }
+    setSatelliteEnabled((value) => !value);
+  }, [fitSatelliteToCurrentView, satelliteEnabled]);
+  useLayoutEffect(() => {
+    if (satelliteEnabled) {
+      fitSatelliteToCurrentView();
+    }
+  }, [fitSatelliteToCurrentView, satelliteEnabled]);
 
   useEffect(() => {
     const node = mapInteractionRef.current;
@@ -3967,7 +4050,7 @@ export default function SuperAdminRegionalMap({
               variant={satelliteEnabled ? 'contained' : 'outlined'}
               size="small"
               startIcon={<SatelliteAlt />}
-              onClick={() => setSatelliteEnabled((value) => !value)}
+              onClick={handleSatelliteToggle}
               sx={{
                 position: 'absolute',
                 top: 14,
