@@ -38,6 +38,8 @@ import { getLocalizedLocationLabel } from '../../utils/locationI18n';
 const BOUNDARY_BASE = '/maps/admin-boundaries';
 const EMPTY_COLLECTION = { type: 'FeatureCollection', features: [] };
 const PIN_SOURCE = 'regional-pins-source';
+const MAP_LABEL_SOURCE = 'regional-map-labels-source';
+const MAP_LABEL_LAYER = 'regional-map-labels-layer';
 const GOOGLE_SATELLITE_SOURCE = 'google-satellite-source';
 const GOOGLE_SATELLITE_LAYER = 'google-satellite-layer';
 const SATELLITE_MAX_ZOOM = 21;
@@ -2448,6 +2450,34 @@ export default function SuperAdminRegionalMap({
       .filter(Boolean);
   }, [lang, svgMap, svgSelectedId, svgViewport.scale]);
 
+  const mapLabelGeoJson = useMemo(
+    () => ({
+      type: 'FeatureCollection',
+      features: (enrichedVisibleGeoJson?.features || [])
+        .map((feature) => {
+          const props = feature.properties || {};
+          const bbox = parseMaybeJson(props.bbox || feature.bbox);
+          const center = parseMaybeJson(props.center) || getCenter({ bbox });
+          if (!Array.isArray(center) || center.length < 2) return null;
+          const level = Number(props.admin_leve || 1);
+          const label = localizedFeatureName(props, lang);
+          if (!label) return null;
+          return {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: center },
+            properties: {
+              id: props.boundary_id || feature.id,
+              label,
+              level,
+              active: (props.boundary_id || feature.id) === svgSelectedId,
+            },
+          };
+        })
+        .filter(Boolean),
+    }),
+    [enrichedVisibleGeoJson, lang, svgSelectedId]
+  );
+
   const setSourceData = useCallback((level, geoJson, makeVisible = true) => {
     const map = mapRef.current;
     if (makeVisible && (level === 1 || level === 2 || level === 3)) {
@@ -2691,6 +2721,7 @@ export default function SuperAdminRegionalMap({
       attributionControl: false,
       style: {
         version: 8,
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
           [GOOGLE_SATELLITE_SOURCE]: {
             type: 'raster',
@@ -2731,9 +2762,68 @@ export default function SuperAdminRegionalMap({
 
     map.on('load', async () => {
       map.addSource(PIN_SOURCE, { type: 'geojson', data: EMPTY_COLLECTION });
+      map.addSource(MAP_LABEL_SOURCE, {
+        type: 'geojson',
+        data: EMPTY_COLLECTION,
+      });
       addBoundaryLayers(map, 1, null, isDark);
       addBoundaryLayers(map, 2, null, isDark);
       addBoundaryLayers(map, 3, null, isDark);
+
+      map.addLayer({
+        id: MAP_LABEL_LAYER,
+        type: 'symbol',
+        source: MAP_LABEL_SOURCE,
+        layout: {
+          visibility: 'none',
+          'symbol-placement': 'point',
+          'text-field': ['get', 'label'],
+          'text-font': ['Noto Sans Regular'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            4,
+            11,
+            7,
+            12.5,
+            10,
+            13.5,
+            13,
+            14.5,
+          ],
+          'text-max-width': 8,
+          'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
+          'text-radial-offset': 0.25,
+          'text-justify': 'auto',
+          'text-allow-overlap': false,
+          'text-ignore-placement': false,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': 'rgba(2,6,23,0.96)',
+          'text-halo-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            4,
+            2.2,
+            10,
+            3,
+          ],
+          'text-halo-blur': 0.2,
+          'text-opacity': [
+            'case',
+            ['boolean', ['get', 'active'], false],
+            1,
+            ['==', ['get', 'level'], 1],
+            0.98,
+            ['==', ['get', 'level'], 2],
+            0.95,
+            0.9,
+          ],
+        },
+      });
 
       map.addLayer({
         id: 'regional-pin-halo',
@@ -2914,6 +3004,12 @@ export default function SuperAdminRegionalMap({
     const source = mapRef.current?.getSource(PIN_SOURCE);
     if (source) source.setData(pinsGeoJson);
   }, [pinsGeoJson]);
+
+  useEffect(() => {
+    const source = mapRef.current?.getSource(MAP_LABEL_SOURCE);
+    if (source) source.setData(mapLabelGeoJson);
+  }, [mapLabelGeoJson]);
+
   const activeBoundaryLevel = useMemo(() => {
     const firstFeature = visibleGeoJson.features?.[0];
     return Number(
@@ -2934,6 +3030,13 @@ export default function SuperAdminRegionalMap({
         'map-background',
         'background-color',
         satelliteEnabled ? '#0f172a' : mapColors.background
+      );
+    }
+    if (map.getLayer(MAP_LABEL_LAYER)) {
+      map.setLayoutProperty(
+        MAP_LABEL_LAYER,
+        'visibility',
+        satelliteEnabled ? 'visible' : 'none'
       );
     }
     [1, 2, 3].forEach((level) => {
@@ -3525,6 +3628,15 @@ export default function SuperAdminRegionalMap({
   const loading = !mapReady || loadingBoundary;
   const dataLoading = loadingRows || statsLoading;
   const satelliteBoundaryOpacity = satelliteEnabled ? 0 : 1;
+  const mapLabelFill = satelliteEnabled ? '#ffffff' : mapColors.label;
+  const mapLabelHalo = satelliteEnabled
+    ? 'rgba(2,6,23,0.96)'
+    : mapColors.labelHalo;
+  const mapLabelShadow = satelliteEnabled
+    ? '0 1px 2px rgba(0,0,0,0.42), 0 0 6px rgba(0,0,0,0.28)'
+    : isDark
+      ? '0 1px 1px rgba(0,0,0,0.22)'
+      : '0 1px 1px rgba(255,255,255,0.28)';
   const mapPanelHeight = {
     xs: 'clamp(420px, 62dvh, 560px)',
     sm: 'clamp(500px, 66dvh, 640px)',
@@ -3678,7 +3790,7 @@ export default function SuperAdminRegionalMap({
                 x={SVG_WIDTH / 2}
                 y={SVG_HEIGHT / 2}
                 textAnchor="middle"
-                fill={mapColors.label}
+                fill={mapLabelFill}
                 opacity={satelliteEnabled ? '0' : '0.12'}
                 fontSize="20"
                 fontWeight="800"
@@ -3791,21 +3903,42 @@ export default function SuperAdminRegionalMap({
                       y={label.y}
                       textAnchor="middle"
                       dominantBaseline="central"
-                      fill={mapColors.label}
-                      stroke={mapColors.labelHalo}
-                      strokeWidth={label.active ? 1.8 : 1.15}
+                      fill={mapLabelFill}
+                      stroke={mapLabelHalo}
+                      strokeWidth={
+                        satelliteEnabled
+                          ? label.active
+                            ? 3.2
+                            : label.level === 1
+                              ? 2.7
+                              : 2.25
+                          : label.active
+                            ? 1.8
+                            : 1.15
+                      }
                       paintOrder="stroke fill"
                       fontSize={label.size}
                       fontWeight={
                         label.active ? 850 : label.level === 1 ? 780 : 700
                       }
                       opacity={
-                        label.active ? 0.88 : label.level === 3 ? 0.42 : 0.56
+                        satelliteEnabled
+                          ? label.active
+                            ? 0.98
+                            : label.level === 1
+                              ? 0.94
+                              : label.level === 2
+                                ? 0.84
+                                : 0.72
+                          : label.active
+                            ? 0.88
+                            : label.level === 3
+                              ? 0.42
+                              : 0.56
                       }
                       style={{
-                        textShadow: isDark
-                          ? '0 1px 1px rgba(0,0,0,0.22)'
-                          : '0 1px 1px rgba(255,255,255,0.28)',
+                        fontFamily: 'Roboto, "Google Sans", Arial, sans-serif',
+                        textShadow: mapLabelShadow,
                         userSelect: 'none',
                       }}
                     >
