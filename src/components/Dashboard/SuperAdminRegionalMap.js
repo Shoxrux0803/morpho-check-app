@@ -45,6 +45,8 @@ const GOOGLE_SATELLITE_LAYER = 'google-satellite-layer';
 const SATELLITE_MAX_ZOOM = 21;
 const SVG_WIDTH = 1000;
 const SVG_HEIGHT = 760;
+const MAP_CAMERA_EASING = (time) =>
+  time < 0.5 ? 4 * time * time * time : 1 - Math.pow(-2 * time + 2, 3) / 2;
 
 const PIN_COLORS = {
   admin: '#2563eb',
@@ -1765,6 +1767,7 @@ export default function SuperAdminRegionalMap({
   const panDragRef = useRef(null);
   const suppressSvgClickRef = useRef(false);
 
+  const [mapMotion, setMapMotion] = useState({ type: 'idle', key: 0 });
   const [mapReady, setMapReady] = useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [visibleGeoJson, setVisibleGeoJson] = useState(EMPTY_COLLECTION);
@@ -2517,17 +2520,22 @@ export default function SuperAdminRegionalMap({
     const map = mapRef.current;
     if (!map || !item) return;
     const bounds = getBounds(item.bbox);
+    map.stop();
     if (bounds) {
       map.fitBounds(bounds, {
-        padding: 22,
-        duration: 900,
+        padding: { top: 46, bottom: 46, left: 46, right: 46 },
+        duration: 1150,
+        easing: MAP_CAMERA_EASING,
+        essential: true,
         maxZoom: fallbackZoom,
       });
     } else {
       map.easeTo({
         center: getCenter(item),
         zoom: fallbackZoom,
-        duration: 850,
+        duration: 1050,
+        easing: MAP_CAMERA_EASING,
+        essential: true,
       });
     }
   }, []);
@@ -2535,6 +2543,7 @@ export default function SuperAdminRegionalMap({
   const selectBoundary = useCallback(
     async (item, level) => {
       if (!item || !indexRef.current) return;
+      setMapMotion({ type: 'in', key: Date.now() });
       const map = mapRef.current;
 
       if (map?.getSource(LEVEL_META[level].source)) {
@@ -2609,6 +2618,7 @@ export default function SuperAdminRegionalMap({
   );
 
   const resetToCountry = useCallback(() => {
+    setMapMotion({ type: 'out', key: Date.now() });
     setSelected(null);
     setSelectedPin(null);
     setPinPopupPosition(null);
@@ -2623,16 +2633,22 @@ export default function SuperAdminRegionalMap({
     setSourceData(3, EMPTY_COLLECTION, false);
     const fullBounds = getBounds(getCollectionBounds(level1GeoJsonRef.current));
     if (fullBounds && mapRef.current) {
+      mapRef.current.stop();
       mapRef.current.fitBounds(fullBounds, {
-        padding: 18,
-        duration: 850,
+        padding: 26,
+        duration: 1100,
+        easing: MAP_CAMERA_EASING,
+        essential: true,
         maxZoom: 5.1,
       });
     } else {
+      mapRef.current?.stop();
       mapRef.current?.easeTo({
         center: [64.5853, 41.3775],
         zoom: 4.65,
-        duration: 800,
+        duration: 1050,
+        easing: MAP_CAMERA_EASING,
+        essential: true,
       });
     }
   }, [setSourceData]);
@@ -2963,10 +2979,13 @@ export default function SuperAdminRegionalMap({
         if (!props) return;
         setSelectedPin(props);
         setPinPopupPosition({ left: event.point.x, top: event.point.y });
+        map.stop();
         map.easeTo({
           center: event.features[0].geometry.coordinates,
           zoom: Math.max(map.getZoom(), 10),
-          duration: 700,
+          duration: 950,
+          easing: MAP_CAMERA_EASING,
+          essential: true,
         });
       });
 
@@ -3275,11 +3294,24 @@ export default function SuperAdminRegionalMap({
     }
     setSatelliteEnabled((value) => !value);
   }, [fitSatelliteToCurrentView, satelliteEnabled]);
+
   useLayoutEffect(() => {
     if (satelliteEnabled) {
       fitSatelliteToCurrentView();
     }
   }, [fitSatelliteToCurrentView, satelliteEnabled]);
+
+  useEffect(() => {
+    const node = mapContainerRef.current;
+    if (!node || !satelliteEnabled || mapMotion.type === 'idle') return;
+    node.style.animation = 'none';
+    // Force a reflow so repeated region selections replay the same animation.
+    void node.offsetWidth;
+    node.style.animation =
+      mapMotion.type === 'in'
+        ? 'mapSelectZoomIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both'
+        : 'mapSelectZoomOut 700ms cubic-bezier(0.22, 1, 0.36, 1) both';
+  }, [mapMotion, satelliteEnabled]);
 
   useEffect(() => {
     const node = mapInteractionRef.current;
@@ -3765,6 +3797,44 @@ export default function SuperAdminRegionalMap({
                 '0%': { opacity: 0.42 },
                 '100%': { opacity: 1 },
               },
+              '@keyframes selectedBoundaryPulse': {
+                '0%': { filter: 'drop-shadow(0 0 0 rgba(250,204,21,0))' },
+                '38%': {
+                  filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.52))',
+                },
+                '100%': {
+                  filter: 'drop-shadow(0 0 3px rgba(250,204,21,0.22))',
+                },
+              },
+              '@keyframes boundaryLineSweep': {
+                '0%': { opacity: 0.35 },
+                '45%': { opacity: 1 },
+                '100%': { opacity: 0.92 },
+              },
+              '@keyframes pinHaloPulse': {
+                '0%, 100%': { opacity: 0.14 },
+                '50%': { opacity: 0.32 },
+              },
+              '@keyframes popupLift': {
+                '0%': {
+                  opacity: 0,
+                  transform: 'translate(-50%, 24px) scale(0.98)',
+                },
+                '100%': {
+                  opacity: 1,
+                  transform: 'translate(-50%, 16px) scale(1)',
+                },
+              },
+              '@keyframes mapSelectZoomIn': {
+                '0%': { opacity: 0.82, transform: 'scale(0.965)' },
+                '58%': { opacity: 1, transform: 'scale(1.012)' },
+                '100%': { opacity: 1, transform: 'scale(1)' },
+              },
+              '@keyframes mapSelectZoomOut': {
+                '0%': { opacity: 0.86, transform: 'scale(1.045)' },
+                '60%': { opacity: 1, transform: 'scale(0.992)' },
+                '100%': { opacity: 1, transform: 'scale(1)' },
+              },
             }}
           >
             <svg
@@ -3775,9 +3845,18 @@ export default function SuperAdminRegionalMap({
               preserveAspectRatio="xMidYMid meet"
               role="img"
               aria-label={mt.title}
+              key={'map-motion-' + mapMotion.type + '-' + mapMotion.key}
               style={{
                 opacity: satelliteEnabled ? 0 : 1,
                 shapeRendering: 'geometricPrecision',
+                transformBox: 'fill-box',
+                transformOrigin: 'center center',
+                animation:
+                  !satelliteEnabled && mapMotion.type === 'in'
+                    ? 'mapSelectZoomIn 620ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                    : !satelliteEnabled && mapMotion.type === 'out'
+                      ? 'mapSelectZoomOut 700ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                      : undefined,
                 transition: 'opacity 160ms ease',
               }}
             >
@@ -3869,8 +3948,14 @@ export default function SuperAdminRegionalMap({
                         paintOrder="fill stroke"
                         style={{
                           cursor: 'pointer',
+                          animation: active
+                            ? 'selectedBoundaryPulse 1250ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                            : undefined,
+                          filter: active
+                            ? 'drop-shadow(0 0 3px rgba(250,204,21,0.22))'
+                            : undefined,
                           transition:
-                            'fill 180ms ease, fill-opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease',
+                            'fill 180ms ease, fill-opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease, filter 220ms ease',
                         }}
                         onMouseEnter={() => {
                           hoveredSvgRef.current = { item, level };
@@ -3965,6 +4050,7 @@ export default function SuperAdminRegionalMap({
                           cursor: 'pointer',
                           filter: 'drop-shadow(0 2px 5px rgba(15,23,42,0.28))',
                           outline: 'none',
+                          transition: 'filter 180ms ease, opacity 180ms ease',
                         }}
                         onPointerDown={(event) => {
                           event.stopPropagation();
@@ -4004,7 +4090,16 @@ export default function SuperAdminRegionalMap({
                           }
                         }}
                       >
-                        <circle cy="-6" r="17" fill={color} opacity="0.14" />
+                        <circle
+                          cy="-6"
+                          r="17"
+                          fill={color}
+                          opacity="0.14"
+                          style={{
+                            animation:
+                              'pinHaloPulse 1800ms ease-in-out infinite',
+                          }}
+                        />
                         <path
                           d="M0 18 C0 18 15 5.4 15 -6 C15 -14.3 8.3 -21 0 -21 C-8.3 -21 -15 -14.3 -15 -6 C-15 5.4 0 18 0 18Z"
                           fill={color}
@@ -4057,6 +4152,16 @@ export default function SuperAdminRegionalMap({
                         strokeLinecap="round"
                         vectorEffect="non-scaling-stroke"
                         shapeRendering="geometricPrecision"
+                        style={{
+                          animation: active
+                            ? 'boundaryLineSweep 900ms cubic-bezier(0.22, 1, 0.36, 1) both'
+                            : undefined,
+                          filter: active
+                            ? 'drop-shadow(0 0 5px rgba(255,255,255,0.38))'
+                            : undefined,
+                          transition:
+                            'stroke 180ms ease, stroke-opacity 180ms ease, stroke-width 180ms ease',
+                        }}
                       />
                     );
                   })}
@@ -4074,6 +4179,9 @@ export default function SuperAdminRegionalMap({
                   left: `min(max(${pinPopupPosition.left}px, 156px), calc(100% - 156px))`,
                   top: `min(max(${pinPopupPosition.top}px, 16px), calc(100% - 240px))`,
                   transform: 'translate(-50%, 16px)',
+                  animation:
+                    'popupLift 220ms cubic-bezier(0.22, 1, 0.36, 1) both',
+                  transformOrigin: 'top center',
                   zIndex: 6,
                   width: 280,
                   maxWidth: 'calc(100% - 28px)',
