@@ -23,12 +23,18 @@ import {
   useTheme,
 } from '@mui/material';
 import {
+  BarChart,
   ChatBubbleOutline,
   Close,
+  Groups,
+  HealthAndSafety,
+  Insights,
   LocationOn,
   MyLocation,
   Public,
   SatelliteAlt,
+  Speed,
+  TrendingUp,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 import { AdminApi, ResearchApi } from '../../services/api';
@@ -1610,6 +1616,147 @@ const StatPill = ({ label, value, color = 'primary.main' }) => (
   </Box>
 );
 
+const RegionalMetricTile = ({ icon, label, value, detail, color }) => (
+  <Box
+    sx={{
+      p: 1.45,
+      minHeight: 124,
+      borderRadius: 2.25,
+      border: '1px solid',
+      borderColor: 'divider',
+      bgcolor: 'background.paper',
+      position: 'relative',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      gap: 1,
+      boxShadow: '0 12px 30px rgba(15,23,42,0.08)',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 3,
+        bgcolor: color,
+      },
+    }}
+  >
+    <Box
+      sx={{
+        position: 'absolute',
+        inset: 0,
+        opacity: 0.1,
+        background: `linear-gradient(135deg, ${color}22, transparent 62%)`,
+        pointerEvents: 'none',
+      }}
+    />
+    <Stack
+      direction="row"
+      alignItems="center"
+      justifyContent="space-between"
+      spacing={1}
+      sx={{ position: 'relative' }}
+    >
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        fontWeight={900}
+        sx={{ lineHeight: 1.2, minWidth: 0 }}
+      >
+        {label}
+      </Typography>
+      <Box
+        sx={{
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
+          display: 'grid',
+          placeItems: 'center',
+          color: '#fff',
+          bgcolor: color,
+          boxShadow: `0 12px 24px ${color}40`,
+          flex: '0 0 auto',
+        }}
+      >
+        {icon}
+      </Box>
+    </Stack>
+
+    <Typography
+      variant="h4"
+      fontWeight={950}
+      sx={{
+        color,
+        lineHeight: 0.95,
+        letterSpacing: 0,
+        position: 'relative',
+        fontSize: '1.62rem',
+        textAlign: 'center',
+        py: 0.25,
+      }}
+    >
+      {value}
+    </Typography>
+
+    {detail && (
+      <Box
+        sx={{
+          px: 1,
+          py: 0.55,
+          borderRadius: 1.25,
+          bgcolor: 'rgba(100,116,139,0.1)',
+          border: '1px solid rgba(100,116,139,0.14)',
+          position: 'relative',
+          minHeight: 28,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          fontWeight={800}
+          sx={{
+            lineHeight: 1.2,
+            overflowWrap: 'anywhere',
+            textAlign: 'center',
+          }}
+        >
+          {detail}
+        </Typography>
+      </Box>
+    )}
+  </Box>
+);
+
+const RegionalInsightRow = ({ label, value, color, helper }) => (
+  <Box
+    sx={{
+      p: 1.15,
+      borderRadius: 1.5,
+      border: '1px solid',
+      borderColor: 'divider',
+      bgcolor: 'background.paper',
+    }}
+  >
+    <Stack direction="row" justifyContent="space-between" spacing={1} mb={0.35}>
+      <Typography variant="caption" color="text.secondary" fontWeight={800}>
+        {label}
+      </Typography>
+      <Typography variant="caption" fontWeight={900} sx={{ color }}>
+        {value}
+      </Typography>
+    </Stack>
+    {helper && (
+      <Typography variant="caption" color="text.secondary" fontWeight={700}>
+        {helper}
+      </Typography>
+    )}
+  </Box>
+);
 const ScientificBarChart = ({ title, subtitle, rows, maxValue }) => (
   <Box
     sx={{
@@ -3493,6 +3640,128 @@ export default function SuperAdminRegionalMap({
     };
   }, [childCount, mt, selectedMetric.riskRate, selectedRecords]);
 
+  const regionalPanelSummary = useMemo(() => {
+    const totalRecords = selectedRecords.length || 0;
+    const clinicalCount = clinicalChartData.sampleCount || 0;
+    const coveragePct = Math.min(
+      pct(clinicalCount, Math.max(childCount, 1)),
+      100
+    );
+    const riskRate = selectedMetric.riskRate || 0;
+    const riskColor = getRiskColor(riskRate);
+    const dominantBmi = clinicalChartData.bmiRows.reduce(
+      (best, row) => (row.value > best.value ? row : best),
+      clinicalChartData.bmiRows[0]
+    );
+    const highZ = clinicalChartData.zRows
+      .filter((row) => row.label.startsWith('Z >'))
+      .reduce((sum, row) => sum + row.value, 0);
+    const activeRoles = [
+      selectedMetric.admins,
+      selectedMetric.researchers,
+    ].filter((value) => Number(value) > 0).length;
+    const operationalScore = Math.min(
+      100,
+      Math.round(
+        coveragePct * 0.42 +
+          Math.min(
+            pct(selectedMetric.analyses || 0, Math.max(totalRecords, 1)),
+            100
+          ) *
+            0.28 +
+          activeRoles * 15
+      )
+    );
+    const riskLabel =
+      riskRate >= 25
+        ? mt.highRisk || 'Yuqori risk'
+        : riskRate >= 10
+          ? mt.watchRisk || 'Kuzatuv kerak'
+          : mt.lowRisk || 'Past risk';
+
+    return {
+      coveragePct,
+      riskColor,
+      riskLabel,
+      dominantBmi,
+      highZ,
+      operationalScore,
+      totalRecords,
+      clinicalCount,
+    };
+  }, [
+    childCount,
+    clinicalChartData,
+    mt,
+    selectedMetric,
+    selectedRecords.length,
+  ]);
+
+  const panelMetricTiles = useMemo(
+    () => [
+      {
+        label: mt.coverageIndex,
+        value: `${regionalPanelSummary.coveragePct}%`,
+        detail: `${regionalPanelSummary.clinicalCount} / ${Math.max(childCount, 1)} ${mt.coverage || 'qamrov'}`,
+        color: '#0f766e',
+        icon: <Speed sx={{ fontSize: 18 }} />,
+      },
+      {
+        label: mt.riskSignal,
+        value: `${selectedMetric.riskRate || 0}%`,
+        detail: regionalPanelSummary.riskLabel,
+        color: regionalPanelSummary.riskColor,
+        icon: <HealthAndSafety sx={{ fontSize: 18 }} />,
+      },
+      {
+        label: mt.activityStructure,
+        value: selectedMetric.analyses || 0,
+        detail: `${selectedMetric.admins || 0} ${mt.admin} / ${selectedMetric.researchers || 0} ${mt.researcher}`,
+        color: '#2563eb',
+        icon: <BarChart sx={{ fontSize: 18 }} />,
+      },
+      {
+        label: mt.lowerLayer,
+        value: childCount,
+        detail: formatArea(selectedAreaSquareMeters, locale),
+        color: '#f59e0b',
+        icon: <Groups sx={{ fontSize: 18 }} />,
+      },
+    ],
+    [
+      childCount,
+      locale,
+      mt,
+      regionalPanelSummary,
+      selectedAreaSquareMeters,
+      selectedMetric,
+    ]
+  );
+
+  const panelInsights = useMemo(
+    () => [
+      {
+        label: mt.bmiDistribution,
+        value: `${regionalPanelSummary.dominantBmi?.label || '-'} ${regionalPanelSummary.dominantBmi?.value || 0}`,
+        helper: mt.dominantClinicalGroup || 'Dominant klinik guruh',
+        color: regionalPanelSummary.dominantBmi?.color || '#2563eb',
+      },
+      {
+        label: mt.zBands,
+        value: regionalPanelSummary.highZ,
+        helper: mt.highZSignal || 'Z-score +2 dan yuqori yozuvlar',
+        color: regionalPanelSummary.highZ ? '#dc2626' : '#0f766e',
+      },
+      {
+        label: mt.operationalAnalysis,
+        value: `${regionalPanelSummary.operationalScore}%`,
+        helper: mt.operationalReadiness || 'Qamrov va faol rollar asosida',
+        color:
+          regionalPanelSummary.operationalScore >= 70 ? '#0f766e' : '#f59e0b',
+      },
+    ],
+    [mt, regionalPanelSummary]
+  );
   const analyticsCards = useMemo(
     () => [
       {
@@ -4527,81 +4796,125 @@ export default function SuperAdminRegionalMap({
               )}
             </Stack>
 
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              flexWrap="wrap"
-              mt={2}
+            <Box
+              sx={{
+                mt: 2,
+                p: 1.5,
+                borderRadius: 2.5,
+                border: '1px solid',
+                borderColor: isDark
+                  ? 'rgba(96,165,250,0.28)'
+                  : 'rgba(37,99,235,0.18)',
+                background: isDark
+                  ? 'linear-gradient(135deg, rgba(37,99,235,0.18), rgba(15,23,42,0.86))'
+                  : 'linear-gradient(135deg, rgba(239,246,255,0.98), rgba(240,253,250,0.98))',
+                boxShadow: isDark
+                  ? '0 18px 42px rgba(2,6,23,0.22)'
+                  : '0 18px 42px rgba(15,23,42,0.08)',
+              }}
             >
-              <StatPill
-                label={mt.analyses}
-                value={selectedMetric.analyses || 0}
-                color="#0f766e"
-              />
-              <StatPill
-                label={mt.admin}
-                value={selectedMetric.admins || 0}
-                color="#2563eb"
-              />
-              <StatPill
-                label={mt.researcher}
-                value={selectedMetric.researchers || 0}
-                color="#7c3aed"
-              />
-            </Stack>
-
-            <Stack
-              direction="row"
-              spacing={1}
-              useFlexGap
-              flexWrap="wrap"
-              mt={1}
-            >
-              <StatPill
-                label={mt.nextLayer}
-                value={childCount}
-                color="#f59e0b"
-              />
-              <StatPill
-                label={mt.area}
-                value={formatArea(selectedAreaSquareMeters, locale)}
-                color="text.primary"
-              />
-            </Stack>
-
-            <Box mt={2.25}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={0.75}
-              >
-                <Typography variant="body2" fontWeight={700}>
-                  {mt.riskSignal}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  fontWeight={900}
-                  sx={{ color: getRiskColor(selectedMetric.riskRate || 0) }}
+              <Stack direction="row" alignItems="center" spacing={1.15}>
+                <Box
+                  sx={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: 2,
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: '#fff',
+                    bgcolor: regionalPanelSummary.riskColor,
+                    boxShadow: `0 14px 30px ${regionalPanelSummary.riskColor}33`,
+                    flex: '0 0 auto',
+                  }}
                 >
-                  {selectedMetric.riskRate || 0}%
-                </Typography>
+                  <Insights />
+                </Box>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    spacing={1}
+                  >
+                    <Typography variant="body2" fontWeight={900}>
+                      {mt.riskSignal}
+                    </Typography>
+                    <Typography
+                      variant="h6"
+                      fontWeight={900}
+                      sx={{
+                        color: regionalPanelSummary.riskColor,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {selectedMetric.riskRate || 0}%
+                    </Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(selectedMetric.riskRate || 0, 100)}
+                    sx={{
+                      mt: 0.8,
+                      height: 9,
+                      borderRadius: 5,
+                      bgcolor: 'rgba(100,116,139,0.16)',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: regionalPanelSummary.riskColor,
+                      },
+                    }}
+                  />
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                    mt={0.75}
+                  >
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={800}
+                    >
+                      {regionalPanelSummary.riskLabel}
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      fontWeight={800}
+                    >
+                      n={regionalPanelSummary.clinicalCount}
+                    </Typography>
+                  </Stack>
+                </Box>
               </Stack>
-              <LinearProgress
-                variant="determinate"
-                value={Math.min(selectedMetric.riskRate || 0, 100)}
-                sx={{
-                  height: 10,
-                  borderRadius: 5,
-                  bgcolor: 'rgba(100,116,139,0.14)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: getRiskColor(selectedMetric.riskRate || 0),
-                  },
-                }}
-              />
             </Box>
 
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 1,
+                mt: 1.25,
+              }}
+            >
+              {panelMetricTiles.map((tile) => (
+                <RegionalMetricTile key={tile.label} {...tile} />
+              ))}
+            </Box>
+
+            <Box mt={1.25}>
+              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                <TrendingUp sx={{ fontSize: 18, color: 'primary.main' }} />
+                <Typography variant="body2" fontWeight={900}>
+                  {mt.analyticalIndicators}
+                </Typography>
+              </Stack>
+              <Stack spacing={0.8}>
+                {panelInsights.map((item) => (
+                  <RegionalInsightRow key={item.label} {...item} />
+                ))}
+              </Stack>
+            </Box>
             {selectedPin && (
               <Box
                 mt={2.5}
