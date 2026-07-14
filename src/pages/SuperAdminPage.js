@@ -1522,7 +1522,8 @@ const SuperAdminPage = () => {
     is_restricted: 0,
   });
   const [showAdminPassword, setShowAdminPassword] = useState(false);
-  const [showCurrentAdminPassword, setShowCurrentAdminPassword] = useState(false);
+  const [showCurrentAdminPassword, setShowCurrentAdminPassword] =
+    useState(false);
   const [boundaryIndex, setBoundaryIndex] = useState(null);
   const [mahallaOptions, setMahallaOptions] = useState([]);
   const [mahallaLoading, setMahallaLoading] = useState(false);
@@ -1530,6 +1531,9 @@ const SuperAdminPage = () => {
   const hasSelectedAdminMahallaOption =
     !adminMahallaValue ||
     mahallaOptions.some((mahalla) => mahalla.label === adminMahallaValue);
+  const isEditingCurrentUser = Boolean(
+    currentAdmin?.id && user?.id && currentAdmin.id === user.id
+  );
 
   useEffect(() => {
     if (adminDialogOpen) setAdminDialogStep(0);
@@ -2432,8 +2436,8 @@ const SuperAdminPage = () => {
       } else {
         payload.supervisor_id = null;
       }
-      if (payload.role !== 'admin') {
-        payload.admin_permissions = normalizeAdminPermissions();
+      if (isEditingCurrentUser) {
+        payload.is_restricted = 0;
       }
       [
         'research_topic',
@@ -5407,7 +5411,9 @@ const SuperAdminPage = () => {
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() =>
-                              setShowCurrentAdminPassword(!showCurrentAdminPassword)
+                              setShowCurrentAdminPassword(
+                                !showCurrentAdminPassword
+                              )
                             }
                             edge="end"
                           >
@@ -5820,53 +5826,51 @@ const SuperAdminPage = () => {
             )}
             {adminDialogStep === 1 && (
               <Stack spacing={1.5} sx={{ mt: 1 }}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    borderRadius: 1.5,
-                    borderColor: 'error.main',
-                    bgcolor: 'error.50',
-                  }}
-                >
-                  <FormControlLabel
+                {!isEditingCurrentUser && (
+                  <Paper
+                    variant="outlined"
                     sx={{
-                      m: 0,
-                      width: '100%',
-                      justifyContent: 'space-between',
+                      p: 2,
+                      borderRadius: 1.5,
+                      borderColor: 'error.main',
+                      bgcolor: 'error.50',
                     }}
-                    label={
-                      <Typography fontWeight={800} color="error.main">
-                        Faoliyatni cheklash
-                      </Typography>
-                    }
-                    labelPlacement="start"
-                    control={
-                      <Switch
-                        color="error"
-                        checked={adminForm.is_restricted === 1}
-                        onChange={(e) =>
-                          setAdminForm({
-                            ...adminForm,
-                            is_restricted: e.target.checked ? 1 : 0,
-                          })
-                        }
-                      />
-                    }
-                  />
-                  <Typography
-                    variant="caption"
-                    color="error.main"
-                    sx={{ display: 'block', mt: 1 }}
                   >
-                    Agar bu yoqilsa, foydalanuvchi tizimdan foydalana olmaydi.
-                  </Typography>
-                </Paper>
-
-                <Alert severity="info">{apt('inheritanceInfo')}</Alert>
-                {adminForm.role !== 'admin' && (
-                  <Alert severity="warning">{apt('adminOnlyWarning')}</Alert>
+                    <FormControlLabel
+                      sx={{
+                        m: 0,
+                        width: '100%',
+                        justifyContent: 'space-between',
+                      }}
+                      label={
+                        <Typography fontWeight={800} color="error.main">
+                          Faoliyatni cheklash
+                        </Typography>
+                      }
+                      labelPlacement="start"
+                      control={
+                        <Switch
+                          color="error"
+                          checked={adminForm.is_restricted === 1}
+                          onChange={(e) =>
+                            setAdminForm({
+                              ...adminForm,
+                              is_restricted: e.target.checked ? 1 : 0,
+                            })
+                          }
+                        />
+                      }
+                    />
+                    <Typography
+                      variant="caption"
+                      color="error.main"
+                      sx={{ display: 'block', mt: 1 }}
+                    >
+                      Agar bu yoqilsa, foydalanuvchi tizimdan foydalana olmaydi.
+                    </Typography>
+                  </Paper>
                 )}
+                <Alert severity="info">{apt('inheritanceInfo')}</Alert>
                 <Grid container spacing={1.5}>
                   {Object.entries(adminPermissionLabels).map(([key, label]) => (
                     <Grid item xs={12} sm={6} key={key}>
@@ -5891,7 +5895,6 @@ const SuperAdminPage = () => {
                                   adminForm.admin_permissions
                                 )[key]
                               }
-                              disabled={adminForm.role !== 'admin'}
                               onChange={(e) =>
                                 setAdminForm({
                                   ...adminForm,
