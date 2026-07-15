@@ -2614,7 +2614,7 @@ const SearchResultRow = ({ icon, title, detail, chip, onClick }) => (
       textTransform: 'none',
     }}
   >
-    <Box sx={{ minWidth: 0, flex: 1 }}>
+    <Box sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}>
       <Stack direction={'row'} spacing={0.75} alignItems={'center'}>
         <Typography variant={'body2'} fontWeight={750} noWrap>
           {title}
@@ -2674,7 +2674,10 @@ const SearchResultPanel = ({
           key={`area-${result.level}-${result.item.id}`}
           icon={<LocationOn sx={{ color: '#0f766e' }} />}
           title={result.label}
-          detail={`${{ 1: mt.region, 2: mt.district, 3: mt.mahalla }[result.level]} · xaritada ko‘rish`}
+          detail={
+            result.detail ||
+            `${{ 1: mt.region, 2: mt.district, 3: mt.mahalla }[result.level]}`
+          }
           onClick={() => onSelect(result)}
         />
       ))}
@@ -2810,6 +2813,8 @@ export default function SuperAdminRegionalMap({
   const [directoryUsers, setDirectoryUsers] = useState([]);
   const [loadingRows, setLoadingRows] = useState(false);
   const [loadingBoundary, setLoadingBoundary] = useState(false);
+  const [mahallaSearchItems, setMahallaSearchItems] = useState([]);
+  const [mahallaSearchLoaded, setMahallaSearchLoaded] = useState(false);
   const [satelliteEnabled, setSatelliteEnabled] = useState(false);
   const [metricLayer, setMetricLayer] = useState('risk');
   const [timeFilter, setTimeFilter] = useState('all');
@@ -2995,6 +3000,28 @@ export default function SuperAdminRegionalMap({
     }
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    if (mahallaSearchLoaded || normalizeMapSearch(searchQuery).length < 2) {
+      return undefined;
+    }
+
+    fetch(`${BOUNDARY_BASE}/level3-search-index.json`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (!mounted) return;
+        setMahallaSearchItems(Array.isArray(data?.items) ? data.items : []);
+        setMahallaSearchLoaded(true);
+      })
+      .catch((error) => {
+        console.error('Mahalla search index error:', error);
+        if (mounted) setMahallaSearchLoaded(true);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [mahallaSearchLoaded, searchQuery]);
   useEffect(() => {
     let mounted = true;
     if (!boundaryIndex?.levels?.['2']?.length || !boundaryIndex?.files?.['3'])
@@ -3453,26 +3480,79 @@ export default function SuperAdminRegionalMap({
     const query = normalizeMapSearch(searchQuery);
     if (query.length < 2) return { locations: [], people: [] };
 
-    const locations = [1, 2, 3]
-      .flatMap((level) =>
-        (boundaryIndex?.levels?.[String(level)] || []).map((item) => ({
-          level,
-          item,
-          label: localizedFeatureName(item, lang),
-        }))
-      )
-      .filter((result) => normalizeMapSearch(result.label).includes(query))
+    const level1ById = new Map(
+      (boundaryIndex?.levels?.['1'] || []).map((item) => [
+        String(item.id),
+        item,
+      ])
+    );
+    const level2ById = new Map(
+      (boundaryIndex?.levels?.['2'] || []).map((item) => [
+        String(item.id),
+        item,
+      ])
+    );
+    const getLocationResultDetail = (level, item) => {
+      const levelLabel = { 1: mt.region, 2: mt.district, 3: mt.mahalla }[level];
+      if (level === 1) return levelLabel;
+
+      const district =
+        level === 3 ? level2ById.get(String(item.parent_id)) : item;
+      const region =
+        level === 2
+          ? level1ById.get(String(item.parent_id))
+          : level1ById.get(String(district?.parent_id));
+      const pathLabel = [region, level === 3 ? district : null]
+        .filter(Boolean)
+        .map((parent) => localizedFeatureName(parent, lang))
+        .join(' / ');
+
+      return [levelLabel, pathLabel].filter(Boolean).join(' - ');
+    };
+
+    const indexedLocations = [1, 2].flatMap((level) =>
+      (boundaryIndex?.levels?.[String(level)] || []).map((item) => ({
+        level,
+        item,
+        label: localizedFeatureName(item, lang),
+        detail: getLocationResultDetail(level, item),
+      }))
+    );
+    const mahallaLocations = mahallaSearchItems.map((item) => ({
+      level: 3,
+      item,
+      label: localizedFeatureName(item, lang),
+      detail: getLocationResultDetail(3, item),
+    }));
+
+    const locations = [...indexedLocations, ...mahallaLocations]
+      .map((result) => ({
+        ...result,
+        haystack: normalizeMapSearch(
+          [
+            result.label,
+            result.detail,
+            result.item?.name_uz,
+            result.item?.display_name,
+            result.item?.name_ru,
+            result.item?.name_cyril,
+            result.item?.name_en,
+          ].join(' ')
+        ),
+      }))
+      .filter((result) => result.haystack.includes(query))
       .sort((a, b) => {
         const aName = normalizeMapSearch(a.label);
         const bName = normalizeMapSearch(b.label);
         return (
           Number(bName.startsWith(query)) - Number(aName.startsWith(query)) ||
+          Number(b.haystack.startsWith(query)) -
+            Number(a.haystack.startsWith(query)) ||
           a.level - b.level ||
           aName.localeCompare(bName)
         );
       })
       .slice(0, 8);
-
     const people = pinFeatures
       .map((pin) => {
         const props = pin.properties || {};
@@ -3499,7 +3579,16 @@ export default function SuperAdminRegionalMap({
       .slice(0, 8);
 
     return { locations, people };
-  }, [boundaryIndex, lang, pinFeatures, searchQuery]);
+  }, [
+    boundaryIndex,
+    lang,
+    mahallaSearchItems,
+    mt.district,
+    mt.mahalla,
+    mt.region,
+    pinFeatures,
+    searchQuery,
+  ]);
 
   const svgMap = useMemo(() => {
     const features = [...(enrichedVisibleGeoJson?.features || [])].sort(
@@ -3697,9 +3786,37 @@ export default function SuperAdminRegionalMap({
   const selectBoundary = useCallback(
     async (item, level) => {
       if (!item || !indexRef.current) return;
+      if (level === 3 && !item.geometry) {
+        const path =
+          item.file ||
+          indexRef.current.files?.['3']?.[String(item.parent_id)] ||
+          `level3/${item.parent_id}.geojson`;
+        const geoJson = await loadBoundaryFile(3, path);
+        const matchedFeature = (geoJson.features || []).find((feature) => {
+          const props = feature.properties || {};
+          return (
+            String(props.boundary_id || feature.id) ===
+              String(item.boundary_id || item.id) ||
+            String(props.id) === String(item.id)
+          );
+        });
+        if (matchedFeature) {
+          const props = matchedFeature.properties || {};
+          item = {
+            ...props,
+            id: Number(props.id ?? item.id),
+            parent_id: Number(props.parent_id ?? item.parent_id),
+            admin_leve: 3,
+            boundary_id: props.boundary_id || matchedFeature.id,
+            bbox: matchedFeature.bbox || props.bbox,
+            center: props.center,
+            geometry: matchedFeature.geometry,
+            file: path,
+          };
+        }
+      }
       setMapMotion({ type: 'in', key: Date.now() });
       const map = mapRef.current;
-
       if (map?.getSource(LEVEL_META[level].source)) {
         clearLayerSelection(map, featureIdsByLevel, 1);
         clearLayerSelection(map, featureIdsByLevel, 2);
