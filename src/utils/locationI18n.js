@@ -156,6 +156,37 @@ const REGION_LABELS_KZ = {
   'surxondaryo viloyati': 'Сурхандарья облысы',
 };
 
+const REGION_LABELS_KY = {
+  'toshkent shahri': 'Ташкент шаары',
+  toshkent: 'Ташкент облусу',
+  'toshkent viloyati': 'Ташкент облусу',
+  qoraqalpogiston: 'Каракалпакстан Республикасы',
+  "qoraqalpog'iston": 'Каракалпакстан Республикасы',
+  "qoraqalpog'iston respublikasi": 'Каракалпакстан Республикасы',
+  andijon: 'Анжиян облусу',
+  'andijon viloyati': 'Анжиян облусу',
+  buxoro: 'Бухара облусу',
+  'buxoro viloyati': 'Бухара облусу',
+  fargona: 'Фергана облусу',
+  "farg'ona": 'Фергана облусу',
+  "farg'ona viloyati": 'Фергана облусу',
+  jizzax: 'Жизак облусу',
+  'jizzax viloyati': 'Жизак облусу',
+  xorazm: 'Хорезм облусу',
+  'xorazm viloyati': 'Хорезм облусу',
+  namangan: 'Наманган облусу',
+  'namangan viloyati': 'Наманган облусу',
+  navoiy: 'Навои облусу',
+  'navoiy viloyati': 'Навои облусу',
+  qashqadaryo: 'Кашкадарыя облусу',
+  'qashqadaryo viloyati': 'Кашкадарыя облусу',
+  samarqand: 'Самарканд облусу',
+  'samarqand viloyati': 'Самарканд облусу',
+  sirdaryo: 'Сырдарыя облусу',
+  'sirdaryo viloyati': 'Сырдарыя облусу',
+  surxondaryo: 'Сурхандарыя облусу',
+  'surxondaryo viloyati': 'Сурхандарыя облусу',
+};
 export const getLocalizedLocationLabel = (value, lang, level = 1) => {
   if (!value) return '-';
   const key = normalizeLocationKey(value);
@@ -210,6 +241,17 @@ export const getLocalizedLocationLabel = (value, lang, level = 1) => {
     return clean;
   }
 
+  if (lang === 'ky') {
+    const clean = stripUzSuffix(value);
+    if (REGION_LABELS_KY[key]) return REGION_LABELS_KY[key];
+    if (key === 'toshkent shahri' || /shahri$/i.test(value))
+      return `${clean} шаары`;
+    if (/respublikasi$/i.test(value)) return `${clean} Республикасы`;
+    if (/viloyati$/i.test(value) || level === 1) return `${clean} облусу`;
+    if (/tumani$/i.test(value) || level === 2) return `${clean} району`;
+    if (/mahallasi$/i.test(value) || level === 3) return `${clean} махалласы`;
+    return clean;
+  }
   if (lang === 'kz') {
     const clean = stripUzSuffix(value);
     const ascii = transliterateUzToAscii(value);

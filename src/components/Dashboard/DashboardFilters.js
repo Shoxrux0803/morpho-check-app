@@ -132,6 +132,28 @@ const FILTER_I18N = {
   },
 };
 
+FILTER_I18N.ky = {
+  ...FILTER_I18N.uz,
+  title: 'Аналитикалык чыпкалар',
+  subtitle: 'Маалыматтарды иргөө жана талдоо',
+  activeFilters: (count) => `${count} чыпка активдүү`,
+  demographics: 'Демография',
+  gender: 'ЖЫНЫСЫ',
+  male: 'Эркек',
+  female: 'Аял',
+  all: 'Баары',
+  region: 'АЙМАК (ОБЛУС)',
+  allRegions: 'Бардык аймактар',
+  biometrics: 'Биометрия',
+  ageRange: 'ЖАШ КУРАК АРАЛЫГЫ',
+  bmiRange: 'BMI АРАЛЫГЫ',
+  scientific: 'Илимий классификация',
+  somatotype: 'СОМАТОТИП',
+  allTypes: 'Бардык түрлөр',
+  dateFrom: 'БАШТАЛГАН КҮНҮ',
+  clear: 'Тазалоо',
+  apply: 'Колдонуу',
+};
 FILTER_I18N.tg = {
   ...FILTER_I18N.uz,
   title: 'Филтрҳои таҳлилӣ',

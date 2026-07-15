@@ -254,6 +254,59 @@ const DASH_I18N = {
   },
 };
 
+DASH_I18N.ky = {
+  ...DASH_I18N.uz,
+  title: 'SuperAdmin аналитика борбору',
+  subtitle:
+    'Аймактар, админдер, клиникалык коркунуч жана айлык динамика боюнча бирдиктүү башкаруу панели',
+  analyses: 'Талдоолор',
+  admins: 'Админдер',
+  today: 'Бүгүн',
+  totalAnalyses: 'Жалпы талдоолор',
+  allTime: 'Бардык убакыт ичинде',
+  todayAnalyses: 'Бүгүнкү талдоолор',
+  enteredToday: 'Бүгүн киргизилди',
+  weeklyGrowth: 'Апталык өсүш',
+  thisWeek: 'ушул аптада',
+  totalAdmins: 'Жалпы админдер',
+  simple: 'кадимки',
+  avgBmi: 'Орточо BMI',
+  systemWide: 'Система боюнча',
+  riskRegions: 'Коркунуч эң көп катталган аймактар',
+  riskRegionsSub: 'BMI же Z-score коркунуч чегинен чыккан жазуулар',
+  riskFrom: 'ичинен',
+  risk: 'коркунуч',
+  monthlyDynamics: 'Айлык динамика',
+  monthlyDynamicsSub: 'Акыркы 12 айдагы талдоолордун саны',
+  analysesCount: 'Талдоолордун саны',
+  genderDistribution: 'Жыныс боюнча бөлүштүрүү',
+  genderDistributionSub: 'Эркек / аял катышы',
+  ageGroups: 'Жаш курак топтору',
+  ageGroupsSub: 'Бейтаптардын жаш курагы боюнча',
+  patientsCount: 'Бейтаптардын саны',
+  somatotypeDistribution: 'Соматотиптердин бөлүштүрүлүшү',
+  somatotypeDistributionSub: 'Дене түзүлүшүнүн классификациясы',
+  count: 'Саны',
+  topRegions: 'Аймактар боюнча топ-10',
+  topRegionsSub: 'Эң көп талдоо киргизилген аймактар',
+  bmiStatusDistribution: 'BMI абалынын бөлүштүрүлүшү',
+  bmiStatusDistributionSub: 'Ден соолук топтору боюнча',
+  noData: 'Маалымат жок',
+  patient: 'бейтап',
+  avgRadar: 'Соматотиптин орточо радары',
+  avgRadarSub: 'Система боюнча орточо соматометриялык көрсөткүчтөр',
+  average: 'Орточо',
+  adminsDistribution: 'Админдердин бөлүштүрүлүшү',
+  adminsDistributionSub: 'Системанын колдонуучулары ролдор боюнча',
+  lastUpdate: 'Акыркы жаңыртуу',
+  male: 'Эркек',
+  female: 'Аял',
+  unknown: 'Белгисиз',
+  normal: 'Норма',
+  overweight: 'Ашыкча салмак',
+  obese: 'Семирүү',
+  underweight: 'Салмак жетишсиздиги',
+};
 DASH_I18N.tg = {
   ...DASH_I18N.uz,
   title: 'Маркази таҳлилии SuperAdmin',
@@ -436,39 +489,8 @@ const localeByLang = {
   ru: 'ru-RU',
   en: 'en-US',
   kz: 'kk-KZ',
+  ky: 'ky-KG',
   tr: 'tr-TR',
-};
-
-const REGION_LABELS_RU = {
-  'toshkent shahri': 'г. Ташкент',
-  toshkent: 'Ташкентская область',
-  'toshkent viloyati': 'Ташкентская область',
-  qoraqalpogiston: 'Республика Каракалпакстан',
-  "qoraqalpog'iston": 'Республика Каракалпакстан',
-  "qoraqalpog'iston respublikasi": 'Республика Каракалпакстан',
-  andijon: 'Андижанская область',
-  'andijon viloyati': 'Андижанская область',
-  buxoro: 'Бухарская область',
-  'buxoro viloyati': 'Бухарская область',
-  fargona: 'Ферганская область',
-  "farg'ona": 'Ферганская область',
-  "farg'ona viloyati": 'Ферганская область',
-  jizzax: 'Джизакская область',
-  'jizzax viloyati': 'Джизакская область',
-  xorazm: 'Хорезмская область',
-  'xorazm viloyati': 'Хорезмская область',
-  namangan: 'Наманганская область',
-  'namangan viloyati': 'Наманганская область',
-  navoiy: 'Навоийская область',
-  'navoiy viloyati': 'Навоийская область',
-  qashqadaryo: 'Кашкадарьинская область',
-  'qashqadaryo viloyati': 'Кашкадарьинская область',
-  samarqand: 'Самаркандская область',
-  'samarqand viloyati': 'Самаркандская область',
-  sirdaryo: 'Сырдарьинская область',
-  'sirdaryo viloyati': 'Сырдарьинская область',
-  surxondaryo: 'Сурхандарьинская область',
-  'surxondaryo viloyati': 'Сурхандарьинская область',
 };
 
 const normalizeRegionKey = (value = '') =>
@@ -478,11 +500,42 @@ const normalizeRegionKey = (value = '') =>
     .replace(/\s+/g, ' ')
     .trim();
 
+const REGION_CANONICAL_ALIASES = {
+  '\u0433. \u0442\u0430\u0448\u043a\u0435\u043d\u0442': 'Toshkent shahri',
+  '\u0442\u0430\u0448\u043a\u0435\u043d\u0442\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Toshkent viloyati',
+  '\u0430\u043d\u0434\u0438\u0436\u0430\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Andijon viloyati',
+  '\u0431\u0443\u0445\u0430\u0440\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Buxoro viloyati',
+  '\u0444\u0435\u0440\u0433\u0430\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    "Farg'ona viloyati",
+  '\u0434\u0436\u0438\u0437\u0430\u043a\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Jizzax viloyati',
+  '\u0445\u043e\u0440\u0435\u0437\u043c\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Xorazm viloyati',
+  '\u043d\u0430\u043c\u0430\u043d\u0433\u0430\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Namangan viloyati',
+  '\u043d\u0430\u0432\u043e\u0438\u0439\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Navoiy viloyati',
+  '\u043a\u0430\u0448\u043a\u0430\u0434\u0430\u0440\u044c\u0438\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Qashqadaryo viloyati',
+  '\u0441\u0430\u043c\u0430\u0440\u043a\u0430\u043d\u0434\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Samarqand viloyati',
+  '\u0441\u044b\u0440\u0434\u0430\u0440\u044c\u0438\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Sirdaryo viloyati',
+  '\u0441\u0443\u0440\u0445\u0430\u043d\u0434\u0430\u0440\u044c\u0438\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
+    'Surxondaryo viloyati',
+  '\u0440\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0430 \u043a\u0430\u0440\u0430\u043a\u0430\u043b\u043f\u0430\u043a\u0441\u0442\u0430\u043d':
+    "Qoraqalpog'iston Respublikasi",
+  '\u0433\u043e\u0440\u043e\u0434 \u0442\u0430\u0448\u043a\u0435\u043d\u0442':
+    'Toshkent shahri',
+};
+
 const getRegionLabel = (value, lang) => {
-  if (['en', 'ru', 'tm'].includes(lang))
-    return getLocalizedLocationLabel(value, lang, 1);
   const key = normalizeRegionKey(value);
-  return REGION_LABELS_RU[key] || value || '-';
+  const canonicalValue = REGION_CANONICAL_ALIASES[key] || value;
+  return getLocalizedLocationLabel(canonicalValue, lang, 1);
 };
 
 // ==== HELPERS ====
@@ -683,12 +736,35 @@ export default function SuperAdminDashboard({
 
   const regionData = useMemo(
     () =>
-      (stats?.by_region || []).slice(0, 10).map((row) => ({
-        ...row,
-        regionLabel: getRegionLabel(row.region, lang),
-      })),
+      (stats?.by_region || [])
+        .map((row) => ({
+          ...row,
+          count: Number(row.count) || 0,
+          regionLabel: getRegionLabel(row.region, lang),
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10),
     [lang, stats]
   );
+  const regionOverview = useMemo(() => {
+    const displayedTotal = regionData.reduce((sum, row) => sum + row.count, 0);
+    const systemTotal = Number(stats?.total_analyses) || displayedTotal;
+    const topThreeTotal = regionData
+      .slice(0, 3)
+      .reduce((sum, row) => sum + row.count, 0);
+
+    return {
+      max: regionData[0]?.count || 1,
+      leader: regionData[0],
+      topThreeShare: systemTotal
+        ? Math.round((topThreeTotal / systemTotal) * 100)
+        : 0,
+      rows: regionData.map((row) => ({
+        ...row,
+        share: systemTotal ? Math.round((row.count / systemTotal) * 100) : 0,
+      })),
+    };
+  }, [regionData, stats?.total_analyses]);
   const riskRegionRows = useMemo(
     () =>
       (stats?.top_risk_regions || []).slice(0, 6).map((row) => ({
@@ -1201,43 +1277,121 @@ export default function SuperAdminDashboard({
           <Grid size={{ xs: 12, md: 7 }}>
             <GlassCard>
               <SectionTitle title={tt.topRegions} subtitle={tt.topRegionsSub} />
-              <Box sx={{ height: 280, minWidth: 500 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={regionData}
-                    layout="vertical"
-                    barCategoryGap="20%"
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={false}
-                      stroke="rgba(255,255,255,0.05)"
-                    />
-                    <XAxis
-                      type="number"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#94a3b8' }}
-                    />
-                    <YAxis
-                      dataKey="regionLabel"
-                      type="category"
-                      width={110}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 11, fill: '#94a3b8' }}
-                    />
-                    <ReTooltip {...CustomTooltipStyle} />
-                    <Bar
-                      dataKey="count"
-                      name={tt.analyses}
-                      fill={COLORS.teal}
-                      radius={[0, 6, 6, 0]}
-                      barSize={12}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+              <Box
+                sx={{
+                  mb: 2.5,
+                  p: 2,
+                  borderRadius: 2.5,
+                  color: '#fff',
+                  background: `linear-gradient(120deg, ${COLORS.primary}, #164e63)`,
+                }}
+              >
+                <Box display="flex" justifyContent="space-between" gap={2}>
+                  <Box minWidth={0}>
+                    <Typography
+                      variant="overline"
+                      fontWeight={900}
+                      sx={{ opacity: 0.7 }}
+                    >
+                      TOP 1
+                    </Typography>
+                    <Typography variant="h6" fontWeight={900} noWrap>
+                      {regionOverview.leader?.regionLabel}
+                    </Typography>
+                  </Box>
+                  <Box textAlign="right" flex="0 0 auto">
+                    <Typography variant="h4" fontWeight={950}>
+                      {regionOverview.leader?.count.toLocaleString(locale)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                      {tt.analysesCount.toLocaleLowerCase()}
+                    </Typography>
+                  </Box>
+                </Box>
+                <Divider
+                  sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.16)' }}
+                />
+                <Stack direction="row" justifyContent="space-between">
+                  <Typography variant="caption" sx={{ opacity: 0.75 }}>
+                    TOP 3: <b>{regionOverview.topThreeShare}%</b>
+                  </Typography>
+                  <Typography variant="caption" sx={{ opacity: 0.75 }}>
+                    {regionData.length} {tt.count.toLocaleLowerCase()}
+                  </Typography>
+                </Stack>
               </Box>
+
+              <Stack spacing={1.55}>
+                {regionOverview.rows.map((row, index) => (
+                  <Box key={`${row.region}-${index}`}>
+                    <Box display="flex" alignItems="center" gap={1.2} mb={0.7}>
+                      <Box
+                        sx={{
+                          width: 26,
+                          height: 26,
+                          flex: '0 0 auto',
+                          borderRadius: '9px',
+                          display: 'grid',
+                          placeItems: 'center',
+                          fontSize: '0.72rem',
+                          fontWeight: 900,
+                          color: index < 3 ? '#fff' : 'text.secondary',
+                          bgcolor:
+                            index === 0
+                              ? COLORS.teal
+                              : index === 1
+                                ? COLORS.secondary
+                                : index === 2
+                                  ? COLORS.warning
+                                  : 'action.hover',
+                        }}
+                      >
+                        {index + 1}
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        fontWeight={750}
+                        noWrap
+                        flex={1}
+                      >
+                        {row.regionLabel}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        fontWeight={900}
+                        whiteSpace="nowrap"
+                      >
+                        {row.count.toLocaleString(locale)}
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          color="text.secondary"
+                          ml={0.7}
+                        >
+                          {row.share}%
+                        </Typography>
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        ml: 4.7,
+                        height: 8,
+                        borderRadius: 99,
+                        bgcolor: 'action.hover',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: `${Math.max((row.count / regionOverview.max) * 100, 3)}%`,
+                          height: '100%',
+                          borderRadius: 99,
+                          background: `linear-gradient(90deg, ${COLORS.secondary}, ${COLORS.teal})`,
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                ))}
+              </Stack>
             </GlassCard>
           </Grid>
         )}

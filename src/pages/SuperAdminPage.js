@@ -265,6 +265,36 @@ const ADMIN_REPORT_LABELS = {
       createdAt: 'Создано',
     },
   },
+  ky: {
+    title: 'Админдер жана изилдөөчүлөр боюнча жалпы отчет',
+    subtitle: 'XLSX отчетунун визуалдык алдын ала көрүнүшү',
+    preview: 'Отчетту көрүү',
+    download: 'XLSX жүктөп алуу',
+    downloading: 'Жүктөлүүдө...',
+    total: 'Жалпы',
+    admins: 'Админдер',
+    researchers: 'Изилдөөчүлөр',
+    superadmins: 'Суперадминдер',
+    generatedAt: 'Түзүлгөн убакыт',
+    noRows: 'Отчет үчүн маалымат табылган жок',
+    downloaded: 'Отчет жүктөлдү',
+    downloadError: 'Отчетту жүктөөдө ката:',
+    columns: {
+      index: '#',
+      name: 'Аты-жөнү',
+      email: 'Email',
+      role: 'Ролу',
+      phone: 'Телефон',
+      region: 'Аймак',
+      district: 'Район/шаар',
+      mahalla: 'Махалла',
+      researchTopic: 'Илимий иштин темасы',
+      researchType: 'Изилдөөнүн түрү',
+      researchArea: 'Изилдөө аймагы',
+      supervisor: 'Илимий жетекчи',
+      createdAt: 'Түзүлгөн убакыт',
+    },
+  },
 };
 
 const ADMIN_REPORT_COLUMN_KEYS = [
@@ -414,6 +444,7 @@ const AUDIT_ACTION_LABELS = {
     download: 'Жүктөө',
     downloaded: 'Жүктөлдү',
     export: 'Экспорт',
+    exported: 'Экспорттолду',
   },
 };
 
