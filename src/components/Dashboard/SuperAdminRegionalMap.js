@@ -1607,10 +1607,14 @@ const formatArea = (value, locale = 'uz-UZ') => {
 
 const getBounds = (bbox) => {
   bbox = parseMaybeJson(bbox);
-  if (!bbox || bbox.length !== 4) return null;
+  if (!Array.isArray(bbox) || bbox.length !== 4) return null;
+  const values = bbox.map(Number);
+  if (!values.every(Number.isFinite)) return null;
+  const [west, south, east, north] = values;
+  if (west === east || south === north) return null;
   return [
-    [bbox[0], bbox[1]],
-    [bbox[2], bbox[3]],
+    [Math.min(west, east), Math.min(south, north)],
+    [Math.max(west, east), Math.max(south, north)],
   ];
 };
 
@@ -2788,6 +2792,7 @@ export default function SuperAdminRegionalMap({
   const level3FeaturesRef = useRef([]);
   const panDragRef = useRef(null);
   const suppressSvgClickRef = useRef(false);
+  const selectionRequestRef = useRef(0);
 
   const [mapMotion, setMapMotion] = useState({ type: 'idle', key: 0 });
   const [mapReady, setMapReady] = useState(false);
@@ -3595,8 +3600,10 @@ export default function SuperAdminRegionalMap({
         bboxArea(b.bbox || b.properties?.bbox) -
         bboxArea(a.bbox || a.properties?.bbox)
     );
+    // The selected boundary is the camera frame. Child files can be incomplete
+    // or delayed, so using their aggregate bounds can leave a chosen city far away.
     const focusedBbox = selected
-      ? getCollectionBounds(enrichedVisibleGeoJson)
+      ? parseMaybeJson(selected.bbox) || getGeometryBounds(selected.geometry)
       : null;
     const bbox =
       focusedBbox || countryBbox || getCollectionBounds(enrichedVisibleGeoJson);
@@ -3761,7 +3768,8 @@ export default function SuperAdminRegionalMap({
   const fitToBoundary = useCallback((item, fallbackZoom) => {
     const map = mapRef.current;
     if (!map || !item) return;
-    const bounds = getBounds(item.bbox);
+    const bounds =
+      getBounds(item.bbox) || getBounds(getGeometryBounds(item.geometry));
     map.stop();
     if (bounds) {
       map.fitBounds(bounds, {
@@ -3769,7 +3777,8 @@ export default function SuperAdminRegionalMap({
         duration: 1150,
         easing: MAP_CAMERA_EASING,
         essential: true,
-        maxZoom: fallbackZoom,
+        // Compact level-1 boundaries such as Tashkent city need a closer fit.
+        maxZoom: Math.max(fallbackZoom, 12),
       });
     } else {
       map.easeTo({
@@ -3785,12 +3794,14 @@ export default function SuperAdminRegionalMap({
   const selectBoundary = useCallback(
     async (item, level) => {
       if (!item || !indexRef.current) return;
+      const requestId = ++selectionRequestRef.current;
       if (level === 3 && !item.geometry) {
         const path =
           item.file ||
           indexRef.current.files?.['3']?.[String(item.parent_id)] ||
           `level3/${item.parent_id}.geojson`;
         const geoJson = await loadBoundaryFile(3, path);
+        if (requestId !== selectionRequestRef.current) return;
         const matchedFeature = (geoJson.features || []).find((feature) => {
           const props = feature.properties || {};
           return (
@@ -3844,6 +3855,7 @@ export default function SuperAdminRegionalMap({
           indexRef.current.files?.['2']?.[String(item.id)] ||
           `level2/${item.id}.geojson`;
         const geoJson = await loadBoundaryFile(2, path);
+        if (requestId !== selectionRequestRef.current) return;
         setSourceData(2, geoJson);
         setVisibleGeoJson(geoJson);
         setSvgViewport({ scale: 1, x: 0, y: 0 });
@@ -3859,6 +3871,7 @@ export default function SuperAdminRegionalMap({
           indexRef.current.files?.['3']?.[String(item.id)] ||
           `level3/${item.id}.geojson`;
         const geoJson = await loadBoundaryFile(3, path);
+        if (requestId !== selectionRequestRef.current) return;
         setLevel3Features(geoJson.features || []);
         setSourceData(3, geoJson);
         setVisibleGeoJson(geoJson);
@@ -3933,6 +3946,7 @@ export default function SuperAdminRegionalMap({
   );
 
   const resetToCountry = useCallback(() => {
+    selectionRequestRef.current += 1;
     setMapMotion({ type: 'out', key: Date.now() });
     setSelected(null);
     setSelectedPin(null);
@@ -4353,78 +4367,98 @@ export default function SuperAdminRegionalMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map?.getLayer(GOOGLE_SATELLITE_LAYER)) return;
-    map.setLayoutProperty(
-      GOOGLE_SATELLITE_LAYER,
-      'visibility',
-      satelliteEnabled ? 'visible' : 'none'
-    );
-    if (map.getLayer('map-background')) {
-      map.setPaintProperty(
-        'map-background',
-        'background-color',
-        satelliteEnabled ? '#0f172a' : mapColors.background
-      );
-    }
-    if (map.getLayer(MAP_LABEL_LAYER)) {
+    if (!map) return undefined;
+
+    const applyLayerMode = () => {
+      if (!map.getLayer(GOOGLE_SATELLITE_LAYER)) return false;
+
       map.setLayoutProperty(
-        MAP_LABEL_LAYER,
+        GOOGLE_SATELLITE_LAYER,
         'visibility',
         satelliteEnabled ? 'visible' : 'none'
       );
-    }
-    [1, 2, 3].forEach((level) => {
-      const meta = LEVEL_META[level];
-      const isActiveLayer = level === activeBoundaryLevel;
-      const visibility =
-        !satelliteEnabled || isActiveLayer ? 'visible' : 'none';
-      if (map.getLayer(meta.fill)) {
-        map.setLayoutProperty(meta.fill, 'visibility', visibility);
+      if (map.getLayer('map-background')) {
         map.setPaintProperty(
-          meta.fill,
-          'fill-opacity',
-          satelliteEnabled && isActiveLayer
-            ? 0.08
-            : satelliteEnabled
-              ? 0
-              : getBoundaryFillOpacityPaint(level)
+          'map-background',
+          'background-color',
+          satelliteEnabled ? '#0f172a' : mapColors.background
         );
       }
-      if (map.getLayer(meta.line)) {
-        map.setLayoutProperty(meta.line, 'visibility', visibility);
-        map.setPaintProperty(
-          meta.line,
-          'line-color',
-          satelliteEnabled
-            ? '#facc15'
-            : getBoundaryLineColorPaint(level, isDark)
+      if (map.getLayer(MAP_LABEL_LAYER)) {
+        map.setLayoutProperty(
+          MAP_LABEL_LAYER,
+          'visibility',
+          satelliteEnabled ? 'visible' : 'none'
         );
-        map.setPaintProperty(
-          meta.line,
-          'line-opacity',
-          satelliteEnabled && isActiveLayer
-            ? 0.92
-            : satelliteEnabled
-              ? 0
-              : level === 1
-                ? 0.76
+      }
+      [1, 2, 3].forEach((level) => {
+        const meta = LEVEL_META[level];
+        const isActiveLayer = level === activeBoundaryLevel;
+        const visibility =
+          !satelliteEnabled || isActiveLayer ? 'visible' : 'none';
+        if (map.getLayer(meta.fill)) {
+          map.setLayoutProperty(meta.fill, 'visibility', visibility);
+          map.setPaintProperty(
+            meta.fill,
+            'fill-opacity',
+            satelliteEnabled && isActiveLayer
+              ? 0.08
+              : satelliteEnabled
+                ? 0
+                : getBoundaryFillOpacityPaint(level)
+          );
+        }
+        if (map.getLayer(meta.line)) {
+          map.setLayoutProperty(meta.line, 'visibility', visibility);
+          map.setPaintProperty(
+            meta.line,
+            'line-color',
+            satelliteEnabled
+              ? '#facc15'
+              : getBoundaryLineColorPaint(level, isDark)
+          );
+          map.setPaintProperty(
+            meta.line,
+            'line-opacity',
+            satelliteEnabled && isActiveLayer
+              ? 0.92
+              : satelliteEnabled
+                ? 0
+                : level === 1
+                  ? 0.76
+                  : level === 2
+                    ? 0.64
+                    : 0.5
+          );
+          map.setPaintProperty(
+            meta.line,
+            'line-width',
+            satelliteEnabled && isActiveLayer
+              ? level === 1
+                ? 3.8
                 : level === 2
-                  ? 0.64
-                  : 0.5
-        );
-        map.setPaintProperty(
-          meta.line,
-          'line-width',
-          satelliteEnabled && isActiveLayer
-            ? level === 1
-              ? 3.8
-              : level === 2
-                ? 3
-                : 2.4
-            : getBoundaryLineWidthPaint(level)
-        );
-      }
-    });
+                  ? 3
+                  : 2.4
+              : getBoundaryLineWidthPaint(level)
+          );
+        }
+      });
+      return true;
+    };
+
+    if (applyLayerMode()) return undefined;
+
+    const retryLayerMode = () => {
+      applyLayerMode();
+    };
+    map.once('load', retryLayerMode);
+    map.once('styledata', retryLayerMode);
+    map.once('idle', retryLayerMode);
+    return () => {
+      map.off('load', retryLayerMode);
+      map.off('styledata', retryLayerMode);
+      map.off('idle', retryLayerMode);
+    };
   }, [activeBoundaryLevel, isDark, mapColors.background, satelliteEnabled]);
 
   useEffect(() => {
@@ -4584,12 +4618,16 @@ export default function SuperAdminRegionalMap({
     if (!map) return;
     map.resize();
 
-    const selectedBounds = selected ? getBounds(selected.bbox) : null;
+    const selectedBounds = selected
+      ? getBounds(selected.bbox) ||
+        getBounds(getGeometryBounds(selected.geometry))
+      : null;
     if (selectedBounds) {
       map.fitBounds(selectedBounds, {
         animate: false,
         duration: 0,
         padding: 22,
+        maxZoom: Math.max(LEVEL_META[selected.admin_leve]?.zoom || 6, 12),
       });
       return;
     }
@@ -4604,8 +4642,16 @@ export default function SuperAdminRegionalMap({
   }, [selected, svgLngLatBounds]);
 
   const handleSatelliteToggle = useCallback(() => {
+    const map = mapRef.current;
     if (!satelliteEnabled) {
       fitSatelliteToCurrentView();
+    } else {
+      map?.easeTo({
+        pitch: 0,
+        duration: 260,
+        easing: MAP_CAMERA_EASING,
+        essential: true,
+      });
     }
     setSatelliteEnabled((value) => !value);
   }, [fitSatelliteToCurrentView, satelliteEnabled]);
@@ -5531,9 +5577,10 @@ export default function SuperAdminRegionalMap({
     toast.success(pin?.name ? mt.chatOpened(pin.name) : mt.chatPrompt);
   };
 
-  const loading = !mapReady || loadingBoundary;
   const dataLoading = loadingRows || statsLoading;
-  const satelliteBoundaryOpacity = satelliteEnabled ? 0 : 1;
+  const showSatelliteCanvas = satelliteEnabled;
+  const loading = !satelliteEnabled && (!mapReady || loadingBoundary);
+  const satelliteBoundaryOpacity = showSatelliteCanvas ? 0 : 1;
   const mapLabelFill = satelliteEnabled ? '#ffffff' : mapColors.label;
   const mapLabelHalo = satelliteEnabled
     ? 'rgba(2,6,23,0.96)'
@@ -5647,7 +5694,7 @@ export default function SuperAdminRegionalMap({
             sx={{
               position: 'absolute',
               inset: 0,
-              opacity: satelliteEnabled ? 1 : 0.01,
+              opacity: showSatelliteCanvas ? 1 : 0.01,
               pointerEvents: satelliteEnabled ? 'auto' : 'none',
               transition: 'opacity 180ms ease',
             }}
@@ -5663,7 +5710,9 @@ export default function SuperAdminRegionalMap({
               inset: 0,
               zIndex: 1,
               pointerEvents: satelliteEnabled ? 'none' : 'auto',
-              bgcolor: satelliteEnabled ? 'transparent' : mapColors.background,
+              bgcolor: showSatelliteCanvas
+                ? 'transparent'
+                : mapColors.background,
               overscrollBehavior: 'contain',
               touchAction: 'none',
               cursor: panDragRef.current ? 'grabbing' : 'grab',
@@ -5721,7 +5770,7 @@ export default function SuperAdminRegionalMap({
               aria-label={mt.title}
               key={'map-motion-' + mapMotion.type + '-' + mapMotion.key}
               style={{
-                opacity: satelliteEnabled ? 0 : 1,
+                opacity: showSatelliteCanvas ? 0 : 1,
                 shapeRendering: 'geometricPrecision',
                 transformBox: 'fill-box',
                 transformOrigin: 'center center',
@@ -5737,14 +5786,16 @@ export default function SuperAdminRegionalMap({
               <rect
                 width={SVG_WIDTH}
                 height={SVG_HEIGHT}
-                fill={satelliteEnabled ? 'transparent' : mapColors.background}
+                fill={
+                  showSatelliteCanvas ? 'transparent' : mapColors.background
+                }
               />
               <text
                 x={SVG_WIDTH / 2}
                 y={SVG_HEIGHT / 2}
                 textAnchor="middle"
                 fill={mapLabelFill}
-                opacity={satelliteEnabled ? '0' : '0.12'}
+                opacity={showSatelliteCanvas ? '0' : '0.12'}
                 fontSize="20"
                 fontWeight="800"
               >
