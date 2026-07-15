@@ -3358,6 +3358,35 @@ Object.assign(translations.en, {
   callSupport: 'Call Support',
 });
 
+Object.assign(translations.en, {
+  chatSettingsTitle: 'Chat Settings',
+  chatSettingsDesc:
+    'Here you can enable or disable the visibility and functionality of the AI chat assistant and internal chat for different roles.',
+  aiChatLabel: 'AI Chat',
+  internalChatLabel: 'Internal Chat',
+  settingUpdated: 'settings updated',
+  settingError: 'An error occurred',
+  roleAdminExt: 'Administrators (Admin)',
+  roleResearcher: 'Researchers (Researcher)',
+  roleUser: 'Regular users (User)',
+  roleFieldAssistant: 'Assistants (Field Assistant)',
+  roleGuest: 'Guests (Unregistered)',
+});
+
+Object.assign(translations.tg, {
+  chatSettingsTitle: 'Танзимоти чат',
+  chatSettingsDesc:
+    'Аз ин ҷо метавонед намоёнӣ ва фаъолияти ёвари AI чат ва чати дохилиро барои нақшҳои гуногун фаъол ё ғайрифаъол кунед.',
+  aiChatLabel: 'AI чат',
+  internalChatLabel: 'Чати дохилӣ',
+  settingUpdated: 'танзимот нав шуд',
+  settingError: 'Хатогӣ рух дод',
+  roleAdminExt: 'Маъмурон (Admin)',
+  roleResearcher: 'Таҳқиқотчиён (Researcher)',
+  roleUser: 'Истифодабарандагони оддӣ (User)',
+  roleFieldAssistant: 'Ёварон (Field Assistant)',
+  roleGuest: 'Меҳмонон (Ба қайд гирифта нашудаанд)',
+});
 const settingsTranslations = {
   tg: {
     settingsTitle: 'Танзимот',
