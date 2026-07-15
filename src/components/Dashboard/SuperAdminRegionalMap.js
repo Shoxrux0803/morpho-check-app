@@ -82,7 +82,13 @@ const MAP_I18N = {
     admin: 'Admin',
     admins: 'Admin',
     researcher: 'Izlanuvchi',
-    fieldAssistant: 'Field assistant',
+    fieldAssistant: 'Dala yordamchisi',
+    highRisk: 'Yuqori risk',
+    watchRisk: 'Kuzatuv kerak',
+    lowRisk: 'Past risk',
+    dominantClinicalGroup: 'Dominant klinik guruh',
+    highZSignal: 'Z-score +2 dan yuqori yozuvlar',
+    operationalReadiness: 'Qamrov va faol rollar asosida',
     nextLayer: 'Keyingi qatlam',
     area: 'Maydon',
     riskSignal: 'Klinik risk signali',
@@ -1177,6 +1183,13 @@ Object.assign(MAP_I18N.ru, {
   reportArea: 'Территория',
   reportRisk: 'Риск',
   reportQuality: 'Качество',
+  highRisk: 'Высокий риск',
+  watchRisk: 'Нужно наблюдение',
+  lowRisk: 'Низкий риск',
+  dominantClinicalGroup: 'Доминирующая клиническая группа',
+  highZSignal: 'Записи с Z-score выше +2',
+  operationalReadiness: 'На основе охвата и активных ролей',
+  fieldAssistant: 'Полевой ассистент',
 });
 
 Object.assign(MAP_I18N.en, {
@@ -1224,6 +1237,13 @@ Object.assign(MAP_I18N.en, {
   reportArea: 'Area',
   reportRisk: 'Risk',
   reportQuality: 'Quality',
+  highRisk: 'High risk',
+  watchRisk: 'Watch needed',
+  lowRisk: 'Low risk',
+  dominantClinicalGroup: 'Dominant clinical group',
+  highZSignal: 'Records with Z-score above +2',
+  operationalReadiness: 'Based on coverage and active roles',
+  fieldAssistant: 'Field assistant',
 });
 
 Object.assign(MAP_I18N.kz, {
@@ -1271,6 +1291,13 @@ Object.assign(MAP_I18N.kz, {
   reportArea: 'Aimaq',
   reportRisk: 'Qauip',
   reportQuality: 'Sapa',
+  highRisk: 'Jogary qauip',
+  watchRisk: 'Baqylau kerek',
+  lowRisk: 'Tomen qauip',
+  dominantClinicalGroup: 'Basym klinikalyq top',
+  highZSignal: 'Z-score +2-den jogary jazbalar',
+  operationalReadiness: 'Qamtu jane belsendi rolder negizinde',
+  fieldAssistant: 'Dala assistenti',
 });
 
 Object.assign(MAP_I18N.ky, {
@@ -1318,6 +1345,13 @@ Object.assign(MAP_I18N.ky, {
   reportArea: 'Aimak',
   reportRisk: 'Korkunuch',
   reportQuality: 'Sapat',
+  highRisk: 'Jogorku korkunuch',
+  watchRisk: 'Kozomol kerek',
+  lowRisk: 'Tomon korkunuch',
+  dominantClinicalGroup: 'Basym klinikalyk top',
+  highZSignal: 'Z-score +2den jogoru jazulaar',
+  operationalReadiness: 'Kamtuu jana aktivduu roldor negizinde',
+  fieldAssistant: 'Talaa assistenti',
 });
 
 Object.assign(MAP_I18N.tg, {
@@ -1365,6 +1399,13 @@ Object.assign(MAP_I18N.tg, {
   reportArea: 'Hudud',
   reportRisk: 'Khavf',
   reportQuality: 'Sifat',
+  highRisk: 'Khavfi baland',
+  watchRisk: 'Nazorat lozim',
+  lowRisk: 'Khavfi past',
+  dominantClinicalGroup: 'Guruhi klinikii asosii',
+  highZSignal: 'Sabthoi Z-score az +2 bolo',
+  operationalReadiness: 'Bar asosii farogiri va naqshhoi faol',
+  fieldAssistant: 'Yordamchii sahroi',
 });
 
 Object.assign(MAP_I18N.tm, {
@@ -1412,6 +1453,13 @@ Object.assign(MAP_I18N.tm, {
   reportArea: 'Sebit',
   reportRisk: 'Risk',
   reportQuality: 'Hil',
+  highRisk: 'Yokary risk',
+  watchRisk: 'Gozegcilik gerek',
+  lowRisk: 'Pes risk',
+  dominantClinicalGroup: 'Esasy kliniki topar',
+  highZSignal: 'Z-score +2-den yokary yazgylar',
+  operationalReadiness: 'Gursaw we isjen rollar esasynda',
+  fieldAssistant: 'Meydan komekcisi',
 });
 
 Object.assign(MAP_I18N.tr, {
@@ -1459,6 +1507,13 @@ Object.assign(MAP_I18N.tr, {
   reportArea: 'Bolge',
   reportRisk: 'Risk',
   reportQuality: 'Kalite',
+  highRisk: 'Yuksek risk',
+  watchRisk: 'Izlem gerekli',
+  lowRisk: 'Dusuk risk',
+  dominantClinicalGroup: 'Baskin klinik grup',
+  highZSignal: 'Z-score +2 uzeri kayitlar',
+  operationalReadiness: 'Kapsama ve aktif rollere gore',
+  fieldAssistant: 'Saha asistani',
 });
 
 const localeByLang = {
@@ -4340,10 +4395,10 @@ export default function SuperAdminRegionalMap({
     );
     const riskLabel =
       riskRate >= 25
-        ? mt.highRisk || 'Yuqori risk'
+        ? mt.highRisk || MAP_I18N.uz.highRisk
         : riskRate >= 10
-          ? mt.watchRisk || 'Kuzatuv kerak'
-          : mt.lowRisk || 'Past risk';
+          ? mt.watchRisk || MAP_I18N.uz.watchRisk
+          : mt.lowRisk || MAP_I18N.uz.lowRisk;
 
     return {
       coveragePct,
@@ -4410,19 +4465,19 @@ export default function SuperAdminRegionalMap({
       {
         label: mt.bmiDistribution,
         value: `${regionalPanelSummary.dominantBmi?.label || '-'} ${regionalPanelSummary.dominantBmi?.value || 0}`,
-        helper: mt.dominantClinicalGroup || 'Dominant klinik guruh',
+        helper: mt.dominantClinicalGroup || MAP_I18N.uz.dominantClinicalGroup,
         color: regionalPanelSummary.dominantBmi?.color || '#2563eb',
       },
       {
         label: mt.zBands,
         value: regionalPanelSummary.highZ,
-        helper: mt.highZSignal || 'Z-score +2 dan yuqori yozuvlar',
+        helper: mt.highZSignal || MAP_I18N.uz.highZSignal,
         color: regionalPanelSummary.highZ ? '#dc2626' : '#0f766e',
       },
       {
         label: mt.operationalAnalysis,
         value: `${regionalPanelSummary.operationalScore}%`,
-        helper: mt.operationalReadiness || 'Qamrov va faol rollar asosida',
+        helper: mt.operationalReadiness || MAP_I18N.uz.operationalReadiness,
         color:
           regionalPanelSummary.operationalScore >= 70 ? '#0f766e' : '#f59e0b',
       },
@@ -4767,7 +4822,7 @@ export default function SuperAdminRegionalMap({
       if (pin?.type === 'admin') return mt.admin;
       if (pin?.type === 'researcher') return mt.researcher;
       if (pin?.type === 'field_assistant')
-        return mt.fieldAssistant || 'Field assistant';
+        return mt.fieldAssistant || MAP_I18N.uz.fieldAssistant;
       return pin?.role || pin?.type || '-';
     },
     [mt]
@@ -4797,7 +4852,7 @@ export default function SuperAdminRegionalMap({
       let y = 46;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(16);
-      doc.text(mt.title || 'Regional analytics map', 40, y);
+      doc.text(mt.title || MAP_I18N.uz.title, 40, y);
       y += 22;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(10);
@@ -4809,7 +4864,11 @@ export default function SuperAdminRegionalMap({
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(12);
-      doc.text(mt.analyticalIndicators || 'Indicators', 40, y);
+      doc.text(
+        mt.analyticalIndicators || MAP_I18N.uz.analyticalIndicators,
+        40,
+        y
+      );
       y += 18;
       doc.setFontSize(9);
       reportSummaryRows.forEach(([label, value]) => {
@@ -4912,7 +4971,7 @@ export default function SuperAdminRegionalMap({
           )
         )
         .join('');
-      const html = `<!doctype html><html><head><meta charset="utf-8" /><style>body{font-family:Arial,sans-serif}table{border-collapse:collapse;margin-bottom:18px}th,td{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}th{background:#e2e8f0}.title{font-size:18px;font-weight:700;margin-bottom:4px}.sub{color:#475569;margin-bottom:14px}</style></head><body><div class="title">${escapeHtml(mt.title || 'Regional analytics map')}</div><div class="sub">${escapeHtml(selectedPathLabel)}</div><table>${summaryRows}</table><table><tr><th>${escapeHtml(mt.riskReasons || MAP_I18N.uz.riskReasons)}</th><th>n</th></tr>${riskRows}</table><table><tr><th>${escapeHtml(mt.reportSection || MAP_I18N.uz.reportSection)}</th><th>${escapeHtml(mt.reportArea || MAP_I18N.uz.reportArea)}</th><th>n</th><th>${escapeHtml(mt.reportRisk || MAP_I18N.uz.reportRisk)}</th><th>${escapeHtml(mt.reportQuality || MAP_I18N.uz.reportQuality)}</th></tr>${topRows}</table></body></html>`;
+      const html = `<!doctype html><html><head><meta charset="utf-8" /><style>body{font-family:Arial,sans-serif}table{border-collapse:collapse;margin-bottom:18px}th,td{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}th{background:#e2e8f0}.title{font-size:18px;font-weight:700;margin-bottom:4px}.sub{color:#475569;margin-bottom:14px}</style></head><body><div class="title">${escapeHtml(mt.title || MAP_I18N.uz.title)}</div><div class="sub">${escapeHtml(selectedPathLabel)}</div><table>${summaryRows}</table><table><tr><th>${escapeHtml(mt.riskReasons || MAP_I18N.uz.riskReasons)}</th><th>n</th></tr>${riskRows}</table><table><tr><th>${escapeHtml(mt.reportSection || MAP_I18N.uz.reportSection)}</th><th>${escapeHtml(mt.reportArea || MAP_I18N.uz.reportArea)}</th><th>n</th><th>${escapeHtml(mt.reportRisk || MAP_I18N.uz.reportRisk)}</th><th>${escapeHtml(mt.reportQuality || MAP_I18N.uz.reportQuality)}</th></tr>${topRows}</table></body></html>`;
       downloadBlob(
         new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' }),
         `${reportFileBase}.xls`
