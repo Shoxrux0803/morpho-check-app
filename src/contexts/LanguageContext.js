@@ -1819,6 +1819,19 @@ Object.assign(translations.uz, {
 
 translations.ky = {
   ...translations.uz,
+  // Chat Settings
+  chatSettingsTitle: 'Чат жөндөөлөрү',
+  chatSettingsDesc:
+    'Бул жерден ар түрдүү ролдор үчүн AI чат жардамчысынын жана ички чаттын көрүнүшүн жана иштешин күйгүзүп же өчүрө аласыз.',
+  aiChatLabel: 'AI чат',
+  internalChatLabel: 'Ички чат',
+  settingUpdated: 'үчүн жөндөө жаңыртылды',
+  settingError: 'Ката кетти',
+  roleAdminExt: 'Администраторлор (Admin)',
+  roleResearcher: 'Изилдөөчүлөр (Researcher)',
+  roleUser: 'Кадимки колдонуучулар (User)',
+  roleFieldAssistant: 'Жардамчылар (Field Assistant)',
+  roleGuest: 'Коноктор (Катталбагандар)',
   home: 'Башкы',
   homeTooltip: 'Башкы бет',
   adminPanel: 'Админ панель',
@@ -2390,6 +2403,19 @@ translations.tg = {
 
 translations.tr = {
   ...translations.en,
+  // Chat Settings
+  chatSettingsTitle: 'Sohbet Ayarları',
+  chatSettingsDesc:
+    'Buradan farklı roller için AI sohbet yardımcısının ve iç sohbetin görünürlüğünü ve çalışmasını açıp kapatabilirsiniz.',
+  aiChatLabel: 'AI Sohbet',
+  internalChatLabel: 'İç Sohbet',
+  settingUpdated: 'için ayar güncellendi',
+  settingError: 'Bir hata oluştu',
+  roleAdminExt: 'Yöneticiler (Admin)',
+  roleResearcher: 'Araştırmacılar (Researcher)',
+  roleUser: 'Normal kullanıcılar (User)',
+  roleFieldAssistant: 'Yardımcılar (Field Assistant)',
+  roleGuest: 'Misafirler (Kayıtlı olmayanlar)',
   home: 'Ana sayfa',
   homeTooltip: 'Ana sayfa',
   adminPanel: 'Yonetim paneli',
@@ -2715,6 +2741,19 @@ translations.tr = {
 
 translations.tm = {
   ...translations.uz,
+  // Chat Settings
+  chatSettingsTitle: 'Chat sazlamalary',
+  chatSettingsDesc:
+    'Bu ýerden dürli rollar üçin AI chat kömekçisiniň we içki chatyň görünmegini hem-de işlemegini açyp ýa-da öçürip bilersiňiz.',
+  aiChatLabel: 'AI chat',
+  internalChatLabel: 'Içki chat',
+  settingUpdated: 'üçin sazlama täzelendi',
+  settingError: 'Ýalňyşlyk ýüze çykdy',
+  roleAdminExt: 'Administratorlar (Admin)',
+  roleResearcher: 'Gözlegçiler (Researcher)',
+  roleUser: 'Adaty ulanyjylar (User)',
+  roleFieldAssistant: 'Kömekçiler (Field Assistant)',
+  roleGuest: 'Myhmanlar (Hasaba alynmadyklar)',
   home: 'Bas sahypa',
   adminPanel: 'Admin panel',
   themeStyle: 'Tema usuly',
