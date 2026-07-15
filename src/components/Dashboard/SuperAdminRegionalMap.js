@@ -7,6 +7,8 @@ import React, {
   useState,
 } from 'react';
 import maplibregl from 'maplibre-gl';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
   Box,
@@ -27,8 +29,10 @@ import {
 } from '@mui/material';
 import {
   BarChart,
+  CameraAlt,
   ChatBubbleOutline,
   Close,
+  Download,
   Groups,
   HealthAndSafety,
   Insights,
@@ -36,6 +40,7 @@ import {
   MyLocation,
   Public,
   SatelliteAlt,
+  TableChart,
   Speed,
   TrendingUp,
 } from '@mui/icons-material';
@@ -173,6 +178,13 @@ const MAP_I18N = {
     avgBmi: "O'rtacha BMI",
     zRisk: 'Z-risk',
     patientCount: 'Patient',
+    exportReport: 'Hisobot eksport',
+    exportPdf: 'PDF',
+    exportXls: 'XLS',
+    exportSnapshot: 'Snapshot',
+    exportSuccess: 'Hisobot tayyor',
+    exportError: 'Eksport xatosi',
+    snapshotSuccess: 'Snapshot tayyor',
   },
   ru: {
     country: 'Узбекистан',
@@ -1667,6 +1679,33 @@ const getTrendInfo = (records = []) => {
     previousRate,
   };
 };
+const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+const escapeHtml = (value = '') =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const slugifyFilePart = (value = '') =>
+  String(value || 'regional-map')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64) || 'regional-map';
+
+const todayStamp = () => new Date().toISOString().slice(0, 10);
 const getRiskColor = (riskRate) => {
   if (riskRate >= 45) return '#dc2626';
   if (riskRate >= 25) return '#f59e0b';
@@ -2156,6 +2195,7 @@ export default function SuperAdminRegionalMap({
   const [timeFilter, setTimeFilter] = useState('all');
   const [customDateFrom, setCustomDateFrom] = useState('');
   const [customDateTo, setCustomDateTo] = useState('');
+  const [exportingMap, setExportingMap] = useState(false);
 
   const userRows = directoryUsers.length ? directoryUsers : admins;
 
@@ -4297,6 +4337,94 @@ export default function SuperAdminRegionalMap({
     },
     [lang, locale, mt]
   );
+  const selectedAreaName = useMemo(
+    () => (selected ? localizedFeatureName(selected, lang) : mt.country),
+    [lang, mt.country, selected]
+  );
+
+  const selectedPathLabel = useMemo(
+    () =>
+      [selectedPath.region, selectedPath.district, selectedPath.mahalla]
+        .filter(Boolean)
+        .map((item) => localizedFeatureName(item, lang))
+        .join(' / ') || selectedAreaName,
+    [lang, selectedAreaName, selectedPath]
+  );
+
+  const currentMetricLabel =
+    metricLayerOptions.find((option) => option.key === metricLayer)?.label ||
+    metricLayer;
+  const currentTimeLabel =
+    timeFilterOptions.find((option) => option.key === timeFilter)?.label ||
+    timeFilter;
+
+  const reportSummaryRows = useMemo(
+    () => [
+      [mt.location, selectedAreaName],
+      [
+        mt.lowerLayer,
+        selected
+          ? { 1: mt.region, 2: mt.district, 3: mt.mahalla }[selected.admin_leve]
+          : mt.country,
+      ],
+      [mt.metricLayer || MAP_I18N.uz.metricLayer, currentMetricLabel],
+      [
+        mt.timeFilter || MAP_I18N.uz.timeFilter,
+        timeFilter === 'custom'
+          ? `${customDateFrom || '-'} / ${customDateTo || '-'}`
+          : currentTimeLabel,
+      ],
+      [
+        mt.patientCount || MAP_I18N.uz.patientCount,
+        selectedBoundaryStats.patientCount,
+      ],
+      [mt.riskSignal, `${selectedBoundaryStats.riskRate || 0}%`],
+      [mt.riskRecords, selectedBoundaryStats.riskCount],
+      [
+        mt.avgBmi || MAP_I18N.uz.avgBmi,
+        formatMetricNumber(selectedBoundaryStats.avgBmi),
+      ],
+      [
+        mt.zRisk || MAP_I18N.uz.zRisk,
+        `${selectedBoundaryStats.zRiskRate || 0}%`,
+      ],
+      [mt.admin, selectedBoundaryStats.adminCount],
+      [mt.researcher, selectedBoundaryStats.researcherCount],
+      [
+        mt.qualityScore || MAP_I18N.uz.qualityScore,
+        `${selectedBoundaryStats.coverageQuality || 0}%`,
+      ],
+      [mt.trend || MAP_I18N.uz.trend, trendLabel],
+      [
+        mt.latestAnalysis || MAP_I18N.uz.latestAnalysis,
+        selectedBoundaryStats.latestDate
+          ? selectedBoundaryStats.latestDate.toLocaleString(locale)
+          : mt.notSpecified,
+      ],
+    ],
+    [
+      currentMetricLabel,
+      currentTimeLabel,
+      customDateFrom,
+      customDateTo,
+      locale,
+      mt,
+      selected,
+      selectedAreaName,
+      selectedBoundaryStats,
+      timeFilter,
+      trendLabel,
+    ]
+  );
+
+  const reportTopSections = useMemo(
+    () => [
+      [mt.highestRisk || MAP_I18N.uz.highestRisk, topRiskAreas],
+      [mt.lowestCoverage || MAP_I18N.uz.lowestCoverage, lowCoverageAreas],
+      [mt.mostPatients || MAP_I18N.uz.mostPatients, highPatientAreas],
+    ],
+    [highPatientAreas, lowCoverageAreas, mt, topRiskAreas]
+  );
   const levelLabel = selected
     ? { 1: mt.region, 2: mt.district, 3: mt.mahalla }[selected.admin_leve]
     : mt.country;
@@ -4323,6 +4451,180 @@ export default function SuperAdminRegionalMap({
     [locale]
   );
 
+  const reportFileBase = useMemo(
+    () => `regional_${slugifyFilePart(selectedAreaName)}_${todayStamp()}`,
+    [selectedAreaName]
+  );
+
+  const handleExportPdf = useCallback(() => {
+    try {
+      setExportingMap(true);
+      const doc = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let y = 46;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text(mt.title || 'Regional analytics map', 40, y);
+      y += 22;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.text(selectedPathLabel, 40, y, { maxWidth: pageWidth - 80 });
+      y += 22;
+      doc.setDrawColor(210, 214, 220);
+      doc.line(40, y, pageWidth - 40, y);
+      y += 20;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(mt.analyticalIndicators || 'Indicators', 40, y);
+      y += 18;
+      doc.setFontSize(9);
+      reportSummaryRows.forEach(([label, value]) => {
+        if (y > 760) {
+          doc.addPage();
+          y = 46;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.text(String(label), 46, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(value ?? '-'), 230, y, { maxWidth: pageWidth - 270 });
+        y += 15;
+      });
+
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(mt.riskReasons || MAP_I18N.uz.riskReasons, 40, y);
+      y += 18;
+      doc.setFontSize(9);
+      riskReasonRows.forEach((row) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(row.label, 46, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(row.value), 230, y);
+        y += 15;
+      });
+
+      reportTopSections.forEach(([title, rows]) => {
+        y += 10;
+        if (y > 720) {
+          doc.addPage();
+          y = 46;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text(title, 40, y);
+        y += 18;
+        doc.setFontSize(9);
+        (rows.length
+          ? rows
+          : [{ name: '-', patientCount: 0, riskRate: 0, coverageQuality: 0 }]
+        ).forEach((row) => {
+          if (y > 760) {
+            doc.addPage();
+            y = 46;
+          }
+          doc.setFont('helvetica', 'normal');
+          doc.text(
+            `${row.name}: n=${row.patientCount}, risk=${row.riskRate || 0}%, quality=${row.coverageQuality || 0}%`,
+            46,
+            y,
+            { maxWidth: pageWidth - 92 }
+          );
+          y += 14;
+        });
+      });
+
+      doc.save(`${reportFileBase}.pdf`);
+      toast.success(mt.exportSuccess || MAP_I18N.uz.exportSuccess);
+    } catch (error) {
+      toast.error(
+        `${mt.exportError || MAP_I18N.uz.exportError}: ${error.message}`
+      );
+    } finally {
+      setExportingMap(false);
+    }
+  }, [
+    mt,
+    reportFileBase,
+    reportSummaryRows,
+    reportTopSections,
+    riskReasonRows,
+    selectedPathLabel,
+  ]);
+
+  const handleExportXls = useCallback(() => {
+    try {
+      setExportingMap(true);
+      const summaryRows = reportSummaryRows
+        .map(
+          ([label, value]) =>
+            `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`
+        )
+        .join('');
+      const riskRows = riskReasonRows
+        .map(
+          (row) =>
+            `<tr><td>${escapeHtml(row.label)}</td><td>${escapeHtml(row.value)}</td></tr>`
+        )
+        .join('');
+      const topRows = reportTopSections
+        .flatMap(([title, rows]) =>
+          (rows.length
+            ? rows
+            : [{ name: '-', patientCount: 0, riskRate: 0, coverageQuality: 0 }]
+          ).map(
+            (row) =>
+              `<tr><td>${escapeHtml(title)}</td><td>${escapeHtml(row.name)}</td><td>${row.patientCount}</td><td>${row.riskRate || 0}%</td><td>${row.coverageQuality || 0}%</td></tr>`
+          )
+        )
+        .join('');
+      const html = `<!doctype html><html><head><meta charset="utf-8" /><style>body{font-family:Arial,sans-serif}table{border-collapse:collapse;margin-bottom:18px}th,td{border:1px solid #cbd5e1;padding:7px 10px;text-align:left}th{background:#e2e8f0}.title{font-size:18px;font-weight:700;margin-bottom:4px}.sub{color:#475569;margin-bottom:14px}</style></head><body><div class="title">${escapeHtml(mt.title || 'Regional analytics map')}</div><div class="sub">${escapeHtml(selectedPathLabel)}</div><table>${summaryRows}</table><table><tr><th>${escapeHtml(mt.riskReasons || MAP_I18N.uz.riskReasons)}</th><th>n</th></tr>${riskRows}</table><table><tr><th>Section</th><th>Hudud</th><th>n</th><th>Risk</th><th>Quality</th></tr>${topRows}</table></body></html>`;
+      downloadBlob(
+        new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' }),
+        `${reportFileBase}.xls`
+      );
+      toast.success(mt.exportSuccess || MAP_I18N.uz.exportSuccess);
+    } catch (error) {
+      toast.error(
+        `${mt.exportError || MAP_I18N.uz.exportError}: ${error.message}`
+      );
+    } finally {
+      setExportingMap(false);
+    }
+  }, [
+    mt,
+    reportFileBase,
+    reportSummaryRows,
+    reportTopSections,
+    riskReasonRows,
+    selectedPathLabel,
+  ]);
+
+  const handleExportSnapshot = useCallback(async () => {
+    const node = mapInteractionRef.current;
+    if (!node) return;
+    try {
+      setExportingMap(true);
+      const canvas = await html2canvas(node, {
+        backgroundColor: null,
+        scale: Math.min(window.devicePixelRatio || 1, 2),
+        useCORS: true,
+        logging: false,
+      });
+      canvas.toBlob((blob) => {
+        if (!blob) throw new Error('Snapshot blob is empty');
+        downloadBlob(blob, `${reportFileBase}.png`);
+        toast.success(mt.snapshotSuccess || MAP_I18N.uz.snapshotSuccess);
+      }, 'image/png');
+    } catch (error) {
+      toast.error(
+        `${mt.exportError || MAP_I18N.uz.exportError}: ${error.message}`
+      );
+    } finally {
+      setExportingMap(false);
+    }
+  }, [mt, reportFileBase]);
   const selectedPinDetails = useMemo(() => {
     if (!selectedPin) return [];
     const rows = [
@@ -5452,6 +5754,58 @@ export default function SuperAdminRegionalMap({
               ))}
             </Box>
 
+            <Box mt={1.25}>
+              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                <Download sx={{ fontSize: 18, color: 'primary.main' }} />
+                <Typography variant="body2" fontWeight={900}>
+                  {mt.exportReport || MAP_I18N.uz.exportReport}
+                </Typography>
+              </Stack>
+              <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Download />}
+                  onClick={handleExportPdf}
+                  disabled={exportingMap}
+                  sx={{
+                    borderRadius: 1.25,
+                    textTransform: 'none',
+                    fontWeight: 900,
+                  }}
+                >
+                  {mt.exportPdf || MAP_I18N.uz.exportPdf}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<TableChart />}
+                  onClick={handleExportXls}
+                  disabled={exportingMap}
+                  sx={{
+                    borderRadius: 1.25,
+                    textTransform: 'none',
+                    fontWeight: 900,
+                  }}
+                >
+                  {mt.exportXls || MAP_I18N.uz.exportXls}
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<CameraAlt />}
+                  onClick={handleExportSnapshot}
+                  disabled={exportingMap}
+                  sx={{
+                    borderRadius: 1.25,
+                    textTransform: 'none',
+                    fontWeight: 900,
+                  }}
+                >
+                  {mt.exportSnapshot || MAP_I18N.uz.exportSnapshot}
+                </Button>
+              </Stack>
+            </Box>
             <Box mt={1.25}>
               <Stack direction="row" spacing={1} alignItems="center" mb={1}>
                 <TrendingUp sx={{ fontSize: 18, color: 'primary.main' }} />
