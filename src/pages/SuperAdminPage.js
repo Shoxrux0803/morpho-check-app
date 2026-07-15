@@ -4950,7 +4950,7 @@ const SuperAdminPage = () => {
     { icon: <SettingsSuggest />, label: pt('clinicalCms') },
     { icon: <AutoGraph />, label: pt('topChart') },
     { icon: <SettingsSuggest />, label: t('chatSettingsTitle') },
-    { icon: <Security />, label: 'Maxfiylik sozlamalari' },
+    { icon: <Security />, label: pt('privacySettings') },
   ];
 
   const isMapTab = activeTab === 2;

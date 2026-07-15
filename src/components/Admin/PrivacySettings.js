@@ -21,40 +21,256 @@ import {
 import { toast } from 'react-hot-toast';
 import { AdminApi } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ROLES = [
-  {
-    key: 'superadmin',
-    label: 'Superadmin',
-    description: "Superadmin tizimga kirganda ko'radigan ma'lumotlar",
-    color: 'error',
-    Icon: SecurityOutlined,
-  },
-  {
-    key: 'admin',
-    label: 'Admin',
-    description: "Admin tizimga kirganda ko'radigan ma'lumotlar",
-    color: 'primary',
-    Icon: AdminPanelSettingsOutlined,
-  },
-  {
-    key: 'field_assistant',
-    label: 'Assistant',
-    description: "Assistant tizimga kirganda ko'radigan ma'lumotlar",
-    color: 'warning',
-    Icon: SupportAgentOutlined,
-  },
-  {
-    key: 'researcher',
-    label: 'Researcher',
-    description: "Researcher tizimga kirganda ko'radigan ma'lumotlar",
-    color: 'success',
-    Icon: BiotechOutlined,
-  },
+  { key: 'superadmin', color: 'error', Icon: SecurityOutlined },
+  { key: 'admin', color: 'primary', Icon: AdminPanelSettingsOutlined },
+  { key: 'field_assistant', color: 'warning', Icon: SupportAgentOutlined },
+  { key: 'researcher', color: 'success', Icon: BiotechOutlined },
 ];
+
+const PRIVACY_COPY = {
+  uz: {
+    title: 'Maxfiylik sozlamalari',
+    subtitle: "Shaxsiy maydonlarning rollar bo'yicha ko'rinishini boshqarish",
+    hiddenCount: (count) => `${count} ta rolda maxfiy`,
+    saved: 'Maxfiylik sozlamasi saqlandi',
+    currentRole: 'Joriy rolingiz',
+    hidden: 'Maxfiy',
+    visible: "Ko'rinadi",
+    hide: 'Yashirish',
+    aria: (label) => `${label} maxfiyligi`,
+    roles: {
+      superadmin: {
+        label: 'Superadmin',
+        description: "Superadmin tizimga kirganda ko'radigan ma'lumotlar",
+      },
+      admin: {
+        label: 'Admin',
+        description: "Admin tizimga kirganda ko'radigan ma'lumotlar",
+      },
+      field_assistant: {
+        label: 'Assistant',
+        description: "Assistant tizimga kirganda ko'radigan ma'lumotlar",
+      },
+      researcher: {
+        label: 'Izlanuvchi',
+        description: "Izlanuvchi tizimga kirganda ko'radigan ma'lumotlar",
+      },
+    },
+  },
+  ru: {
+    title: 'Nastroyki konfidentsialnosti',
+    subtitle: 'Upravlenie vidimostyu personalnyh poley po rolyam',
+    hiddenCount: (count) => `Skryto dlya roley: ${count}`,
+    saved: 'Nastroyka konfidentsialnosti sohranena',
+    currentRole: 'Vasha tekushchaya rol',
+    hidden: 'Skryto',
+    visible: 'Vidno',
+    hide: 'Skryvat',
+    aria: (label) => `Konfidentsialnost roli ${label}`,
+    roles: {
+      superadmin: {
+        label: 'Superadmin',
+        description: 'Dannye, kotorye vidit superadmin pri vhode v sistemu',
+      },
+      admin: {
+        label: 'Admin',
+        description: 'Dannye, kotorye vidit admin pri vhode v sistemu',
+      },
+      field_assistant: {
+        label: 'Assistant',
+        description: 'Dannye, kotorye vidit assistant pri vhode v sistemu',
+      },
+      researcher: {
+        label: 'Issledovatel',
+        description: 'Dannye, kotorye vidit issledovatel pri vhode v sistemu',
+      },
+    },
+  },
+  en: {
+    title: 'Privacy Settings',
+    subtitle: 'Control personal-field visibility by role',
+    hiddenCount: (count) => `${count} roles hidden`,
+    saved: 'Privacy setting saved',
+    currentRole: 'Current role',
+    hidden: 'Private',
+    visible: 'Visible',
+    hide: 'Hide',
+    aria: (label) => `${label} privacy`,
+    roles: {
+      superadmin: {
+        label: 'Superadmin',
+        description: 'Data visible when a superadmin signs in',
+      },
+      admin: {
+        label: 'Admin',
+        description: 'Data visible when an admin signs in',
+      },
+      field_assistant: {
+        label: 'Assistant',
+        description: 'Data visible when an assistant signs in',
+      },
+      researcher: {
+        label: 'Researcher',
+        description: 'Data visible when a researcher signs in',
+      },
+    },
+  },
+  kz: {
+    title: 'Құпиялық параметрлері',
+    subtitle: 'Жеке өрістердің рөлдер бойынша көрінуін басқару',
+    hiddenCount: (count) => `${count} рөлде құпия`,
+    saved: 'Құпиялық параметрі сақталды',
+    currentRole: 'Ағымдағы рөліңіз',
+    hidden: 'Құпия',
+    visible: 'Көрінеді',
+    hide: 'Жасыру',
+    aria: (label) => `${label} құпиялығы`,
+    roles: {
+      superadmin: {
+        label: 'Суперадмин',
+        description: 'Суперадмин жүйеге кіргенде көретін деректер',
+      },
+      admin: {
+        label: 'Админ',
+        description: 'Админ жүйеге кіргенде көретін деректер',
+      },
+      field_assistant: {
+        label: 'Ассистент',
+        description: 'Ассистент жүйеге кіргенде көретін деректер',
+      },
+      researcher: {
+        label: 'Зерттеуші',
+        description: 'Зерттеуші жүйеге кіргенде көретін деректер',
+      },
+    },
+  },
+  ky: {
+    title: 'Купуялык жөндөөлөрү',
+    subtitle: 'Жеке талаалардын ролдор боюнча көрүнүшүн башкаруу',
+    hiddenCount: (count) => `${count} ролдо купуя`,
+    saved: 'Купуялык жөндөөсү сакталды',
+    currentRole: 'Учурдагы ролуңуз',
+    hidden: 'Купуя',
+    visible: 'Көрүнөт',
+    hide: 'Жашыруу',
+    aria: (label) => `${label} купуялыгы`,
+    roles: {
+      superadmin: {
+        label: 'Суперадмин',
+        description: 'Суперадмин системага киргенде көрө турган маалыматтар',
+      },
+      admin: {
+        label: 'Админ',
+        description: 'Админ системага киргенде көрө турган маалыматтар',
+      },
+      field_assistant: {
+        label: 'Ассистент',
+        description: 'Ассистент системага киргенде көрө турган маалыматтар',
+      },
+      researcher: {
+        label: 'Изилдөөчү',
+        description: 'Изилдөөчү системага киргенде көрө турган маалыматтар',
+      },
+    },
+  },
+  tg: {
+    title: 'Tanzimoti mahfiyat',
+    subtitle: 'Idorakunii namoishi maydonhoi shahsi az ruyi naqshho',
+    hiddenCount: (count) => `${count} naqsh mahfi`,
+    saved: 'Tanzimi mahfiyat nigoh doshta shud',
+    currentRole: 'Naqshi jorii shumo',
+    hidden: 'Mahfi',
+    visible: 'Namoyon',
+    hide: 'Pinhon kardan',
+    aria: (label) => `Mahfiyati ${label}`,
+    roles: {
+      superadmin: {
+        label: 'Superadmin',
+        description: 'Malumote, ki superadmin hangomi voridshavi mebinad',
+      },
+      admin: {
+        label: 'Admin',
+        description: 'Malumote, ki admin hangomi voridshavi mebinad',
+      },
+      field_assistant: {
+        label: 'Assistant',
+        description: 'Malumote, ki assistant hangomi voridshavi mebinad',
+      },
+      researcher: {
+        label: 'Muhakkik',
+        description: 'Malumote, ki muhakkik hangomi voridshavi mebinad',
+      },
+    },
+  },
+  tm: {
+    title: 'Gizlinlik sazlamalary',
+    subtitle: 'Shahsy meydanlaryn rollar boyuncha gorunmegini dolandyrmak',
+    hiddenCount: (count) => `${count} rolda gizlin`,
+    saved: 'Gizlinlik sazlamasy saklandy',
+    currentRole: 'Hazirki rolunuz',
+    hidden: 'Gizlin',
+    visible: 'Gorunyar',
+    hide: 'Gizle',
+    aria: (label) => `${label} gizlinligi`,
+    roles: {
+      superadmin: {
+        label: 'Superadmin',
+        description: 'Superadmin ulgama girende goryan maglumatlary',
+      },
+      admin: {
+        label: 'Admin',
+        description: 'Admin ulgama girende goryan maglumatlary',
+      },
+      field_assistant: {
+        label: 'Assistent',
+        description: 'Assistent ulgama girende goryan maglumatlary',
+      },
+      researcher: {
+        label: 'Gozlegchi',
+        description: 'Gozlegchi ulgama girende goryan maglumatlary',
+      },
+    },
+  },
+  tr: {
+    title: 'Gizlilik Ayarlari',
+    subtitle: 'Kisisel alanlarin rollere gore gorunurlugunu yonetin',
+    hiddenCount: (count) => `${count} rolde gizli`,
+    saved: 'Gizlilik ayari kaydedildi',
+    currentRole: 'Gecerli rolunuz',
+    hidden: 'Gizli',
+    visible: 'Gorunur',
+    hide: 'Gizle',
+    aria: (label) => `${label} gizliligi`,
+    roles: {
+      superadmin: {
+        label: 'Super yonetici',
+        description: 'Super yonetici giris yaptiginda gorunen veriler',
+      },
+      admin: {
+        label: 'Yonetici',
+        description: 'Yonetici giris yaptiginda gorunen veriler',
+      },
+      field_assistant: {
+        label: 'Asistan',
+        description: 'Asistan giris yaptiginda gorunen veriler',
+      },
+      researcher: {
+        label: 'Arastirmaci',
+        description: 'Arastirmaci giris yaptiginda gorunen veriler',
+      },
+    },
+  },
+};
+
+const getPrivacyCopy = (lang) => PRIVACY_COPY[lang] || PRIVACY_COPY.uz;
 
 export default function PrivacySettings() {
   const { user } = useAuth();
+  const { lang } = useLanguage();
+  const copy = getPrivacyCopy(lang);
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [savingRole, setSavingRole] = useState('');
@@ -90,7 +306,7 @@ export default function PrivacySettings() {
     setSavingRole(roleName);
     try {
       await AdminApi.privacySettings.update(roleName, enabled);
-      toast.success('Maxfiylik sozlamasi saqlandi');
+      toast.success(copy.saved);
     } catch (err) {
       setSettings((current) => ({ ...current, [roleName]: previous }));
       toast.error(err.message);
@@ -135,16 +351,16 @@ export default function PrivacySettings() {
             </Box>
             <Box>
               <Typography variant="h5" fontWeight={800}>
-                Maxfiylik sozlamalari
+                {copy.title}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Shaxsiy maydonlarning rollar bo'yicha ko'rinishini boshqarish
+                {copy.subtitle}
               </Typography>
             </Box>
           </Stack>
           <Chip
             icon={<VisibilityOffOutlined />}
-            label={hiddenRoleCount + ' ta rolda maxfiy'}
+            label={copy.hiddenCount(hiddenRoleCount)}
             color={hiddenRoleCount ? 'primary' : 'default'}
             variant={hiddenRoleCount ? 'filled' : 'outlined'}
             sx={{ fontWeight: 700 }}
@@ -171,7 +387,9 @@ export default function PrivacySettings() {
             bgcolor: 'background.paper',
           }}
         >
-          {ROLES.map(({ key, label, description, color, Icon }, index) => {
+          {ROLES.map(({ key, color, Icon }, index) => {
+            const roleCopy = copy.roles[key] || PRIVACY_COPY.uz.roles[key];
+            const { label, description } = roleCopy;
             const enabled = Boolean(settings[key]);
             const isCurrentRole = user?.role === key;
             return (
@@ -221,7 +439,7 @@ export default function PrivacySettings() {
                         {isCurrentRole && (
                           <Chip
                             size="small"
-                            label="Joriy rolingiz"
+                            label={copy.currentRole}
                             color="success"
                             variant="outlined"
                             sx={{ height: 24, fontWeight: 700 }}
@@ -236,7 +454,7 @@ export default function PrivacySettings() {
                               <VisibilityOutlined />
                             )
                           }
-                          label={enabled ? 'Maxfiy' : "Ko'rinadi"}
+                          label={enabled ? copy.hidden : copy.visible}
                           color={enabled ? 'primary' : 'default'}
                           variant={enabled ? 'filled' : 'outlined'}
                           sx={{ height: 24, fontWeight: 700 }}
@@ -263,14 +481,14 @@ export default function PrivacySettings() {
                           onChange={(event) =>
                             handleChange(key, event.target.checked)
                           }
-                          inputProps={{ 'aria-label': label + ' maxfiyligi' }}
+                          inputProps={{ 'aria-label': copy.aria(label) }}
                         />
                         <Typography
                           variant="caption"
                           color="text.secondary"
                           sx={{ whiteSpace: 'nowrap' }}
                         >
-                          Yashirish
+                          {copy.hide}
                         </Typography>
                       </Stack>
                     )}
