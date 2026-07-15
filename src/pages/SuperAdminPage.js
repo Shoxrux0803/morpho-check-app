@@ -5201,7 +5201,7 @@ const SuperAdminPage = () => {
               height: isMapTab && !isMobile ? '100%' : 'auto',
               display: isMapTab && !isMobile ? 'flex' : 'block',
               flexDirection: 'column',
-              overflowX: 'hidden',
+              overflowX: isMapTab && !isMobile ? 'hidden' : 'auto',
               minHeight: 0,
               flex: isMapTab && !isMobile ? 1 : 'auto',
             }}

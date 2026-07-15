@@ -1136,6 +1136,7 @@ export default function SecuritySettings() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
+      style={{ width: '100%', minWidth: 0 }}
     >
       <Box
         sx={{
@@ -1144,7 +1145,7 @@ export default function SecuritySettings() {
           mb: 3,
           p: 0.75,
           borderRadius: 3,
-          width: 'fit-content',
+          width: { xs: '100%', sm: 'fit-content' },
           maxWidth: '100%',
           bgcolor: (theme) =>
             theme.palette.mode === 'dark'
@@ -1158,7 +1159,14 @@ export default function SecuritySettings() {
           variant={activeSecurityView === 'password' ? 'contained' : 'text'}
           startIcon={<Lock />}
           onClick={() => setActiveSecurityView('password')}
-          sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+          sx={{
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 800,
+            flex: { xs: 1, sm: '0 1 auto' },
+            minWidth: 0,
+            px: { xs: 1, sm: 2 },
+          }}
         >
           {lt('updatePasswordBtn')}
         </Button>
@@ -1168,7 +1176,14 @@ export default function SecuritySettings() {
             color={securitySummary.critical > 0 ? 'error' : 'primary'}
             startIcon={<AdminPanelSettings />}
             onClick={() => setActiveSecurityView('alerts')}
-            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 800 }}
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              fontWeight: 800,
+              flex: { xs: 1, sm: '0 1 auto' },
+              minWidth: 0,
+              px: { xs: 1, sm: 2 },
+            }}
           >
             {lt('securityEvents')}
             {securitySummary.unread > 0 ? ` (${securitySummary.unread})` : ''}
@@ -1176,14 +1191,12 @@ export default function SecuritySettings() {
         )}
       </Box>
 
-      <Grid container spacing={4}>
+      <Grid container spacing={{ xs: 2, md: 4 }}>
         <AnimatePresence mode="wait">
           {/* Left Column: The Form */}
           {activeSecurityView === 'password' && (
             <Grid
-              item
-              xs={12}
-              lg={7}
+              size={{ xs: 12, lg: 7 }}
               component={motion.div}
               key="password-form"
               initial={{ opacity: 0, x: -20 }}
@@ -1407,11 +1420,10 @@ export default function SecuritySettings() {
 
         {/* Right Column: Live requirements checklist & Session info */}
         <Grid
-          item
-          xs={12}
-          md={activeSecurityView === 'alerts' ? 12 : 5}
-          lg={activeSecurityView === 'alerts' ? 12 : 5}
-          xl={activeSecurityView === 'alerts' ? 12 : 5}
+          size={{
+            xs: 12,
+            md: activeSecurityView === 'alerts' ? 12 : 5,
+          }}
           sx={{
             transition: 'all 0.3s ease',
             ...(activeSecurityView === 'alerts' && {
@@ -1448,6 +1460,10 @@ export default function SecuritySettings() {
                         justifyContent="space-between"
                         gap={2}
                         mb={2.5}
+                        sx={{
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          alignItems: { xs: 'flex-start', sm: 'center' },
+                        }}
                       >
                         <Box>
                           <Typography variant="h6" fontWeight={850}>
@@ -1466,6 +1482,7 @@ export default function SecuritySettings() {
                           spacing={1}
                           flexWrap="wrap"
                           useFlexGap
+                          sx={{ width: { xs: '100%', sm: 'auto' } }}
                         >
                           <Chip
                             size="small"
@@ -1596,7 +1613,7 @@ export default function SecuritySettings() {
                             <Box
                               key={event.id}
                               sx={{
-                                p: 1.5,
+                                p: { xs: 1, sm: 1.5 },
                                 borderRadius: 2,
                                 border: '1px solid',
                                 borderColor:
@@ -1625,11 +1642,21 @@ export default function SecuritySettings() {
                                   onChange={() => handleSelectEvent(event.id)}
                                   sx={{ mt: -0.5, ml: -1 }}
                                 />
-                                <Box flex={1}>
+                                <Box flex={1} minWidth={0}>
                                   <Box
                                     display="flex"
                                     justifyContent="space-between"
                                     gap={1}
+                                    sx={{
+                                      flexDirection: {
+                                        xs: 'column',
+                                        sm: 'row',
+                                      },
+                                      alignItems: {
+                                        xs: 'flex-start',
+                                        sm: 'center',
+                                      },
+                                    }}
                                   >
                                     <Typography
                                       variant="body2"
@@ -1637,7 +1664,14 @@ export default function SecuritySettings() {
                                     >
                                       {lt(event.event_type)}
                                     </Typography>
-                                    <Box display="flex" gap={1}>
+                                    <Box
+                                      display="flex"
+                                      gap={1}
+                                      sx={{
+                                        flexWrap: 'wrap',
+                                        maxWidth: '100%',
+                                      }}
+                                    >
                                       {event.is_blocked && (
                                         <Chip
                                           size="small"
@@ -1675,6 +1709,7 @@ export default function SecuritySettings() {
                                     variant="caption"
                                     color="text.secondary"
                                     display="block"
+                                    sx={{ overflowWrap: 'anywhere' }}
                                   >
                                     {formatSecurityDate(event.created_at)} - IP:{' '}
                                     {event.ip_address || '-'} - {lt('attempt')}:{' '}
@@ -1684,6 +1719,7 @@ export default function SecuritySettings() {
                                     variant="caption"
                                     color="text.secondary"
                                     display="block"
+                                    sx={{ overflowWrap: 'anywhere' }}
                                   >
                                     {getSecurityMetaLabel(
                                       lt,
@@ -1696,6 +1732,7 @@ export default function SecuritySettings() {
                                     variant="caption"
                                     color="text.secondary"
                                     display="block"
+                                    sx={{ overflowWrap: 'anywhere' }}
                                   >
                                     {getSecurityMetaLabel(
                                       lt,
@@ -1712,6 +1749,7 @@ export default function SecuritySettings() {
                                       variant="caption"
                                       color="text.secondary"
                                       display="block"
+                                      sx={{ overflowWrap: 'anywhere' }}
                                     >
                                       {lt('threatType')}:{' '}
                                       {sl(event.threat_type)} -{' '}
@@ -1734,6 +1772,7 @@ export default function SecuritySettings() {
                                       variant="caption"
                                       color="text.secondary"
                                       display="block"
+                                      sx={{ overflowWrap: 'anywhere' }}
                                     >
                                       Email: {event.email}
                                     </Typography>
@@ -1748,7 +1787,7 @@ export default function SecuritySettings() {
                                     </Typography>
                                   )}
                                   <Stack
-                                    direction="row"
+                                    direction={{ xs: 'column', sm: 'row' }}
                                     spacing={1}
                                     flexWrap="wrap"
                                     useFlexGap
@@ -1765,6 +1804,7 @@ export default function SecuritySettings() {
                                       sx={{
                                         textTransform: 'none',
                                         fontWeight: 800,
+                                        width: { xs: '100%', sm: 'auto' },
                                       }}
                                     >
                                       {lt('falsePositive')}
@@ -1781,6 +1821,7 @@ export default function SecuritySettings() {
                                         sx={{
                                           textTransform: 'none',
                                           fontWeight: 800,
+                                          width: { xs: '100%', sm: 'auto' },
                                         }}
                                       >
                                         {lt('unblockIp')}
