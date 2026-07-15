@@ -45,6 +45,7 @@ import {
   TrendingUp,
 } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
+import SearchIcon from '@mui/icons-material/Search';
 import { AdminApi, ResearchApi } from '../../services/api';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getLocalizedLocationLabel } from '../../utils/locationI18n';
@@ -67,6 +68,14 @@ const PIN_COLORS = {
   researcher: '#7c3aed',
   field_assistant: '#f59e0b',
 };
+
+const normalizeMapSearch = (value = '') =>
+  String(value)
+    .toLocaleLowerCase()
+    .replace(/[ʻʼ’`']/g, '')
+    .replace(/[^a-zа-яё0-9\s-]/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 const MAP_I18N = {
   uz: {
@@ -2531,6 +2540,170 @@ const ScientificIndexChart = ({ rows, title, subtitle }) => {
   );
 };
 
+const SearchResultRow = ({ icon, title, detail, chip, onClick }) => (
+  <Button
+    fullWidth
+    onClick={onClick}
+    startIcon={icon}
+    sx={{
+      justifyContent: 'flex-start',
+      textAlign: 'left',
+      px: 1.25,
+      py: 1,
+      borderRadius: 2,
+      color: 'text.primary',
+      textTransform: 'none',
+    }}
+  >
+    <Box sx={{ minWidth: 0, flex: 1 }}>
+      <Stack direction={'row'} spacing={0.75} alignItems={'center'}>
+        <Typography variant={'body2'} fontWeight={750} noWrap>
+          {title}
+        </Typography>
+        {chip && (
+          <Chip
+            size={'small'}
+            label={chip}
+            sx={{ height: 20, fontSize: 10, fontWeight: 800 }}
+          />
+        )}
+      </Stack>
+      <Typography variant={'caption'} color={'text.secondary'} noWrap>
+        {detail}
+      </Typography>
+    </Box>
+  </Button>
+);
+
+const SearchResultPanel = ({
+  open,
+  query,
+  results,
+  mt,
+  getPinRoleLabel,
+  onSelect,
+}) => {
+  if (!open || normalizeMapSearch(query).length < 2) return null;
+  const empty = !results.locations.length && !results.people.length;
+  return (
+    <Paper
+      elevation={10}
+      sx={{
+        position: 'absolute',
+        top: 'calc(100% + 8px)',
+        left: 'auto',
+        right: 0,
+        width: { xs: 280, sm: 360 },
+        maxWidth: 'calc(100vw - 28px)',
+        maxHeight: 430,
+        overflowY: 'auto',
+        borderRadius: 3,
+        p: 1,
+      }}
+    >
+      {!!results.locations.length && (
+        <Typography
+          variant={'overline'}
+          color={'text.secondary'}
+          sx={{ px: 1.25, fontWeight: 800 }}
+        >
+          Hududlar
+        </Typography>
+      )}
+      {results.locations.map((result) => (
+        <SearchResultRow
+          key={`area-${result.level}-${result.item.id}`}
+          icon={<LocationOn sx={{ color: '#0f766e' }} />}
+          title={result.label}
+          detail={`${{ 1: mt.region, 2: mt.district, 3: mt.mahalla }[result.level]} · xaritada ko‘rish`}
+          onClick={() => onSelect(result)}
+        />
+      ))}
+      {!!results.locations.length && !!results.people.length && (
+        <Divider sx={{ my: 0.75 }} />
+      )}
+      {!!results.people.length && (
+        <Typography
+          variant={'overline'}
+          color={'text.secondary'}
+          sx={{ px: 1.25, fontWeight: 800 }}
+        >
+          Adminlar, izlanuvchilar va assistantlar
+        </Typography>
+      )}
+      {results.people.map((result, index) => (
+        <SearchResultRow
+          key={`person-${result.pin.id || result.pin.userId || index}`}
+          icon={
+            <Groups sx={{ color: PIN_COLORS[result.pin.type] || '#2563eb' }} />
+          }
+          title={result.pin.name || result.pin.email || '-'}
+          chip={getPinRoleLabel(result.pin)}
+          detail={[result.pin.district, result.pin.mahalla, result.pin.email]
+            .filter(Boolean)
+            .join(' · ')}
+          onClick={() => onSelect(result)}
+        />
+      ))}
+      {empty && (
+        <Stack alignItems={'center'} spacing={0.75} sx={{ py: 3 }}>
+          <Typography color={'text.disabled'} fontSize={24}>
+            ⌕
+          </Typography>
+          <Typography variant={'body2'} fontWeight={700}>
+            Natija topilmadi
+          </Typography>
+        </Stack>
+      )}
+    </Paper>
+  );
+};
+
+const UnifiedMapSearch = (props) => (
+  <Box
+    onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) props.onClose();
+    }}
+    sx={{
+      position: 'relative',
+      zIndex: 20,
+      width: { xs: 168, sm: 250 },
+      maxWidth: 'calc(100vw - 86px)',
+    }}
+  >
+    <TextField
+      fullWidth
+      value={props.query}
+      onFocus={props.onOpen}
+      onChange={(e) => props.onQueryChange(e.target.value)}
+      placeholder={
+        'Tuman, mahalla, admin, izlanuvchi yoki assistant qidiring...'
+      }
+      InputProps={{
+        startAdornment: (
+          <SearchIcon sx={{ mr: 0.75, color: 'primary.main', fontSize: 19 }} />
+        ),
+      }}
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          height: 40,
+          borderRadius: 1.5,
+          bgcolor: props.isDark ? 'rgba(15,23,42,.9)' : 'rgba(255,255,255,.94)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 24px rgba(15,23,42,.12)',
+          fontSize: 13,
+          '& fieldset': { borderColor: 'rgba(15,118,110,.3)' },
+          '&.Mui-focused fieldset': {
+            borderWidth: 2,
+            borderColor: '#0f766e',
+          },
+        },
+      }}
+    />
+    <SearchResultPanel {...props} />
+  </Box>
+);
+
 export default function SuperAdminRegionalMap({
   stats,
   statsLoading,
@@ -2584,6 +2757,8 @@ export default function SuperAdminRegionalMap({
   const [customDateFrom, setCustomDateFrom] = useState('');
   const [customDateTo, setCustomDateTo] = useState('');
   const [exportingMap, setExportingMap] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const userRows = directoryUsers.length ? directoryUsers : admins;
 
@@ -3215,6 +3390,58 @@ export default function SuperAdminRegionalMap({
     [pinFeatures]
   );
 
+  const searchResults = useMemo(() => {
+    const query = normalizeMapSearch(searchQuery);
+    if (query.length < 2) return { locations: [], people: [] };
+
+    const locations = [1, 2, 3]
+      .flatMap((level) =>
+        (boundaryIndex?.levels?.[String(level)] || []).map((item) => ({
+          level,
+          item,
+          label: localizedFeatureName(item, lang),
+        }))
+      )
+      .filter((result) => normalizeMapSearch(result.label).includes(query))
+      .sort((a, b) => {
+        const aName = normalizeMapSearch(a.label);
+        const bName = normalizeMapSearch(b.label);
+        return (
+          Number(bName.startsWith(query)) - Number(aName.startsWith(query)) ||
+          a.level - b.level ||
+          aName.localeCompare(bName)
+        );
+      })
+      .slice(0, 8);
+
+    const people = pinFeatures
+      .map((pin) => {
+        const props = pin.properties || {};
+        const haystack = normalizeMapSearch(
+          [
+            props.name,
+            props.email,
+            props.phone,
+            props.type,
+            props.role,
+            props.region,
+            props.district,
+            props.mahalla,
+          ].join(' ')
+        );
+        return { pin: props, haystack };
+      })
+      .filter((result) => result.haystack.includes(query))
+      .sort(
+        (a, b) =>
+          Number(b.haystack.startsWith(query)) -
+          Number(a.haystack.startsWith(query))
+      )
+      .slice(0, 8);
+
+    return { locations, people };
+  }, [boundaryIndex, lang, pinFeatures, searchQuery]);
+
   const svgMap = useMemo(() => {
     const features = [...(enrichedVisibleGeoJson?.features || [])].sort(
       (a, b) =>
@@ -3483,6 +3710,51 @@ export default function SuperAdminRegionalMap({
       fitToBoundary(focusItem, LEVEL_META[focusLevel].zoom);
     },
     [fitToBoundary, loadBoundaryFile, setSourceData]
+  );
+
+  const handleSearchResult = useCallback(
+    async (result) => {
+      setSearchOpen(false);
+      setSearchQuery(
+        result.label || result.pin?.name || result.pin?.email || ''
+      );
+
+      if (result.item) {
+        await selectBoundary(result.item, result.level);
+        return;
+      }
+
+      const pin = result.pin;
+      if (!pin) return;
+      const region = resolveRegionBoundary(pin);
+      const district = resolveDistrictBoundary(pin, region);
+      const mahalla = resolveMahallaBoundary(
+        pin,
+        district,
+        userMahallaFeatures
+      );
+      const boundary = mahalla || district || region;
+      const level = mahalla ? 3 : district ? 2 : region ? 1 : 0;
+      if (boundary && level) await selectBoundary(boundary, level);
+      setSelectedPin(pin);
+      setPinPopupPosition({ left: 290, top: 115 });
+      if (!boundary && mapRef.current && pin.longitude && pin.latitude) {
+        mapRef.current.easeTo({
+          center: [Number(pin.longitude), Number(pin.latitude)],
+          zoom: 12,
+          duration: 1050,
+          easing: MAP_CAMERA_EASING,
+          essential: true,
+        });
+      }
+    },
+    [
+      resolveDistrictBoundary,
+      resolveMahallaBoundary,
+      resolveRegionBoundary,
+      selectBoundary,
+      userMahallaFeatures,
+    ]
   );
 
   const resetToCountry = useCallback(() => {
@@ -5722,40 +5994,77 @@ export default function SuperAdminRegionalMap({
               </Paper>
             )}
           </Box>
-          <Tooltip title={satelliteEnabled ? mt.satelliteOff : mt.satelliteOn}>
-            <Button
-              variant={satelliteEnabled ? 'contained' : 'outlined'}
-              size="small"
-              startIcon={<SatelliteAlt />}
-              onClick={handleSatelliteToggle}
-              sx={{
-                position: 'absolute',
-                top: 14,
-                right: { xs: 14, sm: 64 },
-                zIndex: 8,
-                borderRadius: 1.5,
-                textTransform: 'none',
-                fontWeight: 900,
-                bgcolor: satelliteEnabled
-                  ? 'rgba(15,23,42,0.92)'
-                  : isDark
-                    ? 'rgba(15,23,42,0.88)'
-                    : 'rgba(255,255,255,0.92)',
-                color: satelliteEnabled ? '#fff' : 'text.primary',
-                borderColor: satelliteEnabled
-                  ? 'rgba(255,255,255,0.36)'
-                  : 'divider',
-                backdropFilter: 'blur(10px)',
-                '&:hover': {
-                  bgcolor: satelliteEnabled
-                    ? 'rgba(15,23,42,0.98)'
-                    : 'background.paper',
-                },
+          <Stack
+            direction={'row'}
+            spacing={0.75}
+            alignItems={'flex-start'}
+            sx={{
+              position: 'absolute',
+              top: 14,
+              right: { xs: 12, sm: 64 },
+              zIndex: 10,
+              maxWidth: 'calc(100% - 24px)',
+            }}
+          >
+            <UnifiedMapSearch
+              query={searchQuery}
+              open={searchOpen}
+              results={searchResults}
+              isDark={isDark}
+              mt={mt}
+              getPinRoleLabel={getPinRoleLabel}
+              onQueryChange={(value) => {
+                setSearchQuery(value);
+                setSearchOpen(true);
               }}
+              onOpen={() => setSearchOpen(true)}
+              onClose={() => setSearchOpen(false)}
+              onSelect={handleSearchResult}
+            />
+            <Tooltip
+              title={satelliteEnabled ? mt.satelliteOff : mt.satelliteOn}
             >
-              Satellite
-            </Button>
-          </Tooltip>
+              <Button
+                variant={satelliteEnabled ? 'contained' : 'outlined'}
+                size="small"
+                startIcon={<SatelliteAlt />}
+                onClick={handleSatelliteToggle}
+                sx={{
+                  minWidth: { xs: 40, sm: 104 },
+                  height: 40,
+                  px: { xs: 1, sm: 1.25 },
+                  '& .MuiButton-startIcon': {
+                    m: { xs: 0, sm: '0 8px 0 -4px' },
+                  },
+                  borderRadius: 1.5,
+                  textTransform: 'none',
+                  fontWeight: 900,
+                  bgcolor: satelliteEnabled
+                    ? 'rgba(15,23,42,0.92)'
+                    : isDark
+                      ? 'rgba(15,23,42,0.88)'
+                      : 'rgba(255,255,255,0.92)',
+                  color: satelliteEnabled ? '#fff' : 'text.primary',
+                  borderColor: satelliteEnabled
+                    ? 'rgba(255,255,255,0.36)'
+                    : 'divider',
+                  backdropFilter: 'blur(10px)',
+                  '&:hover': {
+                    bgcolor: satelliteEnabled
+                      ? 'rgba(15,23,42,0.98)'
+                      : 'background.paper',
+                  },
+                }}
+              >
+                <Box
+                  component={'span'}
+                  sx={{ display: { xs: 'none', sm: 'inline' } }}
+                >
+                  Satellite
+                </Box>
+              </Button>
+            </Tooltip>
+          </Stack>
           {loading && (
             <Box
               sx={{
@@ -5788,9 +6097,9 @@ export default function SuperAdminRegionalMap({
             sx={{
               position: 'absolute',
               left: 16,
-              top: 16,
+              top: { xs: 66, sm: 16 },
               zIndex: 3,
-              maxWidth: 'calc(100% - 96px)',
+              maxWidth: { xs: 'calc(100% - 32px)', sm: 'calc(100% - 430px)' },
               p: 1,
               borderRadius: 1.5,
               border: '1px solid',
