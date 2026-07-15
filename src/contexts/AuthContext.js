@@ -55,6 +55,13 @@ export const AuthProvider = ({ children }) => {
     setJustLoggedIn(false);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const profile = await api.getUserProfile();
+    localStorage.setItem('user_role', profile.role);
+    setUser(profile);
+    return profile;
+  }, []);
+
   const checkAuth = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -63,8 +70,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const profile = await api.getUserProfile();
-      setUser(profile);
+      await refreshUser();
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {
         console.warn('Stored auth token is invalid or expired; logging out.');
@@ -73,7 +79,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [logout]);
+  }, [logout, refreshUser]);
 
   useEffect(() => {
     checkAuth();
@@ -89,6 +95,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         justLoggedIn,
         completeLoginTransition,
+        refreshUser,
       }}
     >
       {children}

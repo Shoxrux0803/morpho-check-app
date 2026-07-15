@@ -90,8 +90,6 @@ def get_effective_admin_permissions(user: Optional[Any]) -> dict[str, bool]:
     owner = user
     if getattr(user, "role", None) == "field_assistant" and getattr(user, "supervisor", None):
         owner = user.supervisor
-    if getattr(owner, "role", None) == "superadmin":
-        return deepcopy(DEFAULT_ADMIN_PERMISSIONS)
     return normalize_admin_permissions(getattr(owner, "admin_permissions", None))
 
 

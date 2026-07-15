@@ -1503,7 +1503,13 @@ const SuperAdminPage = () => {
     }
   }, [location.search]);
 
-  const { user, login: authLogin, logout, loading: authLoading } = useAuth();
+  const {
+    user,
+    login: authLogin,
+    logout,
+    loading: authLoading,
+    refreshUser,
+  } = useAuth();
   const { lang, t } = useLanguage();
   const pageLabels = PAGE_LABELS[lang] || PAGE_LABELS.uz;
   const adminPermissionLabels = getAdminPermissionLabels(lang);
@@ -2523,6 +2529,9 @@ const SuperAdminPage = () => {
         if (!payload.password) delete payload.password;
 
         await AdminApi.users.update(currentAdmin.id, payload);
+        if (isEditingCurrentUser) {
+          await refreshUser();
+        }
         toast.success(pt('updated'));
       } else {
         // UserCreate needs password_confirm
