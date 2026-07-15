@@ -162,6 +162,10 @@ export default function WeatherClock() {
     ru: 'ru-RU',
     en: 'en-US',
     kz: 'kk-KZ',
+    ky: 'ky-KG',
+    tg: 'tg-TJ',
+    tm: 'tk-TM',
+    tr: 'tr-TR',
   };
   const currentLocale = localeMap[lang] || 'en-US';
 

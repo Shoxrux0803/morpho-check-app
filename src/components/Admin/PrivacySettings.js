@@ -322,10 +322,35 @@ export default function PrivacySettings() {
       <Paper
         variant="outlined"
         sx={{
-          p: { xs: 2, sm: 2.5 },
-          mb: 2,
-          borderRadius: 2,
+          p: { xs: 2.25, sm: 2.75 },
+          mb: 2.25,
+          borderRadius: 3.5,
+          position: 'relative',
+          overflow: 'hidden',
           bgcolor: 'background.paper',
+          borderColor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'rgba(148, 163, 184, 0.24)'
+              : 'rgba(15, 118, 110, 0.14)',
+          background: (theme) =>
+            theme.palette.mode === 'dark'
+              ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(17, 24, 39, 0.74) 100%)'
+              : 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(236,253,245,0.78) 100%)',
+          boxShadow: (theme) =>
+            theme.palette.mode === 'dark'
+              ? '0 18px 45px rgba(0,0,0,0.26)'
+              : '0 18px 45px rgba(15, 118, 110, 0.08)',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            inset: 'auto -80px -120px auto',
+            width: 220,
+            height: 220,
+            borderRadius: '50%',
+            background: 'rgba(45, 212, 191, 0.18)',
+            filter: 'blur(18px)',
+            pointerEvents: 'none',
+          },
         }}
       >
         <Stack
@@ -337,14 +362,15 @@ export default function PrivacySettings() {
           <Stack direction="row" alignItems="center" spacing={1.75}>
             <Box
               sx={{
-                width: 46,
-                height: 46,
+                width: 48,
+                height: 48,
                 display: 'grid',
                 placeItems: 'center',
-                borderRadius: 2,
-                bgcolor: 'primary.main',
-                color: 'primary.contrastText',
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%)',
+                color: '#06111f',
                 flexShrink: 0,
+                boxShadow: '0 12px 28px rgba(45, 212, 191, 0.25)',
               }}
             >
               <SecurityOutlined />
@@ -363,7 +389,15 @@ export default function PrivacySettings() {
             label={copy.hiddenCount(hiddenRoleCount)}
             color={hiddenRoleCount ? 'primary' : 'default'}
             variant={hiddenRoleCount ? 'filled' : 'outlined'}
-            sx={{ fontWeight: 700 }}
+            sx={{
+              height: 30,
+              px: 0.75,
+              fontWeight: 800,
+              borderRadius: 999,
+              position: 'relative',
+              zIndex: 1,
+              '& .MuiChip-icon': { fontSize: 18 },
+            }}
           />
         </Stack>
       </Paper>
@@ -382,9 +416,21 @@ export default function PrivacySettings() {
         <Paper
           variant="outlined"
           sx={{
-            borderRadius: 2,
-            overflow: 'hidden',
-            bgcolor: 'background.paper',
+            p: { xs: 1, sm: 1.25 },
+            borderRadius: 3.5,
+            overflow: 'visible',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(15, 23, 42, 0.58)'
+                : 'rgba(255, 255, 255, 0.78)',
+            borderColor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? 'rgba(148, 163, 184, 0.18)'
+                : 'rgba(15, 118, 110, 0.12)',
+            boxShadow: (theme) =>
+              theme.palette.mode === 'dark'
+                ? '0 20px 50px rgba(0,0,0,0.22)'
+                : '0 20px 50px rgba(15, 23, 42, 0.06)',
           }}
         >
           {ROLES.map(({ key, color, Icon }, index) => {
@@ -394,7 +440,7 @@ export default function PrivacySettings() {
             const isCurrentRole = user?.role === key;
             return (
               <React.Fragment key={key}>
-                {index > 0 && <Divider />}
+                {index > 0 && <Divider sx={{ my: 1, opacity: 0 }} />}
                 <Stack
                   direction="row"
                   alignItems="center"
@@ -403,8 +449,25 @@ export default function PrivacySettings() {
                   sx={{
                     px: { xs: 2, sm: 2.5 },
                     py: { xs: 2, sm: 2.25 },
-                    bgcolor: enabled ? 'action.hover' : 'transparent',
-                    transition: 'background-color 160ms ease',
+                    borderRadius: 2.75,
+                    border: '1px solid',
+                    borderColor: enabled
+                      ? color + '.main'
+                      : (theme) =>
+                          theme.palette.mode === 'dark'
+                            ? 'rgba(148, 163, 184, 0.14)'
+                            : 'rgba(15, 23, 42, 0.08)',
+                    borderLeftWidth: 4,
+                    bgcolor: enabled ? 'action.hover' : 'background.paper',
+                    boxShadow: enabled
+                      ? '0 12px 28px rgba(15, 23, 42, 0.10)'
+                      : '0 8px 22px rgba(15, 23, 42, 0.04)',
+                    transition:
+                      'background-color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease',
+                    '&:hover': {
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 16px 32px rgba(15, 23, 42, 0.12)',
+                    },
                   }}
                 >
                   <Stack
@@ -415,14 +478,15 @@ export default function PrivacySettings() {
                   >
                     <Box
                       sx={{
-                        width: 40,
-                        height: 40,
+                        width: 42,
+                        height: 42,
                         display: 'grid',
                         placeItems: 'center',
-                        borderRadius: 2,
+                        borderRadius: 2.5,
                         bgcolor: color + '.main',
                         color: color + '.contrastText',
                         flexShrink: 0,
+                        boxShadow: '0 10px 22px rgba(15, 23, 42, 0.14)',
                       }}
                     >
                       <Icon fontSize="small" />
@@ -442,7 +506,11 @@ export default function PrivacySettings() {
                             label={copy.currentRole}
                             color="success"
                             variant="outlined"
-                            sx={{ height: 24, fontWeight: 700 }}
+                            sx={{
+                              height: 24,
+                              fontWeight: 800,
+                              borderRadius: 999,
+                            }}
                           />
                         )}
                         <Chip
@@ -457,7 +525,11 @@ export default function PrivacySettings() {
                           label={enabled ? copy.hidden : copy.visible}
                           color={enabled ? 'primary' : 'default'}
                           variant={enabled ? 'filled' : 'outlined'}
-                          sx={{ height: 24, fontWeight: 700 }}
+                          sx={{
+                            height: 24,
+                            fontWeight: 800,
+                            borderRadius: 999,
+                          }}
                         />
                       </Stack>
                       <Typography
@@ -482,6 +554,19 @@ export default function PrivacySettings() {
                             handleChange(key, event.target.checked)
                           }
                           inputProps={{ 'aria-label': copy.aria(label) }}
+                          sx={{
+                            '& .MuiSwitch-switchBase.Mui-checked': {
+                              color: '#2dd4bf',
+                            },
+                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track':
+                              {
+                                backgroundColor: '#2dd4bf',
+                                opacity: 0.45,
+                              },
+                            '& .MuiSwitch-track': {
+                              opacity: 0.28,
+                            },
+                          }}
                         />
                         <Typography
                           variant="caption"

@@ -114,6 +114,237 @@ const PAGE_LABELS = {
   ky: { scientificAnalysis: 'Илимий талдоо' },
 };
 
+const DATE_LABELS_BY_LANG = {
+  uz: {
+    months: [
+      'yanvar',
+      'fevral',
+      'mart',
+      'aprel',
+      'may',
+      'iyun',
+      'iyul',
+      'avgust',
+      'sentabr',
+      'oktabr',
+      'noyabr',
+      'dekabr',
+    ],
+    weekdays: [
+      'Yakshanba',
+      'Dushanba',
+      'Seshanba',
+      'Chorshanba',
+      'Payshanba',
+      'Juma',
+      'Shanba',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year}-yil ${day}-${month}, ${weekday}`,
+  },
+  ru: {
+    months: [
+      'января',
+      'февраля',
+      'марта',
+      'апреля',
+      'мая',
+      'июня',
+      'июля',
+      'августа',
+      'сентября',
+      'октября',
+      'ноября',
+      'декабря',
+    ],
+    weekdays: [
+      'Воскресенье',
+      'Понедельник',
+      'Вторник',
+      'Среда',
+      'Четверг',
+      'Пятница',
+      'Суббота',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year} г. ${day} ${month}, ${weekday}`,
+  },
+  en: {
+    months: [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ],
+    weekdays: [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year} ${month} ${day}, ${weekday}`,
+  },
+  kz: {
+    months: [
+      'қаңтар',
+      'ақпан',
+      'наурыз',
+      'сәуір',
+      'мамыр',
+      'маусым',
+      'шілде',
+      'тамыз',
+      'қыркүйек',
+      'қазан',
+      'қараша',
+      'желтоқсан',
+    ],
+    weekdays: [
+      'Жексенбі',
+      'Дүйсенбі',
+      'Сейсенбі',
+      'Сәрсенбі',
+      'Бейсенбі',
+      'Жұма',
+      'Сенбі',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year} жыл ${day} ${month}, ${weekday}`,
+  },
+  ky: {
+    months: [
+      'январь',
+      'февраль',
+      'март',
+      'апрель',
+      'май',
+      'июнь',
+      'июль',
+      'август',
+      'сентябрь',
+      'октябрь',
+      'ноябрь',
+      'декабрь',
+    ],
+    weekdays: [
+      'Жекшемби',
+      'Дүйшөмбү',
+      'Шейшемби',
+      'Шаршемби',
+      'Бейшемби',
+      'Жума',
+      'Ишемби',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year}-жыл ${day}-${month}, ${weekday}`,
+  },
+  tg: {
+    months: [
+      'январ',
+      'феврал',
+      'март',
+      'апрел',
+      'май',
+      'июн',
+      'июл',
+      'август',
+      'сентябр',
+      'октябр',
+      'ноябр',
+      'декабр',
+    ],
+    weekdays: [
+      'Якшанбе',
+      'Душанбе',
+      'Сешанбе',
+      'Чоршанбе',
+      'Панҷшанбе',
+      'Ҷумъа',
+      'Шанбе',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year} сол ${day}-${month}, ${weekday}`,
+  },
+  tm: {
+    months: [
+      'yanwar',
+      'fewral',
+      'mart',
+      'aprel',
+      'may',
+      'iyun',
+      'iyul',
+      'awgust',
+      'sentýabr',
+      'oktýabr',
+      'noýabr',
+      'dekabr',
+    ],
+    weekdays: [
+      'Ýekşenbe',
+      'Duşenbe',
+      'Sişenbe',
+      'Çarşenbe',
+      'Penşenbe',
+      'Anna',
+      'Şenbe',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year}-nji ýyl ${day}-${month}, ${weekday}`,
+  },
+  tr: {
+    months: [
+      'Ocak',
+      'Şubat',
+      'Mart',
+      'Nisan',
+      'Mayıs',
+      'Haziran',
+      'Temmuz',
+      'Ağustos',
+      'Eylül',
+      'Ekim',
+      'Kasım',
+      'Aralık',
+    ],
+    weekdays: [
+      'Pazar',
+      'Pazartesi',
+      'Salı',
+      'Çarşamba',
+      'Perşembe',
+      'Cuma',
+      'Cumartesi',
+    ],
+    format: ({ year, day, month, weekday }) =>
+      `${year} yılı ${day} ${month}, ${weekday}`,
+  },
+};
+
+const formatPanelDate = (date, lang) => {
+  const labels = DATE_LABELS_BY_LANG[lang] || DATE_LABELS_BY_LANG.en;
+  const parts = {
+    year: date.getFullYear(),
+    day: date.getDate(),
+    month: labels.months[date.getMonth()],
+    weekday: labels.weekdays[date.getDay()],
+  };
+
+  return labels.format(parts);
+};
+
 const HEADER_LABELS = {
   uz: {
     systemStatus: 'Tizim holati',
@@ -5267,12 +5498,7 @@ const SuperAdminPage = () => {
                   color="text.secondary"
                   fontWeight={600}
                 >
-                  {new Date().toLocaleDateString(lang, {
-                    weekday: 'short',
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {formatPanelDate(new Date(), lang)}
                 </Typography>
               </Box>
 
