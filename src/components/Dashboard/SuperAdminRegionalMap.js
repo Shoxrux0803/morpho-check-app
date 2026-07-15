@@ -1,7 +1,6 @@
 import React, {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -4609,12 +4608,6 @@ export default function SuperAdminRegionalMap({
       fitSatelliteToCurrentView();
     }
     setSatelliteEnabled((value) => !value);
-  }, [fitSatelliteToCurrentView, satelliteEnabled]);
-
-  useLayoutEffect(() => {
-    if (satelliteEnabled) {
-      fitSatelliteToCurrentView();
-    }
   }, [fitSatelliteToCurrentView, satelliteEnabled]);
 
   useEffect(() => {
