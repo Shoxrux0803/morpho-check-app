@@ -139,6 +139,7 @@ export const AdminApi = {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
+        cache: 'no-store',
       }).then((r) => {
         if (!r.ok) throw new Error('Eksport qilishda xatolik');
         return r.blob();
@@ -163,10 +164,14 @@ export const AdminApi = {
         })
       ),
     exportTemplate: () => {
-      return fetch(`${API_BASE}${API_PREFIX}/admin/export-template`, {
+      const q = withQuery('/admin/export-template', {
+        _privacy_refresh: Date.now(),
+      });
+      return fetch(`${API_BASE}${API_PREFIX}${q}`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
+        cache: 'no-store',
       }).then((r) => {
         if (!r.ok) throw new Error('Shablonni yuklashda xatolik');
         return r.blob();
@@ -175,12 +180,16 @@ export const AdminApi = {
     importXlsx: (file) => {
       const formData = new FormData();
       formData.append('file', file);
-      return fetch(`${API_BASE}${API_PREFIX}/admin/import-xlsx`, {
+      const q = withQuery('/admin/import-xlsx', {
+        _privacy_refresh: Date.now(),
+      });
+      return fetch(`${API_BASE}${API_PREFIX}${q}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${getToken()}`,
           // Content-Type should NOT be set manually for FormData
         },
+        cache: 'no-store',
         body: formData,
       }).then(async (r) => {
         const text = await r.text();

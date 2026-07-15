@@ -210,7 +210,7 @@ def analyze_and_store(
         action="CREATE",
         target_type="PatientAnalysis",
         target_id=rec.id,
-        details=f"Yangi tahlil yaratildi: {full_name} ({id_code})",
+        details=f"Yangi tahlil yaratildi: {id_code}",
         request=request,
     )
 
@@ -218,7 +218,7 @@ def analyze_and_store(
     try:
         from routers.admin_router import to_dict_analysis
 
-        insert_analysis_event(to_dict_analysis(rec))
+        insert_analysis_event(to_dict_analysis(rec, current_user))
     except Exception:
         pass
 
@@ -461,5 +461,4 @@ def build_pdf_report_data_by_id(
         "ai_parent_tips": ai_tips,
         "ai_predictions": ai_preds,
         "doctor_note": rec.doctor_note or "",
-        "record_url": f"/admin?analysis_id={rec.id}",
     }

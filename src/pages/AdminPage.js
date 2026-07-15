@@ -1187,10 +1187,13 @@ export default function AdminPage() {
   const [xlsxPreviewTotal, setXlsxPreviewTotal] = useState(0);
   const visibleXlsxPreviewColumns = useMemo(
     () =>
-      XLSX_PREVIEW_COLUMNS.filter((column) =>
-        isXlsxPreviewColumnEnabled(column.key, user?.admin_permissions)
+      XLSX_PREVIEW_COLUMNS.filter(
+        (column) =>
+          isXlsxPreviewColumnEnabled(column.key, user?.admin_permissions) &&
+          (!xlsxPreviewRows.some((row) => row.privacy_redacted) ||
+            !['fullName', 'address', 'parentsPhone'].includes(column.key))
       ),
-    [user?.admin_permissions]
+    [user?.admin_permissions, xlsxPreviewRows]
   );
   const [importingXlsx, setImportingXlsx] = useState(false);
   const [importConfirmOpen, setImportConfirmOpen] = useState(false);
@@ -1233,6 +1236,18 @@ export default function AdminPage() {
     }
   }, [user, dashFilters, sort, page, rowsPerPage]);
 
+  const handleOpenAnalysis = useCallback(
+    async (row) => {
+      try {
+        const latest = await AdminApi.analyses.get(row.id);
+        setViewRow(normalize(latest));
+      } catch (error) {
+        toast.error(error.message || pt('recordNotFound'));
+      }
+    },
+    [pt]
+  );
+
   const fetchDashboardStats = useCallback(
     async (filters = dashFilters) => {
       if (!user) return;
@@ -1252,6 +1267,25 @@ export default function AdminPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const reloadPrivacyData = async () => {
+      load();
+      if (!viewRow?.id) return;
+      try {
+        const latest = await AdminApi.analyses.get(viewRow.id);
+        setViewRow(normalize(latest));
+      } catch (error) {
+        console.error(
+          'Failed to refresh open analysis after privacy update:',
+          error
+        );
+      }
+    };
+    window.addEventListener('child-privacy-updated', reloadPrivacyData);
+    return () =>
+      window.removeEventListener('child-privacy-updated', reloadPrivacyData);
+  }, [load, viewRow?.id]);
 
   useEffect(() => {
     if (activeTab === 0) {
@@ -1529,6 +1563,7 @@ export default function AdminPage() {
       };
 
       const rowValues = {
+        privacy_redacted: Boolean(row.privacy_redacted),
         date: row.createdAt
           ? new Date(row.createdAt).toLocaleDateString(getDateLocale(lang))
           : '-',
@@ -1594,7 +1629,9 @@ export default function AdminPage() {
       return Object.fromEntries(
         Object.entries(rowValues).map(([key, current]) => [
           key,
-          normalizePreviewScript(key, current, lang),
+          key === 'privacy_redacted'
+            ? current
+            : normalizePreviewScript(key, current, lang),
         ])
       );
     },
@@ -1797,7 +1834,7 @@ export default function AdminPage() {
                 allChecked={
                   raw.length > 0 && raw.every((r) => checked.has(r.id))
                 }
-                setViewRow={setViewRow}
+                setViewRow={handleOpenAnalysis}
                 onEdit={(r) => setEditRow(r)}
                 formatDate={(d) =>
                   new Date(d).toLocaleDateString(getDateLocale(lang))
@@ -1869,7 +1906,7 @@ export default function AdminPage() {
     setDashFilters,
     toggleAll,
     toggleOne,
-    setViewRow,
+    handleOpenAnalysis,
     rowsPerPage,
     page,
     setPage,
@@ -2179,12 +2216,14 @@ export default function AdminPage() {
                   <strong>{viewRow.idCode}</strong>
                 </TableCell>
               </TableRow>
-              <TableRow>
-                <TableCell>{pt('fullName')}</TableCell>
-                <TableCell>
-                  {viewRow.lastName} {viewRow.firstName}
-                </TableCell>
-              </TableRow>
+              {!viewRow.privacy_redacted && (
+                <TableRow>
+                  <TableCell>{pt('fullName')}</TableCell>
+                  <TableCell>
+                    {viewRow.lastName} {viewRow.firstName}
+                  </TableCell>
+                </TableRow>
+              )}
               <TableRow>
                 <TableCell>{pt('date')}</TableCell>
                 <TableCell>
@@ -2259,6 +2298,7 @@ export default function AdminPage() {
                   'consent_policy_version',
                   'consentconfirmedat',
                   'consent_confirmed_at',
+                  'privacy_redacted',
                 ];
 
                 const lowerKey = key.toLowerCase();

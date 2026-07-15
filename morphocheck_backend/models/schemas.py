@@ -748,6 +748,16 @@ class RoleSettingsOut(RoleSettingsBase):
     class Config:
         from_attributes = True
 
+class PrivacyRoleSettingsUpdate(BaseModel):
+    child_data_privacy_enabled: bool
+
+class PrivacyRoleSettingsOut(PrivacyRoleSettingsUpdate):
+    role_name: str
+    updated_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
 class BlockIPRequest(BaseModel):
     ips: list[str]
     reason: Optional[str] = "Blocked by Superadmin"

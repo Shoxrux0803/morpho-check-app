@@ -7,7 +7,7 @@ from docx import Document
 from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt, RGBColor
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -52,6 +52,15 @@ from utils.security import get_password_hash
 from utils.translit import lat2cyr
 from utils.blocked_ips import block_ips, is_ip_blocked
 from utils.client_intel import describe_ip_location, describe_user_agent
+from utils.privacy import (
+    CHILD_PII_EXPORT_FIELDS,
+    PRIVACY_MANAGED_ROLES,
+    ROLE_PRIVACY_DEFAULTS,
+    child_audit_reference,
+    get_child_privacy_enabled,
+    normalize_privacy_role,
+    redact_child_payload,
+)
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -201,7 +210,11 @@ def bmi_status_by_age(bmi: Optional[float], age: Optional[int]) -> str:
     return "Semizlik?"
 
 
-def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) -> dict:
+def to_dict_analysis(
+    row: PatientAnalysis,
+    current_user: Optional[User] = None,
+    privacy_enabled: Optional[bool] = None,
+) -> dict:
     raw_name = getattr(row, "name", None)
     
     # Маскирование персональных данных для field_assistant
@@ -219,6 +232,7 @@ def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) 
     else:
         masked_name = raw_name
 
+    masked_name = raw_name
     first_name, last_name = split_name(masked_name)
     bmi_val = getattr(row, "bmi", None)
     if bmi_val is None:
@@ -247,13 +261,13 @@ def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) 
         "recommendations": getattr(row, "recommendations", None),
         "ai_recommendations": getattr(row, "ai_recommendations", None),
         "doctor_note": getattr(row, "doctor_note", None),
-        "parents_phone": "***" if current_user and current_user.role == "field_assistant" else getattr(row, "parents_phone", None),
+        "parents_phone": getattr(row, "parents_phone", None),
         "consent_confirmed": bool(getattr(row, "consent_confirmed", 0)),
-        "consent_guardian_name": "***" if current_user and current_user.role == "field_assistant" else getattr(row, "consent_guardian_name", None),
+        "consent_guardian_name": getattr(row, "consent_guardian_name", None),
         "consent_guardian_relationship": getattr(
             row, "consent_guardian_relationship", None
         ),
-        "consent_guardian_phone": "***" if current_user and current_user.role == "field_assistant" else getattr(row, "consent_guardian_phone", None),
+        "consent_guardian_phone": getattr(row, "consent_guardian_phone", None),
         "consent_confirmed_at": getattr(row, "consent_confirmed_at", None),
         "consent_policy_version": getattr(row, "consent_policy_version", None),
     }
@@ -303,6 +317,9 @@ def to_dict_analysis(row: PatientAnalysis, current_user: Optional[User] = None) 
 
     if current_user:
         payload = filter_payload_by_permissions(payload, get_effective_admin_permissions(current_user))
+        payload = redact_child_payload(
+            payload, current_user, privacy_enabled=privacy_enabled
+        )
 
     return payload
 
@@ -646,6 +663,7 @@ def restore_user(
 # ---------------- ANALYSES ---------------------
 @router.get("/analyses")
 def list_analyses(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_or_assistant),
     q: Optional[str] = Query(None),
@@ -661,6 +679,8 @@ def list_analyses(
     page_size: int = 20,
     show_deleted: bool = Query(False),  # Super admin uchun o'chirilganlarni ko'rsatish
 ):
+    response.headers["Cache-Control"] = "no-store, private"
+    response.headers["Pragma"] = "no-cache"
     base = db.query(PatientAnalysis)
 
     if current_user.role == "field_assistant":
@@ -687,7 +707,7 @@ def list_analyses(
     # Qidiruv
     if q:
         like = f"%{q}%"
-        base = base.filter(PatientAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.id_code.ilike(like))
 
     # Filtrlar
     if gender:
@@ -711,13 +731,13 @@ def list_analyses(
     # Sort — o'chirilganlar har doim oxirida
     sort_map = {
         "created_at": getattr(PatientAnalysis, "created_at", None),
-        "name": getattr(PatientAnalysis, "name", None),
+        "name": getattr(PatientAnalysis, "id_code", None),
         "gender": getattr(PatientAnalysis, "gender", None),
         "age": getattr(PatientAnalysis, "age", None),
         "height": getattr(PatientAnalysis, "height", None),
         "weight": getattr(PatientAnalysis, "weight", None),
         "bmi": getattr(PatientAnalysis, "bmi", None),
-        "last_name": getattr(PatientAnalysis, "name", None),
+        "last_name": getattr(PatientAnalysis, "id_code", None),
     }
     col = sort_map.get(sort_key) or getattr(PatientAnalysis, "created_at", None)
     if col is not None:
@@ -728,7 +748,11 @@ def list_analyses(
     )
 
     items_db = base.offset(max(0, (page - 1) * page_size)).limit(page_size).all()
-    items = [to_dict_analysis(r, current_user) for r in items_db]
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    items = [
+        to_dict_analysis(r, current_user, privacy_enabled=privacy_enabled)
+        for r in items_db
+    ]
     return {"items": items, "total": int(total)}
 
 
@@ -748,7 +772,11 @@ def get_analysis(
         if not (creator and creator.supervisor_id == current_user.id):
             raise HTTPException(403, "Ushbu ma'lumotni ko'rishga huquqingiz yo'q")
 
-    return to_dict_analysis(rec, current_user)
+    return to_dict_analysis(
+        rec,
+        current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
+    )
 
 
 class AdminDeleteRequestModel(BaseModel):
@@ -778,7 +806,7 @@ def delete_analyses(
             rec.deleted_by_id = current_user.id
             rec.deleted_at = datetime.utcnow()
             count += 1
-            names.append(rec.name)
+            names.append(child_audit_reference(rec))
 
         db.commit()
 
@@ -881,21 +909,11 @@ def update_analysis(
         if current_user.role != "superadmin" and rec.created_by_id != current_user.id:
             raise HTTPException(403, "Ushbu ma'lumotni o'zgartirishga huquqingiz yo'q")
 
-        old_name = rec.name
-
         # ... logic for update (kept as is) ...
         # (Actually I need to keep the code here to avoid broken endpoint)
 
-        # 1. Ismni yangilash
-        first_name = payload.get("firstName")
-        last_name = payload.get("lastName")
-        if first_name is not None or last_name is not None:
-            old_first, old_last = split_name(rec.name)
-            new_first = first_name if first_name is not None else old_first
-            new_last = last_name if last_name is not None else old_last
-            rec.name = f"{new_first or ''} {new_last or ''}".strip()
-
-        # 2. Region/District yangilash
+        # Admin roles can edit measurements, but never replace hidden child PII.
+        # 1. Region/District yangilash
         if "region" in payload or "district" in payload:
             reg = payload.get("region", rec.region)
             dist = payload.get("district", rec.district)
@@ -903,7 +921,7 @@ def update_analysis(
             rec.region = clean_reg
             rec.district = clean_dist
 
-        # 3. Barcha o'lchovlarni yangilash
+        # 2. Barcha o'lchovlarni yangilash
         fields_to_update = [
             "age",
             "age_months",
@@ -932,17 +950,10 @@ def update_analysis(
             "bone_mass",
             "acm",
             "visceral_fat",
-            "mahalla",
-            "address",
             "examination_date",
-            "birth_date",
-            "preschool_institution",
             "ai_recommendations",
-            "parents_phone",
             "doctor_note",
-            "consent_guardian_name",
             "consent_guardian_relationship",
-            "consent_guardian_phone",
             "consent_policy_version",
         ]
 
@@ -957,7 +968,7 @@ def update_analysis(
             if val is not None:
                 old_val = getattr(rec, f)
                 if str(old_val) != str(val):
-                    changes.append(f"{f}: {old_val} -> {val}")
+                    changes.append(f)
                 setattr(rec, f, val)
 
         if "consent_confirmed" in payload or "consentConfirmed" in payload:
@@ -970,9 +981,9 @@ def update_analysis(
             if new_val and not getattr(rec, "consent_confirmed_at", None):
                 rec.consent_confirmed_at = datetime.utcnow()
             if old_val != new_val:
-                changes.append(f"consent_confirmed: {old_val} -> {new_val}")
+                changes.append("consent_confirmed")
 
-        # 4. Qayta hisoblash
+        # 3. Qayta hisoblash
         try:
             all_settings = clinical_service.get_all_settings(db)
             analysis = recalculate_analysis_fields(rec, db, lang="uz")
@@ -1007,11 +1018,15 @@ def update_analysis(
             action="UPDATE",
             target_type="PatientAnalysis",
             target_id=rec.id,
-            details=f"Tahlil yangilandi: {rec.name}. O'zgarishlar: {', '.join(changes[:3])}{'...' if len(changes) > 3 else ''}",
+            details=f"Tahlil yangilandi: {child_audit_reference(rec)}. O'zgarishlar: {', '.join(changes[:3])}{'...' if len(changes) > 3 else ''}",
             request=request,
         )
 
-        return to_dict_analysis(rec)
+        return to_dict_analysis(
+            rec,
+            current_user,
+            privacy_enabled=get_child_privacy_enabled(db, current_user),
+        )
     except HTTPException:
         db.rollback()
         raise
@@ -1635,7 +1650,7 @@ def preview_analyses_xlsx(
 
     if q:
         like = f"%{q}%"
-        base = base.filter(PatientAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.id_code.ilike(like))
     if gender:
         base = base.filter(func.lower(PatientAnalysis.gender) == gender.lower())
     if age_min is not None:
@@ -1657,13 +1672,13 @@ def preview_analyses_xlsx(
 
     sort_map = {
         "created_at": PatientAnalysis.created_at,
-        "name": PatientAnalysis.name,
+        "name": PatientAnalysis.id_code,
         "gender": PatientAnalysis.gender,
         "age": PatientAnalysis.age,
         "height": PatientAnalysis.height,
         "weight": PatientAnalysis.weight,
         "bmi": PatientAnalysis.bmi,
-        "last_name": PatientAnalysis.name,
+        "last_name": PatientAnalysis.id_code,
     }
     sort_col = sort_map.get(sort_key, PatientAnalysis.created_at)
     base = base.order_by(asc(sort_col) if sort_dir == "asc" else desc(sort_col))
@@ -1691,7 +1706,7 @@ def preview_analyses_xlsx(
             weight_range = f"{rng.get('min', '-')}-{rng.get('max', '-')}"
         indices = analysis.get("indices", {}) or {}
 
-        items.append({
+        item = {
             "id": r.id,
             "created_at": r.created_at,
             "id_code": r.id_code,
@@ -1739,7 +1754,14 @@ def preview_analyses_xlsx(
             "visceral_fat": indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
             "body_length": r.body_length or 0,
             "parents_phone": r.parents_phone or "-",
-        })
+        }
+        items.append(
+            redact_child_payload(
+                item,
+                current_user,
+                privacy_enabled=get_child_privacy_enabled(db, current_user),
+            )
+        )
 
     return {"items": items, "total": int(total)}
 
@@ -1767,7 +1789,7 @@ def export_analyses_xlsx(
 
     if q:
         like = f"%{q}%"
-        base = base.filter(PatientAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.id_code.ilike(like))
     if gender:
         base = base.filter(func.lower(PatientAnalysis.gender) == gender.lower())
     if age_min is not None:
@@ -1882,7 +1904,13 @@ def export_analyses_xlsx(
             return get_research_header(lang, research_key)
         return key
 
-    enabled_column_keys = [key for key in column_keys if _xlsx_column_enabled(key)]
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    enabled_column_keys = [
+        key
+        for key in column_keys
+        if _xlsx_column_enabled(key)
+        and (not privacy_enabled or key not in CHILD_PII_EXPORT_FIELDS)
+    ]
     headers = [_xlsx_header_for(key) for key in enabled_column_keys]
     # Header styling
     header_fill = PatternFill(
@@ -2047,14 +2075,18 @@ def export_analyses_xlsx(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-store, private",
+        },
     )
 
 
 # -------------- O'CHIRILGAN MA'LUMOTLAR (Super Admin) ------------------
-@router.get("/deleted-analyses", dependencies=[Depends(get_current_superadmin)])
+@router.get("/deleted-analyses")
 def list_deleted_analyses(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
     q: Optional[str] = Query(None),
     page: int = 1,
     page_size: int = 20,
@@ -2065,7 +2097,7 @@ def list_deleted_analyses(
     base = db.query(PatientAnalysis).filter((PatientAnalysis.is_deleted == 1))
     if q:
         like = f"%{q}%"
-        base = base.filter(PatientAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.id_code.ilike(like))
 
     total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
     items_db = (
@@ -2078,7 +2110,11 @@ def list_deleted_analyses(
         .limit(page_size)
         .all()
     )
-    items = [to_dict_analysis(r) for r in items_db]
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    items = [
+        to_dict_analysis(r, current_user, privacy_enabled=privacy_enabled)
+        for r in items_db
+    ]
     return {"items": items, "total": int(total)}
 
 
@@ -2093,7 +2129,7 @@ def export_deleted_docx(
     base = db.query(PatientAnalysis).filter(PatientAnalysis.is_deleted == 1)
     if q:
         like = f"%{q}%"
-        base = base.filter(PatientAnalysis.name.ilike(like))
+        base = base.filter(PatientAnalysis.id_code.ilike(like))
 
     rows_db = (
         base.options(
@@ -2129,7 +2165,6 @@ def export_deleted_docx(
     headers = [
         "№",
         "ID Kod",
-        "F.I.Sh.",
         "Jins",
         "Yosh",
         "Viloyat / Tuman",
@@ -2140,7 +2175,7 @@ def export_deleted_docx(
         "O'chirgan Admin",
         "O'chirilgan Sana",
     ]
-    col_widths_cm = [0.8, 2.0, 3.5, 1.5, 1.2, 3.0, 1.5, 1.5, 1.5, 2.5, 3.0, 3.0]
+    col_widths_cm = [0.8, 2.0, 1.5, 1.2, 3.0, 1.5, 1.5, 1.5, 2.5, 3.0, 3.0]
 
     table = doc.add_table(rows=1, cols=len(headers))
     table.style = "Table Grid"
@@ -2196,7 +2231,6 @@ def export_deleted_docx(
         values = [
             str(idx),
             r.id_code or "-",
-            lat2cyr(r.name) if r.name else "-",
             lat2cyr(r.gender) if r.gender else "-",
             age_str,
             lat2cyr(region_str),
@@ -2214,9 +2248,7 @@ def export_deleted_docx(
             cell = row_cells[i]
             cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
             para = cell.paragraphs[0]
-            para.alignment = (
-                WD_ALIGN_PARAGRAPH.CENTER if i != 2 else WD_ALIGN_PARAGRAPH.LEFT
-            )
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
             run = para.add_run(val)
             run.font.size = Pt(8)
 
@@ -2251,7 +2283,10 @@ def export_deleted_docx(
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-store, private",
+        },
     )
 
 
@@ -2327,7 +2362,13 @@ IMPORT_FIELD_NAMES = {field for field, _header, _sample in IMPORT_TEMPLATE_COLUM
 LEGACY_IMPORT_FIELD_MAP = {i: field for i, (field, _header, _sample) in enumerate(IMPORT_TEMPLATE_COLUMNS)}
 
 
-def import_field_enabled(field: str, permissions: dict[str, bool]) -> bool:
+def import_field_enabled(
+    field: str,
+    permissions: dict[str, bool],
+    privacy_enabled: bool = False,
+) -> bool:
+    if privacy_enabled and field in CHILD_PII_EXPORT_FIELDS:
+        return False
     if field in ANTHROPOMETRY_IMPORT_FIELDS:
         return permissions.get(field, True)
     if field in BIOIMPEDANCE_IMPORT_FIELDS:
@@ -2344,7 +2385,10 @@ def parse_import_header_field(value) -> Optional[str]:
 
 
 @router.get("/export-template")
-def export_template(current_user: User = Depends(get_current_admin)):
+def export_template(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
     """Import uchun Excel shablonini yuklab olish."""
     wb = Workbook()
     ws = wb.active
@@ -2355,8 +2399,11 @@ def export_template(current_user: User = Depends(get_current_admin)):
     # Biz Lotin (field name) + Izoh (Kirill) kombinatsiyasini ishlatamiz.
 
     permissions = get_effective_admin_permissions(current_user)
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
     enabled_template_columns = [
-        column for column in IMPORT_TEMPLATE_COLUMNS if import_field_enabled(column[0], permissions)
+        column
+        for column in IMPORT_TEMPLATE_COLUMNS
+        if import_field_enabled(column[0], permissions, privacy_enabled)
     ]
     headers = [header for _field, header, _sample in enabled_template_columns]
     sample = [sample for _field, _header, sample in enabled_template_columns]
@@ -2382,7 +2429,8 @@ def export_template(current_user: User = Depends(get_current_admin)):
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
-            "Content-Disposition": "attachment; filename=morphocheck_template.xlsx"
+            "Content-Disposition": "attachment; filename=morphocheck_template.xlsx",
+            "Cache-Control": "no-store, private",
         },
     )
 
@@ -2405,6 +2453,7 @@ async def import_analyses_xlsx(
     wb = load_workbook(BytesIO(contents), data_only=True)
     ws = wb.active
     import_permissions = get_effective_admin_permissions(current_user)
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
 
     region_offsets = {}
 
@@ -2414,13 +2463,13 @@ async def import_analyses_xlsx(
         idx: field
         for idx, header in enumerate(header_values)
         if (field := parse_import_header_field(header))
-        and import_field_enabled(field, import_permissions)
+        and import_field_enabled(field, import_permissions, privacy_enabled)
     }
     if not field_map:
         field_map = {
             idx: field
             for idx, field in LEGACY_IMPORT_FIELD_MAP.items()
-            if import_field_enabled(field, import_permissions)
+            if import_field_enabled(field, import_permissions, privacy_enabled)
         }
     imported_count = 0
     updated_count = 0
@@ -2505,8 +2554,10 @@ async def import_analyses_xlsx(
 
             row_errors = []
             required_fields = {
-                "first_name": "Ism majburiy.",
-                "last_name": "Familiya majburiy.",
+                **({} if privacy_enabled else {
+                    "first_name": "Ism majburiy.",
+                    "last_name": "Familiya majburiy.",
+                }),
                 "gender": "Jins majburiy.",
                 "age": "Yosh majburiy.",
                 "region": "Viloyat majburiy.",
@@ -2570,7 +2621,7 @@ async def import_analyses_xlsx(
                     "acm",
                     "visceral_fat",
                 )
-                if import_field_enabled(field, import_permissions)
+                if import_field_enabled(field, import_permissions, privacy_enabled)
             ]
             for field in numeric_fields:
                 if not is_blank(data.get(field)) and not is_number_like(
@@ -2616,7 +2667,11 @@ async def import_analyses_xlsx(
                 continue
 
             # Convert types
-            full_name = f"{data['first_name']} {data['last_name']}".strip()
+            full_name = (
+                f"Maxfiy import {row_idx}"
+                if privacy_enabled
+                else f"{data['first_name']} {data['last_name']}".strip()
+            )
             gender = str(data.get("gender") or "erkak").lower()
             if "ayol" in gender or "fem" in gender:
                 gender = "ayol"
@@ -2670,20 +2725,25 @@ async def import_analyses_xlsx(
                 cnt = region_offsets[clean_region]["count"]
                 rec.id_code = f"{pfx}-{cnt:04d}"
                 region_offsets[clean_region]["count"] += 1
-            rec.mahalla = str(data.get("mahalla") or "").strip()
-            rec.address = str(data.get("address") or "").strip()
+            if not privacy_enabled:
+                rec.mahalla = str(data.get("mahalla") or "").strip()
+                rec.address = str(data.get("address") or "").strip()
             rec.height = format_val(data.get("height"), 0.0)
             rec.weight = format_val(data.get("weight"), 0.0)
             rec.chest = format_val(data.get("chest"), 0.0)
             rec.waist = format_val(data.get("waist"), 0.0)
             rec.head = format_val(data.get("head"), 0.0)
             rec.hip = format_val(data.get("hip"), 0.0)
-            rec.birth_date = format_date(data.get("birth_date"), "")
+            if not privacy_enabled:
+                rec.birth_date = format_date(data.get("birth_date"), "")
             rec.examination_date = format_date(
                 data.get("examination_date"), datetime.now().strftime("%Y-%m-%d")
             )
-            rec.preschool_institution = str(data.get("preschool_institution") or "")
-            rec.parents_phone = str(data.get("parents_phone") or "").strip() or None
+            if not privacy_enabled:
+                rec.preschool_institution = str(data.get("preschool_institution") or "")
+                rec.parents_phone = str(data.get("parents_phone") or "").strip() or None
+            if privacy_enabled:
+                rec.name = f"Maxfiy {rec.id_code}"
             rec.father_height = format_val(data.get("father_height"), None)
             rec.mother_height = format_val(data.get("mother_height"), None)
             rec.doctor_note = str(data.get("doctor_note") or "").strip() or None
@@ -2711,7 +2771,7 @@ async def import_analyses_xlsx(
                     "acm",
                     "visceral_fat",
                 )
-                if import_field_enabled(field, import_permissions)
+                if import_field_enabled(field, import_permissions, privacy_enabled)
             ]
             for bf in bio_fields:
                 val = data.get(bf)
@@ -3227,7 +3287,12 @@ def clear_audit_logs(
 
 # --- Role Settings ---
 from models.settings import RoleSettings
-from models.schemas import RoleSettingsOut, RoleSettingsUpdate
+from models.schemas import (
+    PrivacyRoleSettingsOut,
+    PrivacyRoleSettingsUpdate,
+    RoleSettingsOut,
+    RoleSettingsUpdate,
+)
 
 @router.get("/role-settings", response_model=List[RoleSettingsOut])
 def get_role_settings(
@@ -3244,13 +3309,78 @@ def get_role_settings(
             new_setting = RoleSettings(
                 role_name=r,
                 ai_chat_enabled=True,
-                internal_chat_enabled=True
+                internal_chat_enabled=True,
+                child_data_privacy_enabled=ROLE_PRIVACY_DEFAULTS.get(r, True),
             )
             db.add(new_setting)
         db.commit()
         settings = db.query(RoleSettings).all()
         
     return settings
+
+
+def _ensure_privacy_role_settings(db: Session) -> List[RoleSettings]:
+    settings = {
+        item.role_name: item
+        for item in db.query(RoleSettings)
+        .filter(RoleSettings.role_name.in_(PRIVACY_MANAGED_ROLES))
+        .all()
+    }
+    for role_name in PRIVACY_MANAGED_ROLES:
+        if role_name not in settings:
+            setting = RoleSettings(
+                role_name=role_name,
+                ai_chat_enabled=True,
+                internal_chat_enabled=True,
+                child_data_privacy_enabled=ROLE_PRIVACY_DEFAULTS[role_name],
+            )
+            db.add(setting)
+            settings[role_name] = setting
+    db.commit()
+    return [settings[role_name] for role_name in PRIVACY_MANAGED_ROLES]
+
+
+@router.get("/privacy-settings", response_model=List[PrivacyRoleSettingsOut])
+def get_privacy_settings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+):
+    return _ensure_privacy_role_settings(db)
+
+
+@router.put(
+    "/privacy-settings/{role_name}",
+    response_model=PrivacyRoleSettingsOut,
+)
+def update_privacy_setting(
+    role_name: str,
+    update_data: PrivacyRoleSettingsUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_superadmin),
+):
+    role_name = normalize_privacy_role(role_name)
+    if role_name not in PRIVACY_MANAGED_ROLES:
+        raise HTTPException(status_code=400, detail="Bu rol uchun maxfiylik boshqarilmaydi")
+    _ensure_privacy_role_settings(db)
+    setting = (
+        db.query(RoleSettings).filter(RoleSettings.role_name == role_name).first()
+    )
+    setting.child_data_privacy_enabled = update_data.child_data_privacy_enabled
+    db.commit()
+    db.refresh(setting)
+    record_audit_log(
+        db=db,
+        user_id=current_user.id,
+        action="UPDATE_PRIVACY",
+        target_type="RoleSettings",
+        details=(
+            f"{role_name} roli uchun bolalar shaxsiy ma'lumotlari maxfiyligi: "
+            f"{'yoqildi' if setting.child_data_privacy_enabled else 'o‘chirildi'}"
+        ),
+        request=request,
+    )
+    return setting
 
 @router.put("/role-settings/{role_name}", response_model=RoleSettingsOut)
 def update_role_setting(

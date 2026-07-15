@@ -8,7 +8,7 @@ from email.message import EmailMessage
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from models.auth_device import LoginVerificationCode, TrustedLoginDevice
@@ -294,7 +294,12 @@ def login(request: Request, user_in: UserLogin, db: Session = Depends(get_db)):
     login_value = user_in.email.strip().lower()
     user = (
         db.query(User)
-        .filter(or_(User.email == login_value, User.name == user_in.email.strip()))
+        .filter(
+            or_(
+                func.lower(User.email) == login_value,
+                func.lower(User.name) == login_value,
+            )
+        )
         .first()
     )
 

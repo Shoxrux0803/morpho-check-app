@@ -1549,26 +1549,6 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # -----------------------------------------------------------------------
     _section_head_paragraph(doc, L("section_1"))
 
-    t1 = doc.add_table(rows=11, cols=3)
-    t1.style = "Table Grid"
-    _set_table_full_width(t1)
-
-    _set_cell_font(
-        t1.cell(0, 0), L("no"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
-    )
-    _set_cell_font(
-        t1.cell(0, 1),
-        L("indicator"),
-        bold=True,
-        size=9,
-        align=WD_ALIGN_PARAGRAPH.CENTER,
-    )
-    _set_cell_font(
-        t1.cell(0, 2), L("data_col"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
-    )
-    for c in range(3):
-        _shade_cell(t1.cell(0, c))
-
     # Жинси checkbox
     is_boy = any(
         k in gender_raw for k in ("erkak", "o'g'il", "ogil", "ўғил", "male", "ер")
@@ -1616,9 +1596,35 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         ("9", L("address"), full_address),
         ("10", L("parents_phone"), parents_phone),
     ]
+    if data.get("privacy_redacted"):
+        private_labels = {
+            name_label,
+            L("birth_date"),
+            L("institution"),
+            L("address"),
+            L("parents_phone"),
+        }
+        rows_i = [row for row in rows_i if row[1] not in private_labels]
 
-    for i, (num, label, val) in enumerate(rows_i, start=1):
-        _set_cell_font(t1.cell(i, 0), num, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+    t1 = doc.add_table(rows=len(rows_i) + 1, cols=3)
+    t1.style = "Table Grid"
+    _set_table_full_width(t1)
+    _set_cell_font(
+        t1.cell(0, 0), L("no"), bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER
+    )
+    _set_cell_font(
+        t1.cell(0, 1), L("indicator"), bold=True, size=9,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+    )
+    _set_cell_font(
+        t1.cell(0, 2), L("data_col"), bold=True, size=9,
+        align=WD_ALIGN_PARAGRAPH.CENTER,
+    )
+    for c in range(3):
+        _shade_cell(t1.cell(0, c))
+
+    for i, (_, label, val) in enumerate(rows_i, start=1):
+        _set_cell_font(t1.cell(i, 0), str(i), size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
         _set_cell_font(t1.cell(i, 1), label, size=9)
         _set_cell_font(t1.cell(i, 2), val, size=9)
 

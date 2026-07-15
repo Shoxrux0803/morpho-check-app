@@ -914,7 +914,8 @@ def _p_label(value):
 
 
 def generate_research_summary_docx(
-    records, current_user=None, researcher=None, filters=None, lang="uz"
+    records, current_user=None, researcher=None, filters=None, lang="uz",
+    privacy_redacted=False,
 ):
     stats = _build_stats(records, lang=lang)
     doc = Document()
@@ -990,16 +991,17 @@ def generate_research_summary_docx(
         widths=[4, 2, 2, 8],
     )
 
-    settlement_rows = [
-        [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
-        for name, count in stats["settlements"].most_common(10)
-    ]
-    _table(
-        doc,
-        [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")],
-        settlement_rows or [["-", "-", "-", "-"]],
-        widths=[6, 2, 2, 7],
-    )
+    if not privacy_redacted:
+        settlement_rows = [
+            [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
+            for name, count in stats["settlements"].most_common(10)
+        ]
+        _table(
+            doc,
+            [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")],
+            settlement_rows or [["-", "-", "-", "-"]],
+            widths=[6, 2, 2, 7],
+        )
 
     _heading(doc, _tr(lang, "stats"), 2)
     descriptive_rows = []

@@ -100,6 +100,7 @@ import ClinicalCMS from '../components/Admin/ClinicalCMS';
 import AdminActivity from '../components/Admin/AdminActivity';
 import SecuritySettings from '../components/Admin/SecuritySettings';
 import RoleSettingsCMS from '../components/Admin/RoleSettingsCMS';
+import PrivacySettings from '../components/Admin/PrivacySettings';
 import DashboardFilters from '../components/Dashboard/DashboardFilters';
 
 const PAGE_LABELS = {
@@ -4921,6 +4922,8 @@ const SuperAdminPage = () => {
         return <AdminActivity />;
       case 10:
         return <RoleSettingsCMS />;
+      case 11:
+        return <PrivacySettings />;
       default:
         return null;
     }
@@ -4947,6 +4950,7 @@ const SuperAdminPage = () => {
     { icon: <SettingsSuggest />, label: pt('clinicalCms') },
     { icon: <AutoGraph />, label: pt('topChart') },
     { icon: <SettingsSuggest />, label: t('chatSettingsTitle') },
+    { icon: <Security />, label: 'Maxfiylik sozlamalari' },
   ];
 
   const isMapTab = activeTab === 2;

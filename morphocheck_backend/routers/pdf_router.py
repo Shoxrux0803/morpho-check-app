@@ -28,15 +28,9 @@ from utils.admin_permissions import filter_payload_by_permissions, get_effective
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.date_utils import calculate_age_precise
+from utils.privacy import child_audit_reference, get_child_privacy_enabled, redact_child_payload
 
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
-
-
-def _frontend_base_url(request: Request) -> str:
-    origin = request.headers.get("origin") or request.headers.get("referer")
-    if origin:
-        return origin.split("/admin", 1)[0].rstrip("/")
-    return str(request.base_url).rstrip("/")
 
 
 def _can_download_patient_report(
@@ -117,12 +111,6 @@ async def generate_pdf_endpoint(
         if not data_dict.get("id_code"):
             clean_region = (data_dict.get("region") or "").strip()
             data_dict["id_code"] = generate_region_based_id(db, clean_region)
-        qr_id = data_dict.get("analysis_id") or data_dict.get("analysisId")
-        if qr_id:
-            data_dict["record_url"] = (
-                _frontend_base_url(request) + f"/admin?analysis_id={qr_id}"
-            )
-
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
         data_dict["doctor_note"] = getattr(request_data, "doctor_note", None)
@@ -171,7 +159,9 @@ async def generate_pdf_endpoint(
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f"attachment; filename=morphocheck_{lang}.pdf",
-                "Access-Control-Expose-Headers": "Content-Disposition",
+                "X-Report-Audience": "parent",
+                "Cache-Control": "no-store, private",
+                "Access-Control-Expose-Headers": "Content-Disposition, X-Report-Audience",
             },
         )
 
@@ -320,7 +310,6 @@ async def generate_pdf_by_id_endpoint(
             "advices": advices,
             "doctor_note": rec.doctor_note or "",
             "parents_phone": rec.parents_phone or "",
-            "record_url": _frontend_base_url(request) + f"/admin?analysis_id={rec.id}",
         }
 
         # AI Predictions
@@ -359,7 +348,7 @@ async def generate_pdf_by_id_endpoint(
                 action="DOWNLOAD",
                 target_type="PatientAnalysis",
                 target_id=rec.id,
-                details=f"Bemor hisoboti (PDF) yuklab olindi: {rec.name}",
+                details=f"Ota-ona nusxasi (PDF) yuklab olindi: {child_audit_reference(rec)}",
                 request=request,
             )
 
@@ -368,7 +357,9 @@ async def generate_pdf_by_id_endpoint(
             media_type="application/pdf",
             headers={
                 "Content-Disposition": f"attachment; filename=morphocheck_{patient_id}_{lang}.pdf",
-                "Access-Control-Expose-Headers": "Content-Disposition",
+                "X-Report-Audience": "parent",
+                "Cache-Control": "no-store, private",
+                "Access-Control-Expose-Headers": "Content-Disposition, X-Report-Audience",
             },
         )
     except Exception as e:
@@ -520,6 +511,11 @@ async def generate_docx_by_id_endpoint(
             report_data[col] = getattr(rec, col, 0) or 0
 
         report_data = filter_payload_by_permissions(report_data, get_effective_admin_permissions(current_user))
+        report_data = redact_child_payload(
+            report_data,
+            current_user,
+            privacy_enabled=get_child_privacy_enabled(db, current_user),
+        )
         buffer = await asyncio.to_thread(generate_docx_report, report_data, lang)
         buffer.seek(0)
 
@@ -530,7 +526,7 @@ async def generate_docx_by_id_endpoint(
                 action="DOWNLOAD",
                 target_type="PatientAnalysis",
                 target_id=rec.id,
-                details=f"Bemor anketasi (DOCX) yuklab olindi: {rec.name}",
+                details=f"Bemor anketasi (DOCX) yuklab olindi: {child_audit_reference(rec)}",
                 request=request,
             )
 
@@ -539,6 +535,7 @@ async def generate_docx_by_id_endpoint(
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             headers={
                 "Content-Disposition": f"attachment; filename=morphocheck_anketa_{patient_id}_{lang}.docx",
+                "Cache-Control": "no-store, private",
                 "Access-Control-Expose-Headers": "Content-Disposition",
             },
         )
@@ -601,7 +598,7 @@ async def generate_consent_docx_by_id_endpoint(
             action="DOWNLOAD",
             target_type="PatientAnalysis",
             target_id=rec.id,
-            details=f"Maxfiylik rozilik DOCX yuklab olindi: {rec.name}",
+            details=f"Maxfiylik rozilik DOCX yuklab olindi: {child_audit_reference(rec)}",
             request=request,
         )
     return StreamingResponse(
@@ -662,6 +659,16 @@ async def generate_docx_endpoint(
         data_dict["advices"] = advices
 
         data_dict = filter_payload_by_permissions(data_dict, get_effective_admin_permissions(current_user)) if current_user else data_dict
+        data_dict = redact_child_payload(
+            data_dict,
+            current_user,
+            force=current_user is None,
+            privacy_enabled=(
+                get_child_privacy_enabled(db, current_user)
+                if current_user is not None
+                else True
+            ),
+        )
         buffer = await asyncio.to_thread(generate_docx_report, data_dict, lang)
 
         if not isinstance(buffer, BytesIO):
@@ -675,6 +682,7 @@ async def generate_docx_endpoint(
             media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             headers={
                 "Content-Disposition": "attachment; filename=morphocheck_anketa.docx",
+                "Cache-Control": "no-store, private",
                 "Access-Control-Expose-Headers": "Content-Disposition",
             },
         )

@@ -1375,6 +1375,20 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const [xlsxPreviewRows, setXlsxPreviewRows] = useState([]);
   const [xlsxPreviewTotal, setXlsxPreviewTotal] = useState(0);
   const [xlsxPreviewLoading, setXlsxPreviewLoading] = useState(false);
+  const visibleResearchXlsxColumns = RESEARCH_XLSX_PREVIEW_COLUMNS.filter(
+    (column) =>
+      !xlsxPreviewRows.some((row) => row.privacy_redacted) ||
+      ![
+        'full_name',
+        'school_name',
+        'settlement',
+        'birth_place',
+        'birth_date',
+        'parents_phone',
+        'consent_guardian_name',
+        'consent_guardian_phone',
+      ].includes(column.key)
+  );
   const importInputRef = useRef(null);
 
   const [checked, setChecked] = useState(new Set());
@@ -1484,6 +1498,18 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   }, [activeTab, fetchData, fetchDeletedData]);
 
   useEffect(() => {
+    const reloadPrivacyData = () => {
+      setXlsxPreviewRows([]);
+      setXlsxPreviewTotal(0);
+      if (activeTab === 0) fetchData();
+      else if (activeTab === 1) fetchDeletedData();
+    };
+    window.addEventListener('child-privacy-updated', reloadPrivacyData);
+    return () =>
+      window.removeEventListener('child-privacy-updated', reloadPrivacyData);
+  }, [activeTab, fetchData, fetchDeletedData]);
+
+  useEffect(() => {
     setChecked(new Set());
   }, [activeTab, page, deletedPage, rowsPerPage]);
 
@@ -1575,18 +1601,21 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
         return current;
       };
 
-      return Object.fromEntries(
-        RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => {
-          const rawValue =
-            column.key === 'created_at' && row?.created_at
-              ? new Date(row.created_at).toLocaleString(dateLocale)
-              : value(column.key);
-          return [
-            column.key,
-            localizeResearchPreviewValue(column.key, rawValue, lang, t),
-          ];
-        })
-      );
+      return {
+        privacy_redacted: Boolean(row?.privacy_redacted),
+        ...Object.fromEntries(
+          RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => {
+            const rawValue =
+              column.key === 'created_at' && row?.created_at
+                ? new Date(row.created_at).toLocaleString(dateLocale)
+                : value(column.key);
+            return [
+              column.key,
+              localizeResearchPreviewValue(column.key, rawValue, lang, t),
+            ];
+          })
+        ),
+      };
     },
     [dateLocale, lang, t]
   );
@@ -1702,7 +1731,12 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
   /* ── Table Components ── */
   const renderTable = (rows, isLoading, isDeletedView = false) => {
-    const columnCount = 6 + (isSuperAdmin ? 1 : 0) + (isDeletedView ? 1 : 0);
+    const hideChildPii = rows.some((row) => row.privacy_redacted);
+    const columnCount =
+      6 +
+      (isSuperAdmin ? 1 : 0) +
+      (isDeletedView ? 1 : 0) -
+      (hideChildPii ? 2 : 0);
     const currentPage = isDeletedView ? deletedPage : page;
     const rowTotal = isDeletedView ? deletedTotal : total;
 
@@ -1728,10 +1762,16 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                   </IconButton>
                 </TableCell>
                 <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>{t('fullName')}</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
-                  {t('schoolKindergarten')}
-                </TableCell>
+                {!hideChildPii && (
+                  <>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {t('fullName')}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>
+                      {t('schoolKindergarten')}
+                    </TableCell>
+                  </>
+                )}
                 <TableCell sx={{ fontWeight: 700 }}>{t('exam')}</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>
                   {t('heightWeight')}
@@ -1817,31 +1857,35 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                         {currentPage * rowsPerPage + idx + 1}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar
-                          sx={{
-                            width: 30,
-                            height: 30,
-                            fontSize: 12,
-                            bgcolor: 'primary.light',
-                          }}
-                        >
-                          {(row.full_name || '?').charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Typography variant="body2" fontWeight={600}>
-                          {row.full_name || '—'}
+                    {!hideChildPii && (
+                      <TableCell>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Avatar
+                            sx={{
+                              width: 30,
+                              height: 30,
+                              fontSize: 12,
+                              bgcolor: 'primary.light',
+                            }}
+                          >
+                            {(row.full_name || '?').charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Typography variant="body2" fontWeight={600}>
+                            {row.full_name || '—'}
+                          </Typography>
+                        </Stack>
+                      </TableCell>
+                    )}
+                    {!hideChildPii && (
+                      <TableCell>
+                        <Typography variant="body2">
+                          {row.school_name || '—'}
                         </Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {row.school_name || '—'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {row.settlement || ''}
-                      </Typography>
-                    </TableCell>
+                        <Typography variant="caption" color="text.secondary">
+                          {row.settlement || ''}
+                        </Typography>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Chip
                         label={row.examination_date || '—'}
@@ -2248,7 +2292,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
               >
                 <TableHead>
                   <TableRow>
-                    {RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => (
+                    {visibleResearchXlsxColumns.map((column) => (
                       <TableCell key={column.key}>
                         {getResearchXlsxColumnLabel(column.key, lang, t)}
                       </TableCell>
@@ -2259,7 +2303,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                   {xlsxPreviewLoading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={RESEARCH_XLSX_PREVIEW_COLUMNS.length}
+                        colSpan={visibleResearchXlsxColumns.length}
                         align="center"
                         sx={{ py: 8 }}
                       >
@@ -2269,7 +2313,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                   ) : xlsxPreviewRows.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={RESEARCH_XLSX_PREVIEW_COLUMNS.length}
+                        colSpan={visibleResearchXlsxColumns.length}
                         align="center"
                         sx={{ py: 8 }}
                       >
@@ -2279,7 +2323,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                   ) : (
                     xlsxPreviewRows.map((row, idx) => (
                       <TableRow key={`${row.id}-${idx}`} hover>
-                        {RESEARCH_XLSX_PREVIEW_COLUMNS.map((column) => (
+                        {visibleResearchXlsxColumns.map((column) => (
                           <TableCell
                             key={column.key}
                             sx={{
@@ -2798,7 +2842,9 @@ const DetailModal = ({
         >
           <Box>
             <Typography variant="h6" fontWeight={800}>
-              {record.full_name || t('unknown')}
+              {record.privacy_redacted
+                ? `ID: ${record.id_code || record.id}`
+                : record.full_name || t('unknown')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               ID: {record.id} | {t('date')}: {record.examination_date || '-'}
@@ -2820,11 +2866,15 @@ const DetailModal = ({
           title={t('sectionPassport')}
           Icon={Person}
           fields={[
-            [t('fullName'), 'full_name'],
-            [t('schoolKindergarten'), 'school_name'],
-            [t('settlement'), 'settlement'],
-            [t('birthPlace'), 'birth_place'],
-            [t('birthDate'), 'birth_date'],
+            ...(!record.privacy_redacted
+              ? [
+                  [t('fullName'), 'full_name'],
+                  [t('schoolKindergarten'), 'school_name'],
+                  [t('settlement'), 'settlement'],
+                  [t('birthPlace'), 'birth_place'],
+                  [t('birthDate'), 'birth_date'],
+                ]
+              : []),
             [t('gender'), 'gender'],
             ...(isSuperAdmin
               ? [

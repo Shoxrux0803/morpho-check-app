@@ -429,6 +429,7 @@ export const AdminApi = {
       });
 
       clampPageSize(queryParams);
+      queryParams.set('_privacy_refresh', Date.now().toString());
 
       const resp = await fetch(
         `${API_BASE}${API_PREFIX}/admin/analyses?${queryParams.toString()}`,
@@ -438,6 +439,7 @@ export const AdminApi = {
             Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         }
       );
 
@@ -448,6 +450,24 @@ export const AdminApi = {
 
       const data = await resp.json();
       return data;
+    },
+
+    get: async (id) => {
+      const resp = await fetch(
+        `${API_BASE}${API_PREFIX}/admin/analyses/${id}?_privacy_refresh=${Date.now()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+            'Content-Type': 'application/json',
+          },
+          cache: 'no-store',
+        }
+      );
+      if (!resp.ok) {
+        const msg = await parseError(resp);
+        throw new Error(msg);
+      }
+      return resp.json();
     },
 
     remove: async (id) => {
@@ -1064,6 +1084,45 @@ export const AdminApi = {
       return resp.json();
     },
   },
+  privacySettings: {
+    list: async () => {
+      const resp = await fetch(
+        API_BASE + API_PREFIX + '/admin/privacy-settings',
+        {
+          headers: {
+            Authorization: 'Bearer ' + (localStorage.getItem('token') || ''),
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!resp.ok) throw new Error(await parseError(resp));
+      return resp.json();
+    },
+    update: async (roleName, enabled) => {
+      const resp = await fetch(
+        API_BASE + API_PREFIX + '/admin/privacy-settings/' + roleName,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: 'Bearer ' + (localStorage.getItem('token') || ''),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            child_data_privacy_enabled: enabled,
+          }),
+        }
+      );
+      if (!resp.ok) throw new Error(await parseError(resp));
+      const data = await resp.json();
+      localStorage.setItem('child_privacy_version', Date.now().toString());
+      window.dispatchEvent(
+        new CustomEvent('child-privacy-updated', {
+          detail: { roleName, enabled },
+        })
+      );
+      return data;
+    },
+  },
 
   stats: async (params = {}) => {
     const queryParams = new URLSearchParams();
@@ -1165,6 +1224,7 @@ export const ResearchApi = {
       `${API_BASE}${API_PREFIX}/research/?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       }
     );
     if (!resp.ok) {
@@ -1302,6 +1362,7 @@ export const ResearchApi = {
       `${API_BASE}${API_PREFIX}/research/deleted/list?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       }
     );
     if (!resp.ok) {
@@ -1345,10 +1406,12 @@ export const ResearchApi = {
       localStorage.getItem('access_token') ||
       localStorage.getItem('token') ||
       '';
+    q.set('_privacy_refresh', Date.now().toString());
     const resp = await fetch(
       `${API_BASE}${API_PREFIX}/research/export/xlsx?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       }
     );
     if (!resp.ok) {
@@ -1364,6 +1427,7 @@ export const ResearchApi = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') q.append(k, v.toString());
     });
+    q.set('_privacy_refresh', Date.now().toString());
     const formData = new FormData();
     formData.append('file', file);
     const token =
@@ -1375,6 +1439,7 @@ export const ResearchApi = {
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
         body: formData,
       }
     );
@@ -1391,10 +1456,14 @@ export const ResearchApi = {
       localStorage.getItem('access_token') ||
       localStorage.getItem('token') ||
       '';
+    const q = new URLSearchParams({
+      _privacy_refresh: Date.now().toString(),
+    });
     const resp = await fetch(
-      `${API_BASE}${API_PREFIX}/research/import/template`,
+      `${API_BASE}${API_PREFIX}/research/import/template?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       }
     );
     if (!resp.ok) {
@@ -1418,6 +1487,7 @@ export const ResearchApi = {
       `${API_BASE}${API_PREFIX}/research/export/dataset?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       }
     );
     if (!resp.ok) {
@@ -1441,6 +1511,7 @@ export const ResearchApi = {
       `${API_BASE}${API_PREFIX}/research/export/summary-docx?${q.toString()}`,
       {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       }
     );
     if (!resp.ok) {

@@ -19,6 +19,8 @@ from services.analyze_workflow_service import (
 from services.pdf_services import generate_pdf_report as generate_pdf_file
 from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions
 from utils.database import get_db
+from utils.audit_helper import record_audit_log
+from utils.privacy import child_audit_reference, get_child_privacy_enabled, redact_child_payload
 
 router = APIRouter(tags=["Tahlil"])
 logger = logging.getLogger(__name__)
@@ -53,7 +55,14 @@ def analyze_full(
             data, db, request, lang=lang, current_user=current_user
         )
         if current_user:
-            return filter_payload_by_permissions(result, get_effective_admin_permissions(current_user))
+            result = filter_payload_by_permissions(
+                result, get_effective_admin_permissions(current_user)
+            )
+            return redact_child_payload(
+                result,
+                current_user,
+                privacy_enabled=get_child_privacy_enabled(db, current_user),
+            )
         return result
     except HTTPException:
         raise
@@ -69,6 +78,7 @@ def analyze_full(
 @router.post("/pdf-report", tags=["PDF Hisobot"])
 def generate_pdf_report_endpoint(
     data: PatientData,
+    request: Request,
     lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
@@ -80,11 +90,23 @@ def generate_pdf_report_endpoint(
                 report_data, get_effective_admin_permissions(current_user)
             )
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
+        if current_user:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="DOWNLOAD",
+                target_type="PatientAnalysis",
+                details=f"Ota-ona nusxasi (PDF) yuklab olindi: {child_audit_reference(report_data)}",
+                request=request,
+            )
         return StreamingResponse(
             pdf_buffer,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=morphocheck_{data.first_name}_{lang}.pdf"
+                "Content-Disposition": f"attachment; filename=morphocheck_parent_{lang}.pdf",
+                "X-Report-Audience": "parent",
+                "Cache-Control": "no-store, private",
+                "Access-Control-Expose-Headers": "Content-Disposition, X-Report-Audience",
             },
         )
     except Exception as exc:
@@ -98,6 +120,7 @@ def generate_pdf_report_endpoint(
 @router.get("/pdf-by-id/{patient_id}", tags=["PDF Hisobot"])
 def generate_pdf_by_patient_id(
     patient_id: int,
+    request: Request,
     lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin),
@@ -116,11 +139,23 @@ def generate_pdf_by_patient_id(
             report_data, get_effective_admin_permissions(current_user)
         )
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
+        record_audit_log(
+            db=db,
+            user_id=current_user.id,
+            action="DOWNLOAD",
+            target_type="PatientAnalysis",
+            target_id=rec.id,
+            details=f"Ota-ona nusxasi (PDF) yuklab olindi: {child_audit_reference(rec)}",
+            request=request,
+        )
         return StreamingResponse(
             pdf_buffer,
             media_type="application/pdf",
             headers={
-                "Content-Disposition": f"attachment; filename=morphocheck_{patient_id}_{lang}.pdf"
+                "Content-Disposition": f"attachment; filename=morphocheck_{patient_id}_{lang}.pdf",
+                "X-Report-Audience": "parent",
+                "Cache-Control": "no-store, private",
+                "Access-Control-Expose-Headers": "Content-Disposition, X-Report-Audience",
             },
         )
     except HTTPException:

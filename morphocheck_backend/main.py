@@ -300,9 +300,9 @@ def ensure_schema_updates():
 
     def _add_column_if_missing(table_name: str, column_name: str, column_type: str):
         if table_name not in table_names:
-            return
+            return False
         if column_name in _columns(table_name):
-            return
+            return False
         pg_type = _pg_type(column_type) if is_pg else column_type
         if is_pg:
             # PostgreSQL: ADD COLUMN IF NOT EXISTS
@@ -317,6 +317,7 @@ def ensure_schema_updates():
                 conn.execute(
                     text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {pg_type}")
                 )
+        return True
 
     # -- patient_analysis ustunlari --
     if "patient_analysis" in table_names:
@@ -362,6 +363,22 @@ def ensure_schema_updates():
             _add_column_if_missing("users", col, typ)
         if "plain_password" in _columns("users"):
             pass
+
+    if "role_settings" in table_names:
+        privacy_column_added = _add_column_if_missing(
+            "role_settings",
+            "child_data_privacy_enabled",
+            "BOOLEAN DEFAULT 1 NOT NULL",
+        )
+        if privacy_column_added:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "UPDATE role_settings "
+                        "SET child_data_privacy_enabled = false "
+                        "WHERE role_name = 'researcher'"
+                    )
+                )
 
     # -- security_events ustunlari --
     if "security_events" in table_names:

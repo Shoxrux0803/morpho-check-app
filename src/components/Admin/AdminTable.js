@@ -44,6 +44,7 @@ const AdminTable = ({
   const isSuperAdmin = user?.role === 'superadmin';
   const isAssistant = user?.role === 'field_assistant';
   const showCreator = !isAssistant;
+  const hideChildPii = rows.some((row) => row.privacy_redacted);
   const translateGender = (value) => {
     const normalized = String(value || '').toLowerCase();
     if (['erkak', 'male', 'm', 'boy'].includes(normalized)) return t('male');
@@ -84,7 +85,7 @@ const AdminTable = ({
               </TableCell>
             )}
             <TableCell>{t('date')}</TableCell>
-            <TableCell>{t('fullName')}</TableCell>
+            {!hideChildPii && <TableCell>{t('fullName')}</TableCell>}
             <TableCell>{t('gender')}</TableCell>
             <TableCell>{t('age')}</TableCell>
             <TableCell>{t('addressShort')}</TableCell>
@@ -145,19 +146,20 @@ const AdminTable = ({
                     {formatDate(row.createdAt)}
                   </TableCell>
 
-                  {/* F.I.SH */}
-                  <TableCell sx={{ textDecoration: 'none !important' }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight="medium"
-                      sx={{
-                        color: isDeleted ? 'error.main' : 'text.primary',
-                        textDecoration: isDeleted ? 'line-through' : 'none',
-                      }}
-                    >
-                      {row.lastName} {row.firstName}
-                    </Typography>
-                  </TableCell>
+                  {!hideChildPii && (
+                    <TableCell sx={{ textDecoration: 'none !important' }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="medium"
+                        sx={{
+                          color: isDeleted ? 'error.main' : 'text.primary',
+                          textDecoration: isDeleted ? 'line-through' : 'none',
+                        }}
+                      >
+                        {row.lastName} {row.firstName}
+                      </Typography>
+                    </TableCell>
+                  )}
 
                   <TableCell sx={{ textTransform: 'capitalize' }}>
                     {translateGender(row.gender)}
@@ -366,7 +368,7 @@ const AdminTable = ({
           ) : (
             <TableRow>
               <TableCell
-                colSpan={isSuperAdmin ? 11 : 9}
+                colSpan={(isSuperAdmin ? 11 : 9) - (hideChildPii ? 1 : 0)}
                 align="center"
                 sx={{ py: 3 }}
               >

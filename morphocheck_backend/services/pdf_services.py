@@ -1,4 +1,5 @@
 import datetime
+import html
 import os
 from io import BytesIO
 
@@ -1312,8 +1313,6 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
                 section_title_style,
             )
         )
-
-        import html
 
         tips_data = []
         for tip in ai_tips:

@@ -1236,11 +1236,12 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
             study_code_label = "Gözleg kody"
         add_demo(left_cell, study_code_label, data.get("id_code"), bold_label=True)
         
-    add_demo(left_cell, L["fio"], T(data.get("full_name"), capitalize=True))
-    add_demo(left_cell, L["school"], T(data.get("school_name")))
-    add_demo(left_cell, L["settlement"], T(data.get("settlement")))
-    add_demo(left_cell, L["birth_place"], T(data.get("birth_place")))
-    add_demo(left_cell, L["birth_date"], _format_date(data.get("birth_date")))
+    if not data.get("privacy_redacted"):
+        add_demo(left_cell, L["fio"], T(data.get("full_name"), capitalize=True))
+        add_demo(left_cell, L["school"], T(data.get("school_name")))
+        add_demo(left_cell, L["settlement"], T(data.get("settlement")))
+        add_demo(left_cell, L["birth_place"], T(data.get("birth_place")))
+        add_demo(left_cell, L["birth_date"], _format_date(data.get("birth_date")))
     add_demo(left_cell, L["gender"], T(data.get("gender")))
     nat_p = left_cell.add_paragraph()
     nat_p.paragraph_format.space_after = Pt(0)

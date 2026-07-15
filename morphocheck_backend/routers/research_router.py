@@ -26,6 +26,12 @@ from services.research_summary_docx import generate_research_summary_docx
 from utils.database import get_db
 from utils.security import ALGORITHM, SECRET_KEY
 from utils.translit import lat2cyr
+from utils.privacy import (
+    CHILD_PII_EXPORT_FIELDS,
+    child_audit_reference,
+    get_child_privacy_enabled,
+    redact_research_child_payload,
+)
 
 router = APIRouter(tags=["Researcher"])
 
@@ -397,9 +403,16 @@ FLOAT_IMPORT_FIELDS = {
 }
 
 
-def get_research_import_headers() -> List[str]:
+def get_research_import_fields(privacy_enabled: bool = False) -> List[str]:
+    if not privacy_enabled:
+        return list(RESEARCH_IMPORT_FIELDS)
+    return [field for field in RESEARCH_IMPORT_FIELDS if field not in CHILD_PII_EXPORT_FIELDS]
+
+
+def get_research_import_headers(privacy_enabled: bool = False) -> List[str]:
     return [
-        RESEARCH_TEMPLATE_LABELS.get(field, field) for field in RESEARCH_IMPORT_FIELDS
+        RESEARCH_TEMPLATE_LABELS.get(field, field)
+        for field in get_research_import_fields(privacy_enabled)
     ]
 
 
@@ -475,7 +488,11 @@ RESEARCH_TEMPLATE_EXAMPLE = {
 }
 
 
-def research_record_to_dict(record: ResearchRecord, current_user: Optional[User] = None) -> dict:
+def research_record_to_dict(
+    record: ResearchRecord,
+    current_user: Optional[User] = None,
+    privacy_enabled: Optional[bool] = None,
+) -> dict:
     payload = {
         column.name: getattr(record, column.name)
         for column in ResearchRecord.__table__.columns
@@ -500,6 +517,13 @@ def research_record_to_dict(record: ResearchRecord, current_user: Optional[User]
         payload["consent_guardian_phone"] = "***"
         payload["birth_place"] = "***"
 
+    payload = {
+        column.name: getattr(record, column.name)
+        for column in ResearchRecord.__table__.columns
+    }
+    payload = redact_research_child_payload(
+        payload, current_user, privacy_enabled=privacy_enabled
+    )
     payload["created_by_name"] = (
         record.created_by.name if getattr(record, "created_by", None) else None
     )
@@ -1116,24 +1140,28 @@ def apply_research_filters(
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     gender: Optional[str] = None,
+    privacy_enabled: Optional[bool] = None,
 ):
     if current_user.role == "researcher":
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
     elif researcher_id:
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
-    if search:
+    privacy_restricted = bool(privacy_enabled)
+    if search and privacy_restricted:
+        query = query.filter(ResearchRecord.id_code.ilike(f"%{search}%"))
+    elif search:
         like = f"%{search}%"
         query = query.filter(
             ResearchRecord.full_name.ilike(like)
             | ResearchRecord.school_name.ilike(like)
             | ResearchRecord.settlement.ilike(like)
         )
-    if full_name:
+    if full_name and not privacy_restricted:
         query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
-    if school_name:
+    if school_name and not privacy_restricted:
         query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
-    if settlement:
+    if settlement and not privacy_restricted:
         s = settlement.strip()
         query = query.filter(
             (ResearchRecord.settlement.ilike(f"%{s}%"))
@@ -1260,7 +1288,13 @@ def list_deleted_research(
     )
     total = query.order_by(None).count()
     records = query.offset((page - 1) * page_size).limit(page_size).all()
-    items = [research_record_to_dict(record) for record in records]
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    items = [
+        research_record_to_dict(
+            record, current_user, privacy_enabled=privacy_enabled
+        )
+        for record in records
+    ]
     if paginated:
         return {"items": items, "total": int(total)}
     return items
@@ -1300,6 +1334,7 @@ def export_research_xlsx(
     query = apply_research_filters(
         query,
         current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
         search=search,
         full_name=full_name,
         school_name=school_name,
@@ -1523,6 +1558,10 @@ def export_research_xlsx(
         )
 
     headers_map.extend(get_research_index_export_headers(export_lang))
+    if get_child_privacy_enabled(db, current_user):
+        headers_map = [
+            item for item in headers_map if item[1] not in CHILD_PII_EXPORT_FIELDS
+        ]
 
     # Style definitions
     header_fill = PatternFill(
@@ -1619,7 +1658,10 @@ def export_research_xlsx(
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-store, private",
+        },
     )
 
 
@@ -1676,8 +1718,8 @@ def coerce_import_value(field: str, value):
     return str(value).strip() if isinstance(value, str) else value
 
 
-def map_import_headers(headers: List[str]) -> dict:
-    field_set = set(RESEARCH_IMPORT_FIELDS)
+def map_import_headers(headers: List[str], privacy_enabled: bool = False) -> dict:
+    field_set = set(get_research_import_fields(privacy_enabled))
     label_aliases = {
         normalize_import_header(label): field
         for field, label in RESEARCH_TEMPLATE_LABELS.items()
@@ -1696,11 +1738,13 @@ def map_import_headers(headers: List[str]) -> dict:
             field = RESEARCH_IMPORT_ALIASES[normalized]
         elif normalized in label_aliases:
             field = label_aliases[normalized]
-        if field:
+        if field and field in field_set:
             mapped[index] = field
             known_count += 1
 
-    if known_count and known_count >= max(3, len([h for h in headers if h]) // 3):
+    if known_count and (
+        privacy_enabled or known_count >= max(3, len([h for h in headers if h]) // 3)
+    ):
         return mapped
 
     normalized_headers = [normalize_import_header(header) for header in headers]
@@ -1709,14 +1753,16 @@ def map_import_headers(headers: List[str]) -> dict:
         and "kiritgan" in normalized_headers[2]
         and "email" in normalized_headers[3]
     )
-    export_order = RESEARCH_EXPORT_FIELD_ORDER
+    export_order = [
+        field for field in RESEARCH_EXPORT_FIELD_ORDER if field in field_set
+    ]
     if has_superadmin_owner_columns:
         export_order = [
             "created_at",
             "id",
             "created_by_name",
             "created_by_email",
-            *RESEARCH_EXPORT_FIELD_ORDER[2:],
+            *[field for field in RESEARCH_EXPORT_FIELD_ORDER[2:] if field in field_set],
         ]
 
     for index, field in enumerate(export_order[: len(headers)]):
@@ -1733,13 +1779,16 @@ map_research_import_headers = map_import_headers
 
 @router.get("/import/template")
 def download_research_import_template(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """Research XLSX import uchun export ko'rinishidagi shablon."""
     wb = Workbook()
     ws = wb.active
     ws.title = "Research Data"
-    template_headers = get_research_import_headers()
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    template_fields = get_research_import_fields(privacy_enabled)
+    template_headers = get_research_import_headers(privacy_enabled)
     styles = get_research_xlsx_styles()
 
     for col_num, header_text in enumerate(template_headers, 1):
@@ -1749,7 +1798,7 @@ def download_research_import_template(
         header.alignment = styles["center_align"]
         header.border = styles["border"]
 
-    for col_num, field in enumerate(RESEARCH_IMPORT_FIELDS, 1):
+    for col_num, field in enumerate(template_fields, 1):
         example = RESEARCH_TEMPLATE_EXAMPLE.get(field)
         cell = ws.cell(row=2, column=col_num, value=example)
         cell.alignment = styles["left_align"]
@@ -1781,7 +1830,10 @@ def download_research_import_template(
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-store, private",
+        },
     )
 
 
@@ -1828,8 +1880,9 @@ async def import_research_xlsx(
     if not rows:
         raise HTTPException(status_code=400, detail="Excel faylda ma'lumot topilmadi")
 
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
     headers = [str(value or "").strip() for value in rows[0]]
-    column_map = map_import_headers(headers)
+    column_map = map_import_headers(headers, privacy_enabled)
     if not column_map:
         raise HTTPException(
             status_code=400, detail="Import uchun mos ustunlar topilmadi"
@@ -1860,11 +1913,13 @@ async def import_research_xlsx(
         if not payload:
             skipped += 1
             continue
-        if not payload.get("full_name"):
+        if not privacy_enabled and not payload.get("full_name"):
             errors.append(
                 {"row": row_number, "errors": ["F.I.SH ustuni to'ldirilishi kerak"]}
             )
             continue
+        if privacy_enabled and not payload.get("full_name"):
+            payload["full_name"] = f"Maxfiy import {row_number}"
         if row_errors:
             errors.append({"row": row_number, "errors": row_errors})
             continue
@@ -1891,6 +1946,8 @@ async def import_research_xlsx(
         cnt = region_offsets[clean_region]["count"]
         record.id_code = f"{pfx}-{cnt:04d}"
         region_offsets[clean_region]["count"] += 1
+        if privacy_enabled:
+            record.full_name = f"Maxfiy {record.id_code}"
 
         records.append(record)
 
@@ -1964,7 +2021,10 @@ def list_research_records(
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
     # Generic search
-    if search:
+    privacy_restricted = get_child_privacy_enabled(db, current_user)
+    if search and privacy_restricted:
+        query = query.filter(ResearchRecord.id_code.ilike(f"%{search}%"))
+    elif search:
         like = f"%{search}%"
         query = query.filter(
             ResearchRecord.full_name.ilike(like)
@@ -1973,11 +2033,11 @@ def list_research_records(
         )
 
     # Specific demographic filters
-    if full_name:
+    if full_name and not privacy_restricted:
         query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
-    if school_name:
+    if school_name and not privacy_restricted:
         query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
-    if settlement:
+    if settlement and not privacy_restricted:
         s = settlement.strip()
         query = query.filter(
             (ResearchRecord.settlement.ilike(f"%{s}%"))
@@ -2080,7 +2140,11 @@ def list_research_records(
         .limit(page_size)
         .all()
     )
-    items = [research_record_to_dict(record, current_user) for record in records]
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    items = [
+        research_record_to_dict(record, current_user, privacy_enabled=privacy_enabled)
+        for record in records
+    ]
     if paginated:
         return {"items": items, "total": int(total)}
     return items
@@ -2114,7 +2178,7 @@ def export_dataset_for_analysis(
     elif researcher_id:
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
-    if settlement:
+    if settlement and not get_child_privacy_enabled(db, current_user):
         s = settlement.strip()
         query = query.filter(
             (ResearchRecord.settlement.ilike(f"%{s}%"))
@@ -2160,31 +2224,33 @@ def export_dataset_for_analysis(
             else 0
         )
 
-        dataset.append(
-            {
-                "id": r.id_code or r.id,
-                "full_name": r.full_name,
-                "age_years": age,
-                "age_group": calculate_research_age_group(r),
-                "gender": r.gender,
-                "gender_code": gender_code,
-                "settlement": r.settlement,
-                "school": r.school_name,
-                "weight": r.weight,
-                "height": r.chest_standing_height,
-                "bmi": round(r.weight / ((r.chest_standing_height / 100) ** 2), 2)
-                if r.weight and r.chest_standing_height
-                else None,
-                "feeding_code": feeding_code,
-                "marriage_code": marriage_code,
-                "head_circ": r.head_circumference,
-                "waist_circ": r.waist_circumference,
-                "chest_circ": r.chest_circumference_pause,
-                "created_at": r.created_at.strftime("%Y-%m-%d")
-                if r.created_at
-                else None,
-            }
-        )
+        dataset_row = {
+            "id": r.id_code or r.id,
+            "full_name": r.full_name,
+            "age_years": age,
+            "age_group": calculate_research_age_group(r),
+            "gender": r.gender,
+            "gender_code": gender_code,
+            "settlement": r.settlement,
+            "school": r.school_name,
+            "weight": r.weight,
+            "height": r.chest_standing_height,
+            "bmi": round(r.weight / ((r.chest_standing_height / 100) ** 2), 2)
+            if r.weight and r.chest_standing_height
+            else None,
+            "feeding_code": feeding_code,
+            "marriage_code": marriage_code,
+            "head_circ": r.head_circumference,
+            "waist_circ": r.waist_circumference,
+            "chest_circ": r.chest_circumference_pause,
+            "created_at": r.created_at.strftime("%Y-%m-%d")
+            if r.created_at
+            else None,
+        }
+        if get_child_privacy_enabled(db, current_user):
+            for field in ("full_name", "settlement", "school"):
+                dataset_row.pop(field, None)
+        dataset.append(dataset_row)
 
     if not dataset:
         raise HTTPException(
@@ -2202,7 +2268,10 @@ def export_dataset_for_analysis(
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}",
+            "Cache-Control": "no-store, private",
+        },
     )
 
 
@@ -2242,6 +2311,7 @@ def export_research_summary_docx(
     query = apply_research_filters(
         query,
         current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
         search=search,
         full_name=full_name,
         school_name=school_name,
@@ -2327,6 +2397,7 @@ def export_research_summary_docx(
         researcher=researcher,
         filters=filters,
         lang=export_lang,
+        privacy_redacted=get_child_privacy_enabled(db, current_user),
     )
     encoded_filename = urllib.parse.quote(
         f"research_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
@@ -2335,12 +2406,13 @@ def export_research_summary_docx(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "Cache-Control": "no-store, private",
         },
     )
 
 
-@router.post("/", response_model=ResearchRecordOut)
+@router.post("/")
 def create_research_record(
     payload: ResearchRecordCreate,
     db: Session = Depends(get_db),
@@ -2371,7 +2443,7 @@ def create_research_record(
         from routers.research_router import research_record_to_dict
         from utils.clickhouse import insert_research_event
 
-        insert_research_event(research_record_to_dict(record))
+        insert_research_event(research_record_to_dict(record, current_user))
     except Exception:
         pass
 
@@ -2381,10 +2453,13 @@ def create_research_record(
         action="create",
         target_type="ResearchRecord",
         target_id=record.id,
-        details=f"Yangi tadqiqot ma'lumoti yaratildi: {record.full_name}"
+        details=f"Yangi tadqiqot ma'lumoti yaratildi: {child_audit_reference(record)}"
     )
 
-    return record
+    return research_record_to_dict(
+        record, current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
+    )
 
 
 # ═══════════════════════════════════════════════
@@ -2392,7 +2467,7 @@ def create_research_record(
 # ═══════════════════════════════════════════════
 
 
-@router.get("/{record_id}", response_model=ResearchRecordOut)
+@router.get("/{record_id}")
 def get_research_record(
     record_id: int,
     db: Session = Depends(get_db),
@@ -2407,10 +2482,13 @@ def get_research_record(
         creator = db.get(User, record.created_by_id)
         if not (creator and creator.supervisor_id == current_user.id):
             raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
-    return research_record_to_dict(record, current_user)
+    return research_record_to_dict(
+        record, current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
+    )
 
 
-@router.put("/{record_id}", response_model=ResearchRecordOut)
+@router.put("/{record_id}")
 def update_research_record(
     record_id: int,
     payload: ResearchRecordCreate,
@@ -2426,6 +2504,11 @@ def update_research_record(
         raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
 
     for field, value in payload.model_dump(exclude_unset=True).items():
+        if (
+            get_child_privacy_enabled(db, current_user)
+            and field in CHILD_PII_EXPORT_FIELDS
+        ):
+            continue
         setattr(record, field, value)
     if record.consent_confirmed and not record.consent_confirmed_at:
         record.consent_confirmed_at = datetime.utcnow()
@@ -2437,9 +2520,12 @@ def update_research_record(
         action="update",
         target_type="ResearchRecord",
         target_id=record.id,
-        details=f"Tadqiqot ma'lumoti yangilandi: {record.full_name}"
+        details=f"Tadqiqot ma'lumoti yangilandi: {child_audit_reference(record)}"
     )
-    return record
+    return research_record_to_dict(
+        record, current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
+    )
 
 
 @router.delete("/{record_id}")
@@ -2467,7 +2553,7 @@ def delete_research_record(
         action="delete",
         target_type="ResearchRecord",
         target_id=record.id,
-        details=f"Tadqiqot ma'lumoti savatga yuborildi: {record.full_name}"
+        details=f"Tadqiqot ma'lumoti savatga yuborildi: {child_audit_reference(record)}"
     )
     return {"status": "ok", "message": "Soft o'chirildi"}
 
@@ -2520,7 +2606,7 @@ def restore_research_record(
         action="restore",
         target_type="ResearchRecord",
         target_id=record.id,
-        details=f"Tadqiqot ma'lumoti savatdan tiklandi: {record.full_name}"
+        details=f"Tadqiqot ma'lumoti savatdan tiklandi: {child_audit_reference(record)}"
     )
     return {"status": "ok", "message": "Tiklandi"}
 
@@ -2542,13 +2628,18 @@ def download_research_docx(
         raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
 
     data = {c.name: getattr(record, c.name) for c in record.__table__.columns}
+    data = redact_research_child_payload(
+        data, current_user,
+        privacy_enabled=get_child_privacy_enabled(db, current_user),
+    )
     buf = generate_researcher_docx(data, lang=lang)
     encoded_filename = urllib.parse.quote(f"Research_{record.id}_{lang}.docx")
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "Cache-Control": "no-store, private",
         },
     )
 
@@ -2586,6 +2677,7 @@ def download_research_consent_docx(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+            "Cache-Control": "no-store, private",
         },
     )
