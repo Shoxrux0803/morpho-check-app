@@ -112,7 +112,7 @@ const getDateLocale = (lang) => {
 
 const RESEARCH_XLSX_PREVIEW_COLUMNS = [
   { key: 'created_at', label: 'Yaratilgan vaqt' },
-  { key: 'id', label: 'ID' },
+  { key: 'id_code', label: 'ID' },
   { key: 'created_by_name', label: 'Kiritgan researcher' },
   { key: 'created_by_email', label: 'Researcher email' },
   { key: 'full_name', label: 'F.I.SH.' },
@@ -205,7 +205,89 @@ const RESEARCH_XLSX_PREVIEW_COLUMNS = [
   { key: 'mii', label: 'MII' },
   { key: 'adi', label: 'ADI' },
   { key: 'mcri', label: 'MCRI' },
+  { key: 'tbw_percent', label: 'TBW (%)' },
+  { key: 'fat_percent', label: "Yog' (%)" },
+  { key: 'fat_mass', label: "Yog' (kg)" },
+  { key: 'muscle_mass', label: 'Mushak (kg)' },
+  { key: 'bone_mass', label: 'Suyak (kg)' },
+  { key: 'acm_percent', label: 'ACM (%)' },
+  { key: 'visceral_fat', label: "Visseral yog'" },
 ];
+
+const RESEARCH_BIOIMPEDANCE_COLUMN_LABELS = {
+  uz: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: "Yog' (%)",
+    fat_mass: "Yog' (kg)",
+    muscle_mass: 'Mushak (kg)',
+    bone_mass: 'Suyak (kg)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: "Visseral yog'",
+  },
+  ru: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Жир (%)',
+    fat_mass: 'Жир (кг)',
+    muscle_mass: 'Мышцы (кг)',
+    bone_mass: 'Кости (кг)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Висцеральный жир',
+  },
+  en: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Fat (%)',
+    fat_mass: 'Fat (kg)',
+    muscle_mass: 'Muscle (kg)',
+    bone_mass: 'Bone (kg)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Visceral Fat',
+  },
+  kz: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Май (%)',
+    fat_mass: 'Май (кг)',
+    muscle_mass: 'Бұлшықет (кг)',
+    bone_mass: 'Сүйек (кг)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Висцералды май',
+  },
+  ky: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Май (%)',
+    fat_mass: 'Май (кг)',
+    muscle_mass: 'Булчуң (кг)',
+    bone_mass: 'Сөөк (кг)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Висцералдык май',
+  },
+  tg: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Равған (%)',
+    fat_mass: 'Равған (кг)',
+    muscle_mass: 'Мушак (кг)',
+    bone_mass: 'Устухон (кг)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Равғани виссералӣ',
+  },
+  tm: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Yag (%)',
+    fat_mass: 'Yag (kg)',
+    muscle_mass: 'Muskul (kg)',
+    bone_mass: 'Sunk (kg)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Wisseral yag',
+  },
+  tr: {
+    tbw_percent: 'TBW (%)',
+    fat_percent: 'Yağ (%)',
+    fat_mass: 'Yağ (kg)',
+    muscle_mass: 'Kas (kg)',
+    bone_mass: 'Kemik (kg)',
+    acm_percent: 'ACM (%)',
+    visceral_fat: 'Visseral yağ',
+  },
+};
 
 const RESEARCH_XLSX_MODAL_TEXT = {
   uz: {
@@ -361,6 +443,10 @@ const getResearchXlsxText = (lang) =>
   RESEARCH_XLSX_MODAL_TEXT[lang] || RESEARCH_XLSX_MODAL_TEXT.uz;
 
 const getResearchXlsxColumnLabel = (key, lang, t) => {
+  if (key === 'id_code') return 'ID';
+  const bioimpedanceLabel = (RESEARCH_BIOIMPEDANCE_COLUMN_LABELS[lang] ||
+    RESEARCH_BIOIMPEDANCE_COLUMN_LABELS.uz)[key];
+  if (bioimpedanceLabel) return bioimpedanceLabel;
   const translated = t(key);
   if (translated && translated !== key) return translated;
   return (
@@ -1629,6 +1715,8 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
         page: 1,
         page_size: 200,
         paginated: true,
+        include_export_values: true,
+        lang,
       });
       const items = Array.isArray(result) ? result : result.items || [];
       setXlsxPreviewRows(items.map(mapResearchXlsxPreviewRow));
@@ -2198,9 +2286,17 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       <Dialog
         open={xlsxPreviewOpen}
         onClose={() => !exportingXlsx && setXlsxPreviewOpen(false)}
-        maxWidth="xl"
+        maxWidth={false}
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3, maxHeight: '88vh' } }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            width: { xs: 'calc(100vw - 16px)', md: 'calc(100vw - 32px)' },
+            maxWidth: 'none',
+            height: { xs: '94vh', md: '92vh' },
+            maxHeight: 'none',
+          },
+        }}
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Box
@@ -2226,8 +2322,15 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             </IconButton>
           </Box>
         </DialogTitle>
-        <DialogContent dividers sx={{ p: { xs: 2, md: 3 } }}>
-          <Stack spacing={2}>
+        <DialogContent
+          dividers
+          sx={{
+            p: { xs: 1.5, md: 2 },
+            display: 'flex',
+            minHeight: 0,
+          }}
+        >
+          <Stack spacing={2} sx={{ width: '100%', minHeight: 0, flex: 1 }}>
             <Stack
               direction={{ xs: 'column', md: 'row' }}
               justifyContent="space-between"
@@ -2266,24 +2369,32 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
             <TableContainer
               component={Paper}
               variant="outlined"
-              sx={{ borderRadius: 2, maxHeight: 560 }}
+              sx={{
+                borderRadius: 2,
+                flex: 1,
+                minHeight: 0,
+                overflow: 'auto',
+              }}
             >
               <Table
                 stickyHeader
                 size="small"
                 sx={{
-                  minWidth: 7600,
+                  minWidth: RESEARCH_XLSX_PREVIEW_COLUMNS.length * 135,
                   '& .MuiTableCell-root': {
                     borderColor: 'divider',
-                    px: 0.75,
-                    py: 0.5,
-                    fontSize: '0.72rem',
+                    px: 1,
+                    py: 0.75,
+                    fontSize: '0.76rem',
+                    minWidth: 120,
+                    maxWidth: 260,
                   },
                   '& .MuiTableHead-root .MuiTableCell-root': {
                     bgcolor: '#3498DB',
                     color: '#fff',
                     fontWeight: 900,
-                    whiteSpace: 'nowrap',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.2,
                   },
                   '& .MuiTableBody-root .MuiTableRow-root:nth-of-type(even)': {
                     bgcolor: 'action.hover',
@@ -2327,10 +2438,9 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
                           <TableCell
                             key={column.key}
                             sx={{
-                              whiteSpace: 'nowrap',
-                              maxWidth: 180,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
+                              whiteSpace: 'normal',
+                              overflowWrap: 'anywhere',
+                              verticalAlign: 'top',
                             }}
                           >
                             {row[column.key]}
@@ -2843,11 +2953,12 @@ const DetailModal = ({
           <Box>
             <Typography variant="h6" fontWeight={800}>
               {record.privacy_redacted
-                ? `ID: ${record.id_code || record.id}`
+                ? `ID: ${record.id_code || '—'}`
                 : record.full_name || t('unknown')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              ID: {record.id} | {t('date')}: {record.examination_date || '-'}
+              ID: {record.id_code || '—'} | {t('date')}:{' '}
+              {record.examination_date || '-'}
             </Typography>
           </Box>
           <IconButton onClick={requestClose}>

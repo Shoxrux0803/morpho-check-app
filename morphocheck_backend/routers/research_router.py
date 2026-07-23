@@ -24,6 +24,7 @@ from services.indices_service import calculate_detailed_indices
 from services.research_docx import generate_researcher_docx
 from services.research_summary_docx import generate_research_summary_docx
 from utils.database import get_db
+from utils.i18n_export import get_research_header
 from utils.security import ALGORITHM, SECRET_KEY
 from utils.translit import lat2cyr
 from utils.privacy import (
@@ -370,6 +371,8 @@ RESEARCH_EXPORT_HEADERS = [
 ]
 
 INTEGER_IMPORT_FIELDS = {"children_count", "child_order", "teeth_count"}
+DATE_IMPORT_FIELDS = {"birth_date", "examination_date"}
+BOOLEAN_IMPORT_FIELDS = {"consent_confirmed"}
 FLOAT_IMPORT_FIELDS = {
     field
     for field in RESEARCH_IMPORT_FIELDS
@@ -403,15 +406,53 @@ FLOAT_IMPORT_FIELDS = {
 }
 
 
+def normalize_research_import_gender(value: str) -> str:
+    normalized = str(value or "").strip().lower()
+    male_values = {
+        "boy",
+        "male",
+        "erkak",
+        "ogil",
+        "o'g'il",
+        "o'g'il bola",
+        "\u045e\u0493\u0438\u043b",
+        "\u045e\u0493\u0438\u043b \u0431\u043e\u043b\u0430",
+        "\u043c\u0430\u043b\u044c\u0447\u0438\u043a",
+    }
+    female_values = {
+        "girl",
+        "female",
+        "ayol",
+        "qiz",
+        "qiz bola",
+        "\u049b\u0438\u0437",
+        "\u049b\u0438\u0437 \u0431\u043e\u043b\u0430",
+        "\u0434\u0435\u0432\u043e\u0447\u043a\u0430",
+    }
+    if normalized in male_values:
+        return "boy"
+    if normalized in female_values:
+        return "girl"
+    return str(value).strip()
+
+
 def get_research_import_fields(privacy_enabled: bool = False) -> List[str]:
-    if not privacy_enabled:
-        return list(RESEARCH_IMPORT_FIELDS)
-    return [field for field in RESEARCH_IMPORT_FIELDS if field not in CHILD_PII_EXPORT_FIELDS]
+    allowed_fields = [
+        field
+        for field in RESEARCH_IMPORT_FIELDS
+        if not privacy_enabled or field not in CHILD_PII_EXPORT_FIELDS
+    ]
+    report_order = [
+        field for field in RESEARCH_EXPORT_FIELD_ORDER if field in allowed_fields
+    ]
+    return report_order + [
+        field for field in allowed_fields if field not in report_order
+    ]
 
 
 def get_research_import_headers(privacy_enabled: bool = False) -> List[str]:
     return [
-        RESEARCH_TEMPLATE_LABELS.get(field, field)
+        get_research_template_header(field)
         for field in get_research_import_fields(privacy_enabled)
     ]
 
@@ -460,20 +501,40 @@ RESEARCH_TEMPLATE_LABELS = {
     "mother_height": "Ona bo'yi (sm)",
 }
 
+RESEARCH_TEMPLATE_EXTRA_LABELS = {
+    "parents_phone": "\u041e\u0442\u0430-\u043e\u043d\u0430 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0438",
+    "arm_circumference_total": "\u049a\u045e\u043b \u0430\u0439\u043b\u0430\u043d\u0430\u0441\u0438 (\u0441\u043c)",
+    "father_height": "\u041e\u0442\u0430\u0441\u0438\u043d\u0438\u043d\u0433 \u0431\u045e\u0439\u0438 (\u0441\u043c)",
+    "mother_height": "\u041e\u043d\u0430\u0441\u0438\u043d\u0438\u043d\u0433 \u0431\u045e\u0439\u0438 (\u0441\u043c)",
+    "consent_confirmed": "\u0420\u043e\u0437\u0438\u043b\u0438\u043a \u0442\u0430\u0441\u0434\u0438\u0493\u0438",
+    "consent_guardian_name": "\u0412\u0430\u0441\u0438\u0439\u043d\u0438\u043d\u0433 \u0424.\u0418.\u0428.",
+    "consent_guardian_relationship": "\u0412\u0430\u0441\u0438\u0439\u043d\u0438\u043d\u0433 \u049b\u0430\u0440\u0438\u043d\u0434\u043e\u0448\u043b\u0438\u0433\u0438",
+    "consent_guardian_phone": "\u0412\u0430\u0441\u0438\u0439 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0438",
+    "consent_policy_version": "\u0420\u043e\u0437\u0438\u043b\u0438\u043a \u0441\u0438\u0451\u0441\u0430\u0442\u0438 \u0432\u0435\u0440\u0441\u0438\u044f\u0441\u0438",
+}
+
+
+def get_research_template_header(field: str) -> str:
+    report_header = get_research_header("uz", field)
+    if report_header != field:
+        return report_header
+    return RESEARCH_TEMPLATE_EXTRA_LABELS.get(field, field)
+
+
 RESEARCH_TEMPLATE_EXAMPLE = {
-    "full_name": "Aliyev Ali Valiyevich",
-    "school_name": "12-maktab",
-    "settlement": "Toshkent",
-    "birth_place": "Toshkent",
+    "full_name": "\u0410\u043b\u0438\u0435\u0432 \u0410\u043b\u0438 \u0412\u0430\u043b\u0438\u0435\u0432\u0438\u0447",
+    "school_name": "12-\u043c\u0430\u043a\u0442\u0430\u0431",
+    "settlement": "\u0422\u043e\u0448\u043a\u0435\u043d\u0442",
+    "birth_place": "\u0422\u043e\u0448\u043a\u0435\u043d\u0442",
     "birth_date": "2015-04-18",
-    "gender": "Boy",
-    "father_nationality": "O'zbek",
-    "mother_nationality": "O'zbek",
+    "gender": "\u040e\u0493\u0438\u043b \u0431\u043e\u043b\u0430",
+    "father_nationality": "\u040e\u0437\u0431\u0435\u043a",
+    "mother_nationality": "\u040e\u0437\u0431\u0435\u043a",
     "children_count": 3,
     "child_order": 1,
-    "feeding_type": "Tabiiy",
-    "parents_marriage": "Qarindosh emas",
-    "mother_health_status": "Sog'lom",
+    "feeding_type": "\u0422\u0430\u0431\u0438\u0438\u0439",
+    "parents_marriage": "\u049a\u0430\u0440\u0438\u043d\u0434\u043e\u0448 \u044d\u043c\u0430\u0441",
+    "mother_health_status": "\u0421\u043e\u0493\u043b\u043e\u043c",
     "parents_phone": "+998901234567",
     "examination_date": datetime.now().strftime("%Y-%m-%d"),
     "lower_leg_total": 64.5,
@@ -548,6 +609,23 @@ def research_record_to_dict(
     return payload
 
 
+def _research_record_id_region(record: ResearchRecord, owner: User) -> str:
+    """Use the researcher's assigned region for the child's regional ID.
+
+    ``settlement`` is a free-text locality (mahalla/town) and must not be used
+    as the primary region when the record owner has an assigned region.
+    """
+    from services.analyze_service import _split_region_and_district
+
+    region_source = (
+        (getattr(owner, "region", None) or "").strip()
+        or (record.settlement or "").strip()
+        or (record.birth_place or "").strip()
+    )
+    clean_region, _ = _split_region_and_district(region_source, None)
+    return clean_region
+
+
 def format_research_gender_for_xlsx(value, lang="uz") -> str:
     gender = str(value or "").strip().lower()
     is_male = gender in {"boy", "o'g'il", "ogil", "o'g'il bola", "ogil bola", "male", "erkak", "ўғил бола", "ўғил"}
@@ -610,6 +688,91 @@ RESEARCH_INDEX_EXPORT_FIELDS = [
     "adi",
     "mcri",
 ]
+
+RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS = [
+    "tbw_percent",
+    "fat_percent",
+    "fat_mass",
+    "muscle_mass",
+    "bone_mass",
+    "acm_percent",
+    "visceral_fat",
+]
+
+RESEARCH_BIOIMPEDANCE_EXPORT_LABELS = {
+    "uz": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "\u0401\u0493 (%)",
+        "fat_mass": "\u0401\u0493 (\u043a\u0433)",
+        "muscle_mass": "\u041c\u0443\u0448\u0430\u043a (\u043a\u0433)",
+        "bone_mass": "\u0421\u0443\u044f\u043a (\u043a\u0433)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "\u0412\u0438\u0441\u0446\u0435\u0440\u0430\u043b \u0451\u0493",
+    },
+    "ru": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "\u0416\u0438\u0440 (%)",
+        "fat_mass": "\u0416\u0438\u0440 (\u043a\u0433)",
+        "muscle_mass": "\u041c\u044b\u0448\u0446\u044b (\u043a\u0433)",
+        "bone_mass": "\u041a\u043e\u0441\u0442\u0438 (\u043a\u0433)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "\u0412\u0438\u0441\u0446\u0435\u0440\u0430\u043b\u044c\u043d\u044b\u0439 \u0436\u0438\u0440",
+    },
+    "en": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "Fat (%)",
+        "fat_mass": "Fat (kg)",
+        "muscle_mass": "Muscle (kg)",
+        "bone_mass": "Bone (kg)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "Visceral Fat",
+    },
+    "kz": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "\u041c\u0430\u0439 (%)",
+        "fat_mass": "\u041c\u0430\u0439 (\u043a\u0433)",
+        "muscle_mass": "\u0411\u04b1\u043b\u0448\u044b\u049b\u0435\u0442 (\u043a\u0433)",
+        "bone_mass": "\u0421\u04af\u0439\u0435\u043a (\u043a\u0433)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "\u0412\u0438\u0441\u0446\u0435\u0440\u0430\u043b\u0434\u044b \u043c\u0430\u0439",
+    },
+    "ky": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "\u041c\u0430\u0439 (%)",
+        "fat_mass": "\u041c\u0430\u0439 (\u043a\u0433)",
+        "muscle_mass": "\u0411\u0443\u043b\u0447\u0443\u04a3 (\u043a\u0433)",
+        "bone_mass": "\u0421\u04e9\u04e9\u043a (\u043a\u0433)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "\u0412\u0438\u0441\u0446\u0435\u0440\u0430\u043b\u0434\u044b\u043a \u043c\u0430\u0439",
+    },
+    "tg": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "\u0420\u0430\u0432\u0493\u0430\u043d (%)",
+        "fat_mass": "\u0420\u0430\u0432\u0493\u0430\u043d (\u043a\u0433)",
+        "muscle_mass": "\u041c\u0443\u0448\u0430\u043a (\u043a\u0433)",
+        "bone_mass": "\u0423\u0441\u0442\u0443\u0445\u043e\u043d (\u043a\u0433)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "\u0420\u0430\u0432\u0493\u0430\u043d\u0438 \u0432\u0438\u0441\u0441\u0435\u0440\u0430\u043b\u04e3",
+    },
+    "tm": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "Yag (%)",
+        "fat_mass": "Yag (kg)",
+        "muscle_mass": "Muskul (kg)",
+        "bone_mass": "Sunk (kg)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "Wisseral yag",
+    },
+    "tr": {
+        "tbw_percent": "TBW (%)",
+        "fat_percent": "Ya\u011f (%)",
+        "fat_mass": "Ya\u011f (kg)",
+        "muscle_mass": "Kas (kg)",
+        "bone_mass": "Kemik (kg)",
+        "acm_percent": "ACM (%)",
+        "visceral_fat": "Visseral ya\u011f",
+    },
+}
 
 RESEARCH_INDEX_EXPORT_LABELS = {
     "uz": {
@@ -875,6 +1038,21 @@ def get_research_index_export_headers(lang: str):
     ]
 
 
+def get_research_bioimpedance_export_headers(lang: str):
+    labels = RESEARCH_BIOIMPEDANCE_EXPORT_LABELS.get(
+        lang, RESEARCH_BIOIMPEDANCE_EXPORT_LABELS["uz"]
+    )
+    return [
+        (
+            labels.get(
+                field, RESEARCH_BIOIMPEDANCE_EXPORT_LABELS["uz"].get(field, field)
+            ),
+            field,
+        )
+        for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+    ]
+
+
 def normalize_export_lang(lang: Optional[str]) -> str:
     value = (lang or "uz").strip().lower()
     if value == "kk":
@@ -987,7 +1165,9 @@ def build_research_index_export_values(
     weight = float(record.weight or 0)
     age = _calculate_research_age(record)
     if age is None or height <= 0 or weight <= 0:
-        return dict.fromkeys(RESEARCH_INDEX_EXPORT_FIELDS)
+        return dict.fromkeys(
+            RESEARCH_INDEX_EXPORT_FIELDS + RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+        )
 
     tvi = round(weight / ((height / 100) ** 2), 2)
     manual_data = {
@@ -1023,6 +1203,13 @@ def build_research_index_export_values(
         "mii": detailed.get("mii"),
         "adi": detailed.get("adi"),
         "mcri": detailed.get("mcri"),
+        "tbw_percent": detailed.get("tbw_percent"),
+        "fat_percent": detailed.get("fm_percent"),
+        "fat_mass": detailed.get("fm"),
+        "muscle_mass": detailed.get("muscle_mass"),
+        "bone_mass": detailed.get("bone_mass"),
+        "acm_percent": detailed.get("acm_percent"),
+        "visceral_fat": detailed.get("visceral_fat"),
     }
 
 
@@ -1393,8 +1580,6 @@ def export_research_xlsx(
     ws = wb.active
     ws.title = "Research Data"
 
-    from utils.i18n_export import get_research_header
-
     # 1. Заголовки (Локализованные)
     headers_map = [
         (get_research_header(export_lang, "created_at"), "created_at"),
@@ -1558,6 +1743,7 @@ def export_research_xlsx(
         )
 
     headers_map.extend(get_research_index_export_headers(export_lang))
+    headers_map.extend(get_research_bioimpedance_export_headers(export_lang))
     if get_child_privacy_enabled(db, current_user):
         headers_map = [
             item for item in headers_map if item[1] not in CHILD_PII_EXPORT_FIELDS
@@ -1705,6 +1891,34 @@ def coerce_import_value(field: str, value):
         return None
     if isinstance(value, (datetime, date)):
         return value.strftime("%Y-%m-%d")
+    if field == "gender":
+        return normalize_research_import_gender(value)
+    if field in DATE_IMPORT_FIELDS:
+        parsed = _parse_research_date(value)
+        if not parsed:
+            raise ValueError(f"{field}: sana YYYY-MM-DD formatida bo'lishi kerak")
+        return parsed.strftime("%Y-%m-%d")
+    if field in BOOLEAN_IMPORT_FIELDS:
+        normalized = str(value).strip().lower()
+        if normalized in {
+            "1",
+            "true",
+            "yes",
+            "ha",
+            "\u04b3\u0430",
+            "\u0442\u0430\u0441\u0434\u0438\u049b\u043b\u0430\u043d\u0433\u0430\u043d",
+        }:
+            return 1
+        if normalized in {
+            "0",
+            "false",
+            "no",
+            "yo'q",
+            "yoq",
+            "\u0439\u045e\u049b",
+        }:
+            return 0
+        raise ValueError(f"{field}: \u04b3\u0430 \u0451\u043a\u0438 \u0439\u045e\u049b \u0431\u045e\u043b\u0438\u0448\u0438 \u043a\u0435\u0440\u0430\u043a")
     if field in INTEGER_IMPORT_FIELDS:
         try:
             return int(float(str(value).replace(",", ".")))
@@ -1725,6 +1939,12 @@ def map_import_headers(headers: List[str], privacy_enabled: bool = False) -> dic
         for field, label in RESEARCH_TEMPLATE_LABELS.items()
         if field in field_set
     }
+    label_aliases.update(
+        {
+            normalize_import_header(get_research_template_header(field)): field
+            for field in field_set
+        }
+    )
     mapped = {}
     known_count = 0
     for index, header in enumerate(headers):
@@ -1774,6 +1994,119 @@ def map_import_headers(headers: List[str], privacy_enabled: bool = False) -> dic
 map_research_import_headers = map_import_headers
 
 
+def build_research_import_template_workbook(
+    privacy_enabled: bool = False,
+) -> Workbook:
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "\u041c\u0430\u044a\u043b\u0443\u043c\u043e\u0442\u043b\u0430\u0440"
+    template_fields = get_research_import_fields(privacy_enabled)
+    input_headers = get_research_import_headers(privacy_enabled)
+    auto_headers = [
+        label for label, _ in get_research_bioimpedance_export_headers("uz")
+    ]
+    template_headers = input_headers + auto_headers
+    styles = get_research_xlsx_styles()
+    auto_fill = PatternFill(
+        start_color="5B5FC7", end_color="5B5FC7", fill_type="solid"
+    )
+    wrapped_center = Alignment(
+        horizontal="center", vertical="center", wrap_text=True
+    )
+    wrapped_left = Alignment(horizontal="left", vertical="top", wrap_text=True)
+
+    for col_num, header_text in enumerate(template_headers, 1):
+        header = ws.cell(row=1, column=col_num, value=header_text)
+        header.fill = (
+            auto_fill if col_num > len(input_headers) else styles["header_fill"]
+        )
+        header.font = styles["header_font"]
+        header.alignment = wrapped_center
+        header.border = styles["border"]
+    ws.row_dimensions[1].height = 42
+
+    # The main sheet deliberately starts blank so its example is never imported
+    # as a real research record.
+    for row_num in range(2, 102):
+        for col_num in range(1, len(template_headers) + 1):
+            cell = ws.cell(row=row_num, column=col_num, value=None)
+            cell.alignment = styles["left_align"]
+            cell.border = styles["border"]
+
+    for col_num, header_text in enumerate(template_headers, 1):
+        width = min(42, max(14, len(str(header_text)) + 2))
+        ws.column_dimensions[ws.cell(row=1, column=col_num).column_letter].width = width
+
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:{ws.cell(row=101, column=len(template_headers)).coordinate}"
+    ws.sheet_view.showGridLines = False
+
+    example_ws = wb.create_sheet("\u041d\u0430\u043c\u0443\u043d\u0430")
+    for col_num, header_text in enumerate(input_headers, 1):
+        header = example_ws.cell(row=1, column=col_num, value=header_text)
+        header.fill = styles["header_fill"]
+        header.font = styles["header_font"]
+        header.alignment = wrapped_center
+        header.border = styles["border"]
+        cell = example_ws.cell(
+            row=2,
+            column=col_num,
+            value=RESEARCH_TEMPLATE_EXAMPLE.get(template_fields[col_num - 1]),
+        )
+        cell.alignment = styles["left_align"]
+        cell.border = styles["border"]
+        example_ws.column_dimensions[header.column_letter].width = min(
+            42, max(14, len(str(header_text)) + 2)
+        )
+    example_ws.freeze_panes = "A2"
+    example_ws.row_dimensions[1].height = 42
+    example_ws.sheet_view.showGridLines = False
+
+    guide_ws = wb.create_sheet("\u049a\u045e\u043b\u043b\u0430\u043d\u043c\u0430")
+    guide_rows = [
+        [
+            "\u0418\u043c\u043f\u043e\u0440\u0442 \u049b\u043e\u0438\u0434\u0430\u043b\u0430\u0440\u0438",
+            "\u0418\u0437\u043e\u04b3",
+        ],
+        [
+            "\u041c\u0430\u0436\u0431\u0443\u0440\u0438\u0439 \u043c\u0430\u0439\u0434\u043e\u043d\u043b\u0430\u0440",
+            "\u041c\u0430\u0436\u0431\u0443\u0440\u0438\u0439 \u043c\u0430\u0439\u0434\u043e\u043d \u0439\u045e\u049b. \u0424.\u0418.\u0428., \u043c\u0430\u043a\u0442\u0430\u0431 \u0432\u0430 \u043c\u0430\u043d\u0437\u0438\u043b\u0441\u0438\u0437 \u04b3\u0430\u043c \u0438\u043c\u043f\u043e\u0440\u0442 \u049b\u0430\u0431\u0443\u043b \u049b\u0438\u043b\u0438\u043d\u0430\u0434\u0438.",
+        ],
+        [
+            "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u043a \u04b3\u0438\u0441\u043e\u0431",
+            "\u0422\u0443\u0493\u0438\u043b\u0433\u0430\u043d \u0441\u0430\u043d\u0430, \u0442\u0435\u043a\u0448\u0438\u0440\u0443\u0432 \u0441\u0430\u043d\u0430\u0441\u0438, \u0436\u0438\u043d\u0441, \u0431\u045e\u0439 \u0432\u0430 \u0432\u0430\u0437\u043d \u043a\u0438\u0440\u0438\u0442\u0438\u043b\u0441\u0430, \u0431\u0438\u043e\u0438\u043c\u043f\u0435\u0434\u0430\u043d\u0441 \u043d\u0430\u0442\u0438\u0436\u0430\u043b\u0430\u0440\u0438 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u043a \u04b3\u0438\u0441\u043e\u0431\u043b\u0430\u043d\u0430\u0434\u0438.",
+        ],
+        [
+            "\u0421\u0430\u043d\u0430 \u0444\u043e\u0440\u043c\u0430\u0442\u0438",
+            "YYYY-MM-DD, \u043c\u0430\u0441\u0430\u043b\u0430\u043d: 2015-04-18.",
+        ],
+        [
+            "\u0411\u0438\u043e\u0438\u043c\u043f\u0435\u0434\u0430\u043d\u0441 \u0443\u0441\u0442\u0443\u043d\u043b\u0430\u0440\u0438",
+            "\u041e\u0445\u0438\u0440\u0433\u0438 7 \u0442\u0430 \u0443\u0441\u0442\u0443\u043d\u043d\u0438 \u0442\u045e\u043b\u0434\u0438\u0440\u0438\u0448 \u0448\u0430\u0440\u0442 \u044d\u043c\u0430\u0441; \u0443\u043b\u0430\u0440 \u0440\u0435\u043f\u043e\u0440\u0442\u0434\u0430 \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u043a \u04b3\u0438\u0441\u043e\u0431\u043b\u0430\u043d\u0430\u0434\u0438.",
+        ],
+    ]
+    for row in guide_rows:
+        guide_ws.append(row)
+    for row in guide_ws.iter_rows(
+        min_row=1, max_row=len(guide_rows), min_col=1, max_col=2
+    ):
+        for cell in row:
+            cell.border = styles["border"]
+            cell.alignment = wrapped_center if cell.row == 1 else wrapped_left
+            if cell.row == 1:
+                cell.fill = styles["header_fill"]
+                cell.font = styles["header_font"]
+    guide_ws.row_dimensions[1].height = 28
+    for row_num in range(2, len(guide_rows) + 1):
+        guide_ws.row_dimensions[row_num].height = 48
+    guide_ws.column_dimensions["A"].width = 32
+    guide_ws.column_dimensions["B"].width = 110
+    guide_ws.freeze_panes = "A2"
+    guide_ws.sheet_view.showGridLines = False
+
+    return wb
+
+
 #  LIST  (superadmin hammani, researcher o'zini)
 
 
@@ -1783,45 +2116,8 @@ def download_research_import_template(
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
     """Research XLSX import uchun export ko'rinishidagi shablon."""
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Research Data"
     privacy_enabled = get_child_privacy_enabled(db, current_user)
-    template_fields = get_research_import_fields(privacy_enabled)
-    template_headers = get_research_import_headers(privacy_enabled)
-    styles = get_research_xlsx_styles()
-
-    for col_num, header_text in enumerate(template_headers, 1):
-        header = ws.cell(row=1, column=col_num, value=header_text)
-        header.fill = styles["header_fill"]
-        header.font = styles["header_font"]
-        header.alignment = styles["center_align"]
-        header.border = styles["border"]
-
-    for col_num, field in enumerate(template_fields, 1):
-        example = RESEARCH_TEMPLATE_EXAMPLE.get(field)
-        cell = ws.cell(row=2, column=col_num, value=example)
-        cell.alignment = styles["left_align"]
-        cell.border = styles["border"]
-
-    for row_num in range(3, 102):
-        for col_num in range(1, len(template_headers) + 1):
-            cell = ws.cell(row=row_num, column=col_num, value=None)
-            cell.alignment = styles["left_align"]
-            cell.border = styles["border"]
-
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter
-        for cell in col:
-            try:
-                if len(str(cell.value or "")) > max_length:
-                    max_length = len(str(cell.value or ""))
-            except:
-                pass
-        ws.column_dimensions[column].width = min(50, max_length + 2)
-
-    ws.freeze_panes = "A2"
+    wb = build_research_import_template_workbook(privacy_enabled)
 
     buf = io.BytesIO()
     wb.save(buf)
@@ -1913,11 +2209,6 @@ async def import_research_xlsx(
         if not payload:
             skipped += 1
             continue
-        if not privacy_enabled and not payload.get("full_name"):
-            errors.append(
-                {"row": row_number, "errors": ["F.I.SH ustuni to'ldirilishi kerak"]}
-            )
-            continue
         if privacy_enabled and not payload.get("full_name"):
             payload["full_name"] = f"Maxfiy import {row_number}"
         if row_errors:
@@ -1927,9 +2218,9 @@ async def import_research_xlsx(
         record = ResearchRecord(**payload)
         record.created_by_id = target_user.id
 
-        from services.analyze_service import generate_region_based_id, _split_region_and_district
-        
-        clean_region, _ = _split_region_and_district(record.settlement or record.birth_place, None)
+        from services.analyze_service import generate_region_based_id
+
+        clean_region = _research_record_id_region(record, target_user)
         
         if clean_region not in region_offsets:
             base_id = generate_region_based_id(db, clean_region)
@@ -1999,6 +2290,8 @@ def list_research_records(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
     paginated: bool = Query(False),
+    include_export_values: bool = Query(False),
+    lang: Optional[str] = Query("uz"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
@@ -2145,6 +2438,10 @@ def list_research_records(
         research_record_to_dict(record, current_user, privacy_enabled=privacy_enabled)
         for record in records
     ]
+    if include_export_values:
+        export_lang = normalize_export_lang(lang)
+        for item, record in zip(items, records):
+            item.update(build_research_index_export_values(record, export_lang))
     if paginated:
         return {"items": items, "total": int(total)}
     return items
@@ -2418,14 +2715,14 @@ def create_research_record(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_researcher_or_superadmin),
 ):
-    from services.analyze_service import generate_region_based_id, _split_region_and_district
+    from services.analyze_service import generate_region_based_id
 
     record = ResearchRecord(**payload.model_dump(exclude_unset=True))
     record.created_by_id = current_user.id
     if record.consent_confirmed and not record.consent_confirmed_at:
         record.consent_confirmed_at = datetime.utcnow()
 
-    clean_region, _ = _split_region_and_district(record.settlement or record.birth_place, None)
+    clean_region = _research_record_id_region(record, current_user)
     record.id_code = generate_region_based_id(db, clean_region)
 
     db.add(record)

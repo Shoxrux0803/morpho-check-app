@@ -421,6 +421,22 @@ def _t(key: str, lang: str, **kwargs) -> str:
     return report_text(text, lang)
 
 
+def _is_male_gender(gender: str) -> bool:
+    value = (gender or "").strip().lower()
+    return any(
+        marker in value
+        for marker in (
+            "erkak",
+            "male",
+            "boy",
+            "o'g'il",
+            "ogil",
+            "\u045e\u0493\u0438\u043b",
+            "\u043c\u0430\u043b\u044c\u0447\u0438\u043a",
+        )
+    )
+
+
 def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
     gender = (gender or "").strip().lower()
     boys_heights = {
@@ -463,17 +479,17 @@ def get_ideal_height_by_age_and_gender(age: int, gender: str) -> float:
     }
 
     if age <= 21:
-        if "erkak" in gender or "o'g'il" in gender or "ogil" in gender:
+        if _is_male_gender(gender):
             return boys_heights.get(age, 110.0 if age < 5 else 170.0)
         else:
             return girls_heights.get(age, 109.0 if age < 5 else 162.0)
 
-    return 175.0 if "erkak" in gender else 163.0
+    return 175.0 if _is_male_gender(gender) else 163.0
 
 
 def get_fm_percent_norm(age: int, gender: str) -> tuple:
     gender = (gender or "").lower()
-    is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
+    is_male = _is_male_gender(gender)
 
     boys_fm = {
         2: (12, 21),
@@ -526,7 +542,7 @@ def get_fm_percent_norm(age: int, gender: str) -> tuple:
 def get_tbw_percent_norm(age: int, gender: str) -> tuple:
     """Yoshga qarab umumiy suv (TBW %) me'yorini qaytaradi."""
     gender = (gender or "").lower()
-    is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
+    is_male = _is_male_gender(gender)
 
     if age < 13:
         return (60, 75)
@@ -539,7 +555,7 @@ def get_tbw_percent_norm(age: int, gender: str) -> tuple:
 def get_muscle_percent_norm(age: int, gender: str) -> tuple:
     """Yoshga qarab muskul massa (%) me'yorini qaytaradi."""
     gender = (gender or "").lower()
-    is_male = "erkak" in gender or "o'g'il" in gender or "ogil" in gender
+    is_male = _is_male_gender(gender)
 
     if age < 13:
         return (35, 45)
@@ -748,7 +764,7 @@ def calculate_detailed_indices(
         return _t(key, l, **kwargs)
 
     gender_norm = (gender or "").strip().lower()
-    is_male = "erkak" in gender_norm or "o'g'il" in gender_norm or "ogil" in gender_norm
+    is_male = _is_male_gender(gender_norm)
     m = manual_data or {}
 
     # Tilga qarab murojaat shakli

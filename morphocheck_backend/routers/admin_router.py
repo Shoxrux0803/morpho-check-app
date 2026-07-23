@@ -65,6 +65,7 @@ from utils.privacy import (
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
 logger = logging.getLogger(__name__)
+MANAGEMENT_HIDDEN_USER_EMAILS = ("security_bot@system.local",)
 
 verify_admin = get_current_admin
 
@@ -414,7 +415,13 @@ def list_users(
     page: int = 1,
     page_size: int = 20,
 ):
-    query = db.query(User).filter(User.is_deleted == 0)
+    query = db.query(User).filter(
+        User.is_deleted == 0,
+        or_(
+            User.email.is_(None),
+            User.email.notin_(MANAGEMENT_HIDDEN_USER_EMAILS),
+        ),
+    )
     if q:
         like = f"%{q}%"
         query = query.filter(
@@ -439,7 +446,13 @@ def list_deleted_users(db: Session = Depends(get_db)):
     return (
         db.query(User)
         .options(joinedload(User.supervisor))
-        .filter(User.is_deleted == 1)
+        .filter(
+            User.is_deleted == 1,
+            or_(
+                User.email.is_(None),
+                User.email.notin_(MANAGEMENT_HIDDEN_USER_EMAILS),
+            ),
+        )
         .order_by(desc(User.deleted_at), desc(User.id))
         .all()
     )

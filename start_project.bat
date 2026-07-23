@@ -10,4 +10,4 @@ start cmd /k "npm start"
 echo Servers are starting. 
 echo Backend: http://localhost:8000
 echo Frontend: http://localhost:3000
-echo Admin: admin@admin.com / admin123
+echo Superadmin: admin@morphocheck.uz / admin123

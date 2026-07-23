@@ -9,13 +9,29 @@ load_dotenv()
 
 import sentry_sdk
 
-sentry_dsn = os.getenv("SENTRY_DSN")
-if sentry_dsn:
-    sentry_sdk.init(
-        dsn=sentry_dsn,
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0,
-    )
+def _configure_sentry() -> None:
+    """Sentry'ni faqat haqiqiy HTTP(S) DSN berilganda yoqadi.
+
+    `.env.example` dagi namunaviy qiymat lokal serverni yiqitmasligi kerak.
+    """
+    sentry_dsn = os.getenv("SENTRY_DSN", "").strip()
+    if not sentry_dsn or not sentry_dsn.startswith(("http://", "https://")):
+        return
+
+    try:
+        sentry_sdk.init(
+            dsn=sentry_dsn,
+            traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            profiles_sample_rate=float(
+                os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1")
+            ),
+        )
+    except Exception as exc:
+        # Monitoring xatosi asosiy API ishga tushishiga to'sqinlik qilmasin.
+        print(f"[STARTUP] Sentry o'chirildi: {exc}")
+
+
+_configure_sentry()
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware

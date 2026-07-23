@@ -918,7 +918,11 @@ const SuperAdminPage = () => {
     setAdminsLoading(true);
     try {
       const data = await AdminApi.users.list();
-      setAdmins(data);
+      setAdmins(
+        data.filter(
+          (userItem) => userItem.email !== 'security_bot@system.local'
+        )
+      );
     } catch (err) {
       console.error('Failed to fetch admins:', err);
     } finally {

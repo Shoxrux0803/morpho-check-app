@@ -276,7 +276,8 @@ export const DetailModal = ({
               {record.full_name || tr('unknown')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              ID: {record.id} | {tr('date')}: {record.examination_date || '-'} |{' '}
+              ID: {record.id_code || '—'} | {tr('date')}:{' '}
+              {record.examination_date || '-'} |{' '}
               {new Date(record.created_at).toLocaleDateString(dateLocale)}
             </Typography>
           </Box>
@@ -3383,6 +3384,15 @@ const ResearcherPage = () => {
                           />
                           <Button
                             variant="contained"
+                            color="success"
+                            startIcon={<Download />}
+                            onClick={handleExport}
+                            sx={{ borderRadius: 2 }}
+                          >
+                            XLSX report
+                          </Button>
+                          <Button
+                            variant="contained"
                             color="secondary"
                             startIcon={<Description />}
                             onClick={handleExportSummaryDocx}
@@ -3449,7 +3459,6 @@ const ResearcherPage = () => {
                     filter={filter}
                     setFilter={setFilter}
                     onSearch={handleSearch}
-                    onExport={handleExport}
                     isAssistant={isAssistant}
                   />
 
