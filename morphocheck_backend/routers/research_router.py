@@ -124,6 +124,16 @@ RESEARCH_IMPORT_FIELDS = [
     "consent_policy_version",
 ]
 
+RESEARCH_TEMPLATE_EXCLUDED_FIELDS = {
+    "father_height",
+    "mother_height",
+    "consent_confirmed",
+    "consent_guardian_name",
+    "consent_guardian_relationship",
+    "consent_guardian_phone",
+    "consent_policy_version",
+}
+
 RESEARCH_IMPORT_ALIASES = {
     "fish": "full_name",
     "f.i.sh": "full_name",
@@ -440,7 +450,10 @@ def get_research_import_fields(privacy_enabled: bool = False) -> List[str]:
     allowed_fields = [
         field
         for field in RESEARCH_IMPORT_FIELDS
-        if not privacy_enabled or field not in CHILD_PII_EXPORT_FIELDS
+        if (
+            field not in RESEARCH_TEMPLATE_EXCLUDED_FIELDS
+            and (not privacy_enabled or field not in CHILD_PII_EXPORT_FIELDS)
+        )
     ]
     report_order = [
         field for field in RESEARCH_EXPORT_FIELD_ORDER if field in allowed_fields
@@ -2002,14 +2015,8 @@ def build_research_import_template_workbook(
     ws.title = "\u041c\u0430\u044a\u043b\u0443\u043c\u043e\u0442\u043b\u0430\u0440"
     template_fields = get_research_import_fields(privacy_enabled)
     input_headers = get_research_import_headers(privacy_enabled)
-    auto_headers = [
-        label for label, _ in get_research_bioimpedance_export_headers("uz")
-    ]
-    template_headers = input_headers + auto_headers
+    template_headers = input_headers
     styles = get_research_xlsx_styles()
-    auto_fill = PatternFill(
-        start_color="5B5FC7", end_color="5B5FC7", fill_type="solid"
-    )
     wrapped_center = Alignment(
         horizontal="center", vertical="center", wrap_text=True
     )
@@ -2017,9 +2024,7 @@ def build_research_import_template_workbook(
 
     for col_num, header_text in enumerate(template_headers, 1):
         header = ws.cell(row=1, column=col_num, value=header_text)
-        header.fill = (
-            auto_fill if col_num > len(input_headers) else styles["header_fill"]
-        )
+        header.fill = styles["header_fill"]
         header.font = styles["header_font"]
         header.alignment = wrapped_center
         header.border = styles["border"]

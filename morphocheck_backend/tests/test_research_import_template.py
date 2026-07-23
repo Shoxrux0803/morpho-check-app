@@ -1,8 +1,10 @@
 from models.userdata import ResearchRecord
 from routers.research_router import (
     RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS,
+    RESEARCH_TEMPLATE_EXCLUDED_FIELDS,
     build_research_import_template_workbook,
     build_research_index_export_values,
+    get_research_bioimpedance_export_headers,
     get_research_import_fields,
     get_research_import_headers,
     map_import_headers,
@@ -18,6 +20,7 @@ def test_import_template_uses_report_cyrillic_headers_without_internal_names():
     assert all("_" not in header for header in headers)
     assert headers[fields.index("full_name")] == "\u0424.\u0418.\u0428."
     assert headers[fields.index("weight")] == "\u0412\u0430\u0437\u043d (\u043a\u0433)"
+    assert RESEARCH_TEMPLATE_EXCLUDED_FIELDS.isdisjoint(fields)
 
 
 def test_generated_template_is_blank_and_maps_back_to_import_fields():
@@ -34,7 +37,29 @@ def test_generated_template_is_blank_and_maps_back_to_import_fields():
     ]
     assert all(cell.value is None for cell in ws[2])
     assert [mapped[index] for index in range(len(fields))] == fields
-    assert len(headers) == len(fields) + len(RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS)
+    assert len(headers) == len(fields)
+    assert not any(
+        header in headers
+        for header, _ in get_research_bioimpedance_export_headers("uz")
+    )
+
+
+def test_template_respects_researcher_child_data_visibility_setting():
+    hidden_fields = get_research_import_fields(privacy_enabled=True)
+    visible_fields = get_research_import_fields(privacy_enabled=False)
+    hidden_wb = build_research_import_template_workbook(privacy_enabled=True)
+    visible_wb = build_research_import_template_workbook(privacy_enabled=False)
+    hidden_headers = [
+        cell.value for cell in hidden_wb["\u041c\u0430\u044a\u043b\u0443\u043c\u043e\u0442\u043b\u0430\u0440"][1]
+    ]
+    visible_headers = [
+        cell.value for cell in visible_wb["\u041c\u0430\u044a\u043b\u0443\u043c\u043e\u0442\u043b\u0430\u0440"][1]
+    ]
+
+    assert "full_name" not in hidden_fields
+    assert "full_name" in visible_fields
+    assert "\u0424.\u0418.\u0428." not in hidden_headers
+    assert "\u0424.\u0418.\u0428." in visible_headers
 
 
 def test_personal_fields_are_optional_and_cyrillic_gender_calculates_as_male():
