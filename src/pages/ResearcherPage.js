@@ -320,6 +320,7 @@ export const DetailModal = ({
             [tr('parentsMarriage'), 'parents_marriage'],
             [tr('motherHealth'), 'mother_health_status'],
             [tr('examDate'), 'examination_date'],
+            ['Tekshiruv sanasidagi yoshi', 'age_at_examination'],
           ]}
         />
         <Section
@@ -965,6 +966,16 @@ const RecordsTable = ({
                     variant="outlined"
                     sx={{ fontSize: 11 }}
                   />
+                  {row.age_at_examination && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {row.age_at_examination}
+                    </Typography>
+                  )}
                 </TableCell>
                 {!showDeleted && (
                   <TableCell>
@@ -1155,11 +1166,16 @@ const ResearchAnalytics = ({ data, isDark }) => {
     // Age distribution metrics (Avg W/H by Age)
     const ageMap = filteredData.reduce((acc, r) => {
       if (!r.birth_date) return acc;
+      let age = Number.isFinite(Number(r.age_at_examination_years))
+        ? Number(r.age_at_examination_years)
+        : null;
       const bDate = new Date(r.birth_date);
       const eDate = r.examination_date
         ? new Date(r.examination_date)
         : new Date();
-      const age = Math.floor((eDate - bDate) / (365.25 * 24 * 60 * 60 * 1000));
+      if (age === null) {
+        age = Math.floor((eDate - bDate) / (365.25 * 24 * 60 * 60 * 1000));
+      }
       if (age < 0 || age > 20) return acc;
 
       if (!acc[age]) acc[age] = { age, weight: [], height: [], count: 0 };
@@ -1566,6 +1582,9 @@ const EnhancedResearchAnalytics = ({ data, isDark, isAssistant }) => {
     };
     const pct = (value, base) => (base ? Math.round((value / base) * 100) : 0);
     const getAge = (record) => {
+      if (Number.isFinite(Number(record.age_at_examination_years))) {
+        return Number(record.age_at_examination_years);
+      }
       if (!record.birth_date) return null;
       const birthDate = new Date(record.birth_date);
       const examinationDate = record.examination_date

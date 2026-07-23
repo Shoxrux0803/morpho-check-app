@@ -4,10 +4,12 @@ from routers.research_router import (
     RESEARCH_TEMPLATE_EXCLUDED_FIELDS,
     build_research_import_template_workbook,
     build_research_index_export_values,
+    format_research_child_age,
     get_research_bioimpedance_export_headers,
     get_research_import_fields,
     get_research_import_headers,
     map_import_headers,
+    research_record_to_dict,
 )
 
 
@@ -81,3 +83,18 @@ def test_personal_fields_are_optional_and_cyrillic_gender_calculates_as_male():
     assert record.settlement is None
     assert values["tbw_percent"] == 61.4
     assert all(values[field] is not None for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS)
+
+
+def test_research_age_at_examination_uses_exact_calendar_date():
+    record = ResearchRecord(
+        birth_date="2024-04-17",
+        examination_date="2026-04-17",
+    )
+
+    payload = research_record_to_dict(record)
+
+    assert format_research_child_age(record, "uz") == "2 \u0451\u0448 0 \u043e\u0439 0 \u043a\u0443\u043d"
+    assert payload["age_at_examination"] == "2 \u0451\u0448 0 \u043e\u0439 0 \u043a\u0443\u043d"
+    assert payload["age_at_examination_years"] == 2
+    assert payload["age_at_examination_months"] == 0
+    assert payload["age_at_examination_days"] == 0

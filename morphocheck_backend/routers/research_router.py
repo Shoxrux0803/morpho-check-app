@@ -566,6 +566,7 @@ def research_record_to_dict(
     record: ResearchRecord,
     current_user: Optional[User] = None,
     privacy_enabled: Optional[bool] = None,
+    lang: str = "uz",
 ) -> dict:
     payload = {
         column.name: getattr(record, column.name)
@@ -598,6 +599,36 @@ def research_record_to_dict(
     payload = redact_research_child_payload(
         payload, current_user, privacy_enabled=privacy_enabled
     )
+    if current_user and current_user.role == "field_assistant":
+        raw_name = payload.get("full_name")
+        if raw_name and raw_name != "***":
+            parts = raw_name.split()
+            if len(parts) > 1:
+                payload["full_name"] = f"{parts[0]} {parts[1][0]}."
+            elif len(parts) == 1:
+                payload["full_name"] = f"{parts[0][0]}."
+            else:
+                payload["full_name"] = "***"
+        else:
+            payload["full_name"] = "***"
+        payload["parents_phone"] = "***"
+        payload["consent_guardian_name"] = "***"
+        payload["consent_guardian_phone"] = "***"
+        payload["birth_place"] = "***"
+
+    age_parts = _calculate_research_age_parts(record)
+    if age_parts:
+        years, months, days = age_parts
+        payload["age_at_examination_years"] = years
+        payload["age_at_examination_months"] = months
+        payload["age_at_examination_days"] = days
+        payload["age_at_examination"] = format_research_child_age(record, lang)
+    else:
+        payload["age_at_examination_years"] = None
+        payload["age_at_examination_months"] = None
+        payload["age_at_examination_days"] = None
+        payload["age_at_examination"] = None
+
     payload["created_by_name"] = (
         record.created_by.name if getattr(record, "created_by", None) else None
     )
@@ -2440,7 +2471,12 @@ def list_research_records(
     )
     privacy_enabled = get_child_privacy_enabled(db, current_user)
     items = [
-        research_record_to_dict(record, current_user, privacy_enabled=privacy_enabled)
+        research_record_to_dict(
+            record,
+            current_user,
+            privacy_enabled=privacy_enabled,
+            lang=normalize_export_lang(lang),
+        )
         for record in records
     ]
     if include_export_values:
