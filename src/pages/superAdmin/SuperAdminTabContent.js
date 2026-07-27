@@ -56,7 +56,6 @@ import { toast } from 'react-hot-toast';
 import SuperAdminDashboard from '../../components/Dashboard/SuperAdminDashboard';
 import SuperAdminRegionalMap from '../../components/Dashboard/SuperAdminRegionalMap';
 import ScientificAnalysis from '../../components/Dashboard/ScientificAnalysis';
-import ClinicalCMS from '../../components/Admin/ClinicalCMS';
 import AdminActivity from '../../components/Admin/AdminActivity';
 import SecuritySettings from '../../components/Admin/SecuritySettings';
 import RoleSettingsCMS from '../../components/Admin/RoleSettingsCMS';
@@ -2199,12 +2198,10 @@ const SuperAdminTabContent = ({
           </Stack>
         );
       case 8:
-        return <ClinicalCMS />;
-      case 9:
         return <AdminActivity />;
-      case 10:
+      case 9:
         return <RoleSettingsCMS />;
-      case 11:
+      case 10:
         return <PrivacySettings />;
       default:
         return null;

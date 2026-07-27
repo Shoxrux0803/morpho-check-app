@@ -1549,7 +1549,6 @@ const SuperAdminPage = () => {
     { icon: <Security />, label: pt('security') },
     { icon: <History />, label: pt('auditLog') },
     { icon: <Storage />, label: pt('backup') },
-    { icon: <SettingsSuggest />, label: pt('clinicalCms') },
     { icon: <AutoGraph />, label: pt('topChart') },
     { icon: <SettingsSuggest />, label: t('chatSettingsTitle') },
     { icon: <Security />, label: pt('privacySettings') },
