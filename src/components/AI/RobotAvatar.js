@@ -779,6 +779,26 @@ const RobotAvatar = ({
   const [blinkState, setBlinkState] = useState(false);
   const [isWakingUp, setIsWakingUp] = useState(false);
   const [isTalkingInternal, setIsTalkingInternal] = useState(false);
+  const [isPetting, setIsPetting] = useState(false);
+  const [petBurst, setPetBurst] = useState([]);
+  const rafIdRef = useRef(null);
+
+  const triggerPetting = useCallback(() => {
+    setIsPetting(true);
+    setMood('love');
+    const newHearts = Array.from({ length: 6 }).map((_, i) => ({
+      id: Date.now() + i,
+      offsetX: (Math.random() - 0.5) * 50,
+      delay: i * 0.15,
+    }));
+    setPetBurst((prev) => [...prev, ...newHearts]);
+
+    setTimeout(() => {
+      setIsPetting(false);
+      setMood('idle');
+      setPetBurst([]);
+    }, 2800);
+  }, []);
 
   const isSleeping = mood === 'sleeping';
   const isEating = mood === 'eating';
@@ -1060,23 +1080,37 @@ const RobotAvatar = ({
     return () => window.removeEventListener('weather-update', handleWeather);
   }, []);
 
-  // ── Blinking ────────────────────────────────────────────────────────────────
+  // ── Realistic Human Blinking Effect ─────────────────────────────────────────
   useEffect(() => {
     if (isSleeping || mood === 'smiling' || isLove) return;
-    let t;
-    const blink = () => {
+    let timerId;
+    const triggerBlink = () => {
       setBlinkState(true);
-      setTimeout(() => setBlinkState(false), 100);
-      t = setTimeout(blink, 2500 + Math.random() * 5000);
+      setTimeout(() => {
+        setBlinkState(false);
+        // 20% chance of a cute double-blink!
+        if (Math.random() < 0.2) {
+          setTimeout(() => {
+            setBlinkState(true);
+            setTimeout(() => setBlinkState(false), 110);
+          }, 140);
+        }
+      }, 120);
+
+      const nextDelay = 2200 + Math.random() * 2800;
+      timerId = setTimeout(triggerBlink, nextDelay);
     };
-    t = setTimeout(blink, 1500);
-    return () => clearTimeout(t);
+
+    timerId = setTimeout(triggerBlink, 1500);
+    return () => clearTimeout(timerId);
   }, [isSleeping, mood, isLove]);
 
   // ── Body Animation ──────────────────────────────────────────────────────────
   const bodyAnim = (() => {
     if (isWakingUp)
       return 'wake-up-spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+    if (isPetting)
+      return 'emo-pet-wiggle 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) infinite';
     if (isSleeping) return 'emo-sleep 4s ease-in-out infinite';
     if (mood === 'smiling') return 'emo-happy-bounce 0.8s ease-in-out infinite';
     if (isEating) return 'emo-eat 1.2s ease-in-out infinite';
@@ -1167,11 +1201,12 @@ const RobotAvatar = ({
     };
   }, [compact, aiDict.idlePrompts, showBubble, scheduleNextMood]);
 
-  // ── Tickling ────────────────────────────────────────────────────────────────
+  // ── Tickling & Petting ──────────────────────────────────────────────────────
   const clickCountRef = useRef(0);
   const lastClickTimeRef = useRef(0);
 
   const handleAvatarClick = useCallback(() => {
+    triggerPetting();
     const now = Date.now();
     if (now - lastClickTimeRef.current > 1000) {
       clickCountRef.current = 0;
@@ -1186,7 +1221,7 @@ const RobotAvatar = ({
         showBubble(aiDict.tickle, 4000);
       }
     }
-  }, [aiDict.tickle, showBubble]);
+  }, [aiDict.tickle, showBubble, triggerPetting]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ██  RENDER EMO'S DIGITAL EYES  ██
@@ -1485,20 +1520,37 @@ const RobotAvatar = ({
         </div>
       )}
 
-      {/* Heart particles */}
-      {!compact && isLove && !isOpen && (
+      {/* Heart particles (love or petting) */}
+      {!compact && (isLove || isPetting) && !isOpen && (
         <div
           style={{
             position: 'absolute',
-            top: '-4px',
+            top: '-6px',
             right: '-4px',
             zIndex: 15,
             pointerEvents: 'none',
           }}
         >
           <HeartParticle delay={0} offsetX={0} />
-          <HeartParticle delay={0.7} offsetX={15} />
-          <HeartParticle delay={1.4} offsetX={-8} />
+          <HeartParticle delay={0.4} offsetX={18} />
+          <HeartParticle delay={0.8} offsetX={-12} />
+          {petBurst.map((p) => (
+            <span
+              key={p.id}
+              style={{
+                position: 'absolute',
+                top: '-10px',
+                left: `${p.offsetX}px`,
+                fontSize: '16px',
+                color: '#ff6b9d',
+                animation: `emo-float-heart 2s cubic-bezier(0.34, 1.56, 0.64, 1) ${p.delay}s forwards`,
+                pointerEvents: 'none',
+                textShadow: '0 0 12px rgba(255,107,157,0.95)',
+              }}
+            >
+              💖
+            </span>
+          ))}
         </div>
       )}
 

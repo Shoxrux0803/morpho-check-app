@@ -1976,6 +1976,7 @@ const SuperAdminPage = () => {
                   mass: 0.8,
                 }}
                 style={{
+                  width: '100%',
                   height: isMapTab && !isMobile ? '100%' : 'auto',
                   display: isMapTab && !isMobile ? 'flex' : 'block',
                   flexDirection: 'column',
@@ -1985,6 +1986,7 @@ const SuperAdminPage = () => {
               >
                 <Box
                   sx={{
+                    width: '100%',
                     minWidth: {
                       xs: activeTab === 0 || activeTab === 1 ? 720 : 0,
                       md: 0,

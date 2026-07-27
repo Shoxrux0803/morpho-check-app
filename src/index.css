@@ -172,8 +172,8 @@ code {
 
 /* ===== Связывание переменных Bootstrap 5.3 с динамической темой ===== */
 :root,
-[data-bs-theme="light"],
-[data-bs-theme="dark"] {
+[data-bs-theme='light'],
+[data-bs-theme='dark'] {
   --bs-primary: var(--theme-primary) !important;
   --bs-primary-rgb: var(--theme-primary-rgb) !important;
   --bs-body-bg: var(--theme-bg-default) !important;
@@ -182,7 +182,7 @@ code {
   --bs-secondary-bg: var(--theme-bg-paper) !important;
   --bs-tertiary-bg: var(--theme-bg-paper) !important;
   --bs-border-color: var(--theme-border-color) !important;
-  
+
   /* Карточки и списки Bootstrap */
   --bs-card-bg: var(--theme-bg-paper) !important;
   --bs-card-border-color: var(--theme-border-color) !important;
@@ -642,11 +642,7 @@ select:not(.MuiInputBase-input):hover:not(:focus),
       rgba(16, 185, 129, 0.13),
       transparent 30%
     ),
-    linear-gradient(
-      135deg,
-      rgba(248, 250, 252, 0.3),
-      rgba(239, 246, 255, 0.3)
-    );
+    linear-gradient(135deg, rgba(248, 250, 252, 0.3), rgba(239, 246, 255, 0.3));
 }
 
 .mc-analysis-page::before,
@@ -876,9 +872,15 @@ textarea {
 }
 
 @keyframes float-animation {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .float-chat-button {
@@ -886,13 +888,18 @@ textarea {
 }
 
 @keyframes border-glow {
-  0%, 100% {
+  0%,
+  100% {
     border-color: rgba(15, 118, 110, 0.25);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.5),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   }
   50% {
     border-color: rgba(37, 99, 235, 0.45);
-    box-shadow: 0 12px 45px rgba(37, 99, 235, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    box-shadow:
+      0 12px 45px rgba(37, 99, 235, 0.15),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12);
   }
 }
 
@@ -901,13 +908,18 @@ textarea {
 }
 
 @keyframes border-glow-light {
-  0%, 100% {
+  0%,
+  100% {
     border-color: rgba(15, 118, 110, 0.18);
-    box-shadow: 0 12px 40px rgba(31, 38, 135, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+    box-shadow:
+      0 12px 40px rgba(31, 38, 135, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.6);
   }
   50% {
     border-color: rgba(37, 99, 235, 0.3);
-    box-shadow: 0 12px 45px rgba(37, 99, 235, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+    box-shadow:
+      0 12px 45px rgba(37, 99, 235, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.85);
   }
 }
 
@@ -916,19 +928,37 @@ textarea {
 }
 
 /* Custom avatar gradients */
-.avatar-gradient-0 { background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%) !important; }
-.avatar-gradient-1 { background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%) !important; }
-.avatar-gradient-2 { background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%) !important; }
-.avatar-gradient-3 { background: linear-gradient(135deg, #db2777 0%, #f472b6 100%) !important; }
-.avatar-gradient-4 { background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%) !important; }
+.avatar-gradient-0 {
+  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%) !important;
+}
+.avatar-gradient-1 {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%) !important;
+}
+.avatar-gradient-2 {
+  background: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%) !important;
+}
+.avatar-gradient-3 {
+  background: linear-gradient(135deg, #db2777 0%, #f472b6 100%) !important;
+}
+.avatar-gradient-4 {
+  background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%) !important;
+}
 
 /* Unread Badge Pulse */
 @keyframes badge-pulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6); }
-  70% { transform: scale(1.12); box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.6);
+  }
+  70% {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 6px rgba(255, 59, 48, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+  }
 }
 .pulse-badge {
   animation: badge-pulse 2s infinite;
 }
-

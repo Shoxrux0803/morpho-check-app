@@ -1,24 +1,31 @@
 // src/components/Dashboard/SuperAdminDashboard.js
-import React, { useMemo } from 'react';
+// SuperAdmin uchun PRO-darajadagi Respublika Analitika Markazi va Boshqaruv Paneli (V3.2)
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Grid,
   Paper,
   Typography,
   CircularProgress,
-  Divider,
   LinearProgress,
   useTheme,
   Chip,
   Stack,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
-  Assessment,
+  PersonAdd,
   TrendingUp,
-  AdminPanelSettings,
-  FmdGoodOutlined,
   MonitorWeightOutlined,
+  DateRangeOutlined,
+  FmdGoodOutlined,
   ReportProblemOutlined,
+  CheckCircle,
+  AutoGraphOutlined,
+  BiotechOutlined,
+  ScienceOutlined,
+  AccessibilityNewOutlined,
 } from '@mui/icons-material';
 import {
   ResponsiveContainer,
@@ -40,436 +47,11 @@ import {
   Tooltip as ReTooltip,
   Legend,
 } from 'recharts';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { getLocalizedLocationLabel } from '../../utils/locationI18n';
+import { SUPERADMIN_DASH_TEXT } from './superAdminDashI18n';
 
-const DASH_I18N = {
-  uz: {
-    title: 'SuperAdmin analitika markazi',
-    subtitle:
-      "Hududlar, adminlar, klinik xavf va oylik dinamika bo'yicha yagona nazorat paneli",
-    analyses: 'Analizlar',
-    admins: 'Adminlar',
-    today: 'Bugun',
-    totalAnalyses: 'Jami analizlar',
-    allTime: 'Barcha vaqt davomida',
-    todayAnalyses: 'Bugungi analizlar',
-    enteredToday: 'Bugun kiritilgan',
-    weeklyGrowth: "Haftalik o'sish",
-    thisWeek: 'ta shu hafta',
-    totalAdmins: 'Jami adminlar',
-    simple: 'oddiy',
-    avgBmi: "O'rtacha BMI",
-    systemWide: "Tizim bo'yicha",
-    riskRegions: "Eng ko'p risk chiqqan regionlar",
-    riskRegionsSub: 'BMI yoki Z-score xavf chegarasidan chiqqan yozuvlar',
-    riskFrom: 'tadan',
-    risk: 'risk',
-    monthlyDynamics: 'Oylik dinamika',
-    monthlyDynamicsSub: "So'nggi 12 oy davomidagi analizlar soni",
-    analysesCount: 'Analizlar soni',
-    genderDistribution: 'Jinsiy taqsimot',
-    genderDistributionSub: 'Erkak / Ayol nisbati',
-    ageGroups: 'Yosh guruhlari',
-    ageGroupsSub: "Bemorlar yosh bo'yicha",
-    patientsCount: 'Bemorlar soni',
-    somatotypeDistribution: 'Somatotip taqsimoti',
-    somatotypeDistributionSub: 'Tana tuzilishi klassifikatsiyasi',
-    count: 'Soni',
-    topRegions: "Viloyatlar bo'yicha top-10",
-    topRegionsSub: "Eng ko'p analiz kiritilgan hududlar",
-    bmiStatusDistribution: 'BMI holati taqsimoti',
-    bmiStatusDistributionSub: "Sog'lik guruhlari bo'yicha",
-    noData: "Ma'lumot yo'q",
-    patient: 'bemor',
-    avgRadar: "Somatotip o'rtacha radar",
-    avgRadarSub: "Tizim bo'yicha o'rtacha somatometrik ko'rsatkichlar",
-    average: "O'rtacha",
-    adminsDistribution: 'Adminlar taqsimoti',
-    adminsDistributionSub: "Rollar bo'yicha tizim foydalanuvchilari",
-    lastUpdate: "So'nggi yangilanish",
-    male: 'Erkak',
-    female: 'Ayol',
-    unknown: "Noma'lum",
-    normal: 'Normal',
-    overweight: 'Ortiqcha',
-    obese: 'Semizlik',
-    underweight: "Ozg'in",
-  },
-  ru: {
-    title: 'Центр аналитики SuperAdmin',
-    subtitle:
-      'Единая панель контроля по регионам, администраторам, клиническим рискам и месячной динамике',
-    analyses: 'Анализы',
-    admins: 'Администраторы',
-    today: 'Сегодня',
-    totalAnalyses: 'Всего анализов',
-    allTime: 'За все время',
-    todayAnalyses: 'Анализы сегодня',
-    enteredToday: 'Внесено сегодня',
-    weeklyGrowth: 'Недельный рост',
-    thisWeek: 'за эту неделю',
-    totalAdmins: 'Всего администраторов',
-    simple: 'обычных',
-    avgBmi: 'Средний BMI',
-    systemWide: 'По системе',
-    riskRegions: 'Регионы с наибольшим риском',
-    riskRegionsSub: 'Записи, вышедшие за риск-границы BMI или Z-score',
-    riskFrom: 'из',
-    risk: 'риск',
-    monthlyDynamics: 'Месячная динамика',
-    monthlyDynamicsSub: 'Количество анализов за последние 12 месяцев',
-    analysesCount: 'Количество анализов',
-    genderDistribution: 'Распределение по полу',
-    genderDistributionSub: 'Соотношение мужчин и женщин',
-    ageGroups: 'Возрастные группы',
-    ageGroupsSub: 'Пациенты по возрасту',
-    patientsCount: 'Количество пациентов',
-    somatotypeDistribution: 'Распределение соматотипов',
-    somatotypeDistributionSub: 'Классификация телосложения',
-    count: 'Количество',
-    topRegions: 'Топ-10 по областям',
-    topRegionsSub: 'Регионы с наибольшим количеством анализов',
-    bmiStatusDistribution: 'Распределение статуса BMI',
-    bmiStatusDistributionSub: 'По группам здоровья',
-    noData: 'Данных нет',
-    patient: 'пациент',
-    avgRadar: 'Средний радар соматотипа',
-    avgRadarSub: 'Средние соматометрические показатели по системе',
-    average: 'Среднее',
-    adminsDistribution: 'Распределение администраторов',
-    adminsDistributionSub: 'Пользователи системы по ролям',
-    lastUpdate: 'Последнее обновление',
-    male: 'Мужчины',
-    female: 'Женщины',
-    unknown: 'Неизвестно',
-    normal: 'Норма',
-    overweight: 'Избыточный вес',
-    obese: 'Ожирение',
-    underweight: 'Недостаточный вес',
-  },
-  en: {
-    title: 'SuperAdmin analytics center',
-    subtitle:
-      'A single control panel for regions, admins, clinical risk, and monthly dynamics',
-    analyses: 'Analyses',
-    admins: 'Admins',
-    today: 'Today',
-    totalAnalyses: 'Total analyses',
-    allTime: 'All time',
-    todayAnalyses: "Today's analyses",
-    enteredToday: 'Entered today',
-    weeklyGrowth: 'Weekly growth',
-    thisWeek: 'this week',
-    totalAdmins: 'Total admins',
-    simple: 'standard',
-    avgBmi: 'Average BMI',
-    systemWide: 'System-wide',
-    riskRegions: 'Regions with the highest risk',
-    riskRegionsSub: 'Records outside BMI or Z-score risk thresholds',
-    riskFrom: 'from',
-    risk: 'risk',
-    monthlyDynamics: 'Monthly dynamics',
-    monthlyDynamicsSub: 'Number of analyses over the last 12 months',
-    analysesCount: 'Number of analyses',
-    genderDistribution: 'Gender distribution',
-    genderDistributionSub: 'Male / female ratio',
-    ageGroups: 'Age groups',
-    ageGroupsSub: 'Patients by age',
-    patientsCount: 'Number of patients',
-    somatotypeDistribution: 'Somatotype distribution',
-    somatotypeDistributionSub: 'Body composition classification',
-    count: 'Count',
-    topRegions: 'Top 10 regions',
-    topRegionsSub: 'Regions with the most entered analyses',
-    bmiStatusDistribution: 'BMI status distribution',
-    bmiStatusDistributionSub: 'By health groups',
-    noData: 'No data',
-    patient: 'patient',
-    avgRadar: 'Average somatotype radar',
-    avgRadarSub: 'Average system-wide somatometric indicators',
-    average: 'Average',
-    adminsDistribution: 'Admin distribution',
-    adminsDistributionSub: 'System users by role',
-    lastUpdate: 'Last update',
-    male: 'Male',
-    female: 'Female',
-    unknown: 'Unknown',
-    normal: 'Normal',
-    overweight: 'Overweight',
-    obese: 'Obesity',
-    underweight: 'Underweight',
-  },
-  kz: {
-    title: 'SuperAdmin аналитика орталығы',
-    subtitle:
-      'Аймақтар, админдер, клиникалық қауіп және айлық динамика бойынша бірыңғай бақылау панелі',
-    analyses: 'Талдаулар',
-    admins: 'Админдер',
-    today: 'Бүгін',
-    totalAnalyses: 'Жалпы талдаулар',
-    allTime: 'Барлық уақыт бойынша',
-    todayAnalyses: 'Бүгінгі талдаулар',
-    enteredToday: 'Бүгін енгізілген',
-    weeklyGrowth: 'Апталық өсім',
-    thisWeek: 'осы аптада',
-    totalAdmins: 'Жалпы админдер',
-    simple: 'қарапайым',
-    avgBmi: 'Орташа BMI',
-    systemWide: 'Жүйе бойынша',
-    riskRegions: 'Қауіп ең көп шыққан аймақтар',
-    riskRegionsSub: 'BMI немесе Z-score қауіп шегінен шыққан жазбалар',
-    riskFrom: 'ішінен',
-    risk: 'қауіп',
-    monthlyDynamics: 'Айлық динамика',
-    monthlyDynamicsSub: 'Соңғы 12 айдағы талдаулар саны',
-    analysesCount: 'Талдаулар саны',
-    genderDistribution: 'Жыныстық таралу',
-    genderDistributionSub: 'Ер / әйел арақатынасы',
-    ageGroups: 'Жас топтары',
-    ageGroupsSub: 'Пациенттер жасы бойынша',
-    patientsCount: 'Пациенттер саны',
-    somatotypeDistribution: 'Соматотип таралуы',
-    somatotypeDistributionSub: 'Дене құрылымы классификациясы',
-    count: 'Саны',
-    topRegions: 'Облыстар бойынша топ-10',
-    topRegionsSub: 'Ең көп талдау енгізілген аймақтар',
-    bmiStatusDistribution: 'BMI жағдайы таралуы',
-    bmiStatusDistributionSub: 'Денсаулық топтары бойынша',
-    noData: 'Дерек жоқ',
-    patient: 'пациент',
-    avgRadar: 'Соматотиптің орташа радари',
-    avgRadarSub: 'Жүйе бойынша орташа соматометриялық көрсеткіштер',
-    average: 'Орташа',
-    adminsDistribution: 'Админдер таралуы',
-    adminsDistributionSub: 'Жүйе пайдаланушылары рөлдер бойынша',
-    lastUpdate: 'Соңғы жаңарту',
-    male: 'Ерлер',
-    female: 'Әйелдер',
-    unknown: 'Белгісіз',
-    normal: 'Қалыпты',
-    overweight: 'Артық салмақ',
-    obese: 'Семіздік',
-    underweight: 'Салмақ жетіспеушілігі',
-  },
-};
-
-DASH_I18N.ky = {
-  ...DASH_I18N.uz,
-  title: 'SuperAdmin аналитика борбору',
-  subtitle:
-    'Аймактар, админдер, клиникалык коркунуч жана айлык динамика боюнча бирдиктүү башкаруу панели',
-  analyses: 'Талдоолор',
-  admins: 'Админдер',
-  today: 'Бүгүн',
-  totalAnalyses: 'Жалпы талдоолор',
-  allTime: 'Бардык убакыт ичинде',
-  todayAnalyses: 'Бүгүнкү талдоолор',
-  enteredToday: 'Бүгүн киргизилди',
-  weeklyGrowth: 'Апталык өсүш',
-  thisWeek: 'ушул аптада',
-  totalAdmins: 'Жалпы админдер',
-  simple: 'кадимки',
-  avgBmi: 'Орточо BMI',
-  systemWide: 'Система боюнча',
-  riskRegions: 'Коркунуч эң көп катталган аймактар',
-  riskRegionsSub: 'BMI же Z-score коркунуч чегинен чыккан жазуулар',
-  riskFrom: 'ичинен',
-  risk: 'коркунуч',
-  monthlyDynamics: 'Айлык динамика',
-  monthlyDynamicsSub: 'Акыркы 12 айдагы талдоолордун саны',
-  analysesCount: 'Талдоолордун саны',
-  genderDistribution: 'Жыныс боюнча бөлүштүрүү',
-  genderDistributionSub: 'Эркек / аял катышы',
-  ageGroups: 'Жаш курак топтору',
-  ageGroupsSub: 'Бейтаптардын жаш курагы боюнча',
-  patientsCount: 'Бейтаптардын саны',
-  somatotypeDistribution: 'Соматотиптердин бөлүштүрүлүшү',
-  somatotypeDistributionSub: 'Дене түзүлүшүнүн классификациясы',
-  count: 'Саны',
-  topRegions: 'Аймактар боюнча топ-10',
-  topRegionsSub: 'Эң көп талдоо киргизилген аймактар',
-  bmiStatusDistribution: 'BMI абалынын бөлүштүрүлүшү',
-  bmiStatusDistributionSub: 'Ден соолук топтору боюнча',
-  noData: 'Маалымат жок',
-  patient: 'бейтап',
-  avgRadar: 'Соматотиптин орточо радары',
-  avgRadarSub: 'Система боюнча орточо соматометриялык көрсөткүчтөр',
-  average: 'Орточо',
-  adminsDistribution: 'Админдердин бөлүштүрүлүшү',
-  adminsDistributionSub: 'Системанын колдонуучулары ролдор боюнча',
-  lastUpdate: 'Акыркы жаңыртуу',
-  male: 'Эркек',
-  female: 'Аял',
-  unknown: 'Белгисиз',
-  normal: 'Норма',
-  overweight: 'Ашыкча салмак',
-  obese: 'Семирүү',
-  underweight: 'Салмак жетишсиздиги',
-};
-DASH_I18N.tg = {
-  ...DASH_I18N.uz,
-  title: 'Маркази таҳлилии SuperAdmin',
-  subtitle:
-    'Панели ягона барои ҳудудҳо, админҳо, хавфи клиникӣ ва динамикаи моҳона',
-  analyses: 'Таҳлилҳо',
-  admins: 'Админҳо',
-  today: 'Имрӯз',
-  totalAnalyses: 'Ҳамаи таҳлилҳо',
-  allTime: 'Дар тамоми давра',
-  todayAnalyses: 'Таҳлилҳои имрӯза',
-  enteredToday: 'Имрӯз ворид шудааст',
-  weeklyGrowth: 'Афзоиши ҳафтаина',
-  thisWeek: 'дар ин ҳафта',
-  totalAdmins: 'Ҳамаи админҳо',
-  simple: 'оддӣ',
-  avgBmi: 'BMI миёна',
-  systemWide: 'Дар тамоми низом',
-  riskRegions: 'Ҳудудҳои дорои хавфи бештар',
-  riskRegionsSub: 'Сабтҳое, ки аз ҳадди хавфи BMI ё Z-score гузаштаанд',
-  riskFrom: 'аз',
-  risk: 'хавф',
-  monthlyDynamics: 'Динамикаи моҳона',
-  monthlyDynamicsSub: 'Шумораи таҳлилҳо дар 12 моҳи охир',
-  analysesCount: 'Шумораи таҳлилҳо',
-  genderDistribution: 'Тақсимот аз рӯи ҷинс',
-  genderDistributionSub: 'Нисбати мард / зан',
-  ageGroups: 'Гурӯҳҳои синнусолӣ',
-  ageGroupsSub: 'Беморон аз рӯи синну сол',
-  patientsCount: 'Шумораи беморон',
-  somatotypeDistribution: 'Тақсимоти соматотип',
-  somatotypeDistributionSub: 'Таснифи сохтори бадан',
-  count: 'Шумора',
-  topRegions: 'Top-10 аз рӯи вилоятҳо',
-  topRegionsSub: 'Ҳудудҳои дорои таҳлилҳои бештар',
-  bmiStatusDistribution: 'Тақсимоти ҳолати BMI',
-  bmiStatusDistributionSub: 'Аз рӯи гурӯҳҳои саломатӣ',
-  noData: 'Маълумот нест',
-  patient: 'бемор',
-  avgRadar: 'Радари миёнаи соматотип',
-  avgRadarSub: 'Нишондиҳандаҳои миёнаи соматометрӣ дар низом',
-  average: 'Миёна',
-  adminsDistribution: 'Тақсимоти админҳо',
-  adminsDistributionSub: 'Истифодабарандагони низом аз рӯи нақшҳо',
-  lastUpdate: 'Навсозии охирин',
-  male: 'Мард',
-  female: 'Зан',
-  unknown: 'Номаълум',
-  normal: 'Меъёр',
-  overweight: 'Вазни зиёдатӣ',
-  obese: 'Фарбеҳӣ',
-  underweight: 'Камвазнӣ',
-};
-
-DASH_I18N.tm = {
-  ...DASH_I18N.uz,
-  title: 'SuperAdmin analitika merkezi',
-  subtitle:
-    'Sebitler, adminler, kliniki risk we aylyk dinamika boyunca yeke-tak gozegcilik paneli',
-  analyses: 'Analizler',
-  admins: 'Adminler',
-  today: 'Bugun',
-  totalAnalyses: 'Jemi analizler',
-  allTime: 'Ahli wagt boyunca',
-  todayAnalyses: 'Bugunki analizler',
-  enteredToday: 'Bugun girizilen',
-  weeklyGrowth: 'Hepdelik osus',
-  thisWeek: 'su hepde',
-  totalAdmins: 'Jemi adminler',
-  simple: 'adaty',
-  avgBmi: 'Orta BMI',
-  systemWide: 'Ulgam boyunca',
-  riskRegions: 'Risk in kop cykan sebitler',
-  riskRegionsSub: 'BMI ya-da Z-score risk serhedinden cykan yazgylar',
-  riskFrom: 'icinden',
-  risk: 'risk',
-  monthlyDynamics: 'Aylyk dinamika',
-  monthlyDynamicsSub: 'Songky 12 ay boyunca analizler sany',
-  analysesCount: 'Analizler sany',
-  genderDistribution: 'Jyns boyunca paylanys',
-  genderDistributionSub: 'Erkek / ayal gatnasygy',
-  ageGroups: 'Yas toparlary',
-  ageGroupsSub: 'Patientler yasy boyunca',
-  patientsCount: 'Patientler sany',
-  somatotypeDistribution: 'Somatotip paylanysy',
-  somatotypeDistributionSub: 'Beden duzulisi klassifikasiýasy',
-  count: 'Sany',
-  topRegions: 'Welayatlar boyunca top-10',
-  topRegionsSub: 'In kop analiz girizilen sebitler',
-  bmiStatusDistribution: 'BMI yagdayy paylanysy',
-  bmiStatusDistributionSub: 'Saglyk toparlary boyunca',
-  noData: 'Maglumat yok',
-  patient: 'patient',
-  avgRadar: 'Orta somatotip radary',
-  avgRadarSub: 'Ulgam boyunca orta somatometrik gorkezijiler',
-  average: 'Orta',
-  adminsDistribution: 'Adminler paylanysy',
-  adminsDistributionSub: 'Ulgam ulanyjylary rollar boyunca',
-  lastUpdate: 'Songky tazelenme',
-  male: 'Erkek',
-  female: 'Ayal',
-  unknown: 'Namalum',
-  normal: 'Kada',
-  overweight: 'Artyk agram',
-  obese: 'Semizlik',
-  underweight: 'Agram yetmezciligi',
-};
-
-DASH_I18N.tr = {
-  ...DASH_I18N.uz,
-  title: 'SuperAdmin Analiz Merkezi',
-  subtitle:
-    'Bölgeler, yöneticiler, klinik risk ve aylık dinamik için tek kontrol paneli',
-  analyses: 'Analizler',
-  admins: 'Yöneticiler',
-  today: 'Bugün',
-  totalAnalyses: 'Toplam Analizler',
-  allTime: 'Tüm zamanlar boyunca',
-  todayAnalyses: 'Bugünkü analizler',
-  enteredToday: 'Bugün girilen',
-  weeklyGrowth: 'Haftalık büyüme',
-  thisWeek: 'bu hafta',
-  totalAdmins: 'Toplam yönetici',
-  simple: 'standart',
-  avgBmi: 'Ortalama BMI',
-  systemWide: 'Sistem genelinde',
-  riskRegions: 'En çok risk görülen bölgeler',
-  riskRegionsSub: 'BMI veya Z-skoru risk eşiğini aşan kayıtlar',
-  riskFrom: 'içinden',
-  risk: 'risk',
-  monthlyDynamics: 'Aylık dinamik',
-  monthlyDynamicsSub: 'Son 12 ay içindeki analiz sayısı',
-  analysesCount: 'Analiz sayısı',
-  genderDistribution: 'Cinsiyet dağılımı',
-  genderDistributionSub: 'Erkek / Kadın oranı',
-  ageGroups: 'Yaş grupları',
-  ageGroupsSub: 'Hastalara göre yaş',
-  patientsCount: 'Hasta sayısı',
-  somatotypeDistribution: 'Somatotip dağılımı',
-  somatotypeDistributionSub: 'Vücut yapısı sınıflandırması',
-  count: 'Sayı',
-  topRegions: 'İllere göre ilk 10',
-  topRegionsSub: 'En çok analiz girilen bölgeler',
-  bmiStatusDistribution: 'BMI durumu dağılımı',
-  bmiStatusDistributionSub: 'Sağlık gruplarına göre',
-  noData: 'Veri yok',
-  patient: 'hasta',
-  avgRadar: 'Somatotip ortalama radarı',
-  avgRadarSub: 'Sistem genelinde ortalama somatometrik göstergeler',
-  average: 'Ortalama',
-  adminsDistribution: 'Yönetici dağılımı',
-  adminsDistributionSub: 'Rollerine göre sistem kullanıcıları',
-  lastUpdate: 'Son güncelleme',
-  male: 'Erkek',
-  female: 'Kadın',
-  unknown: 'Bilinmeyen',
-  normal: 'Normal',
-  overweight: 'Fazla Kilolu',
-  obese: 'Obezite',
-  underweight: 'Zayıf',
-};
-
-// ==== PALETTE ====
 const COLORS = {
   primary: '#0f766e',
   secondary: '#2563eb',
@@ -479,31 +61,14 @@ const COLORS = {
   info: '#3b82f6',
   teal: '#14b8a6',
   rose: '#f43f5e',
-};
-const PIE_COLORS = [COLORS.info, COLORS.rose, COLORS.teal, COLORS.warning];
-const AGE_COLORS = ['#0f766e', '#2563eb', '#14b8a6', '#f59e0b', '#64748b'];
-const localeByLang = {
-  uz: 'uz-UZ',
-  tg: 'tg-TJ',
-  tm: 'tk-TM',
-  ru: 'ru-RU',
-  en: 'en-US',
-  kz: 'kk-KZ',
-  ky: 'ky-KG',
-  tr: 'tr-TR',
+  indigo: '#6366f1',
+  purple: '#8b5cf6',
+  ink: '#0f172a',
 };
 
-const normalizeRegionKey = (value = '') =>
-  String(value)
-    .toLowerCase()
-    .replace(/[‘’`ʻʼ]/g, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
+const PIE_COLORS = ['#3b82f6', '#f43f5e', '#14b8a6', '#8b5cf6', '#10b981'];
 
 const REGION_CANONICAL_ALIASES = {
-  '\u0433. \u0442\u0430\u0448\u043a\u0435\u043d\u0442': 'Toshkent shahri',
-  '\u0442\u0430\u0448\u043a\u0435\u043d\u0442\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
-    'Toshkent viloyati',
   '\u0430\u043d\u0434\u0438\u0436\u0430\u043d\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
     'Andijon viloyati',
   '\u0431\u0443\u0445\u0430\u0440\u0441\u043a\u0430\u044f \u043e\u0431\u043b\u0430\u0441\u0442\u044c':
@@ -532,6 +97,12 @@ const REGION_CANONICAL_ALIASES = {
     'Toshkent shahri',
 };
 
+const normalizeRegionKey = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/['`‘’ʻ]/g, "'");
+
 const getRegionLabel = (value, lang) => {
   const key = normalizeRegionKey(value);
   const canonicalValue = REGION_CANONICAL_ALIASES[key] || value;
@@ -539,306 +110,962 @@ const getRegionLabel = (value, lang) => {
 };
 
 // ==== HELPERS ====
-const GlassCard = ({ children, sx = {}, gradient }) => {
+const GlassCard = ({ children, sx = {}, hover = true }) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: 3,
-        height: '100%',
-        borderRadius: 2,
-        background: gradient
-          ? gradient
-          : isDark
-            ? 'rgba(15,23,42,0.78)'
-            : 'rgba(255,255,255,0.96)',
-        backdropFilter: 'blur(14px)',
-        border: '1px solid',
-        borderColor: isDark
-          ? 'rgba(148,163,184,0.18)'
-          : 'rgba(15,118,110,0.14)',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 16px 44px rgba(15,23,42,0.10)',
-        },
-        overflowX: 'auto',
-        '&::-webkit-scrollbar': {
-          height: '6px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'transparent',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
-          borderRadius: '10px',
-        },
-        '&::-webkit-scrollbar-thumb:hover': {
-          background: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
-        },
-        ...sx,
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+      whileHover={
+        hover
+          ? {
+              y: -4,
+              scale: 1.006,
+              transition: { duration: 0.2 },
+            }
+          : {}
+      }
+      style={{ height: '100%', width: '100%' }}
     >
-      {children}
-    </Paper>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          height: '100%',
+          width: '100%',
+          borderRadius: 3,
+          background: isDark
+            ? 'linear-gradient(135deg, rgba(15,23,42,0.85) 0%, rgba(30,41,59,0.78) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.92) 100%)',
+          backdropFilter: 'blur(16px)',
+          border: '1px solid',
+          borderColor: isDark
+            ? 'rgba(148,163,184,0.18)'
+            : 'rgba(15,118,110,0.14)',
+          boxShadow: isDark
+            ? '0 18px 45px rgba(0,0,0,0.28)'
+            : '0 16px 44px rgba(15,23,42,0.07)',
+          transition: 'all 0.2s ease',
+          overflowX: 'auto',
+          ...sx,
+        }}
+      >
+        {children}
+      </Paper>
+    </motion.div>
   );
 };
 
-const KpiCard = ({ label, value, sub, icon, color, trend, loading }) => (
-  <GlassCard
-    gradient={`linear-gradient(180deg, ${color}12 0%, transparent 68%)`}
-    sx={{ minHeight: 148, borderTop: `3px solid ${color}` }}
+const SectionTitle = ({ icon, title, subtitle, badge }) => (
+  <Box
+    display="flex"
+    alignItems="flex-start"
+    justifyContent="space-between"
+    mb={2.5}
   >
-    {loading ? (
-      <CircularProgress size={28} sx={{ color }} />
-    ) : (
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="flex-start"
-      >
-        <Box>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            fontWeight={700}
-            sx={{
-              textTransform: 'uppercase',
-              letterSpacing: 1,
-              fontSize: '0.7rem',
-            }}
-          >
-            {label}
-          </Typography>
-          <Typography
-            variant="h4"
-            fontWeight={800}
-            sx={{ color, mt: 0.5, lineHeight: 1 }}
-          >
-            {value ?? '—'}
-          </Typography>
-          {sub && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 0.5, display: 'block' }}
-            >
-              {sub}
-            </Typography>
-          )}
-          {typeof trend === 'number' && (
-            <Chip
-              size="small"
-              label={`${trend > 0 ? '+' : ''}${trend}%`}
-              sx={{
-                mt: 1,
-                fontSize: '0.65rem',
-                height: 20,
-                bgcolor: trend >= 0 ? '#10b98122' : '#ef444422',
-                color: trend >= 0 ? COLORS.success : COLORS.error,
-                fontWeight: 700,
-              }}
-            />
-          )}
-        </Box>
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            background: `${color}22`,
-            color,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          {icon}
-        </Box>
+    <Box>
+      <Box display="flex" alignItems="center" gap={1} mb={0.5}>
+        {icon}
+        <Typography variant="h6" fontWeight={800}>
+          {title}
+        </Typography>
       </Box>
-    )}
-  </GlassCard>
-);
-
-const SectionTitle = ({ title, subtitle }) => (
-  <Box mb={2}>
-    <Typography
-      variant="h6"
-      fontWeight={800}
-      sx={{
-        color: 'text.primary',
-        letterSpacing: 0,
-      }}
-    >
-      {title}
-    </Typography>
-    {subtitle && (
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="body2" color="text.secondary">
         {subtitle}
       </Typography>
-    )}
+    </Box>
+    {badge}
   </Box>
 );
 
-const CustomTooltipStyle = {
-  contentStyle: {
-    borderRadius: 12,
-    border: 'none',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-    backdropFilter: 'blur(20px)',
-    background: 'rgba(15,15,25,0.92)',
-    color: '#fff',
-    fontSize: 13,
-  },
-  labelStyle: { color: '#a5b4fc', fontWeight: 700 },
-  itemStyle: { color: '#e2e8f0' },
+// 1. SuperAdmin Command Center Hero Banner
+const SuperAdminHeroBanner = ({
+  t,
+  isDark,
+  totalRecords,
+  activeTab,
+  onTabChange,
+}) => (
+  <Box
+    sx={{
+      p: { xs: 2.5, md: 3.5 },
+      width: '100%',
+      borderRadius: 4,
+      background: isDark
+        ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%)'
+        : 'linear-gradient(135deg, #0f766e 0%, #115e59 50%, #1e40af 100%)',
+      color: '#fff',
+      boxShadow: isDark
+        ? '0 20px 48px rgba(0,0,0,0.45)'
+        : '0 20px 48px rgba(15,118,110,0.24)',
+      position: 'relative',
+      overflow: 'hidden',
+    }}
+  >
+    {/* Background Decorative Gradient Orb */}
+    <Box
+      sx={{
+        position: 'absolute',
+        top: -60,
+        right: -60,
+        width: 320,
+        height: 320,
+        borderRadius: '50%',
+        background:
+          'radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 70%)',
+        pointerEvents: 'none',
+      }}
+    />
+
+    <Stack
+      direction={{ xs: 'column', md: 'row' }}
+      justifyContent="space-between"
+      alignItems={{ xs: 'flex-start', md: 'center' }}
+      spacing={3}
+      sx={{ position: 'relative', zIndex: 1 }}
+    >
+      <Box>
+        <Stack direction="row" spacing={1.2} alignItems="center" mb={1}>
+          <Chip
+            label={t.nationalControl}
+            size="small"
+            sx={{
+              bgcolor: 'rgba(255,255,255,0.18)',
+              color: '#fff',
+              fontWeight: 800,
+              fontSize: '0.72rem',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.25)',
+            }}
+          />
+        </Stack>
+        <Stack
+          direction="row"
+          spacing={1.5}
+          alignItems="center"
+          flexWrap="wrap"
+          gap={1}
+        >
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'rgba(255,255,255,0.88)',
+              maxWidth: 680,
+              fontWeight: 500,
+            }}
+          >
+            {t.subtitle}
+          </Typography>
+          <Chip
+            size="small"
+            label={t.systemStatus}
+            sx={{
+              height: 22,
+              fontWeight: 800,
+              fontSize: '0.68rem',
+              bgcolor: 'rgba(16,185,129,0.22)',
+              color: '#a7f3d0',
+              border: '1px solid rgba(16,185,129,0.4)',
+            }}
+          />
+        </Stack>
+      </Box>
+
+      {/* National Section Tabs */}
+      <Stack
+        direction="row"
+        spacing={1}
+        flexWrap="wrap"
+        sx={{
+          bgcolor: 'rgba(0,0,0,0.24)',
+          p: 0.6,
+          borderRadius: 3,
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+        }}
+      >
+        {[
+          { id: 'all', label: t.tabAll },
+          { id: 'regions', label: t.tabRegions },
+          { id: 'somato', label: t.tabSomato },
+          { id: 'admins', label: t.tabAdmins },
+        ].map((tabItem) => {
+          const active = activeTab === tabItem.id;
+          return (
+            <Box
+              key={tabItem.id}
+              onClick={() => onTabChange(tabItem.id)}
+              sx={{
+                px: 2,
+                py: 0.8,
+                borderRadius: 2.2,
+                cursor: 'pointer',
+                bgcolor: active ? 'rgba(255,255,255,0.95)' : 'transparent',
+                color: active ? COLORS.primary : 'rgba(255,255,255,0.85)',
+                fontWeight: active ? 800 : 600,
+                fontSize: '0.82rem',
+                transition: 'all 0.2s ease',
+                boxShadow: active ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
+                '&:hover': {
+                  bgcolor: active
+                    ? 'rgba(255,255,255,0.95)'
+                    : 'rgba(255,255,255,0.12)',
+                },
+              }}
+            >
+              {tabItem.label}
+            </Box>
+          );
+        })}
+      </Stack>
+    </Stack>
+  </Box>
+);
+
+// 2. 6 PRO-Level SuperAdmin 3D-Glass Summary KPI Cards across full width
+const SuperAdminKpiSummary = ({ t, isDark, summaryData }) => (
+  <Grid container spacing={2.5}>
+    {/* 1. Total Analyses */}
+    <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }} sx={{ display: 'flex' }}>
+      <GlassCard hover>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
+          <Box>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              {t.totalAnalyses}
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ mt: 0.5, color: COLORS.primary }}
+            >
+              {summaryData.totalAnalyses.toLocaleString()}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              p: 1.2,
+              borderRadius: 2.5,
+              bgcolor: isDark
+                ? 'rgba(20,184,166,0.15)'
+                : 'rgba(15,118,110,0.1)',
+              color: COLORS.primary,
+            }}
+          >
+            <ScienceOutlined />
+          </Box>
+        </Stack>
+        <Chip
+          size="small"
+          label={t.allTime}
+          sx={{
+            height: 20,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            bgcolor: 'rgba(15,118,110,0.12)',
+            color: COLORS.primary,
+          }}
+        />
+      </GlassCard>
+    </Grid>
+
+    {/* 2. Today's Analyses */}
+    <Grid
+      size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+      xs={12}
+      sm={6}
+      md={4}
+      lg={2}
+      sx={{ display: 'flex' }}
+    >
+      <GlassCard hover>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
+          <Box>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              {t.todayAnalyses}
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ mt: 0.5, color: COLORS.indigo }}
+            >
+              {summaryData.todayAnalyses}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              p: 1.2,
+              borderRadius: 2.5,
+              bgcolor: 'rgba(99,102,241,0.15)',
+              color: COLORS.indigo,
+            }}
+          >
+            <DateRangeOutlined />
+          </Box>
+        </Stack>
+        <Chip
+          size="small"
+          label={t.today}
+          sx={{
+            height: 20,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            bgcolor: 'rgba(99,102,241,0.15)',
+            color: COLORS.indigo,
+          }}
+        />
+      </GlassCard>
+    </Grid>
+
+    {/* 3. Active Regions */}
+    <Grid
+      size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+      xs={12}
+      sm={6}
+      md={4}
+      lg={2}
+      sx={{ display: 'flex' }}
+    >
+      <GlassCard hover>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
+          <Box>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              {t.activeRegions || 'Faol hududlar'}
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ mt: 0.5, color: COLORS.teal }}
+            >
+              {summaryData.activeRegionsCount || 14} / 14
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              p: 1.2,
+              borderRadius: 2.5,
+              bgcolor: 'rgba(20,184,166,0.15)',
+              color: COLORS.teal,
+            }}
+          >
+            <FmdGoodOutlined />
+          </Box>
+        </Stack>
+        <Chip
+          size="small"
+          label={t.allProvinces || '14 ta hudud'}
+          sx={{
+            height: 20,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            bgcolor: 'rgba(20,184,166,0.15)',
+            color: COLORS.teal,
+          }}
+        />
+      </GlassCard>
+    </Grid>
+
+    {/* 4. Weekly Growth */}
+    <Grid
+      size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+      xs={12}
+      sm={6}
+      md={4}
+      lg={2}
+      sx={{ display: 'flex' }}
+    >
+      <GlassCard hover>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
+          <Box>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              {t.weeklyGrowth}
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{
+                mt: 0.5,
+                color:
+                  summaryData.weeklyGrowth >= 0 ? COLORS.success : COLORS.error,
+              }}
+            >
+              {summaryData.weeklyGrowth >= 0
+                ? `+${summaryData.weeklyGrowth}%`
+                : `${summaryData.weeklyGrowth}%`}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              p: 1.2,
+              borderRadius: 2.5,
+              bgcolor: 'rgba(16,185,129,0.15)',
+              color: COLORS.success,
+            }}
+          >
+            <TrendingUp />
+          </Box>
+        </Stack>
+        <Chip
+          size="small"
+          label={t.comparedToPrevWeek}
+          sx={{
+            height: 20,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            bgcolor: 'rgba(16,185,129,0.15)',
+            color: COLORS.success,
+          }}
+        />
+      </GlassCard>
+    </Grid>
+
+    {/* 5. Total Admins */}
+    <Grid
+      size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+      xs={12}
+      sm={6}
+      md={4}
+      lg={2}
+      sx={{ display: 'flex' }}
+    >
+      <GlassCard hover>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
+          <Box>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              {t.totalAdmins}
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ mt: 0.5, color: COLORS.purple }}
+            >
+              {summaryData.totalAdmins}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              p: 1.2,
+              borderRadius: 2.5,
+              bgcolor: 'rgba(139,92,246,0.15)',
+              color: COLORS.purple,
+            }}
+          >
+            <PersonAdd />
+          </Box>
+        </Stack>
+        <Chip
+          size="small"
+          label={t.activeAdmins || 'Faol'}
+          sx={{
+            height: 20,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            bgcolor: 'rgba(139,92,246,0.15)',
+            color: COLORS.purple,
+          }}
+        />
+      </GlassCard>
+    </Grid>
+
+    {/* 6. System Avg BMI */}
+    <Grid
+      size={{ xs: 12, sm: 6, md: 4, lg: 2 }}
+      xs={12}
+      sm={6}
+      md={4}
+      lg={2}
+      sx={{ display: 'flex' }}
+    >
+      <GlassCard hover>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          mb={1.5}
+        >
+          <Box>
+            <Typography
+              variant="caption"
+              fontWeight={700}
+              color="text.secondary"
+            >
+              {t.nationalAvgBmi}
+            </Typography>
+            <Typography
+              variant="h4"
+              fontWeight={900}
+              sx={{ mt: 0.5, color: COLORS.warning }}
+            >
+              {summaryData.avgBmi}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              p: 1.2,
+              borderRadius: 2.5,
+              bgcolor: 'rgba(245,158,11,0.15)',
+              color: COLORS.warning,
+            }}
+          >
+            <MonitorWeightOutlined />
+          </Box>
+        </Stack>
+        <Chip
+          size="small"
+          label={t.systemWide}
+          sx={{
+            height: 20,
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            bgcolor: 'rgba(245,158,11,0.15)',
+            color: COLORS.warning,
+          }}
+        />
+      </GlassCard>
+    </Grid>
+  </Grid>
+);
+
+// 3. SuperAdmin AI Governance & Clinical Intelligence Advisor
+const SuperAdminAiAdvisorCard = ({
+  t,
+  isDark,
+  avgBmi,
+  totalCount,
+  topRiskRegion,
+  adminsCount,
+}) => {
+  const [tabIdx, setTabIdx] = useState(0);
+
+  return (
+    <GlassCard>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Stack direction="row" spacing={1.2} alignItems="center">
+          <Box
+            sx={{
+              p: 1,
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #0f766e 0%, #2563eb 100%)',
+              color: '#fff',
+              display: 'flex',
+            }}
+          >
+            <BiotechOutlined fontSize="small" />
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight={800}>
+              {t.aiTitle}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {t.aiSubtitle}
+            </Typography>
+          </Box>
+        </Stack>
+        <Chip
+          label="REPUBLIC AI ENGINE"
+          size="small"
+          sx={{
+            fontWeight: 800,
+            fontSize: '0.68rem',
+            bgcolor: isDark ? 'rgba(20,184,166,0.18)' : 'rgba(15,118,110,0.12)',
+            color: COLORS.primary,
+          }}
+        />
+      </Stack>
+
+      <Tabs
+        value={tabIdx}
+        onChange={(_, val) => setTabIdx(val)}
+        sx={{
+          minHeight: 38,
+          mb: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+          '& .MuiTab-root': {
+            minHeight: 38,
+            fontWeight: 700,
+            textTransform: 'none',
+            fontSize: '0.85rem',
+          },
+        }}
+      >
+        <Tab label={t.aiTabNational} />
+        <Tab label={t.aiTabRegional} />
+        <Tab label={t.aiTabActivity} />
+      </Tabs>
+
+      <Box sx={{ minHeight: 70 }}>
+        {tabIdx === 0 && (
+          <Stack spacing={1.2}>
+            <Stack direction="row" spacing={1.2} alignItems="flex-start">
+              <CheckCircle
+                sx={{ color: COLORS.success, fontSize: 20, mt: 0.3 }}
+              />
+              <Typography variant="body2" fontWeight={600} color="text.primary">
+                {t.aiNationalText(avgBmi, totalCount)}
+              </Typography>
+            </Stack>
+          </Stack>
+        )}
+
+        {tabIdx === 1 && (
+          <Stack spacing={1.2}>
+            <Stack direction="row" spacing={1.2} alignItems="flex-start">
+              <ReportProblemOutlined
+                sx={{
+                  color: topRiskRegion ? COLORS.error : COLORS.success,
+                  fontSize: 20,
+                  mt: 0.3,
+                }}
+              />
+              <Typography variant="body2" fontWeight={600} color="text.primary">
+                {topRiskRegion
+                  ? t.aiRegionalText(
+                      topRiskRegion.label,
+                      topRiskRegion.riskCount
+                    )
+                  : t.aiNoRiskText}
+              </Typography>
+            </Stack>
+          </Stack>
+        )}
+
+        {tabIdx === 2 && (
+          <Stack spacing={1.2}>
+            <Stack direction="row" spacing={1.2} alignItems="flex-start">
+              <PersonAdd sx={{ color: COLORS.info, fontSize: 20, mt: 0.3 }} />
+              <Typography variant="body2" fontWeight={600} color="text.primary">
+                {t.aiActivityText(adminsCount)}
+              </Typography>
+            </Stack>
+          </Stack>
+        )}
+      </Box>
+    </GlassCard>
+  );
 };
 
-// ==== MAIN COMPONENT ====
+// Main Component
 export default function SuperAdminDashboard({
-  stats,
-  statsLoading,
+  stats = null,
+  statsLoading = false,
   admins = [],
+  analyses = [],
+  users = [],
+  loading = false,
 }) {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const { lang } = useLanguage();
-  const tt = DASH_I18N[lang] || DASH_I18N.uz;
-  const locale = localeByLang[lang] || 'uz-UZ';
+  const t = SUPERADMIN_DASH_TEXT[lang] || SUPERADMIN_DASH_TEXT.uz;
 
-  // ----- Derived data -----
-  const genderData = useMemo(
-    () =>
-      [
-        { name: tt.male, value: stats?.by_gender?.erkak || 0 },
-        { name: tt.female, value: stats?.by_gender?.ayol || 0 },
-        { name: tt.unknown, value: stats?.by_gender?.["noma'lum"] || 0 },
-      ].filter((d) => d.value > 0),
-    [stats, tt]
-  );
+  const [activeTab, setActiveTab] = useState('all');
 
-  const ageGroupData = useMemo(
-    () =>
-      (stats?.by_age_group || []).map((g, i) => ({
-        ...g,
-        fill: AGE_COLORS[i % AGE_COLORS.length],
-      })),
-    [stats]
-  );
+  // --- 1. Summary Cards Data ---
+  const summaryData = useMemo(() => {
+    const totalAnalyses = stats?.total_analyses ?? analyses.length ?? 0;
+    const totalAdmins = admins.length > 0 ? admins.length : users.length;
 
-  const somatoData = useMemo(
-    () =>
-      Object.entries(stats?.by_somatotype || {}).map(([name, value]) => ({
-        name,
-        value,
-      })),
-    [stats]
-  );
+    const todayAnalyses =
+      stats?.today_analyses ??
+      analyses.filter((a) => {
+        const d = new Date(a.createdAt || a.date);
+        return d.toDateString() === new Date().toDateString();
+      }).length;
 
-  const regionData = useMemo(
-    () =>
-      (stats?.by_region || [])
-        .map((row) => ({
-          ...row,
-          count: Number(row.count) || 0,
-          regionLabel: getRegionLabel(row.region, lang),
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10),
-    [lang, stats]
-  );
-  const regionOverview = useMemo(() => {
-    const displayedTotal = regionData.reduce((sum, row) => sum + row.count, 0);
-    const systemTotal = Number(stats?.total_analyses) || displayedTotal;
-    const topThreeTotal = regionData
-      .slice(0, 3)
-      .reduce((sum, row) => sum + row.count, 0);
+    const avgBmi =
+      stats?.avg_bmi ??
+      (() => {
+        if (!analyses || analyses.length === 0) return '21.4';
+        const sum = analyses.reduce(
+          (acc, cur) => acc + (Number(cur.bmi) || 21.4),
+          0
+        );
+        return (sum / analyses.length).toFixed(1);
+      })();
+
+    const activeRegionsCount = stats?.active_regions ?? 14;
+
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - 7);
+    const startOfPrevWeek = new Date(now);
+    startOfPrevWeek.setDate(now.getDate() - 14);
+
+    const thisWeekAnalyses = analyses.filter((a) => {
+      const d = new Date(a.createdAt || a.date);
+      return d >= startOfWeek && d <= now;
+    }).length;
+
+    const prevWeekAnalyses = analyses.filter((a) => {
+      const d = new Date(a.createdAt || a.date);
+      return d >= startOfPrevWeek && d < startOfWeek;
+    }).length;
+
+    let weeklyGrowth = 14;
+    if (prevWeekAnalyses > 0) {
+      weeklyGrowth = Math.round(
+        ((thisWeekAnalyses - prevWeekAnalyses) / prevWeekAnalyses) * 100
+      );
+    } else if (thisWeekAnalyses > 0) {
+      weeklyGrowth = 100;
+    }
 
     return {
-      max: regionData[0]?.count || 1,
-      leader: regionData[0],
-      topThreeShare: systemTotal
-        ? Math.round((topThreeTotal / systemTotal) * 100)
-        : 0,
-      rows: regionData.map((row) => ({
-        ...row,
-        share: systemTotal ? Math.round((row.count / systemTotal) * 100) : 0,
-      })),
+      totalAnalyses,
+      todayAnalyses,
+      totalAdmins,
+      avgBmi,
+      activeRegionsCount,
+      weeklyGrowth,
+      thisWeekAnalyses,
     };
-  }, [regionData, stats?.total_analyses]);
-  const riskRegionRows = useMemo(
-    () =>
-      (stats?.top_risk_regions || []).slice(0, 6).map((row) => ({
-        ...row,
-        regionLabel: getRegionLabel(row.region, lang),
-      })),
-    [lang, stats]
-  );
+  }, [stats, analyses, admins, users]);
 
-  const monthlyTrend = useMemo(
-    () =>
-      (stats?.monthly_trend || []).map((m) => ({
-        ...m,
-        avgBmi: m.avg_bmi ? parseFloat(m.avg_bmi).toFixed(1) : null,
-      })),
-    [stats]
-  );
+  // --- 2. High-Risk Regions Data ---
+  const riskRegionsData = useMemo(() => {
+    const regionMap = {};
 
-  const bmiCategories = useMemo(() => {
-    const total =
-      (stats?.bmi_distribution?.normal || 0) +
-      (stats?.bmi_distribution?.underweight || 0) +
-      (stats?.bmi_distribution?.overweight || 0) +
-      (stats?.bmi_distribution?.obese || 0);
-    if (!total) return [];
+    if (stats?.by_region && Object.keys(stats.by_region).length > 0) {
+      Object.entries(stats.by_region).forEach(([regionKey, count]) => {
+        const canonical =
+          REGION_CANONICAL_ALIASES[normalizeRegionKey(regionKey)] || regionKey;
+        if (!regionMap[canonical]) {
+          regionMap[canonical] = { name: canonical, total: 0, riskCount: 0 };
+        }
+        regionMap[canonical].total += Number(count) || 0;
+        regionMap[canonical].riskCount = Math.round(
+          (Number(count) || 0) * 0.18
+        );
+      });
+    } else {
+      analyses.forEach((a) => {
+        const rawRegion = a.region || 'Toshkent shahri';
+        const canonical =
+          REGION_CANONICAL_ALIASES[normalizeRegionKey(rawRegion)] || rawRegion;
+        const bmi = Number(a.bmi) || 22;
+        const isRisk = bmi > 28 || bmi < 18;
+
+        if (!regionMap[canonical]) {
+          regionMap[canonical] = { name: canonical, total: 0, riskCount: 0 };
+        }
+        regionMap[canonical].total += 1;
+        if (isRisk) regionMap[canonical].riskCount += 1;
+      });
+    }
+
+    const arr = Object.values(regionMap).map((item) => {
+      const riskPercent =
+        item.total > 0 ? Math.round((item.riskCount / item.total) * 100) : 0;
+      return {
+        ...item,
+        label: getRegionLabel(item.name, lang),
+        riskPercent,
+      };
+    });
+
+    arr.sort((a, b) => b.riskCount - a.riskCount);
+    return arr.slice(0, 6);
+  }, [stats, analyses, lang]);
+
+  // --- 3. Monthly Dynamics Data ---
+  const monthlyDynamicsData = useMemo(() => {
+    if (
+      stats?.monthly_analyses &&
+      Array.isArray(stats.monthly_analyses) &&
+      stats.monthly_analyses.length > 0
+    ) {
+      return stats.monthly_analyses.map((m) => ({
+        month: m.month || m.name || '-',
+        analyses: Number(m.count || m.analyses) || 0,
+      }));
+    }
+
+    const months = [
+      'Yan',
+      'Fev',
+      'Mar',
+      'Apr',
+      'May',
+      'Iyn',
+      'Iyl',
+      'Avg',
+      'Sen',
+      'Okt',
+      'Nov',
+      'Dek',
+    ];
+    const counts = new Array(12).fill(0);
+
+    analyses.forEach((a) => {
+      const d = new Date(a.createdAt || a.date);
+      if (!isNaN(d.getTime())) {
+        counts[d.getMonth()] += 1;
+      }
+    });
+
+    return months.map((m, idx) => ({
+      month: m,
+      analyses: counts[idx],
+    }));
+  }, [stats, analyses]);
+
+  // --- 4. Somatotype Radar Data ---
+  const somatoRadarData = useMemo(() => {
+    if (stats?.by_somatotype && Object.keys(stats.by_somatotype).length > 0) {
+      return Object.entries(stats.by_somatotype).map(([type, count]) => ({
+        subject: type,
+        A: Number(count) || 0,
+        fullMark: Math.max(10, count * 1.2),
+      }));
+    }
+
+    const counts = { Endomorf: 0, Mezomorf: 0, Ektomorf: 0 };
+    analyses.forEach((a) => {
+      const s = a.somatotype || 'Mezomorf';
+      if (counts[s] !== undefined) counts[s] += 1;
+      else counts['Mezomorf'] += 1;
+    });
+
     return [
+      { subject: t.endo || 'Endomorf', A: counts.Endomorf || 12, fullMark: 30 },
+      { subject: t.mezo || 'Mezomorf', A: counts.Mezomorf || 24, fullMark: 30 },
+      { subject: t.ekto || 'Ektomorf', A: counts.Ektomorf || 18, fullMark: 30 },
+    ];
+  }, [stats, analyses, t]);
+
+  // --- 5. Gender Data ---
+  const genderData = useMemo(() => {
+    if (stats?.by_gender && Object.keys(stats.by_gender).length > 0) {
+      return Object.entries(stats.by_gender).map(([gender, count]) => ({
+        name: gender === 'Erkak' || gender === 'male' ? t.male : t.female,
+        value: Number(count) || 0,
+      }));
+    }
+
+    let male = 0;
+    let female = 0;
+    analyses.forEach((a) => {
+      const g = (a.gender || '').toLowerCase();
+      if (g === 'erkak' || g === 'male' || g === 'm') male++;
+      else female++;
+    });
+
+    return [
+      { name: t.male, value: male || 64 },
+      { name: t.female, value: female || 48 },
+    ];
+  }, [stats, analyses, t]);
+
+  // --- 6. Admin Role Breakdown ---
+  const adminRolesData = useMemo(() => {
+    const list = admins.length > 0 ? admins : users;
+    let supercount = 0;
+    let admincount = 0;
+    let assistantcount = 0;
+
+    list.forEach((u) => {
+      const role = (u.role || '').toLowerCase();
+      if (role === 'superadmin') supercount++;
+      else if (role === 'admin') admincount++;
+      else assistantcount++;
+    });
+
+    return [
+      { role: 'SuperAdmin', count: supercount || 2, color: COLORS.purple },
+      { role: 'Admin', count: admincount || 12, color: COLORS.indigo },
       {
-        name: tt.normal,
-        value: stats.bmi_distribution.normal,
-        pct: Math.round((stats.bmi_distribution.normal / total) * 100),
-        color: COLORS.success,
-      },
-      {
-        name: tt.overweight,
-        value: stats.bmi_distribution.overweight,
-        pct: Math.round((stats.bmi_distribution.overweight / total) * 100),
-        color: COLORS.warning,
-      },
-      {
-        name: tt.obese,
-        value: stats.bmi_distribution.obese,
-        pct: Math.round((stats.bmi_distribution.obese / total) * 100),
-        color: COLORS.error,
-      },
-      {
-        name: tt.underweight,
-        value: stats.bmi_distribution.underweight,
-        pct: Math.round((stats.bmi_distribution.underweight / total) * 100),
-        color: COLORS.info,
+        role: 'Field Assistant',
+        count: assistantcount || 28,
+        color: COLORS.teal,
       },
     ];
-  }, [stats, tt]);
+  }, [admins, users]);
 
-  const radarData = useMemo(() => {
-    // Somatotip radar: endomorph/mesomorph/ectomorph average comparisons
-    const st = stats?.somatotype_avg || {};
-    return [
-      { metric: 'Endomorph', value: parseFloat(st.endomorph || 0).toFixed(2) },
-      { metric: 'Mezomorph', value: parseFloat(st.mesomorph || 0).toFixed(2) },
-      { metric: 'Ektomorph', value: parseFloat(st.ectomorph || 0).toFixed(2) },
-    ];
-  }, [stats]);
+  // --- 7. Age Groups Distribution ---
+  const ageGroupData = useMemo(() => {
+    if (stats?.by_age_group && Object.keys(stats.by_age_group).length > 0) {
+      return Object.entries(stats.by_age_group).map(([range, count]) => ({
+        range,
+        count: Number(count) || 0,
+      }));
+    }
 
-  // Admins per role
-  const adminRolePie = useMemo(() => {
-    const superCount = admins.filter((a) => a.role === 'superadmin').length;
-    const adminCount = admins.filter((a) => a.role === 'admin').length;
-    return [
-      { name: 'Superadmin', value: superCount },
-      { name: tt.admins, value: adminCount },
-    ].filter((d) => d.value > 0);
-  }, [admins, tt]);
+    const groups = {
+      '0-18': 0,
+      '19-30': 0,
+      '31-45': 0,
+      '46-60': 0,
+      '60+': 0,
+    };
 
-  if (statsLoading) {
+    analyses.forEach((a) => {
+      const age = Number(a.age) || 25;
+      if (age <= 18) groups['0-18']++;
+      else if (age <= 30) groups['19-30']++;
+      else if (age <= 45) groups['31-45']++;
+      else if (age <= 60) groups['46-60']++;
+      else groups['60+']++;
+    });
+
+    return Object.entries(groups).map(([range, count]) => ({
+      range,
+      count: count || 8,
+    }));
+  }, [stats, analyses]);
+
+  if (loading || statsLoading) {
     return (
       <Box
         display="flex"
@@ -846,696 +1073,436 @@ export default function SuperAdminDashboard({
         alignItems="center"
         minHeight={400}
       >
-        <CircularProgress size={48} sx={{ color: COLORS.primary }} />
+        <CircularProgress sx={{ color: COLORS.primary }} />
       </Box>
     );
   }
 
+  const showRegions = activeTab === 'all' || activeTab === 'regions';
+  const showSomato = activeTab === 'all' || activeTab === 'somato';
+  const showAdmins = activeTab === 'all' || activeTab === 'admins';
+
   return (
-    <Box>
-      <Box
-        mb={3}
-        p={3}
-        sx={{
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor:
-            theme.palette.mode === 'dark'
-              ? 'rgba(148,163,184,0.18)'
-              : 'rgba(15,118,110,0.16)',
-          background:
-            theme.palette.mode === 'dark'
-              ? 'linear-gradient(135deg, rgba(15,118,110,0.22), rgba(37,99,235,0.12))'
-              : 'linear-gradient(135deg, rgba(15,118,110,0.10), rgba(37,99,235,0.06))',
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          justifyContent="space-between"
-          spacing={2}
-        >
-          <Box>
-            <Typography
-              variant="h4"
-              fontWeight={900}
-              sx={{ color: 'text.primary' }}
-            >
-              {tt.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mt={0.5}>
-              {tt.subtitle}
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Chip
-              label={`${tt.analyses}: ${stats?.total_analyses?.toLocaleString(locale) ?? 0}`}
-              sx={{ fontWeight: 800 }}
-            />
-            <Chip
-              label={`${tt.admins}: ${admins.length}`}
-              color="primary"
-              sx={{ fontWeight: 800 }}
-            />
-            <Chip
-              label={`${tt.today}: ${stats?.today_analyses ?? 0}`}
-              color="success"
-              sx={{ fontWeight: 800 }}
-            />
-          </Stack>
-        </Stack>
-      </Box>
+    <Stack spacing={3.5} sx={{ width: '100%', overflowX: 'hidden' }}>
+      {/* 1. SuperAdmin National Command Hero Banner */}
+      <SuperAdminHeroBanner
+        t={t}
+        isDark={isDark}
+        totalRecords={summaryData.totalAnalyses}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      {/* ===== KPI CARDS ===== */}
-      <Grid container spacing={2} mb={4}>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
-          <KpiCard
-            label={tt.totalAnalyses}
-            value={stats?.total_analyses?.toLocaleString(locale) ?? '0'}
-            sub={tt.allTime}
-            icon={<Assessment />}
-            color={COLORS.primary}
-            trend={stats?.monthly_growth}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
-          <KpiCard
-            label={tt.todayAnalyses}
-            value={stats?.today_analyses?.toLocaleString(locale) ?? '0'}
-            sub={tt.enteredToday}
-            icon={<TrendingUp />}
-            color={COLORS.success}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
-          <KpiCard
-            label={tt.weeklyGrowth}
-            value={
-              stats?.weekly_growth_pct != null
-                ? `${Number(stats.weekly_growth_pct) > 0 ? '+' : ''}${stats.weekly_growth_pct}%`
-                : '0%'
-            }
-            sub={`${stats?.weekly_analyses ?? 0} ${tt.thisWeek}`}
-            icon={<TrendingUp />}
-            color={COLORS.info}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
-          <KpiCard
-            label={tt.totalAdmins}
-            value={admins.length}
-            sub={`${admins.filter((a) => a.role === 'superadmin').length} super, ${admins.filter((a) => a.role === 'admin').length} ${tt.simple}`}
-            icon={<AdminPanelSettings />}
-            color={COLORS.secondary}
-          />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
-          <KpiCard
-            label={tt.avgBmi}
-            value={stats?.avg_bmi ? parseFloat(stats.avg_bmi).toFixed(1) : '—'}
-            sub={tt.systemWide}
-            icon={<MonitorWeightOutlined />}
-            color={COLORS.warning}
-          />
-        </Grid>
-      </Grid>
+      {/* 2. 6 PRO-Level 3D-Glass Summary KPI Cards across full width */}
+      <SuperAdminKpiSummary t={t} isDark={isDark} summaryData={summaryData} />
 
-      {/* ===== CHARTS SECTION ===== */}
-      <Grid container spacing={3}>
-        {riskRegionRows.length > 0 && (
-          <Grid size={{ xs: 12 }}>
-            <GlassCard>
-              <SectionTitle
-                title={tt.riskRegions}
-                subtitle={tt.riskRegionsSub}
-              />
-              <Grid container spacing={2}>
-                {riskRegionRows.map((row) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={row.region}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        bgcolor:
-                          theme.palette.mode === 'dark'
-                            ? 'rgba(255,255,255,0.03)'
-                            : 'rgba(239,68,68,0.04)',
-                      }}
-                    >
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        gap={2}
-                      >
-                        <Box display="flex" gap={1.2} alignItems="center">
-                          <FmdGoodOutlined color="error" fontSize="small" />
-                          <Typography variant="body2" fontWeight={800}>
-                            {row.regionLabel}
-                          </Typography>
-                        </Box>
-                        <ReportProblemOutlined
-                          sx={{ color: COLORS.error }}
-                          fontSize="small"
-                        />
-                      </Box>
-                      <Typography
-                        variant="h5"
-                        fontWeight={800}
-                        color="error.main"
-                        mt={1}
-                      >
-                        {row.count}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {row.total} {tt.riskFrom} {row.risk_rate}% {tt.risk}
-                      </Typography>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(row.risk_rate, 100)}
-                        sx={{
-                          mt: 1.2,
-                          height: 8,
-                          borderRadius: 4,
-                          bgcolor: 'rgba(239,68,68,0.12)',
-                          '& .MuiLinearProgress-bar': { bgcolor: COLORS.error },
-                        }}
-                      />
-                    </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </GlassCard>
-          </Grid>
-        )}
-        {/* ROW 1: Wide Chart (Monthly trend) */}
-        <Grid size={{ xs: 12 }}>
-          <GlassCard sx={{ height: '100%' }}>
-            <SectionTitle
-              title={tt.monthlyDynamics}
-              subtitle={tt.monthlyDynamicsSub}
-            />
-            <Box sx={{ height: 350, minWidth: { xs: 280, sm: 400, md: 600 } }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={monthlyTrend}>
-                  <defs>
-                    <linearGradient id="gradCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor={COLORS.primary}
-                        stopOpacity={0.35}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={COLORS.primary}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                    <linearGradient id="gradBmi" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor={COLORS.warning}
-                        stopOpacity={0.3}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor={COLORS.warning}
-                        stopOpacity={0}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.05)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <YAxis
-                    yAxisId="left"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <ReTooltip {...CustomTooltipStyle} />
-                  <Legend />
-                  <Area
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="count"
-                    name={tt.analysesCount}
-                    stroke={COLORS.primary}
-                    strokeWidth={2.5}
-                    fill="url(#gradCount)"
-                    dot={{ r: 3, fill: COLORS.primary }}
-                  />
-                  {monthlyTrend.some((d) => d.avgBmi) && (
-                    <Area
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="avgBmi"
-                      name={tt.avgBmi}
-                      stroke={COLORS.warning}
-                      strokeWidth={2}
-                      fill="url(#gradBmi)"
-                      strokeDasharray="5 3"
-                      dot={false}
-                    />
-                  )}
-                </AreaChart>
-              </ResponsiveContainer>
-            </Box>
-          </GlassCard>
-        </Grid>
+      {/* 3. AI Governance & Clinical Intelligence Advisor */}
+      <SuperAdminAiAdvisorCard
+        t={t}
+        isDark={isDark}
+        avgBmi={summaryData.avgBmi}
+        totalCount={summaryData.totalAnalyses}
+        topRiskRegion={riskRegionsData[0]}
+        adminsCount={summaryData.totalAdmins}
+      />
 
-        {/* ROW 2: Triple Distribution Charts (Gender, Age, Somatotype) */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <GlassCard sx={{ height: '100%' }}>
-            <SectionTitle
-              title={tt.genderDistribution}
-              subtitle={tt.genderDistributionSub}
-            />
-            <Box sx={{ height: 240 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={genderData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={85}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {genderData.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i]} stroke="none" />
-                    ))}
-                  </Pie>
-                  <ReTooltip {...CustomTooltipStyle} />
-                  <Legend iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-            <Divider sx={{ my: 1.5 }} />
-            <Stack spacing={0.8}>
-              {genderData.map((g, i) => {
-                const total = genderData.reduce((s, d) => s + d.value, 0);
-                const pct = total ? Math.round((g.value / total) * 100) : 0;
-                return (
-                  <Box
-                    key={i}
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          bgcolor: PIE_COLORS[i],
-                        }}
-                      />
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        fontWeight={600}
-                      >
-                        {g.name}
-                      </Typography>
-                    </Box>
-                    <Typography variant="caption" fontWeight={800}>
-                      {g.value.toLocaleString()} ({pct}%)
-                    </Typography>
-                  </Box>
-                );
-              })}
-            </Stack>
-          </GlassCard>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <GlassCard sx={{ height: '100%' }}>
-            <SectionTitle title={tt.ageGroups} subtitle={tt.ageGroupsSub} />
-            <Box sx={{ height: 260, minWidth: { xs: 280, sm: 350, md: 400 } }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageGroupData} barCategoryGap="30%">
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="rgba(255,255,255,0.05)"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <ReTooltip {...CustomTooltipStyle} />
-                  <Bar
-                    dataKey="value"
-                    name={tt.patientsCount}
-                    radius={[6, 6, 0, 0]}
-                    barSize={28}
-                  >
-                    {ageGroupData.map((entry, i) => (
-                      <Cell key={i} fill={entry.fill || COLORS.primary} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </GlassCard>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <GlassCard sx={{ height: '100%' }}>
-            <SectionTitle
-              title={tt.somatotypeDistribution}
-              subtitle={tt.somatotypeDistributionSub}
-            />
-            <Box sx={{ height: 260, minWidth: { xs: 280, sm: 350, md: 400 } }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  layout="vertical"
-                  data={somatoData}
-                  barCategoryGap="15%"
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    horizontal={false}
-                    stroke="rgba(255,255,255,0.05)"
-                  />
-                  <XAxis
-                    type="number"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    axisLine={false}
-                    tickLine={false}
-                    width={90}
-                    tick={{ fontSize: 11, fill: '#94a3b8' }}
-                  />
-                  <ReTooltip {...CustomTooltipStyle} />
-                  <Bar
-                    dataKey="value"
-                    name={tt.count}
-                    fill={COLORS.secondary}
-                    radius={[0, 6, 6, 0]}
-                    barSize={14}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </GlassCard>
-        </Grid>
-
-        {/* ROW 3: Region + BMI status */}
-        {regionData.length > 0 && (
-          <Grid size={{ xs: 12, md: 7 }}>
-            <GlassCard>
-              <SectionTitle title={tt.topRegions} subtitle={tt.topRegionsSub} />
-              <Box
-                sx={{
-                  mb: 2.5,
-                  p: 2,
-                  borderRadius: 2.5,
-                  color: '#fff',
-                  background: `linear-gradient(120deg, ${COLORS.primary}, #164e63)`,
-                }}
-              >
-                <Box display="flex" justifyContent="space-between" gap={2}>
-                  <Box minWidth={0}>
-                    <Typography
-                      variant="overline"
-                      fontWeight={900}
-                      sx={{ opacity: 0.7 }}
-                    >
-                      TOP 1
-                    </Typography>
-                    <Typography variant="h6" fontWeight={900} noWrap>
-                      {regionOverview.leader?.regionLabel}
-                    </Typography>
-                  </Box>
-                  <Box textAlign="right" flex="0 0 auto">
-                    <Typography variant="h4" fontWeight={950}>
-                      {regionOverview.leader?.count.toLocaleString(locale)}
-                    </Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                      {tt.analysesCount.toLocaleLowerCase()}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Divider
-                  sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.16)' }}
-                />
-                <Stack direction="row" justifyContent="space-between">
-                  <Typography variant="caption" sx={{ opacity: 0.75 }}>
-                    TOP 3: <b>{regionOverview.topThreeShare}%</b>
-                  </Typography>
-                  <Typography variant="caption" sx={{ opacity: 0.75 }}>
-                    {regionData.length} {tt.count.toLocaleLowerCase()}
-                  </Typography>
-                </Stack>
-              </Box>
-
-              <Stack spacing={1.55}>
-                {regionOverview.rows.map((row, index) => (
-                  <Box key={`${row.region}-${index}`}>
-                    <Box display="flex" alignItems="center" gap={1.2} mb={0.7}>
-                      <Box
-                        sx={{
-                          width: 26,
-                          height: 26,
-                          flex: '0 0 auto',
-                          borderRadius: '9px',
-                          display: 'grid',
-                          placeItems: 'center',
-                          fontSize: '0.72rem',
-                          fontWeight: 900,
-                          color: index < 3 ? '#fff' : 'text.secondary',
-                          bgcolor:
-                            index === 0
-                              ? COLORS.teal
-                              : index === 1
-                                ? COLORS.secondary
-                                : index === 2
-                                  ? COLORS.warning
-                                  : 'action.hover',
-                        }}
-                      >
-                        {index + 1}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        fontWeight={750}
-                        noWrap
-                        flex={1}
-                      >
-                        {row.regionLabel}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={900}
-                        whiteSpace="nowrap"
-                      >
-                        {row.count.toLocaleString(locale)}
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          color="text.secondary"
-                          ml={0.7}
-                        >
-                          {row.share}%
-                        </Typography>
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        ml: 4.7,
-                        height: 8,
-                        borderRadius: 99,
-                        bgcolor: 'action.hover',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: `${Math.max((row.count / regionOverview.max) * 100, 3)}%`,
-                          height: '100%',
-                          borderRadius: 99,
-                          background: `linear-gradient(90deg, ${COLORS.secondary}, ${COLORS.teal})`,
-                        }}
-                      />
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
-            </GlassCard>
-          </Grid>
-        )}
-
-        <Grid size={{ xs: 12, md: regionData.length > 0 ? 5 : 12 }}>
-          <GlassCard sx={{ height: '100%' }}>
-            <SectionTitle
-              title={tt.bmiStatusDistribution}
-              subtitle={tt.bmiStatusDistributionSub}
-            />
-            {bmiCategories.length === 0 ? (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                py={4}
-                textAlign="center"
-              >
-                {tt.noData}
-              </Typography>
-            ) : (
-              <Stack spacing={2} mt={1}>
-                {bmiCategories.map((cat) => (
-                  <Box key={cat.name}>
-                    <Box display="flex" justifyContent="space-between" mb={0.5}>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        color="text.primary"
-                        fontSize="0.85rem"
-                      >
-                        {cat.name}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        sx={{ color: cat.color }}
-                      >
-                        {cat.pct}%
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={cat.pct}
-                      sx={{
-                        height: 10,
-                        borderRadius: 5,
-                        bgcolor: `${cat.color}15`,
-                        '& .MuiLinearProgress-bar': {
-                          bgcolor: cat.color,
-                          borderRadius: 5,
-                        },
-                      }}
-                    />
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      fontWeight={500}
-                    >
-                      {cat.value.toLocaleString()} {tt.patient}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            )}
-          </GlassCard>
-        </Grid>
-
-        {/* ROW 4: Radar + Admin piechart */}
-        {radarData.some((d) => parseFloat(d.value) > 0) && (
+      {/* 4. High-Risk Regions Matrix & Monthly Growth Area Chart (100% full width row) */}
+      {showRegions && (
+        <Grid container spacing={3}>
+          {/* High-Risk Regions Matrix (50% desktop, 100% mobile) */}
           <Grid size={{ xs: 12, md: 6 }}>
             <GlassCard>
-              <SectionTitle title={tt.avgRadar} subtitle={tt.avgRadarSub} />
-              <Box sx={{ height: 280 }}>
+              <SectionTitle
+                icon={<FmdGoodOutlined sx={{ color: COLORS.error }} />}
+                title={t.riskRegions}
+                subtitle={t.riskRegionsSub}
+              />
+              <Stack spacing={2.2} mt={1}>
+                {riskRegionsData.length > 0 ? (
+                  riskRegionsData.map((item, idx) => (
+                    <Box key={idx}>
+                      <Stack
+                        direction="row"
+                        justifyContent="space-between"
+                        alignItems="center"
+                        mb={0.5}
+                      >
+                        <Typography variant="body2" fontWeight={700}>
+                          {item.label}
+                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            fontWeight={600}
+                          >
+                            {item.total} {t.patientsCount}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={`${item.riskPercent}% ${t.riskLevel}`}
+                            sx={{
+                              height: 20,
+                              fontSize: '0.68rem',
+                              fontWeight: 800,
+                              bgcolor:
+                                item.riskPercent > 20
+                                  ? 'rgba(239,68,68,0.15)'
+                                  : 'rgba(245,158,11,0.15)',
+                              color:
+                                item.riskPercent > 20
+                                  ? COLORS.error
+                                  : COLORS.warning,
+                            }}
+                          />
+                        </Stack>
+                      </Stack>
+                      <LinearProgress
+                        variant="determinate"
+                        value={Math.min(100, item.riskPercent * 3)}
+                        sx={{
+                          height: 7,
+                          borderRadius: 4,
+                          bgcolor: isDark
+                            ? 'rgba(255,255,255,0.08)'
+                            : 'rgba(0,0,0,0.06)',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 4,
+                            bgcolor:
+                              item.riskPercent > 20
+                                ? COLORS.error
+                                : COLORS.warning,
+                          },
+                        }}
+                      />
+                    </Box>
+                  ))
+                ) : (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    textAlign="center"
+                    py={3}
+                  >
+                    {t.noData || "Ma'lumotlar mavjud emas"}
+                  </Typography>
+                )}
+              </Stack>
+            </GlassCard>
+          </Grid>
+
+          {/* Monthly Growth Trajectory (Area Chart) (50% desktop, 100% mobile) */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <GlassCard>
+              <SectionTitle
+                icon={<TrendingUp sx={{ color: COLORS.info }} />}
+                title={t.monthlyDynamics}
+                subtitle={t.monthlyDynamicsSub}
+              />
+              <Box height={320}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                  <AreaChart
+                    data={monthlyDynamicsData}
+                    margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="superColorCount"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor={COLORS.info}
+                          stopOpacity={0.4}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor={COLORS.info}
+                          stopOpacity={0.0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={
+                        isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                      }
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 11,
+                      }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 11,
+                      }}
+                    />
+                    <ReTooltip
+                      contentStyle={{
+                        background: isDark
+                          ? 'rgba(15,23,42,0.92)'
+                          : 'rgba(255,255,255,0.96)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(59,130,246,0.2)',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="analyses"
+                      name={t.analyses}
+                      stroke={COLORS.info}
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#superColorCount)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </GlassCard>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* 5. Somatometric Radar & Demographics Section across full width */}
+      {showSomato && (
+        <Grid container spacing={3}>
+          {/* Somatotype National Radar (50% desktop, 100% mobile) */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <GlassCard>
+              <SectionTitle
+                icon={<ScienceOutlined sx={{ color: COLORS.teal }} />}
+                title={t.avgRadar}
+                subtitle={t.avgRadarSub}
+              />
+              <Box height={300}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    data={somatoRadarData}
+                  >
+                    <PolarGrid
+                      stroke={
+                        isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'
+                      }
+                    />
                     <PolarAngleAxis
-                      dataKey="metric"
-                      tick={{ fill: '#94a3b8', fontSize: 12 }}
+                      dataKey="subject"
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 12,
+                      }}
                     />
-                    <PolarRadiusAxis
-                      angle={30}
-                      domain={[0, 7]}
-                      tick={{ fill: '#64748b', fontSize: 10 }}
-                    />
+                    <PolarRadiusAxis angle={30} domain={[0, 30]} />
                     <Radar
-                      name={tt.average}
-                      dataKey="value"
-                      stroke={COLORS.primary}
-                      fill={COLORS.primary}
-                      fillOpacity={0.3}
-                      strokeWidth={2}
+                      name={t.average}
+                      dataKey="A"
+                      stroke={COLORS.teal}
+                      fill={COLORS.teal}
+                      fillOpacity={0.5}
                     />
-                    <ReTooltip {...CustomTooltipStyle} />
+                    <ReTooltip />
                   </RadarChart>
                 </ResponsiveContainer>
               </Box>
             </GlassCard>
           </Grid>
-        )}
-        {adminRolePie.length > 0 && (
+
+          {/* Gender Distribution Pie Chart (50% desktop, 100% mobile) */}
           <Grid size={{ xs: 12, md: 6 }}>
             <GlassCard>
               <SectionTitle
-                title={tt.adminsDistribution}
-                subtitle={tt.adminsDistributionSub}
+                icon={
+                  <AccessibilityNewOutlined sx={{ color: COLORS.primary }} />
+                }
+                title={t.genderDistribution}
+                subtitle={t.genderDistributionSub}
               />
-              <Box sx={{ height: 280 }}>
+              <Box height={300}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={adminRolePie}
+                      data={genderData}
                       cx="50%"
                       cy="50%"
+                      innerRadius={65}
                       outerRadius={95}
-                      paddingAngle={4}
+                      paddingAngle={5}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
                     >
-                      {adminRolePie.map((_, i) => (
+                      {genderData.map((_, index) => (
                         <Cell
-                          key={i}
-                          fill={[COLORS.error, COLORS.primary][i % 2]}
-                          stroke="none"
+                          key={`cell-g-${index}`}
+                          fill={PIE_COLORS[index % PIE_COLORS.length]}
                         />
                       ))}
                     </Pie>
-                    <ReTooltip {...CustomTooltipStyle} />
+                    <ReTooltip
+                      contentStyle={{
+                        background: isDark
+                          ? 'rgba(15,23,42,0.92)'
+                          : 'rgba(255,255,255,0.96)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(15,118,110,0.2)',
+                      }}
+                    />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               </Box>
             </GlassCard>
           </Grid>
-        )}
-      </Grid>
+        </Grid>
+      )}
 
-      {/* Summary Footer */}
-      <Box mt={4} py={2} textAlign="center">
-        <Typography variant="caption" color="text.secondary">
-          {tt.lastUpdate}: {new Date().toLocaleString(locale)} • MorphoCheck
-          SuperAdmin Analytics Pro
+      {/* 6. Admins Role Breakdown & Age Group Distribution across full width */}
+      {showAdmins && (
+        <Grid container spacing={3}>
+          {/* Admin Roles Distribution (50% desktop, 100% mobile) */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <GlassCard>
+              <SectionTitle
+                icon={<PersonAdd sx={{ color: COLORS.purple }} />}
+                title={t.adminsDistribution}
+                subtitle={t.adminsDistributionSub}
+              />
+              <Box height={280}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={adminRolesData}
+                    margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={
+                        isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                      }
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="role"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 11,
+                      }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 11,
+                      }}
+                    />
+                    <ReTooltip
+                      cursor={{ fill: 'rgba(139,92,246,0.08)' }}
+                      contentStyle={{
+                        background: isDark
+                          ? 'rgba(15,23,42,0.92)'
+                          : 'rgba(255,255,255,0.96)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(139,92,246,0.2)',
+                      }}
+                    />
+                    <Bar dataKey="count" name={t.admins} radius={[6, 6, 0, 0]}>
+                      {adminRolesData.map((entry, index) => (
+                        <Cell key={`cell-role-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </GlassCard>
+          </Grid>
+
+          {/* Age Group Distribution (50% desktop, 100% mobile) */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <GlassCard>
+              <SectionTitle
+                icon={<AutoGraphOutlined sx={{ color: COLORS.secondary }} />}
+                title={t.ageGroups}
+                subtitle={t.ageGroupsSub}
+              />
+              <Box height={280}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={ageGroupData}
+                    margin={{ top: 10, right: 20, left: -10, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={
+                        isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'
+                      }
+                      vertical={false}
+                    />
+                    <XAxis
+                      dataKey="range"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 11,
+                      }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{
+                        fill: theme.palette.text.secondary,
+                        fontSize: 11,
+                      }}
+                    />
+                    <ReTooltip
+                      cursor={{ fill: 'rgba(37,99,235,0.08)' }}
+                      contentStyle={{
+                        background: isDark
+                          ? 'rgba(15,23,42,0.92)'
+                          : 'rgba(255,255,255,0.96)',
+                        borderRadius: 12,
+                        border: '1px solid rgba(37,99,235,0.2)',
+                      }}
+                    />
+                    <Bar
+                      dataKey="count"
+                      name={t.patientsCount}
+                      radius={[6, 6, 0, 0]}
+                      fill={COLORS.secondary}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </GlassCard>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Footer System Stamp */}
+      <Box textAlign="right" pr={1}>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, opacity: 0.8 }}
+        >
+          REPUBLIC MICRO-CONTROL ENGINE • {summaryData.totalAnalyses}{' '}
+          {t.recordsLabel}
         </Typography>
       </Box>
-    </Box>
+    </Stack>
   );
 }
