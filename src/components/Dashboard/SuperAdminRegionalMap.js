@@ -438,7 +438,7 @@ const LEVEL_META = {
     hover: '#14b8a6',
     label: 'Viloyat',
     nextLabel: 'Tumanlar',
-    zoom: 6.7,
+    zoom: 8.5,
   },
   2: {
     source: 'admin-level-2',
@@ -449,7 +449,7 @@ const LEVEL_META = {
     hover: '#f97316',
     label: 'Tuman',
     nextLabel: 'Mahallalar',
-    zoom: 9.1,
+    zoom: 12.0,
   },
   3: {
     source: 'admin-level-3',
@@ -460,7 +460,7 @@ const LEVEL_META = {
     hover: '#8b5cf6',
     label: 'Mahalla',
     nextLabel: '',
-    zoom: 12.8,
+    zoom: 15.5,
   },
 };
 
@@ -3771,14 +3771,15 @@ export default function SuperAdminRegionalMap({
     const bounds =
       getBounds(item.bbox) || getBounds(getGeometryBounds(item.geometry));
     map.stop();
+    const level = Number(item.admin_leve || item.admin_level || item.level || 1);
+    const targetMaxZoom = level === 3 ? 17.5 : level === 2 ? 15.0 : 11.5;
     if (bounds) {
       map.fitBounds(bounds, {
         padding: { top: 46, bottom: 46, left: 46, right: 46 },
         duration: 1150,
         easing: MAP_CAMERA_EASING,
         essential: true,
-        // Compact level-1 boundaries such as Tashkent city need a closer fit.
-        maxZoom: Math.max(fallbackZoom, 12),
+        maxZoom: targetMaxZoom,
       });
     } else {
       map.easeTo({
@@ -3968,7 +3969,7 @@ export default function SuperAdminRegionalMap({
         duration: 1100,
         easing: MAP_CAMERA_EASING,
         essential: true,
-        maxZoom: 5.1,
+        maxZoom: 7.2,
       });
     } else {
       mapRef.current?.stop();
@@ -4335,9 +4336,18 @@ export default function SuperAdminRegionalMap({
       const fullBounds = getBounds(getCollectionBounds(level1));
       if (fullBounds) {
         map.resize();
-        map.fitBounds(fullBounds, { padding: 18, duration: 0, maxZoom: 5.1 });
+        map.fitBounds(fullBounds, { padding: 18, duration: 0, maxZoom: 7.2 });
       }
-      setTimeout(() => map.resize(), 80);
+      setTimeout(() => {
+        if (mapRef.current && fullBounds) {
+          mapRef.current.resize();
+          mapRef.current.fitBounds(fullBounds, {
+            padding: 18,
+            duration: 0,
+            maxZoom: 7.2,
+          });
+        }
+      }, 80);
     });
 
     return () => {
@@ -4623,12 +4633,31 @@ export default function SuperAdminRegionalMap({
         getBounds(getGeometryBounds(selected.geometry))
       : null;
     if (selectedBounds) {
+      const level = Number(selected.admin_leve || selected.admin_level || selected.level || 1);
+      const targetMaxZoom = level === 3 ? 17.5 : level === 2 ? 15.0 : 11.5;
       map.fitBounds(selectedBounds, {
         animate: false,
         duration: 0,
         padding: 22,
-        maxZoom: Math.max(LEVEL_META[selected.admin_leve]?.zoom || 6, 12),
+        maxZoom: targetMaxZoom,
       });
+      return;
+    }
+
+    const fullCountryBounds =
+      getBounds(countryBbox) ||
+      getBounds(getCollectionBounds(visibleGeoJson)) ||
+      [[55.9, 37.1], [73.3, 45.7]];
+
+    if (!svgViewport.scale || svgViewport.scale <= 1.05) {
+      if (fullCountryBounds) {
+        map.fitBounds(fullCountryBounds, {
+          animate: false,
+          duration: 0,
+          padding: 22,
+          maxZoom: 7.2,
+        });
+      }
       return;
     }
 
@@ -4639,12 +4668,24 @@ export default function SuperAdminRegionalMap({
         padding: 0,
       });
     }
-  }, [selected, svgLngLatBounds]);
+  }, [countryBbox, selected, svgLngLatBounds, svgViewport.scale, visibleGeoJson]);
 
   const handleSatelliteToggle = useCallback(() => {
     const map = mapRef.current;
     if (!satelliteEnabled) {
       fitSatelliteToCurrentView();
+      requestAnimationFrame(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+          fitSatelliteToCurrentView();
+        }
+      });
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.resize();
+          fitSatelliteToCurrentView();
+        }
+      }, 60);
     } else {
       map?.easeTo({
         pitch: 0,
@@ -4654,6 +4695,19 @@ export default function SuperAdminRegionalMap({
       });
     }
     setSatelliteEnabled((value) => !value);
+  }, [fitSatelliteToCurrentView, satelliteEnabled]);
+
+  useEffect(() => {
+    if (!satelliteEnabled || !mapRef.current) return undefined;
+    mapRef.current.resize();
+    fitSatelliteToCurrentView();
+    const timer = setTimeout(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+        fitSatelliteToCurrentView();
+      }
+    }, 50);
+    return () => clearTimeout(timer);
   }, [fitSatelliteToCurrentView, satelliteEnabled]);
 
   useEffect(() => {
