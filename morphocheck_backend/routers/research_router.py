@@ -1,6 +1,7 @@
 import asyncio
 import calendar
 import io
+import re
 import urllib.parse
 from datetime import date, datetime
 from typing import List, Optional
@@ -11,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from jose import JWTError, jwt
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -20,7 +22,10 @@ from models.userdata import ResearchRecord
 from routers.auth_router import get_current_user
 from utils.audit_helper import record_audit_log
 from services.consent_docx import generate_consent_docx
-from services.indices_service import calculate_detailed_indices
+from services.indices_service import (
+    calculate_age_independent_indices,
+    calculate_detailed_indices,
+)
 from services.research_docx import generate_researcher_docx
 from services.research_summary_docx import generate_research_summary_docx
 from utils.database import get_db
@@ -35,6 +40,11 @@ from utils.privacy import (
 )
 
 router = APIRouter(tags=["Researcher"])
+
+
+class ResearchBulkAction(BaseModel):
+    ids: List[int] = Field(default_factory=list, max_length=10000)
+
 
 RESEARCH_IMPORT_FIELDS = [
     "full_name",
@@ -447,13 +457,14 @@ def normalize_research_import_gender(value: str) -> str:
 
 
 def get_research_import_fields(privacy_enabled: bool = False) -> List[str]:
+    # Privacy is a disclosure policy, not a storage policy. Import templates are
+    # blank and therefore do not disclose any child's data; keeping the identity
+    # columns here lets the server retain the original values while API responses
+    # and exports continue to redact them for privacy-restricted roles.
     allowed_fields = [
         field
         for field in RESEARCH_IMPORT_FIELDS
-        if (
-            field not in RESEARCH_TEMPLATE_EXCLUDED_FIELDS
-            and (not privacy_enabled or field not in CHILD_PII_EXPORT_FIELDS)
-        )
+        if field not in RESEARCH_TEMPLATE_EXCLUDED_FIELDS
     ]
     report_order = [
         field for field in RESEARCH_EXPORT_FIELD_ORDER if field in allowed_fields
@@ -573,48 +584,10 @@ def research_record_to_dict(
         for column in ResearchRecord.__table__.columns
     }
     
-    # Маскирование персональных данных для field_assistant
-    if current_user and current_user.role == "field_assistant":
-        raw_name = payload.get("full_name")
-        if raw_name:
-            parts = raw_name.split()
-            if len(parts) > 1:
-                payload["full_name"] = f"{parts[0]} {parts[1][0]}."
-            elif len(parts) == 1:
-                payload["full_name"] = f"{parts[0][0]}."
-            else:
-                payload["full_name"] = "***"
-        else:
-            payload["full_name"] = "***"
-            
-        payload["parents_phone"] = "***"
-        payload["consent_guardian_name"] = "***"
-        payload["consent_guardian_phone"] = "***"
-        payload["birth_place"] = "***"
-
-    payload = {
-        column.name: getattr(record, column.name)
-        for column in ResearchRecord.__table__.columns
-    }
+    # Maxfiylik faqat markaziy role sozlamasi orqali qo'llanadi.
     payload = redact_research_child_payload(
         payload, current_user, privacy_enabled=privacy_enabled
     )
-    if current_user and current_user.role == "field_assistant":
-        raw_name = payload.get("full_name")
-        if raw_name and raw_name != "***":
-            parts = raw_name.split()
-            if len(parts) > 1:
-                payload["full_name"] = f"{parts[0]} {parts[1][0]}."
-            elif len(parts) == 1:
-                payload["full_name"] = f"{parts[0][0]}."
-            else:
-                payload["full_name"] = "***"
-        else:
-            payload["full_name"] = "***"
-        payload["parents_phone"] = "***"
-        payload["consent_guardian_name"] = "***"
-        payload["consent_guardian_phone"] = "***"
-        payload["birth_place"] = "***"
 
     age_parts = _calculate_research_age_parts(record)
     if age_parts:
@@ -641,8 +614,16 @@ def research_record_to_dict(
     payload["deleted_by_name"] = (
         record.deleted_by.name if getattr(record, "deleted_by", None) else None
     )
+    from services.analyze_service import infer_uzbekistan_region
+
     payload["region"] = (
-        record.created_by.region if getattr(record, "created_by", None) else None
+        infer_uzbekistan_region(record.settlement)
+        or infer_uzbekistan_region(record.birth_place)
+        or (
+            record.created_by.region
+            if getattr(record, "created_by", None)
+            else None
+        )
     )
     payload["district"] = (
         record.created_by.district if getattr(record, "created_by", None) else None
@@ -654,20 +635,32 @@ def research_record_to_dict(
 
 
 def _research_record_id_region(record: ResearchRecord, owner: User) -> str:
-    """Use the researcher's assigned region for the child's regional ID.
-
-    ``settlement`` is a free-text locality (mahalla/town) and must not be used
-    as the primary region when the record owner has an assigned region.
-    """
-    from services.analyze_service import _split_region_and_district
+    """Resolve a regional ID from imported locality, then profile fallback."""
+    from services.analyze_service import (
+        _split_region_and_district,
+        infer_uzbekistan_region,
+    )
 
     region_source = (
-        (getattr(owner, "region", None) or "").strip()
+        infer_uzbekistan_region(record.settlement)
+        or infer_uzbekistan_region(record.birth_place)
+        or (getattr(owner, "region", None) or "").strip()
         or (record.settlement or "").strip()
         or (record.birth_place or "").strip()
     )
     clean_region, _ = _split_region_and_district(region_source, None)
     return clean_region
+
+
+def _research_record_id_district(record: ResearchRecord, owner: User) -> Optional[str]:
+    """Resolve the district used in the regional research ID."""
+    from services.analyze_service import infer_uzbekistan_district
+
+    return (
+        infer_uzbekistan_district(record.settlement)
+        or infer_uzbekistan_district(record.birth_place)
+        or infer_uzbekistan_district(getattr(owner, "district", None))
+    )
 
 
 def format_research_gender_for_xlsx(value, lang="uz") -> str:
@@ -1219,12 +1212,25 @@ def _parse_research_date(value):
         return None
     if isinstance(value, datetime):
         return value
+    if isinstance(value, date):
+        return datetime.combine(value, datetime.min.time())
+
     text = str(value).strip()
-    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%Y/%m/%d"):
-        try:
-            return datetime.strptime(text[:10], fmt)
-        except ValueError:
-            continue
+    date_numbers = re.findall(r"\d+", text)
+    normalized = ".".join(date_numbers[:3]) if len(date_numbers) >= 3 else text
+    candidates = (text[:10], normalized)
+    for candidate in candidates:
+        for fmt in (
+            "%Y-%m-%d",
+            "%Y/%m/%d",
+            "%Y.%m.%d",
+            "%d.%m.%Y",
+            "%d.%m.%y",
+        ):
+            try:
+                return datetime.strptime(candidate, fmt)
+            except ValueError:
+                continue
     return None
 
 
@@ -1233,6 +1239,11 @@ def _calculate_research_age_parts(record: ResearchRecord):
     if not birth_date:
         return None
     exam_date = _parse_research_date(record.examination_date)
+    if not exam_date:
+        # Older/imported records may not have an explicit examination date.
+        # Their creation date is the closest reliable date to the examination;
+        # using it also keeps report calculations deterministic.
+        exam_date = _parse_research_date(getattr(record, "created_at", None))
     if not exam_date:
         return None
     if exam_date < birth_date:
@@ -1299,19 +1310,50 @@ def build_research_index_export_values(
 ) -> dict:
     height = float(record.chest_standing_height or 0)
     weight = float(record.weight or 0)
-    age = _calculate_research_age(record)
-    if age is None or height <= 0 or weight <= 0:
-        return dict.fromkeys(
-            RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS + RESEARCH_INDEX_EXPORT_FIELDS
-        )
+    empty_values = dict.fromkeys(
+        RESEARCH_INDEX_EXPORT_FIELDS + RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+    )
+    if height <= 0 or weight <= 0:
+        return empty_values
 
+    # BMI/TVI does not depend on age and must still be exported when dates are
+    # incomplete. Previously the early age check blanked this column together
+    # with every calculated index.
     tvi = round(weight / ((height / 100) ** 2), 2)
+    empty_values["tvi"] = tvi
+
     manual_data = {
-        "body_length": record.torso_length,
+        # Current forms use torso_length, while legacy/imported datasets store
+        # the same body-length measurement in trunk_length.
+        "body_length": record.torso_length or record.trunk_length,
         "chest": record.chest_circumference_pause,
         "region": record.settlement or record.birth_place,
         "address": record.settlement or record.birth_place,
     }
+    composition = calculate_age_independent_indices(
+        record.gender or "",
+        height,
+        weight,
+        tvi,
+        manual_data,
+    )
+    empty_values.update(
+        {
+            "hmai": composition["hmai"],
+            "tbw_percent": composition["tbw_percent"],
+            "fat_percent": round(composition["fm_percent"], 1),
+            "fat_mass": round(composition["fm"], 1),
+            "muscle_mass": round(composition["muscle_mass"], 1),
+            "bone_mass": round(composition["bone_mass"], 1),
+            "acm_percent": composition["acm_percent"],
+            "visceral_fat": composition["visceral_fat"],
+        }
+    )
+
+    age = _calculate_research_age(record)
+    if age is None:
+        return empty_values
+
     detailed = calculate_detailed_indices(
         age,
         record.gender or "",
@@ -1473,7 +1515,11 @@ def apply_research_filters(
 
     privacy_restricted = bool(privacy_enabled)
     if search and privacy_restricted:
-        query = query.filter(ResearchRecord.id_code.ilike(f"%{search}%"))
+        like = f"%{search}%"
+        query = query.filter(
+            ResearchRecord.id_code.ilike(like)
+            | ResearchRecord.settlement.ilike(like)
+        )
     elif search:
         like = f"%{search}%"
         query = query.filter(
@@ -1485,12 +1531,14 @@ def apply_research_filters(
         query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
     if school_name and not privacy_restricted:
         query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
-    if settlement and not privacy_restricted:
+    if settlement:
         s = settlement.strip()
-        query = query.filter(
-            (ResearchRecord.settlement.ilike(f"%{s}%"))
-            | (ResearchRecord.birth_place.ilike(f"%{s}%"))
-        )
+        settlement_filter = ResearchRecord.settlement.ilike(f"%{s}%")
+        if not privacy_restricted:
+            settlement_filter = settlement_filter | ResearchRecord.birth_place.ilike(
+                f"%{s}%"
+            )
+        query = query.filter(settlement_filter)
     if feeding_type:
         query = filter_by_feeding_type(query, feeding_type)
     if parents_marriage:
@@ -1598,6 +1646,7 @@ def list_deleted_research(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
     paginated: bool = Query(False),
+    all_ids: bool = Query(False),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -1610,6 +1659,8 @@ def list_deleted_research(
         .filter(ResearchRecord.is_deleted == 1)
         .order_by(ResearchRecord.deleted_at.desc())
     )
+    if all_ids:
+        return [record_id for (record_id,) in query.with_entities(ResearchRecord.id).all()]
     total = query.order_by(None).count()
     records = query.offset((page - 1) * page_size).limit(page_size).all()
     privacy_enabled = get_child_privacy_enabled(db, current_user)
@@ -2070,7 +2121,10 @@ def coerce_import_value(field: str, value):
 
 
 def map_import_headers(headers: List[str], privacy_enabled: bool = False) -> dict:
-    field_set = set(get_research_import_fields(privacy_enabled))
+    # Accept every supported import column even while privacy is enabled.
+    # Visibility is enforced when records are read/exported; dropping columns
+    # here irreversibly destroyed data when the setting was later disabled.
+    field_set = set(get_research_import_fields())
     label_aliases = {
         normalize_import_header(label): field
         for field, label in RESEARCH_TEMPLATE_LABELS.items()
@@ -2338,8 +2392,6 @@ async def import_research_xlsx(
         if not payload:
             skipped += 1
             continue
-        if privacy_enabled and not payload.get("full_name"):
-            payload["full_name"] = f"Maxfiy import {row_number}"
         if row_errors:
             errors.append({"row": row_number, "errors": row_errors})
             continue
@@ -2350,25 +2402,24 @@ async def import_research_xlsx(
         from services.analyze_service import generate_region_based_id
 
         clean_region = _research_record_id_region(record, target_user)
+        clean_district = _research_record_id_district(record, target_user)
+        location_key = (clean_region, clean_district)
         
-        if clean_region not in region_offsets:
-            base_id = generate_region_based_id(db, clean_region)
+        if location_key not in region_offsets:
+            base_id = generate_region_based_id(db, clean_region, clean_district)
             parts = base_id.split("-")
             if len(parts) >= 3 and parts[-1].isdigit():
-                region_offsets[clean_region] = {
+                region_offsets[location_key] = {
                     "prefix": "-".join(parts[:-1]),
                     "count": int(parts[-1])
                 }
             else:
-                region_offsets[clean_region] = {"prefix": "MC-UNK", "count": 1}
+                region_offsets[location_key] = {"prefix": "MC-UNK", "count": 1}
                 
-        pfx = region_offsets[clean_region]["prefix"]
-        cnt = region_offsets[clean_region]["count"]
+        pfx = region_offsets[location_key]["prefix"]
+        cnt = region_offsets[location_key]["count"]
         record.id_code = f"{pfx}-{cnt:04d}"
-        region_offsets[clean_region]["count"] += 1
-        if privacy_enabled:
-            record.full_name = f"Maxfiy {record.id_code}"
-
+        region_offsets[location_key]["count"] += 1
         records.append(record)
 
     if errors:
@@ -2419,6 +2470,7 @@ def list_research_records(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
     paginated: bool = Query(False),
+    all_ids: bool = Query(False),
     include_export_values: bool = Query(False),
     lang: Optional[str] = Query("uz"),
     db: Session = Depends(get_db),
@@ -2445,7 +2497,11 @@ def list_research_records(
     # Generic search
     privacy_restricted = get_child_privacy_enabled(db, current_user)
     if search and privacy_restricted:
-        query = query.filter(ResearchRecord.id_code.ilike(f"%{search}%"))
+        like = f"%{search}%"
+        query = query.filter(
+            ResearchRecord.id_code.ilike(like)
+            | ResearchRecord.settlement.ilike(like)
+        )
     elif search:
         like = f"%{search}%"
         query = query.filter(
@@ -2459,12 +2515,14 @@ def list_research_records(
         query = query.filter(ResearchRecord.full_name.ilike(f"%{full_name}%"))
     if school_name and not privacy_restricted:
         query = query.filter(ResearchRecord.school_name.ilike(f"%{school_name}%"))
-    if settlement and not privacy_restricted:
+    if settlement:
         s = settlement.strip()
-        query = query.filter(
-            (ResearchRecord.settlement.ilike(f"%{s}%"))
-            | (ResearchRecord.birth_place.ilike(f"%{s}%"))
-        )
+        settlement_filter = ResearchRecord.settlement.ilike(f"%{s}%")
+        if not privacy_restricted:
+            settlement_filter = settlement_filter | ResearchRecord.birth_place.ilike(
+                f"%{s}%"
+            )
+        query = query.filter(settlement_filter)
     if feeding_type:
         query = filter_by_feeding_type(query, feeding_type)
     if parents_marriage:
@@ -2555,6 +2613,9 @@ def list_research_records(
                 <= age_max,
             )
 
+    if all_ids:
+        return [record_id for (record_id,) in query.with_entities(ResearchRecord.id).all()]
+
     total = query.order_by(None).count()
     records = (
         query.order_by(ResearchRecord.id.desc())
@@ -2609,12 +2670,14 @@ def export_dataset_for_analysis(
     elif researcher_id:
         query = query.filter(ResearchRecord.created_by_id == researcher_id)
 
-    if settlement and not get_child_privacy_enabled(db, current_user):
+    if settlement:
         s = settlement.strip()
-        query = query.filter(
-            (ResearchRecord.settlement.ilike(f"%{s}%"))
-            | (ResearchRecord.birth_place.ilike(f"%{s}%"))
-        )
+        settlement_filter = ResearchRecord.settlement.ilike(f"%{s}%")
+        if not get_child_privacy_enabled(db, current_user):
+            settlement_filter = settlement_filter | ResearchRecord.birth_place.ilike(
+                f"%{s}%"
+            )
+        query = query.filter(settlement_filter)
     if gender:
         query = query.filter(ResearchRecord.gender == gender)
 
@@ -2679,7 +2742,7 @@ def export_dataset_for_analysis(
             else None,
         }
         if get_child_privacy_enabled(db, current_user):
-            for field in ("full_name", "settlement", "school"):
+            for field in ("full_name", "school"):
                 dataset_row.pop(field, None)
         dataset.append(dataset_row)
 
@@ -2857,7 +2920,8 @@ def create_research_record(
         record.consent_confirmed_at = datetime.utcnow()
 
     clean_region = _research_record_id_region(record, current_user)
-    record.id_code = generate_region_based_id(db, clean_region)
+    clean_district = _research_record_id_district(record, current_user)
+    record.id_code = generate_region_based_id(db, clean_region, clean_district)
 
     db.add(record)
 
@@ -2957,6 +3021,137 @@ def update_research_record(
         record, current_user,
         privacy_enabled=get_child_privacy_enabled(db, current_user),
     )
+
+
+@router.post("/bulk/soft-delete")
+def bulk_soft_delete_research_records(
+    payload: ResearchBulkAction,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_researcher_or_superadmin),
+):
+    """Tanlangan yozuvlarni bitta tranzaksiyada savatga yuboradi."""
+    if current_user.role == "field_assistant":
+        raise HTTPException(status_code=403, detail="O'chirishga ruxsatingiz yo'q")
+
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        return {"deleted": 0}
+
+    query = db.query(ResearchRecord).filter(
+        ResearchRecord.id.in_(ids),
+        ResearchRecord.is_deleted == 0,
+    )
+    if current_user.role == "researcher":
+        query = query.filter(ResearchRecord.created_by_id == current_user.id)
+
+    try:
+        deleted = query.update(
+            {
+                ResearchRecord.is_deleted: 1,
+                ResearchRecord.deleted_by_id: current_user.id,
+                ResearchRecord.deleted_at: datetime.utcnow(),
+            },
+            synchronize_session=False,
+        )
+        db.commit()
+        if deleted:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="delete_bulk",
+                target_type="ResearchRecord",
+                details=f"{deleted} ta tadqiqot ma'lumoti savatga yuborildi",
+                request=request,
+            )
+        return {"deleted": int(deleted or 0)}
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error: {exc}")
+
+
+@router.post("/bulk/hard-delete")
+def bulk_hard_delete_research_records(
+    payload: ResearchBulkAction,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Tanlangan yozuvlarni bitta so'rovda butunlay o'chiradi."""
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Faqat superadmin uchun")
+
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        return {"deleted": 0}
+
+    try:
+        deleted = (
+            db.query(ResearchRecord)
+            .filter(ResearchRecord.id.in_(ids))
+            .delete(synchronize_session=False)
+        )
+        db.commit()
+        if deleted:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="hard_delete_bulk",
+                target_type="ResearchRecord",
+                details=f"{deleted} ta tadqiqot ma'lumoti butunlay o'chirildi",
+                request=request,
+            )
+        return {"deleted": int(deleted or 0)}
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error: {exc}")
+
+
+@router.post("/bulk/restore")
+def bulk_restore_research_records(
+    payload: ResearchBulkAction,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Tanlangan yozuvlarni bitta tranzaksiyada tiklaydi."""
+    if current_user.role != "superadmin":
+        raise HTTPException(status_code=403, detail="Faqat superadmin uchun")
+
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        return {"restored": 0}
+
+    try:
+        restored = (
+            db.query(ResearchRecord)
+            .filter(
+                ResearchRecord.id.in_(ids),
+                ResearchRecord.is_deleted == 1,
+            )
+            .update(
+                {
+                    ResearchRecord.is_deleted: 0,
+                    ResearchRecord.deleted_by_id: None,
+                    ResearchRecord.deleted_at: None,
+                },
+                synchronize_session=False,
+            )
+        )
+        db.commit()
+        if restored:
+            record_audit_log(
+                db=db,
+                user_id=current_user.id,
+                action="restore_bulk",
+                target_type="ResearchRecord",
+                details=f"{restored} ta tadqiqot ma'lumoti tiklandi",
+                request=request,
+            )
+        return {"restored": int(restored or 0)}
+    except Exception as exc:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"DB error: {exc}")
 
 
 @router.delete("/{record_id}")

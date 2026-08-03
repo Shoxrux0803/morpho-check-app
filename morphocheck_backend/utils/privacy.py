@@ -21,24 +21,23 @@ ROLE_PRIVACY_DEFAULTS = {
 CHILD_IDENTITY_FIELDS = {
     "name",
     "full_name",
+    "fullName",
     "first_name",
+    "firstName",
     "last_name",
+    "lastName",
     "child_name",
+    "childName",
 }
 
 CHILD_PRIVATE_FIELDS = {
-    "birth_date",
     "birth_place",
-    "address",
-    "mahalla",
+    "birthPlace",
     "preschool_institution",
+    "preschoolInstitution",
     "school_name",
-    "settlement",
-    "parents_phone",
-    "consent_guardian_name",
-    "consent_guardian_phone",
-    "guardian_name",
-    "guardian_phone",
+    "schoolName",
+    "institution",
 }
 
 CHILD_PII_EXPORT_FIELDS = CHILD_IDENTITY_FIELDS | CHILD_PRIVATE_FIELDS
@@ -71,9 +70,13 @@ def get_child_privacy_enabled(db: Any, viewer: Any) -> bool:
 
         setting = db.query(RoleSettings).filter(RoleSettings.role_name == role_name).first()
         if setting is not None:
-            return bool(setting.child_data_privacy_enabled)
+            enabled = setting.child_data_privacy_enabled
+            # Only an explicit false value may make child PII visible. A null
+            # or otherwise invalid value must not silently disable privacy.
+            return False if enabled is False or enabled == 0 else True
     except Exception:
-        pass
+        # Privacy must fail closed when the settings store is unavailable.
+        return True
     return default_child_privacy_enabled(role_name)
 
 

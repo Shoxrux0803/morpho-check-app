@@ -89,6 +89,13 @@ def generate_pdf_report_endpoint(
             report_data = filter_payload_by_permissions(
                 report_data, get_effective_admin_permissions(current_user)
             )
+            report_data = redact_child_payload(
+                report_data,
+                current_user,
+                privacy_enabled=get_child_privacy_enabled(db, current_user),
+            )
+        else:
+            report_data = redact_child_payload(report_data, force=True)
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
         if current_user:
             record_audit_log(
@@ -137,6 +144,11 @@ def generate_pdf_by_patient_id(
         report_data = build_pdf_report_data_by_id(patient_id, db, lang=lang)
         report_data = filter_payload_by_permissions(
             report_data, get_effective_admin_permissions(current_user)
+        )
+        report_data = redact_child_payload(
+            report_data,
+            current_user,
+            privacy_enabled=get_child_privacy_enabled(db, current_user),
         )
         pdf_buffer = generate_pdf_file(report_data, lang=lang)
         record_audit_log(

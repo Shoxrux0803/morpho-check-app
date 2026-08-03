@@ -1310,6 +1310,29 @@ export const ResearchApi = {
   },
 
   /** Hard delete — faqat superadmin */
+  bulkSoftDelete: async (ids) => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/bulk/soft-delete`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+    return resp.json();
+  },
+
   hardDelete: async (id) => {
     const token =
       localStorage.getItem('access_token') ||
@@ -1327,6 +1350,29 @@ export const ResearchApi = {
   },
 
   /** Restore — faqat superadmin */
+  bulkHardDelete: async (ids) => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(
+      `${API_BASE}${API_PREFIX}/research/bulk/hard-delete`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids }),
+      }
+    );
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+    return resp.json();
+  },
+
   restore: async (id) => {
     const token =
       localStorage.getItem('access_token') ||
@@ -1347,6 +1393,26 @@ export const ResearchApi = {
   },
 
   /** O'chirilganlar ro'yxati — faqat superadmin */
+  bulkRestore: async (ids) => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const resp = await fetch(`${API_BASE}${API_PREFIX}/research/bulk/restore`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ids }),
+    });
+    if (!resp.ok) {
+      const msg = await parseError(resp);
+      throw new Error(msg);
+    }
+    return resp.json();
+  },
+
   deletedList: async (params = {}) => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {

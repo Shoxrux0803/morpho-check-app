@@ -1,7 +1,9 @@
+from datetime import datetime
 from types import SimpleNamespace
 
 from routers.research_router import (
     RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS,
+    _parse_research_date,
     build_research_index_export_values,
     get_research_bioimpedance_export_headers,
     get_research_xlsx_export_field_order,
@@ -12,9 +14,11 @@ def _record(**overrides):
     values = {
         "birth_date": "2014-01-01",
         "examination_date": "2026-01-01",
+        "created_at": datetime(2026, 1, 1),
         "chest_standing_height": 150.0,
         "weight": 45.0,
         "torso_length": 68.0,
+        "trunk_length": 67.0,
         "chest_circumference_pause": 72.0,
         "settlement": "Toshkent",
         "birth_place": "Toshkent",
@@ -129,3 +133,32 @@ def test_research_xlsx_export_calculations_and_attributes_are_complete_and_valid
     assert isinstance(index_values["corridor"], str) and len(index_values["corridor"]) > 0
     assert isinstance(index_values["morphological_type"], str) and len(index_values["morphological_type"]) > 0
 
+def test_research_export_uses_created_date_when_examination_date_is_missing():
+    values = build_research_index_export_values(
+        _record(examination_date=None, created_at=datetime(2026, 1, 1)), "en"
+    )
+
+    assert values["tvi"] == 20.0
+    assert all(values[field] is not None for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS)
+    assert values["z_h"] is not None
+
+
+def test_research_export_keeps_bmi_when_birth_date_is_missing():
+    values = build_research_index_export_values(_record(birth_date=None), "en")
+
+    assert values["tvi"] == 20.0
+    assert values["z_h"] is None
+    assert values["hmai"] is not None
+    assert all(values[field] is not None for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS)
+
+
+def test_research_date_parser_accepts_legacy_import_formats():
+    assert _parse_research_date("21.01 1997").date().isoformat() == "1997-01-21"
+    assert _parse_research_date("20,04,97").date().isoformat() == "1997-04-20"
+    assert _parse_research_date("10, 05.2002").date().isoformat() == "2002-05-10"
+
+
+def test_research_body_length_z_score_falls_back_to_legacy_trunk_length():
+    values = build_research_index_export_values(_record(torso_length=None), "en")
+
+    assert values["z_body_length"] is not None

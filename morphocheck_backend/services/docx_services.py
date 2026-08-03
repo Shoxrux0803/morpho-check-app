@@ -1599,10 +1599,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     if data.get("privacy_redacted"):
         private_labels = {
             name_label,
-            L("birth_date"),
             L("institution"),
-            L("address"),
-            L("parents_phone"),
         }
         rows_i = [row for row in rows_i if row[1] not in private_labels]
 

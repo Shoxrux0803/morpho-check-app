@@ -980,6 +980,11 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
         [L.get("parents_phone", "Parents' phone:"), parents_phone or "-"],
         [L["id_code"], id_code_val or "-"],
     ]
+    if data.get("privacy_redacted"):
+        private_labels = {L["full_name"], L["institution"]}
+        personal_info_data = [
+            row for row in personal_info_data if row[0] not in private_labels
+        ]
 
     personal_table = Table(personal_info_data, colWidths=[2.5 * inch, 3.5 * inch])
     personal_table.setStyle(
@@ -1548,8 +1553,9 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
     )
     elements.append(signature_table)
 
-    elements.append(Spacer(1, 10))
-    elements.append(Paragraph(f"<i>{L['confidential']}</i>", highlight_style))
+    if data.get("privacy_redacted"):
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph(f"<i>{L['confidential']}</i>", highlight_style))
 
     doc.build(elements, onFirstPage=draw_watermark, onLaterPages=draw_watermark)
     buffer.seek(0)

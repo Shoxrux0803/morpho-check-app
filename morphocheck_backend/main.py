@@ -403,6 +403,7 @@ def ensure_schema_updates():
             ("risk_score", "INTEGER DEFAULT 0 NOT NULL"),
             ("action_taken", "VARCHAR(80)"),
             ("matched_signals", "TEXT"),
+            ("attempts", "INTEGER DEFAULT 1 NOT NULL"),
         ]:
             _add_column_if_missing("security_events", col, typ)
     # -- chat_messages ustunlari --

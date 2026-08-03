@@ -1191,7 +1191,7 @@ export default function AdminPage() {
         (column) =>
           isXlsxPreviewColumnEnabled(column.key, user?.admin_permissions) &&
           (!xlsxPreviewRows.some((row) => row.privacy_redacted) ||
-            !['fullName', 'address', 'parentsPhone'].includes(column.key))
+            column.key !== 'fullName')
       ),
     [user?.admin_permissions, xlsxPreviewRows]
   );

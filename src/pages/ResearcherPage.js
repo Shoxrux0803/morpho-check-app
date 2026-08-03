@@ -2409,14 +2409,24 @@ const ResearcherPage = () => {
     setChecked(new Set());
   }, [isSuperAdmin, location.search, sectionToTab, isAssistant]);
 
-  const toggleAll = useCallback(() => {
+  const toggleAll = useCallback(async () => {
     const rows = activeTab === 3 ? deletedData : data;
-    const next = new Set(checked);
     const allChecked = rows.length > 0 && rows.every((r) => checked.has(r.id));
-    if (allChecked) rows.forEach((r) => next.delete(r.id));
-    else rows.forEach((r) => next.add(r.id));
-    setChecked(next);
-  }, [checked, data, deletedData, activeTab]);
+    if (allChecked) {
+      setChecked(new Set());
+      return;
+    }
+
+    try {
+      const ids =
+        activeTab === 3
+          ? await ResearchApi.deletedList({ all_ids: true })
+          : await ResearchApi.list({ ...filter, all_ids: true });
+      setChecked(new Set(Array.isArray(ids) ? ids : []));
+    } catch (err) {
+      toast.error(`${tr('error')}: ${err.message}`);
+    }
+  }, [activeTab, checked, data, deletedData, filter, tr]);
 
   const toggleOne = useCallback(
     (id) => {
@@ -2568,15 +2578,15 @@ const ResearcherPage = () => {
     setDeleteConfirmLoading(true);
     try {
       if (type === 'hard') {
-        for (const id of ids) await ResearchApi.hardDelete(id);
+        await ResearchApi.bulkHardDelete(ids);
         toast.success(
           ids.length > 1 ? tr('hardDeletedMany') : tr('hardDeletedOne')
         );
       } else if (type === 'restore') {
-        for (const id of ids) await ResearchApi.restore(id);
+        await ResearchApi.bulkRestore(ids);
         toast.success(ids.length > 1 ? tr('restoredMany') : tr('restoredOne'));
       } else {
-        for (const id of ids) await ResearchApi.softDelete(id);
+        await ResearchApi.bulkSoftDelete(ids);
         toast.success(
           ids.length > 1 ? tr('movedTrashMany') : tr('movedTrashOne')
         );

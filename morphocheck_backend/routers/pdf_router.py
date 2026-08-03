@@ -110,7 +110,9 @@ async def generate_pdf_endpoint(
 
         if not data_dict.get("id_code"):
             clean_region = (data_dict.get("region") or "").strip()
-            data_dict["id_code"] = generate_region_based_id(db, clean_region)
+            data_dict["id_code"] = generate_region_based_id(
+                db, clean_region, data_dict.get("district")
+            )
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices
         data_dict["doctor_note"] = getattr(request_data, "doctor_note", None)
@@ -146,6 +148,16 @@ async def generate_pdf_endpoint(
         )
 
         data_dict = filter_payload_by_permissions(data_dict, get_effective_admin_permissions(current_user)) if current_user else data_dict
+        data_dict = redact_child_payload(
+            data_dict,
+            current_user,
+            force=current_user is None,
+            privacy_enabled=(
+                get_child_privacy_enabled(db, current_user)
+                if current_user is not None
+                else True
+            ),
+        )
         buffer = await asyncio.to_thread(generate_pdf_file, data_dict, lang=lang)
 
         if not isinstance(buffer, BytesIO):
@@ -338,6 +350,11 @@ async def generate_pdf_by_id_endpoint(
         )
 
         report_data = filter_payload_by_permissions(report_data, get_effective_admin_permissions(current_user)) if current_user else report_data
+        report_data = redact_child_payload(
+            report_data,
+            current_user,
+            privacy_enabled=get_child_privacy_enabled(db, current_user),
+        )
         buffer = await asyncio.to_thread(generate_pdf_file, report_data, lang)
         buffer.seek(0)
 
@@ -653,7 +670,9 @@ async def generate_docx_endpoint(
         # Ensure ID code is present
         if not data_dict.get("id_code"):
             clean_region = (data_dict.get("region") or "").strip()
-            data_dict["id_code"] = generate_region_based_id(db, clean_region)
+            data_dict["id_code"] = generate_region_based_id(
+                db, clean_region, data_dict.get("district")
+            )
 
         data_dict["analysis"] = analysis
         data_dict["advices"] = advices

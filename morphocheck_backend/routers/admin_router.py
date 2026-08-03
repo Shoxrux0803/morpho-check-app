@@ -39,6 +39,7 @@ from routers.auth_router import (
 from services.analyze_service import (
     _split_region_and_district,
     generate_advices,
+    infer_uzbekistan_region,
 )
 from services.analyze_service import (
     calculate_bmi as calc_full_bmi,
@@ -218,21 +219,7 @@ def to_dict_analysis(
 ) -> dict:
     raw_name = getattr(row, "name", None)
     
-    # Маскирование персональных данных для field_assistant
-    if current_user and current_user.role == "field_assistant":
-        if raw_name:
-            parts = raw_name.split()
-            if len(parts) > 1:
-                masked_name = f"{parts[0]} {parts[1][0]}."
-            elif len(parts) == 1:
-                masked_name = f"{parts[0][0]}."
-            else:
-                masked_name = "***"
-        else:
-            masked_name = "***"
-    else:
-        masked_name = raw_name
-
+    # Maxfiylik faqat markaziy role sozlamasi orqali qo'llanadi.
     masked_name = raw_name
     first_name, last_name = split_name(masked_name)
     bmi_val = getattr(row, "bmi", None)
@@ -294,10 +281,7 @@ def to_dict_analysis(
     )
     for extra in extra_fields:
         if hasattr(row, extra):
-            if current_user and current_user.role == "field_assistant" and extra in ["address", "mahalla"]:
-                payload[extra] = "***"
-            else:
-                payload[extra] = getattr(row, extra)
+            payload[extra] = getattr(row, extra)
 
     # Add creator name if requested
     payload["created_by_id"] = getattr(row, "created_by_id", None)
@@ -2565,6 +2549,14 @@ async def import_analyses_xlsx(
                 if col_idx < len(row_values):
                     data[field] = row_values[col_idx]
 
+            inferred_region = (
+                infer_uzbekistan_region(data.get("district"))
+                or infer_uzbekistan_region(data.get("address"))
+                or infer_uzbekistan_region(data.get("region"))
+            )
+            if inferred_region:
+                data["region"] = inferred_region
+
             row_errors = []
             required_fields = {
                 **({} if privacy_enabled else {
@@ -2722,22 +2714,30 @@ async def import_analyses_xlsx(
             # Auto-generate or fix id_code if missing or not in MC- format
             if not rec.id_code or not rec.id_code.startswith("MC-"):
                 from services.analyze_service import generate_region_based_id
-                clean_region, _ = _split_region_and_district(rec.region, rec.district)
-                if clean_region not in region_offsets:
-                    base_id = generate_region_based_id(db, clean_region)
+                clean_region, clean_district = _split_region_and_district(
+                    rec.region, rec.district
+                )
+                location_key = (clean_region, clean_district)
+                if location_key not in region_offsets:
+                    base_id = generate_region_based_id(
+                        db, clean_region, clean_district
+                    )
                     parts = base_id.split("-")
                     if len(parts) >= 3 and parts[-1].isdigit():
-                        region_offsets[clean_region] = {
+                        region_offsets[location_key] = {
                             "prefix": "-".join(parts[:-1]),
                             "count": int(parts[-1])
                         }
                     else:
-                        region_offsets[clean_region] = {"prefix": "MC-UNK", "count": 1}
+                        region_offsets[location_key] = {
+                            "prefix": "MC-UNK",
+                            "count": 1,
+                        }
                 
-                pfx = region_offsets[clean_region]["prefix"]
-                cnt = region_offsets[clean_region]["count"]
+                pfx = region_offsets[location_key]["prefix"]
+                cnt = region_offsets[location_key]["count"]
                 rec.id_code = f"{pfx}-{cnt:04d}"
-                region_offsets[clean_region]["count"] += 1
+                region_offsets[location_key]["count"] += 1
             if not privacy_enabled:
                 rec.mahalla = str(data.get("mahalla") or "").strip()
                 rec.address = str(data.get("address") or "").strip()

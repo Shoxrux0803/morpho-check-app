@@ -4,6 +4,7 @@ import logging
 import json
 import os
 import re
+import unicodedata
 from typing import Any, Dict, Optional, Tuple
 
 from reportlab.pdfbase import pdfmetrics
@@ -29,6 +30,157 @@ _MOJIBAKE_EMOJI_PREFIX_RE = re.compile(r"^(?:рџ\S*\s*)+")
 # ---------------------------
 # Yordamchi funksiyalar
 # ---------------------------
+UZBEKISTAN_REGION_DISTRICTS = {
+    "Toshkent shahri": (
+        "Bektemir", "Chilonzor", "Mirobod", "Mirzo Ulugbek", "Olmazor",
+        "Sergeli", "Shayxontohur", "Uchtepa", "Yakkasaroy", "Yashnobod",
+        "Yangihayot", "Yunusobod",
+    ),
+    "Toshkent viloyati": (
+        "Bekobod", "Bostonliq", "Boka", "Chinoz", "Ohangaron", "Oqqorgon",
+        "Parkent", "Piskent", "Qibray", "Quyi Chirchiq", "Orta Chirchiq",
+        "Yuqori Chirchiq", "Yangiyol", "Zangiota", "Nurafshon", "Olmaliq",
+        "Angren", "Chirchiq",
+    ),
+    "Andijon": (
+        "Andijon", "Asaka", "Baliqchi", "Boz", "Buloqboshi", "Izboskan",
+        "Jalaquduq", "Marhamat", "Oltinkol", "Paxtaobod", "Qorgontepa",
+        "Shahrixon", "Ulugnor", "Xojaobod", "Xonobod",
+    ),
+    "Farg'ona": (
+        "Fargona", "Bagdod", "Beshariq", "Buvayda", "Dangara", "Furqat",
+        "Oltiariq", "Ozbekiston", "Qoshtepa", "Quva", "Rishton", "Sox",
+        "Toshloq", "Uchkoprik", "Yozyovon", "Qoqon", "Margilon",
+    ),
+    "Namangan": (
+        "Namangan", "Chortoq", "Chust", "Kosonsoy", "Mingbuloq", "Norin",
+        "Pop", "Toraqorgon", "Uchqorgon", "Uychi", "Yangiqorgon",
+    ),
+    "Samarqand": (
+        "Samarqand", "Bulungur", "Ishtixon", "Jomboy", "Kattaqorgon",
+        "Narpay", "Nurobod", "Oqdaryo", "Paxtachi", "Pastdargom", "Payariq",
+        "Qoshrabot", "Toyloq", "Urgut",
+    ),
+    "Buxoro": (
+        "Buxoro", "Gijduvon", "Jondor", "Kogon", "Olot", "Peshku",
+        "Qorakol", "Qorovulbozor", "Romitan", "Shofirkon", "Vobkent",
+    ),
+    "Xorazm": (
+        "Urganch", "Xiva", "Bogot", "Gurlan", "Hazorasp", "Qoshkopir",
+        "Shovot", "Xonqa", "Yangiariq", "Yangibozor", "Tuproqqala",
+    ),
+    "Qoraqalpog'iston": (
+        "Nukus", "Amudaryo", "Beruniy", "Bozatov", "Chimboy", "Ellikqala",
+        "Kegeyli", "Moynoq", "Qanlikol", "Qongirot", "Qoraozak", "Shumanay",
+        "Taxtakopir", "Tortkol", "Xojayli", "Taxiatosh",
+    ),
+    "Jizzax": (
+        "Jizzax", "Arnasoy", "Baxmal", "Dostlik", "Forish", "Gallaorol",
+        "Mirzachol", "Paxtakor", "Yangiobod", "Zafarobod", "Zarbdor", "Zomin",
+    ),
+    "Sirdaryo": (
+        "Guliston", "Boyovut", "Oqoltin", "Sardoba", "Sayxunobod",
+        "Sirdaryo", "Xovos", "Yangiyer", "Shirin",
+    ),
+    "Surxondaryo": (
+        "Termiz", "Angor", "Bandixon", "Boysun", "Denov", "Jarqorgon",
+        "Qiziriq", "Qumqorgon", "Muzrabot", "Oltinsoy", "Sariosiyo",
+        "Sherobod", "Shorchi", "Uzun",
+    ),
+    "Qashqadaryo": (
+        "Qarshi", "Chiroqchi", "Dehqonobod", "Guzor", "Kasbi", "Kitob",
+        "Koson", "Kokdala", "Mirishkor", "Muborak", "Nishon", "Qamashi",
+        "Shahrisabz", "Yakkabog",
+    ),
+    "Navoiy": (
+        "Navoiy", "Karmana", "Konimex", "Navbahor", "Nurota", "Qiziltepa",
+        "Tomdi", "Uchquduq", "Xatirchi", "Zarafshon", "Gozgon",
+    ),
+}
+
+_CYRILLIC_LOCATION_TRANSLATION = str.maketrans({
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d", "е": "e",
+    "ё": "yo", "ж": "j", "з": "z", "и": "i", "й": "y", "к": "k",
+    "л": "l", "м": "m", "н": "n", "о": "o", "п": "p", "р": "r",
+    "с": "s", "т": "t", "у": "u", "ф": "f", "х": "x", "ц": "s",
+    "ч": "ch", "ш": "sh", "ъ": "", "ь": "", "э": "e", "ю": "yu",
+    "я": "ya", "ў": "o", "қ": "q", "ғ": "g", "ҳ": "h",
+})
+
+
+def _normalize_uzbek_location(value: Optional[str]) -> str:
+    text = unicodedata.normalize("NFKC", str(value or "")).lower()
+    text = text.translate(_CYRILLIC_LOCATION_TRANSLATION)
+    text = text.replace("ʻ", "").replace("ʼ", "").replace("’", "").replace("'", "")
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
+
+
+def infer_uzbekistan_region(location: Optional[str]) -> Optional[str]:
+    """Return a region using the left-to-right order of locality components."""
+    raw_location = str(location or "").strip()
+    if not raw_location:
+        return None
+
+    # "Aholi punkti" is entered as "tuman, mahalla/QFY".  Resolve each
+    # comma-separated component in that order so a mahalla whose name is also
+    # a district (for example Navbahor or Andijon) cannot override the tuman.
+    components = [part for part in re.split(r"[,;]+", raw_location) if part.strip()]
+    for component in components:
+        normalized = f" {_normalize_uzbek_location(component)} "
+
+        for region in UZBEKISTAN_REGION_DISTRICTS:
+            token = _normalize_uzbek_location(region)
+            if f" {token} " in normalized:
+                return region
+
+        matches = []
+        for region, districts in UZBEKISTAN_REGION_DISTRICTS.items():
+            for district in districts:
+                token = _normalize_uzbek_location(district)
+                if f" {token} " in normalized:
+                    matches.append((len(token), region))
+        if matches:
+            return max(matches, key=lambda match: match[0])[1]
+
+    return None
+
+
+def infer_uzbekistan_district(
+    location: Optional[str], region: Optional[str] = None
+) -> Optional[str]:
+    """Return the first recognized district from a locality string."""
+    raw_location = str(location or "").strip()
+    if not raw_location:
+        return None
+
+    region_norm = infer_uzbekistan_region(region or raw_location)
+    district_groups = (
+        [(region_norm, UZBEKISTAN_REGION_DISTRICTS[region_norm])]
+        if region_norm in UZBEKISTAN_REGION_DISTRICTS
+        else UZBEKISTAN_REGION_DISTRICTS.items()
+    )
+
+    for component in re.split(r"[,;]+", raw_location):
+        normalized = f" {_normalize_uzbek_location(component)} "
+        matches = []
+        for district_region, districts in district_groups:
+            for district in districts:
+                token = _normalize_uzbek_location(district)
+                if f" {token} " in normalized:
+                    matches.append((len(token), district))
+        if matches:
+            return max(matches, key=lambda match: match[0])[1]
+
+    return None
+
+
+def get_district_id_code(district: Optional[str], region: Optional[str] = None) -> str:
+    """Build the one-letter district part used in regional IDs."""
+    district_name = infer_uzbekistan_district(district, region)
+    normalized = _normalize_uzbek_location(district_name)
+    return normalized[:1].upper()
+
+
 def setup_font() -> str:
     """
     PDF uchun shrifni aniqlaydi (DejaVu yo'q bo'lsa, Helvetica).
@@ -129,10 +281,12 @@ def get_ideal_weight_by_age_and_gender(age: int, height: float, gender: str) -> 
     return round(bmi_target * (height_m**2), 1)
 
 
-def generate_region_based_id(db: Session, region: str) -> str:
-    """Viloyatga bog'langan ketma-ket ID generatsiya qilish: {VILOYAT_KODI}-{tartib}"""
+def generate_region_based_id(
+    db: Session, region: str, district: Optional[str] = None
+) -> str:
+    """Generate MC-{region}-{district?}-{sequence} IDs."""
     # Normallashtirish: bo'shliqlarni olib tashlash va bir xil formatga keltirish
-    region_norm = (region or "").strip()
+    region_norm = infer_uzbekistan_region(region) or (region or "").strip()
 
     # Prifikslar xaritasi (Lotin va Kirill variantlari uchun)
     prefixes = {
@@ -189,6 +343,15 @@ def generate_region_based_id(db: Session, region: str) -> str:
         else:
             prefix = "UNK"
 
+    district_source = district
+    if (
+        not district_source
+        and _normalize_uzbek_location(region) != _normalize_uzbek_location(region_norm)
+    ):
+        district_source = region
+    district_code = get_district_id_code(district_source, region_norm)
+    id_prefix = f"{prefix}-{district_code}" if district_code else prefix
+
     # Mavjud yozuvlar sonini hisoblash
     from sqlalchemy import or_
     from models.userdata import PatientAnalysis, ResearchRecord
@@ -199,7 +362,11 @@ def generate_region_based_id(db: Session, region: str) -> str:
         "QR": ["QR", "QQ", "QOR"],
         "QAS": ["QAS", "QASH"],
     }
-    prefixes_to_check = historical_mappings.get(prefix, [prefix])
+    region_prefixes = historical_mappings.get(prefix, [prefix])
+    prefixes_to_check = [
+        f"{region_prefix}-{district_code}" if district_code else region_prefix
+        for region_prefix in region_prefixes
+    ]
 
     count_pa = (
         db.query(PatientAnalysis)
@@ -223,7 +390,7 @@ def generate_region_based_id(db: Session, region: str) -> str:
         .count()
     )
 
-    return f"MC-{prefix}-{count_pa + count_rr + 1:04d}"
+    return f"MC-{id_prefix}-{count_pa + count_rr + 1:04d}"
 
 
 def calculate_bmi(

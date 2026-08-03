@@ -119,7 +119,7 @@ def analyze_and_store(
     clean_region, clean_district = _split_region_and_district(
         data.region, getattr(data, "district", None)
     )
-    id_code = generate_region_based_id(db, clean_region)
+    id_code = generate_region_based_id(db, clean_region, clean_district)
     full_name = f"{data.first_name} {data.last_name}".strip()
 
     rec = PatientAnalysis(

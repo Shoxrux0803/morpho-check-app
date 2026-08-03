@@ -52,7 +52,6 @@ import {
   RestoreFromTrash,
   Add,
   CheckCircle,
-  InfoOutlined,
   Lock,
   CloudUpload,
 } from '@mui/icons-material';
@@ -1467,28 +1466,36 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
       ![
         'full_name',
         'school_name',
-        'settlement',
         'birth_place',
-        'birth_date',
-        'parents_phone',
-        'consent_guardian_name',
-        'consent_guardian_phone',
       ].includes(column.key)
   );
   const importInputRef = useRef(null);
 
   const [checked, setChecked] = useState(new Set());
+  const [selectingAll, setSelectingAll] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteConfirmLoading, setDeleteConfirmLoading] = useState(false);
 
-  const toggleAll = useCallback(() => {
-    const rows = activeTab === 0 ? data : deletedData;
-    const next = new Set(checked);
-    const allChecked = rows.length > 0 && rows.every((r) => checked.has(r.id));
-    if (allChecked) rows.forEach((r) => next.delete(r.id));
-    else rows.forEach((r) => next.add(r.id));
-    setChecked(next);
-  }, [checked, data, deletedData, activeTab]);
+  const toggleAll = useCallback(async () => {
+    const rowTotal = activeTab === 0 ? total : deletedTotal;
+    if (rowTotal > 0 && checked.size === rowTotal) {
+      setChecked(new Set());
+      return;
+    }
+
+    setSelectingAll(true);
+    try {
+      const ids =
+        activeTab === 0
+          ? await ResearchApi.list({ ...appliedFilter, all_ids: true })
+          : await ResearchApi.deletedList({ all_ids: true });
+      setChecked(new Set(Array.isArray(ids) ? ids : []));
+    } catch (err) {
+      toast.error(`${t('errorPrefix')} ${err.message}`);
+    } finally {
+      setSelectingAll(false);
+    }
+  }, [activeTab, appliedFilter, checked.size, deletedTotal, total, t]);
 
   const toggleOne = useCallback(
     (id) => {
@@ -1597,11 +1604,12 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
 
   useEffect(() => {
     setChecked(new Set());
-  }, [activeTab, page, deletedPage, rowsPerPage]);
+  }, [activeTab]);
 
   const handleSearch = useCallback(() => {
     setAppliedFilter(filter);
     setPage(0);
+    setChecked(new Set());
   }, [filter]);
 
   const handlePageChange = useCallback(
@@ -1625,16 +1633,16 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
     setDeleteConfirmLoading(true);
     try {
       if (type === 'hard') {
-        for (const id of ids) await ResearchApi.hardDelete(id);
+        await ResearchApi.bulkHardDelete(ids);
         toast.success(
           ids.length > 1 ? t('hardDeletedMany') : t('hardDeletedOne')
         );
       } else if (type === 'restore') {
-        for (const id of ids) await ResearchApi.restore(id);
+        await ResearchApi.bulkRestore(ids);
         toast.success(ids.length > 1 ? t('restoredMany') : t('restoredOne'));
         fetchDeletedData();
       } else {
-        for (const id of ids) await ResearchApi.softDelete(id);
+        await ResearchApi.bulkSoftDelete(ids);
         toast.success(
           ids.length > 1 ? t('movedTrashMany') : t('movedTrashOne')
         );
@@ -1840,14 +1848,35 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
               }}
             >
               <TableRow>
-                <TableCell sx={{ width: 40, p: 1 }}>
-                  <IconButton size="small" onClick={toggleAll} color="primary">
-                    {rows.length > 0 && rows.every((r) => checked.has(r.id)) ? (
-                      <CheckCircle fontSize="small" />
-                    ) : (
-                      <InfoOutlined fontSize="small" />
-                    )}
-                  </IconButton>
+                <TableCell sx={{ width: 190, p: 1 }}>
+                  <Button
+                    size="small"
+                    onClick={toggleAll}
+                    color="primary"
+                    disabled={selectingAll || rowTotal === 0}
+                    startIcon={
+                      selectingAll ? (
+                        <CircularProgress size={16} />
+                      ) : rowTotal > 0 && checked.size === rowTotal ? (
+                        <CheckCircle fontSize="small" />
+                      ) : (
+                        <Box
+                          component="span"
+                          sx={{
+                            width: 16,
+                            height: 16,
+                            border: '2px solid currentColor',
+                            borderRadius: 0.75,
+                          }}
+                        />
+                      )
+                    }
+                    sx={{ whiteSpace: 'nowrap', fontWeight: 700 }}
+                  >
+                    {rowTotal > 0 && checked.size === rowTotal
+                      ? t('clearSelection')
+                      : t('selectAll')}
+                  </Button>
                 </TableCell>
                 <TableCell sx={{ fontWeight: 700, width: 50 }}>#</TableCell>
                 {!hideChildPii && (
@@ -2981,11 +3010,11 @@ const DetailModal = ({
               ? [
                   [t('fullName'), 'full_name'],
                   [t('schoolKindergarten'), 'school_name'],
-                  [t('settlement'), 'settlement'],
                   [t('birthPlace'), 'birth_place'],
-                  [t('birthDate'), 'birth_date'],
                 ]
               : []),
+            [t('settlement'), 'settlement'],
+            [t('birthDate'), 'birth_date'],
             [t('gender'), 'gender'],
             ...(isSuperAdmin
               ? [

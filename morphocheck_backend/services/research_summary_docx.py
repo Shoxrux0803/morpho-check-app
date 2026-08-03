@@ -991,17 +991,16 @@ def generate_research_summary_docx(
         widths=[4, 2, 2, 8],
     )
 
-    if not privacy_redacted:
-        settlement_rows = [
-            [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
-            for name, count in stats["settlements"].most_common(10)
-        ]
-        _table(
-            doc,
-            [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")],
-            settlement_rows or [["-", "-", "-", "-"]],
-            widths=[6, 2, 2, 7],
-        )
+    settlement_rows = [
+        [name, count, f"{count / total * 100:.1f}%", _bar(count, total)]
+        for name, count in stats["settlements"].most_common(10)
+    ]
+    _table(
+        doc,
+        [_tr(lang, "region"), "N", "%", _tr(lang, "visual_share")],
+        settlement_rows or [["-", "-", "-", "-"]],
+        widths=[6, 2, 2, 7],
+    )
 
     _heading(doc, _tr(lang, "stats"), 2)
     descriptive_rows = []

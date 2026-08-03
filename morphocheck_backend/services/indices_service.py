@@ -639,6 +639,82 @@ def get_ecological_factor(m: Dict[str, Any]) -> float:
     return 1.05
 
 
+def calculate_age_independent_indices(
+    gender: str,
+    height: float,
+    weight: float,
+    bmi: float,
+    manual_data: Dict[str, Any] = None,
+) -> Dict[str, float]:
+    """Calculate composition values that do not require a person's age."""
+    is_male = _is_male_gender(gender)
+    m = manual_data or {}
+
+    if m.get("total_body_water") is not None:
+        tbw = float(m["total_body_water"])
+    elif is_male:
+        if height > 132.7:
+            tbw = -21.993 + (0.406 * weight) + (0.209 * height)
+        else:
+            tbw = -1.927 + (0.465 * weight) + (0.045 * height)
+    elif height > 110.8:
+        tbw = -10.313 + (0.252 * weight) + (0.154 * height)
+    else:
+        tbw = 0.076 + (0.507 * weight) + (0.013 * height)
+
+    ffm = tbw / 0.732
+    fm = (
+        float(m["fat_mass"])
+        if m.get("fat_mass") is not None
+        else max(0, weight - ffm)
+    )
+    fm_percent = (
+        float(m["fat_percent"])
+        if m.get("fat_percent") is not None
+        else ((fm / weight) * 100 if weight > 0 else 0)
+    )
+    muscle_mass = (
+        float(m["muscle_mass"])
+        if m.get("muscle_mass") is not None
+        else ffm * 0.8
+    )
+    bone_mass = (
+        float(m["bone_mass"])
+        if m.get("bone_mass") is not None
+        else ffm * 0.15
+    )
+    acm = float(m["acm"]) if m.get("acm") is not None else tbw * 0.55
+    visceral_fat = (
+        float(m["visceral_fat"])
+        if m.get("visceral_fat") is not None
+        else 1.0
+    )
+    muscle_percent = (muscle_mass / weight) * 100 if weight > 0 else 0
+    hmai = (
+        round(
+            (muscle_percent / (fm_percent * bmi)) * get_ecological_factor(m),
+            3,
+        )
+        if fm_percent > 0 and bmi > 0
+        else 0.0
+    )
+
+    return {
+        "tbw": tbw,
+        "tbw_percent": round((tbw / weight) * 100, 1) if weight > 0 else 0,
+        "ffm": ffm,
+        "fm": fm,
+        "fm_percent": fm_percent,
+        "muscle_mass": muscle_mass,
+        "muscle_percent": muscle_percent,
+        "bone_mass": bone_mass,
+        "acm": acm,
+        "acm_percent": round((acm / tbw) * 100, 1) if tbw > 0 else 0,
+        "visceral_fat": visceral_fat,
+        "hmai": hmai,
+    }
+
+
 def get_centile_from_z(z: float) -> str:
     """Z-score asosida WHO sentil intervalini qaytaradi."""
     if z is None:
@@ -1044,44 +1120,25 @@ def calculate_detailed_indices(
     ideal_bmi = ideal_w / ((ideal_h / 100) ** 2)
 
     # 2. Body Composition
-    if m.get("total_body_water") is not None:
-        tbw = float(m["total_body_water"])
-    else:
-        if is_male:
-            if height > 132.7:
-                tbw = -21.993 + (0.406 * weight) + (0.209 * height)
-            else:
-                tbw = -1.927 + (0.465 * weight) + (0.045 * height)
-        else:
-            if height > 110.8:
-                tbw = -10.313 + (0.252 * weight) + (0.154 * height)
-            else:
-                tbw = 0.076 + (0.507 * weight) + (0.013 * height)
-
+    composition = calculate_age_independent_indices(
+        gender_norm,
+        height,
+        weight,
+        bmi,
+        m,
+    )
+    tbw = composition["tbw"]
+    ffm = composition["ffm"]
+    fm = composition["fm"]
+    fm_percent = composition["fm_percent"]
+    muscle_mass = composition["muscle_mass"]
+    muscle_p = composition["muscle_percent"]
+    bone_mass = composition["bone_mass"]
+    acm = composition["acm"]
+    visceral_fat = composition["visceral_fat"]
+    hmai = composition["hmai"]
     ideal_tbw = 0.61 * ideal_w if is_male else 0.58 * ideal_w
-    ffm = tbw / 0.732
-
-    if m.get("fat_mass") is not None:
-        fm = float(m["fat_mass"])
-    else:
-        fm = max(0, weight - ffm)
-
     ffm_percent = (ffm / weight) * 100 if weight > 0 else 0
-
-    if m.get("fat_percent") is not None:
-        fm_percent = float(m["fat_percent"])
-    else:
-        fm_percent = (fm / weight) * 100 if weight > 0 else 0
-
-    if m.get("muscle_mass") is not None:
-        muscle_mass = float(m["muscle_mass"])
-    else:
-        muscle_mass = ffm * 0.8
-
-    if m.get("bone_mass") is not None:
-        bone_mass = float(m["bone_mass"])
-    else:
-        bone_mass = ffm * 0.15
 
     low_fm, high_fm = get_fm_percent_norm(age, gender_norm)
     normal_fm = (low_fm + high_fm) / 2.0
@@ -1165,7 +1222,6 @@ def calculate_detailed_indices(
 
     median_mm_p = (muscle_min + muscle_max) / 2
     sd_mm_p = (muscle_max - muscle_min) / 4 if (muscle_max - muscle_min) > 0 else 1.0
-    muscle_p = (muscle_mass / weight) * 100 if weight > 0 else 0
     mm_z = round((muscle_p - median_mm_p) / sd_mm_p, 2)
 
     mcri = round((z_bmi + fm_z - mm_z) / 3, 2)
@@ -1184,13 +1240,6 @@ def calculate_detailed_indices(
     corridor = get_corridor_from_z(z_bmi, lang)
 
     # 6. Main Indices
-
-    # HMAI (Hududiy Morfologik Adaptatsiya Indeksi)
-    e_factor = get_ecological_factor(m)
-    if fm_percent > 0 and bmi > 0:
-        hmai = round((muscle_p / (fm_percent * bmi)) * e_factor, 3)
-    else:
-        hmai = 0.0
 
     # MII (Morfologik Integratsiya Indeksi) Individual Concordance variant
     sim_h_w = math.exp(-abs(z_h - z_w))

@@ -46,7 +46,7 @@ def test_generated_template_is_blank_and_maps_back_to_import_fields():
     )
 
 
-def test_template_respects_researcher_child_data_visibility_setting():
+def test_blank_import_template_keeps_identity_columns_when_privacy_is_enabled():
     hidden_fields = get_research_import_fields(privacy_enabled=True)
     visible_fields = get_research_import_fields(privacy_enabled=False)
     hidden_wb = build_research_import_template_workbook(privacy_enabled=True)
@@ -58,10 +58,34 @@ def test_template_respects_researcher_child_data_visibility_setting():
         cell.value for cell in visible_wb["\u041c\u0430\u044a\u043b\u0443\u043c\u043e\u0442\u043b\u0430\u0440"][1]
     ]
 
-    assert "full_name" not in hidden_fields
+    assert hidden_fields == visible_fields
+    assert "full_name" in hidden_fields
+    assert "school_name" in hidden_fields
+    assert "birth_place" in hidden_fields
     assert "full_name" in visible_fields
-    assert "\u0424.\u0418.\u0428." not in hidden_headers
+    assert "birth_date" in hidden_fields
+    assert "birth_date" in visible_fields
+    assert hidden_headers == visible_headers
+    assert "\u0424.\u0418.\u0428." in hidden_headers
     assert "\u0424.\u0418.\u0428." in visible_headers
+
+
+def test_privacy_import_keeps_identity_and_calculation_fields():
+    headers = [
+        "\u0424.\u0418.\u0428.",
+        "\u0422\u0443\u0493\u0438\u043b\u0433\u0430\u043d \u0441\u0430\u043d\u0430\u0441\u0438",
+        "\u0422\u0435\u043a\u0448\u0438\u0440\u0443\u0432 \u0441\u0430\u043d\u0430\u0441\u0438",
+        "\u0411\u045e\u0439\u0438 (\u0442\u0438\u043a) (\u0441\u043c)",
+        "\u0412\u0430\u0437\u043d (\u043a\u0433)",
+    ]
+
+    mapped = map_import_headers(headers, privacy_enabled=True)
+
+    assert mapped[0] == "full_name"
+    assert mapped[1] == "birth_date"
+    assert mapped[2] == "examination_date"
+    assert mapped[3] == "chest_standing_height"
+    assert mapped[4] == "weight"
 
 
 def test_personal_fields_are_optional_and_cyrillic_gender_calculates_as_male():
