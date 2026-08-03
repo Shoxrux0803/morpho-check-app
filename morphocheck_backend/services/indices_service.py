@@ -1083,22 +1083,29 @@ def calculate_detailed_indices(
     else:
         bone_mass = ffm * 0.15
 
-    if m.get("acm") is not None:
-        acm = float(m["acm"])
-    else:
-        acm = tbw * 0.55
-
-    if m.get("visceral_fat") is not None:
-        visceral_fat = float(m["visceral_fat"])
-    else:
-        visceral_fat = 1.0
-
     low_fm, high_fm = get_fm_percent_norm(age, gender_norm)
+    normal_fm = (low_fm + high_fm) / 2.0
     fm_norm_str = f"{low_fm}-{high_fm}%"
     fm_kg_low = round(weight * (low_fm / 100), 1)
     fm_kg_high = round(weight * (high_fm / 100), 1)
     fm_kg_norm_str = f"{fm_kg_low}-{fm_kg_high} {_t('kg', lang)}"
     fm_norm = fm_norm_str
+
+    if m.get("acm") is not None:
+        acm = float(m["acm"])
+    else:
+        base_acm_ratio = 0.52 + (min(age, 20) * 0.003) + (0.01 if is_male else 0.0)
+        fat_adj_acm = (normal_fm - fm_percent) * 0.003
+        acm_ratio = max(0.48, min(0.62, base_acm_ratio + fat_adj_acm))
+        acm = tbw * acm_ratio
+
+    if m.get("visceral_fat") is not None:
+        visceral_fat = float(m["visceral_fat"])
+    else:
+        base_vf = 1.0 if age < 10 else (1.5 if age <= 15 else (2.0 if age <= 20 else 3.0))
+        age_adj_vf = max(0, age - 5) * 0.08
+        fat_adj_vf = (fm_percent - normal_fm) / 3.5
+        visceral_fat = round(max(1.0, min(15.0, base_vf + age_adj_vf + fat_adj_vf)), 1)
 
     tbw_min, tbw_max = get_tbw_percent_norm(age, gender_norm)
     tbw_norm_str = f"{int(tbw_min)}-{int(tbw_max)}%"

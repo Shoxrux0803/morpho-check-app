@@ -1097,6 +1097,98 @@ def get_research_bioimpedance_export_headers(lang: str):
     ]
 
 
+RESEARCH_BASE_EXPORT_FIELDS = [
+    "created_at",
+    "id",
+    "full_name",
+    "school_name",
+    "settlement",
+    "birth_place",
+    "birth_date",
+    "child_age",
+    "age_group",
+    "gender",
+    "father_nationality",
+    "mother_nationality",
+    "living_since",
+    "enrolled_date",
+    "living_conditions",
+    "labor_regime",
+    "past_illnesses",
+    "children_count",
+    "child_order",
+    "feeding_type",
+    "parents_marriage",
+    "mother_health_status",
+    "examination_date",
+    "lower_leg_total",
+    "lower_leg_spina_iliaca",
+    "lower_leg_symphysion",
+    "lower_leg_length",
+    "tibiale_height",
+    "pelvic_width",
+    "thigh_length",
+    "thigh_circumference",
+    "calf_length",
+    "calf_circumference",
+    "foot_length",
+    "teeth_count",
+    "menstruation_start",
+    "skull_longitudinal",
+    "skull_transverse",
+    "head_circumference",
+    "forehead_transverse",
+    "skull_height",
+    "skull_base_length",
+    "skull_base_width",
+    "face_bizygomatic",
+    "face_bigonial",
+    "face_morphological_height",
+    "face_physiognomic_height",
+    "nose_height",
+    "nose_width",
+    "outer_canthal_width",
+    "inner_canthal_width",
+    "lips_mucosa_height",
+    "mouth_width",
+    "chest_standing_height",
+    "chest_sitting_height",
+    "weight",
+    "trunk_length",
+    "torso_length",
+    "chest_circumference_pause",
+    "chest_circumference_inhale",
+    "chest_circumference_exhale",
+    "waist_circumference",
+    "abdomen_circumference",
+    "upper_segment_length",
+    "chest_transverse_diameter",
+    "chest_anteroposterior_diameter",
+    "chest_height",
+    "arm_length",
+    "shoulder_length",
+    "shoulder_width",
+    "shoulder_circumference_rest",
+    "shoulder_circumference_flexed",
+    "forearm_length",
+    "hand_length",
+    "dynamometry",
+    "fat_triceps",
+    "fat_biceps",
+    "fat_subscapular",
+    "fat_iliac",
+    "fat_popliteal",
+]
+
+
+def get_research_xlsx_export_field_order() -> list[str]:
+    return (
+        RESEARCH_BASE_EXPORT_FIELDS
+        + RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+        + RESEARCH_INDEX_EXPORT_FIELDS
+    )
+
+
 def normalize_export_lang(lang: Optional[str]) -> str:
     value = (lang or "uz").strip().lower()
     if value == "kk":
@@ -1210,7 +1302,7 @@ def build_research_index_export_values(
     age = _calculate_research_age(record)
     if age is None or height <= 0 or weight <= 0:
         return dict.fromkeys(
-            RESEARCH_INDEX_EXPORT_FIELDS + RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+            RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS + RESEARCH_INDEX_EXPORT_FIELDS
         )
 
     tvi = round(weight / ((height / 100) ** 2), 2)
@@ -1218,6 +1310,7 @@ def build_research_index_export_values(
         "body_length": record.torso_length,
         "chest": record.chest_circumference_pause,
         "region": record.settlement or record.birth_place,
+        "address": record.settlement or record.birth_place,
     }
     detailed = calculate_detailed_indices(
         age,
@@ -1231,6 +1324,13 @@ def build_research_index_export_values(
     centile = detailed.get("centile")
     morph_type_key = detailed.get("morphological_type_key")
     return {
+        "tbw_percent": detailed.get("tbw_percent"),
+        "fat_percent": detailed.get("fm_percent"),
+        "fat_mass": detailed.get("fm"),
+        "muscle_mass": detailed.get("muscle_mass"),
+        "bone_mass": detailed.get("bone_mass"),
+        "acm_percent": detailed.get("acm_percent"),
+        "visceral_fat": detailed.get("visceral_fat"),
         "tvi": tvi,
         "z_h": detailed.get("z_h"),
         "z_w": detailed.get("z_w"),
@@ -1247,13 +1347,6 @@ def build_research_index_export_values(
         "mii": detailed.get("mii"),
         "adi": detailed.get("adi"),
         "mcri": detailed.get("mcri"),
-        "tbw_percent": detailed.get("tbw_percent"),
-        "fat_percent": detailed.get("fm_percent"),
-        "fat_mass": detailed.get("fm"),
-        "muscle_mass": detailed.get("muscle_mass"),
-        "bone_mass": detailed.get("bone_mass"),
-        "acm_percent": detailed.get("acm_percent"),
-        "visceral_fat": detailed.get("visceral_fat"),
     }
 
 
@@ -1786,8 +1879,8 @@ def export_research_xlsx(
             (get_research_header(export_lang, "created_by_email"), "created_by_email"),
         )
 
-    headers_map.extend(get_research_index_export_headers(export_lang))
     headers_map.extend(get_research_bioimpedance_export_headers(export_lang))
+    headers_map.extend(get_research_index_export_headers(export_lang))
     if get_child_privacy_enabled(db, current_user):
         headers_map = [
             item for item in headers_map if item[1] not in CHILD_PII_EXPORT_FIELDS
@@ -1833,7 +1926,7 @@ def export_research_xlsx(
             elif field_name in index_values:
                 val = index_values[field_name]
             else:
-                val = getattr(record, field_name)
+                val = getattr(record, field_name, None)
 
             # Special formatting
             if field_name == "created_at":
