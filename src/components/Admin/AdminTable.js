@@ -31,6 +31,7 @@ const AdminTable = ({
   checked,
   toggleAll,
   allChecked,
+  selectingAll = false,
   toggleOne,
   setViewRow,
   formatDate,
@@ -80,6 +81,7 @@ const AdminTable = ({
                 <Checkbox
                   checked={allChecked}
                   onChange={toggleAll}
+                  disabled={selectingAll}
                   indeterminate={checked.size > 0 && !allChecked}
                 />
               </TableCell>

@@ -1167,6 +1167,7 @@ export default function AdminPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [checked, setChecked] = useState(new Set());
+  const [selectingAll, setSelectingAll] = useState(false);
 
   // Login state
   const [loginForm, setLoginForm] = useState({
@@ -1414,13 +1415,33 @@ export default function AdminPage() {
     setEditRow((prev) => ({ ...prev, ...data }));
   }, []);
 
-  const toggleAll = useCallback(() => {
-    const next = new Set(checked);
-    const allChecked = raw.length > 0 && raw.every((r) => checked.has(r.id));
-    if (allChecked) raw.forEach((r) => next.delete(r.id));
-    else raw.forEach((r) => next.add(r.id));
-    setChecked(next);
-  }, [checked, raw]);
+  const toggleAll = useCallback(async () => {
+    if (totalCount > 0 && checked.size === totalCount) {
+      setChecked(new Set());
+      return;
+    }
+
+    setSelectingAll(true);
+    try {
+      const ids = await AdminApi.analyses.list({
+        q: dashFilters.q,
+        gender: dashFilters.gender,
+        ageMin: dashFilters.age_min,
+        ageMax: dashFilters.age_max,
+        dateFrom: dashFilters.date_from,
+        dateTo: dashFilters.date_to,
+        region: dashFilters.region,
+        sortKey: sort.key === 'createdAt' ? 'created_at' : sort.key,
+        sortDir: sort.dir,
+        all_ids: true,
+      });
+      setChecked(new Set(Array.isArray(ids) ? ids : []));
+    } catch (err) {
+      toast.error(`${pt('errorPrefix')} ${err.message}`);
+    } finally {
+      setSelectingAll(false);
+    }
+  }, [checked.size, dashFilters, pt, sort, totalCount]);
 
   const toggleOne = useCallback(
     (id) => {
@@ -1831,9 +1852,8 @@ export default function AdminPage() {
                 checked={checked}
                 toggleAll={toggleAll}
                 toggleOne={toggleOne}
-                allChecked={
-                  raw.length > 0 && raw.every((r) => checked.has(r.id))
-                }
+                allChecked={totalCount > 0 && checked.size === totalCount}
+                selectingAll={selectingAll}
                 setViewRow={handleOpenAnalysis}
                 onEdit={(r) => setEditRow(r)}
                 formatDate={(d) =>

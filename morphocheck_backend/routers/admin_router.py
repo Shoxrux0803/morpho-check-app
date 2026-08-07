@@ -122,9 +122,33 @@ def safe_iso_date(value: Optional[str], default: str) -> str:
         return default
 
 
+def clamp_float(value: Optional[float], default: float, min_value: float, max_value: float) -> float:
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return default
+    if numeric < min_value:
+        return min_value
+    if numeric > max_value:
+        return max_value
+    return numeric
+
+
 def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
     first_name, last_name = split_name(getattr(rec, "name", None))
     today = datetime.now().strftime("%Y-%m-%d")
+    height = clamp_float(rec.height, 45.0, 45.0, 250.0)
+    weight = clamp_float(rec.weight, 2.0, 2.0, 300.0)
+    chest = clamp_float(rec.chest, height * 0.50, 25.0, 200.0)
+    if chest < height * 0.25 or chest > height * 1.05:
+        chest = min(max(chest, height * 0.25), height * 1.05)
+    waist = clamp_float(rec.waist, 0.0, 0.0, 200.0)
+    if waist and (waist < height * 0.20 or waist > height * 1.20):
+        waist = 0.0
+    head = clamp_float(rec.head, min(56.0, height * 0.35), 25.0, 80.0)
+    if head < height * 0.20 or head > height * 0.70:
+        head = min(max(head, height * 0.20), height * 0.70)
+
     return PatientData(
         firstName=first_name or "Noma'lum",
         lastName=last_name or "-",
@@ -139,15 +163,18 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
         ageMonths=int(rec.age_months or 0),
         ageDays=int(rec.age_days or 0),
         gender=normalize_analysis_gender(rec.gender),
-        height=float(rec.height or 0.0),
-        weight=float(rec.weight or 0.0),
-        chest=float(rec.chest or 0.0),
-        waist=float(rec.waist or 0.0),
-        head=float(rec.head or 0.0),
+        height=height,
+        weight=weight,
+        chest=chest,
+        waist=waist,
+        head=head,
         fatherHeight=rec.father_height,
         motherHeight=rec.mother_height,
         parentsPhone=rec.parents_phone,
-        consentConfirmed=bool(getattr(rec, "consent_confirmed", 0)),
+        # Existing/imported rows may not have consent metadata. This PatientData
+        # instance is used for calculations/exports only; it must not make
+        # guardian consent a hidden import requirement.
+        consentConfirmed=True,
         consentGuardianName=getattr(rec, "consent_guardian_name", None)
         or "Stored record",
         consentGuardianRelationship=getattr(rec, "consent_guardian_relationship", None)
@@ -674,6 +701,7 @@ def list_analyses(
     region: Optional[str] = Query(None),
     page: int = 1,
     page_size: int = 20,
+    all_ids: bool = Query(False),
     show_deleted: bool = Query(False),  # Super admin uchun o'chirilganlarni ko'rsatish
 ):
     response.headers["Cache-Control"] = "no-store, private"
@@ -739,6 +767,9 @@ def list_analyses(
     col = sort_map.get(sort_key) or getattr(PatientAnalysis, "created_at", None)
     if col is not None:
         base = base.order_by(asc(col) if sort_dir == "asc" else desc(col))
+
+    if all_ids:
+        return [row[0] for row in base.with_entities(PatientAnalysis.id).all()]
 
     base = base.options(
         joinedload(PatientAnalysis.created_by), joinedload(PatientAnalysis.deleted_by)
@@ -1750,7 +1781,6 @@ def preview_analyses_xlsx(
             "acm": indices.get("acm_percent", getattr(r, "acm", None) or "-"),
             "visceral_fat": indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
             "body_length": r.body_length or 0,
-            "parents_phone": r.parents_phone or "-",
         }
         items.append(
             redact_child_payload(
@@ -1828,7 +1858,7 @@ def export_analyses_xlsx(
         "waist", "head", "shoulder_breadth", "shoulder_ratio",
         "thigh_circumference", "thigh_ratio", "hmai", "mii", "adi",
         "tbw", "fat_percent", "fat_mass", "muscle_mass", "bone_mass", "acm",
-        "visceral_fat", "body_length", "parents_phone",
+        "visceral_fat", "body_length",
     ]
     header_by_key = {
         key: base_headers[i]
@@ -1849,15 +1879,14 @@ def export_analyses_xlsx(
     }
     column_keys = [
         "created_at", "id_code", "name", "gender", "age", "region", "district",
-        "address", "created_by", "height", "weight", "bmi", "bmi_category",
+        "address", "created_by", "height", "body_length", "weight", "bmi", "bmi_category",
         "somatotype", "ideal_weight", "weight_diff", "weight_range", "chest",
         "waist", "head", "shoulder_length", "shoulder_breadth",
         "shoulder_circumference", "arm_elbow_length", "hand_length",
         "thigh_length", "thigh_circumference", "calf_length",
         "calf_circumference", "foot_length", "shoulder_ratio", "thigh_ratio",
         "hmai", "mii", "adi", "tbw", "fat_percent", "fat_mass",
-        "muscle_mass", "bone_mass", "acm", "visceral_fat", "body_length",
-        "parents_phone",
+        "muscle_mass", "bone_mass", "acm", "visceral_fat",
     ]
     permission_column_map = {
         "shoulder_length": "shoulder_length",
@@ -2030,7 +2059,6 @@ def export_analyses_xlsx(
             "acm": indices.get("acm_percent", getattr(r, "acm", None) or "-"),
             "visceral_fat": indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
             "body_length": r.body_length or 0,
-            "parents_phone": r.parents_phone or "-",
         }
 
         # Barcha string qiymatlarni lat2cyr orqali o'girish shart emas —
@@ -2312,51 +2340,53 @@ BIOIMPEDANCE_IMPORT_FIELDS = {
     "visceral_fat",
 }
 IMPORT_TEMPLATE_COLUMNS = [
-    ("first_name", "first_name (Ism) *", "Ali"),
-    ("last_name", "last_name (Familiya) *", "Valiyev"),
-    ("gender", "gender (erkak/ayol) *", "erkak"),
-    ("age", "age (Yosh) *", 10),
-    ("age_months", "age_months (Yosh oylar)", 5),
-    ("age_days", "age_days (Yosh kunlar)", 12),
-    ("id_code", "id_code (ID kod)", "MC-001"),
-    ("region", "region (Viloyat) *", "Toshkent"),
-    ("district", "district (Tuman)", "Yunusobod"),
-    ("mahalla", "mahalla", "Minor"),
-    ("address", "address (Manzil)", "Amir Temur ko'chasi"),
-    ("height", "height (Bo'y, sm) *", 140.5),
-    ("weight", "weight (Vazn, kg) *", 35.2),
-    ("chest", "chest (Ko'krak qafasi, sm) *", 70),
-    ("waist", "waist (Bel aylanasi, sm) *", 65),
-    ("hip", "hip (Son/dumba aylanasi, sm)", 72),
-    ("head", "head (Bosh aylanasi, sm) *", 52),
-    ("birth_date", "birth_date (Tug'ilgan sana: YYYY-MM-DD)", "2014-05-10"),
-    ("examination_date", "examination_date (Sana: YYYY-MM-DD)", "2024-05-10"),
-    ("preschool_institution", "preschool_institution (Muassasa)", "123-maktab"),
-    ("parents_phone", "parents_phone", "+998901234567"),
-    ("father_height", "father_height", 172),
-    ("mother_height", "mother_height", 164),
-    ("doctor_note", "doctor_note", "Sog'lom"),
-    ("shoulder_length", "shoulder_length", 15),
-    ("shoulder_breadth", "shoulder_breadth", 30),
-    ("shoulder_circumference", "shoulder_circumference", 25),
-    ("arm_elbow_length", "arm_elbow_length", 20),
-    ("hand_length", "hand_length", 15),
-    ("thigh_length", "thigh_length", 40),
-    ("thigh_circumference", "thigh_circumference", 35),
-    ("calf_length", "calf_length", 25),
-    ("calf_circumference", "calf_circumference", 20),
-    ("foot_length", "foot_length", 22),
-    ("body_length", "body_length", 135),
-    ("total_body_water", "total_body_water", None),
-    ("fat_percent", "fat_percent", None),
-    ("fat_mass", "fat_mass", None),
-    ("muscle_mass", "muscle_mass", None),
-    ("bone_mass", "bone_mass", None),
-    ("acm", "acm", None),
-    ("visceral_fat", "visceral_fat", None),
+    ("id_code", "Идентификатор коди", "001"),
+    ("name", "Ф.И.Ш. *", "Али Валиев"),
+    ("gender", "Жинси (ўғил бола/қиз бола) *", "ўғил бола"),
+    ("age", "Ёши *", 10),
+    ("age_months", "Ёши ойларда", 5),
+    ("age_days", "Ёши кунларда", 12),
+    ("region", "Вилоят *", "Тошкент"),
+    ("district", "Туман", "Юнусобод"),
+    ("address", "Манзил", "Амир Темур кўчаси"),
+    ("height", "Бўйи (см) *", 140.5),
+    ("weight", "Вазн (кг) *", 35.2),
+    ("chest", "Кўкрак қафаси айланаси (см) *", 70),
+    ("waist", "Бел айланаси (см) *", 65),
+    ("head", "Бош айланаси (см) *", 52),
+    ("shoulder_length", "Елка узунлиги (см)", 15),
+    ("shoulder_breadth", "Елка кенглиги (см)", 30),
+    ("shoulder_circumference", "Елка айланаси (см)", 25),
+    ("arm_elbow_length", "Қўл-тирсак узунлиги (см)", 20),
+    ("hand_length", "Қўл панжаси узунлиги (см)", 15),
+    ("thigh_length", "Сон узунлиги (см)", 40),
+    ("thigh_circumference", "Сон айланаси (см)", 35),
+    ("calf_length", "Болдир узунлиги (см)", 25),
+    ("calf_circumference", "Болдир айланаси (см)", 20),
+    ("foot_length", "Оёқ панжаси узунлиги (см)", 22),
+    ("body_length", "Тана узунлиги (см)", 135),
+    ("total_body_water", "Танадаги умумий сув", None),
+    ("fat_percent", "Ёғ улуши (фоиз)", None),
+    ("fat_mass", "Ёғ массаси", None),
+    ("muscle_mass", "Мушак массаси", None),
+    ("bone_mass", "Суяк массаси", None),
+    ("acm", "Фаол ҳужайра массаси", None),
+    ("visceral_fat", "Висцерал ёғ", None),
 ]
 IMPORT_FIELD_NAMES = {field for field, _header, _sample in IMPORT_TEMPLATE_COLUMNS}
-LEGACY_IMPORT_FIELD_MAP = {i: field for i, (field, _header, _sample) in enumerate(IMPORT_TEMPLATE_COLUMNS)}
+IMPORT_HEADER_FIELD_MAP = {
+    str(header).strip().lower(): field
+    for field, header, _sample in IMPORT_TEMPLATE_COLUMNS
+}
+IMPORT_HEADER_FIELD_MAP.update(
+    {
+        "first_name (ism) *": "first_name",
+        "last_name (familiya) *": "last_name",
+    }
+)
+LEGACY_IMPORT_FIELD_MAP = {
+    i: field for i, (field, _header, _sample) in enumerate(IMPORT_TEMPLATE_COLUMNS)
+}
 
 
 def import_field_enabled(
@@ -2377,26 +2407,21 @@ def parse_import_header_field(value) -> Optional[str]:
     raw = str(value or "").strip()
     if not raw:
         return None
+    normalized = raw.lower()
+    if normalized in IMPORT_HEADER_FIELD_MAP:
+        return IMPORT_HEADER_FIELD_MAP[normalized]
     token = raw.split()[0].split("(")[0].strip().strip("*").strip().lower()
     return token if token in IMPORT_FIELD_NAMES else None
 
 
-@router.get("/export-template")
-def export_template(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin),
-):
-    """Import uchun Excel shablonini yuklab olish."""
+def build_admin_import_template_workbook(
+    permissions: dict[str, bool],
+    privacy_enabled: bool = False,
+) -> Workbook:
     wb = Workbook()
     ws = wb.active
-    ws.title = "Template"
+    ws.title = "Маълумотлар"
 
-    # Sarlavhalar (Lotin yozuvida, import qilish oson bo'lishi uchun)
-    # Ammo userga tushunarli bo'lishi uchun Kirillda ham qoldirish mumkin.
-    # Biz Lotin (field name) + Izoh (Kirill) kombinatsiyasini ishlatamiz.
-
-    permissions = get_effective_admin_permissions(current_user)
-    privacy_enabled = get_child_privacy_enabled(db, current_user)
     enabled_template_columns = [
         column
         for column in IMPORT_TEMPLATE_COLUMNS
@@ -2409,15 +2434,111 @@ def export_template(
         start_color="2ECC71", end_color="2ECC71", fill_type="solid"
     )
     header_font = Font(color="FFFFFF", bold=True)
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+    wrapped_center = Alignment(
+        horizontal="center", vertical="center", wrap_text=True
+    )
+    wrapped_left = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
-    for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num, value=header)
+    for col_num, header_text in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=header_text)
         cell.fill = header_fill
         cell.font = header_font
-        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.alignment = wrapped_center
+        cell.border = border
 
-    for col_num, val in enumerate(sample, 1):
-        ws.cell(row=2, column=col_num, value=val)
+    for row_num in range(2, 102):
+        for col_num in range(1, len(headers) + 1):
+            cell = ws.cell(row=row_num, column=col_num, value=None)
+            cell.alignment = wrapped_left
+            cell.border = border
+
+    ws.row_dimensions[1].height = 42
+    ws.freeze_panes = "A2"
+    ws.auto_filter.ref = f"A1:{ws.cell(row=101, column=len(headers)).coordinate}"
+    ws.sheet_view.showGridLines = False
+    for col_num, header_text in enumerate(headers, 1):
+        ws.column_dimensions[ws.cell(row=1, column=col_num).column_letter].width = min(
+            42, max(14, len(str(header_text)) + 2)
+        )
+
+    example_ws = wb.create_sheet("Намуна")
+    for col_num, header_text in enumerate(headers, 1):
+        header = example_ws.cell(row=1, column=col_num, value=header_text)
+        header.fill = header_fill
+        header.font = header_font
+        header.alignment = wrapped_center
+        header.border = border
+        cell = example_ws.cell(row=2, column=col_num, value=sample[col_num - 1])
+        cell.alignment = wrapped_left
+        cell.border = border
+        example_ws.column_dimensions[header.column_letter].width = min(
+            42, max(14, len(str(header_text)) + 2)
+        )
+    example_ws.row_dimensions[1].height = 42
+    example_ws.freeze_panes = "A2"
+    example_ws.sheet_view.showGridLines = False
+
+    guide_ws = wb.create_sheet("Қўлланма")
+    guide_rows = [
+        ["Импорт қоидалари", "Изоҳ"],
+        [
+            "Асосий варақ",
+            "Маълумотларни фақат «Маълумотлар» варағига киритинг. «Намуна» варағи фақат кўриш учун.",
+        ],
+        [
+            "Мажбурий устунлар",
+            "Юлдузча қўйилган устунлар тўлдирилиши шарт.",
+        ],
+        [
+            "Сана формати",
+            "Санани йил-ой-кун тартибида киритинг, масалан: 2014-05-10.",
+        ],
+        [
+            "Жинс қиймати",
+            "«ўғил бола» ёки «қиз бола» деб киритинг.",
+        ],
+        [
+            "Ўлчовлар",
+            "Бўй, вазн ва айланаларни рақам кўринишида киритинг.",
+        ],
+    ]
+    for row in guide_rows:
+        guide_ws.append(row)
+    for row in guide_ws.iter_rows(
+        min_row=1, max_row=len(guide_rows), min_col=1, max_col=2
+    ):
+        for cell in row:
+            cell.border = border
+            cell.alignment = wrapped_center if cell.row == 1 else wrapped_left
+            if cell.row == 1:
+                cell.fill = header_fill
+                cell.font = header_font
+    guide_ws.row_dimensions[1].height = 28
+    for row_num in range(2, len(guide_rows) + 1):
+        guide_ws.row_dimensions[row_num].height = 48
+    guide_ws.column_dimensions["A"].width = 28
+    guide_ws.column_dimensions["B"].width = 96
+    guide_ws.freeze_panes = "A2"
+    guide_ws.sheet_view.showGridLines = False
+
+    return wb
+
+
+@router.get("/export-template")
+def export_template(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+):
+    """Import uchun Excel shablonini yuklab olish."""
+    permissions = get_effective_admin_permissions(current_user)
+    privacy_enabled = get_child_privacy_enabled(db, current_user)
+    wb = build_admin_import_template_workbook(permissions, privacy_enabled)
 
     output = BytesIO()
     wb.save(output)
@@ -2560,19 +2681,23 @@ async def import_analyses_xlsx(
             row_errors = []
             required_fields = {
                 **({} if privacy_enabled else {
-                    "first_name": "Ism majburiy.",
-                    "last_name": "Familiya majburiy.",
+                    "name": "Ф.И.Ш. мажбурий.",
                 }),
-                "gender": "Jins majburiy.",
-                "age": "Yosh majburiy.",
-                "region": "Viloyat majburiy.",
-                "height": "Bo'y majburiy.",
-                "weight": "Vazn majburiy.",
-                "chest": "Ko'krak qafasi majburiy.",
-                "waist": "Bel aylanasi majburiy.",
-                "head": "Bosh aylanasi majburiy.",
+                "gender": "Жинс мажбурий.",
+                "age": "Ёш мажбурий.",
+                "region": "Вилоят мажбурий.",
+                "height": "Бўй мажбурий.",
+                "weight": "Вазн мажбурий.",
+                "chest": "Кўкрак қафаси мажбурий.",
+                "waist": "Бел айланаси мажбурий.",
+                "head": "Бош айланаси мажбурий.",
             }
             for field, message in required_fields.items():
+                if field == "name" and is_blank(data.get("name")) and (
+                    not is_blank(data.get("first_name"))
+                    or not is_blank(data.get("last_name"))
+                ):
+                    continue
                 if is_blank(data.get(field)):
                     row_errors.append((field, message, data.get(field)))
 
@@ -2583,12 +2708,18 @@ async def import_analyses_xlsx(
                 or "ayol" in gender_raw
                 or "male" in gender_raw
                 or "female" in gender_raw
+                or "эркак" in gender_raw
+                or "аёл" in gender_raw
+                or "ўғил" in gender_raw
+                or "угил" in gender_raw
+                or "қиз" in gender_raw
+                or "киз" in gender_raw
             )
             if gender_raw and not valid_gender:
                 row_errors.append(
                     (
                         "gender",
-                        "Jins 'erkak' yoki 'ayol' bo'lishi kerak.",
+                        "Жинс 'ўғил бола' ёки 'қиз бола' бўлиши керак.",
                         data.get("gender"),
                     )
                 )
@@ -2672,13 +2803,24 @@ async def import_analyses_xlsx(
                 continue
 
             # Convert types
+            imported_name = str(data.get("name") or "").strip()
+            if not imported_name:
+                imported_name = (
+                    f"{data.get('first_name') or ''} {data.get('last_name') or ''}"
+                ).strip()
             full_name = (
                 f"Maxfiy import {row_idx}"
                 if privacy_enabled
-                else f"{data['first_name']} {data['last_name']}".strip()
+                else imported_name
             )
             gender = str(data.get("gender") or "erkak").lower()
-            if "ayol" in gender or "fem" in gender:
+            if (
+                "ayol" in gender
+                or "fem" in gender
+                or "аёл" in gender
+                or "қиз" in gender
+                or "киз" in gender
+            ):
                 gender = "ayol"
             else:
                 gender = "erkak"
@@ -2754,7 +2896,6 @@ async def import_analyses_xlsx(
             )
             if not privacy_enabled:
                 rec.preschool_institution = str(data.get("preschool_institution") or "")
-                rec.parents_phone = str(data.get("parents_phone") or "").strip() or None
             if privacy_enabled:
                 rec.name = f"Maxfiy {rec.id_code}"
             rec.father_height = format_val(data.get("father_height"), None)

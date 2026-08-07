@@ -105,6 +105,7 @@ export const AdminApi = {
           sort_key: opts.sortKey,
           sort_dir: opts.sortDir,
           region: opts.region,
+          all_ids: opts.all_ids,
           page: opts.page ?? 1,
           page_size: opts.pageSize ?? 20,
         })
