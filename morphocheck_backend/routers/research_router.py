@@ -1327,6 +1327,9 @@ def build_research_index_export_values(
         # the same body-length measurement in trunk_length.
         "body_length": record.torso_length or record.trunk_length,
         "chest": record.chest_circumference_pause,
+        "shoulder_width": record.shoulder_width,
+        "thigh_circumference": record.thigh_circumference,
+        "calf_circumference": record.calf_circumference,
         "region": record.settlement or record.birth_place,
         "address": record.settlement or record.birth_place,
     }

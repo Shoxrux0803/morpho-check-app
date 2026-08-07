@@ -639,6 +639,100 @@ def get_ecological_factor(m: Dict[str, Any]) -> float:
     return 1.05
 
 
+REFERENCE_MODEL_VERSION = "UZ_FALLBACK_V5_4"
+
+
+def _clamp(value: float, low: float, high: float) -> float:
+    return max(low, min(high, value))
+
+
+def _as_float(value: Any, default: float = None) -> float:
+    if value is None:
+        return default
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return default
+    return number if math.isfinite(number) else default
+
+
+def _safe_z(value: float, mean: float, sd: float, flags: list, key: str) -> float:
+    if sd is None or not math.isfinite(sd) or sd <= 0:
+        flags.append(f"reference_model_error:{key}_sd")
+        return 0.0
+    if value is None or not math.isfinite(value):
+        flags.append(f"data_quality_warning:{key}_value")
+        return 0.0
+    return round((value - mean) / sd, 2)
+
+
+def _z_to_centile_lane(z: float) -> int:
+    if z < -1.88:
+        return 1
+    if z < -1.04:
+        return 2
+    if z <= 1.04:
+        return 3
+    if z <= 1.88:
+        return 4
+    return 5
+
+
+def _hmai_category(score: float) -> str:
+    if score >= 80:
+        return "high"
+    if score >= 60:
+        return "satisfactory"
+    if score >= 40:
+        return "borderline"
+    return "low"
+
+
+def _mii_category(score: float) -> str:
+    return _hmai_category(score)
+
+
+def _adi_category(score: float) -> str:
+    if score < 3:
+        return "harmonic"
+    if score < 6:
+        return "disharmonic"
+    return "severe"
+
+
+def _mcri_category(score: float) -> str:
+    if score < 30:
+        return "low_risk"
+    if score < 50:
+        return "moderate_risk"
+    if score < 70:
+        return "high_risk"
+    return "very_high_risk"
+
+
+def _limit_category_to_borderline(category: str) -> str:
+    return "borderline" if category in {"high", "satisfactory"} else category
+
+
+def _adi_component_z(
+    manual_data: Dict[str, Any],
+    keys: tuple,
+    height: float,
+    mean_ratio: float,
+    sd_ratio: float,
+    flags: list,
+    flag_name: str,
+) -> float:
+    raw = next(
+        (_as_float(manual_data.get(k)) for k in keys if manual_data.get(k) is not None),
+        None,
+    )
+    if raw is None or raw <= 0 or height <= 0:
+        flags.append(f"missing:{flag_name}")
+        return 0.0
+    return _safe_z(raw / height, mean_ratio, sd_ratio, flags, flag_name)
+
+
 def calculate_age_independent_indices(
     gender: str,
     height: float,
@@ -1215,16 +1309,17 @@ def calculate_detailed_indices(
     z_bmi = round((bmi - ideal_bmi) / sd_bmi, 2) if sd_bmi > 0 else 0
     z_tbw = round((tbw - ideal_tbw) / sd_tbw, 2) if sd_tbw > 0 else 0
 
+    component_flags = []
+    qc_status = "ok"
+
     # 4.1 FM_z, MM_z and MCRI calculation
     median_fm_p = (low_fm + high_fm) / 2
     sd_fm_p = (high_fm - low_fm) / 4 if (high_fm - low_fm) > 0 else 1.0
-    fm_z = round((fm_percent - median_fm_p) / sd_fm_p, 2)
+    fm_z = _safe_z(fm_percent, median_fm_p, sd_fm_p, component_flags, "fm")
 
     median_mm_p = (muscle_min + muscle_max) / 2
     sd_mm_p = (muscle_max - muscle_min) / 4 if (muscle_max - muscle_min) > 0 else 1.0
-    mm_z = round((muscle_p - median_mm_p) / sd_mm_p, 2)
-
-    mcri = round((z_bmi + fm_z - mm_z) / 3, 2)
+    mm_z = _safe_z(muscle_p, median_mm_p, sd_mm_p, component_flags, "smm_percent")
 
     # 4.2 Z_chest calculation for MII
     chest_val = float(m.get("chest") or 0)
@@ -1239,41 +1334,162 @@ def calculate_detailed_indices(
     centile = get_centile_from_z(z_bmi)
     corridor = get_corridor_from_z(z_bmi, lang)
 
-    # 6. Main Indices
+    # 6. Main Indices (MorphoCheck author model FINAL v5.4)
+    am = 100.0 - min(100.0, 20.0 * ((abs(z_h) + abs(z_bmi)) / 2.0))
+    p_h = _z_to_centile_lane(z_h)
+    p_w = _z_to_centile_lane(z_w)
+    p_cc = _z_to_centile_lane(z_chest)
+    delta_p = max(p_h, p_w, p_cc) - min(p_h, p_w, p_cc)
+    gm = 100.0 - min(100.0, 25.0 * delta_p)
+    hmai = round((am + gm) / 2.0, 2)
+    extreme_z_flag = max(abs(z_h), abs(z_bmi)) >= 3.0
 
-    # MII (Morfologik Integratsiya Indeksi) Individual Concordance variant
-    sim_h_w = math.exp(-abs(z_h - z_w))
-    sim_w_c = math.exp(-abs(z_w - z_chest))
-    sim_bmi_fm = math.exp(-abs(z_bmi - fm_z))
-    mii = round((sim_h_w + sim_w_c + sim_bmi_fm) / 3, 2)
+    ffm_for_mq = weight - fm
+    mii_hard_qc_failed = False
+    if weight <= 0:
+        component_flags.append("hard_qc:weight_not_positive")
+        mii_hard_qc_failed = True
+    if fm < 0 or fm >= weight:
+        component_flags.append("hard_qc:fat_mass_out_of_range")
+        mii_hard_qc_failed = True
+    if ffm_for_mq <= 0:
+        component_flags.append("hard_qc:ffm_not_positive")
+        mii_hard_qc_failed = True
+    if muscle_mass < 0 or muscle_mass > ffm_for_mq:
+        component_flags.append("hard_qc:smm_out_of_range")
+        mii_hard_qc_failed = True
 
-    adi = round(abs(z_h) + abs(z_w) + abs(z_bmi), 2)
+    if mii_hard_qc_failed:
+        qc_status = "error"
+        mq = None
+        mq_z = 0.0
+        hyd_z = 0.0
+        mii = None
+    else:
+        mq = (muscle_mass / ffm_for_mq) * 100
+        mq_mean = 78.0 if is_male else 74.0
+        mq_sd = 8.0
+        mq_z = _safe_z(mq, mq_mean, mq_sd, component_flags, "mq")
+
+        tbw_percent_value = (tbw / weight) * 100 if weight > 0 else 0
+        tbw_mid = (tbw_min + tbw_max) / 2
+        sd_tbw_percent = max(1.0, (tbw_max - tbw_min) / 4)
+        predicted_tbw_percent = tbw_mid - (0.65 * (fm_percent - median_fm_p))
+        hyd_res = tbw_percent_value - predicted_tbw_percent
+        hyd_z = _safe_z(hyd_res, 0.0, sd_tbw_percent, component_flags, "hyd_res")
+
+        d_fm = min(1.0, abs(fm_z) / 3.0)
+        d_mq = min(1.0, abs(mq_z) / 3.0)
+        d_hyd = min(1.0, abs(hyd_z) / 3.0)
+        mii = round(100.0 * (1.0 - ((d_fm + d_mq + d_hyd) / 3.0)), 2)
+
+    severe_component_flag = False
+    component_warning = False
+    max_mii_component_z = None
+    if mii is not None:
+        max_mii_component_z = max(abs(fm_z), abs(mq_z), abs(hyd_z))
+        severe_component_flag = max_mii_component_z >= 3.0
+        component_warning = 2.0 <= max_mii_component_z < 3.0
+        if severe_component_flag:
+            component_flags.append("severe_component_flag")
+        elif component_warning:
+            component_flags.append("component_warning")
+
+    ratio_z_values = [
+        _adi_component_z(
+            m,
+            ("shoulder_breadth", "shoulder_width", "shoulderBreadth"),
+            height,
+            0.22,
+            0.03,
+            component_flags,
+            "shoulder_breadth_ratio",
+        ),
+        _safe_z(chest_val / height, 0.50, 0.05, component_flags, "chest_ratio")
+        if chest_val > 0 and height > 0
+        else 0.0,
+        _adi_component_z(
+            m,
+            ("thigh_circumference", "thighCircumference"),
+            height,
+            0.30,
+            0.04,
+            component_flags,
+            "thigh_circumference_ratio",
+        ),
+        _adi_component_z(
+            m,
+            ("calf_circumference", "calfCircumference"),
+            height,
+            0.20,
+            0.03,
+            component_flags,
+            "calf_circumference_ratio",
+        ),
+    ]
+    adi = round(sum(min(2.0, abs(z) / 1.5) for z in ratio_z_values), 2)
+
+    if mii is None:
+        mcri = None
+    else:
+        r_bmi = min(100.0, abs(z_bmi) * 50.0)
+        r_fm = min(100.0, abs(fm_z) * 50.0)
+        r_mm = min(100.0, max(0.0, -mm_z) * 50.0)
+        r_adi = min(100.0, (adi / 8.0) * 100.0)
+        r_int = 100.0 - mii
+        mcri = round(
+            (0.30 * r_bmi)
+            + (0.30 * r_fm)
+            + (0.20 * r_mm)
+            + (0.10 * r_adi)
+            + (0.10 * r_int),
+            2,
+        )
+
+    if any(flag.startswith("reference_model_error") for flag in component_flags):
+        qc_status = "reference_model_error"
+    elif qc_status != "error" and component_flags:
+        qc_status = "warning"
 
     # Interpretation — 4 tilda
-    if 0.1 <= hmai <= 0.3:
+    raw_hmai_category = _hmai_category(hmai)
+    hmai_category = (
+        _limit_category_to_borderline(raw_hmai_category)
+        if extreme_z_flag
+        else raw_hmai_category
+    )
+    if hmai_category in {"high", "satisfactory"}:
         hmai_desc = _local_t("hmai_optimal", lang)
-    elif hmai > 0.3:
+    elif hmai_category == "borderline":
         hmai_desc = _local_t("hmai_accel", lang)
     else:
         hmai_desc = _local_t("hmai_stress", lang)
 
-    if mii >= 0.8:
+    raw_mii_category = _mii_category(mii) if mii is not None else "not_calculated"
+    mii_category = (
+        _limit_category_to_borderline(raw_mii_category)
+        if severe_component_flag and mii is not None
+        else raw_mii_category
+    )
+    if mii_category in {"high", "satisfactory"}:
         mii_desc = _local_t("mii_high", lang)
-    elif mii >= 0.5:
+    elif mii_category == "borderline":
         mii_desc = _local_t("mii_normal", lang)
     else:
         mii_desc = _local_t("mii_low", lang)
 
-    if adi <= 1:
+    adi_category = _adi_category(adi)
+    if adi_category == "harmonic":
         adi_desc = _local_t("adi_harmony", lang)
-    elif 1 < adi <= 2:
+    elif adi_category == "disharmonic":
         adi_desc = _local_t("adi_mid", lang)
     else:
         adi_desc = _local_t("adi_high", lang)
 
-    if mcri < 0.5:
+    mcri_category = _mcri_category(mcri) if mcri is not None else "not_calculated"
+    if mcri_category == "low_risk":
         mcri_desc = _local_t("mcri_optimal", lang)
-    elif mcri <= 1.5:
+    elif mcri_category == "moderate_risk":
         mcri_desc = _local_t("mcri_moderate", lang)
     else:
         mcri_desc = _local_t("mcri_high", lang)
@@ -1310,34 +1526,34 @@ def calculate_detailed_indices(
             advice.append(_local_t("adv_body_len_ok", lang, **fmt))
 
     # HMAI
-    if hmai > 0.5:
+    if hmai >= 80:
         advice.append(_local_t("adv_hmai_very_high", lang, **fmt))
-    elif hmai > 0.3:
+    elif hmai >= 60:
         advice.append(_local_t("adv_hmai_high", lang, **fmt))
-    elif hmai < 0.05:
+    elif hmai < 40:
         advice.append(_local_t("adv_hmai_very_low", lang, **fmt))
-    elif hmai < 0.1:
+    elif hmai < 60:
         advice.append(_local_t("adv_hmai_low", lang, **fmt))
     else:
         advice.append(_local_t("adv_hmai_ok", lang, **fmt))
 
     # MII
-    if mii < 0.3:
+    if mii is not None and mii < 40:
         advice.append(_local_t("adv_mii_very_low", lang, **fmt))
-    elif mii < 0.5:
+    elif mii is not None and mii < 60:
         advice.append(_local_t("adv_mii_low", lang, **fmt))
-    elif mii >= 0.8:
+    elif mii is not None and mii >= 80:
         advice.append(_local_t("adv_mii_high", lang, **fmt))
 
     # ADI and MCRI
-    if adi > 3.0:
+    if adi >= 6.0:
         advice.append(_local_t("adv_adi_very_high", lang, **fmt))
-    elif adi > 2.0:
+    elif adi >= 3.0:
         advice.append(_local_t("adv_adi_high", lang, **fmt))
-    elif adi <= 1.0:
+    elif adi < 3.0:
         advice.append(_local_t("adv_adi_ok", lang, **fmt))
 
-    if mcri > 1.5:
+    if mcri is not None and mcri >= 50:
         advice.append(_local_t("adv_mcri_high", lang, **fmt))
 
     # BMI
@@ -1403,13 +1619,51 @@ def calculate_detailed_indices(
         "centile": centile,
         "corridor": corridor,
         "hmai": hmai,
+        "hmai_score": hmai,
+        "hmai_category": hmai_category,
         "hmai_desc": hmai_desc,
         "mii": mii,
+        "mii_score": mii,
+        "mii_category": mii_category,
         "mii_desc": mii_desc,
         "adi": adi,
+        "adi_score": adi,
+        "adi_category": adi_category,
         "adi_desc": adi_desc,
         "mcri": mcri,
+        "mcri_score": mcri,
+        "mcri_category": mcri_category,
         "mcri_desc": mcri_desc,
+        "raw_category": {
+            "hmai": raw_hmai_category,
+            "mii": raw_mii_category,
+            "adi": adi_category,
+            "mcri": mcri_category,
+        },
+        "final_category": {
+            "hmai": hmai_category,
+            "mii": mii_category,
+            "adi": adi_category,
+            "mcri": mcri_category,
+        },
+        "component_flags": component_flags,
+        "qc_status": qc_status,
+        "range_check_passed": (
+            0 <= hmai <= 100
+            and (mii is None or 0 <= mii <= 100)
+            and 0 <= adi <= 8
+            and (mcri is None or 0 <= mcri <= 100)
+        ),
+        "reference_model_version": REFERENCE_MODEL_VERSION,
+        "extreme_z_flag": extreme_z_flag,
+        "severe_component_flag": severe_component_flag,
+        "component_warning": component_warning,
+        "z_fm": fm_z,
+        "z_mq": mq_z,
+        "z_hyd": hyd_z,
+        "z_smm": mm_z,
+        "mq": round(mq, 1) if mq is not None else None,
+        "max_mii_component_z": max_mii_component_z,
         "morphological_type": morphological_type,
         "morphological_type_key": morph_type_key,
         "biological_age_status": biological_age_status,

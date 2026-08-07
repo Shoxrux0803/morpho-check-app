@@ -233,6 +233,10 @@ async def generate_pdf_by_id_endpoint(
             "bone_mass": rec.bone_mass,
             "acm": rec.acm,
             "visceral_fat": rec.visceral_fat,
+            "chest": rec.chest,
+            "shoulder_breadth": rec.shoulder_breadth,
+            "thigh_circumference": rec.thigh_circumference,
+            "calf_circumference": rec.calf_circumference,
         }
         # Recalculate age
         y, m, d = calculate_age_precise(rec.birth_date, rec.examination_date)
@@ -436,6 +440,10 @@ async def generate_docx_by_id_endpoint(
             "bone_mass": rec.bone_mass,
             "acm": rec.acm,
             "visceral_fat": rec.visceral_fat,
+            "chest": rec.chest,
+            "shoulder_breadth": rec.shoulder_breadth,
+            "thigh_circumference": rec.thigh_circumference,
+            "calf_circumference": rec.calf_circumference,
         }
         # Recalculate age
         y, m, d = calculate_age_precise(rec.birth_date, rec.examination_date)

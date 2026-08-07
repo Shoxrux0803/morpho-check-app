@@ -366,6 +366,10 @@ def build_pdf_report_data_by_id(
         "bone_mass": mini.bone_mass,
         "acm": mini.acm,
         "visceral_fat": mini.visceral_fat,
+        "chest": mini.chest,
+        "shoulder_breadth": mini.shoulder_breadth,
+        "thigh_circumference": mini.thigh_circumference,
+        "calf_circumference": mini.calf_circumference,
     }
     all_settings = clinical_service.get_all_settings(db)
     detailed = calculate_detailed_indices(
