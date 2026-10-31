@@ -24,6 +24,8 @@ import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import aiService from '../../services/aiService';
+import ReferenceValuesDialog from '../ReferenceValuesDialog';
+import MeasurementQualityPanel from '../MeasurementQualityPanel';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { researcherT } from '../../utils/researcherI18n';
 import {
@@ -38,11 +40,8 @@ const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
-      background: (theme) =>
-        theme.palette.mode === 'dark'
-          ? 'rgba(30,30,40,0.7)'
-          : 'rgba(255,255,255,0.85)',
-      backdropFilter: 'blur(20px)',
+      background: 'background.paper',
+      backdropFilter: 'none',
       borderRadius: 4,
       border: '1px solid',
       borderColor: (theme) =>
@@ -70,9 +69,11 @@ const ResearcherForm = ({ onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
   const [predictLoading, setPredictLoading] = useState(false);
+  const [referenceData, setReferenceData] = useState(null);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const emptyForm = {
+    subject_code: '',
     full_name: '',
     school_name: '',
     settlement: '',
@@ -124,6 +125,7 @@ const ResearcherForm = ({ onSuccess }) => {
     chest_standing_height: '',
     chest_sitting_height: '',
     weight: '',
+    ffm_measured_kg: '',
     trunk_length: '',
     torso_length: '',
     chest_circumference_pause: '',
@@ -218,8 +220,7 @@ const ResearcherForm = ({ onSuccess }) => {
         'research'
       );
       if (res.params) {
-        setFormData((prev) => ({ ...prev, ...res.params }));
-        toast.success(tr('aiLoaded'), { icon: 'AI' });
+        setReferenceData(res);
       }
     } catch (err) {
       toast.error(tr('aiError'));
@@ -330,6 +331,11 @@ const ResearcherForm = ({ onSuccess }) => {
 
   return (
     <GlassPaper sx={{ p: { xs: 2, md: 4 } }}>
+      <ReferenceValuesDialog
+        data={referenceData}
+        onClose={() => setReferenceData(null)}
+      />
+      {activeStep > 0 && <MeasurementQualityPanel data={formData} />}
       <Typography variant="h5" fontWeight="900" mb={3} textAlign="center">
         {tr('newResearchRecord')}
       </Typography>
@@ -428,6 +434,25 @@ const ResearcherForm = ({ onSuccess }) => {
             <Box>
               {SL(tr('sectionPassport'))}
               <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    name="subject_code"
+                    value={formData.subject_code}
+                    onChange={handleChange}
+                    label={
+                      lang === 'en'
+                        ? 'Stable child code (optional)'
+                        : 'Bolaning doimiy kodi (ixtiyoriy)'
+                    }
+                    helperText={
+                      lang === 'en'
+                        ? 'Use the same anonymous code for repeat visits, e.g. MC-001. Letters, numbers, - and _ only.'
+                        : 'Takroriy tashriflarda bir xil anonim kod yozing, masalan MC-001. Faqat lotin harflari, raqamlar, - va _.'
+                    }
+                    inputProps={{ maxLength: 80, pattern: '[A-Za-z0-9_-]+' }}
+                  />
+                </Grid>
                 <Grid item xs={12} sm={6} md={4}>
                   {I('full_name', tr('fullName'), 'text')}
                 </Grid>
@@ -549,7 +574,11 @@ const ResearcherForm = ({ onSuccess }) => {
                       disabled={predictLoading}
                       sx={{ borderRadius: 2 }}
                     >
-                      {predictLoading ? 'AI...' : 'AI Predict'}
+                      {predictLoading
+                        ? '...'
+                        : lang === 'en'
+                          ? 'Reference values'
+                          : 'Taxminiy ma’lumotnoma'}
                     </Button>
                   </Stack>
                   <Grid container spacing={2}>
@@ -628,6 +657,7 @@ const ResearcherForm = ({ onSuccess }) => {
                       ['chest_standing_height', tr('standingHeight')],
                       ['chest_sitting_height', tr('sittingHeight')],
                       ['weight', tr('weight')],
+                      ['ffm_measured_kg', 'FFM (kg)'],
                       ['trunk_length', tr('trunkLength')],
                       ['torso_length', tr('torsoLength')],
                       ['chest_circumference_pause', tr('chestPause')],

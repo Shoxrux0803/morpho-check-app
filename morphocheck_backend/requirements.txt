@@ -11,12 +11,12 @@ python-multipart
 pillow
 passlib[bcrypt]
 bcrypt==3.2.2
-python-jose[cryptography]
+PyJWT[crypto]>=2.10,<3
 python-docx
 openpyxl
 slowapi
 scikit-learn
-google-generativeai
+google-genai>=2.17,<3
 pandas
 redis
 # MinIO / S3 uchun

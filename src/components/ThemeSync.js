@@ -137,7 +137,7 @@ export default function ThemeSync() {
     if (meta) meta.setAttribute('content', colors.bgDefault);
 
     if (process.env.NODE_ENV !== 'production') {
-      console.debug(
+      console.info(
         '[ThemeSync] mode:',
         mode,
         'variant:',

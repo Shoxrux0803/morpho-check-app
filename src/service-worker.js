@@ -84,7 +84,9 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncPendingRecords() {
-  const queue = await get('pending_measurements');
+  const queueKey = await get('active_measurement_queue_key');
+  if (!queueKey) return;
+  const queue = await get(queueKey);
   const token = await get('auth_token');
 
   if (!queue || queue.length === 0 || !token) return;
@@ -106,6 +108,7 @@ async function syncPendingRecords() {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
+            'Idempotency-Key': String(item.id),
           },
           body: JSON.stringify(item.payload),
         }
@@ -133,7 +136,7 @@ async function syncPendingRecords() {
   }
 
   if (changed) {
-    await set('pending_measurements', updatedQueue);
+    await set(queueKey, updatedQueue);
     // Notify clients if any are open
     const clients = await self.clients.matchAll();
     clients.forEach((client) => client.postMessage({ type: 'SYNC_UPDATED' }));

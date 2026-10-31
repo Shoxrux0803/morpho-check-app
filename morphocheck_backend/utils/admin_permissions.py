@@ -2,7 +2,6 @@ import json
 from copy import deepcopy
 from typing import Any, Optional
 
-
 PERMISSION_KEYS = (
     "shoulder_length",
     "shoulder_breadth",
@@ -21,7 +20,7 @@ PERMISSION_KEYS = (
     "additional_instructions",
 )
 
-DEFAULT_ADMIN_PERMISSIONS = {key: True for key in PERMISSION_KEYS}
+DEFAULT_ADMIN_PERMISSIONS = dict.fromkeys(PERMISSION_KEYS, True)
 
 ANTHROPOMETRY_FIELDS = {
     "shoulder_length": ("shoulder_length", "shoulderLength"),
@@ -45,6 +44,9 @@ BIOIMPEDANCE_FIELDS = (
     ("acm", "acm"),
     ("visceral_fat", "visceralFat"),
     ("body_length", "bodyLength"),
+    ("body_composition", "bodyComposition"),
+    ("body_composition_raw", "bodyCompositionRaw"),
+    ("body_composition_result", "bodyCompositionResult"),
 )
 
 BIOIMPEDANCE_INDEX_KEYS = (

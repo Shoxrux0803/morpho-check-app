@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.user import User
 from models.userdata import PatientAnalysis
+from services.age_service import total_age_months
 from services.ai_advice_service import generate_parent_tips
 from services.analyze_service import (
     _split_region_and_district,
@@ -18,6 +19,10 @@ from services.analyze_service import (
     generate_region_based_id,
     get_bmi_range_by_age_and_gender,
     get_ideal_weight_by_age_and_gender,
+)
+from services.body_composition_service import (
+    calculate_body_composition,
+    raw_body_composition_from_patient,
 )
 from services.cache_service import cache_service
 from services.clinical_service import clinical_service
@@ -35,6 +40,7 @@ def store_raw_analysis(
     db.add(rec)
     db.commit()
     db.refresh(rec)
+    cache_service.delete_pattern("morphocheck:admin_sci_stats:*")
     return rec
 
 
@@ -61,7 +67,7 @@ def build_fast_analysis_context(
     data: PatientData, db: Session, lang: str = "uz"
 ) -> Dict[str, Any]:
     cache_key = cache_service.make_key(
-        "analysis:fast-context:v1", _analysis_cache_payload(data, lang)
+        "analysis:fast-context:index-v6", _analysis_cache_payload(data, lang)
     )
     cached = cache_service.get_json(cache_key)
     if cached is not None:
@@ -110,7 +116,15 @@ def analyze_and_store(
     request: Request,
     lang: str = "uz",
     current_user: Optional[User] = None,
+    offline_submission_id: Optional[str] = None,
 ) -> Dict[str, Any]:
+    body_composition_raw = raw_body_composition_from_patient(data)
+    body_composition_result = calculate_body_composition(
+        weight_kg=data.weight,
+        raw=body_composition_raw,
+        sex=data.gender,
+        age_months=total_age_months(data),
+    )
     fast_context = build_fast_analysis_context(data, db, lang=lang)
     gender_norm = fast_context["gender_norm"]
     analysis = fast_context["analysis"]
@@ -125,11 +139,13 @@ def analyze_and_store(
     rec = PatientAnalysis(
         name=full_name,
         id_code=id_code,
+        offline_submission_id=offline_submission_id,
         region=clean_region,
         district=clean_district,
         mahalla=(data.mahalla or "").strip() or None,
         address=(data.address or "").strip() or None,
         age=data.age,
+        age_total_months=data.age_total_months,
         age_months=data.age_months,
         age_days=data.age_days,
         gender=gender_norm,
@@ -166,6 +182,8 @@ def analyze_and_store(
         bone_mass=data.bone_mass,
         acm=data.acm,
         visceral_fat=data.visceral_fat,
+        body_composition_raw=body_composition_raw,
+        body_composition_result=body_composition_result,
         doctor_note=(data.doctor_note or "").strip() or None,
         consent_confirmed=1 if data.consent_confirmed else 0,
         consent_guardian_name=(data.consent_guardian_name or "").strip() or None,
@@ -201,6 +219,7 @@ def analyze_and_store(
 
     db.commit()
     db.refresh(rec)
+    cache_service.delete_pattern("morphocheck:admin_sci_stats:*")
 
     growth_standards = build_growth_standards(data, analysis)
     progress_tracking = build_progress_tracking(db, rec, full_name)
@@ -232,6 +251,7 @@ def analyze_and_store(
             "id_code": id_code,
             "full_name": full_name,
             "age": data.age,
+            "age_total_months": total_age_months(data),
             "age_months": data.age_months,
             "age_days": data.age_days,
             "gender": gender_norm,
@@ -257,6 +277,7 @@ def analyze_and_store(
             "head": data.head,
         },
         "analysis": analysis,
+        "body_composition": body_composition_result,
         "risk_flags": growth_standards["metrics"],
         "growth_standards": growth_standards,
         "progress_tracking": progress_tracking,
@@ -286,10 +307,17 @@ def build_pdf_report_data(
     report_data["consent_guardian_relationship"] = data.consent_guardian_relationship
     report_data["consent_guardian_phone"] = data.consent_guardian_phone
     report_data["consent_policy_version"] = data.consent_policy_version
+    report_data["body_composition"] = calculate_body_composition(
+        weight_kg=data.weight,
+        raw=raw_body_composition_from_patient(data),
+        sex=data.gender,
+        age_months=total_age_months(data),
+    )
     return report_data
 
 
 class _StoredAnalysisData(BaseModel):
+    age_total_months: Optional[float] = None
     age: int = 0
     gender: str = ""
     height: float = 0.0
@@ -328,6 +356,7 @@ def build_pdf_report_data_by_id(
     first_name = name_parts[0] if name_parts else ""
     last_name = name_parts[1] if len(name_parts) > 1 else ""
     mini = _StoredAnalysisData(
+        age_total_months=total_age_months(rec),
         age=rec.age or 0,
         gender=rec.gender or "",
         height=rec.height or 0,
@@ -370,6 +399,9 @@ def build_pdf_report_data_by_id(
         "shoulder_breadth": mini.shoulder_breadth,
         "thigh_circumference": mini.thigh_circumference,
         "calf_circumference": mini.calf_circumference,
+        "shoulder_circumference": mini.shoulder_circumference,
+        "ffm_kg": (rec.body_composition_raw or {}).get("ffm_measured_kg"),
+        "independent_fm_kg": (rec.body_composition_raw or {}).get("fat_mass_measured_kg", rec.fat_mass),
     }
     all_settings = clinical_service.get_all_settings(db)
     detailed = calculate_detailed_indices(
@@ -381,6 +413,7 @@ def build_pdf_report_data_by_id(
         manual_bio,
         lang=lang,
         all_settings=all_settings,
+        age_months=total_age_months(rec),
     )
     ideal_range = get_bmi_range_by_age_and_gender(mini.age, mini.gender)
     ideal_w = get_ideal_weight_by_age_and_gender(mini.age, mini.height, mini.gender)
@@ -394,7 +427,7 @@ def build_pdf_report_data_by_id(
             "max": round(ideal_range["max"] * h2, 1),
         },
         "weight_diff": round(mini.weight - ideal_w, 1),
-        "z_score": rec.z_score or 0,
+        "z_score": detailed["z_bmi"],
         "shoulder_ratio": round((mini.shoulder_breadth / mini.height) * 100, 1)
         if mini.height > 0 and mini.shoulder_breadth
         else 0,
@@ -440,6 +473,7 @@ def build_pdf_report_data_by_id(
         "first_name": first_name,
         "last_name": last_name,
         "age": rec.age or 0,
+        "age_total_months": total_age_months(rec),
         "age_months": rec.age_months or 0,
         "age_days": rec.age_days or 0,
         "gender": rec.gender or "",
@@ -461,6 +495,13 @@ def build_pdf_report_data_by_id(
         "consent_confirmed_at": getattr(rec, "consent_confirmed_at", None),
         "consent_policy_version": getattr(rec, "consent_policy_version", None) or "",
         "analysis": analysis,
+        "body_composition": getattr(rec, "body_composition_result", None)
+        or calculate_body_composition(
+            weight_kg=rec.weight,
+            raw=getattr(rec, "body_composition_raw", None),
+            sex=rec.gender,
+            age_months=total_age_months(rec),
+        ),
         "advices": advices,
         "ai_parent_tips": ai_tips,
         "ai_predictions": ai_preds,

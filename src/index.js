@@ -16,23 +16,6 @@ import { applyTheme, getStoredTheme } from './utils/theme';
 import ThemeProviderMUI from './providers/ThemeProviderMUI';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
-const disableNoisyWebGpuRenderer = () => {
-  if (typeof navigator === 'undefined' || !('gpu' in navigator)) return;
-
-  try {
-    Object.defineProperty(Navigator.prototype, 'gpu', {
-      configurable: true,
-      get: () => undefined,
-    });
-  } catch {
-    try {
-      Object.defineProperty(navigator, 'gpu', {
-        configurable: true,
-        value: undefined,
-      });
-    } catch {}
-  }
-};
 /* eslint-disable no-console */
 const installDevConsoleNoiseFilter = () => {
   if (process.env.NODE_ENV !== 'development') return;
@@ -95,7 +78,11 @@ const installDevConsoleNoiseFilter = () => {
   );
 
   const originalError = console.error;
-  console.warn = () => {};
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (shouldIgnoreError(args)) return;
+    originalWarn(...args);
+  };
   console.error = (...args) => {
     if (shouldIgnoreError(args)) return;
     originalError(...args);
@@ -104,7 +91,6 @@ const installDevConsoleNoiseFilter = () => {
 /* eslint-enable no-console */
 
 // Importlardan KEYIN boshlang'ich tema
-disableNoisyWebGpuRenderer();
 installDevConsoleNoiseFilter();
 applyTheme(getStoredTheme());
 

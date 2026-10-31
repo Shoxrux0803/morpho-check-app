@@ -12,41 +12,29 @@ import {
   Legend,
   Label,
 } from 'recharts';
-import { useTheme } from '@mui/material';
-import { WHO_DATA } from '../../utils/growthReference';
+import { Alert, useTheme } from '@mui/material';
+import WHO_DATA from '../../data/who2007Charts.json';
+import WHO_V6 from '../../data/whoLmsV6.json';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const GrowthChart = ({ gender, age, type, value }) => {
   const theme = useTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const isDark = theme.palette.mode === 'dark';
 
-  const dataKey =
-    gender === 'erkak' || gender === 'male' || gender === "o'g'il"
-      ? 'boys'
-      : 'girls';
-  const indicatorKey = type === 'height' ? 'heightForAge' : 'bmiForAge';
+  const dataKey = ['erkak', 'male', "o'g'il", 'boy', 'boys'].includes(
+    String(gender).toLowerCase()
+  )
+    ? 'boys'
+    : 'girls';
+  const indicatorKey =
+    type === 'height'
+      ? 'heightForAge'
+      : type === 'weight'
+        ? 'weightForAge'
+        : 'bmiForAge';
   const baseData = WHO_DATA[dataKey];
-  const rawData =
-    type === 'weight'
-      ? baseData.heightForAge.map((heightRow, index) => {
-          const bmiRow =
-            baseData.bmiForAge[index] ||
-            baseData.bmiForAge[baseData.bmiForAge.length - 1];
-          const toWeight = (heightCm, bmiValue) =>
-            Number((bmiValue * Math.pow(heightCm / 100, 2)).toFixed(1));
-          return {
-            age: heightRow.age,
-            sd3neg: toWeight(heightRow.sd3neg, bmiRow.sd3neg),
-            sd2neg: toWeight(heightRow.sd2neg, bmiRow.sd2neg),
-            sd1neg: toWeight(heightRow.sd1neg, bmiRow.sd1neg),
-            median: toWeight(heightRow.median, bmiRow.median),
-            sd1pos: toWeight(heightRow.sd1pos, bmiRow.sd1pos),
-            sd2pos: toWeight(heightRow.sd2pos, bmiRow.sd2pos),
-            sd3pos: toWeight(heightRow.sd3pos, bmiRow.sd3pos),
-          };
-        })
-      : baseData[indicatorKey];
+  const rawData = baseData[indicatorKey];
 
   // Ranglar va uslublar
   const colors = {
@@ -59,7 +47,44 @@ const GrowthChart = ({ gender, age, type, value }) => {
     text: theme.palette.text.secondary,
   };
 
-  const chartData = useMemo(() => rawData, [rawData]);
+  const chartData = useMemo(() => {
+    const indicator =
+      type === 'height' ? 'HFA' : type === 'weight' ? 'WFA' : 'BFA';
+    const sex = dataKey === 'boys' ? 'male' : 'female';
+    const suppliedRows = WHO_V6.filter(
+      (row) => row.indicator === indicator && row.sex === sex
+    ).map((row) => {
+      const at = (z) =>
+        row.L === 0
+          ? row.M * Math.exp(row.S * z)
+          : row.M * Math.pow(1 + row.L * row.S * z, 1 / row.L);
+      return {
+        age: row.month / 12,
+        sd3neg: at(-3),
+        sd2neg: at(-2),
+        sd1neg: at(-1),
+        median: row.M,
+        sd1pos: at(1),
+        sd2pos: at(2),
+        sd3pos: at(3),
+      };
+    });
+    return [...suppliedRows, ...rawData.filter((row) => row.age > 90 / 12)];
+  }, [rawData, type, dataKey]);
+
+  if (
+    !Number.isFinite(Number(age)) ||
+    Number(age) < 30 / 12 ||
+    Number(age) > (type === 'weight' ? 10 : 19)
+  ) {
+    return (
+      <Alert severity="info">
+        {lang === 'en'
+          ? `The supplied reference is available from 30 months to ${type === 'weight' ? 10 : 19} years. This age is outside the chart range.`
+          : `Ma’lumotnoma 30 oylikdan ${type === 'weight' ? 10 : 19} yoshgacha mavjud. Ushbu yosh uchun me’yor chizig‘i ko‘rsatilmaydi.`}
+      </Alert>
+    );
+  }
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -103,6 +128,9 @@ const GrowthChart = ({ gender, age, type, value }) => {
           />
           <XAxis
             dataKey="age"
+            type="number"
+            domain={[61 / 12, type === 'weight' ? 10 : 19]}
+            tickFormatter={(v) => Number(v.toFixed(1))}
             stroke={colors.text}
             fontSize={12}
             tickLine={false}
@@ -200,6 +228,7 @@ const GrowthChart = ({ gender, age, type, value }) => {
             <ReferenceDot
               x={Number(age)}
               y={Number(value)}
+              ifOverflow="extendDomain"
               r={6}
               fill={theme.palette.primary.main}
               stroke="#fff"

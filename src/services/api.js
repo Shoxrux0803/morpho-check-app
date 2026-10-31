@@ -2,6 +2,8 @@
 // proxy (package.json "proxy": "http://localhost:8000") orqali CORS bartaraf etiladi.
 // Development da API_BASE bo'sh - nisbiy URL lar proxy orqali o'tadi.
 // Production da REACT_APP_API_URL ni to'liq URL ga o'rnating.
+import { toast } from 'react-hot-toast';
+
 export const API_BASE = process.env.REACT_APP_API_URL || '';
 export const API_PREFIX = process.env.REACT_APP_API_PREFIX || '/api';
 const MAX_API_PAGE_SIZE = 200;
@@ -37,6 +39,35 @@ async function parseError(resp) {
   }
 }
 
+const getAccessToken = () =>
+  localStorage.getItem('access_token') || localStorage.getItem('token') || '';
+
+async function downloadAuthenticatedFile(url, filename) {
+  const resp = await fetch(url, {
+    headers: { Authorization: `Bearer ${getAccessToken()}` },
+    cache: 'no-store',
+  });
+  if (!resp.ok) {
+    const msg = await parseError(resp);
+    throw new Error(msg);
+  }
+
+  const objectUrl = window.URL.createObjectURL(await resp.blob());
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.URL.revokeObjectURL(objectUrl);
+}
+
+const downloadWithFeedback = (url, filename) =>
+  downloadAuthenticatedFile(url, filename).catch((error) => {
+    toast.error(error?.message || "Faylni yuklab bo'lmadi.");
+    return false;
+  });
+
 /* -------------------- PUBLIC CHAT STATUS -------------------- */
 export async function getPublicChatStatus() {
   const resp = await fetch(
@@ -65,7 +96,7 @@ export async function getPublicChatStatus() {
  * shunda frontenddagi AnalysisResults `results.data.analysis` va `results.data.advices` bilan
  * muammosiz ishlaydi.
  */
-export async function postAnalysis(payload, lang = 'uz') {
+export async function postAnalysis(payload, lang = 'uz', idempotencyKey = '') {
   const resp = await fetch(
     `${API_BASE}${API_PREFIX}/analyze/full?lang=${lang}`,
     {
@@ -73,18 +104,26 @@ export async function postAnalysis(payload, lang = 'uz') {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+        ...(idempotencyKey
+          ? { 'Idempotency-Key': String(idempotencyKey) }
+          : {}),
       },
       body: JSON.stringify(payload),
     }
   );
 
   if (!resp.ok) {
+    let errBody = '';
+    try {
+      errBody = await resp.clone().text();
+    } catch {}
+    console.error('[postAnalysis] xato ' + resp.status + ':', errBody);
     const msg = await parseError(resp);
     throw new Error(msg);
   }
 
-  const body = await resp.json(); // backendning haqiqiy javobi
-  return { data: body }; // <-- .data qobig'iga solib qaytaramiz
+  const body = await resp.json();
+  return { data: body };
 }
 
 /* -------------------- PDF -------------------- */
@@ -1209,6 +1248,18 @@ export const AdminApi = {
 
 /* -------------------- RESEARCH API -------------------- */
 export const ResearchApi = {
+  timeline: async (id) => {
+    const token =
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('token') ||
+      '';
+    const response = await fetch(
+      `${API_BASE}${API_PREFIX}/research/${id}/timeline`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!response.ok) throw new Error(await parseError(response));
+    return response.json();
+  },
   /** Barcha aktiv yozuvlar (superadmin — hammani, researcher — o'zini) */
   list: async (params = {}) => {
     const q = new URLSearchParams();
@@ -1439,28 +1490,18 @@ export const ResearchApi = {
   },
 
   /** DOCX yuklash */
-  downloadDocx: (id, lang = 'ru') => {
-    const token =
-      localStorage.getItem('access_token') ||
-      localStorage.getItem('token') ||
-      '';
-    window.open(
-      `${API_BASE}${API_PREFIX}/research/${id}/docx?accessToken=${token}&lang=${lang}`,
-      '_blank'
-    );
-  },
+  downloadDocx: (id, lang = 'ru') =>
+    downloadWithFeedback(
+      `${API_BASE}${API_PREFIX}/research/${id}/docx?lang=${encodeURIComponent(lang)}`,
+      `research_${id}_${lang}.docx`
+    ),
 
   /** Privacy consent DOCX */
-  downloadConsentDocx: (id, lang = 'uz') => {
-    const token =
-      localStorage.getItem('access_token') ||
-      localStorage.getItem('token') ||
-      '';
-    window.open(
-      `${API_BASE}${API_PREFIX}/research/${id}/consent-docx?accessToken=${token}&lang=${lang}`,
-      '_blank'
-    );
-  },
+  downloadConsentDocx: (id, lang = 'uz') =>
+    downloadWithFeedback(
+      `${API_BASE}${API_PREFIX}/research/${id}/consent-docx?lang=${encodeURIComponent(lang)}`,
+      `research_consent_${id}_${lang}.docx`
+    ),
 
   /** XLSX export */
   exportXlsx: async (params = {}) => {

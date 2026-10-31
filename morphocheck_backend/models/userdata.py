@@ -1,4 +1,5 @@
 from sqlalchemy import (
+    JSON,
     Column,
     DateTime,
     Float,
@@ -19,6 +20,7 @@ class PatientAnalysis(Base):
 
     id = Column(Integer, primary_key=True)
     id_code = Column(String(50), nullable=True, index=True)
+    offline_submission_id = Column(String(120), nullable=True)
     name = Column(String(100), nullable=False, index=True)
 
     region = Column(String(100), nullable=True, index=True)
@@ -32,6 +34,7 @@ class PatientAnalysis(Base):
 
     gender = Column(String(10), nullable=False, index=True)  # erkak / ayol
     age = Column(Integer, nullable=False, index=True)
+    age_total_months = Column(Float, nullable=True)
     age_months = Column(Integer, nullable=True)
     age_days = Column(Integer, nullable=True)
 
@@ -70,6 +73,10 @@ class PatientAnalysis(Base):
     bone_mass = Column(Float, nullable=True)
     acm = Column(Float, nullable=True)
     visceral_fat = Column(Float, nullable=True)
+    # Canonical BIA payload/result. Legacy scalar columns remain for backward
+    # compatibility and must never be overwritten with derived values.
+    body_composition_raw = Column(JSON, nullable=True)
+    body_composition_result = Column(JSON, nullable=True)
 
     recommendations = Column(Text, nullable=False)
     ai_recommendations = Column(Text, nullable=True)
@@ -96,6 +103,12 @@ class PatientAnalysis(Base):
 
     __table_args__ = (
         Index("ix_patient_analysis_deleted_created", "is_deleted", "created_at"),
+        Index(
+            "uq_patient_analysis_owner_offline_submission",
+            "created_by_id",
+            "offline_submission_id",
+            unique=True,
+        ),
         Index(
             "ix_patient_analysis_owner_active_created",
             "created_by_id",
@@ -126,6 +139,8 @@ class ResearchRecord(Base):
 
     id = Column(Integer, primary_key=True)
     id_code = Column(String(50), nullable=True, index=True)
+    subject_code = Column(String(80), nullable=True, index=True)
+    measurement_sources = Column(JSON, nullable=True)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_by = relationship("User", foreign_keys=[created_by_id])
     created_at = Column(DateTime, server_default=func.now(), index=True)
@@ -203,6 +218,7 @@ class ResearchRecord(Base):
     chest_standing_height = Column(Float, nullable=True)
     chest_sitting_height = Column(Float, nullable=True)
     weight = Column(Float, nullable=True)
+    ffm_measured_kg = Column(Float, nullable=True)
     trunk_length = Column(Float, nullable=True)
     torso_length = Column(Float, nullable=True)
     chest_circumference_pause = Column(Float, nullable=True)

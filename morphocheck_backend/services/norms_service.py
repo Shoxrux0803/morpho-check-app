@@ -43,7 +43,11 @@ _NORM_TABLE = {
 
 
 def get_typical_params(
-    age: int, gender: str, target_form: str = "analysis"
+    age: int,
+    gender: str,
+    target_form: str = "analysis",
+    age_months: int = 0,
+    age_days: int = 0,
 ) -> Dict[str, Any]:
     """
     Returns typical (normative) parameters for a given age and gender.
@@ -56,18 +60,21 @@ def get_typical_params(
         else "male"
     )
     table = _NORM_TABLE[gender_norm]
+    precise_age = (
+        float(age) + (float(age_months) / 12.0) + (float(age_days) / 365.2425)
+    )
 
     ages = sorted(table.keys())
 
     # Clamp age to table range
-    if age <= ages[0]:
+    if precise_age <= ages[0]:
         base_vals = table[ages[0]]
-    elif age >= ages[-1]:
+    elif precise_age >= ages[-1]:
         base_vals = table[ages[-1]]
     else:
         # Interpolate
-        lower_age = max([a for a in ages if a <= age])
-        upper_age = min([a for a in ages if a > age])
+        lower_age = max([a for a in ages if a <= precise_age])
+        upper_age = min([a for a in ages if a > precise_age])
 
         lower_vals = table[lower_age]
         upper_vals = table[upper_age]
@@ -76,7 +83,7 @@ def get_typical_params(
         if upper_age == lower_age:
             base_vals = lower_vals
         else:
-            ratio = (age - lower_age) / (upper_age - lower_age)
+            ratio = (precise_age - lower_age) / (upper_age - lower_age)
             base_vals = [
                 round(lower_vals[i] + (upper_vals[i] - lower_vals[i]) * ratio, 1)
                 for i in range(len(lower_vals))

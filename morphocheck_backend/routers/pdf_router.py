@@ -20,15 +20,26 @@ from services.analyze_service import (
     get_ideal_weight_by_age_and_gender,
 )
 from services.clinical_service import clinical_service
+from services.body_composition_service import (
+    calculate_body_composition,
+    raw_body_composition_from_patient,
+)
 from services.consent_docx import generate_consent_docx
 from services.docx_services import generate_docx_report
 from services.ml_service import get_ml_predictions
 from services.pdf_services import generate_pdf_file
-from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions
+from utils.admin_permissions import (
+    filter_payload_by_permissions,
+    get_effective_admin_permissions,
+)
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.date_utils import calculate_age_precise
-from utils.privacy import child_audit_reference, get_child_privacy_enabled, redact_child_payload
+from utils.privacy import (
+    child_audit_reference,
+    get_child_privacy_enabled,
+    redact_child_payload,
+)
 
 router = APIRouter(tags=["PDF / DOCX Generatsiya"])
 
@@ -325,7 +336,6 @@ async def generate_pdf_by_id_endpoint(
             "analysis": analysis,
             "advices": advices,
             "doctor_note": rec.doctor_note or "",
-            "parents_phone": rec.parents_phone or "",
         }
 
         # AI Predictions
@@ -511,7 +521,6 @@ async def generate_docx_by_id_endpoint(
             "parents_phone": rec.parents_phone or "",
             "id_code": rec.id_code or "",
             "analysis": analysis,
-            "parents_phone": rec.parents_phone or "",
         }
 
         # Barcha qo'shimcha ko'rsatkichlarni report_data'ga o'tkazamiz (DOCX uchun kerak)
@@ -534,6 +543,16 @@ async def generate_docx_by_id_endpoint(
             "body_length",
         ]:
             report_data[col] = getattr(rec, col, 0) or 0
+
+        raw_bia = getattr(rec, "body_composition_raw", None)
+        if raw_bia is None:
+            raw_bia = raw_body_composition_from_patient(rec)
+        report_data["body_composition"] = calculate_body_composition(
+            weight_kg=rec.weight,
+            raw=raw_bia,
+            sex=rec.gender,
+            age_months=actual_age * 12 + actual_months,
+        )
 
         report_data = filter_payload_by_permissions(report_data, get_effective_admin_permissions(current_user))
         report_data = redact_child_payload(

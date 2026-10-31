@@ -83,14 +83,17 @@ def test_research_export_varies_acm_and_visceral_fat_across_records():
     assert 1.0 <= values_2["visceral_fat"] <= 15.0
 
 
-def test_research_xlsx_field_order_places_bioimpedance_between_popliteal_fat_and_tvi():
+def test_research_xlsx_field_order_places_tbw_after_mcri():
     fields = get_research_xlsx_export_field_order()
 
     pop_index = fields.index("fat_popliteal")
     tvi_index = fields.index("tvi")
 
-    assert pop_index + 1 == fields.index("tbw_percent")
-    assert fields[pop_index + 1 : tvi_index] == RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+    assert fields[pop_index + 1 : tvi_index] == [
+        field for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS if field != "tbw_percent"
+    ]
+    assert fields[fields.index("mcri") + 1] == "tbw_percent"
+    assert fields.count("tbw_percent") == 1
     assert fields[tvi_index - 1] == "visceral_fat"
     assert fields[tvi_index] == "tvi"
 
@@ -117,7 +120,10 @@ def test_research_xlsx_export_calculations_and_attributes_are_complete_and_valid
             val = "10"
         elif field_name in index_values:
             val = index_values[field_name]
-            assert val is not None, f"Index calculation missing for {field_name}"
+            if field_name in {"hmai", "mii", "adi", "mcri"}:
+                assert val is None  # This record is 120 months, outside v6 scope.
+            else:
+                assert val is not None, f"Index calculation missing for {field_name}"
         else:
             val = getattr(record, field_name, None)
 
@@ -148,7 +154,9 @@ def test_research_export_keeps_bmi_when_birth_date_is_missing():
 
     assert values["tvi"] == 20.0
     assert values["z_h"] is None
-    assert values["hmai"] is not None
+    # HMAI v6 requires age-specific z-scores; an incompatible legacy-scale
+    # value must not be mixed into the same XLSX column when birth date is absent.
+    assert values["hmai"] is None
     assert all(values[field] is not None for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS)
 
 

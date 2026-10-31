@@ -53,7 +53,6 @@ import { useOfflineSync } from '../providers/OfflineSyncProvider';
 import WeatherClock from './WeatherClock';
 import SyncManager from './SyncManager';
 import LogoutConfirmDialog from './LogoutConfirmDialog';
-import LiquidGlass from './ui/LiquidGlass';
 import { nextFilterId, injectFilter, removeFilter } from '../utils/liquidGlass';
 
 const blurActiveElement = () => {
@@ -298,7 +297,7 @@ const buildCalendarDays = (monthDate) => {
 };
 
 export default function Header() {
-  const { mode, toggle, variant, setVariant, setMode } = useThemeMode();
+  const { mode, variant, setVariant, setMode } = useThemeMode();
   const { lang, setLang, t } = useLanguage();
   const [prevMode, setPrevMode] = useState(mode);
   const { user, logout } = useAuth();

@@ -1463,11 +1463,7 @@ const ResearcherDataView = ({ isSuperAdmin = true }) => {
   const visibleResearchXlsxColumns = RESEARCH_XLSX_PREVIEW_COLUMNS.filter(
     (column) =>
       !xlsxPreviewRows.some((row) => row.privacy_redacted) ||
-      ![
-        'full_name',
-        'school_name',
-        'birth_place',
-      ].includes(column.key)
+      !['full_name', 'school_name', 'birth_place'].includes(column.key)
   );
   const importInputRef = useRef(null);
 

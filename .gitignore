@@ -87,3 +87,6 @@ morphocheck_backend/scratch/
 morphocheck_backend/uploads/
 morphocheck_backend/*.db-shm
 morphocheck_backend/*.db-wal
+outputs/
+resp*.json
+test_analyze.py

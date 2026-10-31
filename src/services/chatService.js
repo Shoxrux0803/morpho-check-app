@@ -1,8 +1,8 @@
 // src/services/chatService.js
 import axios from 'axios';
+import { API_BASE, API_PREFIX } from './api';
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = `${API_BASE}${API_PREFIX}`;
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
@@ -38,6 +38,14 @@ export const chatService = {
         ...getAuthHeader(),
         'Content-Type': 'multipart/form-data',
       },
+    });
+    return response.data;
+  },
+
+  getFileBlob: async (fileUrl) => {
+    const response = await axios.get(`${API_BASE}${fileUrl}`, {
+      headers: getAuthHeader(),
+      responseType: 'blob',
     });
     return response.data;
   },

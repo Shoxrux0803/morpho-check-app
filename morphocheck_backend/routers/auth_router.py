@@ -5,20 +5,24 @@ import smtplib
 from datetime import datetime, timedelta
 from email.message import EmailMessage
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jwt import InvalidTokenError as JWTError
+from pydantic import BaseModel
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from models.auth_device import LoginVerificationCode, TrustedLoginDevice
 from models.schemas import Token, UserLogin, UserOut, UserRegister
+from models.settings import RoleSettings
 from models.user import User
-from utils.admin_permissions import get_effective_admin_permissions, normalize_admin_permissions
+from utils.admin_permissions import (
+    get_effective_admin_permissions,
+)
 from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.rate_limit import limiter
-from utils.security_events import record_security_event
 from utils.security import (
     ALGORITHM,
     SECRET_KEY,
@@ -26,6 +30,7 @@ from utils.security import (
     get_password_hash,
     verify_password,
 )
+from utils.security_events import record_security_event
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -226,8 +231,6 @@ def get_optional_user(
     if not token:
         return None
     try:
-        from jose import JWTError, jwt
-
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email:
@@ -393,16 +396,13 @@ def read_users_me(
 ):
     data = UserOut.model_validate(current_user).model_dump()
     data["admin_permissions"] = get_effective_admin_permissions(current_user)
-    
-    from models.settings import RoleSettings
+
     setting = db.query(RoleSettings).filter(RoleSettings.role_name == current_user.role).first()
     data["ai_chat_enabled"] = setting.ai_chat_enabled if setting else True
     data["internal_chat_enabled"] = setting.internal_chat_enabled if setting else True
-    
+
     return data
 
-
-from pydantic import BaseModel
 
 class PasswordChangeRequest(BaseModel):
     current_password: str
@@ -433,7 +433,7 @@ def change_password(
     # Update password
     current_user.hashed_password = get_password_hash(new_pwd)
     current_user.plain_password = new_pwd
-    
+
     # Audit log
     record_audit_log(
         db=db,
@@ -444,7 +444,7 @@ def change_password(
         details=f"Foydalanuvchi parolini o'zgartirdi: {current_user.email}",
         request=request,
     )
-    
+
     db.commit()
     return {"message": "Parol muvaffaqiyatli o'zgartirildi"}
 

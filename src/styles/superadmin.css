@@ -1,0 +1,75 @@
+.superadmin-page {
+  --sa-paper: #fff;
+  --sa-border: #dfe8ef;
+  --sa-muted: #5b6e80;
+  --sa-ink: #172f43;
+  background:
+    radial-gradient(ellipse at top right, #e1f3f1 0, transparent 48%), #f3f6fa;
+}
+.superadmin-page[data-mode='dark'] {
+  --sa-paper: #111e2d;
+  --sa-border: #253548;
+  --sa-muted: #a1b2c6;
+  --sa-ink: #e5edf7;
+  background:
+    radial-gradient(ellipse at top right, #123039 0, transparent 48%), #0b1421;
+}
+.superadmin-page .superadmin-header {
+  background: var(--sa-paper);
+  border-color: var(--sa-border);
+  border-radius: 18px;
+  box-shadow: 0 4px 24px #0a253508;
+  flex-shrink: 0;
+}
+.superadmin-header > div:first-child {
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.superadmin-header > div:first-child > h5 {
+  letter-spacing: -0.6px;
+  font-size: 24px;
+}
+.superadmin-page .superadmin-nav-item {
+  min-height: 44px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+.superadmin-page .superadmin-nav-item:hover:not([aria-current]) {
+  background: #0891b210;
+}
+.superadmin-page .superadmin-nav-item:focus-visible {
+  outline: 2px solid #22b8b0;
+  outline-offset: -2px;
+}
+.superadmin-content .MuiTableHead-root {
+  background: #0891b20a;
+}
+.superadmin-content .MuiTableHead-root .MuiTableCell-root {
+  color: var(--sa-muted);
+  font-size: 12px;
+  padding-block: 16px;
+  white-space: nowrap;
+}
+.superadmin-content .MuiTableCell-root {
+  border-color: var(--sa-border);
+}
+.superadmin-content .MuiChip-outlined .MuiChip-label {
+  color: var(--sa-ink);
+}
+.superadmin-content .MuiButton-root {
+  border-radius: 10px;
+  text-transform: none;
+}
+.superadmin-content .MuiOutlinedInput-root {
+  border-radius: 10px;
+}
+@media (max-width: 899px) {
+  .superadmin-header > div:first-child > h5 {
+    font-size: 22px;
+  }
+  .superadmin-page .superadmin-nav-item {
+    min-height: 42px;
+  }
+}

@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
 import { Toaster, toast, useToasterStore } from 'react-hot-toast';
 
 // ==== Pages & Components ====
@@ -464,67 +464,69 @@ export default function App() {
   const BASENAME = process.env.REACT_APP_BASENAME || '/';
 
   return (
-    <LanguageProvider>
-      <ToastLimit />
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-        toastOptions={{
-          duration: 5000,
-          style: {
-            background: '#333',
-            color: '#fff',
-            borderRadius: '12px',
-            fontSize: '14px',
-            padding: '12px 20px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
+    <MotionConfig reducedMotion="user">
+      <LanguageProvider>
+        <ToastLimit />
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          toastOptions={{
+            duration: 5000,
+            style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '12px',
+              fontSize: '14px',
+              padding: '12px 20px',
             },
-          },
-          error: {
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
+            success: {
+              iconTheme: {
+                primary: '#10B981',
+                secondary: '#fff',
+              },
             },
-          },
-        }}
-      />
-      <AuthProvider>
-        <OfflineSyncProvider>
-          <Router
-            basename={BASENAME}
-            future={{
-              v7_startTransition: true,
-              v7_relativeSplatPath: true,
-            }}
-          >
-            <ScrollToTop />
-            {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
-            <ThemeSync />
-            <FieldAssistantLocationTracker />
+            error: {
+              iconTheme: {
+                primary: '#EF4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
+        <AuthProvider>
+          <OfflineSyncProvider>
+            <Router
+              basename={BASENAME}
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true,
+              }}
+            >
+              <ScrollToTop />
+              {/* MUI (Header) ↔ Tailwind (html.dark) sinxronizator */}
+              <ThemeSync />
+              <FieldAssistantLocationTracker />
 
-            <div className="App d-flex flex-column min-vh-100">
-              <Header />
+              <div className="App d-flex flex-column min-vh-100">
+                <Header />
 
-              <main className="flex-grow-1">
-                <ChunkLoadBoundary>
-                  <Suspense fallback={<PageLoader />}>
-                    <AnimatedRoutes />
-                  </Suspense>
-                </ChunkLoadBoundary>
-              </main>
+                <main className="flex-grow-1">
+                  <ChunkLoadBoundary>
+                    <Suspense fallback={<PageLoader />}>
+                      <AnimatedRoutes />
+                    </Suspense>
+                  </ChunkLoadBoundary>
+                </main>
 
-              <ChatWidget />
-              <AIAssistantWidget />
+                <ChatWidget />
+                <AIAssistantWidget />
 
-              <ConditionalFooter />
-            </div>
-          </Router>
-        </OfflineSyncProvider>
-      </AuthProvider>
-    </LanguageProvider>
+                <ConditionalFooter />
+              </div>
+            </Router>
+          </OfflineSyncProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </MotionConfig>
   );
 }

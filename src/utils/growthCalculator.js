@@ -1,11 +1,27 @@
 import { LMS_DATA } from './whoLMS';
+import WHO_V6 from '../data/whoLmsV6.json';
+
+const V6_INDICATORS = { height: 'HFA', weight: 'WFA', bmi: 'BFA' };
+const V6_SEX = { boys: 'male', girls: 'female' };
 
 /**
  * Interpolates LMS values between age points
  */
 const getLMS = (type, gender, ageInMonths) => {
-  const data = LMS_DATA[gender]?.[type];
-  if (!data) return null;
+  const useV6 = ageInMonths >= 30 && ageInMonths <= 90;
+  const data = useV6
+    ? WHO_V6.filter(
+        (row) =>
+          row.sex === V6_SEX[gender] && row.indicator === V6_INDICATORS[type]
+      ).map((row) => [row.month, row.L, row.M, row.S])
+    : LMS_DATA[gender]?.[type];
+  if (!data || !Number.isFinite(ageInMonths) || data.length === 0) return null;
+
+  // Never extrapolate clinical reference data.  Returning the first/last row
+  // made an out-of-range child look as if the reference applied to them.
+  if (ageInMonths < data[0][0] || ageInMonths > data[data.length - 1][0]) {
+    return null;
+  }
 
   // Find exact match or bounding points
   let lower = null;
@@ -21,8 +37,8 @@ const getLMS = (type, gender, ageInMonths) => {
     }
   }
 
-  if (!lower && upper) return { l: upper[1], m: upper[2], s: upper[3] };
-  if (lower && !upper) return { l: lower[1], m: lower[2], s: lower[3] };
+  if (!lower && upper) return null;
+  if (lower && !upper) return null;
   if (!lower && !upper) return null;
 
   // Linear interpolation
@@ -44,15 +60,24 @@ const getLMS = (type, gender, ageInMonths) => {
  */
 export const calculateZScore = (type, value, gender, ageInMonths) => {
   const lms = getLMS(type, gender, ageInMonths);
-  if (!lms || !value) return null;
+  if (!lms || !Number.isFinite(value) || value <= 0) return null;
 
   const { l, m, s } = lms;
   let z;
 
-  if (Math.abs(l) < 0.01) {
+  if (l === 0) {
     z = Math.log(value / m) / s;
   } else {
     z = (Math.pow(value / m, l) - 1) / (l * s);
+  }
+
+  if (['weight', 'bmi'].includes(type) && Math.abs(z) > 3) {
+    const measurement = (sd) =>
+      l === 0 ? m * Math.exp(s * sd) : m * Math.pow(1 + l * s * sd, 1 / l);
+    z =
+      z > 3
+        ? 3 + (value - measurement(3)) / (measurement(3) - measurement(2))
+        : -3 + (value - measurement(-3)) / (measurement(-2) - measurement(-3));
   }
 
   return parseFloat(z.toFixed(2));
@@ -62,7 +87,7 @@ export const calculateZScore = (type, value, gender, ageInMonths) => {
  * Returns percentile corresponding to a Z-score
  */
 export const zToPercentile = (z) => {
-  if (z === null) return null;
+  if (!Number.isFinite(z)) return null;
   // Standard normal cumulative distribution function approximation
   const p = 0.5 * (1 + Math.sign(z) * erf(Math.abs(z) / Math.sqrt(2)));
   return Math.round(p * 100);
@@ -86,6 +111,13 @@ function erf(x) {
  * Returns status color and text based on Z-score
  */
 export const getZScoreStatus = (z) => {
+  if (!Number.isFinite(z)) {
+    return {
+      color: '#64748b',
+      status: 'Insufficient data',
+      code: 'insufficient_data',
+    };
+  }
   const absZ = Math.abs(z);
   if (absZ < 1) return { color: '#10b981', status: 'Normal', code: 'normal' }; // Green
   if (absZ < 2) return { color: '#f59e0b', status: 'Monitor', code: 'monitor' }; // Yellow

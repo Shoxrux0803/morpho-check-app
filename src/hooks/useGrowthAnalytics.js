@@ -1,3 +1,4 @@
+import { totalAgeMonths } from '../utils/ageMonths';
 import { useMemo } from 'react';
 import {
   calculateZScore,
@@ -5,15 +6,32 @@ import {
   zToPercentile,
 } from '../utils/growthCalculator';
 
-export const useGrowthAnalytics = (formData) => {
+export const useGrowthAnalytics = (formData, canonicalMetrics = null) => {
   return useMemo(() => {
+    if (canonicalMetrics) {
+      return Object.fromEntries(
+        ['height', 'weight', 'bmi']
+          .filter((key) => canonicalMetrics[key])
+          .map((key) => {
+            const metric = canonicalMetrics[key];
+            const z = metric.z_score;
+            return [
+              key,
+              {
+                value: metric.value,
+                zScore: z,
+                percentile: metric.percentile,
+                status: getZScoreStatus(z),
+                source: 'backend',
+              },
+            ];
+          })
+      );
+    }
     if (!formData.age || !formData.gender) return null;
 
     // WHO standards use age in months
-    const ageInMonths =
-      (Number(formData.age) || 0) * 12 +
-      (Number(formData.ageMonths) || 0) +
-      Number(formData.ageDays || 0) / 30.44;
+    const ageInMonths = totalAgeMonths(formData);
     const gender = formData.gender === 'erkak' ? 'boys' : 'girls';
 
     const results = {};
@@ -62,5 +80,5 @@ export const useGrowthAnalytics = (formData) => {
     }
 
     return results;
-  }, [formData]);
+  }, [formData, canonicalMetrics]);
 };

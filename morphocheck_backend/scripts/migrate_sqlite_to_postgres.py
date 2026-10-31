@@ -372,7 +372,7 @@ def main():
 
     # Tekshirish
     if not args.no_verify:
-        all_ok = verify_migration(sqlite_engine, pg_engine)
+        verify_migration(sqlite_engine, pg_engine)
 
     elapsed = (datetime.now() - start_time).total_seconds()
 

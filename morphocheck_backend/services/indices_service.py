@@ -1,6 +1,7 @@
 import math
 from typing import Any, Dict
 
+from services.index_model_v6 import MODEL_VERSION, calculate_v6
 from services.ky_localization import report_text
 
 _T = {
@@ -639,7 +640,9 @@ def get_ecological_factor(m: Dict[str, Any]) -> float:
     return 1.05
 
 
-REFERENCE_MODEL_VERSION = "UZ_FALLBACK_V5_4"
+REFERENCE_MODEL_VERSION = MODEL_VERSION
+MIN_ESTIMATED_FAT_PERCENT = 2.0
+MAX_ESTIMATED_FAT_PERCENT = 45.0
 
 
 def _clamp(value: float, low: float, high: float) -> float:
@@ -666,73 +669,6 @@ def _safe_z(value: float, mean: float, sd: float, flags: list, key: str) -> floa
     return round((value - mean) / sd, 2)
 
 
-def _z_to_centile_lane(z: float) -> int:
-    if z < -1.88:
-        return 1
-    if z < -1.04:
-        return 2
-    if z <= 1.04:
-        return 3
-    if z <= 1.88:
-        return 4
-    return 5
-
-
-def _hmai_category(score: float) -> str:
-    if score >= 80:
-        return "high"
-    if score >= 60:
-        return "satisfactory"
-    if score >= 40:
-        return "borderline"
-    return "low"
-
-
-def _mii_category(score: float) -> str:
-    return _hmai_category(score)
-
-
-def _adi_category(score: float) -> str:
-    if score < 3:
-        return "harmonic"
-    if score < 6:
-        return "disharmonic"
-    return "severe"
-
-
-def _mcri_category(score: float) -> str:
-    if score < 30:
-        return "low_risk"
-    if score < 50:
-        return "moderate_risk"
-    if score < 70:
-        return "high_risk"
-    return "very_high_risk"
-
-
-def _limit_category_to_borderline(category: str) -> str:
-    return "borderline" if category in {"high", "satisfactory"} else category
-
-
-def _adi_component_z(
-    manual_data: Dict[str, Any],
-    keys: tuple,
-    height: float,
-    mean_ratio: float,
-    sd_ratio: float,
-    flags: list,
-    flag_name: str,
-) -> float:
-    raw = next(
-        (_as_float(manual_data.get(k)) for k in keys if manual_data.get(k) is not None),
-        None,
-    )
-    if raw is None or raw <= 0 or height <= 0:
-        flags.append(f"missing:{flag_name}")
-        return 0.0
-    return _safe_z(raw / height, mean_ratio, sd_ratio, flags, flag_name)
-
-
 def calculate_age_independent_indices(
     gender: str,
     height: float,
@@ -743,9 +679,11 @@ def calculate_age_independent_indices(
     """Calculate composition values that do not require a person's age."""
     is_male = _is_male_gender(gender)
     m = manual_data or {}
+    component_flags = []
 
-    if m.get("total_body_water") is not None:
-        tbw = float(m["total_body_water"])
+    measured_tbw = _as_float(m.get("total_body_water"))
+    if measured_tbw is not None and weight > 0 and 0 < measured_tbw < weight:
+        tbw = measured_tbw
     elif is_male:
         if height > 132.7:
             tbw = -21.993 + (0.406 * weight) + (0.209 * height)
@@ -756,43 +694,55 @@ def calculate_age_independent_indices(
     else:
         tbw = 0.076 + (0.507 * weight) + (0.013 * height)
 
-    ffm = tbw / 0.732
-    fm = (
-        float(m["fat_mass"])
-        if m.get("fat_mass") is not None
-        else max(0, weight - ffm)
-    )
-    fm_percent = (
-        float(m["fat_percent"])
-        if m.get("fat_percent") is not None
-        else ((fm / weight) * 100 if weight > 0 else 0)
-    )
+    if measured_tbw is not None and measured_tbw != tbw:
+        component_flags.append("invalid:total_body_water_out_of_range")
+
+    if weight > 0:
+        tbw = _clamp(tbw, 0.0, weight)
+
+    measured_fm = _as_float(m.get("fat_mass"))
+    measured_pbf = _as_float(m.get("fat_percent"))
+    measured_ffm = _as_float(m.get("ffm_kg", m.get("ffm_measured_kg")))
+    if measured_ffm is not None and weight > 0 and 0 < measured_ffm <= weight:
+        fm = weight - measured_ffm
+    elif measured_fm is not None and weight > 0 and 0 < measured_fm < weight:
+        fm = measured_fm
+        if (
+            measured_pbf is not None
+            and 0 < measured_pbf < 100
+            and abs(measured_fm - (weight * measured_pbf / 100.0))
+            > max(0.2, weight * 0.01)
+        ):
+            component_flags.append("warning:fat_mass_pbf_mismatch")
+    elif measured_pbf is not None and weight > 0 and 0 < measured_pbf < 100:
+        fm = weight * measured_pbf / 100.0
+    elif weight > 0:
+        if measured_fm is not None:
+            component_flags.append("invalid:fat_mass_out_of_range")
+        if measured_pbf is not None:
+            component_flags.append("invalid:fat_percent_out_of_range")
+        estimated_ffm = tbw / 0.732
+        ffm_low = weight * (1.0 - (MAX_ESTIMATED_FAT_PERCENT / 100.0))
+        ffm_high = weight * (1.0 - (MIN_ESTIMATED_FAT_PERCENT / 100.0))
+        ffm = _clamp(estimated_ffm, ffm_low, ffm_high)
+        if not math.isclose(ffm, estimated_ffm, abs_tol=1e-9):
+            component_flags.append("warning:estimated_fat_percent_clamped")
+        fm = weight - ffm
+    else:
+        fm = 0.0
+
+    # Mass balance is a hard invariant: body weight = fat mass + fat-free mass.
+    ffm = weight - fm if weight > 0 else 0.0
+    fm_percent = round((fm / weight) * 100, 6) if weight > 0 else 0.0
     muscle_mass = (
-        float(m["muscle_mass"])
-        if m.get("muscle_mass") is not None
-        else ffm * 0.8
+        float(m["muscle_mass"]) if m.get("muscle_mass") is not None else ffm * 0.8
     )
-    bone_mass = (
-        float(m["bone_mass"])
-        if m.get("bone_mass") is not None
-        else ffm * 0.15
-    )
+    bone_mass = float(m["bone_mass"]) if m.get("bone_mass") is not None else ffm * 0.15
     acm = float(m["acm"]) if m.get("acm") is not None else tbw * 0.55
     visceral_fat = (
-        float(m["visceral_fat"])
-        if m.get("visceral_fat") is not None
-        else 1.0
+        float(m["visceral_fat"]) if m.get("visceral_fat") is not None else 1.0
     )
     muscle_percent = (muscle_mass / weight) * 100 if weight > 0 else 0
-    hmai = (
-        round(
-            (muscle_percent / (fm_percent * bmi)) * get_ecological_factor(m),
-            3,
-        )
-        if fm_percent > 0 and bmi > 0
-        else 0.0
-    )
-
     return {
         "tbw": tbw,
         "tbw_percent": round((tbw / weight) * 100, 1) if weight > 0 else 0,
@@ -805,12 +755,12 @@ def calculate_age_independent_indices(
         "acm": acm,
         "acm_percent": round((acm / tbw) * 100, 1) if tbw > 0 else 0,
         "visceral_fat": visceral_fat,
-        "hmai": hmai,
+        "component_flags": component_flags,
     }
 
 
 def get_centile_from_z(z: float) -> str:
-    """Z-score asosida WHO sentil intervalini qaytaradi."""
+    """Return a screening centile lane from the supplied fallback z-score."""
     if z is None:
         return ""
     if z < -1.88:
@@ -909,9 +859,10 @@ def calculate_detailed_indices(
     manual_data: Dict[str, Any] = None,
     lang: str = "uz",
     all_settings: Dict[str, Any] = None,
+    age_months: float = None,
 ) -> Dict[str, Any]:
     # Dinamik tarjimalar uchun yordamchi
-    def _local_t(key, l, **kwargs):
+    def _local_t(key, language, **kwargs):
         if all_settings:
             # Key: 'interp_astenik', 'adv_body_len_high', etc.
             # Avval interp_ prefixi bilan qidiramiz
@@ -922,16 +873,16 @@ def calculate_detailed_indices(
 
             val = all_settings.get(s_key)
             if val and isinstance(val, dict):
-                text = val.get(l) or val.get("uz", key)
+                text = val.get(language) or val.get("uz", key)
                 if kwargs:
                     try:
                         text = text.format(**kwargs)
                     except (KeyError, IndexError, ValueError) as exc:
                         text = f"{text} (format xatosi: {exc})"
-                return report_text(text, l)
+                return report_text(text, language)
 
         # Fallback to hardcoded _T
-        return _t(key, l, **kwargs)
+        return _t(key, language, **kwargs)
 
     gender_norm = (gender or "").strip().lower()
     is_male = _is_male_gender(gender_norm)
@@ -1226,14 +1177,10 @@ def calculate_detailed_indices(
     fm = composition["fm"]
     fm_percent = composition["fm_percent"]
     muscle_mass = composition["muscle_mass"]
-    muscle_p = composition["muscle_percent"]
     bone_mass = composition["bone_mass"]
     acm = composition["acm"]
     visceral_fat = composition["visceral_fat"]
-    hmai = composition["hmai"]
     ideal_tbw = 0.61 * ideal_w if is_male else 0.58 * ideal_w
-    ffm_percent = (ffm / weight) * 100 if weight > 0 else 0
-
     low_fm, high_fm = get_fm_percent_norm(age, gender_norm)
     normal_fm = (low_fm + high_fm) / 2.0
     fm_norm_str = f"{low_fm}-{high_fm}%"
@@ -1253,7 +1200,9 @@ def calculate_detailed_indices(
     if m.get("visceral_fat") is not None:
         visceral_fat = float(m["visceral_fat"])
     else:
-        base_vf = 1.0 if age < 10 else (1.5 if age <= 15 else (2.0 if age <= 20 else 3.0))
+        base_vf = (
+            1.0 if age < 10 else (1.5 if age <= 15 else (2.0 if age <= 20 else 3.0))
+        )
         age_adj_vf = max(0, age - 5) * 0.08
         fat_adj_vf = (fm_percent - normal_fm) / 3.5
         visceral_fat = round(max(1.0, min(15.0, base_vf + age_adj_vf + fat_adj_vf)), 1)
@@ -1275,7 +1224,7 @@ def calculate_detailed_indices(
     visceral_min, visceral_max = get_visceral_norm(age)
     visceral_norm = f"{visceral_min}-{visceral_max}"
 
-    # 4. Z-scores (WHO Standards Approximation)
+    # 4. Local screening z-scores (not official WHO LMS calculations)
     if age < 5:
         sd_h = 3.5 + (age * 0.3)
         sd_w = ideal_w * 0.12 if ideal_w > 0 else 1.0
@@ -1309,190 +1258,87 @@ def calculate_detailed_indices(
     z_bmi = round((bmi - ideal_bmi) / sd_bmi, 2) if sd_bmi > 0 else 0
     z_tbw = round((tbw - ideal_tbw) / sd_tbw, 2) if sd_tbw > 0 else 0
 
-    component_flags = []
-    qc_status = "ok"
-
-    # 4.1 FM_z, MM_z and MCRI calculation
-    median_fm_p = (low_fm + high_fm) / 2
-    sd_fm_p = (high_fm - low_fm) / 4 if (high_fm - low_fm) > 0 else 1.0
-    fm_z = _safe_z(fm_percent, median_fm_p, sd_fm_p, component_flags, "fm")
-
-    median_mm_p = (muscle_min + muscle_max) / 2
-    sd_mm_p = (muscle_max - muscle_min) / 4 if (muscle_max - muscle_min) > 0 else 1.0
-    mm_z = _safe_z(muscle_p, median_mm_p, sd_mm_p, component_flags, "smm_percent")
-
-    # 4.2 Z_chest calculation for MII
-    chest_val = float(m.get("chest") or 0)
-    if chest_val > 0 and ideal_h > 0:
-        ideal_chest = ideal_h * 0.5
-        sd_chest = ideal_chest * 0.1
-        z_chest = round((chest_val - ideal_chest) / sd_chest, 2)
-    else:
-        z_chest = 0
-
-    # 5. Centile and Corridor (WHO based on BMI Z-score)
+    # Author indices use measured FFM only. Legacy composition estimates above
+    # remain separate display values and never enter the v6 model.
+    v6 = calculate_v6(
+        age_months=age * 12 if age_months is None else age_months,
+        sex=gender,
+        height_cm=height,
+        weight_kg=weight,
+        ffm_kg=m.get("ffm_kg", m.get("ffm_measured_kg")),
+        fm_kg=m.get("independent_fm_kg", m.get("fat_mass")),
+        thigh_circ_cm=m.get("thigh_circ_cm", m.get("thigh_circumference")),
+        calf_circ_cm=m.get("calf_circ_cm", m.get("calf_circumference")),
+        upper_arm_circ_cm=m.get("upper_arm_circ_cm", m.get("shoulder_circumference")),
+        haz=m.get("haz"),
+        waz=m.get("waz"),
+        baz=m.get("baz"),
+    )
+    if v6["haz"] is not None:
+        z_h, z_w, z_bmi = v6["haz"], v6["waz"], v6["baz"]
     centile = get_centile_from_z(z_bmi)
     corridor = get_corridor_from_z(z_bmi, lang)
-
-    # 6. Main Indices (MorphoCheck author model FINAL v5.4)
-    am = 100.0 - min(100.0, 20.0 * ((abs(z_h) + abs(z_bmi)) / 2.0))
-    p_h = _z_to_centile_lane(z_h)
-    p_w = _z_to_centile_lane(z_w)
-    p_cc = _z_to_centile_lane(z_chest)
-    delta_p = max(p_h, p_w, p_cc) - min(p_h, p_w, p_cc)
-    gm = 100.0 - min(100.0, 25.0 * delta_p)
-    hmai = round((am + gm) / 2.0, 2)
-    extreme_z_flag = max(abs(z_h), abs(z_bmi)) >= 3.0
-
-    ffm_for_mq = weight - fm
-    mii_hard_qc_failed = False
-    if weight <= 0:
-        component_flags.append("hard_qc:weight_not_positive")
-        mii_hard_qc_failed = True
-    if fm < 0 or fm >= weight:
-        component_flags.append("hard_qc:fat_mass_out_of_range")
-        mii_hard_qc_failed = True
-    if ffm_for_mq <= 0:
-        component_flags.append("hard_qc:ffm_not_positive")
-        mii_hard_qc_failed = True
-    if muscle_mass < 0 or muscle_mass > ffm_for_mq:
-        component_flags.append("hard_qc:smm_out_of_range")
-        mii_hard_qc_failed = True
-
-    if mii_hard_qc_failed:
-        qc_status = "error"
-        mq = None
-        mq_z = 0.0
-        hyd_z = 0.0
-        mii = None
-    else:
-        mq = (muscle_mass / ffm_for_mq) * 100
-        mq_mean = 78.0 if is_male else 74.0
-        mq_sd = 8.0
-        mq_z = _safe_z(mq, mq_mean, mq_sd, component_flags, "mq")
-
-        tbw_percent_value = (tbw / weight) * 100 if weight > 0 else 0
-        tbw_mid = (tbw_min + tbw_max) / 2
-        sd_tbw_percent = max(1.0, (tbw_max - tbw_min) / 4)
-        predicted_tbw_percent = tbw_mid - (0.65 * (fm_percent - median_fm_p))
-        hyd_res = tbw_percent_value - predicted_tbw_percent
-        hyd_z = _safe_z(hyd_res, 0.0, sd_tbw_percent, component_flags, "hyd_res")
-
-        d_fm = min(1.0, abs(fm_z) / 3.0)
-        d_mq = min(1.0, abs(mq_z) / 3.0)
-        d_hyd = min(1.0, abs(hyd_z) / 3.0)
-        mii = round(100.0 * (1.0 - ((d_fm + d_mq + d_hyd) / 3.0)), 2)
-
-    severe_component_flag = False
-    component_warning = False
-    max_mii_component_z = None
-    if mii is not None:
-        max_mii_component_z = max(abs(fm_z), abs(mq_z), abs(hyd_z))
-        severe_component_flag = max_mii_component_z >= 3.0
-        component_warning = 2.0 <= max_mii_component_z < 3.0
-        if severe_component_flag:
-            component_flags.append("severe_component_flag")
-        elif component_warning:
-            component_flags.append("component_warning")
-
-    ratio_z_values = [
-        _adi_component_z(
-            m,
-            ("shoulder_breadth", "shoulder_width", "shoulderBreadth"),
-            height,
-            0.22,
-            0.03,
-            component_flags,
-            "shoulder_breadth_ratio",
-        ),
-        _safe_z(chest_val / height, 0.50, 0.05, component_flags, "chest_ratio")
-        if chest_val > 0 and height > 0
-        else 0.0,
-        _adi_component_z(
-            m,
-            ("thigh_circumference", "thighCircumference"),
-            height,
-            0.30,
-            0.04,
-            component_flags,
-            "thigh_circumference_ratio",
-        ),
-        _adi_component_z(
-            m,
-            ("calf_circumference", "calfCircumference"),
-            height,
-            0.20,
-            0.03,
-            component_flags,
-            "calf_circumference_ratio",
-        ),
-    ]
-    adi = round(sum(min(2.0, abs(z) / 1.5) for z in ratio_z_values), 2)
-
-    if mii is None:
-        mcri = None
-    else:
-        r_bmi = min(100.0, abs(z_bmi) * 50.0)
-        r_fm = min(100.0, abs(fm_z) * 50.0)
-        r_mm = min(100.0, max(0.0, -mm_z) * 50.0)
-        r_adi = min(100.0, (adi / 8.0) * 100.0)
-        r_int = 100.0 - mii
-        mcri = round(
-            (0.30 * r_bmi)
-            + (0.30 * r_fm)
-            + (0.20 * r_mm)
-            + (0.10 * r_adi)
-            + (0.10 * r_int),
-            2,
-        )
-
-    if any(flag.startswith("reference_model_error") for flag in component_flags):
-        qc_status = "reference_model_error"
-    elif qc_status != "error" and component_flags:
-        qc_status = "warning"
-
-    # Interpretation — 4 tilda
-    raw_hmai_category = _hmai_category(hmai)
-    hmai_category = (
-        _limit_category_to_borderline(raw_hmai_category)
-        if extreme_z_flag
-        else raw_hmai_category
+    hmai, mii, adi, mcri = (v6[k] for k in ("hmai", "mii", "adi", "mcri"))
+    component_flags = v6["component_flags"]
+    qc_status = v6["qc_status"]
+    hmai_category, mii_category, adi_category, mcri_category = (
+        v6[k + "_category"] for k in ("hmai", "mii", "adi", "mcri")
     )
-    if hmai_category in {"high", "satisfactory"}:
-        hmai_desc = _local_t("hmai_optimal", lang)
-    elif hmai_category == "borderline":
-        hmai_desc = _local_t("hmai_accel", lang)
-    else:
-        hmai_desc = _local_t("hmai_stress", lang)
-
-    raw_mii_category = _mii_category(mii) if mii is not None else "not_calculated"
-    mii_category = (
-        _limit_category_to_borderline(raw_mii_category)
-        if severe_component_flag and mii is not None
-        else raw_mii_category
+    raw_hmai_category, raw_mii_category = hmai_category, mii_category
+    # Category labels describe research scores; no acceleration or diagnostic claims.
+    labels = {
+        "uz": {
+            "high": "Yuqori",
+            "satisfactory": "Qoniqarli",
+            "borderline": "Chegaraviy",
+            "low": "Past",
+            "harmonic": "Mutanosib",
+            "disharmonic": "O?rtacha dispropor?siya",
+            "severe": "Yuqori disproportsiya",
+            "low_risk": "Past",
+            "moderate_risk": "O?rtacha",
+            "high_risk": "Yuqori",
+            "very_high_risk": "Juda yuqori",
+            "not_calculated": "Hisoblanmadi",
+        },
+        "ru": {
+            "high": "???????",
+            "satisfactory": "??????????????????",
+            "borderline": "???????????",
+            "low": "??????",
+            "harmonic": "???????????????",
+            "disharmonic": "????????? ????????????",
+            "severe": "??????? ????????????",
+            "low_risk": "??????",
+            "moderate_risk": "?????????",
+            "high_risk": "???????",
+            "very_high_risk": "????? ???????",
+            "not_calculated": "?? ?????????",
+        },
+        "en": {
+            "high": "High",
+            "satisfactory": "Satisfactory",
+            "borderline": "Borderline",
+            "low": "Low",
+            "harmonic": "Proportionate",
+            "disharmonic": "Moderate disproportion",
+            "severe": "High disproportion",
+            "low_risk": "Low",
+            "moderate_risk": "Moderate",
+            "high_risk": "High",
+            "very_high_risk": "Very high",
+            "not_calculated": "Not calculated",
+        },
+    }
+    category_text = labels.get(lang, labels["en"])
+    hmai_desc, mii_desc, adi_desc, mcri_desc = (
+        category_text[v6[k + "_category"]] for k in ("hmai", "mii", "adi", "mcri")
     )
-    if mii_category in {"high", "satisfactory"}:
-        mii_desc = _local_t("mii_high", lang)
-    elif mii_category == "borderline":
-        mii_desc = _local_t("mii_normal", lang)
-    else:
-        mii_desc = _local_t("mii_low", lang)
-
-    adi_category = _adi_category(adi)
-    if adi_category == "harmonic":
-        adi_desc = _local_t("adi_harmony", lang)
-    elif adi_category == "disharmonic":
-        adi_desc = _local_t("adi_mid", lang)
-    else:
-        adi_desc = _local_t("adi_high", lang)
-
-    mcri_category = _mcri_category(mcri) if mcri is not None else "not_calculated"
-    if mcri_category == "low_risk":
-        mcri_desc = _local_t("mcri_optimal", lang)
-    elif mcri_category == "moderate_risk":
-        mcri_desc = _local_t("mcri_moderate", lang)
-    else:
-        mcri_desc = _local_t("mcri_high", lang)
+    extreme_z_flag = v6["baz"] is not None and abs(v6["baz"]) > 5
+    component_z = [v6[k] for k in ("z_fmi", "z_ffmi") if v6[k] is not None]
+    max_mii_component_z = max(map(abs, component_z)) if component_z else None
+    severe_component_flag = max_mii_component_z is not None and max_mii_component_z >= 3
+    component_warning = max_mii_component_z is not None and 2 <= max_mii_component_z < 3
 
     # 6. Morphological Type
     if z_bmi < -1.5 or (z_h > 1.0 and z_bmi < -0.5):
@@ -1525,37 +1371,7 @@ def calculate_detailed_indices(
         elif -1.0 <= z_body_length <= 1.0:
             advice.append(_local_t("adv_body_len_ok", lang, **fmt))
 
-    # HMAI
-    if hmai >= 80:
-        advice.append(_local_t("adv_hmai_very_high", lang, **fmt))
-    elif hmai >= 60:
-        advice.append(_local_t("adv_hmai_high", lang, **fmt))
-    elif hmai < 40:
-        advice.append(_local_t("adv_hmai_very_low", lang, **fmt))
-    elif hmai < 60:
-        advice.append(_local_t("adv_hmai_low", lang, **fmt))
-    else:
-        advice.append(_local_t("adv_hmai_ok", lang, **fmt))
-
-    # MII
-    if mii is not None and mii < 40:
-        advice.append(_local_t("adv_mii_very_low", lang, **fmt))
-    elif mii is not None and mii < 60:
-        advice.append(_local_t("adv_mii_low", lang, **fmt))
-    elif mii is not None and mii >= 80:
-        advice.append(_local_t("adv_mii_high", lang, **fmt))
-
-    # ADI and MCRI
-    if adi >= 6.0:
-        advice.append(_local_t("adv_adi_very_high", lang, **fmt))
-    elif adi >= 3.0:
-        advice.append(_local_t("adv_adi_high", lang, **fmt))
-    elif adi < 3.0:
-        advice.append(_local_t("adv_adi_ok", lang, **fmt))
-
-    if mcri is not None and mcri >= 50:
-        advice.append(_local_t("adv_mcri_high", lang, **fmt))
-
+    # Composite research scores do not trigger legacy diagnostic advice.
     # BMI
     if z_bmi < -2.0:
         advice.append(_local_t("adv_bmi_very_low", lang, **fmt))
@@ -1649,20 +1465,20 @@ def calculate_detailed_indices(
         "component_flags": component_flags,
         "qc_status": qc_status,
         "range_check_passed": (
-            0 <= hmai <= 100
+            (hmai is None or 0 <= hmai <= 100)
             and (mii is None or 0 <= mii <= 100)
-            and 0 <= adi <= 8
+            and (adi is None or 0 <= adi <= 100)
             and (mcri is None or 0 <= mcri <= 100)
         ),
         "reference_model_version": REFERENCE_MODEL_VERSION,
         "extreme_z_flag": extreme_z_flag,
         "severe_component_flag": severe_component_flag,
         "component_warning": component_warning,
-        "z_fm": fm_z,
-        "z_mq": mq_z,
-        "z_hyd": hyd_z,
-        "z_smm": mm_z,
-        "mq": round(mq, 1) if mq is not None else None,
+        "z_fm": v6["z_fmi"],
+        "z_mq": None,
+        "z_hyd": None,
+        "z_smm": None,
+        "mq": None,
         "max_mii_component_z": max_mii_component_z,
         "morphological_type": morphological_type,
         "morphological_type_key": morph_type_key,
@@ -1671,4 +1487,8 @@ def calculate_detailed_indices(
         "secular_trend": secular_trend,
         "secular_trend_key": secular_trend_key,
         "advice": advice,
+        "growth_reference_version": "supplied_v6_WHO_LMS"
+        if v6["baz"] is not None
+        else "UZ_FALLBACK_SCREENING",
+        **v6,
     }

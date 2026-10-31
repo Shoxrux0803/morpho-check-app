@@ -9,6 +9,7 @@ load_dotenv()
 
 import sentry_sdk
 
+
 def _configure_sentry() -> None:
     """Sentry'ni faqat haqiqiy HTTP(S) DSN berilganda yoqadi.
 
@@ -34,17 +35,13 @@ def _configure_sentry() -> None:
 _configure_sentry()
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy.orm import Session
-from starlette.middleware.base import BaseHTTPMiddleware
-
-from utils.i18n import I18nMiddleware, i18n_http_exception_handler, i18n_validation_exception_handler
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from models.base import Base
 from models.security_event import SecurityEvent  # noqa: F401
@@ -64,6 +61,7 @@ from routers.utils_router import router as utils_router
 
 # DB init
 from utils.database import SessionLocal, engine, get_db, init_db
+from utils.i18n import i18n_http_exception_handler, i18n_validation_exception_handler
 from utils.rate_limit import limiter
 from utils.security_events import record_security_event
 
@@ -77,10 +75,10 @@ async def lifespan(app: FastAPI):
     # Jadval(lar) mavjud bo'lmasa yaratadi + ulanishni tekshiradi
     init_db(lambda: Base.metadata.create_all(bind=engine))
     ensure_schema_updates()
-    
+
     from utils.blocked_ips import load_blocked_ips_to_cache
     load_blocked_ips_to_cache()
-    
+
     # 2-bosqich: TimescaleDB hypertable larni tekshirish va yaratish
     try:
         from utils.timescale import ensure_hypertables
@@ -119,38 +117,54 @@ app.add_exception_handler(RateLimitExceeded, security_rate_limit_handler)
 app.add_exception_handler(StarletteHTTPException, i18n_http_exception_handler)
 app.add_exception_handler(RequestValidationError, i18n_validation_exception_handler)
 
-app.add_middleware(I18nMiddleware)
-
-
-class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request, call_next):
+@app.middleware("http")
+async def i18n_middleware(request: Request, call_next):
+    """I18n: til parametrini context variable ga saqlash."""
+    lang = request.query_params.get("lang")
+    from utils.i18n import SUPPORTED_LANGUAGES, parse_accept_language, request_lang
+    if not lang or lang not in SUPPORTED_LANGUAGES:
+        accept_lang = request.headers.get("accept-language", "")
+        lang = parse_accept_language(accept_lang)
+    token = request_lang.set(lang)
+    try:
         response = await call_next(request)
-        if request.url.scheme == "https":
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = (
-            "camera=(), microphone=(), geolocation=()"
-        )
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "img-src 'self' data: blob:; "
-            "object-src 'none'; "
-            "base-uri 'self'; "
-            "frame-ancestors 'none'"
-        )
         return response
+    finally:
+        request_lang.reset(token)
 
 
-app.add_middleware(SecurityHeadersMiddleware)
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    """Xavfsizlik sarlavhalarini qo'shish."""
+    try:
+        response = await call_next(request)
+    except Exception:
+        raise
+    if request.url.scheme == "https":
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = (
+        "camera=(), microphone=(), geolocation=()"
+    )
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "img-src 'self' data: blob:; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "frame-ancestors 'none'"
+    )
+    return response
 
 from fastapi.responses import JSONResponse
+
+from utils.blocked_ips import block_ips, is_ip_blocked
 from utils.security_events import get_request_ip
 from utils.threat_shield import assess_request_threat
-from utils.blocked_ips import block_ips, is_ip_blocked
+
 
 @app.middleware("http")
 async def check_blocked_ip_middleware(request: Request, call_next):
@@ -263,14 +277,6 @@ app.add_middleware(
     max_age=600,
 )
 
-# Uploads papkasini yaratish va static qilish
-UPLOAD_DIR = "uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
-
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
-
 def ensure_schema_updates():
     """Small additive schema fixes for deployments without Alembic migrations.
     PostgreSQL va SQLite ikkalasida ham ishlaydi.
@@ -278,7 +284,6 @@ def ensure_schema_updates():
     from sqlalchemy import inspect, text
 
     is_pg = engine.dialect.name == "postgresql"
-    is_sqlite = engine.dialect.name == "sqlite"
     inspector = inspect(engine)
     table_names = inspector.get_table_names()
 
@@ -338,6 +343,7 @@ def ensure_schema_updates():
     # -- patient_analysis ustunlari --
     if "patient_analysis" in table_names:
         for col, typ in [
+            ("age_total_months", "FLOAT"),
             ("doctor_note", "TEXT"),
             ("mahalla", "VARCHAR(150)"),
             ("parents_phone", "VARCHAR(50)"),
@@ -353,6 +359,9 @@ def ensure_schema_updates():
     # -- research_records ustunlari --
     if "research_records" in table_names:
         for col, typ in [
+            ("ffm_measured_kg", "FLOAT"),
+            ("subject_code", "VARCHAR(80)"),
+            ("measurement_sources", "JSON"),
             ("consent_confirmed", "INTEGER DEFAULT 0 NOT NULL"),
             ("consent_guardian_name", "VARCHAR(255)"),
             ("consent_guardian_relationship", "VARCHAR(100)"),
@@ -586,18 +595,36 @@ def health(db: Session = Depends(get_db)):
 # ---- Global Error Handler for Observability ----
 import traceback
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    # Log detailed error to console/logs
+    # StarletteHTTPException (va FastAPI HTTPException) ni maxsus handleriga yuboramiz
+    if isinstance(exc, StarletteHTTPException):
+        return await i18n_http_exception_handler(request, exc)
+
+    # RequestValidationError (Pydantic 422) ni maxsus handleriga yuboramiz
+    if isinstance(exc, RequestValidationError):
+        return await i18n_validation_exception_handler(request, exc)
+
+    import pydantic
+    if isinstance(exc, pydantic.ValidationError):
+        # Ba'zi hollarda Pydantic xatosi to'g'ridan-to'g'ri ko'tarilishi mumkin
+        return await i18n_validation_exception_handler(request, exc)
+
+    # Log faqat haqiqatan kutilmagan xatolar uchun
+    exc_type_name = f"{type(exc).__module__}.{type(exc).__name__}"
     print("=" * 50)
-    print(f"[ERROR] {request.method} {request.url}")
+    print(f"[GLOBAL EXCEPTION] Type: {exc_type_name}")
+    print(f"[ERROR] {request.method} {request.url.path}")
     print(f"Detail: {str(exc)}")
     traceback.print_exc()
     print("=" * 50)
+
+    try:
+        with open("global_error_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"\n{'='*50}\n[GLOBAL EXCEPTION] Type: {exc_type_name}\n[ERROR] {request.method} {request.url.path}\nDetail: {str(exc)}\n{traceback.format_exc()}\n")
+    except Exception:
+        pass
 
     # Return generic but helpful message to client
     return JSONResponse(

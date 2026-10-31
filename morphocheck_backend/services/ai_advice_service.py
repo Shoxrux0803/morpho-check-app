@@ -4,7 +4,8 @@ import os
 import random
 from typing import Dict, List, Optional
 
-import google.generativeai as genai
+from google import genai
+
 from utils.i18n import request_lang
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -246,24 +247,22 @@ for _section in EXPERT_TIPS_LIBRARY.values():
         if "tr" not in _item:
             _item["tr"] = _item.get("uz", [])
 GEMINI_MODELS = [
-    "gemini-3-flash-preview",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemini-flash-latest",
-    "gemini-pro-latest",
+    "gemini-2.5-flash",
 ]
 
 
-def get_gemini_model(model_name: str):
-    """Configures Gemini and returns a model instance."""
+def get_gemini_client():
+    """Returns a client for the supported Google Gen AI SDK."""
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         return None
     try:
-        genai.configure(api_key=api_key)
-        return genai.GenerativeModel(model_name)
+        return genai.Client(api_key=api_key)
     except Exception as e:
-        print(f"[AI ERROR] Failed to configure {model_name}: {str(e)}")
+        print(f"[AI ERROR] Failed to configure Gemini client: {str(e)}")
         return None
 
 
@@ -276,7 +275,9 @@ def get_expert_tips(
     """
     tips = []
     active_lang = lang or request_lang.get() or "uz"
-    l = active_lang if active_lang in ["uz", "ru", "en", "kz", "tm", "tr"] else "uz"
+    language = (
+        active_lang if active_lang in ["uz", "ru", "en", "kz", "tm", "tr"] else "uz"
+    )
 
     # 1. Совет по питанию (на основе ИМТ / Z-score)
     z = patient_data.get("z_score", 0)
@@ -293,7 +294,7 @@ def get_expert_tips(
 
     nutr_options = EXPERT_TIPS_LIBRARY["nutrition"].get(
         cat, EXPERT_TIPS_LIBRARY["nutrition"]["normal"]
-    )[l]
+    )[language]
     tips.append(random.choice(nutr_options))
 
     # 2. Совет по развитию (на основе адаптации или возраста)
@@ -303,7 +304,7 @@ def get_expert_tips(
 
     dev_options = EXPERT_TIPS_LIBRARY["development"].get(
         dev_cat, EXPERT_TIPS_LIBRARY["development"]["harmonious"]
-    )[l]
+    )[language]
     tips.append(random.choice(dev_options))
 
     # 3. Совет по рискам (на основе ML прогнозов)
@@ -312,11 +313,11 @@ def get_expert_tips(
     musculo = risks.get("musculoskeletal_risk", 0)
 
     if metabolic > 40:
-        risk_tips = EXPERT_TIPS_LIBRARY["risk"]["metabolic"][l]
+        risk_tips = EXPERT_TIPS_LIBRARY["risk"]["metabolic"][language]
     elif musculo > 40:
-        risk_tips = EXPERT_TIPS_LIBRARY["risk"]["musculoskeletal"][l]
+        risk_tips = EXPERT_TIPS_LIBRARY["risk"]["musculoskeletal"][language]
     else:
-        risk_tips = EXPERT_TIPS_LIBRARY["nutrition"]["normal"][l]
+        risk_tips = EXPERT_TIPS_LIBRARY["nutrition"]["normal"][language]
 
     tips.append(random.choice(risk_tips))
 
@@ -346,22 +347,25 @@ def generate_parent_tips(
     gender = patient_data.get("gender", "unknown")
     bmi = patient_data.get("bmi", 0)
     z_score = patient_data.get("z_score", 0)
-    adult_height = ml_predictions.get("adult_height_prediction", "N/A")
     risks = ml_predictions.get("risks", {})
 
     prompt = f"""
-    Act as a professional pediatric anthropometrist. 
+    Act as a professional pediatric anthropometrist.
     Based on the following data for a {age}-year-old {gender} child, provide exactly 3 ultra-short advice/tips for their parents.
     DATA: BMI {bmi}, Z-Score {z_score}, Risks: Metabolic {risks.get("metabolic_syndrome_risk") or 0}%, Musculoskeletal {risks.get("musculoskeletal_risk") or 0}%
     INSTRUCTIONS: Respond in {active_lang.upper()}. 3 bullet points. Max 5-7 words per point. Practical and positive. No jargon. Return ONLY list.
     """
 
+    client = get_gemini_client()
+    if client is None:
+        return expert_tips
+
     for model_name in GEMINI_MODELS:
         try:
-            model = get_gemini_model(model_name)
-            if not model:
-                continue
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
             if (
                 not response
                 or not getattr(response, "candidates", None)

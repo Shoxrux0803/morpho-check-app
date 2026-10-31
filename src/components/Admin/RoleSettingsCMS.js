@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Typography,
@@ -201,11 +201,7 @@ const RoleSettingsCMS = () => {
     guest: { label: t('roleGuest'), icon: PersonOutline, color: '#F59E0B' },
   };
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       setLoading(true);
       const data = await AdminApi.roleSettings.list();
@@ -216,7 +212,11 @@ const RoleSettingsCMS = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleToggle = async (role_name, fieldName, currentValue) => {
     try {

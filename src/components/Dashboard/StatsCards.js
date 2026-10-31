@@ -13,7 +13,6 @@ import {
   PersonAdd,
   TrendingUp,
   TrendingDown,
-  Analytics,
   Straighten,
   DoneAll,
 } from '@mui/icons-material';

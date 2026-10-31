@@ -1,6 +1,16 @@
 # morphocheck_backend/models/user.py
 
-from sqlalchemy import Column, DateTime, Float, Index, Integer, String, Text, func, ForeignKey
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from .base import Base  # shu papkadan Base ni olish uchun

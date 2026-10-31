@@ -1,5 +1,3 @@
-import random
-
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
@@ -76,13 +74,13 @@ def predict_health_risks(age: int, bmi: float, z_score: float, somatotype: str) 
         obesity_risk, metabolic_risk, musculo_risk = 0, 0, 0
 
     if z_score > 2:
-        obesity_risk = max(obesity_risk, random.uniform(75, 95))
-        metabolic_risk = max(metabolic_risk, random.uniform(60, 85))
+        obesity_risk = max(obesity_risk, min(95.0, 75.0 + (z_score - 2) * 10))
+        metabolic_risk = max(metabolic_risk, min(85.0, 60.0 + (z_score - 2) * 12.5))
     elif z_score > 1:
-        obesity_risk = max(obesity_risk, random.uniform(40, 65))
-        metabolic_risk = max(metabolic_risk, random.uniform(30, 50))
+        obesity_risk = max(obesity_risk, 40.0 + (z_score - 1) * 25)
+        metabolic_risk = max(metabolic_risk, 30.0 + (z_score - 1) * 20)
     elif z_score < -1.5:
-        musculo_risk = max(musculo_risk, random.uniform(40, 70))
+        musculo_risk = max(musculo_risk, min(70.0, 40.0 + (-z_score - 1.5) * 20))
 
     if s_val == 2:
         obesity_risk += 15

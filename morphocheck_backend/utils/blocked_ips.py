@@ -1,5 +1,7 @@
 from typing import Set
+
 from sqlalchemy.orm import Session
+
 from models.blocked_ip import BlockedIP
 from utils.database import SessionLocal
 
@@ -36,7 +38,7 @@ def block_ips(db: Session, ips: list[str], reason: str = "Blocked by Superadmin"
                 db.add(b)
                 newly_blocked.append(b)
             BLOCKED_IPS_CACHE.add(ip)
-    
+
     if newly_blocked:
         db.commit()
     return len(newly_blocked)

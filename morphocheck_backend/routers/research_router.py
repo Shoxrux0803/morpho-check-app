@@ -3,41 +3,44 @@ import calendar
 import io
 import re
 import urllib.parse
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
+import jwt
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import StreamingResponse
-from jose import JWTError, jwt
+from jwt import InvalidTokenError as JWTError
 from openpyxl import Workbook, load_workbook
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from pydantic import BaseModel, Field
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
-from models.schemas import ResearchRecordCreate, ResearchRecordOut
+from models.schemas import ResearchRecordCreate
 from models.user import User
 from models.userdata import ResearchRecord
 from routers.auth_router import get_current_user
-from utils.audit_helper import record_audit_log
 from services.consent_docx import generate_consent_docx
 from services.indices_service import (
     calculate_age_independent_indices,
     calculate_detailed_indices,
 )
+from services.measurement_provenance import PROVENANCE_VERSION, input_sources
 from services.research_docx import generate_researcher_docx
 from services.research_summary_docx import generate_research_summary_docx
+from utils.audit_helper import record_audit_log
 from utils.database import get_db
 from utils.i18n_export import get_research_header
-from utils.security import ALGORITHM, SECRET_KEY
-from utils.translit import lat2cyr
 from utils.privacy import (
     CHILD_PII_EXPORT_FIELDS,
     child_audit_reference,
     get_child_privacy_enabled,
     redact_research_child_payload,
 )
+from utils.security import ALGORITHM, SECRET_KEY
+from utils.translit import lat2cyr
 
 router = APIRouter(tags=["Researcher"])
 
@@ -47,6 +50,7 @@ class ResearchBulkAction(BaseModel):
 
 
 RESEARCH_IMPORT_FIELDS = [
+    "subject_code",
     "full_name",
     "school_name",
     "settlement",
@@ -100,6 +104,7 @@ RESEARCH_IMPORT_FIELDS = [
     "chest_standing_height",
     "chest_sitting_height",
     "weight",
+    "ffm_measured_kg",
     "trunk_length",
     "torso_length",
     "chest_circumference_pause",
@@ -285,6 +290,7 @@ RESEARCH_EXPORT_FIELD_ORDER = [
     "chest_standing_height",
     "chest_sitting_height",
     "weight",
+    "ffm_measured_kg",
     "trunk_length",
     "torso_length",
     "chest_circumference_pause",
@@ -399,6 +405,7 @@ FLOAT_IMPORT_FIELDS = {
     if field not in INTEGER_IMPORT_FIELDS
     and field
     not in {
+        "subject_code",
         "full_name",
         "school_name",
         "settlement",
@@ -499,6 +506,8 @@ def get_research_xlsx_styles():
 
 
 RESEARCH_TEMPLATE_LABELS = {
+    "ffm_measured_kg": "FFM (kg)",
+    "subject_code": "Боланинг доимий коди",
     "full_name": "F.I.SH",
     "school_name": "Maktab / muassasa",
     "settlement": "Aholi punkti",
@@ -539,6 +548,8 @@ RESEARCH_TEMPLATE_EXTRA_LABELS = {
 
 
 def get_research_template_header(field: str) -> str:
+    if field == "subject_code":
+        return "Боланинг доимий коди"
     report_header = get_research_header("uz", field)
     if report_header != field:
         return report_header
@@ -583,7 +594,7 @@ def research_record_to_dict(
         column.name: getattr(record, column.name)
         for column in ResearchRecord.__table__.columns
     }
-    
+
     # Maxfiylik faqat markaziy role sozlamasi orqali qo'llanadi.
     payload = redact_research_child_payload(
         payload, current_user, privacy_enabled=privacy_enabled
@@ -667,7 +678,7 @@ def format_research_gender_for_xlsx(value, lang="uz") -> str:
     gender = str(value or "").strip().lower()
     is_male = gender in {"boy", "o'g'il", "ogil", "o'g'il bola", "ogil bola", "male", "erkak", "ўғил бола", "ўғил"}
     is_female = gender in {"girl", "qiz", "qiz bola", "female", "ayol", "қиз бола", "қиз"}
-    
+
     if is_male:
         if lang == "tr":
             return "Erkek"
@@ -685,7 +696,7 @@ def format_research_gender_for_xlsx(value, lang="uz") -> str:
             return "\u041f\u0438\u0441\u0430\u0440\u0431\u0430\u0447\u0430"  # Писарбача
         else:
             return "\u040e\u0493\u0438\u043b \u0431\u043e\u043b\u0430"  # Ўғил бола
-            
+
     if is_female:
         if lang == "tr":
             return "K\u0131z"
@@ -703,7 +714,7 @@ def format_research_gender_for_xlsx(value, lang="uz") -> str:
             return "\u0414\u0443\u0445\u0442\u0430\u0440\u0431\u0430\u0447\u0430"  # Духтарбача
         else:
             return "\u049a\u0438\u0437 \u0431\u043e\u043b\u0430"  # Қиз бола
-            
+
     if not value:
         return "-"
     if lang == "uz":
@@ -1177,8 +1188,9 @@ RESEARCH_BASE_EXPORT_FIELDS = [
 def get_research_xlsx_export_field_order() -> list[str]:
     return (
         RESEARCH_BASE_EXPORT_FIELDS
-        + RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS
+        + [field for field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS if field != "tbw_percent"]
         + RESEARCH_INDEX_EXPORT_FIELDS
+        + ["tbw_percent"]
     )
 
 
@@ -1327,9 +1339,11 @@ def build_research_index_export_values(
         # the same body-length measurement in trunk_length.
         "body_length": record.torso_length or record.trunk_length,
         "chest": record.chest_circumference_pause,
-        "shoulder_width": record.shoulder_width,
-        "thigh_circumference": record.thigh_circumference,
-        "calf_circumference": record.calf_circumference,
+        "shoulder_width": getattr(record, "shoulder_width", None),
+        "thigh_circumference": getattr(record, "thigh_circumference", None),
+        "calf_circumference": getattr(record, "calf_circumference", None),
+        "upper_arm_circ_cm": getattr(record, "arm_circumference_total", None),
+        "ffm_kg": getattr(record, "ffm_measured_kg", None),
         "region": record.settlement or record.birth_place,
         "address": record.settlement or record.birth_place,
     }
@@ -1342,7 +1356,6 @@ def build_research_index_export_values(
     )
     empty_values.update(
         {
-            "hmai": composition["hmai"],
             "tbw_percent": composition["tbw_percent"],
             "fat_percent": round(composition["fm_percent"], 1),
             "fat_mass": round(composition["fm"], 1),
@@ -1365,6 +1378,7 @@ def build_research_index_export_values(
         tvi,
         manual_data,
         lang=normalize_export_lang(lang),
+        age_months=sum(v * scale for v, scale in zip(_calculate_research_age_parts(record), (12, 1, 1 / 30.4375))),
     )
     centile = detailed.get("centile")
     morph_type_key = detailed.get("morphological_type_key")
@@ -1399,7 +1413,7 @@ def filter_by_parents_marriage(query, val: str):
     import re
     val_norm = val.strip().lower()
     val_norm = re.sub(r"\s*\(.*?\)", "", val_norm).strip()
-    
+
     if val_norm in ["qarindosh emas", "notrelative", "not relative", "not_relative", "неродственный", "хеш нест", "туыс емес", "garyndash dal", "akraba degil"]:
         return query.filter(
             ResearchRecord.parents_marriage.ilike("%qarindosh emas%")
@@ -1451,7 +1465,7 @@ def filter_by_feeding_type(query, val: str):
     import re
     val_norm = val.strip().lower()
     val_norm = re.sub(r"\s*\(.*?\)", "", val_norm).strip()
-    
+
     if val_norm in ["tabiiy", "natural", "естественное", "табигый", "табиӣ", "табиғи", "tebigy", "dogal"]:
         return query.filter(
             ResearchRecord.feeding_type.ilike("%tabiiy%")
@@ -1582,14 +1596,13 @@ def apply_research_filters(
 
 def get_current_researcher_or_superadmin(
     request: Request,
-    accessToken: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
-    # 1. Tokenni aniqlash (Header yoki Query Param)
-    token = accessToken
+    # Bearer tokenni faqat headerdan qabul qilamiz. Query tokenlar URL/loglarda sizadi.
+    token = None
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
+        token = auth_header.removeprefix("Bearer ").strip()
 
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -1773,6 +1786,7 @@ def export_research_xlsx(
 
     # 1. Заголовки (Локализованные)
     headers_map = [
+        ("Subject code", "subject_code"),
         (get_research_header(export_lang, "created_at"), "created_at"),
         (get_research_header(export_lang, "id"), "id"),
         (get_research_header(export_lang, "full_name"), "full_name"),
@@ -1933,8 +1947,10 @@ def export_research_xlsx(
             (get_research_header(export_lang, "created_by_email"), "created_by_email"),
         )
 
-    headers_map.extend(get_research_bioimpedance_export_headers(export_lang))
+    bioimpedance_headers = get_research_bioimpedance_export_headers(export_lang)
+    headers_map.extend(item for item in bioimpedance_headers if item[1] != "tbw_percent")
     headers_map.extend(get_research_index_export_headers(export_lang))
+    headers_map.extend(item for item in bioimpedance_headers if item[1] == "tbw_percent")
     if get_child_privacy_enabled(db, current_user):
         headers_map = [
             item for item in headers_map if item[1] not in CHILD_PII_EXPORT_FIELDS
@@ -1960,6 +1976,15 @@ def export_research_xlsx(
     # Writing headers
     for col_num, (header_text, _) in enumerate(headers_map, 1):
         cell = ws.cell(row=1, column=col_num, value=header_text)
+        if headers_map[col_num - 1][1] == "tbw_percent":
+            cell.comment = Comment(
+                "TBW is estimated using the sex-, height- and weight-based "
+                "Mellits-Cheek equations. "
+                "TBW (%) = TBW (litres) / weight (kg) * 100. "
+                "No validated Uzbekistan region/district correction is applied. "
+                "Reference: https://discovery.ucl.ac.uk/id/eprint/15090/1/15090.pdf",
+                "MorphoCheck",
+            )
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = center_align
@@ -2027,6 +2052,40 @@ def export_research_xlsx(
                 max_length = cell_length
         ws.column_dimensions[column].width = min(50, max_length + 2)
 
+    metadata = wb.create_sheet("Metadata")
+    metadata.append(["Key", "Value"])
+    metadata.append(["Exported at (UTC)", datetime.now(timezone.utc).isoformat()])
+    metadata.append(["Record count", len(records)])
+    metadata.append(["Sample limit", 10000])
+    metadata.append(["Order", "id descending"])
+    metadata.append(["Population", "Accessible non-deleted research records after filters"])
+    metadata.append(["Raw units", "Lengths/circumferences: cm; weight: kg; skinfolds: mm"])
+    metadata.append(["BMI formula", "weight_kg / (height_cm / 100)^2"])
+    metadata.append(["Index reference version", "DSC_2038_HMAI_MII_ADI_MCRI_v6"])
+    metadata.append(["Index age scope (months)", "30-90; outside scope indices are blank"])
+    metadata.append(["Index status", "Research composite; not clinically validated; MII/MCRI require measured FFM"])
+    metadata.append(["Provenance version", PROVENANCE_VERSION])
+    metadata.append(["Chart reference", "WHO-2007-expanded-z-tables; WFA 61-120 months; HFA/BFA 61-228 months"])
+    for key, value in {"search": search, "full_name": full_name, "school_name": school_name, "settlement": settlement, "feeding_type": feeding_type, "parents_marriage": parents_marriage, "weight_min": weight_min, "weight_max": weight_max, "height_min": height_min, "height_max": height_max, "researcher_id": researcher_id, "date_from": date_from, "date_to": date_to, "gender": gender, "age_min": age_min, "age_max": age_max}.items():
+        if value is not None:
+            if key in {"search", "full_name", "school_name"} and get_child_privacy_enabled(db, current_user):
+                value = "[redacted]"
+            metadata.append([f"Filter: {key}", str(value)])
+    metadata.column_dimensions["A"].width = 30
+    metadata.column_dimensions["B"].width = 85
+    origins = wb.create_sheet("Value sources")
+    origins.append(["Record ID", "Field", "Source"])
+    for record in records:
+        numeric_values = {column.name: getattr(record, column.name) for column in ResearchRecord.__table__.columns}
+        for field in input_sources(record, numeric_values, "unknown"):
+            origins.append([record.id_code or record.id, field, (record.measurement_sources or {}).get(field, "unknown")])
+        computed = build_research_index_export_values(record, export_lang)
+        for field, value in computed.items():
+            if value is not None:
+                origins.append([record.id_code or record.id, field, "estimated" if field in RESEARCH_BIOIMPEDANCE_EXPORT_FIELDS else "calculated"])
+    origins.column_dimensions["A"].width = 22
+    origins.column_dimensions["B"].width = 40
+    origins.column_dimensions["C"].width = 18
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
@@ -2080,6 +2139,11 @@ def coerce_import_value(field: str, value):
     value = clean_import_value(value)
     if value is None:
         return None
+    if field == "subject_code":
+        code = str(value).strip()
+        if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", code):
+            raise ValueError("subject_code: 1-80 lotin harfi, raqam, - yoki _ bo'lishi kerak")
+        return code
     if isinstance(value, (datetime, date)):
         return value.strftime("%Y-%m-%d")
     if field == "gender":
@@ -2400,6 +2464,7 @@ async def import_research_xlsx(
             continue
 
         record = ResearchRecord(**payload)
+        record.measurement_sources = input_sources(record, payload, "imported")
         record.created_by_id = target_user.id
 
         from services.analyze_service import generate_region_based_id
@@ -2407,7 +2472,7 @@ async def import_research_xlsx(
         clean_region = _research_record_id_region(record, target_user)
         clean_district = _research_record_id_district(record, target_user)
         location_key = (clean_region, clean_district)
-        
+
         if location_key not in region_offsets:
             base_id = generate_region_based_id(db, clean_region, clean_district)
             parts = base_id.split("-")
@@ -2418,7 +2483,7 @@ async def import_research_xlsx(
                 }
             else:
                 region_offsets[location_key] = {"prefix": "MC-UNK", "count": 1}
-                
+
         pfx = region_offsets[location_key]["prefix"]
         cnt = region_offsets[location_key]["count"]
         record.id_code = f"{pfx}-{cnt:04d}"
@@ -2489,9 +2554,12 @@ def list_research_records(
         query = query.filter(ResearchRecord.created_by_id == current_user.id)
     elif current_user.role == "researcher":
         # Researcher sees their own records + records of assistants supervised by them
-        assistant_ids = db.query(User.id).filter(User.supervisor_id == current_user.id, User.role == "field_assistant").subquery()
+        assistant_ids = select(User.id).where(
+            User.supervisor_id == current_user.id,
+            User.role == "field_assistant",
+        )
         query = query.filter(
-            (ResearchRecord.created_by_id == current_user.id) | 
+            (ResearchRecord.created_by_id == current_user.id) |
             (ResearchRecord.created_by_id.in_(assistant_ids))
         )
     elif researcher_id:
@@ -2572,19 +2640,6 @@ def list_research_records(
         # SQLite: julianday(exam_date) - julianday(birth_date) = kunlar soni
         # Yil: / 365.25
         # NULL bo'lsa chiqarib tashlash
-        age_expr = func.cast(
-            (
-                func.julianday(
-                    func.coalesce(
-                        ResearchRecord.examination_date,
-                        func.strftime("%Y-%m-%d", "now"),
-                    )
-                )
-                - func.julianday(ResearchRecord.birth_date)
-            )
-            / 365.25,
-            func.cast(0.0, type_=None).__class__,
-        )
         if age_min is not None:
             query = query.filter(
                 ResearchRecord.birth_date.isnot(None),
@@ -2620,12 +2675,10 @@ def list_research_records(
         return [record_id for (record_id,) in query.with_entities(ResearchRecord.id).all()]
 
     total = query.order_by(None).count()
-    records = (
-        query.order_by(ResearchRecord.id.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
-    )
+    records_query = query.order_by(ResearchRecord.id.desc())
+    if paginated:
+        records_query = records_query.offset((page - 1) * page_size).limit(page_size)
+    records = records_query.all()
     privacy_enabled = get_child_privacy_enabled(db, current_user)
     items = [
         research_record_to_dict(
@@ -2918,6 +2971,7 @@ def create_research_record(
     from services.analyze_service import generate_region_based_id
 
     record = ResearchRecord(**payload.model_dump(exclude_unset=True))
+    record.measurement_sources = input_sources(record, payload.model_dump(exclude_unset=True), "measured")
     record.created_by_id = current_user.id
     if record.consent_confirmed and not record.consent_confirmed_at:
         record.consent_confirmed_at = datetime.utcnow()
@@ -2986,6 +3040,33 @@ def get_research_record(
     )
 
 
+@router.get("/{record_id}/timeline")
+def get_research_timeline(
+    record_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_researcher_or_superadmin),
+):
+    # Apply the same permission checks as the detail endpoint before grouping.
+    get_research_record(record_id, db, current_user)
+    anchor = db.get(ResearchRecord, record_id)
+    if anchor.subject_code:
+        query = db.query(ResearchRecord).filter(
+            ResearchRecord.is_deleted == 0,
+            ResearchRecord.created_by_id == anchor.created_by_id,
+            ResearchRecord.subject_code == anchor.subject_code,
+        )
+        total = query.count()
+        records = query.order_by(ResearchRecord.examination_date, ResearchRecord.id).limit(500).all()
+    else:
+        records, total = [anchor], 1
+    return {
+        "subject_code": anchor.subject_code,
+        "total": total,
+        "truncated": total > len(records),
+        "visits": [{"id": record.id, "date": record.examination_date, "height": record.chest_standing_height, "weight": record.weight} for record in records],
+    }
+
+
 @router.put("/{record_id}")
 def update_research_record(
     record_id: int,
@@ -3001,7 +3082,10 @@ def update_research_record(
     if current_user.role == "researcher" and record.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Ruxsat etilmagan")
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    submitted_values = payload.model_dump(exclude_unset=True)
+    changed_values = {key: value for key, value in submitted_values.items() if getattr(record, key, None) != value}
+    record.measurement_sources = {**(record.measurement_sources or {}), **input_sources(record, changed_values, "measured")}
+    for field, value in submitted_values.items():
         if (
             get_child_privacy_enabled(db, current_user)
             and field in CHILD_PII_EXPORT_FIELDS

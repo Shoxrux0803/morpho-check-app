@@ -96,6 +96,7 @@ import {
 } from './superAdmin/utils';
 
 import SuperAdminTabContent from './superAdmin/SuperAdminTabContent';
+import '../styles/superadmin.css';
 
 const SuperAdminPage = () => {
   const theme = useTheme();
@@ -104,6 +105,10 @@ const SuperAdminPage = () => {
   const location = useLocation();
 
   const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('close-ai-chat'));
+  }, [activeTab]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1558,6 +1563,8 @@ const SuperAdminPage = () => {
 
   return (
     <Box
+      className="superadmin-page"
+      data-mode={isDark ? 'dark' : 'light'}
       sx={{
         bgcolor: 'background.default',
         height: isMapTab && !isMobile ? 'calc(100vh - 64px)' : 'auto',
@@ -1620,6 +1627,8 @@ const SuperAdminPage = () => {
                 boxShadow: isDark
                   ? '0 18px 48px rgba(0,0,0,0.34)'
                   : '0 18px 48px rgba(100,116,139,0.09)',
+                borderRadius: '22px',
+                background: isDark ? '#111e2d' : '#ffffff',
               }}
             >
               <Box
@@ -1632,6 +1641,9 @@ const SuperAdminPage = () => {
                   justifyContent: { xs: 'flex-start', md: 'center' },
                   gap: { xs: 1.25, md: 0 },
                   flexDirection: { xs: 'row', md: 'column' },
+                  borderBottom: '1px solid',
+                  borderColor: isDark ? '#243447' : '#e7edf2',
+                  pb: 2.5,
                 }}
               >
                 <Avatar
@@ -1640,6 +1652,9 @@ const SuperAdminPage = () => {
                     height: { xs: 44, md: 54 },
                     margin: { xs: 0, md: '0 auto 12px' },
                     bgcolor: 'primary.main',
+                    background: 'linear-gradient(135deg, #0f766e, #0891b2)',
+                    color: '#fff',
+                    borderRadius: '16px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                     fontSize: { xs: '0.9rem', md: '1.08rem' },
                   }}
@@ -1668,11 +1683,14 @@ const SuperAdminPage = () => {
 
               {/* Custom Nav Items with framer-motion layoutId sliding active state */}
               <Box
+                component="nav"
+                aria-label="Super Admin"
                 sx={{
                   display: 'flex',
                   flexDirection: isMobile ? 'row' : 'column',
                   gap: 0.75,
-                  overflowX: isMobile ? 'auto' : 'visible',
+                  overflowX: isMobile ? 'auto' : 'hidden',
+                  overflowY: isMobile ? 'hidden' : 'auto',
                   pb: isMobile ? 1.5 : 0,
                   flex: { md: '1 1 auto' },
                   minHeight: { md: 0 },
@@ -1685,12 +1703,25 @@ const SuperAdminPage = () => {
                   return (
                     <Box
                       key={index}
-                      component={motion.div}
-                      onClick={() => setActiveTab(index)}
+                      component={motion.button}
+                      type="button"
+                      aria-current={isSelected ? 'page' : undefined}
+                      className="superadmin-nav-item"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        window.dispatchEvent(new CustomEvent('close-ai-chat'));
+                        setActiveTab(index);
+                      }}
                       whileHover={{ scale: 1.015 }}
                       whileTap={{ scale: 0.985 }}
                       sx={{
                         position: 'relative',
+                        isolation: 'isolate',
+                        border: 0,
+                        background: 'transparent',
+                        flexShrink: 0,
+                        font: 'inherit',
+                        textAlign: 'left',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: { xs: 'center', md: 'flex-start' },
@@ -1723,8 +1754,8 @@ const SuperAdminPage = () => {
                             inset: 0,
                             borderRadius: 3,
                             background:
-                              'linear-gradient(135deg, #14b8a6 0%, #2563eb 50%, #8b5cf6 100%)',
-                            boxShadow: '0 8px 20px rgba(37, 99, 235, 0.25)',
+                              'linear-gradient(110deg, #0f766e 0%, #0891b2 100%)',
+                            boxShadow: '0 4px 14px rgba(8, 145, 178, 0.18)',
                             zIndex: -1,
                           }}
                         />
@@ -1766,7 +1797,7 @@ const SuperAdminPage = () => {
                       </Box>
                       <Typography
                         variant="body2"
-                        fontWeight={800}
+                        fontWeight={600}
                         sx={{ fontSize: '0.82rem' }}
                       >
                         {item.label}
@@ -1809,6 +1840,7 @@ const SuperAdminPage = () => {
 
           {/* Main Content Area */}
           <Box
+            className="superadmin-content"
             sx={{
               ...scrollableContentSx,
               width: '100%',
@@ -1822,6 +1854,7 @@ const SuperAdminPage = () => {
           >
             {/* Premium Header */}
             <Box
+              className="superadmin-header"
               component={motion.div}
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1833,7 +1866,7 @@ const SuperAdminPage = () => {
                 alignItems: { xs: 'flex-start', lg: 'center' },
                 gap: 1.5,
                 mb: 1.5,
-                p: 1.5,
+                p: { xs: 2, md: 2.5 },
                 borderRadius: 3,
                 background: isDark
                   ? 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)'
@@ -1851,7 +1884,7 @@ const SuperAdminPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
                 <Typography
                   variant="h5"
-                  fontWeight={900}
+                  fontWeight={700}
                   sx={{
                     background: isDark
                       ? 'linear-gradient(90deg, #38bdf8 0%, #2dd4bf 100%)'
@@ -1986,10 +2019,7 @@ const SuperAdminPage = () => {
                 <Box
                   sx={{
                     width: '100%',
-                    minWidth: {
-                      xs: activeTab === 0 || activeTab === 1 ? 720 : 0,
-                      md: 0,
-                    },
+                    minWidth: 0,
                     height: isMapTab && !isMobile ? '100%' : 'auto',
                     display: isMapTab && !isMobile ? 'flex' : 'block',
                     flexDirection: 'column',

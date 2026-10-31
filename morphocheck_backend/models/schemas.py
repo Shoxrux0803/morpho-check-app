@@ -4,10 +4,53 @@ import re
 from decimal import Decimal
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
-from utils.admin_permissions import DEFAULT_ADMIN_PERMISSIONS, normalize_admin_permissions
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    field_validator,
+    model_validator,
+)
+
+from utils.admin_permissions import (
+    DEFAULT_ADMIN_PERMISSIONS,
+    normalize_admin_permissions,
+)
 
 CONSENT_POLICY_VERSION = "helsinki-declaration-consent-v1"
+
+
+class BodyCompositionInput(BaseModel):
+    """Optional raw BIA payload. Clinical/QC validation is performed canonically."""
+
+    tbw_percent: Optional[float] = Field(None, alias="tbwPercent")
+    pbf_percent: Optional[float] = Field(None, alias="pbfPercent")
+    fat_mass_measured_kg: Optional[float] = Field(None, alias="fatMassMeasuredKg")
+    ffm_measured_kg: Optional[float] = Field(None, alias="ffmMeasuredKg")
+    smm_kg: Optional[float] = Field(None, alias="smmKg")
+    visceral_fat_value: Optional[float] = Field(None, alias="visceralFatValue")
+    visceral_fat_unit: Optional[str] = Field(None, alias="visceralFatUnit", max_length=40)
+    visceral_fat_method: Optional[str] = Field(None, alias="visceralFatMethod", max_length=120)
+    phase_angle_deg: Optional[float] = Field(None, alias="phaseAngleDeg")
+    segmental_lean_mass: Optional[dict[str, Any]] = Field(None, alias="segmentalLeanMass")
+    segmental_fat_mass: Optional[dict[str, Any]] = Field(None, alias="segmentalFatMass")
+    bmr_kcal_day: Optional[float] = Field(None, alias="bmrKcalDay")
+    bmr_source: Optional[str] = Field(None, alias="bmrSource", max_length=60)
+    bmr_equation: Optional[str] = Field(None, alias="bmrEquation", max_length=120)
+    mineral_bone_mass_kg: Optional[float] = Field(None, alias="mineralBoneMassKg")
+    acm_percent: Optional[float] = Field(None, alias="acmPercent")
+    acm_definition_version: Optional[str] = Field(None, alias="acmDefinitionVersion", max_length=120)
+    source: Optional[str] = Field("admin_input", max_length=80)
+    measurement_date: Optional[str] = Field(None, alias="measurementDate", max_length=50)
+    device_manufacturer: Optional[str] = Field(None, alias="deviceManufacturer", max_length=120)
+    device_model: Optional[str] = Field(None, alias="deviceModel", max_length=120)
+    device_serial_or_id: Optional[str] = Field(None, alias="deviceSerialOrId", max_length=120)
+    measurement_method: Optional[str] = Field(None, alias="measurementMethod", max_length=120)
+    operator: Optional[str] = Field(None, max_length=120)
+    reference_version: Optional[str] = Field(None, alias="referenceVersion", max_length=120)
+
+    model_config = {"populate_by_name": True, "extra": "forbid", "allow_inf_nan": False}
 
 
 class PatientData(BaseModel):
@@ -42,6 +85,7 @@ class PatientData(BaseModel):
     analysis_id: Optional[int] = Field(None, alias="analysisId", ge=1)
 
     age: int = Field(..., ge=0, le=120)
+    age_total_months: Optional[float] = Field(None, alias="ageTotalMonths", ge=0, lt=1452, allow_inf_nan=False)
     age_months: Optional[int] = Field(0, alias="ageMonths", ge=0, le=11)
     age_days: Optional[int] = Field(0, alias="ageDays", ge=0, le=31)
     gender: str
@@ -77,12 +121,28 @@ class PatientData(BaseModel):
     bone_mass: Optional[float] = Field(None, alias="boneMass", ge=0, le=30)
     acm: Optional[float] = Field(None, alias="acm", ge=0, le=100)
     visceral_fat: Optional[float] = Field(None, alias="visceralFat", ge=0, le=60)
+    body_composition: Optional[BodyCompositionInput] = Field(None, alias="bodyComposition")
     doctor_note: Optional[str] = Field(None, alias="doctorNote", max_length=2000)
     play_preschool_engagement: Optional[str] = Field(None, alias="playPreschoolEngagement")
 
-    class Config:
-        populate_by_name = True
-        extra = "forbid"
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_age_in_months(cls, values):
+        if not isinstance(values, dict):
+            return values
+        total = values.get("ageTotalMonths", values.get("age_total_months"))
+        if total is None:
+            return values
+        from services.age_service import split_age_months
+
+        total, years, months, days = split_age_months(total)
+        result = dict(values)
+        for key in ("age_months", "age_days", "age_total_months"):
+            result.pop(key, None)
+        result.update(age=years, ageMonths=months, ageDays=days, ageTotalMonths=total)
+        return result
 
     @field_validator(
         "first_name",
@@ -279,8 +339,7 @@ class UserDataCreate(BaseModel):
     bmi: Optional[float]
     somatotype: Optional[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(BaseModel):
@@ -468,8 +527,7 @@ class UserOut(BaseModel):
     def normalize_permissions(cls, v: Any):
         return normalize_admin_permissions(v)
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaymentCreate(BaseModel):
@@ -490,8 +548,7 @@ class PaymentOut(BaseModel):
     status: str
     description: Optional[str]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AuditLogOut(BaseModel):
@@ -505,8 +562,7 @@ class AuditLogOut(BaseModel):
     created_at: datetime.datetime
     user_name: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AnalysisInput(BaseModel):
@@ -543,44 +599,44 @@ class AnalysisInput(BaseModel):
 
         def band(age):
             if age >= 20:
-                return dict(
-                    height=(130, 220),
-                    weight=(30, 250),
-                    head=(52, 64),
-                    chest=(75, 140),
-                    bmi=(14, 60),
-                )
+                return {
+                    "height": (130, 220),
+                    "weight": (30, 250),
+                    "head": (52, 64),
+                    "chest": (75, 140),
+                    "bmi": (14, 60),
+                }
             if age >= 15:
-                return dict(
-                    height=(145, 200),
-                    weight=(35, 120),
-                    head=(52, 61),
-                    chest=(70, 110),
-                    bmi=(12, 38),
-                )
+                return {
+                    "height": (145, 200),
+                    "weight": (35, 120),
+                    "head": (52, 61),
+                    "chest": (70, 110),
+                    "bmi": (12, 38),
+                }
             if age >= 10:
-                return dict(
-                    height=(125, 175),
-                    weight=(24, 70),
-                    head=(50, 58),
-                    chest=(58, 90),
-                    bmi=(12, 38),
-                )
+                return {
+                    "height": (125, 175),
+                    "weight": (24, 70),
+                    "head": (50, 58),
+                    "chest": (58, 90),
+                    "bmi": (12, 38),
+                }
             if age >= 5:
-                return dict(
-                    height=(100, 145),
-                    weight=(14, 40),
-                    head=(48, 55),
-                    chest=(52, 72),
-                    bmi=(12, 38),
-                )
-            return dict(
-                height=(85, 115),
-                weight=(10, 22),
-                head=(46, 52),
-                chest=(48, 62),
-                bmi=(12, 38),
-            )
+                return {
+                    "height": (100, 145),
+                    "weight": (14, 40),
+                    "head": (48, 55),
+                    "chest": (52, 72),
+                    "bmi": (12, 38),
+                }
+            return {
+                "height": (85, 115),
+                "weight": (10, 22),
+                "head": (46, 52),
+                "chest": (48, 62),
+                "bmi": (12, 38),
+            }
 
         b = band(age)
         errs = []
@@ -623,6 +679,7 @@ class AnalysisInput(BaseModel):
 
 
 class ResearchRecordCreate(BaseModel):
+    subject_code: Optional[str] = Field(None, min_length=1, max_length=80, pattern=r"^[A-Za-z0-9_-]+$")
     full_name: Optional[str] = None
     school_name: Optional[str] = None
     settlement: Optional[str] = None
@@ -689,6 +746,7 @@ class ResearchRecordCreate(BaseModel):
     chest_standing_height: Optional[float] = None
     chest_sitting_height: Optional[float] = None
     weight: Optional[float] = None
+    ffm_measured_kg: Optional[float] = Field(None, gt=0, allow_inf_nan=False)
     trunk_length: Optional[float] = None
     torso_length: Optional[float] = None
     chest_circumference_pause: Optional[float] = None
@@ -730,8 +788,7 @@ class ResearchRecordOut(ResearchRecordCreate):
     deleted_by_name: Optional[str] = None
     deleted_at: Optional[datetime.datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RoleSettingsBase(BaseModel):
@@ -745,8 +802,7 @@ class RoleSettingsOut(RoleSettingsBase):
     role_name: str
     updated_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PrivacyRoleSettingsUpdate(BaseModel):
     child_data_privacy_enabled: bool
@@ -755,8 +811,7 @@ class PrivacyRoleSettingsOut(PrivacyRoleSettingsUpdate):
     role_name: str
     updated_at: datetime.datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BlockIPRequest(BaseModel):
     ips: list[str]

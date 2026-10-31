@@ -1,6 +1,7 @@
 import os
-import secrets
 import re
+import secrets
+
 
 def generate_secure_password(length=32):
     return secrets.token_urlsafe(length)
@@ -27,7 +28,7 @@ def main():
     content = re.sub(r'POSTGRES_PASSWORD=.*', f'POSTGRES_PASSWORD={db_pass}', content)
     content = re.sub(r'SECRET_KEY=.*', f'SECRET_KEY={secret_key}', content)
     content = re.sub(r'MINIO_SECRET_KEY=.*', f'MINIO_SECRET_KEY={minio_secret}', content)
-    
+
     # If superadmin password is empty, fill it
     content = re.sub(r'MORPHOCHECK_SUPERADMIN_PASSWORD=.*', f'MORPHOCHECK_SUPERADMIN_PASSWORD={superadmin_pass}', content)
 

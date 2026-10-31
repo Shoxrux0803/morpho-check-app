@@ -1,9 +1,8 @@
+import { formatAgeMonths } from '../utils/ageMonths';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { AdminApi } from '../services/AdminApi';
 import {
   generateConsentDocxById,
-  generateDocx,
-  generatePdf,
   generatePdfById,
   generateDocxById,
 } from '../services/api';
@@ -14,7 +13,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 // Material UI importlari
 import {
   Container,
-  Grid,
   Typography,
   Paper,
   AppBar,
@@ -45,12 +43,10 @@ import {
   TableRow,
   TablePagination,
   Stack,
-  Avatar,
 } from '@mui/material';
 import {
   Delete,
   Download,
-  FilterList,
   Close,
   Dashboard as DashboardIcon,
   List as ListIcon,
@@ -58,7 +54,6 @@ import {
   Visibility,
   Assessment,
   BiotechOutlined,
-  Refresh,
   ErrorOutline,
   CheckCircle,
 } from '@mui/icons-material';
@@ -74,13 +69,11 @@ import LoginExperience from '../components/Auth/LoginExperience';
 // Modular Components
 import AdminDashboard from '../components/Dashboard/AdminDashboard';
 import AdminScientificAnalysis from '../components/Dashboard/AdminScientificAnalysis';
-import AdminFilters from '../components/Admin/AdminFilters';
 import AdminTable from '../components/Admin/AdminTable';
 import InputForm from '../components/InputForm';
 import ResearcherDataView from '../components/Admin/ResearcherDataView';
 import DashboardFilters from '../components/Dashboard/DashboardFilters';
 import { ConsentStatus } from '../components/Consent/PrivacyConsentPanel';
-import { DetailModal } from './ResearcherPage';
 import {
   canUsePermission,
   getAdminPermissionLabels,
@@ -362,18 +355,12 @@ const XLSX_PREVIEW_COLUMNS = [
   { key: 'fullName', label: 'F.I.SH.' },
   { key: 'gender', label: 'Jins' },
   { key: 'age', label: 'Yosh' },
+  { key: 'ageGroup', label: 'Yosh guruhi' },
   { key: 'region', label: 'Viloyat' },
   { key: 'district', label: 'Tuman' },
   { key: 'address', label: 'Manzil' },
-  { key: 'admin', label: 'Kiritdi' },
   { key: 'height', label: "Bo'y (sm)" },
   { key: 'weight', label: 'Vazn (kg)' },
-  { key: 'bmi', label: 'IAV' },
-  { key: 'status', label: 'Holat' },
-  { key: 'somatotype', label: 'Somatotip' },
-  { key: 'idealWeight', label: 'Ideal Vazn (kg)' },
-  { key: 'weightDiff', label: 'Farq (kg)' },
-  { key: 'weightRange', label: "Vazn Oraliq'i" },
   { key: 'chest', label: "Ko'krak ayl." },
   { key: 'waist', label: 'Bel ayl.' },
   { key: 'head', label: 'Bosh ayl.' },
@@ -389,9 +376,12 @@ const XLSX_PREVIEW_COLUMNS = [
   { key: 'footLength', label: 'Oyoq panja uzunligi' },
   { key: 'shoulderRatio', label: 'Elka prop.' },
   { key: 'thighRatio', label: 'Son prop.' },
-  { key: 'hmai', label: 'HMAI' },
-  { key: 'mii', label: 'MII' },
-  { key: 'adi', label: 'ADI' },
+  { key: 'bmi', label: 'BMI' },
+  { key: 'status', label: 'Holat' },
+  { key: 'somatotype', label: 'Somatotip' },
+  { key: 'idealWeight', label: 'Ideal Vazn (kg)' },
+  { key: 'weightDiff', label: 'Farq (kg)' },
+  { key: 'weightRange', label: "Vazn Oraliq'i" },
   { key: 'tbwPercent', label: 'TBW (%)' },
   { key: 'fatPercent', label: "Yo'g' (%)" },
   { key: 'fatMass', label: "Yo'g' (kg)" },
@@ -401,6 +391,10 @@ const XLSX_PREVIEW_COLUMNS = [
   { key: 'visceralFat', label: "Visceral Yo'g'" },
   { key: 'bodyLength', label: 'Tana uzunligi (sm)' },
   { key: 'parentsPhone', label: 'Ota-ona telefon raqami' },
+  { key: 'hmai', label: 'HMAI' },
+  { key: 'mii', label: 'MII' },
+  { key: 'adi', label: 'ADI' },
+  { key: 'mcri', label: 'MCRI' },
 ];
 
 const XLSX_PERMISSION_COLUMN_MAP = {
@@ -440,7 +434,7 @@ const XLSX_ANTHROPOMETRY_PERMISSION_KEYS = [
 ];
 
 const isXlsxPreviewColumnEnabled = (columnKey, permissions) => {
-  if (['hmai', 'mii', 'adi'].includes(columnKey)) {
+  if (['hmai', 'mii', 'adi', 'mcri'].includes(columnKey)) {
     return XLSX_ANTHROPOMETRY_PERMISSION_KEYS.some((key) =>
       canUsePermission(permissions, key)
     );
@@ -543,7 +537,7 @@ const ADMIN_XLSX_COLUMN_LABELS = {
     admin: 'Kiritdi',
     height: "Bo'y (sm)",
     weight: 'Vazn (kg)',
-    bmi: 'IAV',
+    bmi: 'BMI',
     status: 'Holat',
     somatotype: 'Somatotip',
     idealWeight: 'Ideal vazn (kg)',
@@ -838,6 +832,19 @@ ADMIN_XLSX_COLUMN_LABELS.tr = {
   parentsPhone: 'Ebeveyn telefonu',
 };
 
+Object.entries({
+  uz: 'Yosh guruhi',
+  ru: 'Возрастная группа',
+  en: 'Age group',
+  kz: 'Жас тобы',
+  ky: 'Жаш тобу',
+  tg: 'Гурӯҳи синну сол',
+  tm: 'Ýaş topary',
+  tr: 'Yaş grubu',
+}).forEach(([language, label]) => {
+  ADMIN_XLSX_COLUMN_LABELS[language].ageGroup = label;
+});
+
 Object.assign(ADMIN_XLSX_COLUMN_LABELS.uz, {
   shoulderLength: 'Yelka uzunligi (sm)',
   shoulderBreadth: 'Yelka kengligi (sm)',
@@ -933,6 +940,9 @@ Object.assign(ADMIN_XLSX_COLUMN_LABELS.tr, {
   calfLength: 'Baldır uzunluğu (cm)',
   calfCircumference: 'Baldır çevresi (cm)',
   footLength: 'Ayak uzunluğu (cm)',
+});
+Object.values(ADMIN_XLSX_COLUMN_LABELS).forEach((labels) => {
+  labels.mcri = 'MCRI';
 });
 const getXlsxText = (lang) => XLSX_MODAL_TEXT[lang] || XLSX_MODAL_TEXT.uz;
 const XLSX_PERMISSION_LABEL_BY_COLUMN = {
@@ -1140,6 +1150,7 @@ export default function AdminPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [dashboardMode, setDashboardMode] = useState('all');
 
   // States for downloads
   const [viewRow, setViewRow] = useState(null);
@@ -1162,7 +1173,7 @@ export default function AdminPage() {
     date_from: '',
     date_to: '',
   });
-  const [sort, setSort] = useState({ key: 'createdAt', dir: 'desc' });
+  const [sort] = useState({ key: 'createdAt', dir: 'desc' });
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -1219,6 +1230,8 @@ export default function AdminPage() {
         gender: dashFilters.gender,
         ageMin: dashFilters.age_min,
         ageMax: dashFilters.age_max,
+        bmiMin: dashFilters.bmi_min,
+        bmiMax: dashFilters.bmi_max,
         dateFrom: dashFilters.date_from,
         dateTo: dashFilters.date_to,
         region: dashFilters.region,
@@ -1254,7 +1267,10 @@ export default function AdminPage() {
       if (!user) return;
       setStatsLoading(true);
       try {
-        const data = await AdminApi.stats(filters);
+        const data = await AdminApi.stats({
+          ...filters,
+          dashboard_mode: dashboardMode,
+        });
         setStats(data);
       } catch (e) {
         console.error('Failed to fetch admin stats:', e);
@@ -1262,7 +1278,7 @@ export default function AdminPage() {
         setStatsLoading(false);
       }
     },
-    [user, dashFilters]
+    [user, dashFilters, dashboardMode]
   );
 
   useEffect(() => {
@@ -1347,14 +1363,14 @@ export default function AdminPage() {
         await AdminApi.analyses.update(editRow.id, editRow);
         toast.success(pt('updated'));
         setEditRow(null);
-        load();
+        await Promise.all([load(), fetchDashboardStats()]);
       } catch (err) {
         toast.error(`${pt('errorPrefix')} ${err.message}`);
       } finally {
         setUpdating(false);
       }
     },
-    [editRow, load, pt]
+    [editRow, fetchDashboardStats, load, pt]
   );
 
   const handleEditInputChange = useCallback((e) => {
@@ -1466,14 +1482,14 @@ export default function AdminPage() {
         }
         setChecked(new Set());
         setDeleteConfirmOpen(false);
-        load();
+        await Promise.all([load(), fetchDashboardStats()]);
       } catch (e) {
         toast.error(`${pt('deleteError')} ${e.message}`);
       } finally {
         setDeleteConfirmLoading(false);
       }
     },
-    [checked, load, pt]
+    [checked, fetchDashboardStats, load, pt]
   );
 
   const onDeleteSelected = useCallback(async () => {
@@ -1518,6 +1534,7 @@ export default function AdminPage() {
       a.href = url;
       a.download = `report_${viewRow.idCode}_${pdfLang}.pdf`;
       a.click();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
       toast.error(`PDF: ${e.message}`);
     } finally {
@@ -1535,6 +1552,7 @@ export default function AdminPage() {
       a.href = url;
       a.download = `anketa_${viewRow.idCode}_${pdfLang}.docx`;
       a.click();
+      window.URL.revokeObjectURL(url);
     } catch (e) {
       toast.error(`Word: ${e.message}`);
     } finally {
@@ -1564,15 +1582,6 @@ export default function AdminPage() {
 
   const mapXlsxPreviewRow = useCallback(
     (row) => {
-      const ageParts = [
-        row.age ? `${row.age} ${pt('yearShort')}` : '',
-        row.age_months !== undefined &&
-        row.age_months !== null &&
-        row.age_days !== undefined &&
-        row.age_days !== null
-          ? `${row.age_months} ${pt('monthShort')}, ${row.age_days} ${pt('dayShort')}`
-          : '',
-      ].filter(Boolean);
       const value = (...keys) => {
         for (const key of keys) {
           const current = row[key];
@@ -1594,7 +1603,8 @@ export default function AdminPage() {
           [row.lastName, row.firstName].filter(Boolean).join(' ') ||
           '-',
         gender: localizeAdminPreviewValue('gender', row.gender, lang, pt),
-        age: ageParts.join(' / ') || '-',
+        age: `${formatAgeMonths(row)} ${pt('monthShort')}`,
+        ageGroup: value('age_group', 'ageGroup'),
         region: row.region
           ? getLocalizedLocationLabel(row.region, lang, 1)
           : '-',
@@ -1632,6 +1642,7 @@ export default function AdminPage() {
         hmai: value('hmai'),
         mii: value('mii'),
         adi: value('adi'),
+        mcri: value('mcri'),
         tbwPercent: value(
           'tbw_percent',
           'tbw',
@@ -1703,6 +1714,7 @@ export default function AdminPage() {
       a.href = url;
       a.download = `analyses_export_${new Date().toISOString().split('T')[0]}.xlsx`;
       a.click();
+      window.URL.revokeObjectURL(url);
       toast.success(pt('excelLoaded'));
     } catch (e) {
       toast.error(`${pt('excelError')} ${e.message}`);
@@ -1719,6 +1731,7 @@ export default function AdminPage() {
       a.href = url;
       a.download = `morphocheck_template.xlsx`;
       a.click();
+      window.URL.revokeObjectURL(url);
       toast.success(pt('templateLoaded'));
     } catch (e) {
       toast.error(`${pt('templateError')} ${e.message}`);
@@ -1733,20 +1746,24 @@ export default function AdminPage() {
       const res = await AdminApi.analyses.importXlsx(importFile);
       setImportResult(res);
       const errorCount = res?.errors?.length || 0;
+      const warningCount = res?.warnings?.length || 0;
       const skippedCount = res?.skipped || errorCount || 0;
-      toast.success(
+      const hasImportIssues = errorCount > 0 || warningCount > 0;
+      const notifyImport = hasImportIssues ? toast : toast.success;
+      notifyImport(
         `${pt('ready')} ${res.imported} ${pt('newCount')}, ${res.updated} ${pt('updatedCount')}${
           skippedCount ? `, ${skippedCount} ${pt('skippedCount')}` : ''
-        }`
+        }`,
+        hasImportIssues ? { icon: '⚠️' } : undefined
       );
-      if (!res.errors || res.errors.length === 0) setImportConfirmOpen(false);
-      load();
+      if (!errorCount && !warningCount) setImportConfirmOpen(false);
+      await Promise.all([load(), fetchDashboardStats()]);
     } catch (e) {
       toast.error(`${pt('importError')} ${e.message}`);
     } finally {
       setImportingXlsx(false);
     }
-  }, [importFile, load, pt]);
+  }, [fetchDashboardStats, importFile, load, pt]);
 
   const availableTabs = useMemo(() => {
     const allTabs = [
@@ -1764,6 +1781,8 @@ export default function AdminPage() {
             totalCount={totalCount}
             userName={user?.name}
             filters={dashFilters}
+            activeFilterMode={dashboardMode}
+            onActiveFilterModeChange={setDashboardMode}
           />
         ),
       },
@@ -1910,7 +1929,9 @@ export default function AdminPage() {
     loading,
     stats,
     statsLoading,
+    dashboardMode,
     totalCount,
+    selectingAll,
     handleDownloadTemplate,
     setImportConfirmOpen,
     importingXlsx,
@@ -1923,7 +1944,6 @@ export default function AdminPage() {
     dashFilters,
     pageLabels,
     lang,
-    setDashFilters,
     toggleAll,
     toggleOne,
     handleOpenAnalysis,
@@ -3561,7 +3581,11 @@ export default function AdminPage() {
           {importResult && (
             <Box sx={{ mt: 3 }}>
               <Alert
-                severity={importResult.errors?.length ? 'warning' : 'success'}
+                severity={
+                  importResult.errors?.length || importResult.warnings?.length
+                    ? 'warning'
+                    : 'success'
+                }
                 icon={
                   importResult.errors?.length ? (
                     <ErrorOutline />
@@ -3579,6 +3603,18 @@ export default function AdminPage() {
                   {pt('error')}.
                 </Typography>
               </Alert>
+
+              {importResult.warnings?.map((warning, idx) => (
+                <Alert
+                  key={`${warning.field || 'file'}-${idx}`}
+                  severity="warning"
+                  sx={{ mb: 1, borderRadius: 2 }}
+                >
+                  <Typography variant="body2" fontWeight={700}>
+                    Ma'lumot sifati: {warning.message}
+                  </Typography>
+                </Alert>
+              ))}
 
               {importResult.errors && importResult.errors.length > 0 && (
                 <TableContainer

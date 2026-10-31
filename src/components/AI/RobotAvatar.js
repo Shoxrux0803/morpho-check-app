@@ -1,9 +1,10 @@
 // src/components/AI/RobotAvatar.js
 // ─── PRO Living EMO-style Avatar ─────────────────────────────────────────────
-// Accurate recreation of Living AI's EMO robot with 1000+ expression engine
+// Expressive companion with EMO-inspired screen eyes and layered motion
 // Features: Eye tracking, dynamic mouth, mood system, micro-animations, 3D tilt
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useId } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import './RobotAvatar.css';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const AI_TRANSLATIONS = {
@@ -639,104 +640,35 @@ const Scarf = ({ size }) => (
 );
 
 // ── Speech Bubble ─────────────────────────────────────────────────────────────
-const SpeechBubble = ({ message, visible, onDismiss, isTyping, isMobile }) => {
+const SpeechBubble = ({ message, visible, onDismiss, isTyping }) => {
   const { lang } = useLanguage();
   const aiDict = AI_TRANSLATIONS[lang] || AI_TRANSLATIONS['uz'];
 
   if (!visible) return null;
 
-  const borderColor = '#00509d';
-  const bgColor = '#f8f9fa';
-
   return (
     <div
-      onClick={onDismiss}
-      style={{
-        position: 'absolute',
-        bottom: '82px',
-        right: isMobile ? 'auto' : '-12px',
-        left: isMobile ? '-12px' : 'auto',
-        background: bgColor,
-        borderRadius: '24px',
-        padding: isTyping ? '12px 20px' : '14px 22px',
-        minWidth: isTyping ? 'auto' : '180px',
-        maxWidth: '280px',
-        border: `6px solid ${borderColor}`,
-        boxShadow:
-          '0 12px 30px rgba(0,0,0,0.3), inset 0 6px 12px rgba(255,255,255,1), inset 0 -4px 8px rgba(0,0,0,0.06)',
-        zIndex: 10,
-        cursor: 'pointer',
-        animation: 'bubble-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-        transformOrigin: isMobile ? 'bottom left' : 'bottom right',
+      className="morpho-speech"
+      onClick={(event) => {
+        event.stopPropagation();
+        onDismiss();
       }}
     >
+      <div className="morpho-speech__header" aria-hidden="true">
+        <span className="morpho-speech__light" /> MORPHO AI
+      </div>
       {isTyping ? (
-        <div
-          style={{
-            display: 'flex',
-            gap: '6px',
-            alignItems: 'center',
-            height: '19px',
-          }}
-        >
-          {[0, 0.16, 0.32].map((d, i) => (
-            <div
-              key={i}
-              style={{
-                width: '8px',
-                height: '8px',
-                borderRadius: '50%',
-                background: borderColor,
-                animation: `emo-headphone-pulse 0.8s ease-in-out ${d}s infinite`,
-              }}
-            />
+        <div className="morpho-speech__typing">
+          {[0, 0.16, 0.32].map((delay) => (
+            <i key={delay} style={{ '--dot-delay': `${delay}s` }} />
           ))}
-          <span
-            style={{
-              fontSize: '11px',
-              color: '#64748b',
-              marginLeft: '6px',
-              fontFamily: 'monospace',
-              fontWeight: 600,
-            }}
-          >
-            {aiDict.talking}
-          </span>
+          <span>{aiDict.talking}</span>
         </div>
       ) : (
-        <p
-          style={{
-            margin: 0,
-            fontSize: '15px',
-            color: '#1e293b',
-            fontWeight: 600,
-            lineHeight: 1.5,
-            whiteSpace: 'pre-line',
-            fontFamily: 'Inter, Segoe UI, sans-serif',
-            textAlign: 'center',
-          }}
-        >
+        <p role="status" aria-live="polite">
           {message}
         </p>
       )}
-
-      {/* Flawless CSS Diamond Tail */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '-12px',
-          right: isMobile ? 'auto' : '36px',
-          left: isMobile ? '36px' : 'auto',
-          width: '24px',
-          height: '24px',
-          backgroundColor: bgColor,
-          borderBottom: `6px solid ${borderColor}`,
-          borderRight: `6px solid ${borderColor}`,
-          transform: 'rotate(45deg)',
-          zIndex: 2,
-          borderRadius: '0 0 4px 0', // slightly rounded tip
-        }}
-      />
     </div>
   );
 };
@@ -752,12 +684,20 @@ const RobotAvatar = ({
   isTalking = false,
   isMobile = false,
 }) => {
-  injectCSS();
+  useEffect(() => {
+    injectCSS();
+  }, []);
+  const avatarId = useId().replace(/:/g, '');
   const { lang } = useLanguage();
   const aiDict = AI_TRANSLATIONS[lang] || AI_TRANSLATIONS['uz'];
 
   const [eyeOffset, setEyeOffset] = useState({ x: 0, y: 0 });
   const [headTilt, setHeadTilt] = useState(0);
+  const [headPitch, setHeadPitch] = useState(0);
+  const pointerFrameRef = useRef(null);
+  const petTimerRef = useRef(null);
+  const speechTimerRef = useRef(null);
+  const wakeTimerRef = useRef(null);
   const containerRef = useRef(null);
   const mouseVelRef = useRef({ lx: 0, ly: 0, lt: 0 });
 
@@ -781,7 +721,6 @@ const RobotAvatar = ({
   const [isTalkingInternal, setIsTalkingInternal] = useState(false);
   const [isPetting, setIsPetting] = useState(false);
   const [petBurst, setPetBurst] = useState([]);
-  const rafIdRef = useRef(null);
 
   const triggerPetting = useCallback(() => {
     setIsPetting(true);
@@ -793,7 +732,8 @@ const RobotAvatar = ({
     }));
     setPetBurst((prev) => [...prev, ...newHearts]);
 
-    setTimeout(() => {
+    clearTimeout(petTimerRef.current);
+    petTimerRef.current = setTimeout(() => {
       setIsPetting(false);
       setMood('idle');
       setPetBurst([]);
@@ -818,45 +758,66 @@ const RobotAvatar = ({
   const bubbleDismiss = useRef(null);
   const typingTimerRef = useRef(null);
   const moodTimerRef = useRef(null);
+  const scheduleNextMoodRef = useRef(() => {});
 
   const dismissBubble = useCallback(() => {
     setBubble({ visible: false, message: '', isTyping: false });
     setIsTalkingInternal(false);
     if (bubbleDismiss.current) clearTimeout(bubbleDismiss.current);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    clearTimeout(speechTimerRef.current);
   }, []);
 
   const showBubble = useCallback((msg, durationMs = 7000) => {
     if (bubbleDismiss.current) clearTimeout(bubbleDismiss.current);
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    clearTimeout(speechTimerRef.current);
 
     setBubble({ visible: true, message: '', isTyping: true });
     setIsTalkingInternal(true);
 
-    const typingDuration = 1500 + Math.random() * 1000;
+    const typingDuration = 700 + Math.min(msg.length * 8, 700);
 
     typingTimerRef.current = setTimeout(() => {
       setBubble({ visible: true, message: msg, isTyping: false });
 
-      setTimeout(() => setIsTalkingInternal(false), 2000);
+      speechTimerRef.current = setTimeout(
+        () => setIsTalkingInternal(false),
+        Math.min(5000, Math.max(1800, msg.length * 45))
+      );
 
-      bubbleDismiss.current = setTimeout(() => {
-        setBubble({ visible: false, message: '', isTyping: false });
-      }, durationMs);
+      bubbleDismiss.current = setTimeout(
+        () => {
+          setBubble({ visible: false, message: '', isTyping: false });
+        },
+        Math.max(durationMs, msg.length * 65)
+      );
     }, typingDuration);
   }, []);
 
   // ── Welcome ─────────────────────────────────────────────────────────────────
+  useEffect(
+    () => () => {
+      clearTimeout(petTimerRef.current);
+      clearTimeout(speechTimerRef.current);
+      clearTimeout(wakeTimerRef.current);
+      clearTimeout(bubbleDismiss.current);
+      clearTimeout(typingTimerRef.current);
+    },
+    []
+  );
+
   useEffect(() => {
-    if (compact) return;
+    if (compact || isOpen) return;
     const done = sessionStorage.getItem(WELCOME_KEY);
     if (!done) {
-      sessionStorage.setItem(WELCOME_KEY, '1');
-      const t = setTimeout(() => showBubble(aiDict.welcome, 8000), 1800);
+      const t = setTimeout(() => {
+        sessionStorage.setItem(WELCOME_KEY, '1');
+        showBubble(aiDict.welcome, 8000);
+      }, 1800);
       return () => clearTimeout(t);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiDict.welcome]);
+  }, [aiDict.welcome, compact, isOpen, showBubble]);
 
   // ── Proactive Messages & Biorhythms ─────────────────────────────────────────
   useEffect(() => {
@@ -893,12 +854,13 @@ const RobotAvatar = ({
       const dx = e.clientX - cx;
       const dy = e.clientY - cy;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      const mx = 4;
+      const mx = size * 0.055;
       setEyeOffset({
         x: clamp((dx / dist) * mx, -mx, mx),
         y: clamp((dy / dist) * mx, -mx, mx),
       });
-      setHeadTilt(clamp((dx / window.innerWidth) * 16, -10, 10));
+      setHeadTilt(clamp(dx / 35, -9, 9));
+      setHeadPitch(clamp(-dy / 60, -5, 5));
 
       // Wake up
       const now = Date.now();
@@ -915,22 +877,40 @@ const RobotAvatar = ({
         if (isSleeping && !isWakingUp && speed > 0.8 && over) {
           setIsWakingUp(true);
           setMood('dizzy'); // EMO wakes up dizzy!
-          setTimeout(() => {
+          wakeTimerRef.current = setTimeout(() => {
             setMood('idle');
             setIsWakingUp(false);
           }, 1200);
-          scheduleNextMood();
+          scheduleNextMoodRef.current();
         }
       }
       mouseVelRef.current = { lx: e.clientX, ly: e.clientY, lt: now };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },
-    [isSleeping, isWakingUp]
+    [isSleeping, isWakingUp, size]
   );
 
   useEffect(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    const trackPointer = (event) => {
+      if (pointerFrameRef.current !== null || document.hidden) return;
+      pointerFrameRef.current = requestAnimationFrame(() => {
+        pointerFrameRef.current = null;
+        handleMouseMove(event);
+      });
+    };
+    const resetPointer = () => {
+      setEyeOffset({ x: 0, y: 0 });
+      setHeadTilt(0);
+      setHeadPitch(0);
+    };
+    window.addEventListener('pointermove', trackPointer, { passive: true });
+    document.addEventListener('pointerleave', resetPointer);
+    return () => {
+      window.removeEventListener('pointermove', trackPointer);
+      document.removeEventListener('pointerleave', resetPointer);
+      cancelAnimationFrame(pointerFrameRef.current);
+      pointerFrameRef.current = null;
+    };
   }, [handleMouseMove]);
 
   // ── Mood Scheduling (EMO has many moods!) ───────────────────────────────────
@@ -938,6 +918,11 @@ const RobotAvatar = ({
     if (moodTimerRef.current) clearTimeout(moodTimerRef.current);
     const delay = 6000 + Math.random() * 12000;
     moodTimerRef.current = setTimeout(() => {
+      if (isOpenRef.current) return;
+      if (document.hidden) {
+        scheduleNextMood();
+        return;
+      }
       const rand = Math.random();
       const wCtx = weatherContextRef.current;
 
@@ -1008,6 +993,7 @@ const RobotAvatar = ({
       }
     }, delay);
   }, []);
+  scheduleNextMoodRef.current = scheduleNextMood;
 
   useEffect(() => {
     if (isOpen) {
@@ -1083,26 +1069,31 @@ const RobotAvatar = ({
   // ── Realistic Human Blinking Effect ─────────────────────────────────────────
   useEffect(() => {
     if (isSleeping || mood === 'smiling' || isLove) return;
-    let timerId;
-    const triggerBlink = () => {
-      setBlinkState(true);
-      setTimeout(() => {
-        setBlinkState(false);
-        // 20% chance of a cute double-blink!
-        if (Math.random() < 0.2) {
-          setTimeout(() => {
-            setBlinkState(true);
-            setTimeout(() => setBlinkState(false), 110);
-          }, 140);
-        }
-      }, 120);
-
-      const nextDelay = 2200 + Math.random() * 2800;
-      timerId = setTimeout(triggerBlink, nextDelay);
+    setBlinkState(false);
+    const timers = new Set();
+    const later = (callback, delay) => {
+      const id = setTimeout(() => {
+        timers.delete(id);
+        callback();
+      }, delay);
+      timers.add(id);
     };
-
-    timerId = setTimeout(triggerBlink, 1500);
-    return () => clearTimeout(timerId);
+    const triggerBlink = () => {
+      if (!document.hidden) {
+        setBlinkState(true);
+        later(() => {
+          setBlinkState(false);
+          if (Math.random() < 0.2)
+            later(() => {
+              setBlinkState(true);
+              later(() => setBlinkState(false), 100);
+            }, 160);
+        }, 110);
+      }
+      later(triggerBlink, 2600 + Math.random() * 3400);
+    };
+    later(triggerBlink, 1800);
+    return () => timers.forEach(clearTimeout);
   }, [isSleeping, mood, isLove]);
 
   // ── Body Animation ──────────────────────────────────────────────────────────
@@ -1111,11 +1102,12 @@ const RobotAvatar = ({
       return 'wake-up-spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
     if (isPetting)
       return 'emo-pet-wiggle 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) infinite';
+    if (talking && !isSleeping) return 'morpho-talk 1.6s ease-in-out infinite';
     if (isSleeping) return 'emo-sleep 4s ease-in-out infinite';
     if (mood === 'smiling') return 'emo-happy-bounce 0.8s ease-in-out infinite';
     if (isEating) return 'emo-eat 1.2s ease-in-out infinite';
     if (isSinging) return 'emo-sing 0.9s ease-in-out infinite';
-    if (isCurious) return 'emo-idle 4.5s ease-in-out infinite';
+    if (isCurious) return 'emo-curious 3.5s ease-in-out infinite';
     if (isLove) return 'emo-love 1.5s ease-in-out infinite';
     if (isDizzy) return 'emo-dizzy 0.6s ease-in-out infinite';
 
@@ -1199,7 +1191,13 @@ const RobotAvatar = ({
       window.removeEventListener('keydown', handleActivity);
       clearInterval(idleTimer);
     };
-  }, [compact, aiDict.idlePrompts, showBubble, scheduleNextMood]);
+  }, [
+    compact,
+    aiDict.idlePrompts,
+    aiDict.longTyping,
+    showBubble,
+    scheduleNextMood,
+  ]);
 
   // ── Tickling & Petting ──────────────────────────────────────────────────────
   const clickCountRef = useRef(0);
@@ -1278,9 +1276,8 @@ const RobotAvatar = ({
       } else if (isLove) {
         // ─── Love: heart-shaped eyes ───
         bg = '#ff6b9d';
-        br = '40%';
-        extraTransform = 'scale(1.1)';
-        anim = 'emo-love 0.8s ease-in-out infinite';
+        br = '0';
+        extraTransform = 'scale(1.08)';
       } else if (isCurious) {
         // ─── Curious: one eye bigger than other ───
         if (side === 'left') {
@@ -1319,7 +1316,12 @@ const RobotAvatar = ({
       return (
         <div
           key={side}
+          className="morpho-robot__eye"
           style={{
+            clipPath:
+              isLove && !isClosed
+                ? 'polygon(50% 18%, 65% 2%, 85% 2%, 100% 20%, 100% 43%, 50% 100%, 0% 43%, 0% 20%, 15% 2%, 35% 2%)'
+                : undefined,
             width: typeof w === 'number' ? `${w}px` : w,
             height: typeof h === 'number' ? `${h}px` : h,
             backgroundColor: bg,
@@ -1463,6 +1465,9 @@ const RobotAvatar = ({
   return (
     <div
       ref={containerRef}
+      className="morpho-robot"
+      data-mood={mood}
+      data-talking={talking}
       onClick={handleAvatarClick}
       style={{
         position: 'relative',
@@ -1476,6 +1481,8 @@ const RobotAvatar = ({
       }}
     >
       {/* Speech Bubble */}
+      <div className="morpho-robot__halo" aria-hidden="true" />
+      <div className="morpho-robot__shadow" aria-hidden="true" />
       {!compact && (
         <SpeechBubble
           message={bubble.message}
@@ -1616,215 +1623,228 @@ const RobotAvatar = ({
 
       {/* ═══ Main Animated Wrapper ═══ */}
       <div
+        className="morpho-robot__tilt"
         style={{
-          animation: bodyAnim,
-          transformOrigin: 'center bottom',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-end',
-          width: '100%',
-          height: '100%',
-          position: 'relative',
-          transform: `rotateY(${headTilt}deg)`,
-          transition: 'transform 0.15s ease-out',
-          transformStyle: 'preserve-3d',
+          '--head-turn': `${headTilt}deg`,
+          '--head-pitch': `${headPitch}deg`,
         }}
       >
-        {/* ═══ SVG: EMO Body ═══ */}
-        <svg
-          width={s}
-          height={s * 0.92}
-          viewBox="0 0 100 100"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ overflow: 'visible' }}
+        <div
+          style={{
+            animation: bodyAnim,
+            transformOrigin: 'center bottom',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+            transition: 'transform 0.15s ease-out',
+            transformStyle: 'preserve-3d',
+          }}
         >
-          <defs>
-            <linearGradient
-              id={`emo-body-${s}`}
-              x1="20%"
-              y1="0%"
-              x2="80%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#3a3f4b" />
-              <stop offset="50%" stopColor="#282c34" />
-              <stop offset="100%" stopColor="#14171e" />
-            </linearGradient>
-            <linearGradient
-              id={`emo-face-${s}`}
-              x1="0%"
-              y1="0%"
-              x2="0%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#0d1117" />
-              <stop offset="100%" stopColor="#030508" />
-            </linearGradient>
-            <filter id={`sh-${s}`}>
-              <feDropShadow
-                dx="0"
-                dy="5"
-                stdDeviation="5"
-                floodColor="#000"
-                floodOpacity="0.5"
+          {/* ═══ SVG: EMO Body ═══ */}
+          <svg
+            width={s}
+            height={s * 0.92}
+            viewBox="0 0 100 100"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ overflow: 'visible' }}
+          >
+            <defs>
+              <linearGradient
+                id={`emo-body-${avatarId}`}
+                x1="20%"
+                y1="0%"
+                x2="80%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor="#3e5260" />
+                <stop offset="50%" stopColor="#1b2935" />
+                <stop offset="100%" stopColor="#101923" />
+              </linearGradient>
+              <linearGradient
+                id={`emo-face-${avatarId}`}
+                x1="0%"
+                y1="0%"
+                x2="0%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor="#0d1117" />
+                <stop offset="100%" stopColor="#030508" />
+              </linearGradient>
+              <filter id={`sh-${avatarId}`}>
+                <feDropShadow
+                  dx="0"
+                  dy="5"
+                  stdDeviation="5"
+                  floodColor="#000"
+                  floodOpacity="0.5"
+                />
+              </filter>
+              <filter id={`glow-${avatarId}`}>
+                <feDropShadow
+                  dx="0"
+                  dy="0"
+                  stdDeviation="3"
+                  floodColor="#45f3ff"
+                  floodOpacity="0.85"
+                />
+              </filter>
+            </defs>
+
+            {/* ── Legs ── */}
+            {/* Removed by user request */}
+
+            {/* ── Headphones ── */}
+            <g>
+              {/* Left */}
+              <rect
+                x="4"
+                y="33"
+                width="10"
+                height="34"
+                rx="5"
+                fill="#1e2530"
+                filter={`url(#sh-${avatarId})`}
               />
-            </filter>
-            <filter id={`glow-${s}`}>
-              <feDropShadow
-                dx="0"
-                dy="0"
-                stdDeviation="3"
-                floodColor="#45f3ff"
-                floodOpacity="0.85"
+              <circle
+                cx="9"
+                cy="50"
+                r="4"
+                fill="#45f3ff"
+                filter={`url(#glow-${avatarId})`}
+                style={{
+                  animation:
+                    talking || isSinging
+                      ? 'emo-headphone-pulse 0.8s infinite'
+                      : 'none',
+                }}
               />
-            </filter>
-          </defs>
+              {/* Right */}
+              <rect
+                x="86"
+                y="33"
+                width="10"
+                height="34"
+                rx="5"
+                fill="#1e2530"
+                filter={`url(#sh-${avatarId})`}
+              />
+              <circle
+                cx="91"
+                cy="50"
+                r="4"
+                fill="#45f3ff"
+                filter={`url(#glow-${avatarId})`}
+                style={{
+                  animation:
+                    talking || isSinging
+                      ? 'emo-headphone-pulse 0.8s infinite 0.4s'
+                      : 'none',
+                }}
+              />
+            </g>
 
-          {/* ── Legs ── */}
-          {/* Removed by user request */}
-
-          {/* ── Headphones ── */}
-          <g>
-            {/* Left */}
+            {/* ── Main Body ── */}
             <rect
-              x="4"
-              y="33"
-              width="10"
-              height="34"
-              rx="5"
-              fill="#1e2530"
-              filter={`url(#sh-${s})`}
+              x="10"
+              y="8"
+              width="80"
+              height="80"
+              rx="25"
+              stroke="#8cd8ed"
+              strokeOpacity="0.16"
+              strokeWidth="1"
+              fill={`url(#emo-body-${avatarId})`}
+              filter={`url(#sh-${avatarId})`}
             />
-            <circle
-              cx="9"
-              cy="50"
-              r="4"
-              fill="#45f3ff"
-              filter={`url(#glow-${s})`}
-              style={{
-                animation:
-                  talking || isSinging
-                    ? 'emo-headphone-pulse 0.8s infinite'
-                    : 'none',
-              }}
+
+            {/* ── 3D Top highlight ── */}
+            <path
+              d="M 32 10 L 68 10 Q 88 10 88 30 L 88 34 Q 88 14 68 14 L 32 14 Q 12 14 12 34 L 12 30 Q 12 10 32 10 Z"
+              fill="#ffffff"
+              opacity="0.1"
             />
-            {/* Right */}
-            <rect
-              x="86"
-              y="33"
-              width="10"
-              height="34"
-              rx="5"
-              fill="#1e2530"
-              filter={`url(#sh-${s})`}
-            />
-            <circle
-              cx="91"
-              cy="50"
-              r="4"
-              fill="#45f3ff"
-              filter={`url(#glow-${s})`}
-              style={{
-                animation:
-                  talking || isSinging
-                    ? 'emo-headphone-pulse 0.8s infinite 0.4s'
-                    : 'none',
-              }}
-            />
-          </g>
 
-          {/* ── Main Body ── */}
-          <rect
-            x="10"
-            y="8"
-            width="80"
-            height="80"
-            rx="22"
-            fill={`url(#emo-body-${s})`}
-            filter={`url(#sh-${s})`}
-          />
-
-          {/* ── 3D Top highlight ── */}
-          <path
-            d="M 32 10 L 68 10 Q 88 10 88 30 L 88 34 Q 88 14 68 14 L 32 14 Q 12 14 12 34 L 12 30 Q 12 10 32 10 Z"
-            fill="#ffffff"
-            opacity="0.1"
-          />
-
-          {/* ── Screen Face ── */}
-          <rect
-            x="16"
-            y="16"
-            width="68"
-            height="66"
-            rx="16"
-            fill={`url(#emo-face-${s})`}
-          />
-
-          {/* Weather tint overlay */}
-          {mood === 'weather_hot' && (
+            {/* ── Screen Face ── */}
             <rect
               x="16"
               y="16"
               width="68"
               height="66"
-              rx="16"
-              fill="rgba(255, 60, 0, 0.15)"
-              pointerEvents="none"
+              rx="19"
+              stroke="#81ddf1"
+              strokeOpacity="0.14"
+              strokeWidth="0.7"
+              fill={`url(#emo-face-${avatarId})`}
             />
-          )}
-          {mood === 'weather_cold' && (
-            <rect
-              x="16"
-              y="16"
-              width="68"
-              height="66"
-              rx="16"
-              fill="rgba(69, 243, 255, 0.15)"
-              pointerEvents="none"
+
+            {/* Weather tint overlay */}
+            {mood === 'weather_hot' && (
+              <rect
+                x="16"
+                y="16"
+                width="68"
+                height="66"
+                rx="16"
+                fill="rgba(255, 60, 0, 0.15)"
+                pointerEvents="none"
+              />
+            )}
+            {mood === 'weather_cold' && (
+              <rect
+                x="16"
+                y="16"
+                width="68"
+                height="66"
+                rx="16"
+                fill="rgba(69, 243, 255, 0.15)"
+                pointerEvents="none"
+              />
+            )}
+
+            {/* ── Screen reflection ── */}
+            <path
+              d="M 16 38 Q 38 26 84 18 L 84 26 Q 50 36 16 48 Z"
+              fill="#ffffff"
+              opacity="0.04"
             />
-          )}
 
-          {/* ── Screen reflection ── */}
-          <path
-            d="M 16 38 Q 38 26 84 18 L 84 26 Q 50 36 16 48 Z"
-            fill="#ffffff"
-            opacity="0.04"
-          />
+            {/* ── Side accent lines ── */}
+            <line
+              x1="12"
+              y1="72"
+              x2="12"
+              y2="84"
+              stroke="#45f3ff"
+              strokeWidth="1.5"
+              opacity="0.3"
+              strokeLinecap="round"
+            />
+            <line
+              x1="88"
+              y1="72"
+              x2="88"
+              y2="84"
+              stroke="#45f3ff"
+              strokeWidth="1.5"
+              opacity="0.3"
+              strokeLinecap="round"
+            />
+          </svg>
 
-          {/* ── Side accent lines ── */}
-          <line
-            x1="12"
-            y1="72"
-            x2="12"
-            y2="84"
-            stroke="#45f3ff"
-            strokeWidth="1.5"
-            opacity="0.3"
-            strokeLinecap="round"
-          />
-          <line
-            x1="88"
-            y1="72"
-            x2="88"
-            y2="84"
-            stroke="#45f3ff"
-            strokeWidth="1.5"
-            opacity="0.3"
-            strokeLinecap="round"
-          />
-        </svg>
+          {/* ═══ Eyes overlay ═══ */}
+          {renderEyes()}
 
-        {/* ═══ Eyes overlay ═══ */}
-        {renderEyes()}
+          {/* ═══ Mouth overlay ═══ */}
+          {renderMouth()}
 
-        {/* ═══ Mouth overlay ═══ */}
-        {renderMouth()}
-
-        {/* Scarf for cold weather overlay */}
-        {!compact && mood === 'weather_cold' && !isOpen && <Scarf size={s} />}
+          {/* Scarf for cold weather overlay */}
+          {!compact && mood === 'weather_cold' && !isOpen && <Scarf size={s} />}
+        </div>
       </div>
     </div>
   );

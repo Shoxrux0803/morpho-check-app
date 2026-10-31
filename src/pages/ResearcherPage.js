@@ -66,6 +66,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ResearchApi } from '../services/api';
 import CloudUpload from '@mui/icons-material/CloudUpload';
 import ResearcherForm from '../components/Research/ResearcherForm';
+import ChildTimeline from '../components/Research/ChildTimeline';
+import DatasetQualityPanel from '../components/Research/DatasetQualityPanel';
+import MeasurementQualityPanel from '../components/MeasurementQualityPanel';
 import { toast } from 'react-hot-toast';
 import AdvancedResearchFilter from '../components/Research/AdvancedResearchFilter';
 import { ResearchStatisticsPanel } from '../components/Admin/ResearcherDataView';
@@ -101,11 +104,8 @@ const GlassPaper = ({ children, sx = {} }) => (
   <Paper
     elevation={0}
     sx={{
-      background: (theme) =>
-        theme.palette.mode === 'dark'
-          ? 'rgba(30,30,40,0.7)'
-          : 'rgba(255,255,255,0.85)',
-      backdropFilter: 'blur(20px)',
+      background: 'background.paper',
+      backdropFilter: 'none',
       borderRadius: 4,
       border: '1px solid',
       borderColor: (theme) =>
@@ -215,6 +215,21 @@ export const DetailModal = ({
                 <Typography variant="caption" color="text.secondary">
                   {label}
                 </Typography>
+                {typeof record[key] === 'number' && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    sx={{ ml: 1, height: 20, fontSize: 10 }}
+                    label={
+                      {
+                        measured: lang === 'en' ? 'Measured' : 'O‘lchangan',
+                        imported:
+                          lang === 'en' ? 'Imported' : 'Import qilingan',
+                      }[record.measurement_sources?.[key]] ||
+                      (lang === 'en' ? 'Source unknown' : 'Manba noma’lum')
+                    }
+                  />
+                )}
                 <Typography variant="body2" fontWeight={600}>
                   {key === 'gender'
                     ? record[key]?.toLowerCase() === 'boy' ||
@@ -288,6 +303,8 @@ export const DetailModal = ({
       </DialogTitle>
 
       <DialogContent dividers>
+        <MeasurementQualityPanel data={record} />
+        <ChildTimeline record={record} />
         <ConsentStatus
           record={record}
           lang={lang}
@@ -2467,7 +2484,10 @@ const ResearcherPage = () => {
     async (filterParams = filter) => {
       setLoading(true);
       try {
-        const result = await ResearchApi.list(filterParams);
+        const result = await ResearchApi.list({
+          ...filterParams,
+          paginated: false,
+        });
         setData(result);
       } catch (err) {
         console.error(err);
@@ -2563,7 +2583,7 @@ const ResearcherPage = () => {
             : ''
         }`
       );
-      fetchData();
+      await fetchData();
     } catch (err) {
       toast.error(`Import xatoligi: ${err.message}`);
     } finally {
@@ -2594,8 +2614,8 @@ const ResearcherPage = () => {
 
       setChecked(new Set());
       setDeleteConfirmOpen(false);
-      fetchData();
-      if (isSuperAdmin) fetchDeleted();
+      await fetchData();
+      if (isSuperAdmin) await fetchDeleted();
     } catch (err) {
       toast.error(`${tr('error')}: ${err.message}`);
     } finally {
@@ -3491,6 +3511,7 @@ const ResearcherPage = () => {
                     isAssistant={isAssistant}
                   />
 
+                  <DatasetQualityPanel rows={data} />
                   <RecordsTable
                     rows={data}
                     loading={loading}

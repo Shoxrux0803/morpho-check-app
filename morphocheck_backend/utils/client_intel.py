@@ -2,7 +2,8 @@ import ipaddress
 import json
 from functools import lru_cache
 from urllib.error import URLError
-from urllib.request import Request as UrlRequest, urlopen
+from urllib.request import Request as UrlRequest
+from urllib.request import urlopen
 
 DEMO_IP_LOCATIONS = {
     "203.0.113.42": {"label": "Tashkent, Uzbekistan", "city": "Tashkent", "country": "Uzbekistan", "source": "demo"},

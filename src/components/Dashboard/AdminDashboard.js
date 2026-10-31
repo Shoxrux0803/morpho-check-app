@@ -300,6 +300,8 @@ export default function AdminDashboard({
   totalCount = 0,
   userName,
   filters,
+  activeFilterMode = 'all',
+  onActiveFilterModeChange,
 }) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -309,7 +311,6 @@ export default function AdminDashboard({
   const customTooltip = useMemo(() => getTooltipStyle(isDark), [isDark]);
 
   // Dashboard ichki filter paneli (Barcha ko'rsatkichlar / Xavf guruhi / Normal)
-  const [activeFilterMode, setActiveFilterMode] = useState('all');
   const [aiTab, setAiTab] = useState(0);
 
   // Filterlangan ma'lumotlar to'plami
@@ -338,7 +339,101 @@ export default function AdminDashboard({
 
   // Derive statistics from loaded data (admin's own data)
   const localStats = useMemo(() => {
-    const targetData = filteredData.length ? filteredData : data;
+    if (stats) {
+      const distribution = stats.dashboard_bmi_distribution || {};
+      const normal = Number(distribution.normal || 0);
+      const underweight = Number(distribution.underweight || 0);
+      const overweight = Number(distribution.overweight || 0);
+      const obese = Number(distribution.obese || 0);
+      const bmiTotal = normal + underweight + overweight + obese;
+      const pct = (value) =>
+        bmiTotal > 0 ? Math.round((Number(value || 0) / bmiTotal) * 100) : 0;
+      const normalPct = pct(normal);
+      const riskRate = pct(overweight + obese);
+      const normalcyRate = normalPct;
+      const healthScore = bmiTotal
+        ? Math.min(
+            100,
+            Math.max(10, Math.round(normalPct * 0.75 + (100 - riskRate) * 0.25))
+          )
+        : 100;
+
+      const somatotypeCounts = stats.dashboard_somatotypes || {};
+      const endomorph = Number(somatotypeCounts.endomorph || 0);
+      const mesomorph = Number(somatotypeCounts.mesomorph || 0);
+      const ectomorph = Number(somatotypeCounts.ectomorph || 0);
+      const totalSoma = endomorph + mesomorph + ectomorph;
+      const somaPct = (value) =>
+        totalSoma > 0 ? Math.round((value / totalSoma) * 100) : 0;
+      const somatotypes = [
+        {
+          name: t.endomorph,
+          value: somaPct(endomorph),
+          count: endomorph,
+          fullMark: 100,
+        },
+        {
+          name: t.mesomorph,
+          value: somaPct(mesomorph),
+          count: mesomorph,
+          fullMark: 100,
+        },
+        {
+          name: t.ectomorph,
+          value: somaPct(ectomorph),
+          count: ectomorph,
+          fullMark: 100,
+        },
+      ];
+
+      return {
+        avgBmi: Number(stats.avg_bmi || 0).toFixed(1),
+        maleCount: Number(stats.by_gender?.erkak || 0),
+        femaleCount: Number(stats.by_gender?.ayol || 0),
+        unknownCount: Number(stats.by_gender?.["noma'lum"] || 0),
+        avgAge: Math.round(Number(stats.avg_age || 0)),
+        healthScore,
+        riskRate,
+        normalcyRate,
+        bmiCategories: [
+          {
+            name: t.normal,
+            pct: normalPct,
+            count: normal,
+            color: COLORS.success,
+          },
+          {
+            name: t.overweight,
+            pct: pct(overweight),
+            count: overweight,
+            color: COLORS.warning,
+          },
+          {
+            name: t.obese,
+            pct: pct(obese),
+            count: obese,
+            color: COLORS.error,
+          },
+          {
+            name: t.underweight,
+            pct: pct(underweight),
+            count: underweight,
+            color: COLORS.info,
+          },
+        ],
+        somatotypes,
+        dominantSomatotype: totalSoma
+          ? [...somatotypes].sort((a, b) => b.value - a.value)[0]
+          : null,
+        stats: {
+          normalPct,
+          riskPct: riskRate,
+          underweightPct: pct(underweight),
+        },
+      };
+    }
+
+    const targetData = activeFilterMode === 'all' ? data : filteredData;
     if (!targetData.length)
       return {
         avgBmi: 0,
@@ -481,13 +576,12 @@ export default function AdminDashboard({
         underweightPct: Math.round((underweight / bmiTotal) * 100),
       },
     };
-  }, [data, filteredData, t]);
+  }, [activeFilterMode, data, filteredData, stats, t]);
 
   // AI maslahatchi xulosalari va tavsiyalari
   const aiIntelligence = useMemo(() => {
-    const targetData = filteredData.length ? filteredData : data;
-    if (!targetData.length)
-      return { insights: [], risks: [], recommendations: [] };
+    const hasData = Number(stats?.total_analyses || 0) > 0 || data.length > 0;
+    if (!hasData) return { insights: [], risks: [], recommendations: [] };
     const { stats: s, avgBmi, somatotypes } = localStats;
     const insights = [];
     const risks = [];
@@ -522,7 +616,7 @@ export default function AdminDashboard({
     if (s.riskPct > 30) recommendations.push(t.recRisk);
 
     return { insights, risks, recommendations };
-  }, [data, filteredData, localStats, stats?.by_gender, t]);
+  }, [data, localStats, stats, t]);
 
   const genderData = useMemo(
     () =>
@@ -544,6 +638,12 @@ export default function AdminDashboard({
   );
 
   const ageGroupData = useMemo(() => {
+    if (stats?.dashboard_age_groups) {
+      return stats.dashboard_age_groups.map((item) => ({
+        name: item.name,
+        value: Number(item.value || 0),
+      }));
+    }
     const targetData = filteredData.length ? filteredData : data;
     const groups = {
       '0-10': 0,
@@ -563,10 +663,19 @@ export default function AdminDashboard({
       else groups['65+']++;
     });
     return Object.entries(groups).map(([name, value]) => ({ name, value }));
-  }, [data, filteredData]);
+  }, [data, filteredData, stats]);
 
   // Daily trend
   const dailyTrend = useMemo(() => {
+    if (stats?.daily_trend) {
+      return stats.daily_trend.map((item) => {
+        const [, month, day] = String(item.date || '').split('-');
+        return {
+          date: day && month ? `${day}.${month}` : String(item.date || ''),
+          count: Number(item.count || 0),
+        };
+      });
+    }
     const targetData = filteredData.length ? filteredData : data;
     const byDate = {};
     targetData.forEach((r) => {
@@ -582,10 +691,16 @@ export default function AdminDashboard({
         const [, m, day] = date.split('-');
         return { date: `${day}.${m}`, count };
       });
-  }, [data, filteredData]);
+  }, [data, filteredData, stats]);
 
   // Risk regions
   const riskRegionRows = useMemo(() => {
+    if (stats?.top_risk_regions) {
+      return stats.top_risk_regions.slice(0, 6).map((row) => ({
+        ...row,
+        regionLabel: getRegionLabel(row.region, lang),
+      }));
+    }
     const targetData = filteredData.length ? filteredData : data;
     const byReg = {};
     targetData.forEach((r) => {
@@ -609,7 +724,7 @@ export default function AdminDashboard({
       .filter((r) => r.count > 0)
       .sort((a, b) => b.count - a.count)
       .slice(0, 6);
-  }, [data, filteredData, lang]);
+  }, [data, filteredData, lang, stats]);
 
   const todayCount = useMemo(() => {
     const targetData = filteredData.length ? filteredData : data;
@@ -715,7 +830,7 @@ export default function AdminDashboard({
                   key={pill.id}
                   label={pill.label}
                   clickable
-                  onClick={() => setActiveFilterMode(pill.id)}
+                  onClick={() => onActiveFilterModeChange?.(pill.id)}
                   color={activeFilterMode === pill.id ? 'primary' : 'default'}
                   variant={activeFilterMode === pill.id ? 'filled' : 'outlined'}
                   sx={{

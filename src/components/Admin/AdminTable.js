@@ -1,3 +1,4 @@
+import { formatAgeMonths } from '../../utils/ageMonths';
 import React from 'react';
 import {
   Table,
@@ -168,18 +169,7 @@ const AdminTable = ({
                   </TableCell>
 
                   <TableCell>
-                    {row.age} {t('yearShort')}
-                    {row.age_months !== undefined &&
-                      row.age_months !== null && (
-                        <Typography
-                          variant="caption"
-                          display="block"
-                          color="text.secondary"
-                        >
-                          {row.age_months} {t('monthShort')}, {row.age_days}{' '}
-                          {t('dayShort')}
-                        </Typography>
-                      )}
+                    {formatAgeMonths(row)} {t('monthShort')}
                   </TableCell>
 
                   <TableCell>

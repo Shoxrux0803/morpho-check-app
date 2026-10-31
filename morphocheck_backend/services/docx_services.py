@@ -7,6 +7,7 @@ DOCX hisobot generatsiyasi — "Мактабгача таълим ёшидаги
 """
 
 import re
+from copy import deepcopy
 from io import BytesIO
 
 from docx import Document
@@ -16,6 +17,10 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt
 
+from services.body_composition_service import (
+    estimate_phase_angle_from_anthropometry,
+    estimate_segmental_composition,
+)
 from services.ky_localization import ky_text, report_text
 from utils.translit import lat2cyr
 
@@ -708,7 +713,6 @@ DOCX_LABELS["ky"] = {
     "centile": "Центиль аралыгы",
     "corridor": "Ден соолук коридору",
     "hmai_label": "HMAI (ыңгайлашуу)",
-    "mii_label": "MII (интеграция)",
     "adi_label": "ADI (дисбаланс)",
     "mcri_label": "MCRI (коркунуч индекси)",
     "body_len_z": "Дене уз. Z-score",
@@ -740,7 +744,6 @@ DOCX_LABELS["ky"] = {
     "parent": "Ата-эне (камкорчу)",
     "nurse": "Медайым (мекеме)",
     "specialists": "Адис 1 / Адис 2",
-    "consultant": "Консультант",
     "sig_date": "Кол / дата",
     "doctor_parent": "Адис / ата-эне",
     "cm": "см",
@@ -750,8 +753,6 @@ DOCX_LABELS["ky"] = {
     "area_type": "Аймак түрү",
     "mii_label": "MII (интеграция индекси)",
     "consultant": "Кеңешчи",
-    "cm": "см",
-    "kg": "кг",
 }
 DOCX_LABELS["tg"] = {
     **DOCX_LABELS["uz"],
@@ -1279,6 +1280,48 @@ def _fmt(val, suffix: str = "") -> str:
         return s if s not in ("0", "0.0") else ""
 
 
+def _bia_metric_value(metric) -> str:
+    """Return a compact display value from a canonical BIA metric."""
+    if not isinstance(metric, dict):
+        return "—"
+    value = metric.get("used_value")
+    if value is None:
+        value = metric.get("value")
+    if value is None:
+        return "—"
+    prefix = "~" if (
+        metric.get("estimated")
+        or str(metric.get("source") or "").startswith("estimated")
+    ) else ""
+    if isinstance(value, float):
+        return f"{prefix}{value:.2f}"
+    return f"{prefix}{value}"
+
+
+def _bia_metric_number(metric):
+    """Return the numeric payload used by a canonical BIA metric."""
+    if not isinstance(metric, dict):
+        return None
+    value = metric.get("used_value")
+    return metric.get("value") if value is None else value
+
+
+def _bia_segment_part_value(segment, key: str, lang: str = "uz") -> str:
+    """Format one segment for a dedicated, readable segmental table."""
+    if not isinstance(segment, dict):
+        return "—"
+    value = segment.get(key)
+    if value is None:
+        return "—"
+    if isinstance(value, float):
+        value = f"{value:.2f}".rstrip("0").rstrip(".")
+    unit = segment.get("unit") or "kg"
+    if lang == "uz" and str(unit).lower() == "kg":
+        unit = "кг"
+    prefix = "~" if segment.get("estimated") else ""
+    return f"{prefix}{value} {unit}"
+
+
 # ---------------------------------------------------------------------------
 # Asosiy generatsiya funksiyasi
 # ---------------------------------------------------------------------------
@@ -1749,14 +1792,8 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         z_val = float(analysis.get("z_score", 0) or 0)
     except (TypeError, ValueError):
         z_val = 0.0
-    try:
-        age_int = int(float(_val(data, "age") or 0))
-    except (TypeError, ValueError):
-        age_int = 0
-
     bmi_str = f"{bmi_f:.1f}" if bmi_f else ""
     bmi_cat = LP(ky_text(analysis.get("bmi_category", "") or "", lang))
-    zscore_str = f"{z_val:.2f}" if z_val else ""
 
     detailed = analysis.get("indices", {})
 
@@ -1774,16 +1811,16 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         else ""
     )
 
-    hmai_val = detailed.get("hmai", 0)
+    hmai_val = format(detailed["hmai"], ".2f") if detailed.get("hmai") is not None else "?"
     hmai_desc = LP(ky_text(detailed.get("hmai_desc", ""), lang))
 
-    mii_val = detailed.get("mii", 0)
+    mii_val = format(detailed["mii"], ".2f") if detailed.get("mii") is not None else "?"
     mii_desc = LP(ky_text(detailed.get("mii_desc", ""), lang))
 
-    adi_val = detailed.get("adi", 0)
+    adi_val = format(detailed["adi"], ".2f") if detailed.get("adi") is not None else "?"
     adi_desc = LP(ky_text(detailed.get("adi_desc", ""), lang))
 
-    mcri_val = detailed.get("mcri", 0)
+    mcri_val = format(detailed["mcri"], ".2f") if detailed.get("mcri") is not None else "?"
     mcri_desc = LP(ky_text(detailed.get("mcri_desc", ""), lang))
 
     t3 = doc.add_table(rows=1, cols=4)
@@ -1847,6 +1884,7 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
     # -----------------------------------------------------------------------
     # IV. БИОИМПЕДАНС ТАҲЛИЛИ НАТИЖАЛАРИ
     # -----------------------------------------------------------------------
+    canonical_bia = deepcopy(data.get("body_composition") or {})
     bio_results = analysis.get("indices", {})
     has_bio_section = any(
         key in bio_results
@@ -1856,7 +1894,137 @@ def generate_docx_file(raw_data: dict, lang: str = "uz") -> BytesIO:
         )
     )
 
-    if has_bio_section:
+    if canonical_bia:
+        age_months_total = 0
+        try:
+            age_months_total = int(float(age_val or 0)) * 12 + int(float(age_m or 0))
+        except (TypeError, ValueError):
+            pass
+
+        phase_metric = canonical_bia.get("phase_angle_deg") or {}
+        if _bia_metric_number(phase_metric) is None:
+            phase_estimate = estimate_phase_angle_from_anthropometry(
+                age_months=age_months_total,
+                sex=gender_raw,
+                bmi=bmi_f,
+            )
+            if phase_estimate is not None:
+                canonical_bia["phase_angle_deg"] = {
+                    "value": phase_estimate,
+                    "source": "estimated_from_anthropometry",
+                    "estimated": True,
+                    "status": "estimated",
+                }
+
+        segment_estimates = estimate_segmental_composition(
+            ffm_kg=_bia_metric_number(canonical_bia.get("ffm_kg")),
+            fat_mass_kg=_bia_metric_number(canonical_bia.get("fat_mass_kg")),
+            age_months=age_months_total,
+            sex=gender_raw,
+        )
+        segment_keys = (
+            "right_arm", "left_arm", "trunk", "right_leg", "left_leg"
+        )
+        for segment_name in ("segmental_lean_mass", "segmental_fat_mass"):
+            segment = canonical_bia.get(segment_name)
+            has_segment_values = isinstance(segment, dict) and any(
+                segment.get(key) is not None for key in segment_keys
+            )
+            if not has_segment_values and segment_estimates.get(segment_name):
+                canonical_bia[segment_name] = segment_estimates[segment_name]
+
+        _section_head_paragraph(doc, L("section_4"))
+        labels_uz = [
+            "PBF / Ёғ (%)",
+            "Fat mass / Ёғ (кг)",
+            "FFM / Ёғсиз масса (кг)",
+            "SMM / Скелет мушак массаси (кг)",
+            "Visceral Fat / Висцерал ёғ",
+            "Phase Angle / Фаза бурчаги (°)",
+            "Segmental Lean Mass / Сегментал ёғсиз масса",
+            "Segmental Fat Mass / Сегментал ёғ массаси",
+            "BMR (ккал/кун)",
+            "Mineral/Bone mass / Суяк массаси (кг)",
+        ]
+        labels_en = [
+            "PBF / Fat (%)",
+            "Fat mass (kg)",
+            "FFM / Fat-free mass (kg)",
+            "SMM / Skeletal muscle mass (kg)",
+            "Visceral Fat",
+            "Phase Angle (°)",
+            "Segmental Lean Mass",
+            "Segmental Fat Mass",
+            "BMR (kcal/day)",
+            "Mineral/Bone mass (kg)",
+        ]
+        bia_labels = labels_uz if lang == "uz" else labels_en
+        metrics = [
+            ("1", bia_labels[0], _bia_metric_value(canonical_bia.get("pbf_percent"))),
+            ("2", bia_labels[1], _bia_metric_value(canonical_bia.get("fat_mass_kg"))),
+            ("3", bia_labels[2], _bia_metric_value(canonical_bia.get("ffm_kg"))),
+            ("4", bia_labels[3], _bia_metric_value(canonical_bia.get("smm_kg"))),
+            ("5", bia_labels[4], _bia_metric_value(canonical_bia.get("visceral_fat"))),
+            ("6", bia_labels[5], _bia_metric_value(canonical_bia.get("phase_angle_deg"))),
+            ("9", bia_labels[8], _bia_metric_value(canonical_bia.get("bmr_kcal_day"))),
+            ("10", bia_labels[9], _bia_metric_value(canonical_bia.get("mineral_bone_mass_kg"))),
+        ]
+        pairs = [
+            (metrics[0], metrics[1]),
+            (metrics[2], metrics[3]),
+            (metrics[4], metrics[5]),
+            (metrics[6], metrics[7]),
+        ]
+        t4 = doc.add_table(rows=len(pairs) + 1, cols=6)
+        t4.style = "Table Grid"
+        _set_table_full_width(t4)
+        compact_headers = [L("no"), L("indicator"), L("value")] * 2
+        for c, header in enumerate(compact_headers):
+            _set_cell_font(t4.cell(0, c), header, bold=True, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _shade_cell(t4.cell(0, c))
+        for row_idx, (left, right) in enumerate(pairs, start=1):
+            _set_cell_font(t4.cell(row_idx, 0), left[0], size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4.cell(row_idx, 1), left[1], size=9)
+            _set_cell_font(t4.cell(row_idx, 2), left[2], size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4.cell(row_idx, 3), right[0], size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4.cell(row_idx, 4), right[1], size=9)
+            _set_cell_font(t4.cell(row_idx, 5), right[2], size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+        for col, width in enumerate((0.65, 5.0, 2.1, 0.65, 5.0, 2.1)):
+            _set_col_width(t4, col, width)
+        _style_report_table(t4, number_cols=(0, 3))
+
+        segment_headers = {
+            "uz": [L("no"), L("indicator"), "Ўнг қўл", "Чап қўл", "Тана", "Ўнг оёқ", "Чап оёқ"],
+            "en": [L("no"), L("indicator"), "Right arm", "Left arm", "Trunk", "Right leg", "Left leg"],
+        }.get(lang, [L("no"), L("indicator"), "Right arm", "Left arm", "Trunk", "Right leg", "Left leg"])
+        segment_rows = [
+            ("7", bia_labels[6], canonical_bia.get("segmental_lean_mass") or {}),
+            ("8", bia_labels[7], canonical_bia.get("segmental_fat_mass") or {}),
+        ]
+        t4_segments = doc.add_table(rows=3, cols=7)
+        t4_segments.style = "Table Grid"
+        _set_table_full_width(t4_segments)
+        for col_idx, header in enumerate(segment_headers):
+            _set_cell_font(
+                t4_segments.cell(0, col_idx), header, bold=True, size=9,
+                align=WD_ALIGN_PARAGRAPH.CENTER,
+            )
+            _shade_cell(t4_segments.cell(0, col_idx))
+        for row_idx, (number, label, segment) in enumerate(segment_rows, start=1):
+            _set_cell_font(t4_segments.cell(row_idx, 0), number, size=9, align=WD_ALIGN_PARAGRAPH.CENTER)
+            _set_cell_font(t4_segments.cell(row_idx, 1), label, size=9)
+            for col_idx, key in enumerate(segment_keys, start=2):
+                _set_cell_font(
+                    t4_segments.cell(row_idx, col_idx),
+                    _bia_segment_part_value(segment, key, lang),
+                    size=9,
+                    align=WD_ALIGN_PARAGRAPH.CENTER,
+                )
+        for col, width in enumerate((0.6, 5.4, 1.9, 1.9, 1.9, 1.9, 1.9)):
+            _set_col_width(t4_segments, col, width)
+        _style_report_table(t4_segments, number_cols=(0,))
+
+    elif has_bio_section:
         _section_head_paragraph(doc, L("section_4"))
 
         t4 = doc.add_table(rows=8, cols=5)

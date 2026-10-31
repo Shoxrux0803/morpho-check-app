@@ -6,16 +6,12 @@ const GlassPaper = ({ children, sx = {} }) => (
     elevation={0}
     sx={{
       background: (theme) =>
-        theme.palette.mode === 'dark'
-          ? 'rgba(30,30,40,0.7)'
-          : 'rgba(255,255,255,0.85)',
+        theme.palette.mode === 'dark' ? '#111e2d' : '#ffffff',
       backdropFilter: 'blur(20px)',
-      borderRadius: 4,
+      borderRadius: '18px',
       border: '1px solid',
       borderColor: (theme) =>
-        theme.palette.mode === 'dark'
-          ? 'rgba(255,255,255,0.08)'
-          : 'rgba(0,0,0,0.05)',
+        theme.palette.mode === 'dark' ? '#253548' : '#dfe8ef',
       overflow: 'auto',
       '&::-webkit-scrollbar': {
         height: '6px',

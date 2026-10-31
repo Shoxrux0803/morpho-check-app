@@ -18,7 +18,18 @@ select = [
 ]
 ignore = [
     "E501",  # line too long, handled by black/format
+    "B008",  # FastAPI intentionally uses Depends/Query/File calls as defaults
+    "B904",  # API routes deliberately replace internal errors with HTTP errors
 ]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 70
+
+[tool.ruff.lint.per-file-ignores]
+"main.py" = ["E402"]  # environment/bootstrap setup must precede app imports
+"alembic/env.py" = ["E402"]
+"scripts/migrate_sqlite_to_postgres.py" = ["E402"]
+"scripts/setup_superadmin.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"

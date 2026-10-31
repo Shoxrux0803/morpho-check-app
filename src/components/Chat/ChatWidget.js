@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { chatService } from '../../services/chatService';
@@ -157,7 +157,6 @@ const ChatWidget = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [typingUsers, setTypingUsers] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [hoveredMessageId, setHoveredMessageId] = useState(null);
   const [contextMenu, setContextMenu] = useState({
@@ -193,7 +192,7 @@ const ChatWidget = () => {
         setCurrentView(VIEWS.CHAT);
       }
     }
-  }, [user?.role, isOpen, isListUser, selectedUser]);
+  }, [user, isOpen, isListUser, selectedUser]);
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
 
@@ -203,29 +202,10 @@ const ChatWidget = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const API_BASE = (
-    process.env.REACT_APP_API_URL || 'http://localhost:8000/api'
-  ).replace('/api', '');
-
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
-
-  const quickPhrases = useMemo(() => {
-    return isAdmin
-      ? [
-          t('quickPhraseWelcome'),
-          t('quickPhraseSolved'),
-          t('quickPhraseReady'),
-          t('quickPhraseClear'),
-        ]
-      : [
-          t('quickPhraseNeedHelp'),
-          t('quickPhraseError'),
-          t('quickPhraseCheck'),
-          t('quickPhraseThanks'),
-        ];
-  }, [isAdmin, t]);
+  const chatActionsRef = useRef({});
 
   const scrollToBottom = (behavior = 'auto') => {
     if (messagesEndRef.current) {
@@ -236,31 +216,33 @@ const ChatWidget = () => {
   useEffect(() => {
     if (user) {
       if (isListUser && currentView === VIEWS.LIST) {
-        fetchConversations();
+        chatActionsRef.current.fetchConversations?.();
       } else if (currentView === VIEWS.MONITORING_LIST) {
-        fetchMonitoringPairs();
+        chatActionsRef.current.fetchMonitoringPairs?.();
       } else if (
         currentView === VIEWS.CHAT ||
         currentView === VIEWS.BROADCAST
       ) {
-        fetchMessages();
+        chatActionsRef.current.fetchMessages?.();
       } else if (currentView === VIEWS.MONITORING_CHAT) {
-        fetchMonitoringHistory();
+        chatActionsRef.current.fetchMonitoringHistory?.();
       }
 
       const interval = setInterval(() => {
-        if (isListUser && currentView === VIEWS.LIST) fetchConversations();
-        else if (currentView === VIEWS.MONITORING_LIST) fetchMonitoringPairs();
+        if (isListUser && currentView === VIEWS.LIST)
+          chatActionsRef.current.fetchConversations?.();
+        else if (currentView === VIEWS.MONITORING_LIST)
+          chatActionsRef.current.fetchMonitoringPairs?.();
         else if (currentView === VIEWS.CHAT || currentView === VIEWS.BROADCAST)
-          fetchMessages();
+          chatActionsRef.current.fetchMessages?.();
         else if (currentView === VIEWS.MONITORING_CHAT)
-          fetchMonitoringHistory();
-        fetchTypingStatus();
+          chatActionsRef.current.fetchMonitoringHistory?.();
+        chatActionsRef.current.fetchTypingStatus?.();
       }, 5000);
 
       return () => clearInterval(interval);
     }
-  }, [user, currentView, selectedUser, selectedMonitoringPair]);
+  }, [currentView, isListUser, selectedMonitoringPair, selectedUser, user]);
 
   useEffect(() => {
     if (
@@ -269,13 +251,13 @@ const ChatWidget = () => {
     ) {
       const behavior =
         messages.length > 0 &&
-        messages[messages.length - 1].sender_id !== user.id
+        messages[messages.length - 1].sender_id !== user?.id
           ? 'smooth'
           : 'auto';
       const timeoutId = setTimeout(() => scrollToBottom(behavior), 300);
       return () => clearTimeout(timeoutId);
     }
-  }, [messages, isOpen, currentView]);
+  }, [messages, isOpen, currentView, user?.id]);
 
   // Handle marking as read
   useEffect(() => {
@@ -284,9 +266,9 @@ const ChatWidget = () => {
       (currentView === VIEWS.CHAT || currentView === VIEWS.BROADCAST) &&
       unreadCount > 0
     ) {
-      handleMarkRead();
+      chatActionsRef.current.handleMarkRead?.();
     }
-  }, [isOpen, currentView, selectedUser, messages.length]);
+  }, [currentView, isOpen, messages.length, selectedUser, unreadCount]);
 
   // Mutual exclusion logic
   useEffect(() => {
@@ -415,6 +397,15 @@ const ChatWidget = () => {
     } catch (error) {
       console.error('Mark read error', error);
     }
+  };
+
+  chatActionsRef.current = {
+    fetchConversations,
+    fetchMessages,
+    fetchMonitoringHistory,
+    fetchMonitoringPairs,
+    fetchTypingStatus,
+    handleMarkRead,
   };
 
   const handleSend = async (msgContent = null, fileUrl = null) => {
@@ -1390,6 +1381,15 @@ const ChatWidget = () => {
                                   }}
                                 >
                                   {msg.file_url && (
+                                    <SecureChatAttachment
+                                      fileUrl={msg.file_url}
+                                      fileName={msg.content}
+                                      isDark={isDark}
+                                      isMine={isMine}
+                                      downloadLabel={t('download')}
+                                    />
+                                  )}
+                                  {false && msg.file_url && (
                                     <div
                                       style={{
                                         marginBottom: '8px',
@@ -1398,12 +1398,12 @@ const ChatWidget = () => {
                                     >
                                       {isImage(msg.file_url) ? (
                                         <a
-                                          href={`${API_BASE}${msg.file_url}`}
+                                          href={msg.file_url}
                                           target="_blank"
                                           rel="noreferrer"
                                         >
                                           <img
-                                            src={`${API_BASE}${msg.file_url}`}
+                                            src={msg.file_url}
                                             alt="file"
                                             style={{
                                               maxWidth: '100%',
@@ -1417,10 +1417,7 @@ const ChatWidget = () => {
                                       ) : (
                                         <div
                                           onClick={() =>
-                                            window.open(
-                                              `${API_BASE}${msg.file_url}`,
-                                              '_blank'
-                                            )
+                                            window.open(msg.file_url, '_blank')
                                           }
                                           style={{
                                             background: isDark
@@ -1479,7 +1476,7 @@ const ChatWidget = () => {
                                               )}
                                             </div>
                                             <a
-                                              href={`${API_BASE}${msg.file_url}`}
+                                              href={msg.file_url}
                                               download
                                               target="_blank"
                                               rel="noreferrer"
@@ -2140,6 +2137,137 @@ const getFileIcon = (url) => {
     default:
       return 'bi-file-earmark-fill';
   }
+};
+
+const SecureChatAttachment = ({
+  fileUrl,
+  fileName,
+  isDark,
+  isMine,
+  downloadLabel,
+}) => {
+  const [objectUrl, setObjectUrl] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let nextObjectUrl = '';
+    setObjectUrl('');
+    setLoadFailed(false);
+
+    chatService
+      .getFileBlob(fileUrl)
+      .then((blob) => {
+        if (!active) return;
+        nextObjectUrl = URL.createObjectURL(blob);
+        setObjectUrl(nextObjectUrl);
+      })
+      .catch(() => {
+        if (active) setLoadFailed(true);
+      });
+
+    return () => {
+      active = false;
+      if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
+    };
+  }, [fileUrl]);
+
+  if (loadFailed) {
+    return (
+      <div role="alert" style={{ marginBottom: 8, fontSize: 12 }}>
+        Faylni ko‘rsatib bo‘lmadi.
+      </div>
+    );
+  }
+
+  if (!objectUrl) {
+    return (
+      <div aria-busy="true" style={{ marginBottom: 8, fontSize: 12 }}>
+        Fayl yuklanmoqda…
+      </div>
+    );
+  }
+
+  const safeFileName =
+    String(fileName || 'chat-file')
+      .replace(/^(Fayl|File|Dosya):\s*/i, '')
+      .replace(/[\\/:*?"<>|]/g, '_')
+      .slice(0, 120) || 'chat-file';
+
+  if (isImage(fileUrl)) {
+    return (
+      <a
+        href={objectUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ display: 'block', marginBottom: 8 }}
+      >
+        <img
+          src={objectUrl}
+          alt={safeFileName}
+          loading="lazy"
+          style={{
+            display: 'block',
+            maxWidth: '100%',
+            borderRadius: 12,
+            border: isDark ? '1px solid #444' : '1px solid #eee',
+          }}
+        />
+      </a>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        marginBottom: 8,
+        padding: 12,
+        borderRadius: 12,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+        border: isDark
+          ? '1px solid rgba(255,255,255,0.1)'
+          : '1px solid rgba(0,0,0,0.05)',
+      }}
+    >
+      <i
+        aria-hidden="true"
+        className={`bi ${getFileIcon(fileUrl)}`}
+        style={{ fontSize: 24 }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <a
+          href={objectUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'block',
+            overflow: 'hidden',
+            color: isMine ? '#fff' : isDark ? '#eee' : '#333',
+            fontSize: 13,
+            fontWeight: 600,
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {safeFileName}
+        </a>
+        <a
+          href={objectUrl}
+          download={safeFileName}
+          style={{
+            color: isMine ? 'rgba(255,255,255,0.8)' : '#0f766e',
+            fontSize: 11,
+            textDecoration: 'none',
+          }}
+        >
+          <i aria-hidden="true" className="bi bi-download" /> {downloadLabel}
+        </a>
+      </div>
+    </div>
+  );
 };
 
 export default ChatWidget;

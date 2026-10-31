@@ -1,4 +1,7 @@
-from services.indices_service import calculate_detailed_indices
+from services.indices_service import (
+    calculate_age_independent_indices,
+    calculate_detailed_indices,
+)
 
 
 def _base_result(**overrides):
@@ -24,54 +27,53 @@ def _base_result(**overrides):
     return calculate_detailed_indices(**data)
 
 
-def test_v54_indices_stay_in_required_ranges():
+# v5.4 index expectations are replaced by golden cases in test_indices_v6.py.
+# Retain the existing composition regression coverage.
+def test_out_of_scope_indices_are_unavailable():
     result = _base_result()
-
-    assert 0 <= result["hmai"] <= 100
-    assert 0 <= result["mii"] <= 100
-    assert 0 <= result["adi"] <= 8
-    assert 0 <= result["mcri"] <= 100
     assert result["range_check_passed"] is True
-    assert result["reference_model_version"] == "UZ_FALLBACK_V5_4"
+    assert all(result[k] is None for k in ("hmai", "mii", "adi", "mcri"))
+    assert result["reference_model_version"] == "DSC_2038_HMAI_MII_ADI_MCRI_v6"
 
 
-def test_hmai_extreme_z_limits_final_category_to_borderline():
-    result = _base_result(height=155.0, bmi=15.8)
+def test_automatic_composition_always_reconciles_to_total_weight():
+    for gender, height, weight in (
+        ("erkak", 84.98, 8.46),
+        ("ayol", 90.0, 9.0),
+        ("boy", 140.0, 35.0),
+        ("girl", 165.0, 65.0),
+    ):
+        bmi = weight / ((height / 100) ** 2)
+        result = calculate_age_independent_indices(
+            gender=gender,
+            height=height,
+            weight=weight,
+            bmi=bmi,
+            manual_data={},
+        )
 
-    assert result["extreme_z_flag"] is True
-    assert result["hmai_category"] not in {"high", "satisfactory"}
-
-
-def test_mii_severe_component_limits_final_category_to_borderline():
-    manual_data = {
-        "chest": 64.0,
-        "shoulder_breadth": 28.0,
-        "thigh_circumference": 38.0,
-        "calf_circumference": 25.0,
-        "fat_percent": 25.0,
-        "fat_mass": 6.375,
-        "muscle_mass": 15.0,
-        "total_body_water": 15.6375,
-    }
-    result = _base_result(manual_data=manual_data)
-
-    assert result["severe_component_flag"] is True
-    assert result["raw_category"]["mii"] in {"high", "satisfactory"}
-    assert result["mii_category"] == "borderline"
+        assert result["ffm"] + result["fm"] == weight
+        assert 0 < result["ffm"] < weight
+        assert 2 <= result["fm_percent"] <= 45
 
 
-def test_mq_hard_qc_blocks_mii_and_mcri():
-    manual_data = {
-        "chest": 64.0,
-        "shoulder_breadth": 28.0,
-        "thigh_circumference": 38.0,
-        "calf_circumference": 25.0,
-        "fat_mass": 25.5,
-        "muscle_mass": 1.0,
-    }
-    result = _base_result(manual_data=manual_data)
+def test_pbf_and_fat_mass_inputs_cannot_create_two_conflicting_compositions():
+    result_from_pbf = calculate_age_independent_indices(
+        gender="erkak",
+        height=140,
+        weight=40,
+        bmi=20.4,
+        manual_data={"fat_percent": 25},
+    )
+    result_from_mass = calculate_age_independent_indices(
+        gender="erkak",
+        height=140,
+        weight=40,
+        bmi=20.4,
+        manual_data={"fat_mass": 10, "fat_percent": 10},
+    )
 
-    assert result["qc_status"] == "error"
-    assert result["mii"] is None
-    assert result["mcri"] is None
-    assert "hard_qc:fat_mass_out_of_range" in result["component_flags"]
+    assert result_from_pbf["fm"] == 10
+    assert result_from_pbf["ffm"] == 30
+    assert result_from_mass["fm_percent"] == 25
+    assert "warning:fat_mass_pbf_mismatch" in result_from_mass["component_flags"]

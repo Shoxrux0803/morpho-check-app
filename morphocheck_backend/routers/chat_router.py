@@ -3,10 +3,12 @@
 import os
 import uuid
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
-from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -44,8 +46,7 @@ class ChatMessageOut(BaseModel):
     file_url: Optional[str] = None
     reaction: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Typing status storage: {user_id: {"name": str, "timestamp": datetime}}
@@ -62,6 +63,14 @@ ALLOWED_UPLOAD_EXTENSIONS = {
     ".xlsx",
 }
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+CHAT_UPLOAD_DIR = Path("uploads") / "chat"
+
+
+def _secured_chat_file_url(file_url: Optional[str]) -> Optional[str]:
+    if not file_url:
+        return None
+    basename = os.path.basename(file_url.strip().replace("\\", "/"))
+    return f"/api/chat/files/{basename}" if basename else None
 
 
 def _active_user_filter():
@@ -72,10 +81,20 @@ def _validate_chat_file_url(file_url: Optional[str]) -> Optional[str]:
     if not file_url:
         return None
     normalized = file_url.strip().replace("\\", "/")
-    if not normalized.startswith("/uploads/chat/"):
+    if not normalized.startswith(("/uploads/chat/", "/api/chat/files/")):
         raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
     basename = os.path.basename(normalized)
-    if basename != normalized.rsplit("/", 1)[-1] or not basename:
+    stem, extension = os.path.splitext(basename)
+    path_parts = normalized.split("/")
+    try:
+        uuid.UUID(stem)
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
+    if (
+        basename != normalized.rsplit("/", 1)[-1]
+        or any(part in {".", ".."} for part in path_parts)
+        or extension.lower() not in ALLOWED_UPLOAD_EXTENSIONS
+    ):
         raise HTTPException(status_code=400, detail="Noto'g'ri fayl manzili")
     return normalized
 
@@ -93,12 +112,13 @@ def _hydrate_messages(db: Session, messages: List[ChatMessage]) -> List[ChatMess
     users = {}
     if sender_ids:
         user_rows = db.query(User.id, User.name).filter(User.id.in_(sender_ids)).all()
-        users = {user_id: name for user_id, name in user_rows}
+        users = dict(user_rows)
 
     results = []
     for m in messages:
         out = ChatMessageOut.model_validate(m)
         out.sender_name = users.get(m.sender_id, "User")
+        out.file_url = _secured_chat_file_url(m.file_url)
 
         parent = parents.get(m.reply_to_id)
         if parent:
@@ -149,7 +169,7 @@ def send_message(
         )
         if not recipient:
             raise HTTPException(status_code=404, detail="Qabul qiluvchi topilmadi")
-            
+
         is_authorized = False
         if current_user.role == "superadmin" or recipient.role == "superadmin":
             is_authorized = True
@@ -157,7 +177,7 @@ def send_message(
             is_authorized = True
         elif current_user.role == "field_assistant" and recipient.role == "admin" and current_user.supervisor_id == recipient.id:
             is_authorized = True
-            
+
         if not is_authorized:
             raise HTTPException(
                 status_code=403, detail="Siz bu foydalanuvchi bilan yoza olmaysiz"
@@ -178,6 +198,7 @@ def send_message(
     # Add sender name for the response
     res = ChatMessageOut.model_validate(new_msg)
     res.sender_name = current_user.name
+    res.file_url = _secured_chat_file_url(new_msg.file_url)
 
     # If it's a reply, get original sender name and content
     if msg.reply_to_id:
@@ -302,7 +323,7 @@ def get_conversations(
             .filter(
                 ChatMessage.sender_id == user_obj.id,
                 ChatMessage.recipient_id == current_user.id,
-                ChatMessage.is_read == False,
+                ChatMessage.is_read.is_(False),
             )
             .count()
         )
@@ -411,7 +432,8 @@ def mark_all_as_read(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     db.query(ChatMessage).filter(
-        ChatMessage.recipient_id == current_user.id, ChatMessage.is_read == False
+        ChatMessage.recipient_id == current_user.id,
+        ChatMessage.is_read.is_(False),
     ).update({"is_read": True})
     db.commit()
     return {"status": "success"}
@@ -426,7 +448,7 @@ def mark_user_messages_read(
     db.query(ChatMessage).filter(
         ChatMessage.recipient_id == current_user.id,
         ChatMessage.sender_id == user_id,
-        ChatMessage.is_read == False,
+        ChatMessage.is_read.is_(False),
     ).update({"is_read": True})
     db.commit()
     return {"status": "success"}
@@ -505,17 +527,56 @@ async def upload_chat_file(
             detail=f"Fayl Morpho Security Shield tomonidan bloklandi: {assessment.threat_type}",
         )
 
-    UPLOAD_DIR = os.path.join("uploads", "chat")
-    if not os.path.exists(UPLOAD_DIR):
-        os.makedirs(UPLOAD_DIR)
+    CHAT_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     unique_filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+    file_path = CHAT_UPLOAD_DIR / unique_filename
 
     with open(file_path, "wb") as buffer:
         buffer.write(content)
 
-    return {"file_url": f"/uploads/chat/{unique_filename}"}
+    return {"file_url": f"/api/chat/files/{unique_filename}"}
+
+
+@router.get("/files/{filename}")
+def get_chat_file(
+    filename: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Chat faylini faqat suhbat qatnashchilariga qaytaradi."""
+    basename = os.path.basename(filename)
+    extension = os.path.splitext(basename)[1].lower()
+    try:
+        uuid.UUID(os.path.splitext(basename)[0])
+    except (ValueError, AttributeError):
+        raise HTTPException(status_code=404, detail="Fayl topilmadi")
+    if basename != filename or extension not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(status_code=404, detail="Fayl topilmadi")
+
+    legacy_url = f"/uploads/chat/{basename}"
+    secured_url = f"/api/chat/files/{basename}"
+    message = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.file_url.in_([legacy_url, secured_url]))
+        .order_by(ChatMessage.id.desc())
+        .first()
+    )
+    if not message:
+        raise HTTPException(status_code=404, detail="Fayl topilmadi")
+
+    can_read = (
+        message.message_type == "broadcast"
+        or current_user.role == "superadmin"
+        or current_user.id in {message.sender_id, message.recipient_id}
+    )
+    if not can_read:
+        raise HTTPException(status_code=403, detail="Faylga kirish taqiqlangan")
+
+    file_path = CHAT_UPLOAD_DIR / basename
+    if not file_path.is_file():
+        raise HTTPException(status_code=404, detail="Fayl topilmadi")
+    return FileResponse(file_path, filename=basename)
 
 @router.post("/typing")
 def update_typing_status(current_user: User = Depends(get_current_user)):

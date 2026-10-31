@@ -4,6 +4,12 @@
 /* @tailwind utilities;
 
 /* ===== Global reset/umumiy stillar ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 html,
 body {
   margin: 0;
@@ -806,26 +812,10 @@ textarea {
 
 /* Mobile-specific Container adjustments */
 @media (max-width: 600px) {
-  .MuiContainer-root {
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
   /* Reduce padding on small screens */
   .MuiToolbar-root {
     padding: 8px 12px;
     min-height: 56px;
-  }
-
-  /* Improve stack spacing on mobile */
-  .MuiStack-root {
-    gap: 8px !important;
-  }
-
-  /* Paper/Card padding on mobile */
-  .MuiPaper-root {
-    padding-left: 12px;
-    padding-right: 12px;
   }
 
   /* Button full width on mobile forms */

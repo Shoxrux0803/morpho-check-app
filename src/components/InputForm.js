@@ -1,3 +1,4 @@
+import { formatAgeMonths } from '../utils/ageMonths';
 // src/components/InputForm.jsx
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -31,7 +32,7 @@ import WaterIcon from '@mui/icons-material/Water';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Stepper from '@mui/material/Stepper';
@@ -51,6 +52,7 @@ import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import NotesIcon from '@mui/icons-material/Notes';
 import aiService from '../services/aiService';
+import MeasurementQualityPanel from './MeasurementQualityPanel';
 
 import { MCTextField as Field, MCSelect } from './ui/MCField';
 import { UZB_LOCATIONS } from '../data/uzbLocations';
@@ -84,6 +86,7 @@ export default function InputForm({
   onBulkUpdate,
 }) {
   const { lang, t } = useLanguage();
+  const reducedMotion = useReducedMotion();
   const ppe = (key) => getPlayPreschoolText(lang, key);
   const { isAuthenticated, user } = useAuth();
   const btnRef = useRef(null);
@@ -118,67 +121,74 @@ export default function InputForm({
     isPrivilegedInput &&
     canUsePermission(adminPermissions, 'play_preschool_engagement');
 
-  const validateAnthro = (form) => {
-    const errs = [];
-    const age = Number(form.age);
-    const h = Number(form.height);
-    const w = Number(form.weight);
-    // const chest = Number(form.chest);
-    // const head = Number(form.head);
+  const validateAnthro = useCallback(
+    (form) => {
+      const errs = [];
+      const age = Number(form.age);
+      const h = Number(form.height);
+      const w = Number(form.weight);
+      // const chest = Number(form.chest);
+      // const head = Number(form.head);
 
-    // 1. Yosh chegarasi (2 dan 120 gacha)
-    if (isNaN(age) || age < 2 || age > 120) {
-      errs.push(t('errAge'));
-    }
+      // 1. Yosh chegarasi (2 dan 120 gacha)
+      if (isNaN(age) || age < 2 || age > 120) {
+        errs.push(t('errAge'));
+      }
 
-    // BMI hisoblash (agar o'lchovlar bor bo'lsa)
-    if (h > 0 && w > 0) {
-      form.__bmi = round1(w / Math.pow(h / 100, 2));
-    }
+      // BMI hisoblash (agar o'lchovlar bor bo'lsa)
+      if (h > 0 && w > 0) {
+        form.__bmi = round1(w / Math.pow(h / 100, 2));
+      }
 
-    // 2. Mantiqsiz o'lchovlar (juda past yoki juda yuqori)
-    // Bo'y (50-250 sm)
-    if (h > 0 && (h < 50 || h > 250)) {
-      errs.push(`${t('heightLabel')}: 50–250 sm.`);
-    }
-    // Vazn (3-300 kg)
-    if (w > 0 && (w < 2 || w > 350)) {
-      errs.push(`${t('weightLabel')}: 2–350 kg.`);
-    }
-    // BMI (5-80) - juda ekstremal holatlar
-    if (form.__bmi && (form.__bmi < 5 || form.__bmi > 80)) {
-      errs.push(`BMI: 5–80.`);
-    }
+      // 2. Mantiqsiz o'lchovlar (juda past yoki juda yuqori)
+      // Bo'y (50-250 sm)
+      if (h > 0 && (h < 50 || h > 250)) {
+        errs.push(`${t('heightLabel')}: 50–250 sm.`);
+      }
+      // Vazn (3-300 kg)
+      if (w > 0 && (w < 2 || w > 350)) {
+        errs.push(`${t('weightLabel')}: 2–350 kg.`);
+      }
+      // BMI (5-80) - juda ekstremal holatlar
+      if (form.__bmi && (form.__bmi < 5 || form.__bmi > 80)) {
+        errs.push(`BMI: 5–80.`);
+      }
 
-    const requiresGuardianConsent =
-      Number(form.age) > 0 && Number(form.age) < 18;
+      const requiresGuardianConsent =
+        Number(form.age) > 0 && Number(form.age) < 18;
 
-    if (requiresGuardianConsent && !form.consentConfirmed) {
-      errs.push('Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.');
-    }
-    if (
-      requiresGuardianConsent &&
-      !String(form.consentGuardianName || '').trim()
-    ) {
-      errs.push(
-        'Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.'
-      );
-    }
+      if (requiresGuardianConsent && !form.consentConfirmed) {
+        errs.push('Ota-ona yoki vasiyning roziligi tasdiqlanishi kerak.');
+      }
+      if (
+        requiresGuardianConsent &&
+        !String(form.consentGuardianName || '').trim()
+      ) {
+        errs.push(
+          'Rozilik bergan ota-ona yoki vasiyning ismi kiritilishi kerak.'
+        );
+      }
 
-    return errs;
-  };
+      return errs;
+    },
+    [t]
+  );
 
   const analytics = useGrowthAnalytics(formData);
 
   const smoothScrollToResults = useCallback(() => {
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)')
+      .matches
+      ? 'auto'
+      : 'smooth';
     if (scrollTargetId) {
       const el = document.getElementById(scrollTargetId);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (el) el.scrollIntoView({ behavior, block: 'start' });
       return;
     }
     if (scrollTargetRef?.current) {
       scrollTargetRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior,
         block: 'start',
       });
     }
@@ -237,7 +247,7 @@ export default function InputForm({
         smoothScrollToResults();
       }
     },
-    [formData, handleSubmit, smoothScrollToResults]
+    [formData, handleSubmit, smoothScrollToResults, t, validateAnthro]
   );
 
   const adorn = (icon) => ({
@@ -387,7 +397,14 @@ export default function InputForm({
     return () => {
       mounted = false;
     };
-  }, [boundaryIndex, district, featureLabel, findBoundaryDistrict, region]);
+  }, [
+    boundaryIndex,
+    district,
+    featureLabel,
+    findBoundaryDistrict,
+    lang,
+    region,
+  ]);
 
   const onRegionChange = (e) => {
     handleInputChange(e);
@@ -410,7 +427,7 @@ export default function InputForm({
   const prevStep = () => setActiveStep((prev) => prev - 1);
 
   const handleAiPredict = async () => {
-    if (!formData.age || !formData.gender) {
+    if (formData.age === '' || formData.age == null || !formData.gender) {
       toast.error('Iltimos, avval yosh va jinsni kiriting!');
       return;
     }
@@ -420,17 +437,51 @@ export default function InputForm({
       const res = await aiService.predictParams(
         formData.age,
         formData.gender,
-        'analysis'
+        'analysis',
+        formData.ageMonths,
+        formData.ageDays
       );
-      if (res.params && onBulkUpdate) {
-        onBulkUpdate(res.params);
+      if (res.params) {
+        const values = Object.fromEntries(
+          Object.entries(res.params).filter(
+            ([key, value]) =>
+              Object.prototype.hasOwnProperty.call(formData, key) &&
+              value !== '' &&
+              value != null &&
+              Number.isFinite(Number(value))
+          )
+        );
+        const update = {
+          ...values,
+          referenceTemplate: {
+            source: res.source,
+            formulaVersion: res.formula_version,
+            values,
+          },
+        };
+        if (onBulkUpdate) {
+          onBulkUpdate(update);
+        } else {
+          Object.entries(update).forEach(([name, value]) =>
+            handleInputChange({ target: { name, value } })
+          );
+        }
         toast.success(
-          "Gemini: Normativ ko'rsatkichlar muvaffaqiyatli yuklandi!",
-          { icon: '🤖' }
+          lang === 'en'
+            ? 'Form filled with age-based reference values'
+            : lang === 'ru'
+              ? 'Форма заполнена примерными значениями по возрасту'
+              : 'Forma yoshga mos taxminiy qiymatlar bilan to‘ldirildi'
         );
       }
     } catch (err) {
-      toast.error('AI tahlilda xatolik yuz berdi');
+      toast.error(
+        lang === 'en'
+          ? 'Could not load reference values'
+          : lang === 'ru'
+            ? 'Не удалось загрузить справочные значения'
+            : 'Taxminiy ma’lumotnomani olishda xatolik yuz berdi'
+      );
     } finally {
       setPredictLoading(false);
     }
@@ -521,18 +572,26 @@ export default function InputForm({
   }));
 
   const containerVariants = {
-    hidden: { opacity: 0, x: 20 },
+    hidden: { opacity: reducedMotion ? 1 : 0, y: reducedMotion ? 0 : 18 },
     visible: {
       opacity: 1,
-      x: 0,
-      transition: { duration: 0.4, ease: 'easeOut' },
+      y: 0,
+      transition: {
+        duration: reducedMotion ? 0 : 0.55,
+        ease: [0.22, 1, 0.36, 1],
+      },
     },
-    exit: { opacity: 0, x: -20, transition: { duration: 0.3, ease: 'easeIn' } },
+    exit: {
+      opacity: reducedMotion ? 1 : 0,
+      y: reducedMotion ? 0 : -10,
+      transition: { duration: reducedMotion ? 0 : 0.18 },
+    },
   };
 
   return (
     <Box
       component="form"
+      className="analysis-form"
       onSubmit={handleLocalSubmit}
       sx={{ display: 'flex', justifyContent: 'center', pb: 5 }}
     >
@@ -544,7 +603,10 @@ export default function InputForm({
         )}
 
         {/* Stepper UI */}
-        <Box sx={{ mb: 6, mt: 2, overflowX: { xs: 'auto', sm: 'visible' } }}>
+        <Box
+          className="analysis-stepper-panel"
+          sx={{ mb: 6, mt: 2, overflowX: { xs: 'auto', sm: 'visible' } }}
+        >
           <Stepper
             alternativeLabel
             activeStep={activeStep}
@@ -557,6 +619,7 @@ export default function InputForm({
                   <StepLabel
                     StepIconComponent={({ active, completed }) => (
                       <Box
+                        className={`analysis-step-icon ${active ? 'is-active' : ''} ${completed ? 'is-complete' : ''}`}
                         sx={(theme) => ({
                           width: 28,
                           height: 28,
@@ -610,15 +673,26 @@ export default function InputForm({
               );
             })}
           </Stepper>
+          <div className="analysis-step-progress" aria-hidden="true">
+            <motion.div
+              initial={false}
+              animate={{ scaleX: (activeStep + 1) / steps.length }}
+              transition={{
+                duration: reducedMotion ? 0 : 0.6,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            />
+          </div>
         </Box>
 
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {activeStep === stepIndexPersonalInfo && (
             <motion.div
               key="step0"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
+              exit="exit"
             >
               {/* ===== 1. Shaxsiy ma'lumotlar ===== */}
               <Paper
@@ -654,7 +728,7 @@ export default function InputForm({
                 </Stack>
 
                 <Grid container spacing={3}>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={`${t('firstNameLabel')} *`}
@@ -666,7 +740,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={12} lg={6}>
+                  <Grid size={{ xs: 12, md: 12, lg: 6 }}>
                     <Field
                       fullWidth
                       label={`${t('lastNameLabel')} *`}
@@ -678,7 +752,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={t('birthDateLabel')}
@@ -694,7 +768,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={t('examDateLabel')}
@@ -710,16 +784,12 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
-                      label={`${t('ageLabel')} (${t('autoCalcLabel')}) *`}
-                      name="age"
-                      value={
-                        formData.age !== ''
-                          ? `${formData.age} ${t('yearsShort')}, ${formData.ageMonths || 0} ${t('months')}, ${formData.ageDays || 0} ${t('days')}`
-                          : ''
-                      }
+                      label={`${t('ageLabel')} (${t('months')}) (${t('autoCalcLabel')}) *`}
+                      name="ageTotalMonths"
+                      value={formatAgeMonths(formData)}
                       InputProps={{
                         ...adorn(<CalendarMonth />),
                         readOnly: true,
@@ -728,7 +798,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <MCSelect
                       select
                       fullWidth
@@ -747,13 +817,13 @@ export default function InputForm({
                       </MenuItem>
                     </MCSelect>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Collapse
                       in={Number(formData.age) > 0 && Number(formData.age) < 18}
                       timeout={600}
                     >
                       <Grid container spacing={3}>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Field
                             fullWidth
                             label={`${t('fatherHeightLabel')} (sm)`}
@@ -766,7 +836,7 @@ export default function InputForm({
                             placeholder={t('optionalLabel')}
                           />
                         </Grid>
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Field
                             fullWidth
                             label={`${t('motherHeightLabel')} (sm)`}
@@ -779,7 +849,7 @@ export default function InputForm({
                             placeholder={t('optionalLabel')}
                           />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                           <Field
                             fullWidth
                             label={`${t('parentsPhoneLabel')} (${t('optionalLabel')})`}
@@ -795,7 +865,7 @@ export default function InputForm({
                       </Grid>
                     </Collapse>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Collapse
                       in={Number(formData.age) > 0 && Number(formData.age) < 18}
                       timeout={600}
@@ -822,7 +892,7 @@ export default function InputForm({
                 </Box>
 
                 <Grid container spacing={3}>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <MCSelect
                       select
                       fullWidth
@@ -842,7 +912,7 @@ export default function InputForm({
                       ))}
                     </MCSelect>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <MCSelect
                       select
                       fullWidth
@@ -872,7 +942,7 @@ export default function InputForm({
                       ))}
                     </MCSelect>
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <MCSelect
                       select
                       fullWidth
@@ -913,7 +983,7 @@ export default function InputForm({
                       ))}
                     </MCSelect>
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Field
                       fullWidth
                       label={`${t('fullAddressLabel')} (${t('optionalLabel')})`}
@@ -924,7 +994,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={{ xs: 12 }}>
                     <Field
                       fullWidth
                       multiline
@@ -1315,12 +1385,17 @@ export default function InputForm({
                     disabled={predictLoading}
                     sx={{ borderRadius: 2, textTransform: 'none' }}
                   >
-                    {predictLoading ? 'AI...' : 'AI Predict'}
+                    {predictLoading
+                      ? '...'
+                      : lang === 'en'
+                        ? 'Reference values'
+                        : 'Taxminiy ma’lumotnoma'}
                   </Button>
                 </Stack>
 
+                <MeasurementQualityPanel data={formData} />
                 <Grid container spacing={2.5}>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={`${t('heightLabel')} (sm) *`}
@@ -1352,7 +1427,7 @@ export default function InputForm({
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={`${t('bodyLengthLabel')} (sm) *`}
@@ -1365,7 +1440,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('weightLabel')} (kg) *`}
@@ -1397,7 +1472,7 @@ export default function InputForm({
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('chestLabel')} (sm) *`}
@@ -1410,7 +1485,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('waistLabel')} (sm) *`}
@@ -1423,7 +1498,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('headLabel')} (sm) *`}
@@ -1438,7 +1513,7 @@ export default function InputForm({
                   </Grid>
 
                   {analytics?.bmi && (
-                    <Grid item xs={12}>
+                    <Grid size={{ xs: 12 }}>
                       <Alert
                         icon={
                           <AnalyticsIcon
@@ -1489,7 +1564,7 @@ export default function InputForm({
                         adminPermissions,
                         'shoulder_length'
                       ) && (
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Field
                             fullWidth
                             label={`${t('shoulderLength')} (sm) *`}
@@ -1507,7 +1582,7 @@ export default function InputForm({
                         adminPermissions,
                         'shoulder_breadth'
                       ) && (
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Field
                             fullWidth
                             label={`${t('shoulderBreadth')} (sm) *`}
@@ -1525,7 +1600,7 @@ export default function InputForm({
                         adminPermissions,
                         'shoulder_circumference'
                       ) && (
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Field
                             fullWidth
                             label={`${t('shoulderCircumference')} (sm) *`}
@@ -1543,7 +1618,7 @@ export default function InputForm({
                         adminPermissions,
                         'arm_elbow_length'
                       ) && (
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Field
                             fullWidth
                             label={`${t('armElbowLength')} (sm) *`}
@@ -1558,7 +1633,7 @@ export default function InputForm({
                         </Grid>
                       )}
                       {canUsePermission(adminPermissions, 'hand_length') && (
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Field
                             fullWidth
                             label={`${t('handLength')} (sm) *`}
@@ -1573,7 +1648,7 @@ export default function InputForm({
                         </Grid>
                       )}
                       {canUsePermission(adminPermissions, 'thigh_length') && (
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Field
                             fullWidth
                             label={`${t('thighLength')} (sm) *`}
@@ -1591,7 +1666,7 @@ export default function InputForm({
                         adminPermissions,
                         'thigh_circumference'
                       ) && (
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                           <Field
                             fullWidth
                             label={`${t('thighCircumference')} (sm) *`}
@@ -1606,7 +1681,7 @@ export default function InputForm({
                         </Grid>
                       )}
                       {canUsePermission(adminPermissions, 'calf_length') && (
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Field
                             fullWidth
                             label={`${t('calfLength')} (sm) *`}
@@ -1624,7 +1699,7 @@ export default function InputForm({
                         adminPermissions,
                         'calf_circumference'
                       ) && (
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Field
                             fullWidth
                             label={`${t('calfCircumference')} (sm) *`}
@@ -1639,7 +1714,7 @@ export default function InputForm({
                         </Grid>
                       )}
                       {canUsePermission(adminPermissions, 'foot_length') && (
-                        <Grid item xs={12} md={4}>
+                        <Grid size={{ xs: 12, md: 4 }}>
                           <Field
                             fullWidth
                             label={`${t('footLength')} (sm) *`}
@@ -1761,11 +1836,57 @@ export default function InputForm({
                   </Typography>
                 </Stack>
 
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  BIA qiymatlarini qurilma hisobotidan kiriting. Qurilma, sana
+                  va o‘lchov protokoli natija bilan birga saqlanadi.
+                </Alert>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  {[
+                    [
+                      'biaDeviceManufacturer',
+                      'Qurilma ishlab chiqaruvchisi',
+                      'text',
+                    ],
+                    ['biaDeviceModel', 'Qurilma modeli', 'text'],
+                    ['biaMeasurementDate', 'BIA o‘lchov sanasi', 'date'],
+                    ['biaProtocol', 'O‘lchov protokoli / usuli', 'text'],
+                  ].map(([name, label, type]) => (
+                    <Grid size={{ xs: 12, sm: 6 }} key={name}>
+                      <Field
+                        fullWidth
+                        name={name}
+                        label={label}
+                        type={type}
+                        value={formData[name] || ''}
+                        onChange={handleInputChange}
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                  ))}
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <MCSelect
+                      select
+                      fullWidth
+                      name="biaVisceralFatUnit"
+                      label="Visseral yog‘ birligi"
+                      value={formData.biaVisceralFatUnit || ''}
+                      onChange={handleInputChange}
+                    >
+                      <MenuItem value="">Ko‘rsatilmagan</MenuItem>
+                      <MenuItem value="device_level">
+                        Qurilma darajasi (level)
+                      </MenuItem>
+                      <MenuItem value="cm2">cm²</MenuItem>
+                      <MenuItem value="percent">%</MenuItem>
+                    </MCSelect>
+                  </Grid>
+                </Grid>
+
                 <Grid container spacing={2.5}>
-                  <Grid xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
-                      label={`${t('tbwLabel')} (l) (${t('optionalLabel')})`}
+                      label={`${t('tbwLabel')} (%) (${t('optionalLabel')})`}
                       name="totalBodyWater"
                       type="number"
                       value={formData.totalBodyWater || ''}
@@ -1774,7 +1895,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={`${t('fatPercentLabel')} (%) (${t('optionalLabel')})`}
@@ -1786,7 +1907,18 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Field
+                      fullWidth
+                      label="FFM (kg)"
+                      name="ffmMeasuredKg"
+                      type="number"
+                      value={formData.ffmMeasuredKg ?? ''}
+                      onChange={handleInputChange}
+                      sx={inputSx}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('fatMassLabel')} (kg) (${t('optionalLabel')})`}
@@ -1798,7 +1930,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('muscleMassLabel')} (kg) (${t('optionalLabel')})`}
@@ -1810,7 +1942,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <Field
                       fullWidth
                       label={`${t('boneMassLabel')} (kg) (${t('optionalLabel')})`}
@@ -1822,10 +1954,10 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
-                      label={`${t('acmLabel')} (${t('optionalLabel')})`}
+                      label={`${t('acmLabel')} (%) (${t('optionalLabel')})`}
                       name="acm"
                       type="number"
                       value={formData.acm || ''}
@@ -1834,7 +1966,7 @@ export default function InputForm({
                       sx={inputSx}
                     />
                   </Grid>
-                  <Grid item xs={12} md={6}>
+                  <Grid size={{ xs: 12, md: 6 }}>
                     <Field
                       fullWidth
                       label={`${t('visceralFatLabel')} (${t('optionalLabel')})`}

@@ -1,7 +1,8 @@
 // src/services/aiService.js
 import axios from 'axios';
+import { API_BASE, API_PREFIX } from './api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_URL = `${API_BASE}${API_PREFIX}`;
 
 const aiService = {
   chat: async (
@@ -41,12 +42,24 @@ const aiService = {
     return response.data;
   },
 
-  predictParams: async (age, gender, targetForm = 'analysis') => {
+  predictParams: async (
+    age,
+    gender,
+    targetForm = 'analysis',
+    ageMonths = 0,
+    ageDays = 0
+  ) => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('No token found');
     const response = await axios.post(
       `${API_URL}/ai/predict-params`,
-      { age, gender, target_form: targetForm },
+      {
+        age,
+        age_months: ageMonths || 0,
+        age_days: ageDays || 0,
+        gender,
+        target_form: targetForm,
+      },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data;

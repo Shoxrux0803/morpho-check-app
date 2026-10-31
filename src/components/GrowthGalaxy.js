@@ -3,11 +3,6 @@ import { Box, Paper, alpha, useMediaQuery } from '@mui/material';
 import { motion } from 'framer-motion';
 import logo from '../assets/morphocheck-logo.svg';
 
-const orbitDots = [
-  { size: 14, color: '#5eead4', top: '7%', left: '25%' },
-  { size: 9, color: '#7dd3fc', top: '77%', left: '88%' },
-  { size: 7, color: '#ffffff', top: '42%', left: '-1%' },
-];
 export default function GrowthGalaxy({ mode, colorPalette }) {
   const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
   const dark = mode === 'dark';

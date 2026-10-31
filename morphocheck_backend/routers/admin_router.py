@@ -7,35 +7,57 @@ from docx import Document
 from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Cm, Pt, RGBColor
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Query,
+    Request,
+    Response,
+    UploadFile,
+)
 from fastapi.responses import StreamingResponse
 from openpyxl import Workbook, load_workbook
+from openpyxl.comments import Comment
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.worksheet.datavalidation import DataValidation
 from pydantic import BaseModel
-from sqlalchemy import asc, case, desc, func, or_
+from sqlalchemy import asc, case, desc, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from models.audit import AuditLog
 from models.blocked_ip import BlockedIP
 from models.payment import Payment
-from models.security_event import SecurityEvent
 from models.schemas import (
+    BlockIPRequest,
     PatientData,
     PaymentCreate,
     PaymentOut,
+    PrivacyRoleSettingsOut,
+    PrivacyRoleSettingsUpdate,
+    RoleSettingsOut,
+    RoleSettingsUpdate,
     UserCreate,
     UserOut,
     UserUpdate,
-    BlockIPRequest,
 )
+from models.security_event import SecurityEvent
+from models.settings import RoleSettings
 from models.user import User
 from models.userdata import PatientAnalysis, ResearchRecord
 from routers.auth_router import (
     get_current_admin,
+    get_current_admin_or_assistant,
     get_current_superadmin,
     get_current_user,
-    get_current_admin_or_assistant,
 )
+from services.admin_import_layout import (
+    apply_import_measured_ffm,
+    ffm_import_errors,
+    resolve_admin_import_sheet,
+)
+from services.age_service import split_age_months, total_age_months
 from services.analyze_service import (
     _split_region_and_district,
     generate_advices,
@@ -44,15 +66,29 @@ from services.analyze_service import (
 from services.analyze_service import (
     calculate_bmi as calc_full_bmi,
 )
+from services.body_composition_service import (
+    calculate_body_composition,
+    estimate_phase_angle_from_anthropometry,
+    estimate_segmental_composition,
+    raw_body_composition_from_patient,
+)
 from services.cache_service import cache_service
 from services.clinical_service import clinical_service
-from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions, serialize_admin_permissions
+from services.data_quality_service import (
+    BMI_SCREENING_MAX,
+    BMI_SCREENING_MIN,
+    bmi_screening_issue,
+    summarize_anthropometry_quality,
+)
+from utils.admin_permissions import (
+    filter_payload_by_permissions,
+    get_effective_admin_permissions,
+    serialize_admin_permissions,
+)
 from utils.audit_helper import record_audit_log
-from utils.database import get_db
-from utils.security import get_password_hash
-from utils.translit import lat2cyr
 from utils.blocked_ips import block_ips, is_ip_blocked
 from utils.client_intel import describe_ip_location, describe_user_agent
+from utils.database import get_db
 from utils.privacy import (
     CHILD_PII_EXPORT_FIELDS,
     PRIVACY_MANAGED_ROLES,
@@ -62,6 +98,8 @@ from utils.privacy import (
     normalize_privacy_role,
     redact_child_payload,
 )
+from utils.security import get_password_hash
+from utils.translit import lat2cyr
 
 # Router prefiksiz: main.py da /api/admin bilan ulangan bo'ladi
 router = APIRouter(tags=["Admin"])
@@ -69,6 +107,11 @@ logger = logging.getLogger(__name__)
 MANAGEMENT_HIDDEN_USER_EMAILS = ("security_bot@system.local",)
 
 verify_admin = get_current_admin
+
+
+def invalidate_admin_stats_cache() -> None:
+    """Drop cached scientific aggregates after analyses are mutated."""
+    cache_service.delete_pattern("morphocheck:admin_sci_stats:*")
 
 
 class LocationPing(BaseModel):
@@ -160,6 +203,7 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
         birthDate=safe_iso_date(rec.birth_date, "Noma'lum"),
         preschoolInstitution=rec.preschool_institution or "Noma'lum",
         age=int(rec.age or 0),
+        ageTotalMonths=getattr(rec, "age_total_months", None),
         ageMonths=int(rec.age_months or 0),
         ageDays=int(rec.age_days or 0),
         gender=normalize_analysis_gender(rec.gender),
@@ -201,6 +245,7 @@ def build_patient_data_from_analysis(rec: PatientAnalysis) -> PatientData:
         boneMass=rec.bone_mass,
         acm=rec.acm,
         visceralFat=rec.visceral_fat,
+        bodyComposition=getattr(rec, "body_composition_raw", None),
         doctorNote=rec.doctor_note,
     )
 
@@ -215,6 +260,14 @@ def recalculate_analysis_fields(
     rec.bmi = float(analysis["bmi"])
     rec.z_score = float(analysis["z_score"])
     rec.somatotype = str(analysis["somatotype"])
+    raw_bia = getattr(rec, "body_composition_raw", None)
+    if raw_bia:
+        rec.body_composition_result = calculate_body_composition(
+            weight_kg=rec.weight,
+            raw=raw_bia,
+            sex=rec.gender,
+            age_months=total_age_months(rec),
+        )
     return analysis
 
 
@@ -245,7 +298,7 @@ def to_dict_analysis(
     privacy_enabled: Optional[bool] = None,
 ) -> dict:
     raw_name = getattr(row, "name", None)
-    
+
     # Maxfiylik faqat markaziy role sozlamasi orqali qo'llanadi.
     masked_name = raw_name
     first_name, last_name = split_name(masked_name)
@@ -261,6 +314,7 @@ def to_dict_analysis(
         "last_name": last_name,
         "gender": getattr(row, "gender", None),
         "age": getattr(row, "age", None),
+        "age_total_months": total_age_months(row),
         "age_months": getattr(row, "age_months", None),
         "age_days": getattr(row, "age_days", None),
         "height": getattr(row, "height", None),
@@ -305,6 +359,8 @@ def to_dict_analysis(
         "calf_length",
         "calf_circumference",
         "foot_length",
+        "body_composition_raw",
+        "body_composition_result",
     )
     for extra in extra_fields:
         if hasattr(row, extra):
@@ -694,11 +750,14 @@ def list_analyses(
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
     age_max: Optional[int] = Query(None),
+    bmi_min: Optional[float] = Query(None),
+    bmi_max: Optional[float] = Query(None),
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
     sort_key: str = "created_at",
     sort_dir: str = "desc",
     region: Optional[str] = Query(None),
+    somatotype: Optional[str] = Query(None),
     page: int = 1,
     page_size: int = 20,
     all_ids: bool = Query(False),
@@ -715,7 +774,10 @@ def list_analyses(
         )
     elif current_user.role != "superadmin":
         # Oddiy admin: o'z ma'lumotlari + biriktirilgan assistentlar kiritgan ma'lumotlar
-        assistant_ids = db.query(User.id).filter(User.supervisor_id == current_user.id, User.role == "field_assistant").subquery()
+        assistant_ids = select(User.id).where(
+            User.supervisor_id == current_user.id,
+            User.role == "field_assistant",
+        )
         base = base.filter(
             ((PatientAnalysis.created_by_id == current_user.id) | (PatientAnalysis.created_by_id.in_(assistant_ids))) &
             (PatientAnalysis.is_deleted == 0)
@@ -741,6 +803,10 @@ def list_analyses(
         base = base.filter(PatientAnalysis.age >= age_min)
     if age_max is not None:
         base = base.filter(PatientAnalysis.age <= age_max)
+    if bmi_min is not None:
+        base = base.filter(PatientAnalysis.bmi >= bmi_min)
+    if bmi_max is not None:
+        base = base.filter(PatientAnalysis.bmi <= bmi_max)
     if date_from:
         start_dt = datetime.combine(date_from, datetime.min.time())
         base = base.filter(PatientAnalysis.created_at >= start_dt)
@@ -749,6 +815,10 @@ def list_analyses(
         base = base.filter(PatientAnalysis.created_at <= end_dt)
     if region:
         base = base.filter(PatientAnalysis.region == region)
+    if somatotype:
+        base = base.filter(
+            func.lower(PatientAnalysis.somatotype) == somatotype.lower()
+        )
 
     # Jami
     total = base.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
@@ -837,6 +907,7 @@ def delete_analyses(
             names.append(child_audit_reference(rec))
 
         db.commit()
+        invalidate_admin_stats_cache()
 
         if count > 0:
             record_audit_log(
@@ -868,6 +939,7 @@ def hard_delete_analyses(
         q = db.query(PatientAnalysis).filter(PatientAnalysis.id.in_(payload.ids))
         deleted = q.delete(synchronize_session=False)
         db.commit()
+        invalidate_admin_stats_cache()
 
         if deleted:
             record_audit_log(
@@ -903,6 +975,7 @@ def restore_analyses(
         )
 
         db.commit()
+        invalidate_admin_stats_cache()
 
         if count:
             record_audit_log(
@@ -999,6 +1072,18 @@ def update_analysis(
                     changes.append(f)
                 setattr(rec, f, val)
 
+        body_payload = payload.get("bodyComposition", payload.get("body_composition_raw"))
+        if body_payload is not None:
+            if body_payload != getattr(rec, "body_composition_raw", None):
+                changes.append("body_composition")
+            rec.body_composition_raw = body_payload
+            rec.body_composition_result = calculate_body_composition(
+                weight_kg=rec.weight,
+                raw=body_payload,
+                sex=rec.gender,
+                age_months=total_age_months(rec),
+            )
+
         if "consent_confirmed" in payload or "consentConfirmed" in payload:
             consent_value = payload.get(
                 "consent_confirmed", payload.get("consentConfirmed")
@@ -1039,6 +1124,7 @@ def update_analysis(
 
         db.commit()
         db.refresh(rec)
+        invalidate_admin_stats_cache()
 
         record_audit_log(
             db=db,
@@ -1110,13 +1196,17 @@ def create_payment(payload: PaymentCreate, db: Session = Depends(get_db)):
 def stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_or_assistant),
+    q: Optional[str] = Query(None),
     gender: Optional[str] = Query(None),
     age_min: Optional[int] = Query(None),
     age_max: Optional[int] = Query(None),
+    bmi_min: Optional[float] = Query(None),
+    bmi_max: Optional[float] = Query(None),
     region: Optional[str] = Query(None),
     date_from: Optional[date] = Query(None),
     date_to: Optional[date] = Query(None),
     somatotype: Optional[str] = Query(None),
+    dashboard_mode: str = Query("all"),
 ):
     # Base count of users (only for superadmin?)
     total_users = db.query(func.count(User.id)).scalar() or 0
@@ -1126,12 +1216,18 @@ def stats(
     if current_user.role == "field_assistant":
         analysis_q = analysis_q.filter(PatientAnalysis.created_by_id == current_user.id)
     elif current_user.role != "superadmin":
-        assistant_ids = db.query(User.id).filter(User.supervisor_id == current_user.id, User.role == "field_assistant").subquery()
+        assistant_ids = select(User.id).where(
+            User.supervisor_id == current_user.id,
+            User.role == "field_assistant",
+        )
         analysis_q = analysis_q.filter(
             (PatientAnalysis.created_by_id == current_user.id) | (PatientAnalysis.created_by_id.in_(assistant_ids))
         )
 
-    # Apply Filters
+    # Apply the same filters as the analyses table so every dashboard card is
+    # calculated from the complete filtered dataset, not from one UI page.
+    if q:
+        analysis_q = analysis_q.filter(PatientAnalysis.id_code.ilike(f"%{q}%"))
     if gender:
         analysis_q = analysis_q.filter(
             func.lower(PatientAnalysis.gender) == gender.lower()
@@ -1140,6 +1236,10 @@ def stats(
         analysis_q = analysis_q.filter(PatientAnalysis.age >= age_min)
     if age_max is not None:
         analysis_q = analysis_q.filter(PatientAnalysis.age <= age_max)
+    if bmi_min is not None:
+        analysis_q = analysis_q.filter(PatientAnalysis.bmi >= bmi_min)
+    if bmi_max is not None:
+        analysis_q = analysis_q.filter(PatientAnalysis.bmi <= bmi_max)
     if region:
         analysis_q = analysis_q.filter(PatientAnalysis.region == region)
     if somatotype:
@@ -1150,6 +1250,21 @@ def stats(
     if date_to:
         end_dt = datetime.combine(date_to, datetime.max.time())
         analysis_q = analysis_q.filter(PatientAnalysis.created_at <= end_dt)
+
+    allowed_dashboard_modes = {"all", "today", "normal", "risk"}
+    if dashboard_mode not in allowed_dashboard_modes:
+        raise HTTPException(status_code=422, detail="Invalid dashboard mode")
+    if dashboard_mode == "today":
+        today_mode_start = datetime.combine(date.today(), datetime.min.time())
+        analysis_q = analysis_q.filter(PatientAnalysis.created_at >= today_mode_start)
+    elif dashboard_mode == "normal":
+        analysis_q = analysis_q.filter(
+            PatientAnalysis.bmi >= 18.5, PatientAnalysis.bmi < 25
+        )
+    elif dashboard_mode == "risk":
+        analysis_q = analysis_q.filter(
+            (PatientAnalysis.bmi < 18.5) | (PatientAnalysis.bmi >= 25)
+        )
 
     total_analyses = (
         analysis_q.with_entities(func.count(PatientAnalysis.id)).scalar() or 0
@@ -1181,6 +1296,20 @@ def stats(
             case(((PatientAnalysis.age > 12) & (PatientAnalysis.age <= 18), 1))
         ).label("age_13_18"),
         func.count(case(((PatientAnalysis.age > 18), 1))).label("age_18_plus"),
+        func.count(case(((PatientAnalysis.age <= 10), 1))).label("age_0_10"),
+        func.count(
+            case(((PatientAnalysis.age > 10) & (PatientAnalysis.age <= 20), 1))
+        ).label("age_11_20"),
+        func.count(
+            case(((PatientAnalysis.age > 20) & (PatientAnalysis.age <= 35), 1))
+        ).label("age_21_35"),
+        func.count(
+            case(((PatientAnalysis.age > 35) & (PatientAnalysis.age <= 50), 1))
+        ).label("age_36_50"),
+        func.count(
+            case(((PatientAnalysis.age > 50) & (PatientAnalysis.age <= 65), 1))
+        ).label("age_51_65"),
+        func.count(case(((PatientAnalysis.age > 65), 1))).label("age_65_plus"),
         func.count(case(((PatientAnalysis.created_at >= today_start), 1))).label(
             "today_count"
         ),
@@ -1200,11 +1329,17 @@ def stats(
             case(((PatientAnalysis.created_at >= current_month_start), 1))
         ).label("monthly_count"),
         func.avg(PatientAnalysis.bmi).label("avg_bmi"),
+        func.avg(PatientAnalysis.age).label("avg_age"),
     ).first()
 
     if not dist_stats:
         avg_bmi = 0
-        bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
+        dashboard_bmi_dist = {
+            "underweight": 0,
+            "normal": 0,
+            "overweight": 0,
+            "obese": 0,
+        }
         age_groups = [
             {"name": "0-6", "value": 0},
             {"name": "7-12", "value": 0},
@@ -1215,9 +1350,19 @@ def stats(
         weekly_analyses = 0
         previous_week_analyses = 0
         monthly_analyses = 0
+        avg_age = 0
+        dashboard_age_groups = [
+            {"name": "0-10", "value": 0},
+            {"name": "11-20", "value": 0},
+            {"name": "21-35", "value": 0},
+            {"name": "36-50", "value": 0},
+            {"name": "51-65", "value": 0},
+            {"name": "65+", "value": 0},
+        ]
     else:
         avg_bmi = dist_stats.avg_bmi or 0
-        bmi_dist = {
+        avg_age = dist_stats.avg_age or 0
+        dashboard_bmi_dist = {
             "underweight": dist_stats.bmi_underweight or 0,
             "normal": dist_stats.bmi_normal or 0,
             "overweight": dist_stats.bmi_overweight or 0,
@@ -1233,6 +1378,14 @@ def stats(
         weekly_analyses = dist_stats.week_count or 0
         previous_week_analyses = dist_stats.prev_week_count or 0
         monthly_analyses = dist_stats.monthly_count or 0
+        dashboard_age_groups = [
+            {"name": "0-10", "value": dist_stats.age_0_10 or 0},
+            {"name": "11-20", "value": dist_stats.age_11_20 or 0},
+            {"name": "21-35", "value": dist_stats.age_21_35 or 0},
+            {"name": "36-50", "value": dist_stats.age_36_50 or 0},
+            {"name": "51-65", "value": dist_stats.age_51_65 or 0},
+            {"name": "65+", "value": dist_stats.age_65_plus or 0},
+        ]
 
     if previous_week_analyses:
         weekly_growth_pct = round(
@@ -1314,6 +1467,15 @@ def stats(
         .all()
     )
     somatotype_map = {s or "Noma'lum": int(c) for s, c in somatotype_counts}
+    dashboard_somatotypes = {"endomorph": 0, "mesomorph": 0, "ectomorph": 0}
+    for somatotype_name, count in somatotype_counts:
+        normalized = str(somatotype_name or "").lower()
+        if "endo" in normalized:
+            dashboard_somatotypes["endomorph"] += int(count)
+        elif "ekto" in normalized or "ecto" in normalized:
+            dashboard_somatotypes["ectomorph"] += int(count)
+        else:
+            dashboard_somatotypes["mesomorph"] += int(count)
 
     # Regional Distribution
     regional_counts = (
@@ -1361,26 +1523,49 @@ def stats(
         reverse=True,
     )[:8]
 
-    # Monthly Trend (Last 12 months)
+    # Date grouping uses SQL DATE(), which works on both PostgreSQL and SQLite.
+    # The former strftime() query silently produced an empty chart in production.
     try:
+        day_expr = func.date(PatientAnalysis.created_at)
         trend_counts = (
             analysis_q.with_entities(
-                func.strftime("%Y-%m", PatientAnalysis.created_at).label("month"),
+                day_expr.label("day"),
                 func.count(PatientAnalysis.id),
                 func.avg(PatientAnalysis.bmi).label("avg_bmi"),
             )
-            .group_by("month")
-            .order_by("month")
+            .group_by(day_expr)
+            .order_by(day_expr)
             .all()
         )
+        monthly_buckets = {}
+        daily_trend = []
+        for day_value, count, bmi_value in trend_counts:
+            day_text = str(day_value)[:10] if day_value else "Noma'lum"
+            daily_trend.append(
+                {
+                    "date": day_text,
+                    "count": int(count or 0),
+                    "avg_bmi": float(bmi_value or 0),
+                }
+            )
+            month = day_text[:7]
+            bucket = monthly_buckets.setdefault(
+                month, {"month": month, "count": 0, "bmi_sum": 0.0}
+            )
+            bucket["count"] += int(count or 0)
+            bucket["bmi_sum"] += float(bmi_value or 0) * int(count or 0)
+
         monthly_trend = [
             {
-                "month": str(m) if m else "Noma'lum",
-                "count": int(c),
-                "avg_bmi": float(b or 0),
+                "month": bucket["month"],
+                "count": bucket["count"],
+                "avg_bmi": (
+                    bucket["bmi_sum"] / bucket["count"] if bucket["count"] else 0
+                ),
             }
-            for m, c, b in trend_counts
+            for bucket in monthly_buckets.values()
         ][-12:]
+        daily_trend = daily_trend[-14:]
 
         monthly_avg = (
             sum(item["count"] for item in monthly_trend) / len(monthly_trend)
@@ -1390,13 +1575,26 @@ def stats(
     except Exception as e:
         logger.error(f"Monthly trend error: {e}")
         monthly_trend = []
+        daily_trend = []
         monthly_avg = 0
 
     # --- 🔬 Advanced Scientific Analysis & Risk Groups ---
     # Optimized: SQL-level aggregations to avoid loading all rows into Python
     # Cache key: based on user role + filters (5 min TTL for stats)
     _has_filters = any(
-        [gender, age_min, age_max, region, date_from, date_to, somatotype]
+        [
+            q,
+            gender,
+            age_min,
+            age_max,
+            bmi_min,
+            bmi_max,
+            region,
+            date_from,
+            date_to,
+            somatotype,
+            dashboard_mode != "all",
+        ]
     )
     _sci_cache_key = None
     bmi_dist = {"underweight": 0, "normal": 0, "overweight": 0, "obese": 0}
@@ -1634,15 +1832,21 @@ def stats(
         "top_risk_regions": top_risk_regions,
         "total_revenue": float(total_revenue),
         "avg_bmi": float(avg_bmi),
+        "avg_age": float(avg_age),
         "monthly_growth": int(monthly_analyses),
         "monthly_avg": float(monthly_avg),
         "bmi_distribution": bmi_dist,
+        "dashboard_bmi_distribution": dashboard_bmi_dist,
+        "dashboard_age_groups": dashboard_age_groups,
+        "dashboard_somatotypes": dashboard_somatotypes,
+        "dashboard_mode": dashboard_mode,
         "somatotype_avg": somato_avg,
         "by_gender": gender_map,
         "by_somatotype": somatotype_map,
         "by_age_group": age_groups,
         "by_region": regional_data,
         "monthly_trend": monthly_trend,
+        "daily_trend": daily_trend,
         # Advanced fields for ScientificAnalysis.js
         "bmi_histogram": bmi_histogram,
         "percentile_data": percentile_data,
@@ -1743,6 +1947,12 @@ def preview_analyses_xlsx(
             "age": r.age,
             "age_months": getattr(r, "age_months", None),
             "age_days": getattr(r, "age_days", None),
+            "age_group": format_admin_age_group(
+                r.age,
+                getattr(r, "age_months", 0),
+                getattr(r, "age_days", 0),
+            )
+            or "-",
             "region": r.region,
             "district": r.district,
             "address": r.address,
@@ -1773,6 +1983,7 @@ def preview_analyses_xlsx(
             "hmai": indices.get("hmai", "-"),
             "mii": indices.get("mii", "-"),
             "adi": indices.get("adi", "-"),
+            "mcri": indices.get("mcri") if indices.get("mcri") is not None else "-",
             "tbw": indices.get("tbw_percent", getattr(r, "total_body_water", None) or "-"),
             "fat_percent": indices.get("fm_percent", getattr(r, "fat_percent", None) or "-"),
             "fat_mass": indices.get("fm", getattr(r, "fat_mass", None) or "-"),
@@ -1794,6 +2005,251 @@ def preview_analyses_xlsx(
 
 
 # ----------------- EXPORT XLSX ------------------
+ADMIN_AGE_GROUP_EXPORT_LABELS = {
+    "uz": "Ёш гуруҳи",
+    "ru": "Возрастная группа",
+    "en": "Age group",
+    "kz": "Jas toby",
+    "kk": "Jas toby",
+    "ky": "Жаш тобу",
+    "tg": "Гурӯҳи синну сол",
+    "tm": "Yas toparlary",
+    "tr": "Yas grubu",
+}
+
+
+def get_admin_age_group_export_header(lang: Optional[str] = "uz") -> str:
+    normalized_lang = (lang or "uz").strip().lower()
+    return ADMIN_AGE_GROUP_EXPORT_LABELS.get(
+        normalized_lang,
+        ADMIN_AGE_GROUP_EXPORT_LABELS["uz"],
+    )
+
+
+def calculate_admin_age_group(
+    age,
+    age_months=0,
+    age_days=0,
+) -> Optional[float]:
+    """Match the research XLSX report's half-year age grouping."""
+    if age is None or str(age).strip() == "":
+        return None
+    try:
+        total_months = (
+            float(age) * 12
+            + float(age_months or 0)
+            + float(age_days or 0) / 30.4375
+        )
+    except (TypeError, ValueError):
+        return None
+
+    half_year_units = int(total_months / 6 + 0.5)
+    half_year_units = max(2, min(14, half_year_units))
+    return half_year_units / 2
+
+
+def format_admin_age_group(age, age_months=0, age_days=0) -> Optional[str]:
+    age_group = calculate_admin_age_group(age, age_months, age_days)
+    if age_group is None:
+        return None
+    if float(age_group).is_integer():
+        return str(int(age_group))
+    return str(age_group).replace(".", ",")
+
+
+ADMIN_XLSX_REPORT_COLUMN_KEYS = [
+    "created_at",
+    "id_code",
+    "name",
+    "gender",
+    "age",
+    "age_group",
+    "region",
+    "district",
+    "address",
+    "height",
+    "body_length",
+    "weight",
+    "chest",
+    "waist",
+    "head",
+    "shoulder_length",
+    "shoulder_breadth",
+    "shoulder_circumference",
+    "arm_elbow_length",
+    "hand_length",
+    "thigh_length",
+    "thigh_circumference",
+    "calf_length",
+    "calf_circumference",
+    "foot_length",
+    "shoulder_ratio",
+    "thigh_ratio",
+    "bmi",
+    "bmi_category",
+    "somatotype",
+    "ideal_weight",
+    "weight_diff",
+    "weight_range",
+    "fat_percent",
+    "fat_mass",
+    "ffm",
+    "muscle_mass",
+    "visceral_fat",
+    "phase_angle",
+    "segmental_lean_mass",
+    "segmental_fat_mass",
+    "bmr",
+    "bone_mass",
+    "hmai",
+    "mii",
+    "adi",
+    "mcri",
+    "tbw_percent",
+]
+
+
+def build_admin_xlsx_body_composition_values(
+    canonical_bia: dict,
+    indices: dict,
+) -> dict:
+    """Prefer measured BIA values and fall back to calculated analysis indices."""
+
+    def metric_value(name: str, fallback="-"):
+        metric = canonical_bia.get(name, {})
+        if not isinstance(metric, dict):
+            return fallback
+        value = metric.get("used_value")
+        if value is None:
+            value = metric.get("value")
+        return fallback if value is None else value
+
+    tbw_percent = indices.get("tbw_percent")
+    tbw_metric = canonical_bia.get("tbw_percent")
+    if isinstance(tbw_metric, dict) and tbw_metric.get("status") != "invalid":
+        tbw_percent = metric_value("tbw_percent", tbw_percent)
+
+    return {
+        "tbw_percent": tbw_percent if tbw_percent is not None else "-",
+        "fat_percent": metric_value(
+            "pbf_percent", indices.get("fm_percent", "-")
+        ),
+        "fat_mass": metric_value("fat_mass_kg", indices.get("fm", "-")),
+        "ffm": metric_value("ffm_kg", indices.get("ffm", "-")),
+        "muscle_mass": metric_value(
+            "smm_kg", indices.get("muscle_mass", "-")
+        ),
+        "bone_mass": metric_value(
+            "mineral_bone_mass_kg", indices.get("bone_mass", "-")
+        ),
+        "visceral_fat": metric_value(
+            "visceral_fat", indices.get("visceral_fat", "-")
+        ),
+    }
+
+
+def add_admin_data_quality_sheet(wb: Workbook, rows_db) -> dict:
+    """Add an auditable, non-destructive source-data quality summary."""
+    summary = summarize_anthropometry_quality(rows_db)
+    ws = wb.create_sheet("Data Quality")
+    ws.sheet_view.showGridLines = False
+    ws.freeze_panes = "A2"
+
+    header_fill = PatternFill(
+        start_color="5B2C6F", end_color="5B2C6F", fill_type="solid"
+    )
+    review_fill = PatternFill(
+        start_color="FCE4D6", end_color="FCE4D6", fill_type="solid"
+    )
+    ok_fill = PatternFill(
+        start_color="E2F0D9", end_color="E2F0D9", fill_type="solid"
+    )
+    border = Border(
+        left=Side(style="thin"),
+        right=Side(style="thin"),
+        top=Side(style="thin"),
+        bottom=Side(style="thin"),
+    )
+    headers = ["Tekshiruv", "Natija", "Holat", "Izoh"]
+    for column, value in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=column, value=value)
+        cell.fill = header_fill
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = border
+
+    bmi_count = summary["bmi_outlier_count"]
+    proportionality_review = summary["thigh_height_proportionality_review"]
+    checks = [
+        (
+            "Jami qatorlar",
+            summary["total_rows"],
+            "MA'LUMOT",
+            "Faqat joriy eksport filtri doirasidagi faol yozuvlar.",
+        ),
+        (
+            f"BMI skrining oralig'i ({BMI_SCREENING_MIN:g}-{BMI_SCREENING_MAX:g})",
+            f"Oraliqdan tashqari: {bmi_count}",
+            "TEKSHIRISH" if bmi_count else "OK",
+            "BMI manba bo'yi va vaznidan qayta hisoblandi; xom qiymatlar o'zgartirilmadi.",
+        ),
+        (
+            "Son aylanasi va bo'y Pearson R",
+            summary["thigh_height_correlation"],
+            "TEKSHIRISH" if proportionality_review else "OK",
+            f"Juftliklar: {summary['thigh_height_pair_count']}; "
+            "juda kuchli proporsionallik mustaqil o'lchov usulini tekshirishni talab qiladi.",
+        ),
+        (
+            "Son aylanasi / bo'y o'rtacha nisbati",
+            summary["thigh_height_ratio_mean"],
+            "MA'LUMOT",
+            f"SD: {summary['thigh_height_ratio_sd']}; "
+            f"CV: {summary['thigh_height_ratio_cv']}",
+        ),
+    ]
+    for row_number, values in enumerate(checks, 2):
+        for column, value in enumerate(values, 1):
+            cell = ws.cell(row=row_number, column=column, value=value)
+            cell.border = border
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+            if values[2] == "TEKSHIRISH":
+                cell.fill = review_fill
+            elif values[2] == "OK":
+                cell.fill = ok_fill
+
+    detail_start = len(checks) + 3
+    detail_headers = ["ID", "Identifikator", "BMI", "Bo'y (sm)", "Vazn (kg)"]
+    for column, value in enumerate(detail_headers, 1):
+        cell = ws.cell(row=detail_start, column=column, value=value)
+        cell.fill = header_fill
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.border = border
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    if summary["bmi_outliers"]:
+        for offset, item in enumerate(summary["bmi_outliers"], 1):
+            for column, value in enumerate(
+                (
+                    item["id"],
+                    item["id_code"],
+                    item["bmi"],
+                    item["height"],
+                    item["weight"],
+                ),
+                1,
+            ):
+                cell = ws.cell(row=detail_start + offset, column=column, value=value)
+                cell.border = border
+                cell.fill = review_fill
+    else:
+        ws.cell(row=detail_start + 1, column=1, value="BMI bo'yicha ko'rib chiqiladigan qator yo'q.")
+
+    for column, width in {"A": 38, "B": 22, "C": 16, "D": 18, "E": 54}.items():
+        ws.column_dimensions[column].width = width
+    ws.auto_filter.ref = f"A{detail_start}:E{detail_start + max(1, bmi_count)}"
+    return summary
+
+
 @router.get("/export-xlsx")
 def export_analyses_xlsx(
     db: Session = Depends(get_db),
@@ -1877,17 +2333,7 @@ def export_analyses_xlsx(
         "calf_circumference": "calf_circumference",
         "foot_length": "foot_length",
     }
-    column_keys = [
-        "created_at", "id_code", "name", "gender", "age", "region", "district",
-        "address", "created_by", "height", "body_length", "weight", "bmi", "bmi_category",
-        "somatotype", "ideal_weight", "weight_diff", "weight_range", "chest",
-        "waist", "head", "shoulder_length", "shoulder_breadth",
-        "shoulder_circumference", "arm_elbow_length", "hand_length",
-        "thigh_length", "thigh_circumference", "calf_length",
-        "calf_circumference", "foot_length", "shoulder_ratio", "thigh_ratio",
-        "hmai", "mii", "adi", "tbw", "fat_percent", "fat_mass",
-        "muscle_mass", "bone_mass", "acm", "visceral_fat",
-    ]
+    column_keys = ADMIN_XLSX_REPORT_COLUMN_KEYS
     permission_column_map = {
         "shoulder_length": "shoulder_length",
         "shoulder_breadth": "shoulder_breadth",
@@ -1902,14 +2348,20 @@ def export_analyses_xlsx(
         "shoulder_ratio": "shoulder_breadth",
         "thigh_ratio": "thigh_circumference",
         "tbw": "bioimpedance",
+        "tbw_percent": "bioimpedance",
         "fat_percent": "bioimpedance",
         "fat_mass": "bioimpedance",
+        "ffm": "bioimpedance",
         "muscle_mass": "bioimpedance",
         "bone_mass": "bioimpedance",
         "acm": "bioimpedance",
         "visceral_fat": "bioimpedance",
         "body_length": "bioimpedance",
     }
+    for bia_key in (
+        "phase_angle", "segmental_lean_mass", "segmental_fat_mass", "bmr"
+    ):
+        permission_column_map[bia_key] = "bioimpedance"
     anthropometry_permission_keys = (
         "shoulder_length", "shoulder_breadth", "shoulder_circumference",
         "arm_elbow_length", "hand_length", "thigh_length", "thigh_circumference",
@@ -1917,12 +2369,33 @@ def export_analyses_xlsx(
     )
 
     def _xlsx_column_enabled(key: str) -> bool:
-        if key in {"hmai", "mii", "adi"}:
+        if key in {"hmai", "mii", "adi", "mcri"}:
             return any(export_permissions.get(k, True) for k in anthropometry_permission_keys)
         permission_key = permission_column_map.get(key)
         return export_permissions.get(permission_key, True) if permission_key else True
 
     def _xlsx_header_for(key: str) -> str:
+        if key == "age":
+            return {"uz": "Ёш (ой)", "ru": "Возраст (мес.)", "en": "Age (months)"}.get(lang, "Age (months)")
+        bia_headers = {
+            "tbw_percent": "TBW (%)",
+            "fat_percent": "PBF / Ёғ (%)",
+            "fat_mass": "Fat mass / Ёғ (кг)",
+            "ffm": "FFM / Ёғсиз масса (кг)",
+            "muscle_mass": "SMM / Скелет мушак массаси (кг)",
+            "visceral_fat": "Visceral Fat / Висцерал ёғ",
+            "phase_angle": "Phase Angle / Фаза бурчаги (°)",
+            "segmental_lean_mass": "Segmental Lean Mass / Сегментал ёғсиз масса",
+            "segmental_fat_mass": "Segmental Fat Mass / Сегментал ёғ массаси",
+            "bmr": "BMR (ккал/кун)",
+            "bone_mass": "Mineral/Bone mass / Суяк массаси (кг)",
+        }
+        if key in bia_headers:
+            return bia_headers[key]
+        if key == "age_group":
+            return get_admin_age_group_export_header(lang)
+        if key == "mcri":
+            return "MCRI"
         if key in header_by_key:
             return header_by_key[key]
         research_key = research_header_keys.get(key)
@@ -1952,6 +2425,15 @@ def export_analyses_xlsx(
 
     for col_num, header in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=header)
+        if enabled_column_keys[col_num - 1] == "tbw_percent":
+            cell.comment = Comment(
+                "Valid BIA TBW (%) is preferred. Otherwise TBW is estimated "
+                "using the sex-, height- and weight-based Mellits-Cheek equations. "
+                "TBW (%) = TBW (litres) / weight (kg) * 100. "
+                "No validated Uzbekistan region/district correction is applied. "
+                "Reference: https://discovery.ucl.ac.uk/id/eprint/15090/1/15090.pdf",
+                "MorphoCheck",
+            )
         cell.fill = header_fill
         cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center")
@@ -1978,28 +2460,122 @@ def export_analyses_xlsx(
             rng = analysis["ideal_weight_range"]
             vazn_range = f"{rng.get('min', '-')}-{rng.get('max', '-')}"
         indices = analysis.get("indices", {}) or {}
+        # Recalculate from immutable raw input for every export.  Stored canonical
+        # results may predate newly added derived metrics (notably BMR), so reading
+        # only body_composition_result leaves historical rows blank forever.
+        raw_bia = getattr(r, "body_composition_raw", None)
+        if raw_bia is None:
+            raw_bia = raw_body_composition_from_patient(
+                build_patient_data_from_analysis(r)
+            )
+        canonical_bia = calculate_body_composition(
+            weight_kg=r.weight,
+            raw=raw_bia,
+            sex=r.gender,
+            age_months=(r.age or 0) * 12 + (getattr(r, "age_months", 0) or 0),
+        )
+        lean_segments = canonical_bia.get("segmental_lean_mass", {})
+        fat_segments = canonical_bia.get("segmental_fat_mass", {})
+        def _bia_value(name, fallback="-", metrics=canonical_bia):
+            metric = metrics.get(name, {})
+            if not isinstance(metric, dict):
+                return fallback
+            value = metric.get("used_value")
+            if value is None:
+                value = metric.get("value")
+            return fallback if value is None else value
 
-        age_labels = {
-            "uz": ("y.", "o.", "k."),
-            "ru": ("г.", "м.", "д."),
-            "en": ("y.", "m.", "d."),
-            "kk": ("ж.", "а.", "к."),
-            "tg": ("с.", "м.", "р."),
-        }
-        y_label, m_label, d_label = age_labels.get(lang, ("й.", "о.", "к."))
-        if lang in ["uz", "en", "kk", "tg"]:
-            y_label, m_label, d_label = age_labels.get(lang, ("y.", "o.", "k."))
-            if lang == "uz":
-                # Provide fallback cyrillic if needed, but let's just stick to the labels
-                pass
+        body_composition_values = build_admin_xlsx_body_composition_values(
+            canonical_bia,
+            indices,
+        )
+
+        age_months_total = (r.age or 0) * 12 + (getattr(r, "age_months", 0) or 0)
+        phase_value = _bia_value("phase_angle_deg", None)
+        estimated_phase = estimate_phase_angle_from_anthropometry(
+            age_months=age_months_total,
+            sex=r.gender,
+            bmi=analysis.get("bmi", getattr(r, "bmi", None)),
+        )
+        estimated_segments = estimate_segmental_composition(
+            ffm_kg=_bia_value("ffm_kg", indices.get("ffm")),
+            fat_mass_kg=_bia_value("fat_mass_kg", indices.get("fm")),
+            age_months=age_months_total,
+            sex=r.gender,
+        )
+
+        def _segment_has_values(segment):
+            return isinstance(segment, dict) and any(
+                segment.get(key) is not None
+                for key in ("right_arm", "left_arm", "trunk", "right_leg", "left_leg")
+            )
+
+        if not _segment_has_values(lean_segments):
+            lean_segments = estimated_segments.get("segmental_lean_mass") or {}
+        if not _segment_has_values(fat_segments):
+            fat_segments = estimated_segments.get("segmental_fat_mass") or {}
+
+        missing_bia_text = {
+            "uz": "O'lchanmagan (BIA qurilmasi kerak)",
+            "ru": "Не измерено (требуется BIA-прибор)",
+            "en": "Not measured (BIA device required)",
+            "kz": "Өлшенбеген (BIA құрылғысы қажет)",
+            "kk": "Өлшенбеген (BIA құрылғысы қажет)",
+            "ky": "Өлчөнгөн эмес (BIA аппараты керек)",
+            "tg": "Чен нашудааст (дастгоҳи BIA лозим)",
+            "tm": "Ölçelmedi (BIA enjamy gerek)",
+            "tr": "Ölçülmedi (BIA cihazı gerekli)",
+        }.get(lang, "O'lchanmagan (BIA qurilmasi kerak)")
+        bmr_unavailable_text = {
+            "uz": "Hisoblanmadi (yosh, jins yoki vazn yetishmaydi)",
+            "ru": "Не рассчитано (нет возраста, пола или веса)",
+            "en": "Not calculated (age, sex, or weight missing)",
+        }.get(lang, "Hisoblanmadi (yosh, jins yoki vazn yetishmaydi)")
+        segment_labels = {
+            "uz": {
+                "right_arm": "Ўнг қўл",
+                "left_arm": "Чап қўл",
+                "trunk": "Тана",
+                "right_leg": "Ўнг оёқ",
+                "left_leg": "Чап оёқ",
+            },
+            "en": {
+                "right_arm": "Right Arm",
+                "left_arm": "Left Arm",
+                "trunk": "Trunk",
+                "right_leg": "Right Leg",
+                "left_leg": "Left Leg",
+            },
+        }.get(lang, {})
+
+        def _segment_text(
+            segment,
+            missing_text=missing_bia_text,
+            labels=segment_labels,
+        ):
+            if not isinstance(segment, dict):
+                return missing_text
+            unit = segment.get("unit") or "kg"
+            if lang == "uz" and str(unit).lower() == "kg":
+                unit = "кг"
+            values = [
+                f"{labels.get(key, key.replace('_', ' ').title())}: "
+                f"{segment[key]} {unit}"
+                for key in ("right_arm", "left_arm", "trunk", "right_leg", "left_leg")
+                if segment.get(key) is not None
+            ]
+            if not values:
+                return missing_text
+            return ", ".join(values)
+
+        if phase_value is None and estimated_phase is not None:
+            phase_export_value = f"{estimated_phase}°"
+        else:
+            phase_export_value = phase_value if phase_value is not None else missing_bia_text
 
         age_m = getattr(r, "age_months", 0) or 0
         age_d = getattr(r, "age_days", 0) or 0
-        age_str = f"{r.age} {y_label}"
-        if age_m:
-            age_str += f", {age_m} {m_label}"
-        if age_d:
-            age_str += f", {age_d} {d_label}"
+        age_str = total_age_months(r)
 
         from services.ky_localization import report_text
 
@@ -2015,12 +2591,25 @@ def export_analyses_xlsx(
             # Others use Cyrillic
             return lat2cyr(localized)
 
+        def _fmt_gender(val):
+            if lang != "uz":
+                return _fmt(val)
+            normalized = str(val or "").strip().lower()
+            if normalized in {"ayol", "аёл", "female", "f", "girl", "qiz"}:
+                return "аёл"
+            if normalized in {
+                "erkak", "еркак", "эркак", "male", "m", "boy", "o'g'il", "ўғил"
+            }:
+                return "эркак"
+            return _fmt(val)
+
         value_by_key = {
             "created_at": r.created_at.strftime("%Y-%m-%d") if r.created_at else "-",
             "id_code": r.id_code or "-",
             "name": _fmt(r.name),
-            "gender": _fmt(r.gender),
+            "gender": _fmt_gender(r.gender),
             "age": age_str,
+            "age_group": format_admin_age_group(r.age, age_m, age_d) or "-",
             "region": _fmt(r.region),
             "district": _fmt(r.district),
             "address": _fmt(r.address),
@@ -2051,13 +2640,12 @@ def export_analyses_xlsx(
             "hmai": indices.get("hmai", "-"),
             "mii": indices.get("mii", "-"),
             "adi": indices.get("adi", "-"),
-            "tbw": indices.get("tbw_percent", getattr(r, "total_body_water", None) or "-"),
-            "fat_percent": indices.get("fm_percent", getattr(r, "fat_percent", None) or "-"),
-            "fat_mass": indices.get("fm", getattr(r, "fat_mass", None) or "-"),
-            "muscle_mass": indices.get("muscle_mass", getattr(r, "muscle_mass", None) or "-"),
-            "bone_mass": indices.get("bone_mass", getattr(r, "bone_mass", None) or "-"),
-            "acm": indices.get("acm_percent", getattr(r, "acm", None) or "-"),
-            "visceral_fat": indices.get("visceral_fat", getattr(r, "visceral_fat", None) or "-"),
+            "mcri": indices.get("mcri") if indices.get("mcri") is not None else "-",
+            **body_composition_values,
+            "phase_angle": phase_export_value,
+            "segmental_lean_mass": _segment_text(lean_segments),
+            "segmental_fat_mass": _segment_text(fat_segments),
+            "bmr": _bia_value("bmr_kcal_day", bmr_unavailable_text),
             "body_length": r.body_length or 0,
         }
 
@@ -2091,6 +2679,8 @@ def export_analyses_xlsx(
                 max_length = cell_length
         adjusted_width = max_length + 2
         ws.column_dimensions[column].width = adjusted_width
+
+    add_admin_data_quality_sheet(wb, rows_db)
 
     output = BytesIO()
     wb.save(output)
@@ -2330,6 +2920,7 @@ ANTHROPOMETRY_IMPORT_FIELDS = {
     "foot_length",
 }
 BIOIMPEDANCE_IMPORT_FIELDS = {
+    "ffm_measured_kg",
     "body_length",
     "total_body_water",
     "fat_percent",
@@ -2340,6 +2931,35 @@ BIOIMPEDANCE_IMPORT_FIELDS = {
     "visceral_fat",
 }
 IMPORT_TEMPLATE_COLUMNS = [
+    ("id_code", "Идентификатор коди", "001"),
+    ("name", "Ф.И.Ш. *", "Али Валиев"),
+    ("gender", "Жинси (ўғил бола/қиз бола) *", "ўғил бола"),
+    ("age_total_months", "Ёш (ой) *", 125.3942505),
+    ("region", "Вилоят *", "Тошкент"),
+    ("district", "Туман", "Юнусобод"),
+    ("address", "Манзил", "Амир Темур кўчаси"),
+    ("height", "Бўйи (см) *", 140.5),
+    ("body_length", "Тана узунлиги (см)", 135),
+    ("weight", "Вазн (кг) *", 35.2),
+    ("chest", "Кўкрак қафаси айланаси (см) *", 70),
+    ("waist", "Бел айланаси (см) *", 65),
+    ("head", "Бош айланаси (см) *", 52),
+    ("shoulder_length", "Елка узунлиги (см)", 15),
+    ("shoulder_breadth", "Елка кенглиги (см)", 30),
+    ("shoulder_circumference", "Елка айланаси (см)", 25),
+    ("arm_elbow_length", "Қўл-тирсак узунлиги (см)", 20),
+    ("hand_length", "Қўл панжаси узунлиги (см)", 15),
+    ("thigh_length", "Сон узунлиги (см)", 40),
+    ("thigh_circumference", "Сон айланаси (см)", 35),
+    ("calf_length", "Болдир узунлиги (см)", 25),
+    ("calf_circumference", "Болдир айланаси (см)", 20),
+    ("foot_length", "Оёқ панжаси узунлиги (см)", 22),
+]
+
+# Keep accepting files created from the previous template. New templates only
+# expose source measurements that correspond to the current XLSX report; fields
+# whose report values are derived automatically are deliberately left out.
+LEGACY_IMPORT_TEMPLATE_COLUMNS = [
     ("id_code", "Идентификатор коди", "001"),
     ("name", "Ф.И.Ш. *", "Али Валиев"),
     ("gender", "Жинси (ўғил бола/қиз бола) *", "ўғил бола"),
@@ -2373,20 +2993,42 @@ IMPORT_TEMPLATE_COLUMNS = [
     ("acm", "Фаол ҳужайра массаси", None),
     ("visceral_fat", "Висцерал ёғ", None),
 ]
-IMPORT_FIELD_NAMES = {field for field, _header, _sample in IMPORT_TEMPLATE_COLUMNS}
+IMPORT_COLUMN_DEFINITIONS = (
+    IMPORT_TEMPLATE_COLUMNS + LEGACY_IMPORT_TEMPLATE_COLUMNS
+)
+IMPORT_FIELD_NAMES = {
+    field for field, _header, _sample in IMPORT_COLUMN_DEFINITIONS
+} | {"ffm_measured_kg"}
 IMPORT_HEADER_FIELD_MAP = {
     str(header).strip().lower(): field
-    for field, header, _sample in IMPORT_TEMPLATE_COLUMNS
+    for field, header, _sample in IMPORT_COLUMN_DEFINITIONS
 }
 IMPORT_HEADER_FIELD_MAP.update(
     {
         "first_name (ism) *": "first_name",
         "last_name (familiya) *": "last_name",
+        "манзил": "address",
+        "манзили": "address",
+        "адрес": "address",
+        "address": "address",
+        "id": "id_code",
+        "ҳудуд": "region",
+        "жинс": "gender",
+        "ёш (ой)": "age_total_months",
+        "age_total_months": "age_total_months",
+        "age (months)": "age_total_months",
+        "total age (months)": "age_total_months",
+        "бўй (см)": "height",
+        "вазн (кг)": "weight",
+        "сон айл.": "thigh_circumference",
+        "болдир айл.": "calf_circumference",
+        "елка айл.": "shoulder_circumference",
+        "ffm (кг)": "ffm_measured_kg",
+        "ffm (kg)": "ffm_measured_kg",
+        "fm (кг)": "fat_mass",
+        "pbf (%)": "fat_percent",
     }
 )
-LEGACY_IMPORT_FIELD_MAP = {
-    i: field for i, (field, _header, _sample) in enumerate(IMPORT_TEMPLATE_COLUMNS)
-}
 
 
 def import_field_enabled(
@@ -2411,7 +3053,21 @@ def parse_import_header_field(value) -> Optional[str]:
     if normalized in IMPORT_HEADER_FIELD_MAP:
         return IMPORT_HEADER_FIELD_MAP[normalized]
     token = raw.split()[0].split("(")[0].strip().strip("*").strip().lower()
+    if token in IMPORT_HEADER_FIELD_MAP:
+        return IMPORT_HEADER_FIELD_MAP[token]
     return token if token in IMPORT_FIELD_NAMES else None
+
+
+def apply_admin_import_location_fields(
+    rec: PatientAnalysis,
+    data: dict,
+    privacy_enabled: bool,
+) -> None:
+    """Persist template-visible location fields during admin XLSX import."""
+    if "address" in data:
+        rec.address = str(data.get("address") or "").strip()
+    if not privacy_enabled and "mahalla" in data:
+        rec.mahalla = str(data.get("mahalla") or "").strip()
 
 
 def build_admin_import_template_workbook(
@@ -2467,6 +3123,140 @@ def build_admin_import_template_workbook(
             42, max(14, len(str(header_text)) + 2)
         )
 
+    column_by_field = {
+        field: ws.cell(row=1, column=column_number).column_letter
+        for column_number, (field, _header, _sample) in enumerate(
+            enabled_template_columns, 1
+        )
+    }
+
+    def add_decimal_validation(field, minimum, maximum, message):
+        column_letter = column_by_field.get(field)
+        if not column_letter:
+            return
+        validation = DataValidation(
+            type="decimal",
+            operator="between",
+            formula1=str(minimum),
+            formula2=str(maximum),
+            allow_blank=True,
+        )
+        validation.errorTitle = "Noto'g'ri qiymat"
+        validation.error = message
+        validation.promptTitle = "O'lchov nazorati"
+        validation.prompt = message
+        validation.showErrorMessage = True
+        validation.showInputMessage = True
+        ws.add_data_validation(validation)
+        validation.add(f"{column_letter}2:{column_letter}101")
+
+    add_decimal_validation("age_total_months", 0, 239.999999, "Yosh 0 dan 240 oygacha bo'lishi kerak.")
+
+    age_column = column_by_field.get("age")
+    if age_column:
+        age_validation = DataValidation(
+            type="whole",
+            operator="between",
+            formula1="0",
+            formula2="19",
+            allow_blank=False,
+        )
+        age_validation.errorTitle = "Noto'g'ri yosh"
+        age_validation.error = "Yosh 0 dan 19 gacha bo'lishi kerak."
+        age_validation.showErrorMessage = True
+        ws.add_data_validation(age_validation)
+        age_validation.add(f"{age_column}2:{age_column}101")
+
+    for field, maximum, label in (
+        ("age_months", 11, "Oy 0 dan 11 gacha bo'lishi kerak."),
+        ("age_days", 31, "Kun 0 dan 31 gacha bo'lishi kerak."),
+    ):
+        column_letter = column_by_field.get(field)
+        if not column_letter:
+            continue
+        validation = DataValidation(
+            type="whole",
+            operator="between",
+            formula1="0",
+            formula2=str(maximum),
+            allow_blank=True,
+        )
+        validation.errorTitle = "Noto'g'ri qiymat"
+        validation.error = label
+        validation.showErrorMessage = True
+        ws.add_data_validation(validation)
+        validation.add(f"{column_letter}2:{column_letter}101")
+
+    gender_column = column_by_field.get("gender")
+    if gender_column:
+        gender_validation = DataValidation(
+            type="list",
+            formula1='"ўғил бола,қиз бола"',
+            allow_blank=False,
+        )
+        gender_validation.errorTitle = "Noto'g'ri jins"
+        gender_validation.error = "Ro'yxatdan qiymat tanlang."
+        gender_validation.showErrorMessage = True
+        ws.add_data_validation(gender_validation)
+        gender_validation.add(f"{gender_column}2:{gender_column}101")
+
+    add_decimal_validation("height", 30, 250, "Bo'y 30-250 sm oralig'ida bo'lishi kerak.")
+    for field in (
+        "body_length",
+        "chest",
+        "waist",
+        "head",
+        "shoulder_length",
+        "shoulder_breadth",
+        "shoulder_circumference",
+        "arm_elbow_length",
+        "hand_length",
+        "thigh_length",
+        "calf_length",
+        "calf_circumference",
+        "foot_length",
+    ):
+        add_decimal_validation(
+            field,
+            0,
+            250,
+            "O'lchov 0-250 sm oralig'ida bo'lishi kerak.",
+        )
+    add_decimal_validation(
+        "thigh_circumference",
+        0,
+        140,
+        "Son aylanasi 0-140 sm oralig'ida bo'lishi kerak.",
+    )
+
+    height_column = column_by_field.get("height")
+    weight_column = column_by_field.get("weight")
+    if height_column and weight_column:
+        bmi_formula = (
+            f"=AND(ISNUMBER(${height_column}2),ISNUMBER(${weight_column}2),"
+            f"${weight_column}2>=1,${weight_column}2<=250,"
+            f"ROUND(${weight_column}2/((${height_column}2/100)^2),1)"
+            f">={BMI_SCREENING_MIN:g},"
+            f"ROUND(${weight_column}2/((${height_column}2/100)^2),1)"
+            f"<={BMI_SCREENING_MAX:g})"
+        )
+        bmi_validation = DataValidation(
+            type="custom",
+            formula1=bmi_formula,
+            allow_blank=False,
+        )
+        bmi_validation.errorTitle = "Bo'y-vazn mos emas"
+        bmi_validation.error = (
+            f"Hisoblangan BMI {BMI_SCREENING_MIN:g}-{BMI_SCREENING_MAX:g} "
+            "oralig'ida bo'lishi kerak. Bo'y va vaznni tekshiring."
+        )
+        bmi_validation.promptTitle = "BMI ichki nazorati"
+        bmi_validation.prompt = bmi_validation.error
+        bmi_validation.showErrorMessage = True
+        bmi_validation.showInputMessage = True
+        ws.add_data_validation(bmi_validation)
+        bmi_validation.add(f"{weight_column}2:{weight_column}101")
+
     example_ws = wb.create_sheet("Намуна")
     for col_num, header_text in enumerate(headers, 1):
         header = example_ws.cell(row=1, column=col_num, value=header_text)
@@ -2486,6 +3276,7 @@ def build_admin_import_template_workbook(
 
     guide_ws = wb.create_sheet("Қўлланма")
     guide_rows = [
+        ["Ёш бирлиги", "Ёшни умумий ойда киритинг. Масалан, уч йил ўн бир ой — 47 ой. Касрли ой ҳам қабул қилинади."],
         ["Импорт қоидалари", "Изоҳ"],
         [
             "Асосий варақ",
@@ -2508,6 +3299,21 @@ def build_admin_import_template_workbook(
             "Бўй, вазн ва айланаларни рақам кўринишида киритинг.",
         ],
     ]
+    guide_rows.extend(
+        [
+            [
+                "Тана вазни индекси ички назорати",
+                f"Бўй ва вазндан ҳисобланган тана вазни индекси "
+                f"{BMI_SCREENING_MIN:g}-{BMI_SCREENING_MAX:g} оралиғида "
+                "бўлиши керак.",
+            ],
+            [
+                "Сон айланаси",
+                "Сон айланасини бўйдан ҳисобламанг; уни алоҳида "
+                "антропометрик ўлчовда олинг.",
+            ],
+        ]
+    )
     for row in guide_rows:
         guide_ws.append(row)
     for row in guide_ws.iter_rows(
@@ -2569,30 +3375,21 @@ async def import_analyses_xlsx(
     if not contents:
         raise HTTPException(400, "Bo'sh fayl yuklanmaydi.")
     wb = load_workbook(BytesIO(contents), data_only=True)
-    ws = wb.active
     import_permissions = get_effective_admin_permissions(current_user)
     privacy_enabled = get_child_privacy_enabled(db, current_user)
 
     region_offsets = {}
 
-    # Header-based mapping keeps imports compatible with permission-shortened templates.
-    header_values = [cell.value for cell in ws[1]]
-    field_map = {
-        idx: field
-        for idx, header in enumerate(header_values)
-        if (field := parse_import_header_field(header))
-        and import_field_enabled(field, import_permissions, privacy_enabled)
-    }
-    if not field_map:
-        field_map = {
-            idx: field
-            for idx, field in LEGACY_IMPORT_FIELD_MAP.items()
-            if import_field_enabled(field, import_permissions, privacy_enabled)
-        }
+    ws, field_map = resolve_admin_import_sheet(
+        wb, parse_import_header_field,
+        lambda field: import_field_enabled(field, import_permissions, privacy_enabled),
+        privacy_enabled,
+    )
     imported_count = 0
     updated_count = 0
     skipped_count = 0
     errors = []
+    warnings = []
 
     def safe_cell_value(v):
         if isinstance(v, (datetime, date)):
@@ -2603,6 +3400,16 @@ async def import_analyses_xlsx(
         errors.append(
             {
                 "row": row,
+                "field": field,
+                "message": message,
+                "value": safe_cell_value(value),
+            }
+        )
+
+    def add_import_warning(scope, field, message, value=None):
+        warnings.append(
+            {
+                "scope": scope,
                 "field": field,
                 "message": message,
                 "value": safe_cell_value(value),
@@ -2658,6 +3465,29 @@ async def import_analyses_xlsx(
             return v.strftime("%Y-%m-%d")
         return str(v).strip()
 
+    source_rows_for_quality = []
+    for source_row in ws.iter_rows(min_row=2, values_only=True):
+        if not any(value is not None and str(value).strip() for value in source_row):
+            continue
+        source_data = {
+            field: source_row[column_index]
+            for column_index, field in field_map.items()
+            if column_index < len(source_row)
+        }
+        source_rows_for_quality.append(source_data)
+
+    import_quality = summarize_anthropometry_quality(source_rows_for_quality)
+    if import_quality["thigh_height_proportionality_review"]:
+        add_import_warning(
+            "file",
+            "thigh_circumference",
+            "Son aylanasi va bo'y juda qat'iy proporsional: "
+            f"R={import_quality['thigh_height_correlation']}, "
+            f"nisbat SD={import_quality['thigh_height_ratio_sd']}. "
+            "Son aylanasini bo'ydan hisoblamang; mustaqil o'lchov manbasini tekshiring.",
+            import_quality["thigh_height_pair_count"],
+        )
+
     # Skip header (row 1)
     for row_idx, row in enumerate(ws.iter_rows(min_row=2), 2):
         row_values = [cell.value for cell in row]
@@ -2670,6 +3500,14 @@ async def import_analyses_xlsx(
                 if col_idx < len(row_values):
                     data[field] = row_values[col_idx]
 
+            age_conversion_error = None
+            if "age_total_months" in data:
+                try:
+                    total, years, months, days = split_age_months(data["age_total_months"], maximum=240)
+                    data.update(age_total_months=total, age=years, age_months=months, age_days=days)
+                except ValueError as exc:
+                    age_conversion_error = str(exc)
+
             inferred_region = (
                 infer_uzbekistan_region(data.get("district"))
                 or infer_uzbekistan_region(data.get("address"))
@@ -2679,6 +3517,8 @@ async def import_analyses_xlsx(
                 data["region"] = inferred_region
 
             row_errors = []
+            if age_conversion_error:
+                row_errors.append(("age_total_months", age_conversion_error, data.get("age_total_months")))
             required_fields = {
                 **({} if privacy_enabled else {
                     "name": "Ф.И.Ш. мажбурий.",
@@ -2752,6 +3592,7 @@ async def import_analyses_xlsx(
                     "total_body_water",
                     "fat_percent",
                     "fat_mass",
+                    "ffm_measured_kg",
                     "muscle_mass",
                     "bone_mass",
                     "acm",
@@ -2774,6 +3615,15 @@ async def import_analyses_xlsx(
                     ("age", "Yosh 0 dan 19 gacha bo'lishi kerak.", data.get("age"))
                 )
 
+            for field, maximum, label in (
+                ("age_months", 11, "Oy 0 dan 11 gacha bo'lishi kerak."),
+                ("age_days", 31, "Kun 0 dan 31 gacha bo'lishi kerak."),
+            ):
+                if is_number_like(data.get(field)) and not (
+                    0 <= format_int(data.get(field), -1) <= maximum
+                ):
+                    row_errors.append((field, label, data.get(field)))
+
             if is_number_like(data.get("height")) and not (
                 30 <= format_val(data.get("height"), 0) <= 250
             ):
@@ -2795,6 +3645,46 @@ async def import_analyses_xlsx(
                         data.get("weight"),
                     )
                 )
+
+            measurement_ranges = {
+                "body_length": (0, 250),
+                "chest": (1, 250),
+                "waist": (1, 250),
+                "head": (1, 250),
+                "shoulder_length": (0, 250),
+                "shoulder_breadth": (0, 250),
+                "shoulder_circumference": (0, 250),
+                "arm_elbow_length": (0, 250),
+                "hand_length": (0, 250),
+                "thigh_length": (0, 250),
+                "thigh_circumference": (0, 140),
+                "calf_length": (0, 250),
+                "calf_circumference": (0, 250),
+                "foot_length": (0, 250),
+            }
+            for field, (minimum, maximum) in measurement_ranges.items():
+                if is_number_like(data.get(field)) and not (
+                    minimum <= format_val(data.get(field), -1) <= maximum
+                ):
+                    row_errors.append(
+                        (
+                            field,
+                            f"O'lchov {minimum}-{maximum} sm oralig'ida bo'lishi kerak.",
+                            data.get(field),
+                        )
+                    )
+
+            if is_number_like(data.get("height")) and is_number_like(
+                data.get("weight")
+            ):
+                bmi_issue = bmi_screening_issue(
+                    format_val(data.get("height"), 0),
+                    format_val(data.get("weight"), 0),
+                )
+                if bmi_issue:
+                    row_errors.append(("bmi", bmi_issue, None))
+
+            row_errors.extend(ffm_import_errors(data))
 
             if row_errors:
                 skipped_count += 1
@@ -2847,6 +3737,7 @@ async def import_analyses_xlsx(
             rec.name = full_name
             rec.gender = gender
             rec.age = format_int(data.get("age"), 0)
+            rec.age_total_months = data.get("age_total_months")
             rec.age_months = format_int(data.get("age_months"), 0)
             rec.age_days = format_int(data.get("age_days"), 0)
             rec.region = str(data.get("region") or "").strip()
@@ -2875,14 +3766,12 @@ async def import_analyses_xlsx(
                             "prefix": "MC-UNK",
                             "count": 1,
                         }
-                
+
                 pfx = region_offsets[location_key]["prefix"]
                 cnt = region_offsets[location_key]["count"]
                 rec.id_code = f"{pfx}-{cnt:04d}"
                 region_offsets[location_key]["count"] += 1
-            if not privacy_enabled:
-                rec.mahalla = str(data.get("mahalla") or "").strip()
-                rec.address = str(data.get("address") or "").strip()
+            apply_admin_import_location_fields(rec, data, privacy_enabled)
             rec.height = format_val(data.get("height"), 0.0)
             rec.weight = format_val(data.get("weight"), 0.0)
             rec.chest = format_val(data.get("chest"), 0.0)
@@ -2903,6 +3792,7 @@ async def import_analyses_xlsx(
             rec.doctor_note = str(data.get("doctor_note") or "").strip() or None
 
             # Bio fields
+            apply_import_measured_ffm(rec, data)
             bio_fields = [
                 field
                 for field in (
@@ -2967,6 +3857,7 @@ async def import_analyses_xlsx(
 
     try:
         db.commit()
+        invalidate_admin_stats_cache()
     except Exception as commit_err:
         db.rollback()
         logger.error(f"Excel import DB commit error: {commit_err}")
@@ -2981,6 +3872,10 @@ async def import_analyses_xlsx(
         "updated": updated_count,
         "skipped": skipped_count,
         "errors": errors,
+        "warnings": warnings,
+        "data_quality": import_quality,
+        "source_sheet": ws.title,
+        "age_unit": "months" if "age_total_months" in field_map.values() else "legacy_years",
     }
 
 
@@ -3284,10 +4179,9 @@ def block_security_ips(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_superadmin),
 ):
-    from utils.blocked_ips import block_ips
-    
+
     count = block_ips(db, payload.ips, payload.reason)
-    
+
     record_audit_log(
         db=db,
         user_id=current_user.id,
@@ -3440,14 +4334,6 @@ def clear_audit_logs(
 
 
 # --- Role Settings ---
-from models.settings import RoleSettings
-from models.schemas import (
-    PrivacyRoleSettingsOut,
-    PrivacyRoleSettingsUpdate,
-    RoleSettingsOut,
-    RoleSettingsUpdate,
-)
-
 @router.get("/role-settings", response_model=List[RoleSettingsOut])
 def get_role_settings(
     db: Session = Depends(get_db),
@@ -3456,7 +4342,7 @@ def get_role_settings(
     roles = ["admin", "researcher", "user", "guest", "field_assistant"]
     settings = db.query(RoleSettings).all()
     existing_roles = {s.role_name for s in settings}
-    
+
     missing_roles = [r for r in roles if r not in existing_roles]
     if missing_roles:
         for r in missing_roles:
@@ -3469,7 +4355,7 @@ def get_role_settings(
             db.add(new_setting)
         db.commit()
         settings = db.query(RoleSettings).all()
-        
+
     return settings
 
 
@@ -3547,7 +4433,7 @@ def update_role_setting(
     setting = db.query(RoleSettings).filter(RoleSettings.role_name == role_name).first()
     if not setting:
         raise HTTPException(status_code=404, detail="Role setting topilmadi")
-    
+
     update_dict = update_data.model_dump(exclude_unset=True)
     if "ai_chat_enabled" in update_dict:
         setting.ai_chat_enabled = update_dict["ai_chat_enabled"]
@@ -3556,7 +4442,7 @@ def update_role_setting(
 
     db.commit()
     db.refresh(setting)
-    
+
     record_audit_log(
         db=db,
         user_id=current_user.id,
@@ -3565,5 +4451,5 @@ def update_role_setting(
         details=f"{role_name} roli uchun Chat holati o'zgartirildi: AI={setting.ai_chat_enabled}, Ichki={setting.internal_chat_enabled}",
         request=request,
     )
-    
+
     return setting

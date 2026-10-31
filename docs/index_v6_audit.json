@@ -1,0 +1,140 @@
+{
+  "status": "PASS",
+  "model_version": "6.0",
+  "source_sha256": {
+    "MorphoCheck_MUALLIFLIK_INDEX_v6_0_CONFIG.json": "596ab7ee51e2d0883f89498c79243b5e66fee20e8d2777539d9bf0e37bdf2104",
+    "MorphoCheck_MUALLIFLIK_INDEX_v6_0_REFERENCE.xlsx": "5e293f6dce7d99d069b8a6b5c22bac52c9d97235d77417bd45662f2fd0598da4"
+  },
+  "sheets": 8,
+  "who_lms_rows": 366,
+  "internal_reference_rows": 10,
+  "recomputed_excel_formulas": 92,
+  "max_formula_cache_error": 0,
+  "reference_cases": 13,
+  "max_model_source_error": 5.6772364587232005e-12,
+  "cases": [
+    {
+      "id": "EXCEL_CASE_0001",
+      "errors_vs_source": {
+        "hmai": 6.394884621840902e-14,
+        "mii": 5.542233338928781e-13,
+        "adi": 2.4584778657299466e-12,
+        "mcri": 4.476419235288631e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0002",
+      "errors_vs_source": {
+        "hmai": 1.7053025658242404e-13,
+        "mii": 2.842170943040401e-14,
+        "adi": 3.161915174132446e-12,
+        "mcri": 4.902744876744691e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0003",
+      "errors_vs_source": {
+        "hmai": 4.263256414560601e-14,
+        "mii": 6.110667527536862e-13,
+        "adi": 4.703792910731863e-12,
+        "mcri": 5.258016244624741e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0004",
+      "errors_vs_source": {
+        "hmai": 4.263256414560601e-14,
+        "mii": 5.684341886080802e-14,
+        "adi": 3.140598892059643e-12,
+        "mcri": 4.902744876744691e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0005",
+      "errors_vs_source": {
+        "hmai": 7.105427357601002e-15,
+        "mii": 9.947598300641403e-14,
+        "adi": 2.3803181647963356e-12,
+        "mcri": 3.872457909892546e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0006",
+      "errors_vs_source": {
+        "hmai": 1.2789769243681803e-13,
+        "mii": 2.842170943040401e-14,
+        "adi": 3.090860900556436e-12,
+        "mcri": 4.787281682183675e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0011",
+      "errors_vs_source": {
+        "hmai": 4.263256414560601e-14,
+        "mii": 5.968558980384842e-13,
+        "adi": 4.732214620162267e-12,
+        "mcri": 2.5224267119483557e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0051",
+      "errors_vs_source": {
+        "hmai": 2.1316282072803006e-14,
+        "mii": 5.186961971048731e-13,
+        "adi": 3.1299407510232413e-12,
+        "mcri": 4.902744876744691e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0251",
+      "errors_vs_source": {
+        "hmai": 7.105427357601002e-14,
+        "mii": 5.115907697472721e-13,
+        "adi": 5.643485678774596e-12,
+        "mcri": 6.146194664324867e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_0501",
+      "errors_vs_source": {
+        "hmai": 6.394884621840902e-14,
+        "mii": 4.973799150320701e-13,
+        "adi": 5.151434834260726e-12,
+        "mcri": 7.229772336359019e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_1001",
+      "errors_vs_source": {
+        "hmai": 8.526512829121202e-14,
+        "mii": 2.842170943040401e-14,
+        "adi": 3.1370461783808423e-12,
+        "mcri": 3.339550858072471e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_1501",
+      "errors_vs_source": {
+        "hmai": 1.4210854715202004e-14,
+        "mii": 7.105427357601002e-14,
+        "adi": 1.6768808563938364e-12,
+        "mcri": 2.0250467969162855e-13
+      }
+    },
+    {
+      "id": "EXCEL_CASE_2038",
+      "errors_vs_source": {
+        "hmai": 0.0,
+        "mii": 4.263256414560601e-14,
+        "adi": 5.6772364587232005e-12,
+        "mcri": 4.1655567883935873e-13
+      }
+    }
+  ],
+  "limits": [
+    "The reference contains 13 cases, not the full 2038-person source dataset.",
+    "WHO LMS and device protocols were compared to supplied files, not independently validated.",
+    "The interpreter verifies supported arithmetic; Excel itself was not launched.",
+    "Stored historical analyses were not bulk overwritten."
+  ]
+}

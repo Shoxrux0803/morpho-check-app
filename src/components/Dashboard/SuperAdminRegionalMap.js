@@ -2820,7 +2820,7 @@ export default function SuperAdminRegionalMap({
   const [mahallaSearchItems, setMahallaSearchItems] = useState([]);
   const [mahallaSearchLoaded, setMahallaSearchLoaded] = useState(false);
   const [satelliteEnabled, setSatelliteEnabled] = useState(false);
-  const [metricLayer, setMetricLayer] = useState('risk');
+  const [metricLayer, setMetricLayer] = useState('default');
   const [timeFilter, setTimeFilter] = useState('all');
   const [customDateFrom, setCustomDateFrom] = useState('');
   const [customDateTo, setCustomDateTo] = useState('');
@@ -3771,7 +3771,9 @@ export default function SuperAdminRegionalMap({
     const bounds =
       getBounds(item.bbox) || getBounds(getGeometryBounds(item.geometry));
     map.stop();
-    const level = Number(item.admin_leve || item.admin_level || item.level || 1);
+    const level = Number(
+      item.admin_leve || item.admin_level || item.level || 1
+    );
     const targetMaxZoom = level === 3 ? 17.5 : level === 2 ? 15.0 : 11.5;
     if (bounds) {
       map.fitBounds(bounds, {
@@ -4633,7 +4635,9 @@ export default function SuperAdminRegionalMap({
         getBounds(getGeometryBounds(selected.geometry))
       : null;
     if (selectedBounds) {
-      const level = Number(selected.admin_leve || selected.admin_level || selected.level || 1);
+      const level = Number(
+        selected.admin_leve || selected.admin_level || selected.level || 1
+      );
       const targetMaxZoom = level === 3 ? 17.5 : level === 2 ? 15.0 : 11.5;
       map.fitBounds(selectedBounds, {
         animate: false,
@@ -4644,10 +4648,11 @@ export default function SuperAdminRegionalMap({
       return;
     }
 
-    const fullCountryBounds =
-      getBounds(countryBbox) ||
-      getBounds(getCollectionBounds(visibleGeoJson)) ||
-      [[55.9, 37.1], [73.3, 45.7]];
+    const fullCountryBounds = getBounds(countryBbox) ||
+      getBounds(getCollectionBounds(visibleGeoJson)) || [
+        [55.9, 37.1],
+        [73.3, 45.7],
+      ];
 
     if (!svgViewport.scale || svgViewport.scale <= 1.05) {
       if (fullCountryBounds) {
@@ -4668,7 +4673,13 @@ export default function SuperAdminRegionalMap({
         padding: 0,
       });
     }
-  }, [countryBbox, selected, svgLngLatBounds, svgViewport.scale, visibleGeoJson]);
+  }, [
+    countryBbox,
+    selected,
+    svgLngLatBounds,
+    svgViewport.scale,
+    visibleGeoJson,
+  ]);
 
   const handleSatelliteToggle = useCallback(() => {
     const map = mapRef.current;

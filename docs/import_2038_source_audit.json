@@ -1,0 +1,154 @@
+{
+  "count": 2038,
+  "unique_ids": 2038,
+  "sex": {
+    "Ўғил": 1031,
+    "Қиз": 1007
+  },
+  "regions": {
+    "Зарбдор": 310,
+    "Жиззах шаҳри": 765,
+    "Ғаллаорол": 330,
+    "Дўстлик": 288,
+    "Бахмал": 345
+  },
+  "age_range_months": [
+    36,
+    80.9527721
+  ],
+  "height_range_cm": [
+    84.98,
+    130.2
+  ],
+  "weight_range_kg": [
+    9.37,
+    29.2
+  ],
+  "height_under_95": 292,
+  "abs_baz_over_5": 7,
+  "max_errors": {
+    "haz": 5.773159728050814e-15,
+    "waz": 4.051782021008421e-08,
+    "baz": 5.796928093104725e-08,
+    "hmai": 1.0058446093808016e-06,
+    "mii": 1.306118718957805e-06,
+    "adi": 6.9046990347487736e-12,
+    "mcri": 1.090051748420251e-06,
+    "bmi": 0.0,
+    "fm": 0.0,
+    "pbf": 7.105427357601002e-15
+  },
+  "difference_counts_over_1e8": {
+    "haz": 0,
+    "waz": 1163,
+    "baz": 1438,
+    "hmai": 1962,
+    "mii": 950,
+    "adi": 0,
+    "mcri": 1442,
+    "warning:bia_height_under_95cm": 292,
+    "warning:abs_baz_over_5": 7
+  },
+  "source_sha256": "38dc76300cecb1e0d2dc1fa981877349829b342e82e1b41187fee1dbd2fc1368",
+  "active_sheet": "02_WHO_2038_ҚИЁС",
+  "main_sheet": "01_2038_АСОСИЙ",
+  "sheets": [
+    {
+      "name": "00_БОШ_САҲИФА",
+      "rows": 19,
+      "columns": 3
+    },
+    {
+      "name": "01_2038_АСОСИЙ",
+      "rows": 2039,
+      "columns": 24
+    },
+    {
+      "name": "02_WHO_2038_ҚИЁС",
+      "rows": 2039,
+      "columns": 14
+    },
+    {
+      "name": "03_БИМ_2038_АРХИВ",
+      "rows": 2039,
+      "columns": 15
+    },
+    {
+      "name": "04_АСИММЕТРИЯ_МОДЕЛ",
+      "rows": 2039,
+      "columns": 19
+    },
+    {
+      "name": "05_ҲУДУД_ЖИНС",
+      "rows": 11,
+      "columns": 9
+    },
+    {
+      "name": "06_ЁШ_ЖИНС",
+      "rows": 17,
+      "columns": 11
+    },
+    {
+      "name": "07_ҚАТЛАМ_ТАНЛОВИ",
+      "rows": 6,
+      "columns": 4
+    },
+    {
+      "name": "08_ҲУДУД_5FOLD",
+      "rows": 6,
+      "columns": 7
+    },
+    {
+      "name": "09_МЕТОД_ВА_МАНБА",
+      "rows": 12,
+      "columns": 3
+    },
+    {
+      "name": "10_АДАБИЁТЛАР",
+      "rows": 8,
+      "columns": 4
+    },
+    {
+      "name": "11_ҚАЙД_РЕЕСТРИ",
+      "rows": 9,
+      "columns": 3
+    }
+  ],
+  "import_preflight": {
+    "status": 400,
+    "detail": "\"01_2038_АСОСИЙ\" varag‘i admin import shabloniga to‘liq mos emas. Yetishmagan ustunlar: Ko‘krak aylanasi, Bosh aylanasi, F.I.Sh., Bel aylanasi. Ustunlar joylashuvi bo‘yicha taxminiy import qilinmadi. Shablonni yuklab, mavjud o‘lchovlarni nomiga mos joylashtiring."
+  },
+  "main_header_mapping": {
+    "ID": "id_code",
+    "Ҳудуд": "region",
+    "Жинс": "gender",
+    "Ёш (ой)": "age_total_months",
+    "Ёш гуруҳи": null,
+    "Бўй (см)": "height",
+    "Вазн (кг)": "weight",
+    "BMI": null,
+    "FFM (кг)": "ffm_measured_kg",
+    "FM (кг)": "fat_mass",
+    "PBF (%)": "fat_percent",
+    "Сон айл.": "thigh_circumference",
+    "Болдир айл.": "calf_circumference",
+    "Елка айл.": "shoulder_circumference",
+    "HAZ": null,
+    "WAZ": null,
+    "BAZ": null,
+    "HMAI": null,
+    "MII": null,
+    "ADI": null,
+    "MCRI": null,
+    "БИМ ≥95 см": null,
+    "BAZ QC": null,
+    "SEG QC": null
+  },
+  "matching_id_sets": {
+    "01_2038_АСОСИЙ": true,
+    "02_WHO_2038_ҚИЁС": true,
+    "03_БИМ_2038_АРХИВ": true,
+    "04_АСИММЕТРИЯ_МОДЕЛ": true
+  },
+  "excel_error_cells": 0
+}

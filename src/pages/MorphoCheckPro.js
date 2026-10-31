@@ -1,7 +1,10 @@
+import { totalAgeMonths } from '../utils/ageMonths';
 // src/pages/MorphoCheckPro.js
 import React, { useState, useRef, useEffect } from 'react';
 import InputForm from '../components/InputForm';
 import AnalysisResults from '../components/AnalysisResults';
+import AnalysisPageHeader from '../components/AnalysisPageHeader';
+import '../styles/analysis.css';
 import { postAnalysis, generatePdf, generateDocx } from '../services/api';
 import { AdminApi } from '../services/AdminApi';
 import { useAuth } from '../contexts/AuthContext';
@@ -47,10 +50,16 @@ const emptyFormData = {
   totalBodyWater: '',
   fatPercent: '',
   fatMass: '',
+  ffmMeasuredKg: '',
   muscleMass: '',
   boneMass: '',
   acm: '',
   visceralFat: '',
+  biaDeviceModel: '',
+  biaDeviceManufacturer: '',
+  biaMeasurementDate: '',
+  biaProtocol: '',
+  biaVisceralFatUnit: '',
   bodyLength: '',
   doctorNote: '',
   consentConfirmed: false,
@@ -81,6 +90,30 @@ const loadDraft = () => {
     return emptyFormData;
   }
 };
+
+const optionalNumber = (value) =>
+  value === '' || value == null ? null : Number(value);
+const buildBodyCompositionPayload = (data) => ({
+  tbwPercent: optionalNumber(data.totalBodyWater),
+  pbfPercent: optionalNumber(data.fatPercent),
+  fatMassMeasuredKg: optionalNumber(data.fatMass),
+  ffmMeasuredKg: optionalNumber(data.ffmMeasuredKg),
+  smmKg: optionalNumber(data.muscleMass),
+  visceralFatValue: optionalNumber(data.visceralFat),
+  visceralFatUnit:
+    data.visceralFat === ''
+      ? null
+      : data.biaVisceralFatUnit || 'device_level_unspecified',
+  mineralBoneMassKg: optionalNumber(data.boneMass),
+  acmPercent: optionalNumber(data.acm),
+  acmDefinitionVersion:
+    data.acm === '' ? null : 'MORPHOCHECK_ACTIVE_CELL_MASS_PERCENT_OF_TBW_v1',
+  source: 'admin_input',
+  deviceModel: data.biaDeviceModel || null,
+  deviceManufacturer: data.biaDeviceManufacturer || null,
+  measurementDate: data.biaMeasurementDate || null,
+  measurementMethod: data.biaProtocol || null,
+});
 
 export default function MorphoCheckPro() {
   const { lang, t } = useLanguage();
@@ -130,6 +163,7 @@ export default function MorphoCheckPro() {
         'boneMass',
         'acm',
         'visceralFat',
+        'bodyComposition',
         'bodyLength',
       ].forEach((key) => delete next[key]);
     }
@@ -206,6 +240,8 @@ export default function MorphoCheckPro() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.birthDate, formData.examinationDate]);
 
+  // Derived composition values belong to backend results, not measured inputs.
+
   const numericFields = [
     'age',
     'height',
@@ -220,7 +256,15 @@ export default function MorphoCheckPro() {
     const { name, value } = e.target;
     const v =
       numericFields.includes(name) && value !== '' ? Number(value) : value;
-    setFormData((prev) => ({ ...prev, [name]: v }));
+    setFormData((prev) => {
+      const next = { ...prev, [name]: v };
+      if (prev.referenceTemplate?.values?.[name] != null) {
+        const values = { ...prev.referenceTemplate.values };
+        delete values[name];
+        next.referenceTemplate = { ...prev.referenceTemplate, values };
+      }
+      return next;
+    });
   };
 
   const handleBulkUpdate = (data) => {
@@ -284,6 +328,7 @@ export default function MorphoCheckPro() {
         mahalla: formData.mahalla || '',
         address: formData.address || '',
         age: Number(formData.age),
+        ageTotalMonths: totalAgeMonths(formData),
         ageMonths: Number(formData.ageMonths || 0),
         ageDays: Number(formData.ageDays || 0),
         gender: formData.gender,
@@ -316,19 +361,17 @@ export default function MorphoCheckPro() {
         calfCircumference: Number(formData.calfCircumference) || 0,
         footLength: Number(formData.footLength) || 0,
         // Bioimpedance
-        totalBodyWater:
-          formData.totalBodyWater !== ''
-            ? Number(formData.totalBodyWater)
-            : null,
+        totalBodyWater: null,
         fatPercent:
           formData.fatPercent !== '' ? Number(formData.fatPercent) : null,
         fatMass: formData.fatMass !== '' ? Number(formData.fatMass) : null,
         muscleMass:
           formData.muscleMass !== '' ? Number(formData.muscleMass) : null,
         boneMass: formData.boneMass !== '' ? Number(formData.boneMass) : null,
-        acm: formData.acm !== '' ? Number(formData.acm) : null,
+        acm: null,
         visceralFat:
           formData.visceralFat !== '' ? Number(formData.visceralFat) : null,
+        bodyComposition: buildBodyCompositionPayload(formData),
         bodyLength:
           formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || '',
@@ -378,6 +421,9 @@ export default function MorphoCheckPro() {
       setActiveTab('results');
     } catch (err) {
       setError(err.message || t('serverError'));
+      if (typeof toast !== 'undefined' && toast.error) {
+        toast.error(err.message || t('serverError'));
+      }
     } finally {
       setLoading(false);
     }
@@ -414,6 +460,7 @@ export default function MorphoCheckPro() {
       totalBodyWater: '',
       fatPercent: '',
       fatMass: '',
+      ffmMeasuredKg: '',
       muscleMass: '',
       boneMass: '',
       acm: '',
@@ -440,6 +487,7 @@ export default function MorphoCheckPro() {
         mahalla: formData.mahalla || '',
         address: formData.address || '',
         age: Number(formData.age),
+        ageTotalMonths: totalAgeMonths(formData),
         ageMonths: Number(formData.ageMonths || 0),
         ageDays: Number(formData.ageDays || 0),
         gender: formData.gender,
@@ -488,19 +536,17 @@ export default function MorphoCheckPro() {
           ppe_appetite: formData.ppe_appetite || '',
         }),
         // Bioimpedance
-        totalBodyWater:
-          formData.totalBodyWater !== ''
-            ? Number(formData.totalBodyWater)
-            : null,
+        totalBodyWater: null,
         fatPercent:
           formData.fatPercent !== '' ? Number(formData.fatPercent) : null,
         fatMass: formData.fatMass !== '' ? Number(formData.fatMass) : null,
         muscleMass:
           formData.muscleMass !== '' ? Number(formData.muscleMass) : null,
         boneMass: formData.boneMass !== '' ? Number(formData.boneMass) : null,
-        acm: formData.acm !== '' ? Number(formData.acm) : null,
+        acm: null,
         visceralFat:
           formData.visceralFat !== '' ? Number(formData.visceralFat) : null,
+        bodyComposition: buildBodyCompositionPayload(formData),
         bodyLength:
           formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || '',
@@ -540,6 +586,7 @@ export default function MorphoCheckPro() {
         mahalla: formData.mahalla || '',
         address: formData.address || '',
         age: Number(formData.age),
+        ageTotalMonths: totalAgeMonths(formData),
         ageMonths: Number(formData.ageMonths || 0),
         ageDays: Number(formData.ageDays || 0),
         gender: formData.gender,
@@ -572,19 +619,17 @@ export default function MorphoCheckPro() {
         calfCircumference: Number(formData.calfCircumference) || 0,
         footLength: Number(formData.footLength) || 0,
         // Bioimpedance
-        totalBodyWater:
-          formData.totalBodyWater !== ''
-            ? Number(formData.totalBodyWater)
-            : null,
+        totalBodyWater: null,
         fatPercent:
           formData.fatPercent !== '' ? Number(formData.fatPercent) : null,
         fatMass: formData.fatMass !== '' ? Number(formData.fatMass) : null,
         muscleMass:
           formData.muscleMass !== '' ? Number(formData.muscleMass) : null,
         boneMass: formData.boneMass !== '' ? Number(formData.boneMass) : null,
-        acm: formData.acm !== '' ? Number(formData.acm) : null,
+        acm: null,
         visceralFat:
           formData.visceralFat !== '' ? Number(formData.visceralFat) : null,
+        bodyComposition: buildBodyCompositionPayload(formData),
         bodyLength:
           formData.bodyLength !== '' ? Number(formData.bodyLength) : null,
         doctorNote: formData.doctorNote || '',
@@ -620,6 +665,7 @@ export default function MorphoCheckPro() {
   return (
     <div className="mc-analysis-page">
       <div className="container my-4 mc-analysis-content">
+        <AnalysisPageHeader showingResults={activeTab !== 'form'} />
         {activeTab === 'form' ? (
           <InputForm
             formData={formData}

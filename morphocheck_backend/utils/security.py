@@ -1,9 +1,9 @@
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from jose import jwt
+import jwt
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -32,7 +32,7 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
     else:

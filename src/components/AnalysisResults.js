@@ -1,3 +1,4 @@
+import { formatAgeMonths, totalAgeMonths } from '../utils/ageMonths';
 // src/components/AnalysisResults.jsx
 import React, { useState, useEffect } from 'react';
 import {
@@ -13,7 +14,6 @@ import {
   Alert,
   Button,
   Paper,
-  TextField,
   MenuItem,
   Select,
   FormControl,
@@ -34,6 +34,8 @@ import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
 import Face6Icon from '@mui/icons-material/Face6';
 import GrowthChart from './Charts/GrowthChart';
+import MeasurementQualityPanel from './MeasurementQualityPanel';
+import BIAResultsPanel from './BIAResultsPanel';
 import PersonOutline from '@mui/icons-material/PersonOutline';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useLanguage, LANGUAGES } from '../contexts/LanguageContext';
@@ -91,7 +93,6 @@ export default function AnalysisResults({
   ].some((key) => canUsePermission(adminPermissions, key));
   const [pdfLang, setPdfLang] = useState(lang);
   const [chartType, setChartType] = useState('height');
-  const analytics = useGrowthAnalytics(formData);
   const [aiTips, setAiTips] = useState([]);
   const [tipsLoading, setTipsLoading] = useState(false);
   const [assistantMode, setAssistantMode] = useState(null);
@@ -108,10 +109,11 @@ export default function AnalysisResults({
   const measurements = root?.measurements ?? null;
   const patientInfo = root?.patient_info ?? null;
   const riskFlags = root?.risk_flags ?? root?.growth_standards?.metrics ?? null;
+  // Results and reports use the exact same backend-calculated Z-score source.
+  const analytics = useGrowthAnalytics(formData, riskFlags);
   const progressTracking = root?.progress_tracking ?? null;
 
   // 3) Kerakli qiymatlar
-  const zScore = analysis?.z_score;
   const bmi = analysis?.bmi;
   const idealWeight = analysis?.ideal_weight;
   const weightDiff = analysis?.weight_diff;
@@ -154,12 +156,6 @@ export default function AnalysisResults({
     }
   }
 
-  const zScoreColor =
-    zScore == null
-      ? 'default'
-      : Math.abs(Number(zScore)) > 1.5
-        ? 'error'
-        : 'success';
   const diffColor =
     weightDiff == null
       ? 'default'
@@ -172,9 +168,12 @@ export default function AnalysisResults({
   const regionText = formData?.region || patientInfo?.region || '';
   const districtText = formData?.district || patientInfo?.district || '';
   const mahallaText = formData?.mahalla || patientInfo?.mahalla || '';
-  const ageText = patientInfo?.age ?? formData?.age ?? '—';
+  const ageText =
+    formatAgeMonths(patientInfo?.age != null ? patientInfo : formData) || '—';
   const genderValue = patientInfo?.gender ?? formData?.gender;
   const age = patientInfo?.age ?? formData?.age;
+  const chartAge =
+    totalAgeMonths(patientInfo?.age != null ? patientInfo : formData) / 12;
   const gender = genderValue;
   const genderText =
     genderValue === 'erkak'
@@ -341,7 +340,17 @@ export default function AnalysisResults({
       };
       fetchTips();
     }
-  }, [root, lang, aiTips.length]);
+  }, [
+    aiTips.length,
+    analysis?.bmi,
+    analysis?.z_score,
+    formData?.age,
+    formData?.gender,
+    lang,
+    patientInfo?.age,
+    patientInfo?.gender,
+    root,
+  ]);
 
   // 1) Natija yo'q — moved down after hooks
   if (!results) {
@@ -349,9 +358,18 @@ export default function AnalysisResults({
   }
 
   return (
-    <Box className="mc-surface-reveal" sx={{ maxWidth: 1200, mx: 'auto' }}>
+    <Box
+      className="mc-surface-reveal analysis-results"
+      sx={{ maxWidth: 1200, mx: 'auto' }}
+    >
+      <MeasurementQualityPanel data={formData} />
+      {canShowBioimpedance && <BIAResultsPanel data={root?.body_composition} />}
       {/* Profil sarlavhasi + PDF */}
-      <Paper elevation={1} sx={{ p: 3, mb: 3 }}>
+      <Paper
+        className="analysis-result-profile"
+        elevation={1}
+        sx={{ p: 3, mb: 3 }}
+      >
         <Stack
           direction="row"
           alignItems="center"
@@ -366,7 +384,7 @@ export default function AnalysisResults({
                 {fullName || t('userLabel')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {ageText} {t('yearsOld')}, {genderText}
+                {ageText} {t('months')}, {genderText}
                 {[regionText, districtText, mahallaText].filter(Boolean).length
                   ? ` | ${[regionText, districtText, mahallaText].filter(Boolean).join(' / ')}`
                   : ''}
@@ -469,7 +487,7 @@ export default function AnalysisResults({
             />
             <CardContent>
               <Grid container spacing={3}>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Paper
                     variant="outlined"
                     sx={{
@@ -522,7 +540,7 @@ export default function AnalysisResults({
                   </Paper>
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Paper
                     variant="outlined"
                     sx={{ p: 2, borderRadius: 2, height: '100%' }}
@@ -574,10 +592,8 @@ export default function AnalysisResults({
                         riskColorMap[item?.risk?.level] || riskColorMap.gray;
                       return (
                         <Grid
+                          size={{ xs: 12, sm: 6, md: key === 'bmi' ? 4 : 2 }}
                           key={key}
-                          xs={12}
-                          sm={6}
-                          md={key === 'bmi' ? 4 : 2}
                         >
                           <Paper
                             variant="outlined"
@@ -692,7 +708,7 @@ export default function AnalysisResults({
                                 chest: t('chestLabel'),
                               };
                               return (
-                                <Grid key={key} xs={6} md={2.4}>
+                                <Grid size={{ xs: 6, md: 2.4 }} key={key}>
                                   <Paper
                                     variant="outlined"
                                     sx={{ p: 1.5, borderRadius: 2 }}
@@ -761,7 +777,7 @@ export default function AnalysisResults({
                   </Typography>
                   <Grid container spacing={2}>
                     {analytics.height && (
-                      <Grid xs={12} md={4}>
+                      <Grid size={{ xs: 12, md: 4 }}>
                         <Paper
                           variant="outlined"
                           sx={{
@@ -831,7 +847,7 @@ export default function AnalysisResults({
                       </Grid>
                     )}
                     {analytics.weight && (
-                      <Grid xs={12} md={4}>
+                      <Grid size={{ xs: 12, md: 4 }}>
                         <Paper
                           variant="outlined"
                           sx={{
@@ -901,7 +917,7 @@ export default function AnalysisResults({
                       </Grid>
                     )}
                     {analytics.bmi && (
-                      <Grid xs={12} md={4}>
+                      <Grid size={{ xs: 12, md: 4 }}>
                         <Paper
                           variant="outlined"
                           sx={{
@@ -977,7 +993,7 @@ export default function AnalysisResults({
               <Divider sx={{ my: 3 }} />
 
               <Grid container spacing={3}>
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Paper
                     variant="outlined"
                     sx={{ p: 2, borderRadius: 2, height: '100%' }}
@@ -998,7 +1014,7 @@ export default function AnalysisResults({
                   </Paper>
                 </Grid>
 
-                <Grid xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Paper
                     variant="outlined"
                     sx={{ p: 2, borderRadius: 2, height: '100%' }}
@@ -1040,7 +1056,7 @@ export default function AnalysisResults({
               {(canShowShoulderRatio || canShowThighRatio) && (
                 <Grid container spacing={3} sx={{ mt: 1 }}>
                   {canShowShoulderRatio && (
-                    <Grid xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <Paper
                         variant="outlined"
                         sx={{ p: 2, borderRadius: 2, height: '100%' }}
@@ -1060,7 +1076,7 @@ export default function AnalysisResults({
                     </Grid>
                   )}
                   {canShowThighRatio && (
-                    <Grid xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }}>
                       <Paper
                         variant="outlined"
                         sx={{ p: 2, borderRadius: 2, height: '100%' }}
@@ -1166,7 +1182,7 @@ export default function AnalysisResults({
                     {t('detailedIndices')}
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid xs={12} sm={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{
@@ -1191,7 +1207,7 @@ export default function AnalysisResults({
                         </Typography>
                       </Paper>
                     </Grid>
-                    <Grid xs={12} sm={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{
@@ -1216,7 +1232,7 @@ export default function AnalysisResults({
                         </Typography>
                       </Paper>
                     </Grid>
-                    <Grid xs={12} sm={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{
@@ -1242,7 +1258,39 @@ export default function AnalysisResults({
                       </Paper>
                     </Grid>
 
-                    <Grid xs={6} md={4}>
+                    <Grid size={{ xs: 12, sm: 4 }}>
+                      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="text.secondary">
+                          MCRI-6
+                        </Typography>
+                        <Typography variant="h5" fontWeight={700}>
+                          {Number.isFinite(analysis?.indices?.mcri)
+                            ? analysis.indices.mcri.toFixed(2)
+                            : '?'}
+                        </Typography>
+                        <Typography variant="caption">
+                          {analysis?.indices?.mcri_desc ?? '?'}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 12 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        v6.0 ? 0?100 ? 30?90{' '}
+                        {lang === 'uz'
+                          ? 'oy'
+                          : lang === 'ru'
+                            ? '???.'
+                            : 'months'}
+                        {' ? '}
+                        {lang === 'uz'
+                          ? 'Tadqiqot indeksi. Klinik tashxis sifatida tasdiqlanmagan.'
+                          : lang === 'ru'
+                            ? '????????????????? ??????. ??????????? ????????? ?? ?????????.'
+                            : 'Research index. Not clinically validated.'}
+                      </Typography>
+                    </Grid>
+
+                    <Grid size={{ xs: 6, md: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{ p: 1.5, borderRadius: 2 }}
@@ -1259,7 +1307,7 @@ export default function AnalysisResults({
                         </Typography>
                       </Paper>
                     </Grid>
-                    <Grid xs={6} md={4}>
+                    <Grid size={{ xs: 6, md: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{ p: 1.5, borderRadius: 2 }}
@@ -1276,7 +1324,7 @@ export default function AnalysisResults({
                         </Typography>
                       </Paper>
                     </Grid>
-                    <Grid xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{ p: 1.5, borderRadius: 2 }}
@@ -1372,7 +1420,7 @@ export default function AnalysisResults({
 
                     <GrowthChart
                       gender={gender}
-                      age={age}
+                      age={chartAge}
                       type={chartType}
                       value={
                         chartType === 'height'
@@ -1396,7 +1444,7 @@ export default function AnalysisResults({
                       {chartType === 'height'
                         ? "Ushbu grafik balandlikning yoshga nisbatan me'yorlarini (SDS) ko'rsatadi. Yashil chiziq - median (o'rtacha)."
                         : chartType === 'weight'
-                          ? "Vazn grafigi WHO bo'y va BMI egri chiziqlaridan chiqarilgan taxminiy norma koridorlarini ko'rsatadi."
+                          ? 'Vazn–yosh grafigi: WHO 2007 ma’lumotlari faqat 5–10 yosh uchun.'
                           : "BMI grafigi tana vazni indeksining yoshga nisbatan o'zgarishini ko'rsatadi."}
                     </Typography>
                   </Paper>
@@ -1436,7 +1484,7 @@ export default function AnalysisResults({
               <CardContent>
                 <Grid container spacing={3}>
                   {age < 18 && (
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                       <Paper
                         variant="outlined"
                         sx={{
@@ -1476,7 +1524,7 @@ export default function AnalysisResults({
                     </Grid>
                   )}
 
-                  <Grid item xs={12} md={age < 18 ? 8 : 12}>
+                  <Grid size={{ xs: 12, md: age < 18 ? 8 : 12 }}>
                     <Paper
                       variant="outlined"
                       sx={{ p: 3, borderRadius: 3, height: '100%' }}
@@ -1654,7 +1702,7 @@ export default function AnalysisResults({
             <CardContent>
               <Grid container spacing={1.5}>
                 {assistantActions.map((action) => (
-                  <Grid item xs={12} sm={6} md={3} key={action.key}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }} key={action.key}>
                     <Button
                       fullWidth
                       variant={
@@ -1881,7 +1929,7 @@ export default function AnalysisResults({
 
                   <Grid container spacing={1.25}>
                     {playPreschoolAdvice.tips.map((tip, index) => (
-                      <Grid key={tip} item xs={12} md={6}>
+                      <Grid size={{ xs: 12, md: 6 }} key={tip}>
                         <Stack
                           direction="row"
                           spacing={1.25}
@@ -1941,7 +1989,7 @@ export default function AnalysisResults({
                     return true;
                   })
                   .map(({ key, title, icon }) => (
-                    <Grid key={key} item xs={12} md={6}>
+                    <Grid size={{ xs: 12, md: 6 }} key={key}>
                       <Paper
                         variant="outlined"
                         sx={{ p: 2, borderRadius: 2, height: '100%' }}

@@ -19,7 +19,6 @@ import {
   CircularProgress,
   Tabs,
   Tab,
-  Divider,
 } from '@mui/material';
 import {
   BiotechOutlined,
@@ -29,7 +28,6 @@ import {
   CheckCircle,
   TrendingUp,
   MonitorWeightOutlined,
-  AccessibilityNewOutlined,
 } from '@mui/icons-material';
 import {
   ResponsiveContainer,
@@ -42,8 +40,6 @@ import {
   CartesianGrid,
   Tooltip as ReTooltip,
   Cell,
-  ReferenceLine,
-  Legend,
 } from 'recharts';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -57,17 +53,6 @@ const COLORS = {
   error: '#ef4444',
   info: '#3b82f6',
   teal: '#14b8a6',
-};
-
-const localeByLang = {
-  uz: 'uz-UZ',
-  tg: 'tg-TJ',
-  tm: 'tk-TM',
-  ru: 'ru-RU',
-  en: 'en-US',
-  kz: 'kk-KZ',
-  ky: 'ky-KG',
-  tr: 'tr-TR',
 };
 
 const GlassCard = ({ children, sx = {}, hover = false }) => {
@@ -641,8 +626,6 @@ export default function AdminScientificAnalysis({
   const isDark = theme.palette.mode === 'dark';
   const { language } = useLanguage();
   const t = ADMIN_SCI_TEXT[language] || ADMIN_SCI_TEXT.uz;
-  const currentLocale = localeByLang[language] || 'uz-UZ';
-
   const [activeTab, setActiveTab] = useState('all');
 
   // ---- 1. Median BMI (P50) ----

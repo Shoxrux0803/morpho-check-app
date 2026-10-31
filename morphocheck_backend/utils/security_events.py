@@ -5,9 +5,9 @@ from fastapi import Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
+from models.chat import ChatMessage
 from models.security_event import SecurityEvent
 from models.user import User
-from models.chat import ChatMessage
 
 SECURITY_WINDOW_MINUTES = 15
 HIGH_ATTEMPT_THRESHOLD = 5
@@ -29,7 +29,7 @@ def _normalize_email(email: Optional[str]) -> Optional[str]:
 
 
 def _calculate_attempts(db: Session, event_type: str, email: Optional[str], ip_address: Optional[str]) -> int:
-    since = datetime.utcnow() - timedelta(minutes=SECURITY_WINDOW_MINUTES)
+    since = datetime.now() - timedelta(minutes=SECURITY_WINDOW_MINUTES)
     query = db.query(SecurityEvent).filter(
         SecurityEvent.event_type == event_type,
         SecurityEvent.created_at >= since,
@@ -73,7 +73,7 @@ def _notify_superadmins_of_security_event(db: Session, event: SecurityEvent):
         superadmins = db.query(User).filter(User.role == "superadmin", User.is_deleted == 0).all()
         if not superadmins:
             return
-            
+
         severity_label = "CRITICAL 🔴" if event.severity == "critical" else "YUQORI 🟠" if event.severity == "high" else "O'RTA 🟡"
         message_content = f"⚠️ {severity_label} Xavfsizlik Hodisasi!\n\n"
         message_content += f"Hodisa: {event.event_type}\n"
@@ -84,8 +84,8 @@ def _notify_superadmins_of_security_event(db: Session, event: SecurityEvent):
         message_content += f"Urinishlar: {event.attempts}\n\n"
         # The user requested a button or link. We can add a relative link that the frontend can parse,
         # or we can rely on the frontend detecting Markdown/links.
-        message_content += f"Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring: [Security Settings](/superadmin?tab=security)"
-        
+        message_content += "Batafsil ma'lumot uchun xavfsizlik sahifasiga kiring: [Security Settings](/superadmin?tab=security)"
+
         for sa in superadmins:
             new_msg = ChatMessage(
                 sender_id=bot.id,

@@ -1,13 +1,13 @@
 # morphocheck_backend/utils/i18n.py
 
 import contextvars
-import re
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
+
 from fastapi import Request
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
 # Context variable to hold the preferred language for the current request context.
 # Supported languages: "uz", "ru", "en", "tr". Default: "uz".
@@ -459,8 +459,23 @@ async def i18n_validation_exception_handler(request: Request, exc: RequestValida
             clean_msg = msg[len("Value error, "):]
 
         translated_msg = translate(clean_msg, lang)
-        error["msg"] = f"{prefix}{translated_msg}"
-        translated_errors.append(error)
+
+        safe_error = {
+            "loc": error.get("loc", []),
+            "msg": f"{prefix}{translated_msg}",
+            "type": error.get("type", "")
+        }
+        if "input" in error:
+            # Pydantic v2 includes 'input', make sure it is stringified or safe to serialize
+            try:
+                # simple test if it's serializable, if not cast to string
+                import json
+                json.dumps(error["input"])
+                safe_error["input"] = error["input"]
+            except Exception:
+                safe_error["input"] = str(error["input"])
+
+        translated_errors.append(safe_error)
 
     return JSONResponse(
         status_code=422,

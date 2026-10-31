@@ -341,7 +341,13 @@
 .card,
 .nav-link,
 .form-control {
-  transition: all 0.2s ease-in-out;
+  transition:
+    color 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
+    transform 0.2s ease-in-out,
+    opacity 0.2s ease-in-out;
 }
 
 /* Page transition overlay */
@@ -398,6 +404,19 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
   .btn,
   .card,
   .nav-link,

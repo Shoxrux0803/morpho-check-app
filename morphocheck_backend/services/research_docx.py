@@ -1217,7 +1217,7 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
 
     left_cell.paragraphs[0].clear()
     right_cell.paragraphs[0].clear()
-    
+
     if data.get("id_code"):
         study_code_label = "ID"
         if lang == "ru":
@@ -1235,7 +1235,7 @@ def generate_researcher_docx(data: dict, lang: str = "ru") -> io.BytesIO:
         elif lang == "tm":
             study_code_label = "ID"
         add_demo(left_cell, study_code_label, data.get("id_code"), bold_label=True)
-        
+
     if not data.get("privacy_redacted"):
         add_demo(left_cell, L["fio"], T(data.get("full_name"), capitalize=True))
         add_demo(left_cell, L["school"], T(data.get("school_name")))

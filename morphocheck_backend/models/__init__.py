@@ -3,14 +3,14 @@
 from .audit import AuditLog
 from .auth_device import LoginVerificationCode, TrustedLoginDevice
 from .base import Base
+from .blocked_ip import BlockedIP
 from .chat import ChatMessage
 from .clinical import ClinicalSetting
 from .payment import Payment
-from .settings import RoleSettings
 from .security_event import SecurityEvent
+from .settings import RoleSettings
 from .user import User
 from .userdata import PatientAnalysis
-from .blocked_ip import BlockedIP
 
 __all__ = [
     "Base",

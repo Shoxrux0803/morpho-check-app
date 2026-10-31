@@ -1,7 +1,7 @@
 # morphocheck_backend/services/analyze_service.py
 import datetime
-import logging
 import json
+import logging
 import os
 import re
 import unicodedata
@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 
 from models.schemas import PatientData
 from models.userdata import PatientAnalysis
+from services.age_service import total_age_months
 from services.indices_service import calculate_detailed_indices
 from services.ky_localization import (
     KY_BMI_CATEGORIES,
@@ -163,7 +164,7 @@ def infer_uzbekistan_district(
     for component in re.split(r"[,;]+", raw_location):
         normalized = f" {_normalize_uzbek_location(component)} "
         matches = []
-        for district_region, districts in district_groups:
+        for _district_region, districts in district_groups:
             for district in districts:
                 token = _normalize_uzbek_location(district)
                 if f" {token} " in normalized:
@@ -354,6 +355,7 @@ def generate_region_based_id(
 
     # Mavjud yozuvlar sonini hisoblash
     from sqlalchemy import or_
+
     from models.userdata import PatientAnalysis, ResearchRecord
 
     # Tarixiy muvofiqlik (masalan, TS/TV -> TOSH yoki QR/QQ -> QR)
@@ -421,11 +423,53 @@ def calculate_bmi(
         "shoulder_breadth": data.shoulder_breadth,
         "thigh_circumference": data.thigh_circumference,
         "calf_circumference": data.calf_circumference,
+        "shoulder_circumference": data.shoulder_circumference,
+        "ffm_kg": data.body_composition.ffm_measured_kg if data.body_composition is not None else None,
+        "independent_fm_kg": data.body_composition.fat_mass_measured_kg if data.body_composition is not None else data.fat_mass,
         "region": data.region,
         "district": data.district,
         "mahalla": data.mahalla,
         "address": data.address,
     }
+    # New Body Composition inputs pass through the canonical QC layer before
+    # any compatible value reaches the unchanged legacy index engine.
+    if data.body_composition is not None:
+        from services.body_composition_service import (
+            calculate_body_composition,
+            raw_body_composition_from_patient,
+        )
+
+        canonical_bia = calculate_body_composition(
+            weight_kg=weight,
+            raw=raw_body_composition_from_patient(data),
+            sex=gender,
+            age_months=total_age_months(data),
+        )
+        manual_bio["fat_percent"] = (
+            canonical_bia["pbf_percent"]["value"]
+            if canonical_bia["pbf_percent"]["status"] != "invalid"
+            else None
+        )
+        manual_bio["fat_mass"] = (
+            canonical_bia["fat_mass_kg"]["used_value"]
+            if canonical_bia["fat_mass_kg"]["status"] != "invalid"
+            else None
+        )
+        manual_bio["muscle_mass"] = (
+            canonical_bia["smm_kg"]["value"]
+            if canonical_bia["smm_kg"]["status"] != "invalid"
+            else None
+        )
+        manual_bio["bone_mass"] = (
+            canonical_bia["mineral_bone_mass_kg"]["value"]
+            if canonical_bia["mineral_bone_mass_kg"]["status"] != "invalid"
+            else None
+        )
+        manual_bio["visceral_fat"] = (
+            canonical_bia["visceral_fat"]["value"]
+            if canonical_bia["visceral_fat"]["status"] != "invalid"
+            else None
+        )
 
     detailed = calculate_detailed_indices(
         age,
@@ -436,6 +480,7 @@ def calculate_bmi(
         manual_bio,
         lang=lang,
         all_settings=all_settings,
+        age_months=total_age_months(data),
     )
 
     # РљР°С‚РµРіРѕСЂРёСЏ РРњРў РЅР° РѕСЃРЅРѕРІРµ Z-score (РґР»СЏ РґРµС‚РµР№) РёР»Рё СЃС‚Р°РЅРґР°СЂС‚РѕРІ Р’РћР— (РґР»СЏ РІР·СЂРѕСЃР»С‹С…)
@@ -541,6 +586,26 @@ def build_growth_standards(
     weight = float(data.weight)
     chest = float(data.chest)
     head = float(data.head)
+    age_months = total_age_months(data)
+
+    # Each indicator has its own published/reference applicability window.
+    # A missing reference is not a normal result and must not be extrapolated.
+    applicability = {
+        "height": (60, 228),
+        "weight": (60, 120),
+        "bmi": (60, 228),
+        "head": (36, 216),
+        "chest": (36, 216),
+    }
+
+    supplied_v6 = indices.get("growth_reference_version") == "supplied_v6_WHO_LMS"
+    if supplied_v6:
+        for key in ("height", "weight", "bmi"):
+            applicability[key] = (30, 90)
+
+    def applicable(metric: str) -> bool:
+        minimum, maximum = applicability[metric]
+        return minimum <= age_months <= maximum
 
     # Head/chest standards are practical local screening approximations.
     head_expected = min(56.0, 46.5 + min(int(data.age), 18) * 0.45)
@@ -553,37 +618,45 @@ def build_growth_standards(
             "label": "Bo'y",
             "value": height,
             "unit": "sm",
-            "z_score": indices.get("z_h"),
+            "z_score": indices.get("z_h") if applicable("height") else None,
         },
         "weight": {
             "label": "Vazn",
             "value": weight,
             "unit": "kg",
-            "z_score": indices.get("z_w"),
+            "z_score": indices.get("z_w") if applicable("weight") else None,
         },
         "bmi": {
             "label": "BMI",
             "value": bmi,
             "unit": "",
-            "z_score": indices.get("z_bmi"),
+            "z_score": indices.get("z_bmi") if applicable("bmi") else None,
         },
         "head": {
             "label": "Bosh aylanasi",
             "value": head,
             "unit": "sm",
-            "z_score": round((head - head_expected) / head_sd, 2) if head_sd else None,
+            "z_score": round((head - head_expected) / head_sd, 2)
+            if head_sd and applicable("head")
+            else None,
         },
         "chest": {
             "label": "Ko'krak aylanasi",
             "value": chest,
             "unit": "sm",
             "z_score": round((chest - chest_expected) / chest_sd, 2)
-            if chest_sd
+            if chest_sd and applicable("chest")
             else None,
         },
     }
 
-    for metric in metrics.values():
+    for key, metric in metrics.items():
+        minimum, maximum = applicability[key]
+        metric["source"] = "supplied_v6_WHO_LMS_source_audit_pending" if supplied_v6 and key in {"height", "weight", "bmi"} else "local_screening_approximation"
+        metric["applicable"] = applicable(key)
+        metric["age_range_months"] = {"min": minimum, "max": maximum}
+        if not metric["applicable"]:
+            metric["not_applicable_reason"] = "Ushbu yosh uchun qo'llanmaydi"
         metric["percentile"] = _z_to_percentile(metric.get("z_score"))
         metric["risk"] = _risk_from_z(metric.get("z_score"))
 
@@ -592,7 +665,7 @@ def build_growth_standards(
         metrics.values(), key=lambda item: worst_rank.get(item["risk"]["level"], 0)
     )
     return {
-        "source": "WHO LMS + mahalliy skrining diapazonlari",
+        "source": "Supplied v6 WHO LMS; head/chest: local screening" if supplied_v6 else "MorphoCheck local screening approximation (not WHO LMS)",
         "metrics": metrics,
         "summary": worst["risk"],
     }
@@ -1107,11 +1180,11 @@ def _build_sport_recommendation(
         scores["wrestling"] += 1
         reasons.append(txt["harmony"])
 
-    if mii >= 0.8:
+    if mii >= 80:
         scores["football"] += 1
         scores["gymnastics"] += 1
         scores["wrestling"] += 1
-    if hmai > 0.3:
+    if hmai >= 80:
         scores["athletics"] += 1
         scores["cycling"] += 1
         reasons.append(txt["endurance"])
@@ -1391,7 +1464,7 @@ def generate_advices(
         try:
             ppe = json.loads(ppe_data)
             ppe_advices = []
-            
+
             # Contextual analysis of PPE
             if ppe.get("ppe_group_play") == "Low" or ppe.get("ppe_peer_interaction") == "Rare":
                 if lang == "ru":
@@ -1400,7 +1473,7 @@ def generate_advices(
                     ppe_advices.append("Encourage the child to participate in group games to develop social skills.")
                 else:
                     ppe_advices.append("Bolani ijtimoiy ko'nikmalarni rivojlantirish uchun jamoaviy o'yinlarga jalb qilish tavsiya etiladi.")
-                    
+
             if ppe.get("ppe_physical_activity") == "Low" or ppe.get("ppe_daily_physical_activity") == "<1 hour":
                 if lang == "ru":
                     ppe_advices.append("Необходимо увеличить ежедневную физическую активность (минимум 1-2 часа активных игр).")
@@ -1408,7 +1481,7 @@ def generate_advices(
                     ppe_advices.append("It is necessary to increase daily physical activity (at least 1-2 hours of active play).")
                 else:
                     ppe_advices.append("Kundalik jismoniy faollikni oshirish zarur (kamida 1-2 soat faol o'yinlar).")
-                    
+
             if ppe.get("ppe_screen_time") == ">2 hours":
                 if lang == "ru":
                     ppe_advices.append("Следует ограничить время перед экраном (менее 1-2 часов в день).")
@@ -1416,7 +1489,7 @@ def generate_advices(
                     ppe_advices.append("Screen time should be limited (less than 1-2 hours per day).")
                 else:
                     ppe_advices.append("Ekran oldidagi vaqtni cheklash lozim (kuniga 1-2 soatdan kam).")
-                    
+
             if ppe.get("ppe_sleep_routine") == "Irregular" or ppe.get("ppe_fatigue_activity") == "High" or ppe.get("ppe_fatigue_home") == "Often":
                 if lang == "ru":
                     ppe_advices.append("Обратите внимание на режим сна и отдыха, ребенок часто испытывает утомляемость.")
@@ -1424,7 +1497,7 @@ def generate_advices(
                     ppe_advices.append("Pay attention to sleep and rest routines, the child often experiences fatigue.")
                 else:
                     ppe_advices.append("Uyqu va dam olish rejimiga e'tibor qarating, bolada toliqish holatlari ko'p uchraydi.")
-                    
+
             if ppe.get("ppe_appetite") == "Poor":
                 if lang == "ru":
                     ppe_advices.append("Сниженный аппетит может требовать коррекции рациона и консультации педиатра.")
@@ -1432,7 +1505,7 @@ def generate_advices(
                     ppe_advices.append("Poor appetite may require diet correction and a pediatrician consultation.")
                 else:
                     ppe_advices.append("Ishtahaning pastligi ovqatlanish ratsionini to'g'rilashni talab qilishi mumkin.")
-            
+
             if ppe_advices:
                 res["play_preschool"] = " ".join(ppe_advices)
             else:

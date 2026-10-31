@@ -1,5 +1,6 @@
 // src/components/AI/AIAssistantWidget.js
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import RobotAvatar from './RobotAvatar';
 import {
   Box,
@@ -9,17 +10,13 @@ import {
   IconButton,
   TextField,
   InputAdornment,
-  Avatar,
   Tooltip,
   Zoom,
-  Fade,
   Chip,
 } from '@mui/material';
 import {
-  SmartToy,
   Close,
   Send,
-  AutoAwesome,
   InfoOutlined,
   AttachFile,
   Download,
@@ -31,6 +28,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { toast } from 'react-hot-toast';
 import aiService from '../../services/aiService';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -215,6 +213,33 @@ const AIAssistantWidget = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const launcherPointerRef = useRef(null);
+
+  const handleLauncherClick = (event) => {
+    // Decorative avatar content can extend beyond the launcher. Only a press
+    // that starts and ends inside the actual button may open the chat.
+    if (event.detail > 0) {
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const inside = (point) =>
+        point &&
+        point.x >= bounds.left &&
+        point.x <= bounds.right &&
+        point.y >= bounds.top &&
+        point.y <= bounds.bottom;
+      const startedInside = inside(launcherPointerRef.current);
+      launcherPointerRef.current = null;
+      if (!startedInside || !inside({ x: event.clientX, y: event.clientY })) {
+        return;
+      }
+    }
+    event.stopPropagation();
+    setIsOpen((open) => !open);
+  };
+
+  // The assistant is shared across routes. Navigation must dismiss its panel.
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     setMessages((prev) => {
@@ -276,7 +301,22 @@ const AIAssistantWidget = () => {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file && file.type.startsWith('image/')) {
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Faqat JPEG, PNG, WebP yoki GIF rasm yuklash mumkin.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Rasm hajmi 5 MB dan oshmasligi kerak.');
+      event.target.value = '';
+      return;
+    }
+    if (file.type.startsWith('image/')) {
+      if (selectedImage?.startsWith('blob:')) {
+        URL.revokeObjectURL(selectedImage);
+      }
       setSelectedImage(URL.createObjectURL(file));
       setImageMimeType(file.type);
 
@@ -289,6 +329,9 @@ const AIAssistantWidget = () => {
   };
 
   const removeImage = () => {
+    if (selectedImage?.startsWith('blob:')) {
+      URL.revokeObjectURL(selectedImage);
+    }
     setSelectedImage(null);
     setImageBase64(null);
     setImageMimeType(null);
@@ -322,7 +365,7 @@ const AIAssistantWidget = () => {
       content: textToSend || imageMsgContent,
     };
     if (selectedImage) {
-      userMsg.image = selectedImage; // For display only
+      userMsg.image = imageBase64; // Blob URL revoke qilingandan keyin ham ko'rinadi.
     }
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
@@ -440,16 +483,19 @@ const AIAssistantWidget = () => {
     return null;
   }
 
-  return (
+  return createPortal(
     <Box
       sx={{
         position: 'fixed',
+        width: 64,
+        height: 64,
+        pointerEvents: 'none',
         bottom: { xs: 92, md: 30 },
-        left: { xs: 16, md: 'auto' },
+        left: 'auto',
         right:
           !isOpen && isAdminChatOpen
-            ? { xs: 'auto', md: 450 }
-            : { xs: 'auto', md: 110 },
+            ? { xs: 16, md: 450 }
+            : { xs: 16, md: 110 },
         zIndex: 9999,
         transition: 'right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       }}
@@ -459,7 +505,18 @@ const AIAssistantWidget = () => {
         <Fab
           color="primary"
           aria-label="ai-assistant"
-          onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
+          aria-controls={isOpen ? 'morpho-ai-chat' : undefined}
+          onPointerDown={(event) => {
+            launcherPointerRef.current = {
+              x: event.clientX,
+              y: event.clientY,
+            };
+          }}
+          onPointerCancel={() => {
+            launcherPointerRef.current = null;
+          }}
+          onClick={handleLauncherClick}
           sx={{
             boxShadow: isDark
               ? '0 8px 40px rgba(13,71,161,0.7)'
@@ -467,6 +524,7 @@ const AIAssistantWidget = () => {
             background: 'transparent',
             padding: 0,
             overflow: 'visible',
+            pointerEvents: 'auto',
             width: 64,
             height: 64,
             transform: 'none',
@@ -496,13 +554,21 @@ const AIAssistantWidget = () => {
               <Close sx={{ color: 'white', fontSize: 28 }} />
             </div>
           ) : (
-            <RobotAvatar
-              isOpen={isOpen}
-              passwordVisible={passwordVisible}
-              size={64}
-              isTalking={isTalking}
-              isMobile={isMobile}
-            />
+            <Box
+              component="span"
+              sx={{
+                pointerEvents: 'none',
+                '& .morpho-speech': { pointerEvents: 'auto' },
+              }}
+            >
+              <RobotAvatar
+                isOpen={isOpen}
+                passwordVisible={passwordVisible}
+                size={64}
+                isTalking={isTalking}
+                isMobile={isMobile}
+              />
+            </Box>
           )}
         </Fab>
       </Zoom>
@@ -516,6 +582,7 @@ const AIAssistantWidget = () => {
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
             style={{
+              pointerEvents: 'auto',
               position: isMobile ? 'fixed' : 'absolute',
               bottom: isMobile ? 16 : 80,
               left: isMobile ? 12 : 'auto',
@@ -527,6 +594,9 @@ const AIAssistantWidget = () => {
             }}
           >
             <Paper
+              id="morpho-ai-chat"
+              role="dialog"
+              aria-label="MorphoAI"
               elevation={24}
               sx={{
                 borderRadius: isMobile ? '18px' : '24px',
@@ -1095,7 +1165,8 @@ const AIAssistantWidget = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </Box>
+    </Box>,
+    document.body
   );
 };
 

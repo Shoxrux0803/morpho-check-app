@@ -6,6 +6,15 @@ module.exports = {
     configure: (webpackConfig) => {
       const axiosRoot = path.dirname(require.resolve("axios/package.json"));
 
+      // CRA shares a single ESLint result cache between the dev server and
+      // production builds. Concurrent runs can restore stale formatting errors.
+      // Keep lint checks enabled and always read the current source files.
+      webpackConfig.plugins.forEach((plugin) => {
+        if (plugin.constructor.name === "ESLintWebpackPlugin") {
+          plugin.options.cache = false;
+        }
+      });
+
       webpackConfig.resolve = webpackConfig.resolve || {};
       webpackConfig.resolve.alias = {
         ...(webpackConfig.resolve.alias || {}),

@@ -1,5 +1,7 @@
-from sqlalchemy import Column, String, Boolean, DateTime, func
+from sqlalchemy import Boolean, Column, DateTime, String, func
+
 from .base import Base
+
 
 class RoleSettings(Base):
     __tablename__ = "role_settings"

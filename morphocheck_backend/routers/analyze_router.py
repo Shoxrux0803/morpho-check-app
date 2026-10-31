@@ -1,7 +1,10 @@
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 from typing import Any, Dict, Optional
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -9,7 +12,11 @@ from sqlalchemy.orm import Session
 from models.schemas import PatientData
 from models.user import User
 from models.userdata import PatientAnalysis
-from routers.auth_router import get_current_admin, get_optional_user, get_current_admin_or_assistant
+from routers.auth_router import (
+    get_current_admin,
+    get_current_admin_or_assistant,
+    get_optional_user,
+)
 from services.analyze_workflow_service import (
     analyze_and_store,
     build_pdf_report_data,
@@ -17,14 +24,43 @@ from services.analyze_workflow_service import (
     store_raw_analysis,
 )
 from services.pdf_services import generate_pdf_report as generate_pdf_file
-from utils.admin_permissions import filter_payload_by_permissions, get_effective_admin_permissions
-from utils.database import get_db
+from utils.admin_permissions import (
+    filter_payload_by_permissions,
+    get_effective_admin_permissions,
+)
 from utils.audit_helper import record_audit_log
-from utils.privacy import child_audit_reference, get_child_privacy_enabled, redact_child_payload
+from utils.database import get_db
+from utils.privacy import (
+    child_audit_reference,
+    get_child_privacy_enabled,
+    redact_child_payload,
+)
 
 router = APIRouter(tags=["Tahlil"])
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+# Uvicorn development console can be detached from the terminal that reports a
+# browser error.  Keep a small rotating error log so a 500 from this endpoint
+# can be diagnosed without logging the patient payload itself.
+_error_log_path = Path(__file__).resolve().parent.parent / "logs" / "analyze_errors.log"
+_error_log_path.parent.mkdir(parents=True, exist_ok=True)
+if not any(
+    isinstance(handler, RotatingFileHandler)
+    and Path(handler.baseFilename) == _error_log_path
+    for handler in logger.handlers
+):
+    _error_handler = RotatingFileHandler(
+        _error_log_path,
+        maxBytes=1_000_000,
+        backupCount=3,
+        encoding="utf-8",
+    )
+    _error_handler.setLevel(logging.ERROR)
+    _error_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
+    )
+    logger.addHandler(_error_handler)
 
 
 @router.post("/", tags=["Tahlil"])
@@ -49,10 +85,34 @@ def analyze_full(
     lang: str = Query(default="uz", description="Til: uz, tr, tm, ru, en, kz"),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_optional_user),
+    idempotency_key: Optional[str] = Header(
+        default=None, alias="Idempotency-Key", max_length=120
+    ),
 ):
     try:
+        if idempotency_key and current_user:
+            existing = (
+                db.query(PatientAnalysis)
+                .filter(
+                    PatientAnalysis.created_by_id == current_user.id,
+                    PatientAnalysis.offline_submission_id == idempotency_key,
+                )
+                .first()
+            )
+            if existing:
+                return {
+                    "status": "duplicate",
+                    "id": existing.id,
+                    "id_code": existing.id_code,
+                    "message": "Bu offline yozuv avval sinxronlangan.",
+                }
         result = analyze_and_store(
-            data, db, request, lang=lang, current_user=current_user
+            data,
+            db,
+            request,
+            lang=lang,
+            current_user=current_user,
+            offline_submission_id=idempotency_key if current_user else None,
         )
         if current_user:
             result = filter_payload_by_permissions(
@@ -68,10 +128,19 @@ def analyze_full(
         raise
     except Exception as exc:
         db.rollback()
-        logger.exception("To'liq tahlilda xato")
+        error_id = uuid4().hex[:12]
+        import traceback as _tb
+        _tb_str = _tb.format_exc()
+        logger.exception("To'liq tahlilda xato [error_id=%s]", error_id)
+        # Xatoni alohida faylga ham yozamiz (debug uchun)
+        try:
+            with open("analyze_debug.log", "a", encoding="utf-8") as _f:
+                _f.write(f"\n{'='*60}\nerror_id={error_id}\nexc={exc}\n{_tb_str}\n")
+        except Exception:
+            pass
         raise HTTPException(
             status_code=500,
-            detail=f"Tahlil yoki saqlash xatosi: {exc}",
+            detail=f"Tahlil yoki saqlash xatosi [{error_id}]: {exc}",
         ) from exc
 
 

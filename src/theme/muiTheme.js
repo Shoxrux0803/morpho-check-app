@@ -256,20 +256,16 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
         styleOverrides: {
           root: ({ theme }) => ({
             position: 'relative',
-            borderRadius: 24,
-            background: liquidGlass.surface,
-            WebkitBackdropFilter: liquidGlass.blur,
-            backdropFilter: liquidGlass.blur,
-            border: `1px solid ${liquidGlass.border}`,
-            boxShadow: liquidGlass.shadow,
-            transition: 'all 0.3s ease',
+            borderRadius: 18,
+            background: theme.palette.background.paper,
+            WebkitBackdropFilter: 'none',
+            backdropFilter: 'none',
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: isDark ? 'none' : '0 3px 16px rgba(20,50,40,0.025)',
+            transition: 'border-color 0.2s ease',
             backgroundClip: 'padding-box',
             '&:hover': {
-              boxShadow: liquidGlass.shadowHover,
-              borderColor:
-                theme.palette.mode === 'light'
-                  ? 'rgba(255,255,255,0.72)'
-                  : 'rgba(255,255,255,0.24)',
+              borderColor: theme.palette.divider,
             },
           }),
         },
@@ -277,19 +273,14 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
       MuiCard: {
         styleOverrides: {
           root: ({ theme }) => ({
-            borderRadius: 28,
+            borderRadius: 18,
             padding: theme.spacing(0),
             overflow: 'hidden',
-            background: liquidGlass.surface,
-            WebkitBackdropFilter: liquidGlass.blur,
-            backdropFilter: liquidGlass.blur,
-            border: `1px solid ${liquidGlass.border}`,
-            boxShadow: liquidGlass.shadow,
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-2px)',
-              boxShadow: liquidGlass.shadowHover,
-            },
+            background: theme.palette.background.paper,
+            WebkitBackdropFilter: 'none',
+            backdropFilter: 'none',
+            border: `1px solid ${theme.palette.divider}`,
+            boxShadow: isDark ? 'none' : '0 3px 16px rgba(20,50,40,0.025)',
           }),
         },
       },
@@ -302,13 +293,11 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
             padding: '10px 24px',
             textTransform: 'none',
             transition: 'all 0.3s ease',
-            WebkitBackdropFilter: liquidGlass.blurSoft,
-            backdropFilter: liquidGlass.blurSoft,
-            boxShadow:
-              'inset 0 1px 0 rgba(255,255,255,0.64), 0 8px 20px rgba(20,30,60,0.12)',
+            WebkitBackdropFilter: 'none',
+            backdropFilter: 'none',
+            boxShadow: 'none',
             '&:hover': {
-              boxShadow:
-                'inset 0 1px 0 rgba(255,255,255,0.78), 0 12px 28px rgba(20,30,60,0.18)',
+              boxShadow: 'none',
               transform: 'translateY(-1px)',
             },
             '&.Mui-disabled': {
@@ -316,13 +305,11 @@ export const makeTheme = (mode = 'light', variant = 'neo') => {
             },
           },
           contained: {
-            background:
-              'linear-gradient(135deg, rgba(14,165,233,0.88), rgba(139,92,246,0.86))',
-            color: '#fff',
-            '&:hover': {
-              background:
-                'linear-gradient(135deg, rgba(14,165,233,0.96), rgba(236,72,153,0.90))',
-            },
+            backgroundImage: 'none',
+            boxShadow: 'none',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            '&:hover': { backgroundImage: 'none' },
           },
           outlined: {
             borderWidth: '1px',

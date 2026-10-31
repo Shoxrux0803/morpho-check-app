@@ -100,7 +100,6 @@ PDF_LABELS = {
         "adv_activity": "Jismoniy faollik",
         "adv_checkups": "Tekshiruvlar",
         "adv_play_preschool": "O'yin va maktabgacha ta'lim",
-        "adv_sport": "Sportga yo'naltirish",
         "adv_general": "📝 Umumiy tavsiya",
     },
     "ru": {
@@ -168,7 +167,6 @@ PDF_LABELS = {
         "adv_activity": "Физическая активность",
         "adv_checkups": "Обследования",
         "adv_play_preschool": "Игра и дошкольное образование",
-        "adv_sport": "Спортивная ориентация",
         "adv_general": "Общая рекомендация",
         "detailed_advices_label": "ДОПОЛНИТЕЛЬНЫЕ УКАЗАНИЯ:",
     },
@@ -237,7 +235,6 @@ PDF_LABELS = {
         "adv_activity": "Activity",
         "adv_checkups": "Checkups",
         "adv_play_preschool": "Play & Preschool Engagement",
-        "adv_sport": "Sports orientation",
         "adv_general": "General advice",
         "detailed_advices_label": "ADDITIONAL INSTRUCTIONS:",
     },
@@ -305,7 +302,6 @@ PDF_LABELS = {
         "adv_activity": "Физикалық белсенділік",
         "adv_checkups": "Тексерулер",
         "adv_play_preschool": "Ойын және мектепке дейінгі білім",
-        "adv_sport": "Спортқа бағыттау",
         "adv_general": "📝 Жалпы ұсыныс",
         "detailed_advices_label": "ҚОСЫМША НҰСҚАУЛАР:",
     },
@@ -1086,24 +1082,31 @@ def generate_pdf_file(data: dict, lang: str = "uz"):
         analysis_table_data.append(
             [
                 L["hmai"],
-                f"{detailed.get('hmai', '')}",
+                format(detailed["hmai"], ".2f") if detailed.get("hmai") is not None else "?",
                 report_text(detailed.get("hmai_desc", ""), lang),
             ]
         )
         analysis_table_data.append(
             [
                 L["mii"],
-                f"{detailed.get('mii', '')}",
+                format(detailed["mii"], ".2f") if detailed.get("mii") is not None else "?",
                 report_text(detailed.get("mii_desc", ""), lang),
             ]
         )
         analysis_table_data.append(
             [
                 L["adi"],
-                f"{detailed.get('adi', '')}",
+                format(detailed["adi"], ".2f") if detailed.get("adi") is not None else "?",
                 report_text(detailed.get("adi_desc", ""), lang),
             ]
         )
+
+    if detailed and is_deep_analysis:
+        analysis_table_data.append([
+            "MCRI-6",
+            format(detailed["mcri"], ".2f") if detailed.get("mcri") is not None else "?",
+            report_text(detailed.get("mcri_desc", ""), lang),
+        ])
 
     if is_deep_analysis:
         shoulder_ratio = analysis_data_dict.get("shoulder_ratio", 0)

@@ -1,6 +1,9 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
+
+from sqlalchemy import Column, DateTime, Integer, String
+
 from models.base import Base
+
 
 class BlockedIP(Base):
     __tablename__ = "blocked_ips"

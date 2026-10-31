@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router-dom';
 import { useThemeMode } from '../providers/ThemeProviderMUI';
 import { useLanguage } from '../contexts/LanguageContext';
 import logo from '../assets/morphocheck-logo.svg';
+import { indexModelV6Info } from '../utils/indexModelV6Info';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -64,87 +65,11 @@ const somatoTypes = [
 ];
 
 const indexCards = [
-  {
-    key: 'HMAI',
-    title: 'Hududiy Morfologik Adaptatsiya Indeksi',
-    subtitle: 'HMAI (мослашув)',
-    icon: Gauge,
-    color: '#0ea5e9',
-    formula: 'HMAI = (MM% / FM%) x BMI x E',
-    meaning:
-      "Mushak va yog' komponentlari o'rtasidagi nisbatni BMI hamda hududiy ekologik koeffitsient bilan bog'lab, bolaning muhitga morfologik moslashuv darajasini ko'rsatadi.",
-    deep: "Oddiy BMI tana tarkibini ajratmaydi. HMAI esa sog'lom mushak ustunligi, energetik zaxira va yashash muhiti ta'sirini bitta integrativ ko'rsatkichga jamlaydi. Urban, tog', cho'l yoki qishloq sharoitlarida bir xil BMI turlicha biologik ma'noga ega bo'lishi mumkin.",
-    factors: [
-      'MM% - mushak massasi',
-      "FM% - yog' massasi",
-      'BMI - tana massasi indeksi',
-      'E - hududiy omil',
-    ],
-    zones: [
-      'Past adaptatsiya',
-      'Kompensatsiya',
-      'Optimal moslashuv',
-      'Sportiv fenotip',
-    ],
-  },
-  {
-    key: 'MII',
-    title: 'Morfologik Integratsiya Indeksi',
-    subtitle: 'MII (интеграция)',
-    icon: Network,
-    color: '#16a34a',
-    formula: 'MII = (r(h,m) + r(m,CI) + r(BMI,FM%)) / 3',
-    meaning:
-      "Bo'y, vazn, ko'krak aylanasi, BMI va yog' foizi o'rtasidagi korrelyatsion uyg'unlikni baholab, organizmni yagona biologik tizim sifatida ko'rsatadi.",
-    deep: "MII izolyatsiya qilingan raqamlar o'rniga tizimli uyg'unlikni o'lchaydi. Yuqori MII parametrlar bir-biriga mos rivojlanayotganini, past MII esa yashirin disbalans yoki rivojlanish sur'atlari nomutanosibligini ko'rsatishi mumkin.",
-    factors: [
-      "r(h,m) - bo'y/vazn",
-      "r(m,CI) - vazn/ko'krak",
-      'r(BMI,FM%) - indeks/tarkib',
-    ],
-    zones: [
-      'Fragmentatsiya',
-      "O'tish zonasi",
-      "Uyg'un integratsiya",
-      'Yuqori tizimlilik',
-    ],
-  },
-  {
-    key: 'ADI',
-    title: 'Antropometrik Disgarmoniya Indeksi',
-    subtitle: 'ADI (номутаносиблик)',
-    icon: Target,
-    color: '#f97316',
-    formula: 'ADI = |Zh| + |Zw| + |ZBMI|',
-    meaning:
-      "Bo'y, vazn va BMI bo'yicha Z-score og'ishlarini birlashtirib, umumiy morfologik nomutanosiblik darajasini klinik skriningga qulay ko'rinishda beradi.",
-    deep: "Z-score alohida o'qilganda klinik signal bo'laklarga ajralib ketadi. ADI esa og'ishlar yig'indisini ko'rsatadi: bir parametr ozgina, ikkinchisi sezilarli siljigan holatlarda umumiy riskni tezroq payqashga yordam beradi.",
-    factors: ["Zh - bo'y Z-score", 'Zw - vazn Z-score', 'ZBMI - BMI Z-score'],
-    zones: [
-      'Normaga yaqin',
-      'Yengil disbalans',
-      "O'rta nomutanosiblik",
-      'Kuchli disgarmoniya',
-    ],
-  },
-  {
-    key: 'MCRI',
-    title: 'MorphoCheck Kompleks Risk Indeksi',
-    subtitle: 'MCRI (Риск индекси)',
-    icon: ShieldCheck,
-    color: '#dc2626',
-    formula: 'MCRI = (BMIz + FMz - MMz) / 3',
-    meaning:
-      "BMI, yog' massasi va mushak komponentini birgalikda hisoblab, adipostatik fenotip va metabolik xavfni erta bosqichda prognoz qilishga xizmat qiladi.",
-    deep: "BMI yuqori bo'lishi har doim ham bir xil xavf degani emas: mushak massasi yuqori bolada klinik ma'no boshqacha, yog' massasi yuqori va mushak past bo'lsa risk kuchayadi. MCRI shu farqni raqamli qiladi.",
-    factors: [
-      'BMIz - BMI standarti',
-      "FMz - yog' Z-score",
-      'MMz - mushak Z-score',
-    ],
-    zones: ['Past risk', 'Kuzatuv', 'Profilaktika', 'Yuqori risk'],
-  },
-];
+  { key: 'HMAI', icon: Gauge, color: '#0ea5e9' },
+  { key: 'MII', icon: Network, color: '#16a34a' },
+  { key: 'ADI', icon: Target, color: '#f97316' },
+  { key: 'MCRI', icon: ShieldCheck, color: '#dc2626' },
+].map((item) => ({ ...item, ...indexModelV6Info(item.key, 'uz') }));
 
 const clinicalLayers = [
   {
@@ -248,80 +173,10 @@ const infoCopy = {
     readyTitle: 'Превратите анализ в практический результат',
     readyDesc:
       'MorphoCheck Pro превращает научные формулы в понятный, экспортируемый и отслеживаемый цифровой отчет для врача, исследователя и администратора.',
-    indexCards: [
-      {
-        ...indexCards[0],
-        title: 'Индекс региональной морфологической адаптации',
-        subtitle: 'HMAI (адаптация)',
-        meaning:
-          'Связывает соотношение мышечного и жирового компонентов с BMI и региональным экологическим коэффициентом, показывая уровень морфологической адаптации ребенка к среде.',
-        deep: 'Обычный BMI не разделяет состав тела. HMAI объединяет здоровое мышечное преимущество, энергетический резерв и влияние среды в один интегративный показатель.',
-        factors: [
-          'MM% - мышечная масса',
-          'FM% - жировая масса',
-          'BMI - индекс массы тела',
-          'E - региональный фактор',
-        ],
-        zones: [
-          'Низкая адаптация',
-          'Компенсация',
-          'Оптимальная адаптация',
-          'Спортивный фенотип',
-        ],
-      },
-      {
-        ...indexCards[1],
-        title: 'Индекс морфологической интеграции',
-        subtitle: 'MII (интеграция)',
-        meaning:
-          'Оценивает корреляционную согласованность роста, веса, окружности груди, BMI и процента жира, показывая организм как единую биологическую систему.',
-        deep: 'MII измеряет системную согласованность вместо изолированных чисел. Высокий MII указывает на согласованное развитие параметров, низкий MII может отражать скрытый дисбаланс.',
-        factors: [
-          'r(h,m) - рост/вес',
-          'r(m,CI) - вес/грудь',
-          'r(BMI,FM%) - индекс/состав',
-        ],
-        zones: [
-          'Фрагментация',
-          'Переходная зона',
-          'Гармоничная интеграция',
-          'Высокая системность',
-        ],
-      },
-      {
-        ...indexCards[2],
-        title: 'Индекс антропометрической дисгармонии',
-        subtitle: 'ADI (дисгармония)',
-        meaning:
-          'Объединяет отклонения Z-score по росту, весу и BMI, давая удобную для клинического скрининга оценку морфологической несогласованности.',
-        deep: 'Когда Z-score читается отдельно, клинический сигнал дробится. ADI суммирует отклонения и помогает быстрее заметить общий риск.',
-        factors: [
-          'Zh - Z-score роста',
-          'Zw - Z-score веса',
-          'ZBMI - Z-score BMI',
-        ],
-        zones: [
-          'Близко к норме',
-          'Легкий дисбаланс',
-          'Средняя дисгармония',
-          'Сильная дисгармония',
-        ],
-      },
-      {
-        ...indexCards[3],
-        title: 'Комплексный индекс риска MorphoCheck',
-        subtitle: 'MCRI (индекс риска)',
-        meaning:
-          'Совместно учитывает BMI, жировую массу и мышечный компонент, помогая прогнозировать адипостатический фенотип и метаболический риск на раннем этапе.',
-        deep: 'Высокий BMI не всегда означает одинаковый риск: при высокой мышечной массе клинический смысл один, при высокой жировой массе и низких мышцах риск усиливается.',
-        factors: [
-          'BMIz - стандарт BMI',
-          'FMz - Z-score жира',
-          'MMz - Z-score мышц',
-        ],
-        zones: ['Низкий риск', 'Наблюдение', 'Профилактика', 'Высокий риск'],
-      },
-    ],
+    indexCards: indexCards.map((item) => ({
+      ...item,
+      ...indexModelV6Info(item.key, 'ru'),
+    })),
     clinicalLayers: [
       {
         icon: Activity,
@@ -403,80 +258,10 @@ const infoCopy = {
     readyTitle: 'Turn analysis into a practical result',
     readyDesc:
       'MorphoCheck Pro turns scientific formulas into a readable, exportable, and trackable digital report for physicians, researchers, and administrators.',
-    indexCards: [
-      {
-        ...indexCards[0],
-        title: 'Regional Morphological Adaptation Index',
-        subtitle: 'HMAI (adaptation)',
-        meaning:
-          "Links the ratio between muscle and fat components with BMI and the regional ecological coefficient, showing how well the child's morphology adapts to the environment.",
-        deep: 'Simple BMI does not separate body composition. HMAI combines healthy muscle dominance, energy reserve, and environmental influence into one integrative indicator.',
-        factors: [
-          'MM% - muscle mass',
-          'FM% - fat mass',
-          'BMI - body mass index',
-          'E - regional factor',
-        ],
-        zones: [
-          'Low adaptation',
-          'Compensation',
-          'Optimal adaptation',
-          'Sport phenotype',
-        ],
-      },
-      {
-        ...indexCards[1],
-        title: 'Morphological Integration Index',
-        subtitle: 'MII (integration)',
-        meaning:
-          'Evaluates the correlation harmony among height, weight, chest circumference, BMI, and fat percentage, showing the body as a single biological system.',
-        deep: 'MII measures systemic harmony instead of isolated numbers. A high MII shows coordinated development, while a low MII can indicate hidden imbalance.',
-        factors: [
-          'r(h,m) - height/weight',
-          'r(m,CI) - weight/chest',
-          'r(BMI,FM%) - index/composition',
-        ],
-        zones: [
-          'Fragmentation',
-          'Transition zone',
-          'Harmonious integration',
-          'High systemicity',
-        ],
-      },
-      {
-        ...indexCards[2],
-        title: 'Anthropometric Disharmony Index',
-        subtitle: 'ADI (disharmony)',
-        meaning:
-          'Combines Z-score deviations for height, weight, and BMI into a clinically convenient measure of overall morphological imbalance.',
-        deep: 'When Z-scores are read separately, the clinical signal becomes fragmented. ADI sums deviations and helps detect total risk faster.',
-        factors: [
-          'Zh - height Z-score',
-          'Zw - weight Z-score',
-          'ZBMI - BMI Z-score',
-        ],
-        zones: [
-          'Near normal',
-          'Mild imbalance',
-          'Moderate disharmony',
-          'Severe disharmony',
-        ],
-      },
-      {
-        ...indexCards[3],
-        title: 'MorphoCheck Complex Risk Index',
-        subtitle: 'MCRI (risk index)',
-        meaning:
-          'Combines BMI, fat mass, and muscle component to forecast adipostatic phenotype and metabolic risk at an early stage.',
-        deep: 'High BMI does not always mean the same risk: a child with high muscle mass has a different clinical meaning than one with high fat mass and low muscle mass.',
-        factors: [
-          'BMIz - BMI standard',
-          'FMz - fat Z-score',
-          'MMz - muscle Z-score',
-        ],
-        zones: ['Low risk', 'Monitoring', 'Prevention', 'High risk'],
-      },
-    ],
+    indexCards: indexCards.map((item) => ({
+      ...item,
+      ...indexModelV6Info(item.key, 'en'),
+    })),
     clinicalLayers: [
       {
         icon: Activity,
@@ -557,80 +342,10 @@ const infoCopy = {
     readyTitle: 'Талдауды практикалық нәтижеге айналдырыңыз',
     readyDesc:
       'MorphoCheck Pro ғылыми формулаларды дәрігер, зерттеуші және әкімші үшін оқуға жеңіл, экспортталатын және бақылауға болатын цифрлық есепке айналдырады.',
-    indexCards: [
-      {
-        ...indexCards[0],
-        title: 'Аймақтық морфологиялық бейімделу индексі',
-        subtitle: 'HMAI (бейімделу)',
-        meaning:
-          'Бұлшықет пен май компоненттерінің қатынасын BMI және аймақтық экологиялық коэффициентпен байланыстырып, баланың ортаға морфологиялық бейімделу деңгейін көрсетеді.',
-        deep: 'Қарапайым BMI дене құрамын ажыратпайды. HMAI сау бұлшықет басымдығын, энергетикалық қорды және орта әсерін бір интегративті көрсеткішке біріктіреді.',
-        factors: [
-          'MM% - бұлшықет массасы',
-          'FM% - май массасы',
-          'BMI - дене массасы индексі',
-          'E - аймақтық фактор',
-        ],
-        zones: [
-          'Төмен бейімделу',
-          'Компенсация',
-          'Оңтайлы бейімделу',
-          'Спорттық фенотип',
-        ],
-      },
-      {
-        ...indexCards[1],
-        title: 'Морфологиялық интеграция индексі',
-        subtitle: 'MII (интеграция)',
-        meaning:
-          'Бой, салмақ, кеуде шеңбері, BMI және май пайызы арасындағы корреляциялық үйлесімді бағалап, ағзаны біртұтас биологиялық жүйе ретінде көрсетеді.',
-        deep: 'MII оқшау сандардың орнына жүйелік үйлесімді өлшейді. Жоғары MII параметрлердің үйлесімді дамуын, төмен MII жасырын дисбалансты көрсетуі мүмкін.',
-        factors: [
-          'r(h,m) - бой/салмақ',
-          'r(m,CI) - салмақ/кеуде',
-          'r(BMI,FM%) - индекс/құрам',
-        ],
-        zones: [
-          'Фрагментация',
-          'Өтпелі аймақ',
-          'Үйлесімді интеграция',
-          'Жоғары жүйелілік',
-        ],
-      },
-      {
-        ...indexCards[2],
-        title: 'Антропометриялық үйлесімсіздік индексі',
-        subtitle: 'ADI (үйлесімсіздік)',
-        meaning:
-          'Бой, салмақ және BMI бойынша Z-score ауытқуларын біріктіріп, жалпы морфологиялық үйлесімсіздік деңгейін клиникалық скринингке ыңғайлы түрде береді.',
-        deep: 'Z-score жеке оқылғанда клиникалық сигнал бөлшектенеді. ADI ауытқулар қосындысын көрсетіп, жалпы қауіпті тезірек байқауға көмектеседі.',
-        factors: [
-          'Zh - бой Z-score',
-          'Zw - салмақ Z-score',
-          'ZBMI - BMI Z-score',
-        ],
-        zones: [
-          'Нормаға жақын',
-          'Жеңіл дисбаланс',
-          'Орташа үйлесімсіздік',
-          'Күшті үйлесімсіздік',
-        ],
-      },
-      {
-        ...indexCards[3],
-        title: 'MorphoCheck кешенді қауіп индексі',
-        subtitle: 'MCRI (қауіп индексі)',
-        meaning:
-          'BMI, май массасы және бұлшықет компонентін бірге есептеп, адипостатикалық фенотип пен метаболикалық қауіпті ерте кезеңде болжауға көмектеседі.',
-        deep: 'BMI жоғары болуы әрдайым бірдей қауіп дегенді білдірмейді: бұлшықет массасы жоғары балада клиникалық мән басқа, май массасы жоғары әрі бұлшықет төмен болса қауіп күшейеді.',
-        factors: [
-          'BMIz - BMI стандарты',
-          'FMz - май Z-score',
-          'MMz - бұлшықет Z-score',
-        ],
-        zones: ['Төмен қауіп', 'Бақылау', 'Профилактика', 'Жоғары қауіп'],
-      },
-    ],
+    indexCards: indexCards.map((item) => ({
+      ...item,
+      ...indexModelV6Info(item.key, 'kz'),
+    })),
     clinicalLayers: [
       {
         icon: Activity,
@@ -710,80 +425,10 @@ infoCopy.tr = {
   readyTitle: 'Analizi pratik sonuca donusturun',
   readyDesc:
     'MorphoCheck Pro bilimsel formulleri hekimler, arastirmacilar ve yoneticiler icin okunabilir, disa aktarilabilir ve izlenebilir dijital rapora donusturur.',
-  indexCards: [
-    {
-      ...indexCards[0],
-      title: 'Bolgesel Morfolojik Adaptasyon Indeksi',
-      subtitle: 'HMAI (adaptasyon)',
-      meaning:
-        'Kas ve yag bilesenleri arasindaki orani BMI ve bolgesel ekolojik katsayi ile iliskilendirerek cocugun morfolojisinin ortama ne kadar iyi uyum sagladigini gosterir.',
-      deep: 'Basit BMI vucut kompozisyonunu ayirmaz. HMAI saglikli kas baskinligi, enerji rezervi ve cevresel etkiyi tek bir butunlesik gostergede birlestirir.',
-      factors: [
-        'MM% - kas kutlesi',
-        'FM% - yag kutlesi',
-        'BMI - vucut kitle indeksi',
-        'E - bolgesel faktor',
-      ],
-      zones: [
-        'Dusuk adaptasyon',
-        'Kompansasyon',
-        'Optimal adaptasyon',
-        'Spor fenotipi',
-      ],
-    },
-    {
-      ...indexCards[1],
-      title: 'Morfolojik Integrasyon Indeksi',
-      subtitle: 'MII (integrasyon)',
-      meaning:
-        'Boy, agirlik, gogus cevresi, BMI ve yag yuzdesi arasindaki korelasyon uyumunu degerlendirir ve bedeni tek bir biyolojik sistem olarak gosterir.',
-      deep: 'MII izole sayilar yerine sistemik uyumu olcer. Yuksek MII koordineli gelisimi, dusuk MII ise gizli dengesizligi gosterebilir.',
-      factors: [
-        'r(h,m) - boy/agirlik',
-        'r(m,CI) - agirlik/gogus',
-        'r(BMI,FM%) - indeks/kompozisyon',
-      ],
-      zones: [
-        'Parcalanma',
-        'Gecis bolgesi',
-        'Uyumlu integrasyon',
-        'Yuksek sistemlilik',
-      ],
-    },
-    {
-      ...indexCards[2],
-      title: 'Antropometrik Disharmoni Indeksi',
-      subtitle: 'ADI (disharmoni)',
-      meaning:
-        'Boy, agirlik ve BMI icin Z-score sapmalarini birlestirerek genel morfolojik dengesizligi klinik olarak kullanisli bir olcuye donusturur.',
-      deep: 'Z-score degerleri ayri okundugunda klinik sinyal parcalanir. ADI sapmalari toplar ve toplam riski daha hizli fark etmeye yardim eder.',
-      factors: [
-        'Zh - boy Z-score',
-        'Zw - agirlik Z-score',
-        'ZBMI - BMI Z-score',
-      ],
-      zones: [
-        'Normale yakin',
-        'Hafif dengesizlik',
-        'Orta disharmoni',
-        'Agir disharmoni',
-      ],
-    },
-    {
-      ...indexCards[3],
-      title: 'MorphoCheck Kompleks Risk Indeksi',
-      subtitle: 'MCRI (risk indeksi)',
-      meaning:
-        'BMI, yag kutlesi ve kas bilesenini birlestirerek adipostatik fenotip ve metabolik riski erken asamada ongormeye yardim eder.',
-      deep: 'Yuksek BMI her zaman ayni risk anlamina gelmez: kas kutlesi yuksek cocugun klinik anlami, yag kutlesi yuksek ve kas kutlesi dusuk cocuktan farklidir.',
-      factors: [
-        'BMIz - BMI standardi',
-        'FMz - yag Z-score',
-        'MMz - kas Z-score',
-      ],
-      zones: ['Dusuk risk', 'Izlem', 'Onleme', 'Yuksek risk'],
-    },
-  ],
+  indexCards: indexCards.map((item) => ({
+    ...item,
+    ...indexModelV6Info(item.key, 'tr'),
+  })),
   clinicalLayers: [
     {
       icon: Activity,
@@ -1315,7 +960,14 @@ export default function InfoDetail() {
   const navigate = useNavigate();
   const { mode } = useThemeMode();
   const { lang, t } = useLanguage();
-  const copy = infoCopy[lang] || infoCopy.uz;
+  const baseCopy = infoCopy[lang] || infoCopy.uz;
+  const copy = {
+    ...baseCopy,
+    indexCards: baseCopy.indexCards.map((item) => ({
+      ...item,
+      ...indexModelV6Info(item.key, lang),
+    })),
+  };
 
   return (
     <Box
@@ -1643,7 +1295,7 @@ export default function InfoDetail() {
                       overflowWrap: 'anywhere',
                     }}
                   >
-                    MC-Score = w1 x MCRI - w2 x MII - w3 x HMAI + w4 x ADI
+                    {indexModelV6Info('MCRI', lang).formula}
                   </Box>
                   <Grid container spacing={1.5} sx={{ mt: 2 }}>
                     {copy.riskFactors.map(([title, desc, color]) => (

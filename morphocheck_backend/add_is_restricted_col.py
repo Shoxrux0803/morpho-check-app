@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def upgrade():
     conn = sqlite3.connect('morphocheck.db')
     cursor = conn.cursor()
@@ -8,7 +9,7 @@ def upgrade():
         print("Column 'is_restricted' added successfully.")
     except sqlite3.OperationalError as e:
         print(f"Error (maybe column already exists): {e}")
-    
+
     conn.commit()
     conn.close()
 

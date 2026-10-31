@@ -1,7 +1,6 @@
 from copy import deepcopy
 from typing import Any, Mapping, Optional
 
-
 PRIVACY_MANAGED_ROLES = ("superadmin", "admin", "field_assistant", "researcher")
 ROLE_PRIVACY_ALIASES = {
     "assistant": "field_assistant",

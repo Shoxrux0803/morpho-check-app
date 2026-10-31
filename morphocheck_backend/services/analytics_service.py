@@ -140,7 +140,7 @@ def get_bmi_distribution(
     rows = base.with_entities(PatientAnalysis.bmi, PatientAnalysis.age).all()
 
     categories = {"ozgin": 0, "normal": 0, "ortiqcha": 0, "semizlik": 0, "nomalum": 0}
-    for bmi, age in rows:
+    for bmi, _age in rows:
         if bmi is None:
             categories["nomalum"] += 1
         elif bmi < 18.5:

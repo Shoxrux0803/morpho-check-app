@@ -107,7 +107,7 @@ def init_db(
       init_db(lambda: Base.metadata.create_all(bind=engine))
     """
     last_err: Optional[Exception] = None
-    for attempt in range(1, retries + 1):
+    for _attempt in range(1, retries + 1):
         try:
             # 1) Ulanish test
             with engine.connect() as conn:

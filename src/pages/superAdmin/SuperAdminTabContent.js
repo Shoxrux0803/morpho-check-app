@@ -207,7 +207,7 @@ const SuperAdminTabContent = ({
               sx={{
                 position: 'relative',
                 overflow: 'hidden',
-                borderRadius: 4,
+                borderRadius: '18px',
                 p: { xs: 2, md: 2.5 },
                 border: '1px solid',
                 borderColor: isDark
@@ -297,6 +297,7 @@ const SuperAdminTabContent = ({
                           height: 32,
                           borderRadius: 2,
                           fontWeight: 800,
+                          color: isDark ? '#e5edf7' : undefined,
                           bgcolor:
                             isDark && color !== 'error'
                               ? 'rgba(255,255,255,0.08)'
@@ -352,7 +353,7 @@ const SuperAdminTabContent = ({
               component={GlassPaper}
               sx={{
                 overflow: 'auto',
-                borderRadius: 4,
+                borderRadius: '18px',
                 borderColor: isDark
                   ? 'rgba(255,255,255,0.10)'
                   : 'rgba(15,118,110,0.10)',

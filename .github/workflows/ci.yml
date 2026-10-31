@@ -60,3 +60,7 @@ jobs:
         working-directory: morphocheck_backend
         run: python -m compileall .
 
+      - name: Run backend tests
+        working-directory: morphocheck_backend
+        run: pytest -q
+

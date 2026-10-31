@@ -1,20 +1,23 @@
 # morphocheck_backend/routers/ai_router.py
 
+import base64
+import binascii
 import json
 import os
 from typing import Dict, List, Optional
 
-import google.generativeai as genai
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
+from google import genai
+from google.genai import types
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
 
 from models.user import User
 from routers.auth_router import get_current_user
-from utils.database import get_db
 from services.ai_advice_service import generate_parent_tips
 from services.nlp_service import analyze_text
+from utils.database import get_db
 from utils.i18n import request_lang
 
 load_dotenv(override=True)
@@ -23,35 +26,37 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"), override=True
 router = APIRouter(tags=["AI Assistant"])
 
 GEMINI_MODELS = [
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemini-flash-latest",
-    "gemini-pro-latest",
+    "gemini-2.5-flash",
 ]
 
 
-def get_gemini_model(model_name: str):
+def get_gemini_client():
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is missing")
     try:
-        genai.configure(api_key=api_key)
-        return genai.GenerativeModel(model_name)
+        return genai.Client(api_key=api_key)
     except Exception as e:
-        print(f"[AI ERROR] Failed to configure {model_name}: {str(e)}")
+        print(f"[AI ERROR] Failed to configure Gemini client: {str(e)}")
         return None
 
 
 async def generate_with_fallback(contents):
     """Tries multiple Gemini models until one succeeds."""
     last_error = "No models attempted"
+    client = get_gemini_client()
+    if client is None:
+        raise RuntimeError("Gemini client could not be initialized")
     for model_name in GEMINI_MODELS:
         try:
             print(f"[AI INFO] Attempting generation with {model_name}...")
-            model = get_gemini_model(model_name)
-            response = model.generate_content(contents)
+            response = await client.aio.models.generate_content(
+                model=model_name,
+                contents=contents,
+            )
             if (
                 response
                 and getattr(response, "candidates", None)
@@ -66,16 +71,53 @@ async def generate_with_fallback(contents):
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(default="", max_length=10_000)
     context_page: Optional[str] = None
     context_data: Optional[Dict] = None
-    history: Optional[List[Dict[str, str]]] = []
-    image_data: Optional[str] = None
+    history: List[Dict[str, str]] = Field(default_factory=list, max_length=20)
+    image_data: Optional[str] = Field(default=None, max_length=8_000_000)
     image_mime_type: Optional[str] = None
 
 
+def _build_chat_contents(req: ChatRequest, system_prompt: str):
+    contents = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=system_prompt)],
+        )
+    ]
+    for item in req.history[-10:]:
+        text = str(item.get("content") or "").strip()
+        if not text:
+            continue
+        role = "model" if item.get("role") == "assistant" else "user"
+        contents.append(
+            types.Content(role=role, parts=[types.Part.from_text(text=text[:10_000])])
+        )
+
+    current_parts = [types.Part.from_text(text=req.message or "Describe this image.")]
+    if req.image_data and req.image_mime_type:
+        allowed_mime_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+        if req.image_mime_type not in allowed_mime_types:
+            raise HTTPException(status_code=400, detail="Unsupported image format")
+        encoded = req.image_data.split(",", 1)[-1]
+        try:
+            image_bytes = base64.b64decode(encoded, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise HTTPException(status_code=400, detail="Invalid image data") from exc
+        if len(image_bytes) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Image is larger than 5 MB")
+        current_parts.append(
+            types.Part.from_bytes(data=image_bytes, mime_type=req.image_mime_type)
+        )
+    contents.append(types.Content(role="user", parts=current_parts))
+    return contents
+
+
 class PredictParamsRequest(BaseModel):
-    age: int
+    age: int = Field(ge=0, le=120)
+    age_months: int = Field(default=0, ge=0, le=11)
+    age_days: int = Field(default=0, ge=0, le=31)
     gender: str
     target_form: str
 
@@ -114,9 +156,11 @@ async def ai_chat(
             f"You are MorphoAI Assistant. Context: {req.context_page}. Data: {context_data_str}. "
             f"Please respond in language: {lang_code.upper()}."
         )
-        contents = [system_prompt, req.message]
+        contents = _build_chat_contents(req, system_prompt)
         response, model_name = await generate_with_fallback(contents)
         return {"reply": response.text, "model": model_name}
+    except HTTPException:
+        raise
     except Exception as e:
         error_text = str(e)
         print(f"[AI CHAT ERROR] {error_text}")
@@ -140,9 +184,32 @@ async def predict_params(
     try:
         from services.norms_service import get_typical_params
 
-        params = get_typical_params(req.age, req.gender, req.target_form)
+        params = get_typical_params(
+            req.age,
+            req.gender,
+            req.target_form,
+            age_months=req.age_months,
+            age_days=req.age_days,
+        )
         print(f"[AI INFO] Fast Template Prediction for {req.age}yo {req.gender}")
-        return {"params": params}
+        return {
+            "mode": "reference_only",
+            "source": "interpolated_anthropometric_template",
+            "formula_version": "typical-params-v1",
+            "is_measured": False,
+            "params": params,
+            "units": {
+                key: (
+                    "kg" if key in {"weight", "fatMass", "muscleMass", "boneMass"}
+                    else "%" if key == "fatPercent"
+                    else "L" if key == "totalBodyWater"
+                    else "" if key in {"visceralFat", "acm", "teeth_count", "menstruation_start"}
+                    else "mm" if key.startswith("fat_")
+                    else "kgf" if key == "dynamometry"
+                    else "cm"
+                ) for key in params
+            },
+        }
     except Exception as e:
         print(f"[AI PREDICT ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail="Error predicting parameters")

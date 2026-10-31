@@ -9,14 +9,18 @@ import React, {
 import { get, set } from 'idb-keyval';
 import { postAnalysis } from '../services/api';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 
 const OfflineSyncContext = createContext();
 
 export const useOfflineSync = () => useContext(OfflineSyncContext);
 
-const QUEUE_KEY = 'pending_measurements';
+const QUEUE_KEY_PREFIX = 'pending_measurements';
 
 export const OfflineSyncProvider = ({ children }) => {
+  const { user } = useAuth();
+  const ownerId = user?.id == null ? null : String(user.id);
+  const queueKey = ownerId ? `${QUEUE_KEY_PREFIX}:${ownerId}` : null;
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [queue, setQueue] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -27,7 +31,7 @@ export const OfflineSyncProvider = ({ children }) => {
     if (navigator.storage && navigator.storage.persist) {
       navigator.storage.persist().then((persistent) => {
         if (persistent) {
-          console.log(
+          console.info(
             'Storage will not be cleared except by explicit user action.'
           );
         }
@@ -37,9 +41,13 @@ export const OfflineSyncProvider = ({ children }) => {
 
   // Load queue on init
   const loadQueue = useCallback(async () => {
-    const stored = (await get(QUEUE_KEY)) || [];
+    if (!queueKey) {
+      setQueue([]);
+      return;
+    }
+    const stored = (await get(queueKey)) || [];
     setQueue(stored);
-  }, []);
+  }, [queueKey]);
 
   // Update online status
   useEffect(() => {
@@ -75,7 +83,8 @@ export const OfflineSyncProvider = ({ children }) => {
   const syncItems = useCallback(async () => {
     if (!navigator.onLine || isSyncing) return;
 
-    const currentQueue = (await get(QUEUE_KEY)) || [];
+    if (!queueKey) return;
+    const currentQueue = (await get(queueKey)) || [];
     if (currentQueue.length === 0) return;
 
     // Only sync items that are 'pending' or were previously 'failed' but we want to retry
@@ -97,17 +106,17 @@ export const OfflineSyncProvider = ({ children }) => {
       setQueue([...updatedQueue]);
 
       try {
-        await postAnalysis(item.payload, item.lang);
+        await postAnalysis(item.payload, item.lang, item.id);
         // Success: remove from updatedQueue
         updatedQueue.splice(idx, 1);
-        await set(QUEUE_KEY, updatedQueue);
+        await set(queueKey, updatedQueue);
         setQueue([...updatedQueue]);
       } catch (err) {
         console.error('Sync failed for item:', item.id, err);
         updatedQueue[idx].status = 'failed';
         updatedQueue[idx].lastError = err.message || 'Unknown error';
         updatedQueue[idx].attempts = (updatedQueue[idx].attempts || 0) + 1;
-        await set(QUEUE_KEY, updatedQueue);
+        await set(queueKey, updatedQueue);
         setQueue([...updatedQueue]);
       }
     }
@@ -119,7 +128,7 @@ export const OfflineSyncProvider = ({ children }) => {
     } else {
       toast.error(`Sync finished. ${remaining} items failed.`, { id: toastId });
     }
-  }, [isSyncing]);
+  }, [isSyncing, queueKey]);
 
   // Auto-sync when coming online
   useEffect(() => {
@@ -129,7 +138,10 @@ export const OfflineSyncProvider = ({ children }) => {
   }, [isOnline, syncItems]);
 
   const addToQueue = async (payload, lang) => {
-    const currentQueue = (await get(QUEUE_KEY)) || [];
+    if (!queueKey) {
+      throw new Error('Offline navbat uchun foydalanuvchi aniqlanmadi');
+    }
+    const currentQueue = (await get(queueKey)) || [];
     const newItem = {
       id: `sync_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       payload,
@@ -138,9 +150,11 @@ export const OfflineSyncProvider = ({ children }) => {
       status: 'pending',
       attempts: 0,
       lastError: null,
+      ownerId,
     };
     const newQueue = [...currentQueue, newItem];
-    await set(QUEUE_KEY, newQueue);
+    await set(queueKey, newQueue);
+    await set('active_measurement_queue_key', queueKey);
     setQueue(newQueue);
     toast.success('Saved offline. Will sync when online.', { icon: '📥' });
 
@@ -156,14 +170,16 @@ export const OfflineSyncProvider = ({ children }) => {
   };
 
   const removeFromQueue = async (id) => {
-    const currentQueue = (await get(QUEUE_KEY)) || [];
+    if (!queueKey) return;
+    const currentQueue = (await get(queueKey)) || [];
     const newQueue = currentQueue.filter((item) => item.id !== id);
-    await set(QUEUE_KEY, newQueue);
+    await set(queueKey, newQueue);
     setQueue(newQueue);
   };
 
   const updateQueueItem = async (id, updatedPayload) => {
-    const currentQueue = (await get(QUEUE_KEY)) || [];
+    if (!queueKey) return;
+    const currentQueue = (await get(queueKey)) || [];
     const idx = currentQueue.findIndex((item) => item.id === id);
     if (idx !== -1) {
       currentQueue[idx].payload = {
@@ -172,7 +188,7 @@ export const OfflineSyncProvider = ({ children }) => {
       };
       currentQueue[idx].status = 'pending';
       currentQueue[idx].lastError = null;
-      await set(QUEUE_KEY, currentQueue);
+      await set(queueKey, currentQueue);
       setQueue([...currentQueue]);
     }
   };

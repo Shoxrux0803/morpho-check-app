@@ -589,7 +589,7 @@ ADMIN_EXPORT_HEADERS = {
         "Киритди",
         "Бўй (см)",
         "Вазн (кг)",
-        "ИАВ",
+        "BMI",
         "Ҳолат",
         "Соматотип",
         "Идеал Вазн (кг)",
@@ -970,6 +970,8 @@ ADMIN_EXPORT_HEADERS["tr"] = [
 
 
 def get_research_header(lang: str, field_name: str) -> str:
+    if field_name == "ffm_measured_kg":
+        return "FFM (kg)"
     lang = lang.lower() if lang else "uz"
     if lang not in RESEARCH_EXPORT_HEADERS:
         lang = "uz"
